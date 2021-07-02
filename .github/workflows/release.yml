@@ -1,0 +1,305 @@
+on:
+  release:
+    types: [created]
+    
+env:
+  CRATE_NAME: ina
+  OUTPUT_NAME: ina
+
+jobs:
+  release_windows_32bit_x86:
+    name: Windows 32-bit x86
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: i686-pc-windows-gnu
+          override: true
+      - run: sudo apt-get update && sudo apt-get install gcc-mingw-w64-i686 -y
+      - uses: actions-rs/cargo@v1
+        with:
+          command: rustc
+          args: --release --target=i686-pc-windows-gnu
+      - uses: thebongy/version-check@v1
+        with:
+          file: Cargo.toml
+          tagFormat: ${version}
+        id: version_check
+      - run: mv target/i686-pc-windows-gnu/release/${{env.CRATE_NAME}}.exe ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_windows_32bit_x86.exe
+      - run: strip --strip-all ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_windows_32bit_x86.exe
+      - run: zip ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_windows_32bit_x86.zip ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_windows_32bit_x86.exe
+      - uses: JasonEtco/upload-to-release@master
+        with:
+          args: ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_windows_32bit_x86.zip application/octet-stream
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+  release_windows_64bit_x86-64:
+    name: Windows 64-bit x86-64
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: x86_64-pc-windows-gnu
+          override: true
+      - run: sudo apt-get update && sudo apt-get install gcc-mingw-w64-x86-64 -y
+      - uses: actions-rs/cargo@v1
+        with:
+          command: rustc
+          args: --release --target=x86_64-pc-windows-gnu
+      - uses: thebongy/version-check@v1
+        with:
+          file: Cargo.toml
+          tagFormat: ${version}
+        id: version_check
+      - run: mv target/x86_64-pc-windows-gnu/release/${{env.CRATE_NAME}}.exe ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_windows_64bit_x86-64.exe
+      - run: strip --strip-all ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_windows_64bit_x86-64.exe
+      - run: zip ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_windows_64bit_x86-64.zip ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_windows_64bit_x86-64.exe
+      - uses: JasonEtco/upload-to-release@master
+        with:
+          args: ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_windows_64bit_x86-64.zip application/octet-stream
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+  
+  release_windows_64bit_x86-64_popcnt:
+    name: Windows 64-bit x86-64 POPCNT
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: x86_64-pc-windows-gnu
+          override: true
+      - run: sudo apt-get update && sudo apt-get install gcc-mingw-w64-x86-64 -y
+      - uses: actions-rs/cargo@v1
+        with:
+          command: rustc
+          args: --release --target=x86_64-pc-windows-gnu -- -C target-feature=+popcnt
+      - uses: thebongy/version-check@v1
+        with:
+          file: Cargo.toml
+          tagFormat: ${version}
+        id: version_check
+      - run: mv target/x86_64-pc-windows-gnu/release/${{env.CRATE_NAME}}.exe ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_windows_64bit_x86-64_popcnt.exe
+      - run: strip --strip-all ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_windows_64bit_x86-64_popcnt.exe
+      - run: zip ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_windows_64bit_x86-64_popcnt.zip ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_windows_64bit_x86-64_popcnt.exe
+      - uses: JasonEtco/upload-to-release@master
+        with:
+          args: ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_windows_64bit_x86-64_popcnt.zip application/octet-stream
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+  
+  release_windows_64bit_x86-64_popcnt_bmi2:
+    name: Windows 64-bit x86-64 POPCNT BMI2
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: x86_64-pc-windows-gnu
+          override: true
+      - run: sudo apt-get update && sudo apt-get install gcc-mingw-w64-x86-64 -y
+      - uses: actions-rs/cargo@v1
+        with:
+          command: rustc
+          args: --release --target=x86_64-pc-windows-gnu -- -C target-feature=+popcnt,+bmi,+bmi2
+      - uses: thebongy/version-check@v1
+        with:
+          file: Cargo.toml
+          tagFormat: ${version}
+        id: version_check
+      - run: mv target/x86_64-pc-windows-gnu/release/${{env.CRATE_NAME}}.exe ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_windows_64bit_x86-64_popcnt_bmi2.exe
+      - run: strip --strip-all ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_windows_64bit_x86-64_popcnt_bmi2.exe
+      - run: zip ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_windows_64bit_x86-64_popcnt_bmi2.zip ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_windows_64bit_x86-64_popcnt_bmi2.exe
+      - uses: JasonEtco/upload-to-release@master
+        with:
+          args: ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_windows_64bit_x86-64_popcnt_bmi2.zip application/octet-stream
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+         
+  release_linux_32bit_x86:
+    name: Linux 32-bit x86
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: i686-unknown-linux-gnu
+          override: true
+      - run: sudo apt-get update && sudo apt-get install gcc-i686-linux-gnu -y
+      - uses: actions-rs/cargo@v1
+        with:
+          command: rustc
+          args: --release --target=i686-unknown-linux-gnu -- -C linker=i686-linux-gnu-gcc
+      - uses: thebongy/version-check@v1
+        with:
+          file: Cargo.toml
+          tagFormat: ${version}
+        id: version_check
+      - run: mv target/i686-unknown-linux-gnu/release/${{env.CRATE_NAME}} ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_32bit_x86
+      - run: strip --strip-all ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_32bit_x86
+      - run: zip ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_32bit_x86.zip ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_32bit_x86
+      - uses: JasonEtco/upload-to-release@master
+        with:
+          args: ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_32bit_x86.zip application/octet-stream
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          
+  release_linux_64bit_x86-64:
+    name: Linux 64-bit x86-64
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: x86_64-unknown-linux-gnu
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: rustc
+          args: --release --target=x86_64-unknown-linux-gnu
+      - uses: thebongy/version-check@v1
+        with:
+          file: Cargo.toml
+          tagFormat: ${version}
+        id: version_check
+      - run: mv target/x86_64-unknown-linux-gnu/release/${{env.CRATE_NAME}} ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_64bit_x86-64
+      - run: strip --strip-all ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_64bit_x86-64
+      - run: zip ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_64bit_x86-64.zip ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_64bit_x86-64
+      - uses: JasonEtco/upload-to-release@master
+        with:
+          args: ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_64bit_x86-64.zip application/octet-stream
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+         
+  release_linux_64bit_x86-64_popcnt:
+    name: Linux 64-bit x86-64 POPCNT
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: x86_64-unknown-linux-gnu
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: rustc
+          args: --release --target=x86_64-unknown-linux-gnu -- -C target-feature=+popcnt
+      - uses: thebongy/version-check@v1
+        with:
+          file: Cargo.toml
+          tagFormat: ${version}
+        id: version_check
+      - run: mv target/x86_64-unknown-linux-gnu/release/${{env.CRATE_NAME}} ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_64bit_x86-64_popcnt
+      - run: strip --strip-all ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_64bit_x86-64_popcnt
+      - run: zip ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_64bit_x86-64_popcnt.zip ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_64bit_x86-64_popcnt
+      - uses: JasonEtco/upload-to-release@master
+        with:
+          args: ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_64bit_x86-64_popcnt.zip application/octet-stream
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          
+  release_linux_64bit_x86-64_popcnt_bmi2:
+    name: Linux 64-bit x86-64 POPCNT BMI2
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: x86_64-unknown-linux-gnu
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: rustc
+          args: --release --target=x86_64-unknown-linux-gnu -- -C target-feature=+popcnt,+bmi,+bmi2
+      - uses: thebongy/version-check@v1
+        with:
+          file: Cargo.toml
+          tagFormat: ${version}
+        id: version_check
+      - run: mv target/x86_64-unknown-linux-gnu/release/${{env.CRATE_NAME}} ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_64bit_x86-64_popcnt_bmi2
+      - run: strip --strip-all ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_64bit_x86-64_popcnt_bmi2
+      - run: zip ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_64bit_x86-64_popcnt_bmi2.zip ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_64bit_x86-64_popcnt_bmi2
+      - uses: JasonEtco/upload-to-release@master
+        with:
+          args: ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_64bit_x86-64_popcnt_bmi2.zip application/octet-stream
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+  release_linux_32bit_arm:
+    name: Linux 32-bit ARM
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: arm-unknown-linux-gnueabi
+          override: true
+      - run: sudo apt-get update && sudo apt-get install gcc-arm-linux-gnueabi -y
+      - uses: actions-rs/cargo@v1
+        with:
+          command: rustc
+          args: --release --target=arm-unknown-linux-gnueabi -- -C linker=arm-linux-gnueabi-gcc
+      - uses: thebongy/version-check@v1
+        with:
+          file: Cargo.toml
+          tagFormat: ${version}
+        id: version_check
+      - run: mv target/arm-unknown-linux-gnueabi/release/${{env.CRATE_NAME}} ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_32bit_arm
+      - run: arm-linux-gnueabi-strip --strip-all ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_32bit_arm
+      - run: zip ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_32bit_arm.zip ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_32bit_arm
+      - uses: JasonEtco/upload-to-release@master
+        with:
+          args: ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_32bit_arm.zip application/octet-stream
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      
+  release_linux_64bit_aarch64:
+    name: Linux 64-bit AArch64
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: aarch64-unknown-linux-gnu
+          override: true
+      - run: sudo apt-get update && sudo apt-get install gcc-aarch64-linux-gnu -y
+      - uses: actions-rs/cargo@v1
+        with:
+          command: rustc
+          args: --release --target=aarch64-unknown-linux-gnu -- -C linker=aarch64-linux-gnu-gcc
+      - uses: thebongy/version-check@v1
+        with:
+          file: Cargo.toml
+          tagFormat: ${version}
+        id: version_check
+      - run: mv target/aarch64-unknown-linux-gnu/release/${{env.CRATE_NAME}} ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_64bit_aarch64
+      - run: aarch64-linux-gnu-strip --strip-all ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_64bit_aarch64
+      - run: zip ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_64bit_aarch64.zip ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_64bit_aarch64
+      - uses: JasonEtco/upload-to-release@master
+        with:
+          args: ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_linux_64bit_aarch64.zip application/octet-stream
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
