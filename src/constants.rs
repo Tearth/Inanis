@@ -17,3 +17,5 @@ pub const RANK_E: u64 = 0x000000FF00000000;
 pub const RANK_F: u64 = 0x0000FF0000000000;
 pub const RANK_G: u64 = 0x00FF000000000000;
 pub const RANK_H: u64 = 0xFF00000000000000;
+
+pub const EDGE: u64 = 0xff818181818181ff;
