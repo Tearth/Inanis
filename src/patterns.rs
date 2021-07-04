@@ -55,14 +55,11 @@ fn patterns_generate_diagonals() {
             let mut result = 0u64;
 
             for direction in [(1, 1), (-1, 1), (1, -1), (-1, -1)] {
-                let mut current = (field_index % 8, field_index / 8);
-                let mut next = (current.0 + direction.0, current.1 + direction.1);
+                let mut current = (field_index % 8 + direction.0, field_index / 8 + direction.1);
 
-                while next.0 >= 0 && next.0 <= 7 && next.1 >= 0 && next.1 <= 7 {
-                    current = next;
-                    result = result | (1u64 << (current.0 + current.1 * 8));
-
-                    next = (current.0 + direction.0, current.1 + direction.1);
+                while current.0 >= 0 && current.0 <= 7 && current.1 >= 0 && current.1 <= 7 {
+                    result |= 1u64 << (current.0 + current.1 * 8);
+                    current = (current.0 + direction.0, current.1 + direction.1);
                 }
             }
 
