@@ -4,7 +4,7 @@ use crate::patterns::*;
 use arr_macro::arr;
 
 #[rustfmt::skip]
-static MAGIC_ROOK_SHIFTS: [i32; 64] =
+static MAGIC_ROOK_SHIFTS: [u8; 64] =
 [
     12, 11, 11, 11, 11, 11, 11, 12,
     11, 10, 10, 10, 10, 10, 10, 11,
@@ -17,7 +17,7 @@ static MAGIC_ROOK_SHIFTS: [i32; 64] =
 ];
 
 #[rustfmt::skip]
-static MAGIC_BISHOP_SHIFTS: [i32; 64] =
+static MAGIC_BISHOP_SHIFTS: [u8; 64] =
 [
     6, 5, 5, 5, 5, 5, 5, 6,
     5, 5, 5, 5, 5, 5, 5, 5,
@@ -165,7 +165,7 @@ static MAGIC_BISHOP_NUMBERS: [u64; 64] = [
 
 struct MagicField {
     pub mask: u64,
-    pub shift: i32,
+    pub shift: u8,
     pub magic_number: u64,
     pub attacks: Vec<u64>,
 }
@@ -185,30 +185,10 @@ static mut MAGIC_ROOK_FIELDS: [MagicField; 64] = arr!(MagicField::new(); 64);
 static mut MAGIC_BISHOP_FIELDS: [MagicField; 64] = arr!(MagicField::new(); 64);
 
 pub fn magic_init() {
-    let _test01 = magic_get_permutation(0x1010106e101000, 0);
-    let _test02 = magic_get_permutation(0x1010106e101000, 1);
-    let _test03 = magic_get_permutation(0x1010106e101000, 2);
-    let _test04 = magic_get_permutation(0x1010106e101000, 3);
-    let _test05 = magic_get_permutation(0x1010106e101000, 4);
-    let _test06 = magic_get_permutation(0x1010106e101000, 5);
-    let _test07 = magic_get_permutation(0x1010106e101000, 6);
-
-    let _test08 = magic_get_rook_attacks(0x10300001001000, 28);
-    let _test09 = magic_get_bishop_attacks(0x10300001001000, 28);
-    let _test10 = magic_get_rook_attacks(0x10300001001000, 0);
-    let _test11 = magic_get_bishop_attacks(0x10300001001000, 0);
-
     for index in 0..64 {
         magic_apply_rook_number_for_field(index);
-    }
-
-    for index in 0..64 {
         magic_apply_bishop_number_for_field(index);
     }
-
-    let x1 = magic_get_rook_moves(0x101000040, 0);
-    let x2 = magic_get_bishop_moves(0x8000200102000000, 18);
-    let x3 = magic_get_rook_moves(0x101000040, 0);
 }
 
 pub fn magic_generate_rook_number_for_field(field_index: i32) -> u64 {
@@ -267,7 +247,7 @@ pub fn magic_get_bishop_moves(bitboard: u64, field_index: i32) -> u64 {
     }
 }
 
-fn magic_generate_number(shift: i32, count: i32, permutations: &Vec<u64>, attacks: &Vec<u64>) -> u64 {
+fn magic_generate_number(shift: u8, count: i32, permutations: &Vec<u64>, attacks: &Vec<u64>) -> u64 {
     let mut final_attacks = Vec::with_capacity(count as usize);
     final_attacks.resize(count as usize, 0);
 
@@ -358,7 +338,7 @@ fn magic_apply_bishop_number_for_field(field_index: i32) {
 }
 
 fn magic_apply_number_for_field(
-    shift: i32,
+    shift: u8,
     count: i32,
     mask: u64,
     permutations: &Vec<u64>,
