@@ -22,7 +22,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: rustc
-          args: --release --target=i686-pc-windows-gnu
+          args: --release --bin ina --target=i686-pc-windows-gnu
       - uses: thebongy/version-check@v1
         with:
           file: Cargo.toml
@@ -52,7 +52,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: rustc
-          args: --release --target=x86_64-pc-windows-gnu
+          args: --release --bin ina --target=x86_64-pc-windows-gnu
       - uses: thebongy/version-check@v1
         with:
           file: Cargo.toml
@@ -82,7 +82,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: rustc
-          args: --release --target=x86_64-pc-windows-gnu -- -C target-feature=+popcnt
+          args: --release --bin ina --target=x86_64-pc-windows-gnu -- -C target-feature=+popcnt
       - uses: thebongy/version-check@v1
         with:
           file: Cargo.toml
@@ -112,7 +112,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: rustc
-          args: --release --target=x86_64-pc-windows-gnu -- -C target-feature=+popcnt,+bmi,+bmi2
+          args: --release --bin ina --target=x86_64-pc-windows-gnu -- -C target-feature=+popcnt,+bmi,+bmi2
       - uses: thebongy/version-check@v1
         with:
           file: Cargo.toml
@@ -142,7 +142,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: rustc
-          args: --release --target=i686-unknown-linux-gnu -- -C linker=i686-linux-gnu-gcc
+          args: --release --bin ina --target=i686-unknown-linux-gnu -- -C linker=i686-linux-gnu-gcc
       - uses: thebongy/version-check@v1
         with:
           file: Cargo.toml
@@ -171,7 +171,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: rustc
-          args: --release --target=x86_64-unknown-linux-gnu
+          args: --release --bin ina --target=x86_64-unknown-linux-gnu
       - uses: thebongy/version-check@v1
         with:
           file: Cargo.toml
@@ -200,7 +200,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: rustc
-          args: --release --target=x86_64-unknown-linux-gnu -- -C target-feature=+popcnt
+          args: --release --bin ina --target=x86_64-unknown-linux-gnu -- -C target-feature=+popcnt
       - uses: thebongy/version-check@v1
         with:
           file: Cargo.toml
@@ -229,7 +229,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: rustc
-          args: --release --target=x86_64-unknown-linux-gnu -- -C target-feature=+popcnt,+bmi,+bmi2
+          args: --release --bin ina --target=x86_64-unknown-linux-gnu -- -C target-feature=+popcnt,+bmi,+bmi2
       - uses: thebongy/version-check@v1
         with:
           file: Cargo.toml
@@ -259,7 +259,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: rustc
-          args: --release --target=arm-unknown-linux-gnueabi -- -C linker=arm-linux-gnueabi-gcc
+          args: --release --bin ina --target=arm-unknown-linux-gnueabi -- -C linker=arm-linux-gnueabi-gcc
       - uses: thebongy/version-check@v1
         with:
           file: Cargo.toml
@@ -289,7 +289,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: rustc
-          args: --release --target=aarch64-unknown-linux-gnu -- -C linker=aarch64-linux-gnu-gcc
+          args: --release --bin ina --target=aarch64-unknown-linux-gnu -- -C linker=aarch64-linux-gnu-gcc
       - uses: thebongy/version-check@v1
         with:
           file: Cargo.toml

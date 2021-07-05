@@ -4,7 +4,7 @@
         {
             "label": "cargo build",
             "type": "shell",
-            "command": "cargo rustc --target=x86_64-pc-windows-msvc -- -C target-feature=+bmi,+bmi2,+popcnt --emit asm",
+            "command": "cargo rustc --bin ina --target=x86_64-pc-windows-msvc -- -C target-feature=+bmi,+bmi2,+popcnt -C llvm-args=-x86-asm-syntax=intel --emit asm",
             "args": [],
             "group": {
                 "kind": "build",
@@ -15,7 +15,7 @@
         {
             "label": "cargo build release windows",
             "type": "shell",
-            "command": "cargo rustc --release --target=x86_64-pc-windows-msvc -- -C target-feature=+bmi,bmi2,+popcnt --emit asm",
+            "command": "cargo rustc --bin ina --release --target=x86_64-pc-windows-msvc -- -C target-feature=+bmi,bmi2,+popcnt -C llvm-args=-x86-asm-syntax=intel --emit asm",
             "args": [],
             "group": {
                 "kind": "build",
@@ -26,7 +26,7 @@
         {
             "label": "cargo build release linux",
             "type": "shell",
-            "command": "cargo rustc --release --target=x86_64-unknown-linux-musl -- -C linker=rust-lld --emit asm",
+            "command": "cargo rustc --bin ina --release --target=x86_64-unknown-linux-musl -- -C linker=rust-lld --emit asm",
             "args": [],
             "group": {
                 "kind": "build",
