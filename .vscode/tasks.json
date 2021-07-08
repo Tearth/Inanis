@@ -33,6 +33,20 @@
                 "isDefault": true
             },
             "problemMatcher": []
+        },
+        {
+            "label": "build and run release windows",
+            "type": "shell",
+            "command": "${workspaceFolder}/target/x86_64-pc-windows-msvc/release/ina.exe",
+            "args": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [],
+            "dependsOn": [
+                "cargo build release windows"
+            ]
         }
     ]
 }
