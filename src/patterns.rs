@@ -41,10 +41,11 @@ fn generate_files() {
         }
     }
 }
+
 fn generate_ranks() {
     unsafe {
         for field_index in 0..64 {
-            RANK_PATTERNS[field_index] = (0xff << 8 * (field_index / 8)) & !(1u64 << field_index);
+            RANK_PATTERNS[field_index] = (0xff << (8 * (field_index / 8))) & !(1u64 << field_index);
         }
     }
 }

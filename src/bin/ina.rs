@@ -7,9 +7,9 @@ fn main() {
     ina::movegen::init();
 
     let diff = Utc::now() - now;
-    println!("");
+    println!();
     println!("Time: {} ms", diff.num_milliseconds());
-    println!("");
+    println!();
 
     let _test1 = ina::patterns::get_file(10);
     let _test2 = ina::patterns::get_rank(20);
@@ -18,6 +18,4 @@ fn main() {
     let _test5 = ina::patterns::get_box(5);
 
     println!("WAH");
-
-    loop {}
 }

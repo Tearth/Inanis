@@ -261,12 +261,10 @@ pub fn generate_bishop_number_for_field(field_index: usize) -> u64 {
     generate_magic_number(shift, &permutations, &attacks)
 }
 
-fn generate_magic_number(shift: u8, permutations: &Vec<u64>, attacks: &Vec<u64>) -> u64 {
+fn generate_magic_number(shift: u8, permutations: &[u64], attacks: &[u64]) -> u64 {
     let count = 1 << shift;
+    let mut hashed_attacks = vec![0; count];
     let mut magic_number: u64;
-
-    let mut hashed_attacks = Vec::with_capacity(count as usize);
-    hashed_attacks.resize(count as usize, 0);
 
     loop {
         magic_number = fastrand::u64(1..u64::MAX) & fastrand::u64(1..u64::MAX) & fastrand::u64(1..u64::MAX);
@@ -344,7 +342,7 @@ fn apply_bishop_number_for_field(field_index: usize) {
     }
 }
 
-fn apply_number_for_field(permutations: &Vec<u64>, attacks: &Vec<u64>, field: &mut MagicField) {
+fn apply_number_for_field(permutations: &[u64], attacks: &[u64], field: &mut MagicField) {
     let count = 1 << field.shift;
 
     field.attacks = Vec::with_capacity(count as usize);
@@ -355,8 +353,8 @@ fn apply_number_for_field(permutations: &Vec<u64>, attacks: &Vec<u64>, field: &m
         let permutation_attacks = attacks[index as usize];
 
         let hash = permutation.wrapping_mul(field.number) >> (64 - field.shift);
-        debug_assert!(attacks[hash as usize] != 0);
 
+        debug_assert!(field.attacks[hash as usize] == 0);
         field.attacks[hash as usize] = permutation_attacks;
     }
 }
