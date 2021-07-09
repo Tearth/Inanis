@@ -29,7 +29,7 @@ static BISHOP_SHIFTS: [u8; 64] =
     6, 5, 5, 5, 5, 5, 5, 6
 ];
 
-static ROOK_NUMBERS: [u64; 64] = [
+static ROOK_MAGIC_NUMBERS: [u64; 64] = [
     2413929538783315984,
     1170945936180973568,
     36063983556362632,
@@ -96,7 +96,7 @@ static ROOK_NUMBERS: [u64; 64] = [
     2323860433544422402,
 ];
 
-static BISHOP_NUMBERS: [u64; 64] = [
+static BISHOP_MAGIC_NUMBERS: [u64; 64] = [
     18018831217729569,
     7566619154406457857,
     5769265629886676992,
@@ -166,7 +166,7 @@ static BISHOP_NUMBERS: [u64; 64] = [
 struct MagicField {
     pub mask: u64,
     pub shift: u8,
-    pub number: u64,
+    pub magic: u64,
     pub attacks: Vec<u64>,
 }
 
@@ -175,7 +175,7 @@ impl MagicField {
         MagicField {
             mask: 0,
             shift: 0,
-            number: 0,
+            magic: 0,
             attacks: Vec::new(),
         }
     }
@@ -186,8 +186,8 @@ static mut BISHOP_FIELDS: [MagicField; 64] = arr!(MagicField::new(); 64);
 
 pub fn init() {
     for index in 0..64 {
-        apply_rook_number_for_field(index);
-        apply_bishop_number_for_field(index);
+        apply_rook_magic_for_field(index);
+        apply_bishop_magic_for_field(index);
     }
 }
 
@@ -202,7 +202,7 @@ pub fn get_king_moves(field_index: usize) -> u64 {
 pub fn get_rook_moves(bitboard: u64, field_index: usize) -> u64 {
     unsafe {
         let mut hash = bitboard & ROOK_FIELDS[field_index].mask;
-        hash = hash.wrapping_mul(ROOK_FIELDS[field_index].number);
+        hash = hash.wrapping_mul(ROOK_FIELDS[field_index].magic);
         hash >>= 64 - ROOK_FIELDS[field_index].shift;
 
         ROOK_FIELDS[field_index].attacks[hash as usize]
@@ -212,7 +212,7 @@ pub fn get_rook_moves(bitboard: u64, field_index: usize) -> u64 {
 pub fn get_bishop_moves(bitboard: u64, field_index: usize) -> u64 {
     unsafe {
         let mut hash = bitboard & BISHOP_FIELDS[field_index].mask;
-        hash = hash.wrapping_mul(BISHOP_FIELDS[field_index].number);
+        hash = hash.wrapping_mul(BISHOP_FIELDS[field_index].magic);
         hash >>= 64 - BISHOP_FIELDS[field_index].shift;
 
         BISHOP_FIELDS[field_index].attacks[hash as usize]
@@ -292,7 +292,7 @@ fn generate_magic_number(shift: u8, permutations: &[u64], attacks: &[u64]) -> u6
     magic_number
 }
 
-fn apply_rook_number_for_field(field_index: usize) {
+fn apply_rook_magic_for_field(field_index: usize) {
     unsafe {
         let shift = ROOK_SHIFTS[field_index];
         let mask = get_rook_mask(field_index);
@@ -311,13 +311,13 @@ fn apply_rook_number_for_field(field_index: usize) {
         let mut field = &mut ROOK_FIELDS[field_index];
         field.shift = shift;
         field.mask = mask;
-        field.number = ROOK_NUMBERS[field_index];
+        field.magic = ROOK_MAGIC_NUMBERS[field_index];
 
-        apply_number_for_field(&permutations, &attacks, &mut field)
+        apply_magic_for_field(&permutations, &attacks, &mut field)
     }
 }
 
-fn apply_bishop_number_for_field(field_index: usize) {
+fn apply_bishop_magic_for_field(field_index: usize) {
     unsafe {
         let shift = BISHOP_SHIFTS[field_index];
         let mask = get_bishop_mask(field_index);
@@ -336,13 +336,13 @@ fn apply_bishop_number_for_field(field_index: usize) {
         let mut field = &mut ROOK_FIELDS[field_index];
         field.shift = shift;
         field.mask = mask;
-        field.number = BISHOP_NUMBERS[field_index];
+        field.magic = BISHOP_MAGIC_NUMBERS[field_index];
 
-        apply_number_for_field(&permutations, &attacks, &mut field)
+        apply_magic_for_field(&permutations, &attacks, &mut field)
     }
 }
 
-fn apply_number_for_field(permutations: &[u64], attacks: &[u64], field: &mut MagicField) {
+fn apply_magic_for_field(permutations: &[u64], attacks: &[u64], field: &mut MagicField) {
     let count = 1 << field.shift;
 
     field.attacks = Vec::with_capacity(count as usize);
@@ -352,7 +352,7 @@ fn apply_number_for_field(permutations: &[u64], attacks: &[u64], field: &mut Mag
         let permutation = permutations[index as usize];
         let permutation_attacks = attacks[index as usize];
 
-        let hash = permutation.wrapping_mul(field.number) >> (64 - field.shift);
+        let hash = permutation.wrapping_mul(field.magic) >> (64 - field.shift);
 
         debug_assert!(field.attacks[hash as usize] == 0);
         field.attacks[hash as usize] = permutation_attacks;
