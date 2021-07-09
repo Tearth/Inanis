@@ -17,5 +17,10 @@ fn main() {
     let _test4 = ina::patterns::get_jumps(4);
     let _test5 = ina::patterns::get_box(5);
 
+    for i in 0..10000 {
+        let _x = ina::movegen::get_bishop_moves(i, (i % 64) as usize);
+        println!("get_bishop_moves{}", _x);
+    }
+
     println!("WAH");
 }

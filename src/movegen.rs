@@ -199,23 +199,23 @@ pub fn get_king_moves(field_index: usize) -> u64 {
     get_box(field_index)
 }
 
-pub fn get_rook_moves(bitboard: u64, field_index: usize) -> u64 {
+pub fn get_rook_moves(mut bitboard: u64, field_index: usize) -> u64 {
     unsafe {
-        let mut hash = bitboard & ROOK_FIELDS[field_index].mask;
-        hash = hash.wrapping_mul(ROOK_FIELDS[field_index].magic);
-        hash >>= 64 - ROOK_FIELDS[field_index].shift;
+        bitboard &= ROOK_FIELDS[field_index].mask;
+        bitboard = bitboard.wrapping_mul(ROOK_FIELDS[field_index].magic);
+        bitboard >>= 64 - ROOK_FIELDS[field_index].shift;
 
-        ROOK_FIELDS[field_index].attacks[hash as usize]
+        ROOK_FIELDS[field_index].attacks[bitboard as usize]
     }
 }
 
-pub fn get_bishop_moves(bitboard: u64, field_index: usize) -> u64 {
+pub fn get_bishop_moves(mut bitboard: u64, field_index: usize) -> u64 {
     unsafe {
-        let mut hash = bitboard & BISHOP_FIELDS[field_index].mask;
-        hash = hash.wrapping_mul(BISHOP_FIELDS[field_index].magic);
-        hash >>= 64 - BISHOP_FIELDS[field_index].shift;
+        bitboard &= BISHOP_FIELDS[field_index].mask;
+        bitboard = bitboard.wrapping_mul(BISHOP_FIELDS[field_index].magic);
+        bitboard >>= 64 - BISHOP_FIELDS[field_index].shift;
 
-        BISHOP_FIELDS[field_index].attacks[hash as usize]
+        BISHOP_FIELDS[field_index].attacks[bitboard as usize]
     }
 }
 

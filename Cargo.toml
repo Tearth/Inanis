@@ -5,12 +5,16 @@ authors = ["Paweł Osikowski"]
 edition = "2018"
 
 [dependencies]
-arr_macro = "0.1.3"
-fastrand = "1.4.1"
-chrono = "0.4.19"
+arr_macro = { version = "0.1.3" }
+fastrand = { version = "1.4.1" }
+chrono = { version = "0.4.19" }
 
 [build-dependencies]
-chrono = "0.4.19"
+chrono = { version = "0.4.19" }
 
 [dev-dependencies]
-criterion = "0.3.4"
+criterion = { version = "0.3.4", features = ["html_reports"] }
+
+[[bench]]
+name = "movegen_benches"
+harness = false
