@@ -333,7 +333,7 @@ fn apply_bishop_magic_for_field(field_index: usize) {
             attacks.push(get_bishop_attacks(permutation, field_index));
         }
 
-        let mut field = &mut ROOK_FIELDS[field_index];
+        let mut field = &mut BISHOP_FIELDS[field_index];
         field.shift = shift;
         field.mask = mask;
         field.magic = BISHOP_MAGIC_NUMBERS[field_index];
