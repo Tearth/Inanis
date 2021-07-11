@@ -1,4 +1,4 @@
-use crate::movegen;
+use crate::{movegen, perft};
 use chrono::Utc;
 use std::{io, process};
 
@@ -24,6 +24,7 @@ pub fn run() {
         match trimmed.as_str() {
             "help" => handle_help(),
             "magic" => handle_magic(),
+            "perft" => handle_perft(split),
             "wah" => handle_wah(),
             "quit" => handle_quit(),
             _ => handle_unknown_command(),
@@ -34,6 +35,7 @@ pub fn run() {
 fn handle_help() {
     println!("List of available commands:");
     println!("  magic - generate magic numbers");
+    println!("  perft d - run perft test with d depth");
     println!("  quit - close the application");
 }
 
@@ -54,6 +56,23 @@ fn handle_magic() {
 
     let diff = (Utc::now() - now).num_milliseconds();
     println!("Done! Magic numbers generated in {} ms", diff);
+}
+
+fn handle_perft(input: Vec<&str>) {
+    if input.len() < 2 {
+        println!("Depth parameter not found");
+        return;
+    }
+
+    let depth: u32 = match input[1].trim().parse() {
+        Ok(result) => result,
+        Err(_) => {
+            println!("Invalid depth parameter");
+            return;
+        }
+    };
+
+    perft::run(depth);
 }
 
 fn handle_wah() {

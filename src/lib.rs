@@ -1,7 +1,15 @@
-#![allow(clippy::needless_range_loop, clippy::identity_op, clippy::let_and_return)]
+#![allow(
+    clippy::needless_range_loop,
+    clippy::identity_op,
+    clippy::let_and_return,
+    clippy::uninit_assumed_init
+)]
 
+pub mod board;
 pub mod constants;
 pub mod helpers;
 pub mod movegen;
+pub mod movescan;
 pub mod patterns;
+pub mod perft;
 pub mod terminal;

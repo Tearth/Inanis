@@ -1,5 +1,5 @@
 pub fn get_lsb(value: u64) -> u64 {
-    ((value as i64) & -(value as i64)) as u64
+    value & value.wrapping_neg()
 }
 
 pub fn pop_lsb(value: u64) -> u64 {
