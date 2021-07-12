@@ -1,16 +1,28 @@
-use crate::{board::*, movescan::*};
+use crate::{board::*, common::*, movescan::*};
 
-pub fn run(depth: u32) {
-    let board = Bitboard::new();
+pub fn perft(depth: i32) -> u32 {
+    let mut board = Bitboard::new();
+    let count = perft_internal(depth, &mut board);
+
+    count
+}
+
+fn perft_internal(depth: i32, board: &mut Bitboard) -> u32 {
+    if depth <= 0 {
+        return 1;
+    }
 
     let mut moves = [Move::new(0, 0, MoveFlags::Quiet); 218];
+    let moves_count = board.get_moves(&mut moves);
 
-    let mut index = 0;
-    index = scan_pawn_moves(&board, Color::Black, &mut moves, index);
-    index = scan_knight_moves(&board, Color::Black, &mut moves, index);
-    index = scan_bishop_moves(&board, Color::Black, &mut moves, index);
-    index = scan_rook_moves(&board, Color::Black, &mut moves, index);
-    index = scan_queen_moves(&board, Color::Black, &mut moves, index);
-    index = scan_king_moves(&board, Color::Black, &mut moves, index);
-    let x = 10;
+    let mut count = 0;
+    for i in 0..moves_count {
+        let r#move = moves[i];
+
+        board.make_move(&r#move);
+        count += perft_internal(depth - 1, board);
+        board.undo_move(&r#move);
+    }
+
+    count
 }

@@ -6,7 +6,7 @@
 )]
 
 pub mod board;
-pub mod constants;
+pub mod common;
 pub mod helpers;
 pub mod movegen;
 pub mod movescan;

@@ -64,7 +64,7 @@ fn handle_perft(input: Vec<&str>) {
         return;
     }
 
-    let depth: u32 = match input[1].trim().parse() {
+    let depth: i32 = match input[1].trim().parse() {
         Ok(result) => result,
         Err(_) => {
             println!("Invalid depth parameter");
@@ -72,7 +72,7 @@ fn handle_perft(input: Vec<&str>) {
         }
     };
 
-    perft::run(depth);
+    perft::perft(depth);
 }
 
 fn handle_wah() {

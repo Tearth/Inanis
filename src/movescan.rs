@@ -1,4 +1,4 @@
-use crate::{board::*, constants::*, helpers::*, movegen::*};
+use crate::{board::*, common::*, helpers::*, movegen::*};
 
 pub enum MoveFlags {
     Quiet,
@@ -21,7 +21,7 @@ pub enum MoveFlags {
 
 #[derive(Copy, Clone)]
 pub struct Move {
-    data: u16,
+    pub data: u16,
 }
 
 impl Move {
@@ -62,11 +62,12 @@ impl Move {
     }
 }
 
-pub fn scan_knight_moves(board: &Bitboard, color: Color, moves: &mut [Move], mut index: usize) -> usize {
-    let mut pieces = board.pieces[color as usize][Piece::Knight as usize];
+pub fn scan_knight_moves(board: &Bitboard, color: u8, moves: &mut [Move], mut index: usize) -> usize {
+    let mut pieces = board.pieces[color as usize][KNIGHT as usize];
     let enemy_color = match color {
-        Color::White => Color::Black,
-        Color::Black => Color::White,
+        WHITE => BLACK,
+        BLACK => WHITE,
+        _ => u8::MAX,
     };
 
     while pieces != 0 {
@@ -94,10 +95,11 @@ pub fn scan_knight_moves(board: &Bitboard, color: Color, moves: &mut [Move], mut
 }
 
 pub fn scan_bishop_moves(board: &Bitboard, color: Color, moves: &mut [Move], mut index: usize) -> usize {
-    let mut pieces = board.pieces[color as usize][Piece::Bishop as usize];
+    let mut pieces = board.pieces[color as usize][BISHOP as usize];
     let enemy_color = match color {
-        Color::White => Color::Black,
-        Color::Black => Color::White,
+        WHITE => BLACK,
+        BLACK => WHITE,
+        _ => u8::MAX,
     };
 
     while pieces != 0 {
@@ -105,7 +107,7 @@ pub fn scan_bishop_moves(board: &Bitboard, color: Color, moves: &mut [Move], mut
         let from_field_index = bit_scan(from_field);
         pieces = pop_lsb(pieces);
 
-        let occupancy = board.occupancy[Color::White as usize] | board.occupancy[Color::Black as usize];
+        let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
         let mut piece_moves = get_bishop_moves(occupancy, from_field_index as usize) & !board.occupancy[color as usize];
         while piece_moves != 0 {
             let to_field = get_lsb(piece_moves);
@@ -126,10 +128,11 @@ pub fn scan_bishop_moves(board: &Bitboard, color: Color, moves: &mut [Move], mut
 }
 
 pub fn scan_rook_moves(board: &Bitboard, color: Color, moves: &mut [Move], mut index: usize) -> usize {
-    let mut pieces = board.pieces[color as usize][Piece::Rook as usize];
+    let mut pieces = board.pieces[color as usize][ROOK as usize];
     let enemy_color = match color {
-        Color::White => Color::Black,
-        Color::Black => Color::White,
+        WHITE => BLACK,
+        BLACK => WHITE,
+        _ => u8::MAX,
     };
 
     while pieces != 0 {
@@ -137,7 +140,7 @@ pub fn scan_rook_moves(board: &Bitboard, color: Color, moves: &mut [Move], mut i
         let from_field_index = bit_scan(from_field);
         pieces = pop_lsb(pieces);
 
-        let occupancy = board.occupancy[Color::White as usize] | board.occupancy[Color::Black as usize];
+        let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
         let mut piece_moves = get_rook_moves(occupancy, from_field_index as usize) & !board.occupancy[color as usize];
         while piece_moves != 0 {
             let to_field = get_lsb(piece_moves);
@@ -158,10 +161,11 @@ pub fn scan_rook_moves(board: &Bitboard, color: Color, moves: &mut [Move], mut i
 }
 
 pub fn scan_queen_moves(board: &Bitboard, color: Color, moves: &mut [Move], mut index: usize) -> usize {
-    let mut pieces = board.pieces[color as usize][Piece::Queen as usize];
+    let mut pieces = board.pieces[color as usize][QUEEN as usize];
     let enemy_color = match color {
-        Color::White => Color::Black,
-        Color::Black => Color::White,
+        WHITE => BLACK,
+        BLACK => WHITE,
+        _ => u8::MAX,
     };
 
     while pieces != 0 {
@@ -169,7 +173,7 @@ pub fn scan_queen_moves(board: &Bitboard, color: Color, moves: &mut [Move], mut 
         let from_field_index = bit_scan(from_field);
         pieces = pop_lsb(pieces);
 
-        let occupancy = board.occupancy[Color::White as usize] | board.occupancy[Color::Black as usize];
+        let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
         let mut piece_moves = get_queen_moves(occupancy, from_field_index as usize) & !board.occupancy[color as usize];
         while piece_moves != 0 {
             let to_field = get_lsb(piece_moves);
@@ -190,10 +194,11 @@ pub fn scan_queen_moves(board: &Bitboard, color: Color, moves: &mut [Move], mut 
 }
 
 pub fn scan_king_moves(board: &Bitboard, color: Color, moves: &mut [Move], mut index: usize) -> usize {
-    let mut pieces = board.pieces[color as usize][Piece::King as usize];
+    let mut pieces = board.pieces[color as usize][KING as usize];
     let enemy_color = match color {
-        Color::White => Color::Black,
-        Color::Black => Color::White,
+        WHITE => BLACK,
+        BLACK => WHITE,
+        _ => u8::MAX,
     };
 
     while pieces != 0 {
@@ -224,8 +229,8 @@ pub fn scan_pawn_moves(board: &Bitboard, color: Color, moves: &mut [Move], mut i
     index = scan_pawn_moves_single_push(board, color, moves, index);
     index = scan_pawn_moves_double_push(board, color, moves, index);
 
-    let left_shift = if color == Color::White { 9 } else { 7 };
-    let right_shift = if color == Color::White { 7 } else { 9 };
+    let left_shift = if color == WHITE { 9 } else { 7 };
+    let right_shift = if color == WHITE { 7 } else { 9 };
     index = scan_pawn_moves_diagonal_attacks(board, color, left_shift, FILE_A, moves, index);
     index = scan_pawn_moves_diagonal_attacks(board, color, right_shift, FILE_H, moves, index);
 
@@ -233,21 +238,18 @@ pub fn scan_pawn_moves(board: &Bitboard, color: Color, moves: &mut [Move], mut i
 }
 
 fn scan_pawn_moves_single_push(board: &Bitboard, color: Color, moves: &mut [Move], mut index: usize) -> usize {
-    let pieces = board.pieces[color as usize][Piece::Pawn as usize];
-    let enemy_color = match color {
-        Color::White => Color::Black,
-        Color::Black => Color::White,
-    };
+    let pieces = board.pieces[color as usize][PAWN as usize];
 
     let shift: i8;
     let mut target_fields: u64;
 
-    if color == Color::White {
+    let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
+    if color == WHITE {
         shift = 8;
-        target_fields = (pieces << 8) & !board.occupancy[enemy_color as usize];
+        target_fields = (pieces << 8) & !occupancy;
     } else {
         shift = -8;
-        target_fields = (pieces >> 8) & !board.occupancy[enemy_color as usize];
+        target_fields = (pieces >> 8) & !occupancy;
     }
 
     while target_fields != 0 {
@@ -255,12 +257,11 @@ fn scan_pawn_moves_single_push(board: &Bitboard, color: Color, moves: &mut [Move
         let to_field_index = bit_scan(to_field);
         target_fields = pop_lsb(target_fields);
 
-        let mut flags = MoveFlags::Quiet;
-        if (to_field & board.occupancy[enemy_color as usize]) != 0 {
-            flags = MoveFlags::Capture;
-        }
-
-        moves[index] = Move::new(((to_field_index as i8) - shift) as u8, to_field_index as u8, flags);
+        moves[index] = Move::new(
+            ((to_field_index as i8) - shift) as u8,
+            to_field_index as u8,
+            MoveFlags::Quiet,
+        );
         index += 1;
     }
 
@@ -268,23 +269,25 @@ fn scan_pawn_moves_single_push(board: &Bitboard, color: Color, moves: &mut [Move
 }
 
 fn scan_pawn_moves_double_push(board: &Bitboard, color: Color, moves: &mut [Move], mut index: usize) -> usize {
-    let pieces = board.pieces[color as usize][Piece::Pawn as usize];
+    let pieces = board.pieces[color as usize][PAWN as usize];
     let enemy_color = match color {
-        Color::White => Color::Black,
-        Color::Black => Color::White,
+        WHITE => BLACK,
+        BLACK => WHITE,
+        _ => u8::MAX,
     };
 
     let shift: i8;
     let mut target_fields: u64;
 
-    if color == Color::White {
+    let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
+    if color == WHITE {
         shift = 16;
-        target_fields = (pieces << 8) & !board.occupancy[enemy_color as usize];
-        target_fields = (target_fields << 8) & !board.occupancy[enemy_color as usize];
+        target_fields = ((pieces & RANK_B) << 8) & !occupancy;
+        target_fields = (target_fields << 8) & !occupancy;
     } else {
         shift = -16;
-        target_fields = (pieces >> 8) & !board.occupancy[enemy_color as usize];
-        target_fields = (target_fields >> 8) & !board.occupancy[enemy_color as usize];
+        target_fields = ((pieces & RANK_G) >> 8) & !occupancy;
+        target_fields = (target_fields >> 8) & !occupancy;
     }
 
     while target_fields != 0 {
@@ -311,16 +314,17 @@ fn scan_pawn_moves_diagonal_attacks(
     moves: &mut [Move],
     mut index: usize,
 ) -> usize {
-    let pieces = board.pieces[color as usize][Piece::Pawn as usize];
+    let pieces = board.pieces[color as usize][PAWN as usize];
     let enemy_color = match color {
-        Color::White => Color::Black,
-        Color::Black => Color::White,
+        WHITE => BLACK,
+        BLACK => WHITE,
+        _ => u8::MAX,
     };
 
     let shift: i8;
     let mut target_fields: u64;
 
-    if color == Color::White {
+    if color == WHITE {
         shift = direction;
         target_fields = ((pieces & !forbidden_file) << direction) & board.occupancy[enemy_color as usize];
     } else {
