@@ -43,7 +43,7 @@ impl Bitboard {
 
             #[rustfmt::skip]
             occupancy: [
-                0xffff, 
+                0xffff,
                 0xffff000000000000
             ],
 
@@ -97,7 +97,7 @@ impl Bitboard {
                 self.remove_piece(to, captured_piece, enemy_color);
                 self.move_piece(from, to, piece, self.color_to_move);
             }
-            _ => panic!("Invalid value: flags={:?}", flags)
+            _ => panic!("Invalid value: flags={:?}", flags),
         }
 
         self.color_to_move = enemy_color;
@@ -125,7 +125,7 @@ impl Bitboard {
                 self.move_piece(to, from, piece, self.color_to_move);
                 self.add_piece(to, captured_piece, enemy_color);
             }
-            _ => panic!("Invalid value: flags={:?}", flags)
+            _ => panic!("Invalid value: flags={:?}", flags),
         }
     }
 
