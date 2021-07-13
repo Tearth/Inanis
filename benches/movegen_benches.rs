@@ -22,10 +22,10 @@ fn criterion_benchmark(c: &mut Criterion) {
         let mut field_index = 0;
 
         b.iter(|| {
-            movegen::get_bishop_moves(black_box(bitboard), black_box(field_index % 64));
-
             bitboard += 1;
             field_index += 1;
+
+            movegen::get_bishop_moves(black_box(bitboard), black_box(field_index % 64))
         })
     });
 }

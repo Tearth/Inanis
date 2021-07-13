@@ -64,7 +64,7 @@ fn handle_perft(input: Vec<&str>) {
         return;
     }
 
-    let depth: i32 = match input[1].trim().parse() {
+    let max_depth: i32 = match input[1].trim().parse() {
         Ok(result) => result,
         Err(_) => {
             println!("Invalid depth parameter");
@@ -72,7 +72,15 @@ fn handle_perft(input: Vec<&str>) {
         }
     };
 
-    perft::perft(depth);
+    for depth in 1..max_depth + 1 {
+        let now = Utc::now();
+        let count = perft::perft(depth);
+        let diff = (Utc::now() - now).num_milliseconds();
+
+        println!("Depth {}: {} in {} ms", depth, count, diff);
+    }
+
+    println!("Perft done!");
 }
 
 fn handle_wah() {

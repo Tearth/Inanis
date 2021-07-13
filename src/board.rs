@@ -46,14 +46,14 @@ impl Bitboard {
         }
     }
 
-    pub fn get_moves(&self, mut moves: &mut [Move]) -> usize {
+    pub fn get_moves<const color: u8>(&self, mut moves: &mut [Move]) -> usize {
         let mut index = 0;
-        index = scan_pawn_moves(&self, self.color_to_move, &mut moves, index);
-        index = scan_knight_moves(&self, self.color_to_move, &mut moves, index);
-        index = scan_bishop_moves(&self, self.color_to_move, &mut moves, index);
-        index = scan_rook_moves(&self, self.color_to_move, &mut moves, index);
-        index = scan_queen_moves(&self, self.color_to_move, &mut moves, index);
-        index = scan_king_moves(&self, self.color_to_move, &mut moves, index);
+        index = scan_pawn_moves::<color>(&self, &mut moves, index);
+        index = scan_piece_moves::<color, KNIGHT>(&self, &mut moves, index);
+        index = scan_piece_moves::<color, BISHOP>(&self, &mut moves, index);
+        index = scan_piece_moves::<color, ROOK>(&self, &mut moves, index);
+        index = scan_piece_moves::<color, QUEEN>(&self, &mut moves, index);
+        index = scan_piece_moves::<color, KING>(&self, &mut moves, index);
 
         index
     }
