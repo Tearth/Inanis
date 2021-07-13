@@ -74,7 +74,7 @@ fn handle_perft(input: Vec<&str>) {
 
     for depth in 1..max_depth + 1 {
         let now = Utc::now();
-        let count = perft::perft(depth);
+        let count = perft::run(depth);
         let diff = (Utc::now() - now).num_milliseconds();
 
         println!("Depth {}: {} in {} ms", depth, count, diff);

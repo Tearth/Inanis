@@ -5,6 +5,9 @@
     clippy::uninit_assumed_init
 )]
 
+#[macro_use]
+extern crate bitflags;
+
 pub mod board;
 pub mod common;
 pub mod helpers;

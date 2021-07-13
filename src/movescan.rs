@@ -1,22 +1,24 @@
 use crate::{board::*, common::*, helpers::*, movegen::*};
 
-pub enum MoveFlags {
-    Quiet,
-    DoublePush,
-    KingCastle,
-    QueenCastle,
-    Capture,
-    EnPassant,
-    Undefined1,
-    Undefined2,
-    KnightPromotion,
-    BishopPromotion,
-    RookPromotion,
-    QueenPromotion,
-    KnightPromotionCapture,
-    BishopPromotionCapture,
-    RookPromotionCapture,
-    QueenPromotionCapture,
+bitflags! {
+    pub struct MoveFlags: u8 {
+        const QUIET = 0;
+        const DOUBLE_PUSH = 1;
+        const KING_CASTLE = 2;
+        const QUEEN_CASTLE = 3;
+        const CAPTURE = 4;
+        const EN_PASSANT = 5;
+        const UNDEFINED1 = 6;
+        const UNDEFINED2 = 7;
+        const KNIGHT_PROMOTION = 8;
+        const BISHOP_PROMOTION = 9;
+        const ROOK_PROMOTION = 10;
+        const QUEEN_PROMOTION = 11;
+        const KNIGHT_PROMOTION_CAPTURE = 12;
+        const BISHOP_PROMOTION_CAPTURE = 13;
+        const ROOK_PROMOTION_CAPTURE = 14;
+        const QUEEN_PROMOTION_CAPTURE = 15;
+    }
 }
 
 #[derive(Copy, Clone)]
@@ -27,7 +29,7 @@ pub struct Move {
 impl Move {
     pub fn new(from: u8, to: u8, flags: MoveFlags) -> Move {
         Move {
-            data: ((flags as u16) << 12) | ((to as u16) << 6) | (from as u16),
+            data: ((flags.bits as u16) << 12) | ((to as u16) << 6) | (from as u16),
         }
     }
 
@@ -40,25 +42,7 @@ impl Move {
     }
 
     pub fn get_flags(&self) -> MoveFlags {
-        match (self.data >> 12) & 0xf {
-            0 => MoveFlags::Quiet,
-            1 => MoveFlags::DoublePush,
-            2 => MoveFlags::KingCastle,
-            3 => MoveFlags::QueenCastle,
-            4 => MoveFlags::Capture,
-            5 => MoveFlags::EnPassant,
-            6 => MoveFlags::Undefined1,
-            7 => MoveFlags::Undefined2,
-            8 => MoveFlags::KnightPromotion,
-            9 => MoveFlags::BishopPromotion,
-            10 => MoveFlags::RookPromotion,
-            11 => MoveFlags::QueenPromotion,
-            12 => MoveFlags::KnightPromotionCapture,
-            13 => MoveFlags::BishopPromotionCapture,
-            14 => MoveFlags::RookPromotionCapture,
-            15 => MoveFlags::QueenPromotionCapture,
-            _ => panic!("Invalid move flag"),
-        }
+        unsafe { MoveFlags::from_bits_unchecked(((self.data >> 12) & 0xf) as u8) }
     }
 }
 
@@ -78,7 +62,7 @@ pub fn scan_piece_moves<const COLOR: u8, const PIECE: u8>(board: &Bitboard, move
             ROOK => get_rook_moves(occupancy, from_field_index as usize),
             QUEEN => get_queen_moves(occupancy, from_field_index as usize),
             KING => get_king_moves(from_field_index as usize),
-            _ => panic!("Invalid value, PIECE={}", PIECE),
+            _ => panic!("Invalid value: PIECE={}", PIECE),
         } & !board.occupancy[COLOR as usize];
 
         while piece_moves != 0 {
@@ -86,12 +70,10 @@ pub fn scan_piece_moves<const COLOR: u8, const PIECE: u8>(board: &Bitboard, move
             let to_field_index = bit_scan(to_field);
             piece_moves = pop_lsb(piece_moves);
 
-            let mut flags = MoveFlags::Quiet;
-            if (to_field & board.occupancy[enemy_color as usize]) != 0 {
-                flags = MoveFlags::Capture;
-            }
+            let capture = (to_field & board.occupancy[enemy_color as usize]) != 0;
+            let flags = if capture { MoveFlags::CAPTURE } else { MoveFlags::QUIET };
 
-            moves[index] = Move::new(from_field_index as u8, to_field_index as u8, flags);
+            moves[index] = Move::new(from_field_index, to_field_index, flags);
             index += 1;
         }
     }
@@ -102,42 +84,32 @@ pub fn scan_piece_moves<const COLOR: u8, const PIECE: u8>(board: &Bitboard, move
 pub fn scan_pawn_moves<const COLOR: u8>(board: &Bitboard, moves: &mut [Move], mut index: usize) -> usize {
     index = scan_pawn_moves_single_push::<COLOR>(board, moves, index);
     index = scan_pawn_moves_double_push::<COLOR>(board, moves, index);
-
-    let left_shift = if COLOR == WHITE { 9 } else { 7 };
-    let right_shift = if COLOR == WHITE { 7 } else { 9 };
-    index = scan_pawn_moves_diagonal_attacks::<COLOR>(board, left_shift, FILE_A, moves, index);
-    index = scan_pawn_moves_diagonal_attacks::<COLOR>(board, right_shift, FILE_H, moves, index);
+    index = scan_pawn_moves_diagonal_attacks::<COLOR, LEFT>(board, moves, index);
+    index = scan_pawn_moves_diagonal_attacks::<COLOR, RIGHT>(board, moves, index);
 
     index
 }
 
 fn scan_pawn_moves_single_push<const COLOR: u8>(board: &Bitboard, moves: &mut [Move], mut index: usize) -> usize {
     let pieces = board.pieces[COLOR as usize][PAWN as usize];
-
-    let shift: i8;
-    let mut target_fields: u64;
     let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
 
-    match COLOR {
-        WHITE => {
-            shift = 8;
-            target_fields = (pieces << 8) & !occupancy;
-        }
-        BLACK => {
-            shift = -8;
-            target_fields = (pieces >> 8) & !occupancy;
-        }
+    let shift = 8 - 16 * (COLOR as i8);
+    let mut target_fields = match COLOR {
+        WHITE => (pieces << 8),
+        BLACK => (pieces >> 8),
         _ => {
-            panic!("Invalid value, COLOR={}", COLOR);
+            panic!("Invalid value: COLOR={}", COLOR);
         }
-    };
+    } & !occupancy;
 
     while target_fields != 0 {
         let to_field = get_lsb(target_fields);
         let to_field_index = bit_scan(to_field);
+        let from_field_index = ((to_field_index as i8) - shift) as u8;
         target_fields = pop_lsb(target_fields);
 
-        moves[index] = Move::new(((to_field_index as i8) - shift) as u8, to_field_index as u8, MoveFlags::Quiet);
+        moves[index] = Move::new(from_field_index, to_field_index, MoveFlags::QUIET);
         index += 1;
     }
 
@@ -146,71 +118,56 @@ fn scan_pawn_moves_single_push<const COLOR: u8>(board: &Bitboard, moves: &mut [M
 
 fn scan_pawn_moves_double_push<const COLOR: u8>(board: &Bitboard, moves: &mut [Move], mut index: usize) -> usize {
     let pieces = board.pieces[COLOR as usize][PAWN as usize];
-
-    let shift: i8;
-    let mut target_fields: u64;
     let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
 
-    match COLOR {
-        WHITE => {
-            shift = 16;
-            target_fields = ((pieces & RANK_B) << 8) & !occupancy;
-            target_fields = (target_fields << 8) & !occupancy;
-        }
-        BLACK => {
-            shift = -16;
-            target_fields = ((pieces & RANK_G) >> 8) & !occupancy;
-            target_fields = (target_fields >> 8) & !occupancy;
-        }
+    let shift = 16 - 32 * (COLOR as i8);
+    let mut target_fields = match COLOR {
+        WHITE => ((((pieces & RANK_B) << 8) & !occupancy) << 8),
+        BLACK => ((((pieces & RANK_G) >> 8) & !occupancy) >> 8),
         _ => {
-            panic!("Invalid value, COLOR={}", COLOR);
+            panic!("Invalid value: COLOR={}", COLOR);
         }
-    };
+    } & !occupancy;
 
     while target_fields != 0 {
         let to_field = get_lsb(target_fields);
         let to_field_index = bit_scan(to_field);
+        let from_field_index = ((to_field_index as i8) - shift) as u8;
         target_fields = pop_lsb(target_fields);
 
-        moves[index] = Move::new(((to_field_index as i8) - shift) as u8, to_field_index as u8, MoveFlags::DoublePush);
+        moves[index] = Move::new(from_field_index, to_field_index, MoveFlags::DOUBLE_PUSH);
         index += 1;
     }
 
     index
 }
 
-fn scan_pawn_moves_diagonal_attacks<const COLOR: u8>(
-    board: &Bitboard,
-    direction: i8,
-    forbidden_file: u64,
-    moves: &mut [Move],
-    mut index: usize,
-) -> usize {
+fn scan_pawn_moves_diagonal_attacks<const COLOR: u8, const DIR: u8>(board: &Bitboard, moves: &mut [Move], mut index: usize) -> usize {
     let pieces = board.pieces[COLOR as usize][PAWN as usize];
 
-    let shift: i8;
-    let mut target_fields: u64;
+    let forbidden_file = FILE_A >> (COLOR * 8);
+    let shift = 9 - (COLOR ^ DIR) * 2;
 
-    match COLOR {
-        WHITE => {
-            shift = direction;
-            target_fields = ((pieces & !forbidden_file) << direction) & board.occupancy[BLACK as usize];
-        }
-        BLACK => {
-            shift = -direction;
-            target_fields = ((pieces & !forbidden_file) >> direction) & board.occupancy[WHITE as usize];
-        }
+    let mut target_fields = match COLOR {
+        WHITE => ((pieces & !forbidden_file) << shift) & board.occupancy[BLACK as usize],
+        BLACK => ((pieces & !forbidden_file) >> shift) & board.occupancy[WHITE as usize],
         _ => {
-            panic!("Invalid value, COLOR={}", COLOR);
+            panic!("Invalid value: COLOR={}", COLOR);
         }
     };
+
+    let mut from_shift = shift as i8;
+    if COLOR == BLACK {
+        from_shift = -(shift as i8);
+    }
 
     while target_fields != 0 {
         let to_field = get_lsb(target_fields);
         let to_field_index = bit_scan(to_field);
+        let from_field_index = ((to_field_index as i8) - from_shift) as u8;
         target_fields = pop_lsb(target_fields);
 
-        moves[index] = Move::new(((to_field_index as i8) - shift) as u8, to_field_index as u8, MoveFlags::Capture);
+        moves[index] = Move::new(from_field_index, to_field_index, MoveFlags::CAPTURE);
         index += 1;
     }
 

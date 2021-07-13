@@ -293,53 +293,49 @@ fn generate_magic_number(shift: u8, permutations: &[u64], attacks: &[u64]) -> u6
 }
 
 fn apply_rook_magic_for_field(field_index: usize) {
-    unsafe {
-        let shift = ROOK_SHIFTS[field_index];
-        let mask = get_rook_mask(field_index);
-        let count = 1 << shift;
+    let shift = ROOK_SHIFTS[field_index];
+    let mask = get_rook_mask(field_index);
+    let count = 1 << shift;
 
-        let mut permutations = Vec::with_capacity(count as usize);
-        let mut attacks = Vec::with_capacity(count as usize);
+    let mut permutations = Vec::with_capacity(count as usize);
+    let mut attacks = Vec::with_capacity(count as usize);
 
-        for index in 0..count {
-            let permutation = get_permutation(mask, index as u64);
+    for index in 0..count {
+        let permutation = get_permutation(mask, index as u64);
 
-            permutations.push(permutation);
-            attacks.push(get_rook_attacks(permutation, field_index));
-        }
-
-        let mut field = &mut ROOK_FIELDS[field_index];
-        field.shift = shift;
-        field.mask = mask;
-        field.magic = ROOK_MAGIC_NUMBERS[field_index];
-
-        apply_magic_for_field(&permutations, &attacks, &mut field)
+        permutations.push(permutation);
+        attacks.push(get_rook_attacks(permutation, field_index));
     }
+
+    let mut field = unsafe { &mut ROOK_FIELDS[field_index] };
+    field.shift = shift;
+    field.mask = mask;
+    field.magic = ROOK_MAGIC_NUMBERS[field_index];
+
+    apply_magic_for_field(&permutations, &attacks, &mut field)
 }
 
 fn apply_bishop_magic_for_field(field_index: usize) {
-    unsafe {
-        let shift = BISHOP_SHIFTS[field_index];
-        let mask = get_bishop_mask(field_index);
-        let count = 1 << shift;
+    let shift = BISHOP_SHIFTS[field_index];
+    let mask = get_bishop_mask(field_index);
+    let count = 1 << shift;
 
-        let mut permutations = Vec::with_capacity(count as usize);
-        let mut attacks = Vec::with_capacity(count as usize);
+    let mut permutations = Vec::with_capacity(count as usize);
+    let mut attacks = Vec::with_capacity(count as usize);
 
-        for index in 0..count {
-            let permutation = get_permutation(mask, index as u64);
+    for index in 0..count {
+        let permutation = get_permutation(mask, index as u64);
 
-            permutations.push(permutation);
-            attacks.push(get_bishop_attacks(permutation, field_index));
-        }
-
-        let mut field = &mut BISHOP_FIELDS[field_index];
-        field.shift = shift;
-        field.mask = mask;
-        field.magic = BISHOP_MAGIC_NUMBERS[field_index];
-
-        apply_magic_for_field(&permutations, &attacks, &mut field)
+        permutations.push(permutation);
+        attacks.push(get_bishop_attacks(permutation, field_index));
     }
+
+    let mut field = unsafe { &mut BISHOP_FIELDS[field_index] };
+    field.shift = shift;
+    field.mask = mask;
+    field.magic = BISHOP_MAGIC_NUMBERS[field_index];
+
+    apply_magic_for_field(&permutations, &attacks, &mut field)
 }
 
 fn apply_magic_for_field(permutations: &[u64], attacks: &[u64], field: &mut MagicField) {
@@ -404,10 +400,7 @@ fn get_bishop_attacks(bitboard: u64, field_index: usize) -> u64 {
 
 fn get_attacks(bitboard: u64, field_index: usize, direction: (isize, isize)) -> u64 {
     let mut result = 0u64;
-    let mut current = (
-        (field_index as isize) % 8 + direction.0,
-        (field_index as isize) / 8 + direction.1,
-    );
+    let mut current = ((field_index as isize) % 8 + direction.0, (field_index as isize) / 8 + direction.1);
 
     while current.0 >= 0 && current.0 <= 7 && current.1 >= 0 && current.1 <= 7 {
         result |= 1u64 << (current.0 + current.1 * 8);

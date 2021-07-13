@@ -1,16 +1,17 @@
 #![allow(warnings)]
 
-pub type Color = u8;
 pub const WHITE: u8 = 0;
 pub const BLACK: u8 = 1;
 
-pub type Piece = u8;
 pub const PAWN: u8 = 0;
 pub const KNIGHT: u8 = 1;
 pub const BISHOP: u8 = 2;
 pub const ROOK: u8 = 3;
 pub const QUEEN: u8 = 4;
 pub const KING: u8 = 5;
+
+pub const LEFT: u8 = 0;
+pub const RIGHT: u8 = 1;
 
 pub const FILE_A: u64 = 0x8080808080808080;
 pub const FILE_B: u64 = 0x4040404040404040;
