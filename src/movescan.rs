@@ -156,7 +156,7 @@ fn scan_pawn_moves_diagonal_attacks<const COLOR: u8, const DIR: u8>(board: &Bitb
         _ => {
             panic!("Invalid value: COLOR={}", COLOR);
         }
-    } & board.occupancy[enemy_color as usize];
+    } & (board.occupancy[enemy_color as usize] | board.en_passant);
 
     while target_fields != 0 {
         let to_field = get_lsb(target_fields);
@@ -164,7 +164,10 @@ fn scan_pawn_moves_diagonal_attacks<const COLOR: u8, const DIR: u8>(board: &Bitb
         let from_field_index = ((to_field_index as i8) - signed_shift) as u8;
         target_fields = pop_lsb(target_fields);
 
-        moves[index] = Move::new(from_field_index, to_field_index, MoveFlags::CAPTURE);
+        let en_passant = (to_field & board.en_passant) != 0;
+        let flags = if en_passant { MoveFlags::EN_PASSANT } else { MoveFlags::CAPTURE };
+
+        moves[index] = Move::new(from_field_index, to_field_index, flags);
         index += 1;
     }
 

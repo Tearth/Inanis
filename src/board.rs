@@ -5,7 +5,9 @@ pub struct Bitboard {
     pub occupancy: [u64; 2],
     pub piece_table: [u8; 64],
     pub color_to_move: u8,
-    pub captured_pieces: Vec<u8>,
+    pub en_passant: u64,
+    pub captured_pieces_stack: Vec<u8>,
+    pub en_passant_stack: Vec<u64>,
 }
 
 impl Bitboard {
@@ -16,7 +18,9 @@ impl Bitboard {
                 occupancy: [0, 2],
                 piece_table: [0; 64],
                 color_to_move: WHITE,
-                captured_pieces: Vec::new(),
+                en_passant: 0,
+                captured_pieces_stack: Vec::new(),
+                en_passant_stack: Vec::new(),
             };
         }
 
@@ -60,7 +64,9 @@ impl Bitboard {
             ],
 
             color_to_move: WHITE,
-            captured_pieces: Vec::with_capacity(16),
+            en_passant: 0,
+            captured_pieces_stack: Vec::with_capacity(16),
+            en_passant_stack: Vec::with_capacity(16),
         }
     }
 
@@ -83,19 +89,27 @@ impl Bitboard {
         let piece = self.get_piece(from);
         let enemy_color = self.color_to_move ^ 1;
 
+        self.en_passant_stack.push(self.en_passant);
+        self.en_passant = 0;
+
         match flags {
             MoveFlags::QUIET => {
                 self.move_piece(from, to, piece, self.color_to_move);
             }
             MoveFlags::DOUBLE_PUSH => {
                 self.move_piece(from, to, piece, self.color_to_move);
+                self.en_passant = 1u64 << ((to as i8) + 8 * ((self.color_to_move as i8) * 2 - 1));
             }
             MoveFlags::CAPTURE => {
                 let captured_piece = self.get_piece(to);
-                self.captured_pieces.push(captured_piece);
+                self.captured_pieces_stack.push(captured_piece);
 
                 self.remove_piece(to, captured_piece, enemy_color);
                 self.move_piece(from, to, piece, self.color_to_move);
+            }
+            MoveFlags::EN_PASSANT => {
+                self.move_piece(from, to, piece, self.color_to_move);
+                self.remove_piece(((to as i8) + 8 * ((self.color_to_move as i8) * 2 - 1)) as u8, PAWN, enemy_color);
             }
             _ => panic!("Invalid value: flags={:?}", flags),
         }
@@ -120,13 +134,19 @@ impl Bitboard {
                 self.move_piece(to, from, piece, self.color_to_move);
             }
             MoveFlags::CAPTURE => {
-                let captured_piece = self.captured_pieces.pop().unwrap();
+                let captured_piece = self.captured_pieces_stack.pop().unwrap();
 
                 self.move_piece(to, from, piece, self.color_to_move);
                 self.add_piece(to, captured_piece, enemy_color);
             }
+            MoveFlags::EN_PASSANT => {
+                self.move_piece(to, from, piece, self.color_to_move);
+                self.add_piece(((to as i8) + 8 * ((self.color_to_move as i8) * 2 - 1)) as u8, PAWN, enemy_color);
+            }
             _ => panic!("Invalid value: flags={:?}", flags),
         }
+
+        self.en_passant = self.en_passant_stack.pop().unwrap();
     }
 
     pub fn is_king_checked<const COLOR: u8>(&self) -> bool {
@@ -188,8 +208,8 @@ impl Bitboard {
         let field = 1u64 << field_index;
         let potential_enemy_pawns = king_attacks & self.pieces[enemy_color as usize][PAWN as usize];
         let attacking_enemy_pawns = match COLOR {
-            WHITE => field & (potential_enemy_pawns >> 7) | (potential_enemy_pawns >> 9),
-            BLACK => field & (potential_enemy_pawns << 7) | (potential_enemy_pawns << 9),
+            WHITE => field & ((potential_enemy_pawns >> 7) | (potential_enemy_pawns >> 9)),
+            BLACK => field & ((potential_enemy_pawns << 7) | (potential_enemy_pawns << 9)),
             _ => panic!("Invalid value: COLOR={}", COLOR),
         };
 
