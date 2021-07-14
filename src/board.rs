@@ -1,4 +1,4 @@
-use crate::{common::*, movescan::*};
+use crate::{common::*, helpers::*, movegen::*, movescan::*};
 
 pub struct Bitboard {
     pub pieces: [[u64; 6]; 2],
@@ -129,6 +129,10 @@ impl Bitboard {
         }
     }
 
+    pub fn is_king_checked<const COLOR: u8>(&self) -> bool {
+        self.is_field_attacked::<COLOR>(bit_scan(self.pieces[COLOR as usize][KING as usize]))
+    }
+
     fn get_piece(&self, field: u8) -> u8 {
         self.piece_table[field as usize]
     }
@@ -151,5 +155,48 @@ impl Bitboard {
 
         self.piece_table[to as usize] = self.piece_table[from as usize];
         self.piece_table[from as usize] = u8::MAX;
+    }
+
+    fn is_field_attacked<const COLOR: u8>(&self, field_index: u8) -> bool {
+        let enemy_color = COLOR ^ 1;
+        let occupancy = self.occupancy[WHITE as usize] | self.occupancy[BLACK as usize];
+
+        let rook_queen_attacks = get_rook_moves(occupancy, field_index as usize);
+        let enemy_rooks_queens = self.pieces[enemy_color as usize][ROOK as usize] | self.pieces[enemy_color as usize][QUEEN as usize];
+        if (rook_queen_attacks & enemy_rooks_queens) != 0 {
+            return true;
+        }
+
+        let bishop_queen_attacks = get_bishop_moves(occupancy, field_index as usize);
+        let enemy_bishops_queens = self.pieces[enemy_color as usize][BISHOP as usize] | self.pieces[enemy_color as usize][QUEEN as usize];
+        if (bishop_queen_attacks & enemy_bishops_queens) != 0 {
+            return true;
+        }
+
+        let knight_attacks = get_knight_moves(field_index as usize);
+        let enemy_knights = self.pieces[enemy_color as usize][KNIGHT as usize];
+        if (knight_attacks & enemy_knights) != 0 {
+            return true;
+        }
+
+        let king_attacks = get_king_moves(field_index as usize);
+        let enemy_kings = self.pieces[enemy_color as usize][KING as usize];
+        if (king_attacks & enemy_kings) != 0 {
+            return true;
+        }
+
+        let field = 1u64 << field_index;
+        let potential_enemy_pawns = king_attacks & self.pieces[enemy_color as usize][PAWN as usize];
+        let attacking_enemy_pawns = match COLOR {
+            WHITE => field & (potential_enemy_pawns >> 7) | (potential_enemy_pawns >> 9),
+            BLACK => field & (potential_enemy_pawns << 7) | (potential_enemy_pawns << 9),
+            _ => panic!("Invalid value: COLOR={}", COLOR),
+        };
+
+        if attacking_enemy_pawns != 0 {
+            return true;
+        }
+
+        false
     }
 }

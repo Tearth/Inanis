@@ -75,9 +75,10 @@ fn handle_perft(input: Vec<&str>) {
     for depth in 1..max_depth + 1 {
         let now = Utc::now();
         let count = perft::run(depth);
-        let diff = (Utc::now() - now).num_milliseconds();
+        let diff = ((Utc::now() - now).num_milliseconds() as f64) / 1000.0;
+        let mnps = ((count as f64) / 1000000.0) / diff;
 
-        println!("Depth {}: {} in {} ms", depth, count, diff);
+        println!("Depth {}: {} leafs in {:.2} s ({:.2} ML/s)", depth, count, diff, mnps);
     }
 
     println!("Perft done!");

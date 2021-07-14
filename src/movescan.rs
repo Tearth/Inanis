@@ -42,7 +42,7 @@ impl Move {
     }
 
     pub fn get_flags(&self) -> MoveFlags {
-        unsafe { MoveFlags::from_bits_unchecked(((self.data >> 12) & 0xf) as u8) }
+        unsafe { MoveFlags::from_bits_unchecked((self.data >> 12) as u8) }
     }
 }
 
@@ -144,27 +144,24 @@ fn scan_pawn_moves_double_push<const COLOR: u8>(board: &Bitboard, moves: &mut [M
 
 fn scan_pawn_moves_diagonal_attacks<const COLOR: u8, const DIR: u8>(board: &Bitboard, moves: &mut [Move], mut index: usize) -> usize {
     let pieces = board.pieces[COLOR as usize][PAWN as usize];
+    let enemy_color = COLOR ^ 1;
 
-    let forbidden_file = FILE_A >> (COLOR * 8);
+    let forbidden_file = FILE_A >> (DIR * 7);
     let shift = 9 - (COLOR ^ DIR) * 2;
+    let signed_shift = (shift as i8) - ((COLOR as i8) * 2 * (shift as i8));
 
     let mut target_fields = match COLOR {
-        WHITE => ((pieces & !forbidden_file) << shift) & board.occupancy[BLACK as usize],
-        BLACK => ((pieces & !forbidden_file) >> shift) & board.occupancy[WHITE as usize],
+        WHITE => ((pieces & !forbidden_file) << shift),
+        BLACK => ((pieces & !forbidden_file) >> shift),
         _ => {
             panic!("Invalid value: COLOR={}", COLOR);
         }
-    };
-
-    let mut from_shift = shift as i8;
-    if COLOR == BLACK {
-        from_shift = -(shift as i8);
-    }
+    } & board.occupancy[enemy_color as usize];
 
     while target_fields != 0 {
         let to_field = get_lsb(target_fields);
         let to_field_index = bit_scan(to_field);
-        let from_field_index = ((to_field_index as i8) - from_shift) as u8;
+        let from_field_index = ((to_field_index as i8) - signed_shift) as u8;
         target_fields = pop_lsb(target_fields);
 
         moves[index] = Move::new(from_field_index, to_field_index, MoveFlags::CAPTURE);
