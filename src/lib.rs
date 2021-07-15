@@ -2,7 +2,8 @@
     clippy::needless_range_loop,
     clippy::identity_op,
     clippy::let_and_return,
-    clippy::uninit_assumed_init
+    clippy::uninit_assumed_init,
+    clippy::nonminimal_bool
 )]
 
 #[macro_use]
