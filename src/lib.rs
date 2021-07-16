@@ -3,7 +3,8 @@
     clippy::identity_op,
     clippy::let_and_return,
     clippy::uninit_assumed_init,
-    clippy::nonminimal_bool
+    clippy::nonminimal_bool,
+    clippy::collapsible_if
 )]
 
 #[macro_use]

@@ -290,6 +290,16 @@ impl Bitboard {
         false
     }
 
+    pub fn are_fields_attacked<const COLOR: u8>(&self, field_indexes: &[u8]) -> bool {
+        for field_index in field_indexes {
+            if self.is_field_attacked::<COLOR>(*field_index) {
+                return true;
+            }
+        }
+
+        false
+    }
+
     pub fn is_king_checked<const COLOR: u8>(&self) -> bool {
         self.is_field_attacked::<COLOR>(bit_scan(self.pieces[COLOR as usize][KING as usize]))
     }

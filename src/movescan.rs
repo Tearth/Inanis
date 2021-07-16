@@ -81,27 +81,16 @@ pub fn scan_piece_moves<const COLOR: u8, const PIECE: u8>(board: &Bitboard, move
             match COLOR {
                 WHITE => {
                     let king_side_castling_rights = board.castling_rights.contains(CastlingRights::WHITE_SHORT_CASTLING);
-                    let queen_side_castling_rights = board.castling_rights.contains(CastlingRights::WHITE_LONG_CASTLING);
-
                     if king_side_castling_rights && (occupancy & 0x6) == 0 {
-                        let short_castling_fields_attacked = false
-                            || board.is_field_attacked::<COLOR>(1)
-                            || board.is_field_attacked::<COLOR>(2)
-                            || board.is_field_attacked::<COLOR>(3);
-
-                        if !short_castling_fields_attacked {
+                        if !board.are_fields_attacked::<COLOR>(&[3, 2, 1]) {
                             moves[index] = Move::new(3, 1, MoveFlags::SHORT_CASTLING);
                             index += 1;
                         }
                     }
 
+                    let queen_side_castling_rights = board.castling_rights.contains(CastlingRights::WHITE_LONG_CASTLING);
                     if queen_side_castling_rights && (occupancy & 0x70) == 0 {
-                        let long_castling_fields_attacked = false
-                            || board.is_field_attacked::<COLOR>(3)
-                            || board.is_field_attacked::<COLOR>(4)
-                            || board.is_field_attacked::<COLOR>(5);
-
-                        if !long_castling_fields_attacked {
+                        if !board.are_fields_attacked::<COLOR>(&[3, 4, 5]) {
                             moves[index] = Move::new(3, 5, MoveFlags::LONG_CASTLING);
                             index += 1;
                         }
@@ -109,28 +98,17 @@ pub fn scan_piece_moves<const COLOR: u8, const PIECE: u8>(board: &Bitboard, move
                 }
                 BLACK => {
                     let king_side_castling_rights = board.castling_rights.contains(CastlingRights::BLACK_SHORT_CASTLING);
-                    let queen_side_castling_rights = board.castling_rights.contains(CastlingRights::BLACK_LONG_CASTLING);
-
                     if king_side_castling_rights && (occupancy & 0x600000000000000) == 0 {
-                        let short_castling_fields_attacked = false
-                            || board.is_field_attacked::<COLOR>(59)
-                            || board.is_field_attacked::<COLOR>(58)
-                            || board.is_field_attacked::<COLOR>(57);
-
-                        if !short_castling_fields_attacked {
-                            moves[index] = Move::new(3, 1, MoveFlags::SHORT_CASTLING);
+                        if !board.are_fields_attacked::<COLOR>(&[59, 58, 57]) {
+                            moves[index] = Move::new(59, 57, MoveFlags::SHORT_CASTLING);
                             index += 1;
                         }
                     }
 
+                    let queen_side_castling_rights = board.castling_rights.contains(CastlingRights::BLACK_LONG_CASTLING);
                     if queen_side_castling_rights && (occupancy & 0x7000000000000000) == 0 {
-                        let long_castling_fields_attacked = false
-                            || board.is_field_attacked::<COLOR>(59)
-                            || board.is_field_attacked::<COLOR>(60)
-                            || board.is_field_attacked::<COLOR>(61);
-
-                        if !long_castling_fields_attacked {
-                            moves[index] = Move::new(3, 5, MoveFlags::LONG_CASTLING);
+                        if !board.are_fields_attacked::<COLOR>(&[59, 60, 61]) {
+                            moves[index] = Move::new(59, 61, MoveFlags::LONG_CASTLING);
                             index += 1;
                         }
                     }
