@@ -1,4 +1,4 @@
-use crate::{movegen, perft};
+use crate::{movegen, movescan::Move, perft};
 use chrono::Utc;
 use std::{io, process};
 
@@ -25,6 +25,7 @@ pub fn run() {
             "help" => handle_help(),
             "magic" => handle_magic(),
             "perft" => handle_perft(split),
+            "perftd" => handle_perftd(split),
             "wah" => handle_wah(),
             "quit" => handle_quit(),
             _ => handle_unknown_command(),
@@ -81,6 +82,33 @@ fn handle_perft(input: Vec<&str>) {
         println!("Depth {}: {} leafs in {:.2} s ({:.2} ML/s)", depth, count, diff, mnps);
     }
 
+    println!("Perft done!");
+}
+
+fn handle_perftd(input: Vec<&str>) {
+    if input.len() < 2 {
+        println!("Depth parameter not found");
+        return;
+    }
+
+    let depth: i32 = match input[1].trim().parse() {
+        Ok(result) => result,
+        Err(_) => {
+            println!("Invalid depth parameter");
+            return;
+        }
+    };
+
+    let result = perft::run_divided(depth, &input[2..]);
+    let mut total_leafs = 0;
+
+    for r#move in result {
+        println!("{}: {} leafs", r#move.0, r#move.1);
+        total_leafs += r#move.1;
+    }
+
+    println!();
+    println!("{} leafs total", total_leafs);
     println!("Perft done!");
 }
 

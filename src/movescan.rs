@@ -1,3 +1,5 @@
+use std::mem::MaybeUninit;
+
 use crate::{board::*, common::*, helpers::*, movegen::*};
 
 bitflags! {
@@ -31,6 +33,40 @@ impl Move {
         Move {
             data: ((flags.bits as u16) << 12) | ((to as u16) << 6) | (from as u16),
         }
+    }
+
+    pub fn from_text(text: &str, board: &Bitboard) -> Move {
+        let mut chars = text.chars();
+        let from = (7 - ((chars.next().unwrap() as u8) - b'a')) + 8 * ((chars.next().unwrap() as u8) - b'1');
+        let to = (7 - ((chars.next().unwrap() as u8) - b'a')) + 8 * ((chars.next().unwrap() as u8) - b'1');
+
+        let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
+        let moves_count = match board.color_to_move {
+            WHITE => board.get_moves::<WHITE>(&mut moves),
+            BLACK => board.get_moves::<BLACK>(&mut moves),
+            _ => panic!("Invalid value: board.color_to_move={}", board.color_to_move),
+        };
+
+        for r#move in &moves[0..moves_count] {
+            if r#move.get_from() == from && r#move.get_to() == to {
+                return *r#move;
+            }
+        }
+
+        panic!("Invalid move");
+    }
+
+    pub fn to_text(&self) -> String {
+        let from = self.get_from();
+        let to = self.get_to();
+
+        let mut result = Vec::new();
+        result.push(char::from(b'a' + (7 - from % 8)));
+        result.push(char::from(b'1' + from / 8));
+        result.push(char::from(b'a' + (7 - to % 8)));
+        result.push(char::from(b'1' + to / 8));
+
+        result.into_iter().collect()
     }
 
     pub fn get_from(&self) -> u8 {
