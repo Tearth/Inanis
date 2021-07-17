@@ -12,6 +12,7 @@ extern crate bitflags;
 
 pub mod board;
 pub mod common;
+pub mod fen;
 pub mod helpers;
 pub mod movegen;
 pub mod movescan;

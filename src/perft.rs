@@ -2,14 +2,14 @@ use crate::{board::*, common::*, movescan::*};
 use std::mem::MaybeUninit;
 
 pub fn run(depth: i32) -> u64 {
-    let mut board = Bitboard::new(false);
+    let mut board = Bitboard::new_default();
     let count = run_internal::<WHITE>(depth, &mut board);
 
     count
 }
 
 pub fn run_divided(depth: i32, premade_moves: &[&str]) -> Vec<(String, u64)> {
-    let mut board = Bitboard::new(false);
+    let mut board = Bitboard::new_default();
 
     for premade_move in premade_moves {
         let parsed_move = Move::from_text(premade_move.trim(), &board);

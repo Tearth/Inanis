@@ -1,4 +1,4 @@
-use crate::{common::*, helpers::*, movegen::*, movescan::*};
+use crate::{common::*, fen::fen_to_board, helpers::*, movegen::*, movescan::*};
 
 bitflags! {
     pub struct CastlingRights: u8 {
@@ -24,70 +24,33 @@ pub struct Bitboard {
     pub captured_pieces_stack: Vec<u8>,
     pub castling_rights_stack: Vec<CastlingRights>,
     pub en_passant_stack: Vec<u64>,
+    pub halfmove_clock: u32,
+    pub fullmove_number: u32,
 }
 
 impl Bitboard {
-    pub fn new(without_init: bool) -> Bitboard {
-        if without_init {
-            return Bitboard {
-                pieces: [[0; 6], [0; 6]],
-                occupancy: [0, 2],
-                piece_table: [0; 64],
-                color_to_move: WHITE,
-                castling_rights: CastlingRights::NONE,
-                en_passant: 0,
-                captured_pieces_stack: Vec::new(),
-                castling_rights_stack: Vec::new(),
-                en_passant_stack: Vec::new(),
-            };
-        }
-
+    pub fn new() -> Bitboard {
         Bitboard {
-            #[rustfmt::skip]
-            pieces: [
-                [
-                    0x000000000000ff00,
-                    0x0000000000000042,
-                    0x0000000000000024,
-                    0x0000000000000081,
-                    0x0000000000000010,
-                    0x0000000000000008,
-                ],
-                [
-                    0x00ff000000000000,
-                    0x4200000000000000,
-                    0x2400000000000000,
-                    0x8100000000000000,
-                    0x1000000000000000,
-                    0x0800000000000000,
-                ],
-            ],
-
-            #[rustfmt::skip]
-            occupancy: [
-                0xffff,
-                0xffff000000000000
-            ],
-
-            #[rustfmt::skip]
-            piece_table: [
-                3, 1, 2, 5, 4, 2, 1, 3,
-                0, 0, 0, 0, 0, 0, 0, 0,
-                u8::MAX, u8::MAX, u8::MAX, u8::MAX, u8::MAX, u8::MAX, u8::MAX, u8::MAX,
-                u8::MAX, u8::MAX, u8::MAX, u8::MAX, u8::MAX, u8::MAX, u8::MAX, u8::MAX,
-                u8::MAX, u8::MAX, u8::MAX, u8::MAX, u8::MAX, u8::MAX, u8::MAX, u8::MAX,
-                u8::MAX, u8::MAX, u8::MAX, u8::MAX, u8::MAX, u8::MAX, u8::MAX, u8::MAX,
-                0, 0, 0, 0, 0, 0, 0, 0,
-                3, 1, 2, 5, 4, 2, 1, 3,
-            ],
-
+            pieces: [[0; 6], [0; 6]],
+            occupancy: [0, 0],
+            piece_table: [u8::MAX; 64],
             color_to_move: WHITE,
-            castling_rights: CastlingRights::ALL,
+            castling_rights: CastlingRights::NONE,
             en_passant: 0,
             captured_pieces_stack: Vec::with_capacity(16),
             castling_rights_stack: Vec::with_capacity(16),
             en_passant_stack: Vec::with_capacity(16),
+            halfmove_clock: 0,
+            fullmove_number: 0,
         }
+    }
+
+    pub fn new_default() -> Bitboard {
+        Bitboard::new_from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+    }
+
+    pub fn new_from_fen(fen: &str) -> Bitboard {
+        fen_to_board(fen).unwrap()
     }
 
     pub fn get_moves<const COLOR: u8>(&self, mut moves: &mut [Move]) -> usize {
@@ -330,27 +293,33 @@ impl Bitboard {
         self.is_field_attacked::<COLOR>(bit_scan(self.pieces[COLOR as usize][KING as usize]))
     }
 
-    fn get_piece(&self, field: u8) -> u8 {
+    pub fn get_piece(&self, field: u8) -> u8 {
         self.piece_table[field as usize]
     }
 
-    fn add_piece(&mut self, field: u8, piece: u8, color: u8) {
+    pub fn add_piece(&mut self, field: u8, piece: u8, color: u8) {
         self.pieces[color as usize][piece as usize] |= 1u64 << field;
         self.occupancy[color as usize] |= 1u64 << field;
         self.piece_table[field as usize] = piece;
     }
 
-    fn remove_piece(&mut self, field: u8, piece: u8, color: u8) {
+    pub fn remove_piece(&mut self, field: u8, piece: u8, color: u8) {
         self.pieces[color as usize][piece as usize] &= !(1u64 << field);
         self.occupancy[color as usize] &= !(1u64 << field);
         self.piece_table[field as usize] = u8::MAX;
     }
 
-    fn move_piece(&mut self, from: u8, to: u8, piece: u8, color: u8) {
+    pub fn move_piece(&mut self, from: u8, to: u8, piece: u8, color: u8) {
         self.pieces[color as usize][piece as usize] ^= (1u64 << from) | (1u64 << to);
         self.occupancy[color as usize] ^= (1u64 << from) | (1u64 << to);
 
         self.piece_table[to as usize] = self.piece_table[from as usize];
         self.piece_table[from as usize] = u8::MAX;
+    }
+}
+
+impl Default for Bitboard {
+    fn default() -> Self {
+        Self::new()
     }
 }
