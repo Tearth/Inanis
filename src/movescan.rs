@@ -56,15 +56,16 @@ impl Move {
         panic!("Invalid move");
     }
 
-    pub fn to_text(&self) -> String {
+    pub fn to_text(self) -> String {
         let from = self.get_from();
         let to = self.get_to();
 
-        let mut result = Vec::new();
-        result.push(char::from(b'a' + (7 - from % 8)));
-        result.push(char::from(b'1' + from / 8));
-        result.push(char::from(b'a' + (7 - to % 8)));
-        result.push(char::from(b'1' + to / 8));
+        let result = vec![
+            char::from(b'a' + (7 - from % 8)),
+            char::from(b'1' + from / 8),
+            char::from(b'a' + (7 - to % 8)),
+            char::from(b'1' + to / 8),
+        ];
 
         result.into_iter().collect()
     }
@@ -79,6 +80,16 @@ impl Move {
 
     pub fn get_flags(&self) -> MoveFlags {
         unsafe { MoveFlags::from_bits_unchecked((self.data >> 12) as u8) }
+    }
+
+    pub fn get_promotion_piece(&self) -> u8 {
+        match self.get_flags() {
+            MoveFlags::KNIGHT_PROMOTION | MoveFlags::KNIGHT_PROMOTION_CAPTURE => KNIGHT,
+            MoveFlags::BISHOP_PROMOTION | MoveFlags::BISHOP_PROMOTION_CAPTURE => BISHOP,
+            MoveFlags::ROOK_PROMOTION | MoveFlags::ROOK_PROMOTION_CAPTURE => ROOK,
+            MoveFlags::QUEEN_PROMOTION | MoveFlags::QUEEN_PROMOTION_CAPTURE => QUEEN,
+            _ => panic!("Invalid promotion piece"),
+        }
     }
 }
 
@@ -179,6 +190,7 @@ fn scan_pawn_moves_single_push<const COLOR: u8>(board: &Bitboard, moves: &mut [M
     let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
 
     let shift = 8 - 16 * (COLOR as i8);
+    let promotion_line = 0xff00000000000000 >> (56 * (COLOR as u8));
     let mut target_fields = match COLOR {
         WHITE => (pieces << 8),
         BLACK => (pieces >> 8),
@@ -193,8 +205,16 @@ fn scan_pawn_moves_single_push<const COLOR: u8>(board: &Bitboard, moves: &mut [M
         let from_field_index = ((to_field_index as i8) - shift) as u8;
         target_fields = pop_lsb(target_fields);
 
-        moves[index] = Move::new(from_field_index, to_field_index, MoveFlags::QUIET);
-        index += 1;
+        if (to_field & promotion_line) != 0 {
+            moves[index + 0] = Move::new(from_field_index, to_field_index, MoveFlags::KNIGHT_PROMOTION);
+            moves[index + 1] = Move::new(from_field_index, to_field_index, MoveFlags::BISHOP_PROMOTION);
+            moves[index + 2] = Move::new(from_field_index, to_field_index, MoveFlags::ROOK_PROMOTION);
+            moves[index + 3] = Move::new(from_field_index, to_field_index, MoveFlags::QUEEN_PROMOTION);
+            index += 4;
+        } else {
+            moves[index] = Move::new(from_field_index, to_field_index, MoveFlags::QUIET);
+            index += 1;
+        }
     }
 
     index
@@ -233,6 +253,7 @@ fn scan_pawn_moves_diagonal_attacks<const COLOR: u8, const DIR: u8>(board: &Bitb
     let forbidden_file = FILE_A >> (DIR * 7);
     let shift = 9 - (COLOR ^ DIR) * 2;
     let signed_shift = (shift as i8) - ((COLOR as i8) * 2 * (shift as i8));
+    let promotion_line = 0xff00000000000000 >> (56 * (COLOR as u8));
 
     let mut target_fields = match COLOR {
         WHITE => ((pieces & !forbidden_file) << shift),
@@ -248,11 +269,19 @@ fn scan_pawn_moves_diagonal_attacks<const COLOR: u8, const DIR: u8>(board: &Bitb
         let from_field_index = ((to_field_index as i8) - signed_shift) as u8;
         target_fields = pop_lsb(target_fields);
 
-        let en_passant = (to_field & board.en_passant) != 0;
-        let flags = if en_passant { MoveFlags::EN_PASSANT } else { MoveFlags::CAPTURE };
+        if (to_field & promotion_line) != 0 {
+            moves[index + 0] = Move::new(from_field_index, to_field_index, MoveFlags::KNIGHT_PROMOTION_CAPTURE);
+            moves[index + 1] = Move::new(from_field_index, to_field_index, MoveFlags::BISHOP_PROMOTION_CAPTURE);
+            moves[index + 2] = Move::new(from_field_index, to_field_index, MoveFlags::ROOK_PROMOTION_CAPTURE);
+            moves[index + 3] = Move::new(from_field_index, to_field_index, MoveFlags::QUEEN_PROMOTION_CAPTURE);
+            index += 4;
+        } else {
+            let en_passant = (to_field & board.en_passant) != 0;
+            let flags = if en_passant { MoveFlags::EN_PASSANT } else { MoveFlags::CAPTURE };
 
-        moves[index] = Move::new(from_field_index, to_field_index, flags);
-        index += 1;
+            moves[index] = Move::new(from_field_index, to_field_index, flags);
+            index += 1;
+        }
     }
 
     index

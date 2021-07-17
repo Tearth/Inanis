@@ -154,7 +154,22 @@ impl Bitboard {
                 self.move_piece(from, to, piece, self.color_to_move);
                 self.remove_piece(((to as i8) + 8 * ((self.color_to_move as i8) * 2 - 1)) as u8, PAWN, enemy_color);
             }
-            _ => panic!("Invalid value: flags={:?}", flags),
+            _ => {
+                // Promotion bit set, coincidentally knight promotion is the same
+                if flags.contains(MoveFlags::KNIGHT_PROMOTION) {
+                    let promotion_piece = r#move.get_promotion_piece();
+
+                    if flags.contains(MoveFlags::CAPTURE) {
+                        let captured_piece = self.get_piece(to);
+                        self.captured_pieces_stack.push(captured_piece);
+
+                        self.remove_piece(to, captured_piece, enemy_color);
+                    }
+
+                    self.remove_piece(from, PAWN, self.color_to_move);
+                    self.add_piece(to, promotion_piece, self.color_to_move);
+                }
+            }
         }
 
         if piece == KING {
@@ -240,7 +255,18 @@ impl Bitboard {
                 self.move_piece(to, from, piece, self.color_to_move);
                 self.add_piece(((to as i8) + 8 * ((self.color_to_move as i8) * 2 - 1)) as u8, PAWN, enemy_color);
             }
-            _ => panic!("Invalid value: flags={:?}", flags),
+            _ => {
+                // Promotion bit set, coincidentally knight promotion is the same
+                if flags.contains(MoveFlags::KNIGHT_PROMOTION) {
+                    self.add_piece(from, PAWN, self.color_to_move);
+                    self.remove_piece(to, piece, self.color_to_move);
+
+                    if flags.contains(MoveFlags::CAPTURE) {
+                        let captured_piece = self.captured_pieces_stack.pop().unwrap();
+                        self.add_piece(to, captured_piece, enemy_color);
+                    }
+                }
+            }
         }
 
         self.en_passant = self.en_passant_stack.pop().unwrap();

@@ -1,4 +1,4 @@
-use crate::{movegen, movescan::Move, perft};
+use crate::{movegen, perft};
 use chrono::Utc;
 use std::{io, process};
 
