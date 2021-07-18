@@ -22,11 +22,12 @@ pub struct Bitboard {
     pub pieces: [[u64; 6]; 2],
     pub occupancy: [u64; 2],
     pub piece_table: [u8; 64],
-    pub color_to_move: u8,
+    pub active_color: u8,
     pub castling_rights: CastlingRights,
     pub en_passant: u64,
-    pub halfmove_clock: u32,
+    pub halfmove_clock: u16,
     pub fullmove_number: u32,
+    pub halfmove_clocks_stack: Vec<u16>,
     pub captured_pieces_stack: Vec<u8>,
     pub castling_rights_stack: Vec<CastlingRights>,
     pub en_passant_stack: Vec<u64>,
@@ -38,11 +39,12 @@ impl Bitboard {
             pieces: [[0; 6], [0; 6]],
             occupancy: [0, 0],
             piece_table: [u8::MAX; 64],
-            color_to_move: WHITE,
+            active_color: WHITE,
             castling_rights: CastlingRights::NONE,
             en_passant: 0,
             halfmove_clock: 0,
             fullmove_number: 0,
+            halfmove_clocks_stack: Vec::with_capacity(16),
             captured_pieces_stack: Vec::with_capacity(16),
             castling_rights_stack: Vec::with_capacity(16),
             en_passant_stack: Vec::with_capacity(16),
@@ -57,187 +59,40 @@ impl Bitboard {
         fen::fen_to_board(fen)
     }
 
-    pub fn get_moves<const COLOR: u8>(&self, mut moves: &mut [Move]) -> usize {
-        let mut index = 0;
-        index = movescan::scan_pawn_moves::<COLOR>(&self, &mut moves, index);
-        index = movescan::scan_piece_moves::<COLOR, KNIGHT>(&self, &mut moves, index);
-        index = movescan::scan_piece_moves::<COLOR, BISHOP>(&self, &mut moves, index);
-        index = movescan::scan_piece_moves::<COLOR, ROOK>(&self, &mut moves, index);
-        index = movescan::scan_piece_moves::<COLOR, QUEEN>(&self, &mut moves, index);
-        index = movescan::scan_piece_moves::<COLOR, KING>(&self, &mut moves, index);
-
-        index
+    pub fn get_moves<const COLOR: u8>(&self, moves: &mut [Move]) -> usize {
+        self.get_moves_internal::<COLOR>(moves)
     }
 
-    pub fn make_move(&mut self, r#move: &Move) {
-        let from = r#move.get_from();
-        let to = r#move.get_to();
-        let flags = r#move.get_flags();
-        let piece = self.get_piece(from);
-        let enemy_color = self.color_to_move ^ 1;
-
-        self.castling_rights_stack.push(self.castling_rights);
-        self.en_passant_stack.push(self.en_passant);
-        self.en_passant = 0;
-
-        match flags {
-            MoveFlags::QUIET => {
-                self.move_piece(from, to, piece, self.color_to_move);
-            }
-            MoveFlags::DOUBLE_PUSH => {
-                self.move_piece(from, to, piece, self.color_to_move);
-                self.en_passant = 1u64 << ((to as i8) + 8 * ((self.color_to_move as i8) * 2 - 1));
-            }
-            MoveFlags::CAPTURE => {
-                let captured_piece = self.get_piece(to);
-                self.captured_pieces_stack.push(captured_piece);
-
-                self.remove_piece(to, captured_piece, enemy_color);
-                self.move_piece(from, to, piece, self.color_to_move);
-            }
-            MoveFlags::SHORT_CASTLING => match self.color_to_move {
-                WHITE => {
-                    self.move_piece(3, 1, KING, WHITE);
-                    self.move_piece(0, 2, ROOK, WHITE);
-                }
-                BLACK => {
-                    self.move_piece(59, 57, KING, BLACK);
-                    self.move_piece(56, 58, ROOK, BLACK);
-                }
-                _ => panic!("Invalid value: self.color_to_move={}", self.color_to_move),
-            },
-            MoveFlags::LONG_CASTLING => match self.color_to_move {
-                WHITE => {
-                    self.move_piece(3, 5, KING, WHITE);
-                    self.move_piece(7, 4, ROOK, WHITE);
-                }
-                BLACK => {
-                    self.move_piece(59, 61, KING, BLACK);
-                    self.move_piece(63, 60, ROOK, BLACK);
-                }
-                _ => panic!("Invalid value: self.color_to_move={}", self.color_to_move),
-            },
-            MoveFlags::EN_PASSANT => {
-                self.move_piece(from, to, piece, self.color_to_move);
-                self.remove_piece(((to as i8) + 8 * ((self.color_to_move as i8) * 2 - 1)) as u8, PAWN, enemy_color);
-            }
-            _ => {
-                // Promotion bit set, coincidentally knight promotion is the same
-                if flags.contains(MoveFlags::KNIGHT_PROMOTION) {
-                    let promotion_piece = r#move.get_promotion_piece();
-
-                    if flags.contains(MoveFlags::CAPTURE) {
-                        let captured_piece = self.get_piece(to);
-                        self.captured_pieces_stack.push(captured_piece);
-
-                        self.remove_piece(to, captured_piece, enemy_color);
-                    }
-
-                    self.remove_piece(from, PAWN, self.color_to_move);
-                    self.add_piece(to, promotion_piece, self.color_to_move);
-                }
-            }
+    pub fn get_moves_active_color(&self, moves: &mut [Move]) -> usize {
+        match self.active_color {
+            WHITE => self.get_moves_internal::<WHITE>(moves),
+            BLACK => self.get_moves_internal::<BLACK>(moves),
+            _ => panic!("Invalid value: self.active_color={}", self.active_color),
         }
-
-        if piece == KING {
-            match self.color_to_move {
-                WHITE => {
-                    self.castling_rights &= !CastlingRights::WHITE_CASTLING;
-                }
-                BLACK => {
-                    self.castling_rights &= !CastlingRights::BLACK_CASTLING;
-                }
-                _ => panic!("Invalid value: self.color_to_move={}", self.color_to_move),
-            }
-        }
-
-        if piece == ROOK {
-            match self.color_to_move {
-                WHITE => {
-                    if from == 0 {
-                        self.castling_rights &= !CastlingRights::WHITE_SHORT_CASTLING;
-                    } else if from == 7 {
-                        self.castling_rights &= !CastlingRights::WHITE_LONG_CASTLING;
-                    }
-                }
-                BLACK => {
-                    if from == 56 {
-                        self.castling_rights &= !CastlingRights::BLACK_SHORT_CASTLING;
-                    } else if from == 63 {
-                        self.castling_rights &= !CastlingRights::BLACK_LONG_CASTLING;
-                    }
-                }
-                _ => panic!("Invalid value: self.color_to_move={}", self.color_to_move),
-            }
-        }
-
-        self.color_to_move = enemy_color;
     }
 
-    pub fn undo_move(&mut self, r#move: &Move) {
-        let enemy_color = self.color_to_move;
-        self.color_to_move ^= 1;
+    pub fn make_move<const COLOR: u8, const ENEMY_COLOR: u8>(&mut self, r#move: &Move) {
+        self.make_move_internal::<COLOR, ENEMY_COLOR>(r#move);
+    }
 
-        let from = r#move.get_from();
-        let to = r#move.get_to();
-        let flags = r#move.get_flags();
-        let piece = self.get_piece(to);
+    pub fn make_move_active_color(&mut self, r#move: &Move) {
+        match self.active_color {
+            WHITE => self.make_move_internal::<WHITE, BLACK>(r#move),
+            BLACK => self.make_move_internal::<BLACK, WHITE>(r#move),
+            _ => panic!("Invalid value: self.active_color={}", self.active_color),
+        };
+    }
 
-        match flags {
-            MoveFlags::QUIET => {
-                self.move_piece(to, from, piece, self.color_to_move);
-            }
-            MoveFlags::DOUBLE_PUSH => {
-                self.move_piece(to, from, piece, self.color_to_move);
-            }
-            MoveFlags::CAPTURE => {
-                let captured_piece = self.captured_pieces_stack.pop().unwrap();
+    pub fn undo_move<const COLOR: u8, const ENEMY_COLOR: u8>(&mut self, r#move: &Move) {
+        self.undo_move_internal::<COLOR, ENEMY_COLOR>(r#move);
+    }
 
-                self.move_piece(to, from, piece, self.color_to_move);
-                self.add_piece(to, captured_piece, enemy_color);
-            }
-            MoveFlags::SHORT_CASTLING => match self.color_to_move {
-                WHITE => {
-                    self.move_piece(1, 3, KING, WHITE);
-                    self.move_piece(2, 0, ROOK, WHITE);
-                }
-                BLACK => {
-                    self.move_piece(57, 59, KING, BLACK);
-                    self.move_piece(58, 56, ROOK, BLACK);
-                }
-                _ => panic!("Invalid value: self.color_to_move={}", self.color_to_move),
-            },
-            MoveFlags::LONG_CASTLING => match self.color_to_move {
-                WHITE => {
-                    self.move_piece(5, 3, KING, WHITE);
-                    self.move_piece(4, 7, ROOK, WHITE);
-                }
-                BLACK => {
-                    self.move_piece(61, 59, KING, BLACK);
-                    self.move_piece(60, 63, ROOK, BLACK);
-                }
-                _ => panic!("Invalid value: self.color_to_move={}", self.color_to_move),
-            },
-            MoveFlags::EN_PASSANT => {
-                self.move_piece(to, from, piece, self.color_to_move);
-                self.add_piece(((to as i8) + 8 * ((self.color_to_move as i8) * 2 - 1)) as u8, PAWN, enemy_color);
-            }
-            _ => {
-                // Promotion bit set, coincidentally knight promotion is the same
-                if flags.contains(MoveFlags::KNIGHT_PROMOTION) {
-                    self.add_piece(from, PAWN, self.color_to_move);
-                    self.remove_piece(to, piece, self.color_to_move);
-
-                    if flags.contains(MoveFlags::CAPTURE) {
-                        let captured_piece = self.captured_pieces_stack.pop().unwrap();
-                        self.add_piece(to, captured_piece, enemy_color);
-                    }
-                }
-            }
-        }
-
-        self.en_passant = self.en_passant_stack.pop().unwrap();
-        self.castling_rights = self.castling_rights_stack.pop().unwrap();
+    pub fn undo_move_active_color(&mut self, r#move: &Move) {
+        match self.active_color {
+            WHITE => self.undo_move_internal::<BLACK, WHITE>(r#move),
+            BLACK => self.undo_move_internal::<WHITE, BLACK>(r#move),
+            _ => panic!("Invalid value: self.active_color={}", self.active_color),
+        };
     }
 
     pub fn is_field_attacked<const COLOR: u8>(&self, field_index: u8) -> bool {
@@ -301,24 +156,192 @@ impl Bitboard {
         self.piece_table[field as usize]
     }
 
-    pub fn add_piece(&mut self, field: u8, piece: u8, color: u8) {
-        self.pieces[color as usize][piece as usize] |= 1u64 << field;
-        self.occupancy[color as usize] |= 1u64 << field;
+    pub fn add_piece<const COLOR: u8>(&mut self, field: u8, piece: u8) {
+        self.pieces[COLOR as usize][piece as usize] |= 1u64 << field;
+        self.occupancy[COLOR as usize] |= 1u64 << field;
         self.piece_table[field as usize] = piece;
     }
 
-    pub fn remove_piece(&mut self, field: u8, piece: u8, color: u8) {
-        self.pieces[color as usize][piece as usize] &= !(1u64 << field);
-        self.occupancy[color as usize] &= !(1u64 << field);
+    pub fn remove_piece<const COLOR: u8>(&mut self, field: u8, piece: u8) {
+        self.pieces[COLOR as usize][piece as usize] &= !(1u64 << field);
+        self.occupancy[COLOR as usize] &= !(1u64 << field);
         self.piece_table[field as usize] = u8::MAX;
     }
 
-    pub fn move_piece(&mut self, from: u8, to: u8, piece: u8, color: u8) {
-        self.pieces[color as usize][piece as usize] ^= (1u64 << from) | (1u64 << to);
-        self.occupancy[color as usize] ^= (1u64 << from) | (1u64 << to);
+    pub fn move_piece<const COLOR: u8>(&mut self, from: u8, to: u8, piece: u8) {
+        self.pieces[COLOR as usize][piece as usize] ^= (1u64 << from) | (1u64 << to);
+        self.occupancy[COLOR as usize] ^= (1u64 << from) | (1u64 << to);
 
         self.piece_table[to as usize] = self.piece_table[from as usize];
         self.piece_table[from as usize] = u8::MAX;
+    }
+
+    fn get_moves_internal<const COLOR: u8>(&self, mut moves: &mut [Move]) -> usize {
+        let mut index = 0;
+        index = movescan::scan_pawn_moves::<COLOR>(&self, &mut moves, index);
+        index = movescan::scan_piece_moves::<COLOR, KNIGHT>(&self, &mut moves, index);
+        index = movescan::scan_piece_moves::<COLOR, BISHOP>(&self, &mut moves, index);
+        index = movescan::scan_piece_moves::<COLOR, ROOK>(&self, &mut moves, index);
+        index = movescan::scan_piece_moves::<COLOR, QUEEN>(&self, &mut moves, index);
+        index = movescan::scan_piece_moves::<COLOR, KING>(&self, &mut moves, index);
+
+        index
+    }
+
+    fn make_move_internal<const COLOR: u8, const ENEMY_COLOR: u8>(&mut self, r#move: &Move) {
+        let from = r#move.get_from();
+        let to = r#move.get_to();
+        let flags = r#move.get_flags();
+        let piece = self.get_piece(from);
+
+        self.halfmove_clocks_stack.push(self.halfmove_clock);
+        self.castling_rights_stack.push(self.castling_rights);
+        self.en_passant_stack.push(self.en_passant);
+        self.en_passant = 0;
+
+        match flags {
+            MoveFlags::QUIET => {
+                self.move_piece::<COLOR>(from, to, piece);
+            }
+            MoveFlags::DOUBLE_PUSH => {
+                self.move_piece::<COLOR>(from, to, piece);
+                self.en_passant = 1u64 << ((to as i8) + 8 * ((COLOR as i8) * 2 - 1));
+            }
+            MoveFlags::CAPTURE => {
+                let captured_piece = self.get_piece(to);
+                self.captured_pieces_stack.push(captured_piece);
+
+                self.remove_piece::<ENEMY_COLOR>(to, captured_piece);
+                self.move_piece::<COLOR>(from, to, piece);
+            }
+            MoveFlags::SHORT_CASTLING => {
+                self.move_piece::<COLOR>(3 + 56 * (COLOR as u8), 1 + 56 * (COLOR as u8), KING);
+                self.move_piece::<COLOR>(0 + 56 * (COLOR as u8), 2 + 56 * (COLOR as u8), ROOK);
+            }
+            MoveFlags::LONG_CASTLING => {
+                self.move_piece::<COLOR>(3 + 56 * (COLOR as u8), 5 + 56 * (COLOR as u8), KING);
+                self.move_piece::<COLOR>(7 + 56 * (COLOR as u8), 4 + 56 * (COLOR as u8), ROOK);
+            }
+            MoveFlags::EN_PASSANT => {
+                self.move_piece::<COLOR>(from, to, piece);
+                self.remove_piece::<ENEMY_COLOR>(((to as i8) + 8 * ((COLOR as i8) * 2 - 1)) as u8, PAWN);
+            }
+            _ => {
+                // Promotion bit set, coincidentally knight promotion is the same
+                if flags.contains(MoveFlags::KNIGHT_PROMOTION) {
+                    let promotion_piece = r#move.get_promotion_piece();
+
+                    if flags.contains(MoveFlags::CAPTURE) {
+                        let captured_piece = self.get_piece(to);
+                        self.captured_pieces_stack.push(captured_piece);
+
+                        self.remove_piece::<ENEMY_COLOR>(to, captured_piece);
+                    }
+
+                    self.remove_piece::<COLOR>(from, PAWN);
+                    self.add_piece::<COLOR>(to, promotion_piece);
+                }
+            }
+        }
+
+        if piece == KING {
+            match COLOR {
+                WHITE => {
+                    self.castling_rights &= !CastlingRights::WHITE_CASTLING;
+                }
+                BLACK => {
+                    self.castling_rights &= !CastlingRights::BLACK_CASTLING;
+                }
+                _ => panic!("Invalid value: COLOR={}", COLOR),
+            }
+        }
+
+        if piece == ROOK {
+            match COLOR {
+                WHITE => {
+                    if from == 0 {
+                        self.castling_rights &= !CastlingRights::WHITE_SHORT_CASTLING;
+                    } else if from == 7 {
+                        self.castling_rights &= !CastlingRights::WHITE_LONG_CASTLING;
+                    }
+                }
+                BLACK => {
+                    if from == 56 {
+                        self.castling_rights &= !CastlingRights::BLACK_SHORT_CASTLING;
+                    } else if from == 63 {
+                        self.castling_rights &= !CastlingRights::BLACK_LONG_CASTLING;
+                    }
+                }
+                _ => panic!("Invalid value: COLOR={}", COLOR),
+            }
+        }
+
+        if COLOR == BLACK {
+            self.fullmove_number += 1;
+        }
+
+        if piece == PAWN || flags.contains(MoveFlags::CAPTURE) {
+            self.halfmove_clock = 0;
+        } else {
+            self.halfmove_clock += 1;
+        }
+
+        self.active_color = ENEMY_COLOR;
+    }
+
+    fn undo_move_internal<const COLOR: u8, const ENEMY_COLOR: u8>(&mut self, r#move: &Move) {
+        let from = r#move.get_from();
+        let to = r#move.get_to();
+        let flags = r#move.get_flags();
+        let piece = self.get_piece(to);
+
+        match flags {
+            MoveFlags::QUIET => {
+                self.move_piece::<COLOR>(to, from, piece);
+            }
+            MoveFlags::DOUBLE_PUSH => {
+                self.move_piece::<COLOR>(to, from, piece);
+            }
+            MoveFlags::CAPTURE => {
+                let captured_piece = self.captured_pieces_stack.pop().unwrap();
+
+                self.move_piece::<COLOR>(to, from, piece);
+                self.add_piece::<ENEMY_COLOR>(to, captured_piece);
+            }
+            MoveFlags::SHORT_CASTLING => {
+                self.move_piece::<COLOR>(1 + 56 * (COLOR as u8), 3 + 56 * (COLOR as u8), KING);
+                self.move_piece::<COLOR>(2 + 56 * (COLOR as u8), 0 + 56 * (COLOR as u8), ROOK);
+            }
+            MoveFlags::LONG_CASTLING => {
+                self.move_piece::<COLOR>(5 + 56 * (COLOR as u8), 3 + 56 * (COLOR as u8), KING);
+                self.move_piece::<COLOR>(4 + 56 * (COLOR as u8), 7 + 56 * (COLOR as u8), ROOK);
+            }
+            MoveFlags::EN_PASSANT => {
+                self.move_piece::<COLOR>(to, from, piece);
+                self.add_piece::<ENEMY_COLOR>(((to as i8) + 8 * ((COLOR as i8) * 2 - 1)) as u8, PAWN);
+            }
+            _ => {
+                // Promotion bit set, coincidentally knight promotion is the same
+                if flags.contains(MoveFlags::KNIGHT_PROMOTION) {
+                    self.add_piece::<COLOR>(from, PAWN);
+                    self.remove_piece::<COLOR>(to, piece);
+
+                    if flags.contains(MoveFlags::CAPTURE) {
+                        let captured_piece = self.captured_pieces_stack.pop().unwrap();
+                        self.add_piece::<ENEMY_COLOR>(to, captured_piece);
+                    }
+                }
+            }
+        }
+
+        if COLOR == BLACK {
+            self.fullmove_number -= 1;
+        }
+
+        self.halfmove_clock = self.halfmove_clocks_stack.pop().unwrap();
+        self.castling_rights = self.castling_rights_stack.pop().unwrap();
+        self.en_passant = self.en_passant_stack.pop().unwrap();
+        self.active_color = COLOR;
     }
 }
 

@@ -52,7 +52,12 @@ fn fen_to_pieces<'a>(board: &mut Bitboard, pieces: &str) -> Result<(), &'a str> 
                 _ => return Err("Invalid FEN"),
             };
 
-            board.add_piece(current_field_index as u8, piece, color);
+            match color {
+                WHITE => board.add_piece::<WHITE>(current_field_index as u8, piece),
+                BLACK => board.add_piece::<BLACK>(current_field_index as u8, piece),
+                _ => panic!("Invalid value: board.active_color={}", board.active_color),
+            };
+
             current_field_index -= 1;
         }
     }
@@ -108,16 +113,16 @@ fn pieces_to_fen(board: &Bitboard) -> String {
 
 fn fen_to_active_color<'a>(board: &mut Bitboard, active_color: &str) -> Result<(), &'a str> {
     let color_char = active_color.chars().next().unwrap();
-    board.color_to_move = if color_char == 'w' { WHITE } else { BLACK };
+    board.active_color = if color_char == 'w' { WHITE } else { BLACK };
 
     Ok(())
 }
 
 fn active_color_to_fen(board: &Bitboard) -> String {
-    match board.color_to_move {
+    match board.active_color {
         WHITE => "w".to_string(),
         BLACK => "b".to_string(),
-        _ => panic!("Invalid value: board.color_to_move={}", board.color_to_move),
+        _ => panic!("Invalid value: board.active_color={}", board.active_color),
     }
 }
 
@@ -191,7 +196,7 @@ fn en_passant_to_fen(board: &Bitboard) -> String {
 }
 
 fn fen_to_halfmove_clock<'a>(board: &mut Bitboard, halfmove_clock: &str) -> Result<(), &'a str> {
-    board.halfmove_clock = match halfmove_clock.parse::<u32>() {
+    board.halfmove_clock = match halfmove_clock.parse::<u16>() {
         Ok(value) => value,
         Err(_) => return Err("Invalid FEN"),
     };

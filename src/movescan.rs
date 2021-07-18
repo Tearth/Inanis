@@ -46,10 +46,10 @@ impl Move {
         let to = (7 - ((chars.next().unwrap() as u8) - b'a')) + 8 * ((chars.next().unwrap() as u8) - b'1');
 
         let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
-        let moves_count = match board.color_to_move {
+        let moves_count = match board.active_color {
             WHITE => board.get_moves::<WHITE>(&mut moves),
             BLACK => board.get_moves::<BLACK>(&mut moves),
-            _ => panic!("Invalid value: board.color_to_move={}", board.color_to_move),
+            _ => panic!("Invalid value: board.active_color={}", board.active_color),
         };
 
         for r#move in &moves[0..moves_count] {
