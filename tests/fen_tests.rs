@@ -7,7 +7,7 @@ mod fen_tests {
             $(
                 #[test]
                 fn $name() {
-                    let board = Bitboard::new_from_fen($original_fen);
+                    let board = Bitboard::new_from_fen($original_fen).unwrap();
                     assert_eq!($original_fen, board_to_fen(&board));
                 }
             )*

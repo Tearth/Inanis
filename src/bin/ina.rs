@@ -1,4 +1,6 @@
-use ina::{movegen, patterns, terminal};
+use ina::movegen;
+use ina::patterns;
+use ina::terminal;
 
 fn main() {
     patterns::init();

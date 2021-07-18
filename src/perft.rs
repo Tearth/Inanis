@@ -1,4 +1,6 @@
-use crate::{board::*, common::*, movescan::*};
+use crate::board::Bitboard;
+use crate::common::*;
+use crate::movescan::Move;
 use std::mem::MaybeUninit;
 
 pub fn run(depth: i32) -> u64 {

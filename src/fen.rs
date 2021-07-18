@@ -1,4 +1,6 @@
-use crate::{board::*, common::*, helpers::bit_scan};
+use crate::bit::*;
+use crate::board::{Bitboard, CastlingRights};
+use crate::common::*;
 
 pub fn fen_to_board(fen: &str) -> Result<Bitboard, &str> {
     let parts: Vec<&str> = fen.split(' ').collect();

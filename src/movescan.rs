@@ -1,6 +1,11 @@
 use std::mem::MaybeUninit;
 
-use crate::{board::*, common::*, helpers::*, movegen::*};
+use crate::{
+    bit::*,
+    board::{Bitboard, CastlingRights},
+    common::*,
+    movegen,
+};
 
 bitflags! {
     pub struct MoveFlags: u8 {
@@ -104,11 +109,11 @@ pub fn scan_piece_moves<const COLOR: u8, const PIECE: u8>(board: &Bitboard, move
 
         let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
         let mut piece_moves = match PIECE {
-            KNIGHT => get_knight_moves(from_field_index as usize),
-            BISHOP => get_bishop_moves(occupancy, from_field_index as usize),
-            ROOK => get_rook_moves(occupancy, from_field_index as usize),
-            QUEEN => get_queen_moves(occupancy, from_field_index as usize),
-            KING => get_king_moves(from_field_index as usize),
+            KNIGHT => movegen::get_knight_moves(from_field_index as usize),
+            BISHOP => movegen::get_bishop_moves(occupancy, from_field_index as usize),
+            ROOK => movegen::get_rook_moves(occupancy, from_field_index as usize),
+            QUEEN => movegen::get_queen_moves(occupancy, from_field_index as usize),
+            KING => movegen::get_king_moves(from_field_index as usize),
             _ => panic!("Invalid value: PIECE={}", PIECE),
         } & !board.occupancy[COLOR as usize];
 

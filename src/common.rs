@@ -1,5 +1,3 @@
-#![allow(warnings)]
-
 pub const WHITE: u8 = 0;
 pub const BLACK: u8 = 1;
 

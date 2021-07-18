@@ -1,4 +1,8 @@
-use crate::{common::*, fen::fen_to_board, helpers::*, movegen::*, movescan::*};
+use crate::bit::*;
+use crate::common::*;
+use crate::fen;
+use crate::movegen;
+use crate::movescan::{self, Move, MoveFlags};
 
 bitflags! {
     pub struct CastlingRights: u8 {
@@ -21,11 +25,11 @@ pub struct Bitboard {
     pub color_to_move: u8,
     pub castling_rights: CastlingRights,
     pub en_passant: u64,
+    pub halfmove_clock: u32,
+    pub fullmove_number: u32,
     pub captured_pieces_stack: Vec<u8>,
     pub castling_rights_stack: Vec<CastlingRights>,
     pub en_passant_stack: Vec<u64>,
-    pub halfmove_clock: u32,
-    pub fullmove_number: u32,
 }
 
 impl Bitboard {
@@ -37,30 +41,30 @@ impl Bitboard {
             color_to_move: WHITE,
             castling_rights: CastlingRights::NONE,
             en_passant: 0,
+            halfmove_clock: 0,
+            fullmove_number: 0,
             captured_pieces_stack: Vec::with_capacity(16),
             castling_rights_stack: Vec::with_capacity(16),
             en_passant_stack: Vec::with_capacity(16),
-            halfmove_clock: 0,
-            fullmove_number: 0,
         }
     }
 
     pub fn new_default() -> Bitboard {
-        Bitboard::new_from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+        Bitboard::new_from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap()
     }
 
-    pub fn new_from_fen(fen: &str) -> Bitboard {
-        fen_to_board(fen).unwrap()
+    pub fn new_from_fen(fen: &str) -> Result<Bitboard, &str> {
+        fen::fen_to_board(fen)
     }
 
     pub fn get_moves<const COLOR: u8>(&self, mut moves: &mut [Move]) -> usize {
         let mut index = 0;
-        index = scan_pawn_moves::<COLOR>(&self, &mut moves, index);
-        index = scan_piece_moves::<COLOR, KNIGHT>(&self, &mut moves, index);
-        index = scan_piece_moves::<COLOR, BISHOP>(&self, &mut moves, index);
-        index = scan_piece_moves::<COLOR, ROOK>(&self, &mut moves, index);
-        index = scan_piece_moves::<COLOR, QUEEN>(&self, &mut moves, index);
-        index = scan_piece_moves::<COLOR, KING>(&self, &mut moves, index);
+        index = movescan::scan_pawn_moves::<COLOR>(&self, &mut moves, index);
+        index = movescan::scan_piece_moves::<COLOR, KNIGHT>(&self, &mut moves, index);
+        index = movescan::scan_piece_moves::<COLOR, BISHOP>(&self, &mut moves, index);
+        index = movescan::scan_piece_moves::<COLOR, ROOK>(&self, &mut moves, index);
+        index = movescan::scan_piece_moves::<COLOR, QUEEN>(&self, &mut moves, index);
+        index = movescan::scan_piece_moves::<COLOR, KING>(&self, &mut moves, index);
 
         index
     }
@@ -240,25 +244,25 @@ impl Bitboard {
         let enemy_color = COLOR ^ 1;
         let occupancy = self.occupancy[WHITE as usize] | self.occupancy[BLACK as usize];
 
-        let rook_queen_attacks = get_rook_moves(occupancy, field_index as usize);
+        let rook_queen_attacks = movegen::get_rook_moves(occupancy, field_index as usize);
         let enemy_rooks_queens = self.pieces[enemy_color as usize][ROOK as usize] | self.pieces[enemy_color as usize][QUEEN as usize];
         if (rook_queen_attacks & enemy_rooks_queens) != 0 {
             return true;
         }
 
-        let bishop_queen_attacks = get_bishop_moves(occupancy, field_index as usize);
+        let bishop_queen_attacks = movegen::get_bishop_moves(occupancy, field_index as usize);
         let enemy_bishops_queens = self.pieces[enemy_color as usize][BISHOP as usize] | self.pieces[enemy_color as usize][QUEEN as usize];
         if (bishop_queen_attacks & enemy_bishops_queens) != 0 {
             return true;
         }
 
-        let knight_attacks = get_knight_moves(field_index as usize);
+        let knight_attacks = movegen::get_knight_moves(field_index as usize);
         let enemy_knights = self.pieces[enemy_color as usize][KNIGHT as usize];
         if (knight_attacks & enemy_knights) != 0 {
             return true;
         }
 
-        let king_attacks = get_king_moves(field_index as usize);
+        let king_attacks = movegen::get_king_moves(field_index as usize);
         let enemy_kings = self.pieces[enemy_color as usize][KING as usize];
         if (king_attacks & enemy_kings) != 0 {
             return true;

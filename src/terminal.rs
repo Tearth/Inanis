@@ -1,6 +1,8 @@
-use crate::{movegen, perft};
+use crate::movegen;
+use crate::perft;
 use chrono::Utc;
-use std::{io, process};
+use std::io;
+use std::process;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");

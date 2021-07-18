@@ -1,6 +1,4 @@
-use crate::common::*;
-use crate::helpers::*;
-use crate::patterns::*;
+use crate::{bit::*, common::*, patterns};
 use arr_macro::arr;
 
 #[rustfmt::skip]
@@ -192,11 +190,11 @@ pub fn init() {
 }
 
 pub fn get_knight_moves(field_index: usize) -> u64 {
-    get_jumps(field_index)
+    patterns::get_jumps(field_index)
 }
 
 pub fn get_king_moves(field_index: usize) -> u64 {
-    get_box(field_index)
+    patterns::get_box(field_index)
 }
 
 pub fn get_rook_moves(mut bitboard: u64, field_index: usize) -> u64 {
@@ -371,11 +369,11 @@ fn get_permutation(mut mask: u64, mut index: u64) -> u64 {
 }
 
 fn get_rook_mask(field_index: usize) -> u64 {
-    (get_file(field_index) & !RANK_A & !RANK_H) | (get_rank(field_index) & !FILE_A & !FILE_H)
+    (patterns::get_file(field_index) & !RANK_A & !RANK_H) | (patterns::get_rank(field_index) & !FILE_A & !FILE_H)
 }
 
 fn get_bishop_mask(field_index: usize) -> u64 {
-    get_diagonals(field_index) & !EDGE
+    patterns::get_diagonals(field_index) & !EDGE
 }
 
 fn get_rook_attacks(bitboard: u64, field_index: usize) -> u64 {
