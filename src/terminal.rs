@@ -1,3 +1,4 @@
+use crate::board::Bitboard;
 use crate::movegen;
 use crate::perft;
 use chrono::Utc;
@@ -75,9 +76,25 @@ fn handle_perft(input: Vec<&str>) {
         }
     };
 
+    let mut board = match prepare_board(&input[2..]) {
+        Ok(board) => board,
+        Err(message) => {
+            println!("{}", message);
+            return;
+        }
+    };
+
     for depth in 1..max_depth + 1 {
         let now = Utc::now();
-        let count = perft::run(depth);
+
+        let count = match perft::run(depth, &mut board) {
+            Ok(result) => result,
+            Err(message) => {
+                println!("{}", message);
+                return;
+            }
+        };
+
         let diff = ((Utc::now() - now).num_milliseconds() as f64) / 1000.0;
         let mnps = ((count as f64) / 1000000.0) / diff;
 
@@ -101,9 +118,23 @@ fn handle_perftd(input: Vec<&str>) {
         }
     };
 
-    let result = perft::run_divided(depth, &input[2..]);
-    let mut total_leafs = 0;
+    let mut board = match prepare_board(&input[2..]) {
+        Ok(board) => board,
+        Err(message) => {
+            println!("{}", message);
+            return;
+        }
+    };
 
+    let result = match perft::run_divided(depth, &mut board) {
+        Ok(result) => result,
+        Err(message) => {
+            println!("{}", message);
+            return;
+        }
+    };
+
+    let mut total_leafs = 0;
     for r#move in result {
         println!("{}: {} leafs", r#move.0, r#move.1);
         total_leafs += r#move.1;
@@ -131,4 +162,19 @@ fn read_line() -> String {
     io::stdin().read_line(&mut buffer).unwrap();
 
     buffer
+}
+
+fn prepare_board(parameters: &[&str]) -> Result<Bitboard, &'static str> {
+    if parameters.is_empty() {
+        Ok(Bitboard::new_default())
+    } else {
+        match parameters[0] {
+            "fen" => {
+                let fen = parameters[1..].join(" ");
+                Bitboard::new_from_fen(fen.as_str())
+            }
+            "moves" => Bitboard::new_from_moves(&parameters[1..]),
+            _ => Err("Invalid parameters"),
+        }
+    }
 }

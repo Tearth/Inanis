@@ -1,11 +1,8 @@
+use crate::bit::*;
+use crate::board::{Bitboard, CastlingRights};
+use crate::common::*;
+use crate::movegen;
 use std::mem::MaybeUninit;
-
-use crate::{
-    bit::*,
-    board::{Bitboard, CastlingRights},
-    common::*,
-    movegen,
-};
 
 bitflags! {
     pub struct MoveFlags: u8 {
@@ -40,25 +37,34 @@ impl Move {
         }
     }
 
-    pub fn from_text(text: &str, board: &Bitboard) -> Move {
+    pub fn from_text(text: &str, board: &Bitboard) -> Result<Move, &'static str> {
         let mut chars = text.chars();
-        let from = (7 - ((chars.next().unwrap() as u8) - b'a')) + 8 * ((chars.next().unwrap() as u8) - b'1');
-        let to = (7 - ((chars.next().unwrap() as u8) - b'a')) + 8 * ((chars.next().unwrap() as u8) - b'1');
+        let from_file = chars.next().ok_or("Invalid move")? as u8;
+        let from_rank = chars.next().ok_or("Invalid move")? as u8;
+        let to_file = chars.next().ok_or("Invalid move")? as u8;
+        let to_rank = chars.next().ok_or("Invalid move")? as u8;
+
+        if !(b'a'..=b'h').contains(&from_file) || !(b'a'..=b'h').contains(&to_file) {
+            return Err("Invalid move");
+        }
+
+        if !(b'1'..=b'8').contains(&from_rank) || !(b'1'..=b'8').contains(&to_rank) {
+            return Err("Invalid move");
+        }
+
+        let from = (7 - (from_file - b'a')) + 8 * (from_rank - b'1');
+        let to = (7 - (to_file - b'a')) + 8 * (to_rank - b'1');
 
         let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
-        let moves_count = match board.active_color {
-            WHITE => board.get_moves::<WHITE>(&mut moves),
-            BLACK => board.get_moves::<BLACK>(&mut moves),
-            _ => panic!("Invalid value: board.active_color={}", board.active_color),
-        };
+        let moves_count = board.get_moves_active_color(&mut moves);
 
         for r#move in &moves[0..moves_count] {
             if r#move.get_from() == from && r#move.get_to() == to {
-                return *r#move;
+                return Ok(*r#move);
             }
         }
 
-        panic!("Invalid move");
+        Err("Invalid move")
     }
 
     pub fn to_text(self) -> String {
@@ -93,7 +99,7 @@ impl Move {
             MoveFlags::BISHOP_PROMOTION | MoveFlags::BISHOP_PROMOTION_CAPTURE => BISHOP,
             MoveFlags::ROOK_PROMOTION | MoveFlags::ROOK_PROMOTION_CAPTURE => ROOK,
             MoveFlags::QUEEN_PROMOTION | MoveFlags::QUEEN_PROMOTION_CAPTURE => QUEEN,
-            _ => panic!("Invalid promotion piece"),
+            _ => panic!("Invalid value: self.get_flags()={:?}", self.get_flags()),
         }
     }
 }
@@ -211,10 +217,10 @@ fn scan_pawn_moves_single_push<const COLOR: u8>(board: &Bitboard, moves: &mut [M
         target_fields = pop_lsb(target_fields);
 
         if (to_field & promotion_line) != 0 {
-            moves[index + 0] = Move::new(from_field_index, to_field_index, MoveFlags::KNIGHT_PROMOTION);
-            moves[index + 1] = Move::new(from_field_index, to_field_index, MoveFlags::BISHOP_PROMOTION);
-            moves[index + 2] = Move::new(from_field_index, to_field_index, MoveFlags::ROOK_PROMOTION);
-            moves[index + 3] = Move::new(from_field_index, to_field_index, MoveFlags::QUEEN_PROMOTION);
+            moves[index + 0] = Move::new(from_field_index, to_field_index, MoveFlags::QUEEN_PROMOTION);
+            moves[index + 1] = Move::new(from_field_index, to_field_index, MoveFlags::ROOK_PROMOTION);
+            moves[index + 2] = Move::new(from_field_index, to_field_index, MoveFlags::BISHOP_PROMOTION);
+            moves[index + 3] = Move::new(from_field_index, to_field_index, MoveFlags::KNIGHT_PROMOTION);
             index += 4;
         } else {
             moves[index] = Move::new(from_field_index, to_field_index, MoveFlags::QUIET);
@@ -275,10 +281,10 @@ fn scan_pawn_moves_diagonal_attacks<const COLOR: u8, const DIR: u8>(board: &Bitb
         target_fields = pop_lsb(target_fields);
 
         if (to_field & promotion_line) != 0 {
-            moves[index + 0] = Move::new(from_field_index, to_field_index, MoveFlags::KNIGHT_PROMOTION_CAPTURE);
-            moves[index + 1] = Move::new(from_field_index, to_field_index, MoveFlags::BISHOP_PROMOTION_CAPTURE);
-            moves[index + 2] = Move::new(from_field_index, to_field_index, MoveFlags::ROOK_PROMOTION_CAPTURE);
-            moves[index + 3] = Move::new(from_field_index, to_field_index, MoveFlags::QUEEN_PROMOTION_CAPTURE);
+            moves[index + 0] = Move::new(from_field_index, to_field_index, MoveFlags::QUEEN_PROMOTION_CAPTURE);
+            moves[index + 1] = Move::new(from_field_index, to_field_index, MoveFlags::ROOK_PROMOTION_CAPTURE);
+            moves[index + 2] = Move::new(from_field_index, to_field_index, MoveFlags::BISHOP_PROMOTION_CAPTURE);
+            moves[index + 3] = Move::new(from_field_index, to_field_index, MoveFlags::KNIGHT_PROMOTION_CAPTURE);
             index += 4;
         } else {
             let en_passant = (to_field & board.en_passant) != 0;

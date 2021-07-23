@@ -2,7 +2,7 @@ use crate::bit::*;
 use crate::board::{Bitboard, CastlingRights};
 use crate::common::*;
 
-pub fn fen_to_board(fen: &str) -> Result<Bitboard, &str> {
+pub fn fen_to_board(fen: &str) -> Result<Bitboard, &'static str> {
     let parts: Vec<&str> = fen.split(' ').collect();
     if parts.len() < 6 {
         return Err("Invalid FEN");
@@ -33,13 +33,11 @@ pub fn board_to_fen(board: &Bitboard) -> String {
     )
 }
 
-fn fen_to_pieces<'a>(board: &mut Bitboard, pieces: &str) -> Result<(), &'a str> {
+fn fen_to_pieces(board: &mut Bitboard, pieces: &str) -> Result<(), &'static str> {
     let mut current_field_index = 63;
-    for char in pieces.chars() {
-        if char == '/' {
-            continue;
-        } else if char.is_digit(10) {
-            current_field_index -= char.to_digit(10).unwrap() as i32;
+    for char in pieces.chars().filter(|&x| x != '/') {
+        if char.is_digit(10) {
+            current_field_index -= char.to_digit(10).ok_or("Invalid FEN")? as i32;
         } else {
             let color = if char.is_uppercase() { WHITE } else { BLACK };
             let piece = match char {
@@ -90,7 +88,7 @@ fn pieces_to_fen(board: &Bitboard) -> String {
             };
 
             if (board.pieces[WHITE as usize][piece as usize] & (1u64 << field_index)) == 0 {
-                piece_symbol = (piece_symbol.to_lowercase().collect::<Vec<char>>())[0];
+                piece_symbol = piece_symbol.to_lowercase().collect::<Vec<char>>()[0];
             }
 
             result.push(piece_symbol);
@@ -111,8 +109,8 @@ fn pieces_to_fen(board: &Bitboard) -> String {
     result
 }
 
-fn fen_to_active_color<'a>(board: &mut Bitboard, active_color: &str) -> Result<(), &'a str> {
-    let color_char = active_color.chars().next().unwrap();
+fn fen_to_active_color(board: &mut Bitboard, active_color: &str) -> Result<(), &'static str> {
+    let color_char = active_color.chars().next().ok_or("Invalid FEN")?;
     board.active_color = if color_char == 'w' { WHITE } else { BLACK };
 
     Ok(())
@@ -126,7 +124,7 @@ fn active_color_to_fen(board: &Bitboard) -> String {
     }
 }
 
-fn fen_to_castling<'a>(board: &mut Bitboard, castling: &str) -> Result<(), &'a str> {
+fn fen_to_castling(board: &mut Bitboard, castling: &str) -> Result<(), &'static str> {
     if castling == "-" {
         return Ok(());
     }
@@ -170,13 +168,16 @@ fn castling_to_fen(board: &Bitboard) -> String {
     result
 }
 
-fn fen_to_en_passant<'a>(board: &mut Bitboard, en_passant: &str) -> Result<(), &'a str> {
+fn fen_to_en_passant(board: &mut Bitboard, en_passant: &str) -> Result<(), &'static str> {
     if en_passant == "-" {
         return Ok(());
     }
 
     let mut chars = en_passant.chars();
-    let field_index = (7 - ((chars.next().unwrap() as u8) - b'a')) + 8 * ((chars.next().unwrap() as u8) - b'1');
+    let file = chars.next().ok_or("Invalid FEN")? as u8;
+    let rank = chars.next().ok_or("Invalid FEN")? as u8;
+
+    let field_index = (7 - (file - b'a')) + 8 * (rank - b'1');
     board.en_passant = 1u64 << field_index;
 
     Ok(())
@@ -195,7 +196,7 @@ fn en_passant_to_fen(board: &Bitboard) -> String {
     result.into_iter().collect()
 }
 
-fn fen_to_halfmove_clock<'a>(board: &mut Bitboard, halfmove_clock: &str) -> Result<(), &'a str> {
+fn fen_to_halfmove_clock(board: &mut Bitboard, halfmove_clock: &str) -> Result<(), &'static str> {
     board.halfmove_clock = match halfmove_clock.parse::<u16>() {
         Ok(value) => value,
         Err(_) => return Err("Invalid FEN"),
@@ -208,7 +209,7 @@ fn halfmove_clock_to_fen(board: &Bitboard) -> String {
     board.halfmove_clock.to_string()
 }
 
-fn fen_to_fullmove_number<'a>(board: &mut Bitboard, fullmove_number: &str) -> Result<(), &'a str> {
+fn fen_to_fullmove_number(board: &mut Bitboard, fullmove_number: &str) -> Result<(), &'static str> {
     board.fullmove_number = match fullmove_number.parse::<u32>() {
         Ok(value) => value,
         Err(_) => return Err("Invalid FEN"),

@@ -1,6 +1,9 @@
 #[cfg(test)]
 mod perft_tests {
-    use ina::{movegen, patterns, perft};
+    use ina::board::Bitboard;
+    use ina::movegen;
+    use ina::patterns;
+    use ina::perft;
     use std::sync::Once;
 
     static INIT: Once = Once::new();
@@ -15,7 +18,7 @@ mod perft_tests {
                         movegen::init();
                     });
 
-                    assert_eq!($expected_leafs_count, perft::run($depth));
+                    assert_eq!($expected_leafs_count, perft::run($depth, &mut Bitboard::new_default()).unwrap());
                 }
             )*
         }

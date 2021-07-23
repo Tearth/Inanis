@@ -1,6 +1,7 @@
 use crate::bit::*;
 use crate::common::*;
 use crate::fen;
+use crate::fen::board_to_fen;
 use crate::movegen;
 use crate::movescan::{self, Move, MoveFlags};
 
@@ -55,8 +56,18 @@ impl Bitboard {
         Bitboard::new_from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap()
     }
 
-    pub fn new_from_fen(fen: &str) -> Result<Bitboard, &str> {
+    pub fn new_from_fen(fen: &str) -> Result<Bitboard, &'static str> {
         fen::fen_to_board(fen)
+    }
+
+    pub fn new_from_moves(moves: &[&str]) -> Result<Bitboard, &'static str> {
+        let mut board = Bitboard::new_default();
+        for premade_move in moves {
+            let parsed_move = Move::from_text(premade_move.trim(), &board)?;
+            board.make_move_active_color(&parsed_move);
+        }
+
+        Ok(board)
     }
 
     pub fn get_moves<const COLOR: u8>(&self, moves: &mut [Move]) -> usize {
@@ -176,6 +187,10 @@ impl Bitboard {
         self.piece_table[from as usize] = u8::MAX;
     }
 
+    pub fn to_fen(&self) -> String {
+        board_to_fen(self)
+    }
+
     fn get_moves_internal<const COLOR: u8>(&self, mut moves: &mut [Move]) -> usize {
         let mut index = 0;
         index = movescan::scan_pawn_moves::<COLOR>(&self, &mut moves, index);
@@ -245,13 +260,9 @@ impl Bitboard {
         }
 
         if piece == KING {
-            match COLOR {
-                WHITE => {
-                    self.castling_rights &= !CastlingRights::WHITE_CASTLING;
-                }
-                BLACK => {
-                    self.castling_rights &= !CastlingRights::BLACK_CASTLING;
-                }
+            self.castling_rights &= match COLOR {
+                WHITE => !CastlingRights::WHITE_CASTLING,
+                BLACK => !CastlingRights::BLACK_CASTLING,
                 _ => panic!("Invalid value: COLOR={}", COLOR),
             }
         }
@@ -294,6 +305,10 @@ impl Bitboard {
         let to = r#move.get_to();
         let flags = r#move.get_flags();
         let piece = self.get_piece(to);
+
+        self.halfmove_clock = self.halfmove_clocks_stack.pop().unwrap();
+        self.castling_rights = self.castling_rights_stack.pop().unwrap();
+        self.en_passant = self.en_passant_stack.pop().unwrap();
 
         match flags {
             MoveFlags::QUIET => {
@@ -338,9 +353,6 @@ impl Bitboard {
             self.fullmove_number -= 1;
         }
 
-        self.halfmove_clock = self.halfmove_clocks_stack.pop().unwrap();
-        self.castling_rights = self.castling_rights_stack.pop().unwrap();
-        self.en_passant = self.en_passant_stack.pop().unwrap();
         self.active_color = COLOR;
     }
 }

@@ -3,21 +3,17 @@ use crate::common::*;
 use crate::movescan::Move;
 use std::mem::MaybeUninit;
 
-pub fn run(depth: i32) -> u64 {
-    let mut board = Bitboard::new_default();
-    let count = run_internal::<WHITE, BLACK>(depth, &mut board);
+pub fn run(depth: i32, board: &mut Bitboard) -> Result<u64, &'static str> {
+    let count = match board.active_color {
+        WHITE => run_internal::<WHITE, BLACK>(depth, board),
+        BLACK => run_internal::<BLACK, WHITE>(depth, board),
+        _ => panic!("Invalid value: board.active_color={}", board.active_color),
+    };
 
-    count
+    Ok(count)
 }
 
-pub fn run_divided(depth: i32, premade_moves: &[&str]) -> Vec<(String, u64)> {
-    let mut board = Bitboard::new_default();
-
-    for premade_move in premade_moves {
-        let parsed_move = Move::from_text(premade_move.trim(), &board);
-        board.make_move_active_color(&parsed_move);
-    }
-
+pub fn run_divided(depth: i32, board: &mut Bitboard) -> Result<Vec<(String, u64)>, &'static str> {
     let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
     let moves_count = board.get_moves_active_color(&mut moves);
 
@@ -26,8 +22,8 @@ pub fn run_divided(depth: i32, premade_moves: &[&str]) -> Vec<(String, u64)> {
         board.make_move_active_color(r#move);
 
         let moves_count = match board.active_color {
-            WHITE => run_internal::<WHITE, BLACK>(depth - 1, &mut board),
-            BLACK => run_internal::<BLACK, WHITE>(depth - 1, &mut board),
+            WHITE => run_internal::<WHITE, BLACK>(depth - 1, board),
+            BLACK => run_internal::<BLACK, WHITE>(depth - 1, board),
             _ => panic!("Invalid value: board.active_color={}", board.active_color),
         };
 
@@ -35,7 +31,7 @@ pub fn run_divided(depth: i32, premade_moves: &[&str]) -> Vec<(String, u64)> {
         board.undo_move_active_color(r#move);
     }
 
-    result
+    Ok(result)
 }
 
 fn run_internal<const COLOR: u8, const ENEMY_COLOR: u8>(depth: i32, board: &mut Bitboard) -> u64 {
