@@ -1,15 +1,13 @@
 #[cfg(test)]
 mod fen_tests {
     use ina::board::Bitboard;
-    use ina::fen;
 
     macro_rules! fen_tests {
         ($($name:ident: $original_fen:expr,)*) => {
             $(
                 #[test]
                 fn $name() {
-                    let board = Bitboard::new_from_fen($original_fen).unwrap();
-                    assert_eq!($original_fen, fen::board_to_fen(&board));
+                    assert_eq!($original_fen, Bitboard::new_from_fen($original_fen).unwrap().to_fen());
                 }
             )*
         }

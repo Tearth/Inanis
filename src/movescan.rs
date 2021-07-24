@@ -39,17 +39,17 @@ impl Move {
 
     pub fn from_text(text: &str, board: &Bitboard) -> Result<Move, &'static str> {
         let mut chars = text.chars();
-        let from_file = chars.next().ok_or("Invalid move")? as u8;
-        let from_rank = chars.next().ok_or("Invalid move")? as u8;
-        let to_file = chars.next().ok_or("Invalid move")? as u8;
-        let to_rank = chars.next().ok_or("Invalid move")? as u8;
+        let from_file = chars.next().ok_or("Invalid move: bad source file")? as u8;
+        let from_rank = chars.next().ok_or("Invalid move: bad source rank")? as u8;
+        let to_file = chars.next().ok_or("Invalid move: bad destination file")? as u8;
+        let to_rank = chars.next().ok_or("Invalid move: bad destination rank")? as u8;
 
         if !(b'a'..=b'h').contains(&from_file) || !(b'a'..=b'h').contains(&to_file) {
-            return Err("Invalid move");
+            return Err("Invalid move: bad source field");
         }
 
         if !(b'1'..=b'8').contains(&from_rank) || !(b'1'..=b'8').contains(&to_rank) {
-            return Err("Invalid move");
+            return Err("Invalid move: bad destination field");
         }
 
         let from = (7 - (from_file - b'a')) + 8 * (from_rank - b'1');
@@ -64,7 +64,7 @@ impl Move {
             }
         }
 
-        Err("Invalid move")
+        Err("Invalid move: not found")
     }
 
     pub fn to_text(self) -> String {

@@ -2,6 +2,7 @@
 name = "ina"
 version = "1.0.0"
 authors = ["Paweł Osikowski"]
+repository = "https://github.com/Tearth/Ina"
 edition = "2018"
 
 [lib]

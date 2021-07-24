@@ -7,13 +7,14 @@ use std::process;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
+const REPOSITORY: &str = env!("CARGO_PKG_REPOSITORY");
 const DATE: &str = env!("DATE");
 const HASH: &str = env!("HASH");
 
 pub fn init() {
     println!("Ina v{} ({}), created by {}", VERSION, DATE, AUTHOR);
     println!("Executable hash: {}", HASH);
-    println!("Homepage: https://github.com/Tearth/Ina");
+    println!("Homepage: {}", REPOSITORY);
     println!();
     println!("Type \"help\" to get a list of available commands");
 }
@@ -39,7 +40,12 @@ pub fn run() {
 fn handle_help() {
     println!("List of available commands:");
     println!("  magic - generate magic numbers");
-    println!("  perft d - run perft test with d depth");
+    println!("  perft [d] - run perft test with d depth");
+    println!("  perft [d] fen [fen] - run perft test with d depth and initial state defined by FEN");
+    println!("  perft [d] moves [moves] - run perft test with d depth and initial state defined by moves");
+    println!("  perftd [d] - run divided perft test with d depth");
+    println!("  perftd [d] fen [fen] - run divided perft test with d depth and initial state defined by FEN");
+    println!("  perftd [d] moves [moves] - run divided perft test with d depth and initial state defined by moves");
     println!("  quit - close the application");
 }
 

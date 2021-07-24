@@ -2,15 +2,15 @@ use criterion::*;
 use ina::movegen;
 use ina::patterns;
 
-fn criterion_benchmark(c: &mut Criterion) {
+fn criterion_benchmark(criterion: &mut Criterion) {
     patterns::init();
     movegen::init();
 
-    c.bench_function("get_rook_moves", |b| {
+    criterion.bench_function("get_rook_moves", |bencher| {
         let mut bitboard = 0u64;
         let mut field_index = 0;
 
-        b.iter(|| {
+        bencher.iter(|| {
             bitboard += 1;
             field_index += 1;
 
@@ -18,11 +18,11 @@ fn criterion_benchmark(c: &mut Criterion) {
         })
     });
 
-    c.bench_function("get_bishop_moves", |b| {
+    criterion.bench_function("get_bishop_moves", |bencher| {
         let mut bitboard = 0u64;
         let mut field_index = 0;
 
-        b.iter(|| {
+        bencher.iter(|| {
             bitboard += 1;
             field_index += 1;
 

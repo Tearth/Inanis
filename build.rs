@@ -4,6 +4,11 @@ use chrono::prelude::*;
 use std::env;
 use std::process::Command;
 
+fn main() {
+    println!("cargo:rustc-env=HASH={}", hash());
+    println!("cargo:rustc-env=DATE={}", date());
+}
+
 fn hash() -> String {
     let output = Command::new("git")
         .arg("log")
@@ -20,9 +25,4 @@ fn hash() -> String {
 
 fn date() -> String {
     Utc::now().format("%d-%m-%Y").to_string()
-}
-
-fn main() {
-    println!("cargo:rustc-env=HASH={}", hash());
-    println!("cargo:rustc-env=DATE={}", date());
 }

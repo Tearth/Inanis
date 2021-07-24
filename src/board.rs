@@ -1,7 +1,6 @@
 use crate::bit::*;
 use crate::common::*;
 use crate::fen;
-use crate::fen::board_to_fen;
 use crate::movegen;
 use crate::movescan::{self, Move, MoveFlags};
 
@@ -27,7 +26,7 @@ pub struct Bitboard {
     pub castling_rights: CastlingRights,
     pub en_passant: u64,
     pub halfmove_clock: u16,
-    pub fullmove_number: u32,
+    pub fullmove_number: u16,
     pub halfmove_clocks_stack: Vec<u16>,
     pub captured_pieces_stack: Vec<u8>,
     pub castling_rights_stack: Vec<CastlingRights>,
@@ -45,10 +44,10 @@ impl Bitboard {
             en_passant: 0,
             halfmove_clock: 0,
             fullmove_number: 0,
-            halfmove_clocks_stack: Vec::with_capacity(16),
-            captured_pieces_stack: Vec::with_capacity(16),
-            castling_rights_stack: Vec::with_capacity(16),
-            en_passant_stack: Vec::with_capacity(16),
+            halfmove_clocks_stack: Vec::with_capacity(32),
+            captured_pieces_stack: Vec::with_capacity(32),
+            castling_rights_stack: Vec::with_capacity(32),
+            en_passant_stack: Vec::with_capacity(32),
         }
     }
 
@@ -188,7 +187,7 @@ impl Bitboard {
     }
 
     pub fn to_fen(&self) -> String {
-        board_to_fen(self)
+        fen::board_to_fen(self)
     }
 
     fn get_moves_internal<const COLOR: u8>(&self, mut moves: &mut [Move]) -> usize {
@@ -242,20 +241,16 @@ impl Bitboard {
                 self.remove_piece::<ENEMY_COLOR>(((to as i8) + 8 * ((COLOR as i8) * 2 - 1)) as u8, PAWN);
             }
             _ => {
-                // Promotion bit set, coincidentally knight promotion is the same
-                if flags.contains(MoveFlags::KNIGHT_PROMOTION) {
-                    let promotion_piece = r#move.get_promotion_piece();
+                let promotion_piece = r#move.get_promotion_piece();
+                if flags.contains(MoveFlags::CAPTURE) {
+                    let captured_piece = self.get_piece(to);
+                    self.captured_pieces_stack.push(captured_piece);
 
-                    if flags.contains(MoveFlags::CAPTURE) {
-                        let captured_piece = self.get_piece(to);
-                        self.captured_pieces_stack.push(captured_piece);
-
-                        self.remove_piece::<ENEMY_COLOR>(to, captured_piece);
-                    }
-
-                    self.remove_piece::<COLOR>(from, PAWN);
-                    self.add_piece::<COLOR>(to, promotion_piece);
+                    self.remove_piece::<ENEMY_COLOR>(to, captured_piece);
                 }
+
+                self.remove_piece::<COLOR>(from, PAWN);
+                self.add_piece::<COLOR>(to, promotion_piece);
             }
         }
 
@@ -336,15 +331,12 @@ impl Bitboard {
                 self.add_piece::<ENEMY_COLOR>(((to as i8) + 8 * ((COLOR as i8) * 2 - 1)) as u8, PAWN);
             }
             _ => {
-                // Promotion bit set, coincidentally knight promotion is the same
-                if flags.contains(MoveFlags::KNIGHT_PROMOTION) {
-                    self.add_piece::<COLOR>(from, PAWN);
-                    self.remove_piece::<COLOR>(to, piece);
+                self.add_piece::<COLOR>(from, PAWN);
+                self.remove_piece::<COLOR>(to, piece);
 
-                    if flags.contains(MoveFlags::CAPTURE) {
-                        let captured_piece = self.captured_pieces_stack.pop().unwrap();
-                        self.add_piece::<ENEMY_COLOR>(to, captured_piece);
-                    }
+                if flags.contains(MoveFlags::CAPTURE) {
+                    let captured_piece = self.captured_pieces_stack.pop().unwrap();
+                    self.add_piece::<ENEMY_COLOR>(to, captured_piece);
                 }
             }
         }
