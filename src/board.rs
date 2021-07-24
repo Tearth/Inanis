@@ -23,11 +23,11 @@ pub struct Bitboard {
     pub pieces: [[u64; 6]; 2],
     pub occupancy: [u64; 2],
     pub piece_table: [u8; 64],
-    pub active_color: u8,
     pub castling_rights: CastlingRights,
     pub en_passant: u64,
     pub halfmove_clock: u16,
     pub fullmove_number: u16,
+    pub active_color: u8,
     pub hash: u64,
     pub halfmove_clocks_stack: Vec<u16>,
     pub captured_pieces_stack: Vec<u8>,
@@ -42,11 +42,11 @@ impl Bitboard {
             pieces: [[0; 6], [0; 6]],
             occupancy: [0, 0],
             piece_table: [u8::MAX; 64],
-            active_color: WHITE,
             castling_rights: CastlingRights::NONE,
             en_passant: 0,
             halfmove_clock: 0,
             fullmove_number: 0,
+            active_color: WHITE,
             hash: 0,
             halfmove_clocks_stack: Vec::with_capacity(32),
             captured_pieces_stack: Vec::with_capacity(32),
@@ -86,32 +86,32 @@ impl Bitboard {
         }
     }
 
-    pub fn make_move<const COLOR: u8, const ENEMY_COLOR: u8>(&mut self, r#move: &Move) {
-        self.make_move_internal::<COLOR, ENEMY_COLOR>(r#move);
+    pub fn make_move<const COLOR: u8>(&mut self, r#move: &Move) {
+        self.make_move_internal::<COLOR>(r#move);
     }
 
     pub fn make_move_active_color(&mut self, r#move: &Move) {
         match self.active_color {
-            WHITE => self.make_move_internal::<WHITE, BLACK>(r#move),
-            BLACK => self.make_move_internal::<BLACK, WHITE>(r#move),
+            WHITE => self.make_move_internal::<WHITE>(r#move),
+            BLACK => self.make_move_internal::<BLACK>(r#move),
             _ => panic!("Invalid value: self.active_color={}", self.active_color),
         };
     }
 
-    pub fn undo_move<const COLOR: u8, const ENEMY_COLOR: u8>(&mut self, r#move: &Move) {
-        self.undo_move_internal::<COLOR, ENEMY_COLOR>(r#move);
+    pub fn undo_move<const COLOR: u8>(&mut self, r#move: &Move) {
+        self.undo_move_internal::<COLOR>(r#move);
     }
 
     pub fn undo_move_active_color(&mut self, r#move: &Move) {
         match self.active_color {
-            WHITE => self.undo_move_internal::<BLACK, WHITE>(r#move),
-            BLACK => self.undo_move_internal::<WHITE, BLACK>(r#move),
+            WHITE => self.undo_move_internal::<BLACK>(r#move),
+            BLACK => self.undo_move_internal::<WHITE>(r#move),
             _ => panic!("Invalid value: self.active_color={}", self.active_color),
         };
     }
 
-    pub fn is_field_attacked<const COLOR: u8>(&self, field_index: u8) -> bool {
-        let enemy_color = COLOR ^ 1;
+    pub fn is_field_attacked(&self, color: u8, field_index: u8) -> bool {
+        let enemy_color = color ^ 1;
         let occupancy = self.occupancy[WHITE as usize] | self.occupancy[BLACK as usize];
 
         let rook_queen_attacks = movegen::get_rook_moves(occupancy, field_index as usize);
@@ -140,10 +140,10 @@ impl Bitboard {
 
         let field = 1u64 << field_index;
         let potential_enemy_pawns = king_attacks & self.pieces[enemy_color as usize][PAWN as usize];
-        let attacking_enemy_pawns = match COLOR {
+        let attacking_enemy_pawns = match color {
             WHITE => field & ((potential_enemy_pawns >> 7) | (potential_enemy_pawns >> 9)),
             BLACK => field & ((potential_enemy_pawns << 7) | (potential_enemy_pawns << 9)),
-            _ => panic!("Invalid value: COLOR={}", COLOR),
+            _ => panic!("Invalid value: COLOR={}", color),
         };
 
         if attacking_enemy_pawns != 0 {
@@ -153,9 +153,9 @@ impl Bitboard {
         false
     }
 
-    pub fn are_fields_attacked<const COLOR: u8>(&self, field_indexes: &[u8]) -> bool {
+    pub fn are_fields_attacked(&self, color: u8, field_indexes: &[u8]) -> bool {
         for field_index in field_indexes {
-            if self.is_field_attacked::<COLOR>(*field_index) {
+            if self.is_field_attacked(color, *field_index) {
                 return true;
             }
         }
@@ -163,29 +163,29 @@ impl Bitboard {
         false
     }
 
-    pub fn is_king_checked<const COLOR: u8>(&self) -> bool {
-        self.is_field_attacked::<COLOR>(bit_scan(self.pieces[COLOR as usize][KING as usize]))
+    pub fn is_king_checked(&self, color: u8) -> bool {
+        self.is_field_attacked(color, bit_scan(self.pieces[color as usize][KING as usize]))
     }
 
     pub fn get_piece(&self, field: u8) -> u8 {
         self.piece_table[field as usize]
     }
 
-    pub fn add_piece<const COLOR: u8>(&mut self, field: u8, piece: u8) {
-        self.pieces[COLOR as usize][piece as usize] |= 1u64 << field;
-        self.occupancy[COLOR as usize] |= 1u64 << field;
+    pub fn add_piece(&mut self, color: u8, piece: u8, field: u8) {
+        self.pieces[color as usize][piece as usize] |= 1u64 << field;
+        self.occupancy[color as usize] |= 1u64 << field;
         self.piece_table[field as usize] = piece;
     }
 
-    pub fn remove_piece<const COLOR: u8>(&mut self, field: u8, piece: u8) {
-        self.pieces[COLOR as usize][piece as usize] &= !(1u64 << field);
-        self.occupancy[COLOR as usize] &= !(1u64 << field);
+    pub fn remove_piece(&mut self, color: u8, piece: u8, field: u8) {
+        self.pieces[color as usize][piece as usize] &= !(1u64 << field);
+        self.occupancy[color as usize] &= !(1u64 << field);
         self.piece_table[field as usize] = u8::MAX;
     }
 
-    pub fn move_piece<const COLOR: u8>(&mut self, from: u8, to: u8, piece: u8) {
-        self.pieces[COLOR as usize][piece as usize] ^= (1u64 << from) | (1u64 << to);
-        self.occupancy[COLOR as usize] ^= (1u64 << from) | (1u64 << to);
+    pub fn move_piece(&mut self, color: u8, piece: u8, from: u8, to: u8) {
+        self.pieces[color as usize][piece as usize] ^= (1u64 << from) | (1u64 << to);
+        self.occupancy[color as usize] ^= (1u64 << from) | (1u64 << to);
 
         self.piece_table[to as usize] = self.piece_table[from as usize];
         self.piece_table[from as usize] = u8::MAX;
@@ -247,7 +247,9 @@ impl Bitboard {
         index
     }
 
-    fn make_move_internal<const COLOR: u8, const ENEMY_COLOR: u8>(&mut self, r#move: &Move) {
+    fn make_move_internal<const COLOR: u8>(&mut self, r#move: &Move) {
+        let enemy_color = COLOR ^ 1;
+
         let from = r#move.get_from();
         let to = r#move.get_to();
         let flags = r#move.get_flags();
@@ -265,12 +267,12 @@ impl Bitboard {
 
         match flags {
             MoveFlags::QUIET => {
-                self.move_piece::<COLOR>(from, to, piece);
+                self.move_piece(COLOR, piece, from, to);
                 self.hash = zobrist::toggle_piece(self.hash, COLOR, piece, from);
                 self.hash = zobrist::toggle_piece(self.hash, COLOR, piece, to);
             }
             MoveFlags::DOUBLE_PUSH => {
-                self.move_piece::<COLOR>(from, to, piece);
+                self.move_piece(COLOR, piece, from, to);
                 self.hash = zobrist::toggle_piece(self.hash, COLOR, piece, from);
                 self.hash = zobrist::toggle_piece(self.hash, COLOR, piece, to);
 
@@ -281,10 +283,10 @@ impl Bitboard {
                 let captured_piece = self.get_piece(to);
                 self.captured_pieces_stack.push(captured_piece);
 
-                self.remove_piece::<ENEMY_COLOR>(to, captured_piece);
-                self.hash = zobrist::toggle_piece(self.hash, ENEMY_COLOR, captured_piece, to);
+                self.remove_piece(enemy_color, captured_piece, to);
+                self.hash = zobrist::toggle_piece(self.hash, enemy_color, captured_piece, to);
 
-                self.move_piece::<COLOR>(from, to, piece);
+                self.move_piece(COLOR, piece, from, to);
                 self.hash = zobrist::toggle_piece(self.hash, COLOR, piece, from);
                 self.hash = zobrist::toggle_piece(self.hash, COLOR, piece, to);
             }
@@ -292,14 +294,14 @@ impl Bitboard {
                 let king_from = 3 + 56 * (COLOR as u8);
                 let king_to = 1 + 56 * (COLOR as u8);
 
-                self.move_piece::<COLOR>(king_from, king_to, KING);
+                self.move_piece(COLOR, KING, king_from, king_to);
                 self.hash = zobrist::toggle_piece(self.hash, COLOR, KING, king_from);
                 self.hash = zobrist::toggle_piece(self.hash, COLOR, KING, king_to);
 
                 let rook_from = 0 + 56 * (COLOR as u8);
                 let rook_to = 2 + 56 * (COLOR as u8);
 
-                self.move_piece::<COLOR>(rook_from, rook_to, ROOK);
+                self.move_piece(COLOR, ROOK, rook_from, rook_to);
                 self.hash = zobrist::toggle_piece(self.hash, COLOR, ROOK, rook_from);
                 self.hash = zobrist::toggle_piece(self.hash, COLOR, ROOK, rook_to);
             }
@@ -307,26 +309,26 @@ impl Bitboard {
                 let king_from = 3 + 56 * (COLOR as u8);
                 let king_to = 5 + 56 * (COLOR as u8);
 
-                self.move_piece::<COLOR>(3 + 56 * (COLOR as u8), 5 + 56 * (COLOR as u8), KING);
+                self.move_piece(COLOR, KING, 3 + 56 * (COLOR as u8), 5 + 56 * (COLOR as u8));
                 self.hash = zobrist::toggle_piece(self.hash, COLOR, KING, king_from);
                 self.hash = zobrist::toggle_piece(self.hash, COLOR, KING, king_to);
 
                 let rook_from = 7 + 56 * (COLOR as u8);
                 let rook_to = 4 + 56 * (COLOR as u8);
 
-                self.move_piece::<COLOR>(7 + 56 * (COLOR as u8), 4 + 56 * (COLOR as u8), ROOK);
+                self.move_piece(COLOR, ROOK, 7 + 56 * (COLOR as u8), 4 + 56 * (COLOR as u8));
                 self.hash = zobrist::toggle_piece(self.hash, COLOR, ROOK, rook_from);
                 self.hash = zobrist::toggle_piece(self.hash, COLOR, ROOK, rook_to);
             }
             MoveFlags::EN_PASSANT => {
-                self.move_piece::<COLOR>(from, to, piece);
+                self.move_piece(COLOR, piece, from, to);
                 self.hash = zobrist::toggle_piece(self.hash, COLOR, piece, from);
                 self.hash = zobrist::toggle_piece(self.hash, COLOR, piece, to);
 
                 let enemy_pawn_field_index = ((to as i8) + 8 * ((COLOR as i8) * 2 - 1)) as u8;
 
-                self.remove_piece::<ENEMY_COLOR>(enemy_pawn_field_index, PAWN);
-                self.hash = zobrist::toggle_piece(self.hash, ENEMY_COLOR, PAWN, enemy_pawn_field_index);
+                self.remove_piece(enemy_color, PAWN, enemy_pawn_field_index);
+                self.hash = zobrist::toggle_piece(self.hash, enemy_color, PAWN, enemy_pawn_field_index);
             }
             _ => {
                 let promotion_piece = r#move.get_promotion_piece();
@@ -334,14 +336,14 @@ impl Bitboard {
                     let captured_piece = self.get_piece(to);
                     self.captured_pieces_stack.push(captured_piece);
 
-                    self.remove_piece::<ENEMY_COLOR>(to, captured_piece);
-                    self.hash = zobrist::toggle_piece(self.hash, ENEMY_COLOR, captured_piece, to);
+                    self.remove_piece(enemy_color, captured_piece, to);
+                    self.hash = zobrist::toggle_piece(self.hash, enemy_color, captured_piece, to);
                 }
 
-                self.remove_piece::<COLOR>(from, PAWN);
+                self.remove_piece(COLOR, PAWN, from);
                 self.hash = zobrist::toggle_piece(self.hash, COLOR, PAWN, from);
 
-                self.add_piece::<COLOR>(to, promotion_piece);
+                self.add_piece(COLOR, promotion_piece, to);
                 self.hash = zobrist::toggle_piece(self.hash, COLOR, promotion_piece, to);
             }
         }
@@ -398,11 +400,13 @@ impl Bitboard {
             self.halfmove_clock += 1;
         }
 
-        self.active_color = ENEMY_COLOR;
+        self.active_color = enemy_color;
         self.hash = zobrist::toggle_active_color(self.hash);
     }
 
-    fn undo_move_internal<const COLOR: u8, const ENEMY_COLOR: u8>(&mut self, r#move: &Move) {
+    fn undo_move_internal<const COLOR: u8>(&mut self, r#move: &Move) {
+        let enemy_color = COLOR ^ 1;
+
         let from = r#move.get_from();
         let to = r#move.get_to();
         let flags = r#move.get_flags();
@@ -415,36 +419,36 @@ impl Bitboard {
 
         match flags {
             MoveFlags::QUIET => {
-                self.move_piece::<COLOR>(to, from, piece);
+                self.move_piece(COLOR, piece, to, from);
             }
             MoveFlags::DOUBLE_PUSH => {
-                self.move_piece::<COLOR>(to, from, piece);
+                self.move_piece(COLOR, piece, to, from);
             }
             MoveFlags::CAPTURE => {
                 let captured_piece = self.captured_pieces_stack.pop().unwrap();
 
-                self.move_piece::<COLOR>(to, from, piece);
-                self.add_piece::<ENEMY_COLOR>(to, captured_piece);
+                self.move_piece(COLOR, piece, to, from);
+                self.add_piece(enemy_color, captured_piece, to);
             }
             MoveFlags::SHORT_CASTLING => {
-                self.move_piece::<COLOR>(1 + 56 * (COLOR as u8), 3 + 56 * (COLOR as u8), KING);
-                self.move_piece::<COLOR>(2 + 56 * (COLOR as u8), 0 + 56 * (COLOR as u8), ROOK);
+                self.move_piece(COLOR, KING, 1 + 56 * (COLOR as u8), 3 + 56 * (COLOR as u8));
+                self.move_piece(COLOR, ROOK, 2 + 56 * (COLOR as u8), 0 + 56 * (COLOR as u8));
             }
             MoveFlags::LONG_CASTLING => {
-                self.move_piece::<COLOR>(5 + 56 * (COLOR as u8), 3 + 56 * (COLOR as u8), KING);
-                self.move_piece::<COLOR>(4 + 56 * (COLOR as u8), 7 + 56 * (COLOR as u8), ROOK);
+                self.move_piece(COLOR, KING, 5 + 56 * (COLOR as u8), 3 + 56 * (COLOR as u8));
+                self.move_piece(COLOR, ROOK, 4 + 56 * (COLOR as u8), 7 + 56 * (COLOR as u8));
             }
             MoveFlags::EN_PASSANT => {
-                self.move_piece::<COLOR>(to, from, piece);
-                self.add_piece::<ENEMY_COLOR>(((to as i8) + 8 * ((COLOR as i8) * 2 - 1)) as u8, PAWN);
+                self.move_piece(COLOR, piece, to, from);
+                self.add_piece(enemy_color, PAWN, ((to as i8) + 8 * ((COLOR as i8) * 2 - 1)) as u8);
             }
             _ => {
-                self.add_piece::<COLOR>(from, PAWN);
-                self.remove_piece::<COLOR>(to, piece);
+                self.add_piece(COLOR, PAWN, from);
+                self.remove_piece(COLOR, piece, to);
 
                 if flags.contains(MoveFlags::CAPTURE) {
                     let captured_piece = self.captured_pieces_stack.pop().unwrap();
-                    self.add_piece::<ENEMY_COLOR>(to, captured_piece);
+                    self.add_piece(enemy_color, captured_piece, to);
                 }
             }
         }

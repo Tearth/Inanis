@@ -142,7 +142,7 @@ pub fn scan_piece_moves<const COLOR: u8, const PIECE: u8>(board: &Bitboard, move
                     let king_side_rook_present = (board.pieces[COLOR as usize][ROOK as usize] & 0x1) != 0;
 
                     if king_side_castling_rights && king_side_rook_present && (occupancy & 0x6) == 0 {
-                        if !board.are_fields_attacked::<COLOR>(&[3, 2, 1]) {
+                        if !board.are_fields_attacked(COLOR, &[3, 2, 1]) {
                             moves[index] = Move::new(3, 1, MoveFlags::SHORT_CASTLING);
                             index += 1;
                         }
@@ -152,7 +152,7 @@ pub fn scan_piece_moves<const COLOR: u8, const PIECE: u8>(board: &Bitboard, move
                     let queen_side_rook_present = (board.pieces[COLOR as usize][ROOK as usize] & 0x80) != 0;
 
                     if queen_side_castling_rights && queen_side_rook_present && (occupancy & 0x70) == 0 {
-                        if !board.are_fields_attacked::<COLOR>(&[3, 4, 5]) {
+                        if !board.are_fields_attacked(COLOR, &[3, 4, 5]) {
                             moves[index] = Move::new(3, 5, MoveFlags::LONG_CASTLING);
                             index += 1;
                         }
@@ -163,7 +163,7 @@ pub fn scan_piece_moves<const COLOR: u8, const PIECE: u8>(board: &Bitboard, move
                     let king_side_rook_present = (board.pieces[COLOR as usize][ROOK as usize] & 0x100000000000000) != 0;
 
                     if king_side_castling_rights && king_side_rook_present && (occupancy & 0x600000000000000) == 0 {
-                        if !board.are_fields_attacked::<COLOR>(&[59, 58, 57]) {
+                        if !board.are_fields_attacked(COLOR, &[59, 58, 57]) {
                             moves[index] = Move::new(59, 57, MoveFlags::SHORT_CASTLING);
                             index += 1;
                         }
@@ -173,7 +173,7 @@ pub fn scan_piece_moves<const COLOR: u8, const PIECE: u8>(board: &Bitboard, move
                     let queen_side_rook_present = (board.pieces[COLOR as usize][ROOK as usize] & 0x8000000000000000) != 0;
 
                     if queen_side_castling_rights && queen_side_rook_present && (occupancy & 0x7000000000000000) == 0 {
-                        if !board.are_fields_attacked::<COLOR>(&[59, 60, 61]) {
+                        if !board.are_fields_attacked(COLOR, &[59, 60, 61]) {
                             moves[index] = Move::new(59, 61, MoveFlags::LONG_CASTLING);
                             index += 1;
                         }

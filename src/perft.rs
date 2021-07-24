@@ -50,13 +50,13 @@ fn run_internal<const COLOR: u8, const ENEMY_COLOR: u8>(depth: i32, board: &mut 
 
     let mut count = 0;
     for r#move in &moves[0..moves_count] {
-        board.make_move::<COLOR, ENEMY_COLOR>(r#move);
+        board.make_move::<COLOR>(r#move);
 
-        if !board.is_king_checked::<COLOR>() {
+        if !board.is_king_checked(COLOR) {
             count += run_internal::<ENEMY_COLOR, COLOR>(depth - 1, board, check_integrity)
         }
 
-        board.undo_move::<COLOR, ENEMY_COLOR>(r#move);
+        board.undo_move::<COLOR>(r#move);
     }
 
     count

@@ -52,8 +52,8 @@ fn fen_to_pieces(board: &mut Bitboard, pieces: &str) -> Result<(), &'static str>
             };
 
             match color {
-                WHITE => board.add_piece::<WHITE>(current_field_index as u8, piece),
-                BLACK => board.add_piece::<BLACK>(current_field_index as u8, piece),
+                WHITE => board.add_piece(WHITE, piece, current_field_index as u8),
+                BLACK => board.add_piece(BLACK, piece, current_field_index as u8),
                 _ => panic!("Invalid value: color={}", color),
             };
 
