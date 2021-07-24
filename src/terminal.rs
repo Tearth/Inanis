@@ -93,7 +93,7 @@ fn handle_perft(input: Vec<&str>) {
     for depth in 1..max_depth + 1 {
         let now = Utc::now();
 
-        let count = match perft::run(depth, &mut board) {
+        let count = match perft::run(depth, &mut board, false) {
             Ok(result) => result,
             Err(message) => {
                 println!("{}", message);
@@ -132,7 +132,7 @@ fn handle_perftd(input: Vec<&str>) {
         }
     };
 
-    let result = match perft::run_divided(depth, &mut board) {
+    let result = match perft::run_divided(depth, &mut board, false) {
         Ok(result) => result,
         Err(message) => {
             println!("{}", message);

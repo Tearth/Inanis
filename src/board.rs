@@ -3,6 +3,7 @@ use crate::common::*;
 use crate::fen;
 use crate::movegen;
 use crate::movescan::{self, Move, MoveFlags};
+use crate::zobrist;
 
 bitflags! {
     pub struct CastlingRights: u8 {
@@ -27,10 +28,12 @@ pub struct Bitboard {
     pub en_passant: u64,
     pub halfmove_clock: u16,
     pub fullmove_number: u16,
+    pub hash: u64,
     pub halfmove_clocks_stack: Vec<u16>,
     pub captured_pieces_stack: Vec<u8>,
     pub castling_rights_stack: Vec<CastlingRights>,
     pub en_passant_stack: Vec<u64>,
+    pub hash_stack: Vec<u64>,
 }
 
 impl Bitboard {
@@ -44,10 +47,12 @@ impl Bitboard {
             en_passant: 0,
             halfmove_clock: 0,
             fullmove_number: 0,
+            hash: 0,
             halfmove_clocks_stack: Vec::with_capacity(32),
             captured_pieces_stack: Vec::with_capacity(32),
             castling_rights_stack: Vec::with_capacity(32),
             en_passant_stack: Vec::with_capacity(32),
+            hash_stack: Vec::with_capacity(32),
         }
     }
 
@@ -190,6 +195,46 @@ impl Bitboard {
         fen::board_to_fen(self)
     }
 
+    pub fn calculate_hash(&self) -> u64 {
+        let mut hash = 0u64;
+
+        for color in 0..2 {
+            for piece_index in 0..6 {
+                let mut pieces = self.pieces[color as usize][piece_index as usize];
+                while pieces != 0 {
+                    let field = get_lsb(pieces);
+                    let field_index = bit_scan(field);
+                    pieces = pop_lsb(pieces);
+
+                    hash = zobrist::toggle_piece(hash, color, piece_index, field_index);
+                }
+            }
+        }
+
+        if self.castling_rights.contains(CastlingRights::WHITE_SHORT_CASTLING) {
+            hash = zobrist::toggle_castling_right(hash, self.castling_rights, CastlingRights::WHITE_SHORT_CASTLING);
+        }
+        if self.castling_rights.contains(CastlingRights::WHITE_LONG_CASTLING) {
+            hash = zobrist::toggle_castling_right(hash, self.castling_rights, CastlingRights::WHITE_LONG_CASTLING);
+        }
+        if self.castling_rights.contains(CastlingRights::BLACK_SHORT_CASTLING) {
+            hash = zobrist::toggle_castling_right(hash, self.castling_rights, CastlingRights::BLACK_SHORT_CASTLING);
+        }
+        if self.castling_rights.contains(CastlingRights::BLACK_LONG_CASTLING) {
+            hash = zobrist::toggle_castling_right(hash, self.castling_rights, CastlingRights::BLACK_LONG_CASTLING);
+        }
+
+        if self.en_passant != 0 {
+            hash = zobrist::toggle_en_passant(hash, (self.en_passant % 8) as u8);
+        }
+
+        if self.active_color == BLACK {
+            hash = zobrist::toggle_active_color(hash);
+        }
+
+        hash
+    }
+
     fn get_moves_internal<const COLOR: u8>(&self, mut moves: &mut [Move]) -> usize {
         let mut index = 0;
         index = movescan::scan_pawn_moves::<COLOR>(&self, &mut moves, index);
@@ -211,34 +256,77 @@ impl Bitboard {
         self.halfmove_clocks_stack.push(self.halfmove_clock);
         self.castling_rights_stack.push(self.castling_rights);
         self.en_passant_stack.push(self.en_passant);
-        self.en_passant = 0;
+        self.hash_stack.push(self.hash);
+
+        if self.en_passant != 0 {
+            self.hash = zobrist::toggle_en_passant(self.hash, (self.en_passant % 8) as u8);
+            self.en_passant = 0;
+        }
 
         match flags {
             MoveFlags::QUIET => {
                 self.move_piece::<COLOR>(from, to, piece);
+                self.hash = zobrist::toggle_piece(self.hash, COLOR, piece, from);
+                self.hash = zobrist::toggle_piece(self.hash, COLOR, piece, to);
             }
             MoveFlags::DOUBLE_PUSH => {
                 self.move_piece::<COLOR>(from, to, piece);
+                self.hash = zobrist::toggle_piece(self.hash, COLOR, piece, from);
+                self.hash = zobrist::toggle_piece(self.hash, COLOR, piece, to);
+
                 self.en_passant = 1u64 << ((to as i8) + 8 * ((COLOR as i8) * 2 - 1));
+                self.hash = zobrist::toggle_en_passant(self.hash, (self.en_passant % 8) as u8);
             }
             MoveFlags::CAPTURE => {
                 let captured_piece = self.get_piece(to);
                 self.captured_pieces_stack.push(captured_piece);
 
                 self.remove_piece::<ENEMY_COLOR>(to, captured_piece);
+                self.hash = zobrist::toggle_piece(self.hash, ENEMY_COLOR, captured_piece, to);
+
                 self.move_piece::<COLOR>(from, to, piece);
+                self.hash = zobrist::toggle_piece(self.hash, COLOR, piece, from);
+                self.hash = zobrist::toggle_piece(self.hash, COLOR, piece, to);
             }
             MoveFlags::SHORT_CASTLING => {
-                self.move_piece::<COLOR>(3 + 56 * (COLOR as u8), 1 + 56 * (COLOR as u8), KING);
-                self.move_piece::<COLOR>(0 + 56 * (COLOR as u8), 2 + 56 * (COLOR as u8), ROOK);
+                let king_from = 3 + 56 * (COLOR as u8);
+                let king_to = 1 + 56 * (COLOR as u8);
+
+                self.move_piece::<COLOR>(king_from, king_to, KING);
+                self.hash = zobrist::toggle_piece(self.hash, COLOR, KING, king_from);
+                self.hash = zobrist::toggle_piece(self.hash, COLOR, KING, king_to);
+
+                let rook_from = 0 + 56 * (COLOR as u8);
+                let rook_to = 2 + 56 * (COLOR as u8);
+
+                self.move_piece::<COLOR>(rook_from, rook_to, ROOK);
+                self.hash = zobrist::toggle_piece(self.hash, COLOR, ROOK, rook_from);
+                self.hash = zobrist::toggle_piece(self.hash, COLOR, ROOK, rook_to);
             }
             MoveFlags::LONG_CASTLING => {
+                let king_from = 3 + 56 * (COLOR as u8);
+                let king_to = 5 + 56 * (COLOR as u8);
+
                 self.move_piece::<COLOR>(3 + 56 * (COLOR as u8), 5 + 56 * (COLOR as u8), KING);
+                self.hash = zobrist::toggle_piece(self.hash, COLOR, KING, king_from);
+                self.hash = zobrist::toggle_piece(self.hash, COLOR, KING, king_to);
+
+                let rook_from = 7 + 56 * (COLOR as u8);
+                let rook_to = 4 + 56 * (COLOR as u8);
+
                 self.move_piece::<COLOR>(7 + 56 * (COLOR as u8), 4 + 56 * (COLOR as u8), ROOK);
+                self.hash = zobrist::toggle_piece(self.hash, COLOR, ROOK, rook_from);
+                self.hash = zobrist::toggle_piece(self.hash, COLOR, ROOK, rook_to);
             }
             MoveFlags::EN_PASSANT => {
                 self.move_piece::<COLOR>(from, to, piece);
-                self.remove_piece::<ENEMY_COLOR>(((to as i8) + 8 * ((COLOR as i8) * 2 - 1)) as u8, PAWN);
+                self.hash = zobrist::toggle_piece(self.hash, COLOR, piece, from);
+                self.hash = zobrist::toggle_piece(self.hash, COLOR, piece, to);
+
+                let enemy_pawn_field_index = ((to as i8) + 8 * ((COLOR as i8) * 2 - 1)) as u8;
+
+                self.remove_piece::<ENEMY_COLOR>(enemy_pawn_field_index, PAWN);
+                self.hash = zobrist::toggle_piece(self.hash, ENEMY_COLOR, PAWN, enemy_pawn_field_index);
             }
             _ => {
                 let promotion_piece = r#move.get_promotion_piece();
@@ -247,17 +335,31 @@ impl Bitboard {
                     self.captured_pieces_stack.push(captured_piece);
 
                     self.remove_piece::<ENEMY_COLOR>(to, captured_piece);
+                    self.hash = zobrist::toggle_piece(self.hash, ENEMY_COLOR, captured_piece, to);
                 }
 
                 self.remove_piece::<COLOR>(from, PAWN);
+                self.hash = zobrist::toggle_piece(self.hash, COLOR, PAWN, from);
+
                 self.add_piece::<COLOR>(to, promotion_piece);
+                self.hash = zobrist::toggle_piece(self.hash, COLOR, promotion_piece, to);
             }
         }
 
         if piece == KING {
             self.castling_rights &= match COLOR {
-                WHITE => !CastlingRights::WHITE_CASTLING,
-                BLACK => !CastlingRights::BLACK_CASTLING,
+                WHITE => {
+                    self.hash = zobrist::toggle_castling_right(self.hash, self.castling_rights, CastlingRights::WHITE_SHORT_CASTLING);
+                    self.hash = zobrist::toggle_castling_right(self.hash, self.castling_rights, CastlingRights::WHITE_LONG_CASTLING);
+
+                    !CastlingRights::WHITE_CASTLING
+                }
+                BLACK => {
+                    self.hash = zobrist::toggle_castling_right(self.hash, self.castling_rights, CastlingRights::BLACK_SHORT_CASTLING);
+                    self.hash = zobrist::toggle_castling_right(self.hash, self.castling_rights, CastlingRights::BLACK_LONG_CASTLING);
+
+                    !CastlingRights::BLACK_CASTLING
+                }
                 _ => panic!("Invalid value: COLOR={}", COLOR),
             }
         }
@@ -266,15 +368,19 @@ impl Bitboard {
             match COLOR {
                 WHITE => {
                     if from == 0 {
+                        self.hash = zobrist::toggle_castling_right(self.hash, self.castling_rights, CastlingRights::WHITE_SHORT_CASTLING);
                         self.castling_rights &= !CastlingRights::WHITE_SHORT_CASTLING;
                     } else if from == 7 {
+                        self.hash = zobrist::toggle_castling_right(self.hash, self.castling_rights, CastlingRights::WHITE_LONG_CASTLING);
                         self.castling_rights &= !CastlingRights::WHITE_LONG_CASTLING;
                     }
                 }
                 BLACK => {
                     if from == 56 {
+                        self.hash = zobrist::toggle_castling_right(self.hash, self.castling_rights, CastlingRights::BLACK_SHORT_CASTLING);
                         self.castling_rights &= !CastlingRights::BLACK_SHORT_CASTLING;
                     } else if from == 63 {
+                        self.hash = zobrist::toggle_castling_right(self.hash, self.castling_rights, CastlingRights::BLACK_LONG_CASTLING);
                         self.castling_rights &= !CastlingRights::BLACK_LONG_CASTLING;
                     }
                 }
@@ -293,6 +399,7 @@ impl Bitboard {
         }
 
         self.active_color = ENEMY_COLOR;
+        self.hash = zobrist::toggle_active_color(self.hash);
     }
 
     fn undo_move_internal<const COLOR: u8, const ENEMY_COLOR: u8>(&mut self, r#move: &Move) {
@@ -304,6 +411,7 @@ impl Bitboard {
         self.halfmove_clock = self.halfmove_clocks_stack.pop().unwrap();
         self.castling_rights = self.castling_rights_stack.pop().unwrap();
         self.en_passant = self.en_passant_stack.pop().unwrap();
+        self.hash = self.hash_stack.pop().unwrap();
 
         match flags {
             MoveFlags::QUIET => {

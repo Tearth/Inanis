@@ -19,3 +19,4 @@ pub mod movescan;
 pub mod patterns;
 pub mod perft;
 pub mod terminal;
+pub mod zobrist;

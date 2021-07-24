@@ -4,6 +4,7 @@ mod perft_tests {
     use ina::movegen;
     use ina::patterns;
     use ina::perft;
+    use ina::zobrist;
     use std::sync::Once;
 
     static INIT: Once = Once::new();
@@ -16,9 +17,10 @@ mod perft_tests {
                     INIT.call_once(|| {
                         patterns::init();
                         movegen::init();
+                        zobrist::init();
                     });
 
-                    assert_eq!($expected_leafs_count, perft::run($depth, &mut Bitboard::new_default()).unwrap());
+                    assert_eq!($expected_leafs_count, perft::run($depth, &mut Bitboard::new_default(), false).unwrap());
                 }
             )*
         }
