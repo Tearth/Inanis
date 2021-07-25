@@ -172,15 +172,15 @@ fn read_line() -> String {
 
 fn prepare_board(parameters: &[&str]) -> Result<Bitboard, &'static str> {
     if parameters.is_empty() {
-        Ok(Bitboard::new_default())
-    } else {
-        match parameters[0] {
-            "fen" => {
-                let fen = parameters[1..].join(" ");
-                Bitboard::new_from_fen(fen.as_str())
-            }
-            "moves" => Bitboard::new_from_moves(&parameters[1..]),
-            _ => Err("Invalid parameters"),
+        return Ok(Bitboard::new_default());
+    }
+
+    match parameters[0] {
+        "fen" => {
+            let fen = parameters[1..].join(" ");
+            Bitboard::new_from_fen(fen.as_str())
         }
+        "moves" => Bitboard::new_from_moves(&parameters[1..]),
+        _ => Err("Invalid parameters"),
     }
 }

@@ -28,22 +28,26 @@ pub fn init() {
     }
 }
 
-pub fn toggle_piece(hash: u64, color: u8, piece: u8, field_index: u8) -> u64 {
-    unsafe { hash ^ PIECE_HASHES[color as usize][piece as usize][field_index as usize] }
-}
-
-pub fn toggle_castling_right(hash: u64, current: CastlingRights, right: CastlingRights) -> u64 {
-    if current.contains(right) {
-        return unsafe { hash ^ CASTLING_HASHES[bit_scan(right.bits() as u64) as usize] };
+pub fn toggle_piece(hash: &mut u64, color: u8, piece: u8, field_index: u8) {
+    unsafe {
+        *hash ^= PIECE_HASHES[color as usize][piece as usize][field_index as usize];
     }
-
-    hash
 }
 
-pub fn toggle_en_passant(hash: u64, file: u8) -> u64 {
-    unsafe { hash ^ EN_PASSANT_HASHES[file as usize] }
+pub fn toggle_castling_right(hash: &mut u64, current: CastlingRights, right: CastlingRights) {
+    if current.contains(right) {
+        *hash ^= unsafe { CASTLING_HASHES[bit_scan(right.bits() as u64) as usize] };
+    }
 }
 
-pub fn toggle_active_color(hash: u64) -> u64 {
-    unsafe { hash ^ ACTIVE_COLOR_HASH }
+pub fn toggle_en_passant(hash: &mut u64, file: u8) {
+    unsafe {
+        *hash ^= EN_PASSANT_HASHES[file as usize];
+    }
+}
+
+pub fn toggle_active_color(hash: &mut u64) {
+    unsafe {
+        *hash ^= ACTIVE_COLOR_HASH;
+    }
 }
