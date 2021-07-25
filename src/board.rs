@@ -261,7 +261,7 @@ impl Bitboard {
         self.hash_stack.push(self.hash);
 
         if self.en_passant != 0 {
-            zobrist::toggle_en_passant(&mut self.hash, (self.en_passant % 8) as u8);
+            zobrist::toggle_en_passant(&mut self.hash, (bit_scan(self.en_passant) % 8) as u8);
             self.en_passant = 0;
         }
 
@@ -277,7 +277,7 @@ impl Bitboard {
                 zobrist::toggle_piece(&mut self.hash, COLOR, piece, to);
 
                 self.en_passant = 1u64 << ((to as i8) + 8 * ((COLOR as i8) * 2 - 1));
-                zobrist::toggle_en_passant(&mut self.hash, (self.en_passant % 8) as u8);
+                zobrist::toggle_en_passant(&mut self.hash, (bit_scan(self.en_passant) % 8) as u8);
             }
             MoveFlags::CAPTURE => {
                 let captured_piece = self.get_piece(to);

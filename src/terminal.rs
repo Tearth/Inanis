@@ -30,6 +30,7 @@ pub fn run() {
             "magic" => handle_magic(),
             "perft" => handle_perft(split),
             "perftd" => handle_perftd(split),
+            "perftf" => handle_perftf(split),
             "wah" => handle_wah(),
             "quit" => handle_quit(),
             _ => handle_unknown_command(),
@@ -148,6 +149,48 @@ fn handle_perftd(input: Vec<&str>) {
 
     println!();
     println!("{} leafs total", total_leafs);
+    println!("Perft done!");
+}
+
+fn handle_perftf(input: Vec<&str>) {
+    if input.len() < 2 {
+        println!("Depth parameter not found");
+        return;
+    }
+
+    let max_depth: i32 = match input[1].trim().parse() {
+        Ok(result) => result,
+        Err(_) => {
+            println!("Invalid depth parameter");
+            return;
+        }
+    };
+
+    let mut board = match prepare_board(&input[2..]) {
+        Ok(board) => board,
+        Err(message) => {
+            println!("{}", message);
+            return;
+        }
+    };
+
+    for depth in 1..max_depth + 1 {
+        let now = Utc::now();
+
+        let count = match perft::run_fast(depth, &mut board, false) {
+            Ok(result) => result,
+            Err(message) => {
+                println!("{}", message);
+                return;
+            }
+        };
+
+        let diff = ((Utc::now() - now).num_milliseconds() as f64) / 1000.0;
+        let mnps = ((count as f64) / 1000000.0) / diff;
+
+        println!("Depth {}: {} leafs in {:.2} s ({:.2} ML/s)", depth, count, diff, mnps);
+    }
+
     println!("Perft done!");
 }
 
