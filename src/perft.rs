@@ -4,6 +4,8 @@ use crate::movescan::Move;
 use std::mem::{size_of, MaybeUninit};
 use std::u64;
 
+const BUCKET_SLOTS: usize = 4;
+
 struct PerftContext<'a> {
     pub board: &'a mut Bitboard,
     pub check_integrity: bool,
@@ -23,28 +25,77 @@ impl<'a> PerftContext<'a> {
 }
 
 struct PerftHashTable {
-    table: Vec<PerftHashTableEntry>,
+    table: Vec<PerftHashTableBucket>,
     slots: usize,
 }
 
 impl PerftHashTable {
     fn new(size: usize) -> PerftHashTable {
-        PerftHashTable {
-            table: Vec::new(),
-            slots: size / size_of::<PerftHashTableEntry>(),
-        }
-    }
+        let buckets = size / size_of::<PerftHashTableBucket>();
+        let mut hashtable = PerftHashTable {
+            table: Vec::with_capacity(buckets),
+            slots: buckets,
+        };
 
-    pub fn init(&mut self) {
-        self.table.resize(self.slots, PerftHashTableEntry::new(0, 0, 0));
+        hashtable.table.resize(hashtable.slots, PerftHashTableBucket::new());
+        hashtable
     }
 
     pub fn add(&mut self, hash: u64, depth: u8, leafs_count: u64) {
-        self.table[(hash as usize) % self.slots] = PerftHashTableEntry::new(hash, depth, leafs_count);
+        let mut bucket = self.table[(hash as usize) % self.slots];
+        let mut smallest_depth = (bucket.entries[0].key_and_depth & 0xf) as u8;
+        let mut smallest_depth_index = 0;
+
+        for entry_index in 1..BUCKET_SLOTS {
+            let entry_depth = (bucket.entries[entry_index].key_and_depth & 0xf) as u8;
+            if entry_depth <= smallest_depth {
+                smallest_depth = entry_depth;
+                smallest_depth_index = entry_index;
+            }
+        }
+
+        bucket.entries[smallest_depth_index] = PerftHashTableEntry::new(hash, depth, leafs_count);
+        self.table[(hash as usize) % self.slots] = bucket;
     }
 
-    pub fn get(&self, hash: u64) -> PerftHashTableEntry {
-        self.table[(hash as usize) % self.slots]
+    pub fn get(&self, hash: u64, depth: u8) -> Option<PerftHashTableEntry> {
+        let bucket = self.table[(hash as usize) % self.slots];
+        for entry in bucket.entries {
+            if entry.key_and_depth == ((hash & !0xf) | (depth as u64)) {
+                return Some(entry);
+            }
+        }
+
+        None
+    }
+
+    pub fn get_usage(&self) -> f32 {
+        let mut filled_entries = 0;
+        let buckets_count_to_check = 1000 / BUCKET_SLOTS;
+
+        for bucket_index in 0..buckets_count_to_check {
+            for entry in self.table[bucket_index].entries {
+                if entry.key_and_depth != 0 && entry.leafs_count != 0 {
+                    filled_entries += 1;
+                }
+            }
+        }
+
+        ((filled_entries as f32) / 1000.0) * 100.0
+    }
+}
+
+#[repr(align(64))]
+#[derive(Clone, Copy)]
+struct PerftHashTableBucket {
+    pub entries: [PerftHashTableEntry; BUCKET_SLOTS],
+}
+
+impl PerftHashTableBucket {
+    fn new() -> PerftHashTableBucket {
+        PerftHashTableBucket {
+            entries: [PerftHashTableEntry::new(0, 0, 0); BUCKET_SLOTS],
+        }
     }
 }
 
@@ -97,10 +148,9 @@ pub fn run_divided(depth: i32, board: &mut Bitboard, check_integrity: bool) -> R
     Ok(result)
 }
 
-pub fn run_fast(depth: i32, board: &mut Bitboard, check_integrity: bool) -> Result<u64, &'static str> {
+pub fn run_fast(depth: i32, board: &mut Bitboard, check_integrity: bool, hashtable_size: usize) -> Result<(u64, f32), &'static str> {
     let mut context = PerftContext::new(board, check_integrity, true);
-    context.hash_table = PerftHashTable::new(1024 * 1024 * 1024);
-    context.hash_table.init();
+    context.hash_table = PerftHashTable::new(hashtable_size);
 
     let count = match context.board.active_color {
         WHITE => run_internal::<WHITE, BLACK>(&mut context, depth),
@@ -108,7 +158,7 @@ pub fn run_fast(depth: i32, board: &mut Bitboard, check_integrity: bool) -> Resu
         _ => panic!("Invalid value: board.active_color={}", board.active_color),
     };
 
-    Ok(count)
+    Ok((count, context.hash_table.get_usage()))
 }
 
 fn run_internal<const COLOR: u8, const ENEMY_COLOR: u8>(context: &mut PerftContext, depth: i32) -> u64 {
@@ -123,9 +173,8 @@ fn run_internal<const COLOR: u8, const ENEMY_COLOR: u8>(context: &mut PerftConte
     }
 
     if context.fast {
-        let hash_table_entry = context.hash_table.get(context.board.hash);
-        if hash_table_entry.key_and_depth == (context.board.hash & !0xF) | (depth as u64) {
-            return hash_table_entry.leafs_count;
+        if let Some(entry) = context.hash_table.get(context.board.hash, depth as u8) {
+            return entry.leafs_count;
         }
     }
 

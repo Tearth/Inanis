@@ -158,6 +158,11 @@ fn handle_perftf(input: Vec<&str>) {
         return;
     }
 
+    if input.len() < 3 {
+        println!("Hashtable size not found");
+        return;
+    }
+
     let max_depth: i32 = match input[1].trim().parse() {
         Ok(result) => result,
         Err(_) => {
@@ -166,7 +171,21 @@ fn handle_perftf(input: Vec<&str>) {
         }
     };
 
-    let mut board = match prepare_board(&input[2..]) {
+    let hashtable_size: usize = match input[2].trim().parse() {
+        Ok(result) => result,
+        Err(_) => {
+            println!("Invalid hashtable size parameter");
+            return;
+        }
+    };
+    let hashtable_size_bytes = hashtable_size * 1024 * 1024;
+
+    if hashtable_size_bytes == 0 {
+        println!("Hashtable size must be greater than zero");
+        return;
+    }
+
+    let mut board = match prepare_board(&input[3..]) {
         Ok(board) => board,
         Err(message) => {
             println!("{}", message);
@@ -174,10 +193,9 @@ fn handle_perftf(input: Vec<&str>) {
         }
     };
 
-    for depth in 1..max_depth + 1 {
+    for depth in 1..=max_depth {
         let now = Utc::now();
-
-        let count = match perft::run_fast(depth, &mut board, false) {
+        let (count, hashtable_usage) = match perft::run_fast(depth, &mut board, false, hashtable_size_bytes) {
             Ok(result) => result,
             Err(message) => {
                 println!("{}", message);
@@ -188,7 +206,10 @@ fn handle_perftf(input: Vec<&str>) {
         let diff = ((Utc::now() - now).num_milliseconds() as f64) / 1000.0;
         let mnps = ((count as f64) / 1000000.0) / diff;
 
-        println!("Depth {}: {} leafs in {:.2} s ({:.2} ML/s)", depth, count, diff, mnps);
+        println!(
+            "Depth {}: {} leafs in {:.2} s ({:.2} ML/s, {:.2}% hashtable used)",
+            depth, count, diff, mnps, hashtable_usage
+        );
     }
 
     println!("Perft done!");
