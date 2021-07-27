@@ -29,8 +29,8 @@ pub fn run() {
             "help" => handle_help(),
             "magic" => handle_magic(),
             "perft" => handle_perft(split),
-            "perftd" => handle_perftd(split),
-            "perftf" => handle_perftf(split),
+            "dperft" => handle_dperft(split),
+            "qperft" => handle_qperft(split),
             "wah" => handle_wah(),
             "quit" => handle_quit(),
             _ => handle_unknown_command(),
@@ -40,14 +40,24 @@ pub fn run() {
 
 fn handle_help() {
     println!("List of available commands:");
+    println!(" === General ===");
     println!("  magic - generate magic numbers");
-    println!("  perft [d] - run perft test with d depth");
-    println!("  perft [d] fen [fen] - run perft test with d depth and initial state defined by FEN");
-    println!("  perft [d] moves [moves] - run perft test with d depth and initial state defined by moves");
-    println!("  perftd [d] - run divided perft test with d depth");
-    println!("  perftd [d] fen [fen] - run divided perft test with d depth and initial state defined by FEN");
-    println!("  perftd [d] moves [moves] - run divided perft test with d depth and initial state defined by moves");
     println!("  quit - close the application");
+    println!();
+    println!(" === Perft === ");
+    println!("  perft [depth]");
+    println!("  perft [depth] fen [fen]");
+    println!("  perft [depth] moves [moves]");
+    println!();
+    println!(" === Divided Perft === ");
+    println!("  dperft [depth]");
+    println!("  dperft [depth] fen [fen]");
+    println!("  dperft [depth] moves [moves]");
+    println!();
+    println!(" === Quick Perft === ");
+    println!("  qperft [depth] [hash_table_size_mb]");
+    println!("  qperft [depth] [hash_table_size_mb] fen [fen]");
+    println!("  qperft [depth] [hash_table_size_mb] moves [moves]");
 }
 
 fn handle_magic() {
@@ -111,7 +121,7 @@ fn handle_perft(input: Vec<&str>) {
     println!("Perft done!");
 }
 
-fn handle_perftd(input: Vec<&str>) {
+fn handle_dperft(input: Vec<&str>) {
     if input.len() < 2 {
         println!("Depth parameter not found");
         return;
@@ -152,7 +162,7 @@ fn handle_perftd(input: Vec<&str>) {
     println!("Perft done!");
 }
 
-fn handle_perftf(input: Vec<&str>) {
+fn handle_qperft(input: Vec<&str>) {
     if input.len() < 2 {
         println!("Depth parameter not found");
         return;
