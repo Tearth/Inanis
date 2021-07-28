@@ -19,6 +19,7 @@ bitflags! {
     }
 }
 
+#[derive(Clone)]
 pub struct Bitboard {
     pub pieces: [[u64; 6]; 2],
     pub occupancy: [u64; 2],

@@ -2,7 +2,8 @@ use crate::board::Bitboard;
 use crate::common::*;
 use crate::movescan::Move;
 use std::mem::{size_of, MaybeUninit};
-use std::u64;
+use std::sync::{Arc, Mutex};
+use std::{thread, u64};
 
 const BUCKET_SLOTS: usize = 4;
 
@@ -148,17 +149,67 @@ pub fn run_divided(depth: i32, board: &mut Bitboard, check_integrity: bool) -> R
     Ok(result)
 }
 
-pub fn run_fast(depth: i32, board: &mut Bitboard, check_integrity: bool, hashtable_size: usize) -> Result<(u64, f32), &'static str> {
-    let mut context = PerftContext::new(board, check_integrity, true);
-    context.hash_table = PerftHashTable::new(hashtable_size);
+pub fn run_fast(
+    depth: i32,
+    board: &mut Bitboard,
+    check_integrity: bool,
+    hashtable_size: usize,
+    threads_count: usize,
+) -> Result<(u64, f32), &'static str> {
+    let queue = Arc::new(Mutex::new(Vec::new()));
+    let mut threads = Vec::new();
 
-    let count = match context.board.active_color {
-        WHITE => run_internal::<WHITE, BLACK>(&mut context, depth),
-        BLACK => run_internal::<BLACK, WHITE>(&mut context, depth),
-        _ => panic!("Invalid value: board.active_color={}", board.active_color),
-    };
+    let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
+    let moves_count = board.get_moves_active_color(&mut moves);
 
-    Ok((count, context.hash_table.get_usage()))
+    for r#move in &moves[0..moves_count] {
+        let mut cloned_board = board.clone();
+        cloned_board.make_move_active_color(r#move);
+
+        queue.lock().unwrap().push(cloned_board);
+    }
+
+    for _ in 0..threads_count {
+        let cloned_queue = queue.clone();
+        threads.push(thread::spawn(move || {
+            let mut count = 0;
+            let mut hash_table_usage = 0.0;
+
+            loop {
+                let mut board = {
+                    let mut lock = cloned_queue.lock().unwrap();
+                    match lock.pop() {
+                        Some(value) => value,
+                        None => break,
+                    }
+                };
+
+                let mut context = PerftContext::new(&mut board, check_integrity, true);
+                context.hash_table = PerftHashTable::new(hashtable_size / threads_count);
+
+                count += match context.board.active_color {
+                    WHITE => run_internal::<WHITE, BLACK>(&mut context, depth - 1),
+                    BLACK => run_internal::<BLACK, WHITE>(&mut context, depth - 1),
+                    _ => panic!("Invalid value: board.active_color={}", context.board.active_color),
+                };
+
+                hash_table_usage = context.hash_table.get_usage();
+            }
+
+            (count, hash_table_usage)
+        }));
+    }
+
+    let mut total_count = 0;
+    let mut hash_table_usage_accumulator = 0.0;
+
+    for thread in threads {
+        let (count, hash_table_usage) = thread.join().unwrap();
+        total_count += count;
+        hash_table_usage_accumulator += hash_table_usage;
+    }
+
+    Ok((total_count, hash_table_usage_accumulator / (threads_count as f32)))
 }
 
 fn run_internal<const COLOR: u8, const ENEMY_COLOR: u8>(context: &mut PerftContext, depth: i32) -> u64 {

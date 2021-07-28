@@ -55,9 +55,9 @@ fn handle_help() {
     println!("  dperft [depth] moves [moves]");
     println!();
     println!(" === Quick Perft === ");
-    println!("  qperft [depth] [hash_table_size_mb]");
-    println!("  qperft [depth] [hash_table_size_mb] fen [fen]");
-    println!("  qperft [depth] [hash_table_size_mb] moves [moves]");
+    println!("  qperft [depth] [threads_count] [hash_table_size_mb]");
+    println!("  qperft [depth] [threads_count] [hash_table_size_mb] fen [fen]");
+    println!("  qperft [depth] [threads_count] [hash_table_size_mb] moves [moves]");
 }
 
 fn handle_magic() {
@@ -173,6 +173,11 @@ fn handle_qperft(input: Vec<&str>) {
         return;
     }
 
+    if input.len() < 4 {
+        println!("Threads count not found");
+        return;
+    }
+
     let max_depth: i32 = match input[1].trim().parse() {
         Ok(result) => result,
         Err(_) => {
@@ -181,7 +186,15 @@ fn handle_qperft(input: Vec<&str>) {
         }
     };
 
-    let hashtable_size: usize = match input[2].trim().parse() {
+    let threads_count: usize = match input[2].trim().parse() {
+        Ok(result) => result,
+        Err(_) => {
+            println!("Invalid threads count parameter");
+            return;
+        }
+    };
+
+    let hashtable_size: usize = match input[3].trim().parse() {
         Ok(result) => result,
         Err(_) => {
             println!("Invalid hashtable size parameter");
@@ -195,7 +208,7 @@ fn handle_qperft(input: Vec<&str>) {
         return;
     }
 
-    let mut board = match prepare_board(&input[3..]) {
+    let mut board = match prepare_board(&input[4..]) {
         Ok(board) => board,
         Err(message) => {
             println!("{}", message);
@@ -205,7 +218,7 @@ fn handle_qperft(input: Vec<&str>) {
 
     for depth in 1..=max_depth {
         let now = Utc::now();
-        let (count, hashtable_usage) = match perft::run_fast(depth, &mut board, false, hashtable_size_bytes) {
+        let (count, hashtable_usage) = match perft::run_fast(depth, &mut board, false, hashtable_size_bytes, threads_count) {
             Ok(result) => result,
             Err(message) => {
                 println!("{}", message);
