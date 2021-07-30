@@ -11,16 +11,16 @@ struct PerftContext<'a> {
     pub board: &'a mut Bitboard,
     pub check_integrity: bool,
     pub fast: bool,
-    pub hash_table: PerftHashTable,
+    pub hash_table: &'a mut PerftHashTable,
 }
 
 impl<'a> PerftContext<'a> {
-    pub fn new(board: &mut Bitboard, check_integrity: bool, fast: bool) -> PerftContext {
+    pub fn new(board: &'a mut Bitboard, check_integrity: bool, fast: bool, hash_table: &'a mut PerftHashTable) -> PerftContext<'a> {
         PerftContext {
             board,
             check_integrity,
             fast,
-            hash_table: PerftHashTable::new(0),
+            hash_table,
         }
     }
 }
@@ -38,7 +38,10 @@ impl PerftHashTable {
             slots: buckets,
         };
 
-        hashtable.table.resize(hashtable.slots, PerftHashTableBucket::new());
+        if size != 0 {
+            hashtable.table.resize(hashtable.slots, PerftHashTableBucket::new());
+        }
+
         hashtable
     }
 
@@ -116,7 +119,8 @@ impl PerftHashTableEntry {
 }
 
 pub fn run(depth: i32, board: &mut Bitboard, check_integrity: bool) -> Result<u64, &'static str> {
-    let mut context = PerftContext::new(board, check_integrity, false);
+    let mut hash_table = PerftHashTable::new(0);
+    let mut context = PerftContext::new(board, check_integrity, false, &mut hash_table);
     let count = match context.board.active_color {
         WHITE => run_internal::<WHITE, BLACK>(&mut context, depth),
         BLACK => run_internal::<BLACK, WHITE>(&mut context, depth),
@@ -130,7 +134,8 @@ pub fn run_divided(depth: i32, board: &mut Bitboard, check_integrity: bool) -> R
     let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
     let moves_count = board.get_moves_active_color(&mut moves);
 
-    let mut context = PerftContext::new(board, check_integrity, false);
+    let mut hash_table = PerftHashTable::new(0);
+    let mut context = PerftContext::new(board, check_integrity, false, &mut hash_table);
     let mut result = Vec::<(String, u64)>::new();
 
     for r#move in &moves[0..moves_count] {
@@ -174,6 +179,7 @@ pub fn run_fast(
         threads.push(thread::spawn(move || {
             let mut count = 0;
             let mut hash_table_usage = 0.0;
+            let mut hash_table = PerftHashTable::new(hashtable_size / threads_count);
 
             loop {
                 let mut board = {
@@ -184,9 +190,7 @@ pub fn run_fast(
                     }
                 };
 
-                let mut context = PerftContext::new(&mut board, check_integrity, true);
-                context.hash_table = PerftHashTable::new(hashtable_size / threads_count);
-
+                let mut context = PerftContext::new(&mut board, check_integrity, true, &mut hash_table);
                 count += match context.board.active_color {
                     WHITE => run_internal::<WHITE, BLACK>(&mut context, depth - 1),
                     BLACK => run_internal::<BLACK, WHITE>(&mut context, depth - 1),
