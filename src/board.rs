@@ -238,12 +238,12 @@ impl Bitboard {
 
     fn get_moves_internal<const COLOR: u8>(&self, mut moves: &mut [Move]) -> usize {
         let mut index = 0;
-        index = movescan::scan_pawn_moves::<COLOR>(&self, &mut moves, index);
-        index = movescan::scan_piece_moves::<COLOR, KNIGHT>(&self, &mut moves, index);
-        index = movescan::scan_piece_moves::<COLOR, BISHOP>(&self, &mut moves, index);
-        index = movescan::scan_piece_moves::<COLOR, ROOK>(&self, &mut moves, index);
-        index = movescan::scan_piece_moves::<COLOR, QUEEN>(&self, &mut moves, index);
-        index = movescan::scan_piece_moves::<COLOR, KING>(&self, &mut moves, index);
+        index = movescan::scan_pawn_moves::<COLOR>(self, &mut moves, index);
+        index = movescan::scan_piece_moves::<COLOR, KNIGHT>(self, &mut moves, index);
+        index = movescan::scan_piece_moves::<COLOR, BISHOP>(self, &mut moves, index);
+        index = movescan::scan_piece_moves::<COLOR, ROOK>(self, &mut moves, index);
+        index = movescan::scan_piece_moves::<COLOR, QUEEN>(self, &mut moves, index);
+        index = movescan::scan_piece_moves::<COLOR, KING>(self, &mut moves, index);
 
         index
     }

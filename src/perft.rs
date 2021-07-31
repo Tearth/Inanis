@@ -1,6 +1,7 @@
 use crate::board::Bitboard;
 use crate::common::*;
 use crate::movescan::Move;
+use std::cell::UnsafeCell;
 use std::mem::{size_of, MaybeUninit};
 use std::sync::{Arc, Mutex};
 use std::{thread, u64};
@@ -11,11 +12,11 @@ struct PerftContext<'a> {
     pub board: &'a mut Bitboard,
     pub check_integrity: bool,
     pub fast: bool,
-    pub hash_table: &'a mut PerftHashTable,
+    pub hash_table: &'a Arc<PerftHashTable>,
 }
 
 impl<'a> PerftContext<'a> {
-    pub fn new(board: &'a mut Bitboard, check_integrity: bool, fast: bool, hash_table: &'a mut PerftHashTable) -> PerftContext<'a> {
+    pub fn new(board: &'a mut Bitboard, check_integrity: bool, fast: bool, hash_table: &'a Arc<PerftHashTable>) -> PerftContext<'a> {
         PerftContext {
             board,
             check_integrity,
@@ -26,27 +27,29 @@ impl<'a> PerftContext<'a> {
 }
 
 struct PerftHashTable {
-    table: Vec<PerftHashTableBucket>,
+    table: UnsafeCell<Vec<PerftHashTableBucket>>,
     slots: usize,
 }
 
 impl PerftHashTable {
     fn new(size: usize) -> PerftHashTable {
         let buckets = size / size_of::<PerftHashTableBucket>();
-        let mut hashtable = PerftHashTable {
-            table: Vec::with_capacity(buckets),
+        let hashtable = PerftHashTable {
+            table: UnsafeCell::new(Vec::with_capacity(buckets)),
             slots: buckets,
         };
 
         if size != 0 {
-            hashtable.table.resize(hashtable.slots, PerftHashTableBucket::new());
+            unsafe {
+                (*hashtable.table.get()).resize(hashtable.slots, PerftHashTableBucket::new());
+            }
         }
 
         hashtable
     }
 
-    pub fn add(&mut self, hash: u64, depth: u8, leafs_count: u64) {
-        let mut bucket = self.table[(hash as usize) % self.slots];
+    pub fn add(&self, hash: u64, depth: u8, leafs_count: u64) {
+        let mut bucket = unsafe { (*self.table.get())[(hash as usize) % self.slots] };
         let mut smallest_depth = (bucket.entries[0].key_and_depth & 0xf) as u8;
         let mut smallest_depth_index = 0;
 
@@ -59,11 +62,11 @@ impl PerftHashTable {
         }
 
         bucket.entries[smallest_depth_index] = PerftHashTableEntry::new(hash, depth, leafs_count);
-        self.table[(hash as usize) % self.slots] = bucket;
+        unsafe { (*self.table.get())[(hash as usize) % self.slots] = bucket };
     }
 
     pub fn get(&self, hash: u64, depth: u8) -> Option<PerftHashTableEntry> {
-        let bucket = self.table[(hash as usize) % self.slots];
+        let bucket = unsafe { (*self.table.get())[(hash as usize) % self.slots] };
         for entry in bucket.entries {
             if entry.key_and_depth == ((hash & !0xf) | (depth as u64)) {
                 return Some(entry);
@@ -78,7 +81,7 @@ impl PerftHashTable {
         let buckets_count_to_check = 1000 / BUCKET_SLOTS;
 
         for bucket_index in 0..buckets_count_to_check {
-            for entry in self.table[bucket_index].entries {
+            for entry in unsafe { (*self.table.get())[bucket_index].entries } {
                 if entry.key_and_depth != 0 && entry.leafs_count != 0 {
                     filled_entries += 1;
                 }
@@ -88,6 +91,8 @@ impl PerftHashTable {
         ((filled_entries as f32) / 1000.0) * 100.0
     }
 }
+
+unsafe impl Sync for PerftHashTable {}
 
 #[repr(align(64))]
 #[derive(Clone, Copy)]
@@ -119,8 +124,8 @@ impl PerftHashTableEntry {
 }
 
 pub fn run(depth: i32, board: &mut Bitboard, check_integrity: bool) -> Result<u64, &'static str> {
-    let mut hash_table = PerftHashTable::new(0);
-    let mut context = PerftContext::new(board, check_integrity, false, &mut hash_table);
+    let hash_table = Arc::new(PerftHashTable::new(0));
+    let mut context = PerftContext::new(board, check_integrity, false, &hash_table);
     let count = match context.board.active_color {
         WHITE => run_internal::<WHITE, BLACK>(&mut context, depth),
         BLACK => run_internal::<BLACK, WHITE>(&mut context, depth),
@@ -134,8 +139,8 @@ pub fn run_divided(depth: i32, board: &mut Bitboard, check_integrity: bool) -> R
     let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
     let moves_count = board.get_moves_active_color(&mut moves);
 
-    let mut hash_table = PerftHashTable::new(0);
-    let mut context = PerftContext::new(board, check_integrity, false, &mut hash_table);
+    let hash_table = Arc::new(PerftHashTable::new(0));
+    let mut context = PerftContext::new(board, check_integrity, false, &hash_table);
     let mut result = Vec::<(String, u64)>::new();
 
     for r#move in &moves[0..moves_count] {
@@ -174,23 +179,25 @@ pub fn run_fast(
         queue.lock().unwrap().push(cloned_board);
     }
 
+    let hash_table = Arc::new(PerftHashTable::new(hashtable_size));
     for _ in 0..threads_count {
-        let cloned_queue = queue.clone();
+        let queue_arc = queue.clone();
+        let hash_table_arc = hash_table.clone();
+
         threads.push(thread::spawn(move || {
             let mut count = 0;
             let mut hash_table_usage = 0.0;
-            let mut hash_table = PerftHashTable::new(hashtable_size / threads_count);
 
             loop {
                 let mut board = {
-                    let mut lock = cloned_queue.lock().unwrap();
+                    let mut lock = queue_arc.lock().unwrap();
                     match lock.pop() {
                         Some(value) => value,
                         None => break,
                     }
                 };
 
-                let mut context = PerftContext::new(&mut board, check_integrity, true, &mut hash_table);
+                let mut context = PerftContext::new(&mut board, check_integrity, true, &hash_table_arc);
                 count += match context.board.active_color {
                     WHITE => run_internal::<WHITE, BLACK>(&mut context, depth - 1),
                     BLACK => run_internal::<BLACK, WHITE>(&mut context, depth - 1),
@@ -209,6 +216,7 @@ pub fn run_fast(
 
     for thread in threads {
         let (count, hash_table_usage) = thread.join().unwrap();
+
         total_count += count;
         hash_table_usage_accumulator += hash_table_usage;
     }

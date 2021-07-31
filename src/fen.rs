@@ -21,12 +21,12 @@ pub fn fen_to_board(fen: &str) -> Result<Bitboard, &'static str> {
 }
 
 pub fn board_to_fen(board: &Bitboard) -> String {
-    let pieces = pieces_to_fen(&board);
-    let active_color = active_color_to_fen(&board);
-    let castling = castling_to_fen(&board);
-    let en_passant = en_passant_to_fen(&board);
-    let halfmove_clock = halfmove_clock_to_fen(&board);
-    let fullmove_number = fullmove_number_to_fen(&board);
+    let pieces = pieces_to_fen(board);
+    let active_color = active_color_to_fen(board);
+    let castling = castling_to_fen(board);
+    let en_passant = en_passant_to_fen(board);
+    let halfmove_clock = halfmove_clock_to_fen(board);
+    let fullmove_number = fullmove_number_to_fen(board);
 
     format!(
         "{} {} {} {} {} {}",
