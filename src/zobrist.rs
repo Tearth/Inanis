@@ -10,8 +10,8 @@ pub fn init() {
     unsafe {
         for color_hash in PIECE_HASHES.iter_mut() {
             for piece_hash in color_hash.iter_mut() {
-                for piece_hash in piece_hash.iter_mut() {
-                    *piece_hash = fastrand::u64(1..u64::MAX);
+                for field_hash in piece_hash.iter_mut() {
+                    *field_hash = fastrand::u64(1..u64::MAX);
                 }
             }
         }
@@ -29,9 +29,7 @@ pub fn init() {
 }
 
 pub fn toggle_piece(hash: &mut u64, color: u8, piece: u8, field_index: u8) {
-    unsafe {
-        *hash ^= PIECE_HASHES[color as usize][piece as usize][field_index as usize];
-    }
+    *hash ^= unsafe { PIECE_HASHES[color as usize][piece as usize][field_index as usize] };
 }
 
 pub fn toggle_castling_right(hash: &mut u64, current: CastlingRights, right: CastlingRights) {
@@ -41,13 +39,9 @@ pub fn toggle_castling_right(hash: &mut u64, current: CastlingRights, right: Cas
 }
 
 pub fn toggle_en_passant(hash: &mut u64, file: u8) {
-    unsafe {
-        *hash ^= EN_PASSANT_HASHES[file as usize];
-    }
+    *hash ^= unsafe { EN_PASSANT_HASHES[file as usize] };
 }
 
 pub fn toggle_active_color(hash: &mut u64) {
-    unsafe {
-        *hash ^= ACTIVE_COLOR_HASH;
-    }
+    *hash ^= unsafe { ACTIVE_COLOR_HASH };
 }

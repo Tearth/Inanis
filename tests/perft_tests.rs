@@ -20,7 +20,7 @@ mod perft_tests {
                         zobrist::init();
                     });
 
-                    assert_eq!($expected_leafs_count, perft::run($depth, &mut Bitboard::new_from_fen($fen).unwrap(), false).unwrap());
+                    assert_eq!($expected_leafs_count, perft::run($depth, &mut Bitboard::new_from_fen($fen).unwrap(), false));
                 }
             )*
         }

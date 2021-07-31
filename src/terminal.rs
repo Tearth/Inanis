@@ -55,9 +55,9 @@ fn handle_help() {
     println!("  dperft [depth] moves [moves]");
     println!();
     println!(" === Quick Perft === ");
-    println!("  qperft [depth] [threads_count] [hash_table_size_mb]");
-    println!("  qperft [depth] [threads_count] [hash_table_size_mb] fen [fen]");
-    println!("  qperft [depth] [threads_count] [hash_table_size_mb] moves [moves]");
+    println!("  qperft [depth] [threads_count] [hashtable_size_mb]");
+    println!("  qperft [depth] [threads_count] [hashtable_size_mb] fen [fen]");
+    println!("  qperft [depth] [threads_count] [hashtable_size_mb] moves [moves]");
 }
 
 fn handle_magic() {
@@ -103,14 +103,7 @@ fn handle_perft(input: Vec<&str>) {
 
     for depth in 1..max_depth + 1 {
         let now = Utc::now();
-
-        let count = match perft::run(depth, &mut board, false) {
-            Ok(result) => result,
-            Err(message) => {
-                println!("{}", message);
-                return;
-            }
-        };
+        let count = perft::run(depth, &mut board, false);
 
         let diff = ((Utc::now() - now).num_milliseconds() as f64) / 1000.0;
         let mnps = ((count as f64) / 1000000.0) / diff;
@@ -143,13 +136,7 @@ fn handle_dperft(input: Vec<&str>) {
         }
     };
 
-    let result = match perft::run_divided(depth, &mut board, false) {
-        Ok(result) => result,
-        Err(message) => {
-            println!("{}", message);
-            return;
-        }
-    };
+    let result = perft::run_divided(depth, &mut board);
 
     let mut total_leafs = 0;
     for r#move in result {
@@ -218,19 +205,13 @@ fn handle_qperft(input: Vec<&str>) {
 
     for depth in 1..=max_depth {
         let now = Utc::now();
-        let (count, hashtable_usage) = match perft::run_fast(depth, &mut board, false, hashtable_size_bytes, threads_count) {
-            Ok(result) => result,
-            Err(message) => {
-                println!("{}", message);
-                return;
-            }
-        };
+        let (count, hashtable_usage) = perft::run_fast(depth, &mut board, hashtable_size_bytes, threads_count);
 
         let diff = ((Utc::now() - now).num_milliseconds() as f64) / 1000.0;
         let mnps = ((count as f64) / 1000000.0) / diff;
 
         println!(
-            "Depth {}: {} leafs in {:.2} s ({:.2} ML/s, {:.2}% hashtable used)",
+            "Depth {}: {} leafs in {:.2} s ({:.2} ML/s, {:.2}% of hashtable used)",
             depth, count, diff, mnps, hashtable_usage
         );
     }

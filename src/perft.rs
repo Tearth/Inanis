@@ -10,18 +10,18 @@ const BUCKET_SLOTS: usize = 4;
 
 struct PerftContext<'a> {
     pub board: &'a mut Bitboard,
+    pub hashtable: &'a Arc<PerftHashTable>,
     pub check_integrity: bool,
     pub fast: bool,
-    pub hash_table: &'a Arc<PerftHashTable>,
 }
 
 impl<'a> PerftContext<'a> {
-    pub fn new(board: &'a mut Bitboard, check_integrity: bool, fast: bool, hash_table: &'a Arc<PerftHashTable>) -> PerftContext<'a> {
+    pub fn new(board: &'a mut Bitboard, hashtable: &'a Arc<PerftHashTable>, check_integrity: bool, fast: bool) -> PerftContext<'a> {
         PerftContext {
             board,
+            hashtable,
             check_integrity,
             fast,
-            hash_table,
         }
     }
 }
@@ -55,7 +55,7 @@ impl PerftHashTable {
 
         for entry_index in 1..BUCKET_SLOTS {
             let entry_depth = (bucket.entries[entry_index].key_and_depth & 0xf) as u8;
-            if entry_depth <= smallest_depth {
+            if entry_depth < smallest_depth {
                 smallest_depth = entry_depth;
                 smallest_depth_index = entry_index;
             }
@@ -77,8 +77,10 @@ impl PerftHashTable {
     }
 
     pub fn get_usage(&self) -> f32 {
+        const RESOLUTION: usize = 10000;
+
         let mut filled_entries = 0;
-        let buckets_count_to_check = 1000 / BUCKET_SLOTS;
+        let buckets_count_to_check = RESOLUTION / BUCKET_SLOTS;
 
         for bucket_index in 0..buckets_count_to_check {
             for entry in unsafe { (*self.table.get())[bucket_index].entries } {
@@ -88,7 +90,7 @@ impl PerftHashTable {
             }
         }
 
-        ((filled_entries as f32) / 1000.0) * 100.0
+        ((filled_entries as f32) / (RESOLUTION as f32)) * 100.0
     }
 }
 
@@ -123,50 +125,46 @@ impl PerftHashTableEntry {
     }
 }
 
-pub fn run(depth: i32, board: &mut Bitboard, check_integrity: bool) -> Result<u64, &'static str> {
-    let hash_table = Arc::new(PerftHashTable::new(0));
-    let mut context = PerftContext::new(board, check_integrity, false, &hash_table);
+pub fn run(depth: i32, board: &mut Bitboard, check_integrity: bool) -> u64 {
+    let hashtable = Arc::new(PerftHashTable::new(0));
+    let mut context = PerftContext::new(board, &hashtable, check_integrity, false);
+
     let count = match context.board.active_color {
         WHITE => run_internal::<WHITE, BLACK>(&mut context, depth),
         BLACK => run_internal::<BLACK, WHITE>(&mut context, depth),
-        _ => panic!("Invalid value: board.active_color={}", board.active_color),
+        _ => panic!("Invalid value: context.board.active_color={}", board.active_color),
     };
 
-    Ok(count)
+    count
 }
 
-pub fn run_divided(depth: i32, board: &mut Bitboard, check_integrity: bool) -> Result<Vec<(String, u64)>, &'static str> {
+pub fn run_divided(depth: i32, board: &mut Bitboard) -> Vec<(String, u64)> {
     let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
     let moves_count = board.get_moves_active_color(&mut moves);
 
-    let hash_table = Arc::new(PerftHashTable::new(0));
-    let mut context = PerftContext::new(board, check_integrity, false, &hash_table);
+    let hashtable = Arc::new(PerftHashTable::new(0));
+    let mut context = PerftContext::new(board, &hashtable, false, false);
     let mut result = Vec::<(String, u64)>::new();
 
     for r#move in &moves[0..moves_count] {
         context.board.make_move_active_color(r#move);
 
-        let moves_count = match context.board.active_color {
+        let count = match context.board.active_color {
             WHITE => run_internal::<WHITE, BLACK>(&mut context, depth - 1),
             BLACK => run_internal::<BLACK, WHITE>(&mut context, depth - 1),
-            _ => panic!("Invalid value: board.active_color={}", board.active_color),
+            _ => panic!("Invalid value: context.board.active_color={}", board.active_color),
         };
 
-        result.push((r#move.to_text(), moves_count));
+        result.push((r#move.to_text(), count));
         context.board.undo_move_active_color(r#move);
     }
 
-    Ok(result)
+    result
 }
 
-pub fn run_fast(
-    depth: i32,
-    board: &mut Bitboard,
-    check_integrity: bool,
-    hashtable_size: usize,
-    threads_count: usize,
-) -> Result<(u64, f32), &'static str> {
+pub fn run_fast(depth: i32, board: &mut Bitboard, hashtable_size: usize, threads_count: usize) -> (u64, f32) {
     let queue = Arc::new(Mutex::new(Vec::new()));
+    let hashtable = Arc::new(PerftHashTable::new(hashtable_size));
     let mut threads = Vec::new();
 
     let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
@@ -179,49 +177,47 @@ pub fn run_fast(
         queue.lock().unwrap().push(cloned_board);
     }
 
-    let hash_table = Arc::new(PerftHashTable::new(hashtable_size));
     for _ in 0..threads_count {
         let queue_arc = queue.clone();
-        let hash_table_arc = hash_table.clone();
+        let hashtable_arc = hashtable.clone();
 
         threads.push(thread::spawn(move || {
             let mut count = 0;
-            let mut hash_table_usage = 0.0;
+            let mut hashtable_usage = 0.0;
 
             loop {
                 let mut board = {
-                    let mut lock = queue_arc.lock().unwrap();
-                    match lock.pop() {
+                    match queue_arc.lock().unwrap().pop() {
                         Some(value) => value,
                         None => break,
                     }
                 };
 
-                let mut context = PerftContext::new(&mut board, check_integrity, true, &hash_table_arc);
+                let mut context = PerftContext::new(&mut board, &hashtable_arc, false, true);
                 count += match context.board.active_color {
                     WHITE => run_internal::<WHITE, BLACK>(&mut context, depth - 1),
                     BLACK => run_internal::<BLACK, WHITE>(&mut context, depth - 1),
-                    _ => panic!("Invalid value: board.active_color={}", context.board.active_color),
+                    _ => panic!("Invalid value: context.board.active_color={}", context.board.active_color),
                 };
 
-                hash_table_usage = context.hash_table.get_usage();
+                hashtable_usage = context.hashtable.get_usage();
             }
 
-            (count, hash_table_usage)
+            (count, hashtable_usage)
         }));
     }
 
     let mut total_count = 0;
-    let mut hash_table_usage_accumulator = 0.0;
+    let mut hashtable_usage_accumulator = 0.0;
 
     for thread in threads {
-        let (count, hash_table_usage) = thread.join().unwrap();
+        let (count, hashtable_usage) = thread.join().unwrap();
 
         total_count += count;
-        hash_table_usage_accumulator += hash_table_usage;
+        hashtable_usage_accumulator += hashtable_usage;
     }
 
-    Ok((total_count, hash_table_usage_accumulator / (threads_count as f32)))
+    (total_count, hashtable_usage_accumulator / (threads_count as f32))
 }
 
 fn run_internal<const COLOR: u8, const ENEMY_COLOR: u8>(context: &mut PerftContext, depth: i32) -> u64 {
@@ -236,7 +232,7 @@ fn run_internal<const COLOR: u8, const ENEMY_COLOR: u8>(context: &mut PerftConte
     }
 
     if context.fast {
-        if let Some(entry) = context.hash_table.get(context.board.hash, depth as u8) {
+        if let Some(entry) = context.hashtable.get(context.board.hash, depth as u8) {
             return entry.leafs_count;
         }
     }
@@ -256,7 +252,7 @@ fn run_internal<const COLOR: u8, const ENEMY_COLOR: u8>(context: &mut PerftConte
     }
 
     if context.fast {
-        context.hash_table.add(context.board.hash, depth as u8, count);
+        context.hashtable.add(context.board.hash, depth as u8, count);
     }
 
     count
