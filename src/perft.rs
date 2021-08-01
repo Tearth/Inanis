@@ -8,6 +8,23 @@ use std::{thread, u64};
 
 const BUCKET_SLOTS: usize = 4;
 
+macro_rules! run_internal {
+    ($color:expr, $context:expr, $depth:expr, $invert:expr) => {
+        match $invert {
+            true => match $color {
+                WHITE => run_internal::<BLACK>($context, $depth),
+                BLACK => run_internal::<WHITE>($context, $depth),
+                _ => panic!("Invalid value: $color={}", $color),
+            },
+            false => match $color {
+                WHITE => run_internal::<WHITE>($context, $depth),
+                BLACK => run_internal::<BLACK>($context, $depth),
+                _ => panic!("Invalid value: $color={}", $color),
+            },
+        }
+    };
+}
+
 struct PerftContext<'a> {
     pub board: &'a mut Bitboard,
     pub hashtable: &'a Arc<PerftHashTable>,
@@ -40,9 +57,7 @@ impl PerftHashTable {
         };
 
         if size != 0 {
-            unsafe {
-                (*hashtable.table.get()).resize(hashtable.slots, PerftHashTableBucket::new());
-            }
+            unsafe { (*hashtable.table.get()).resize(hashtable.slots, PerftHashTableBucket::new()) };
         }
 
         hashtable
@@ -78,11 +93,11 @@ impl PerftHashTable {
 
     pub fn get_usage(&self) -> f32 {
         const RESOLUTION: usize = 10000;
+        const BUCKETS_COUNT_TO_CHECK: usize = RESOLUTION / BUCKET_SLOTS;
 
         let mut filled_entries = 0;
-        let buckets_count_to_check = RESOLUTION / BUCKET_SLOTS;
 
-        for bucket_index in 0..buckets_count_to_check {
+        for bucket_index in 0..BUCKETS_COUNT_TO_CHECK {
             for entry in unsafe { (*self.table.get())[bucket_index].entries } {
                 if entry.key_and_depth != 0 && entry.leafs_count != 0 {
                     filled_entries += 1;
@@ -129,13 +144,7 @@ pub fn run(depth: i32, board: &mut Bitboard, check_integrity: bool) -> u64 {
     let hashtable = Arc::new(PerftHashTable::new(0));
     let mut context = PerftContext::new(board, &hashtable, check_integrity, false);
 
-    let count = match context.board.active_color {
-        WHITE => run_internal::<WHITE, BLACK>(&mut context, depth),
-        BLACK => run_internal::<BLACK, WHITE>(&mut context, depth),
-        _ => panic!("Invalid value: context.board.active_color={}", board.active_color),
-    };
-
-    count
+    run_internal!(context.board.active_color, &mut context, depth, false)
 }
 
 pub fn run_divided(depth: i32, board: &mut Bitboard) -> Vec<(String, u64)> {
@@ -149,13 +158,11 @@ pub fn run_divided(depth: i32, board: &mut Bitboard) -> Vec<(String, u64)> {
     for r#move in &moves[0..moves_count] {
         context.board.make_move_active_color(r#move);
 
-        let count = match context.board.active_color {
-            WHITE => run_internal::<WHITE, BLACK>(&mut context, depth - 1),
-            BLACK => run_internal::<BLACK, WHITE>(&mut context, depth - 1),
-            _ => panic!("Invalid value: context.board.active_color={}", board.active_color),
-        };
+        result.push((
+            r#move.to_text(),
+            run_internal!(context.board.active_color, &mut context, depth - 1, false),
+        ));
 
-        result.push((r#move.to_text(), count));
         context.board.undo_move_active_color(r#move);
     }
 
@@ -194,11 +201,7 @@ pub fn run_fast(depth: i32, board: &mut Bitboard, hashtable_size: usize, threads
                 };
 
                 let mut context = PerftContext::new(&mut board, &hashtable_arc, false, true);
-                count += match context.board.active_color {
-                    WHITE => run_internal::<WHITE, BLACK>(&mut context, depth - 1),
-                    BLACK => run_internal::<BLACK, WHITE>(&mut context, depth - 1),
-                    _ => panic!("Invalid value: context.board.active_color={}", context.board.active_color),
-                };
+                count += run_internal!(context.board.active_color, &mut context, depth - 1, false);
 
                 hashtable_usage = context.hashtable.get_usage();
             }
@@ -220,7 +223,7 @@ pub fn run_fast(depth: i32, board: &mut Bitboard, hashtable_size: usize, threads
     (total_count, hashtable_usage_accumulator / (threads_count as f32))
 }
 
-fn run_internal<const COLOR: u8, const ENEMY_COLOR: u8>(context: &mut PerftContext, depth: i32) -> u64 {
+fn run_internal<const COLOR: u8>(context: &mut PerftContext, depth: i32) -> u64 {
     if context.check_integrity {
         if context.board.hash != context.board.calculate_hash() {
             panic!("Integrity check failed: invalid hash");
@@ -245,7 +248,7 @@ fn run_internal<const COLOR: u8, const ENEMY_COLOR: u8>(context: &mut PerftConte
         context.board.make_move::<COLOR>(r#move);
 
         if !context.board.is_king_checked(COLOR) {
-            count += run_internal::<ENEMY_COLOR, COLOR>(context, depth - 1)
+            count += run_internal!(COLOR, context, depth - 1, true);
         }
 
         context.board.undo_move::<COLOR>(r#move);

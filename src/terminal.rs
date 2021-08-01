@@ -39,25 +39,24 @@ pub fn run() {
 }
 
 fn handle_help() {
-    println!("List of available commands:");
-    println!(" === General ===");
-    println!("  magic - generate magic numbers");
-    println!("  quit - close the application");
+    println!("=== General ===");
+    println!(" magic - generate magic numbers");
+    println!(" quit - close the application");
     println!();
-    println!(" === Perft === ");
-    println!("  perft [depth]");
-    println!("  perft [depth] fen [fen]");
-    println!("  perft [depth] moves [moves]");
+    println!("=== Perft ===");
+    println!(" perft [depth]");
+    println!(" perft [depth] fen [fen]");
+    println!(" perft [depth] moves [moves]");
     println!();
-    println!(" === Divided Perft === ");
-    println!("  dperft [depth]");
-    println!("  dperft [depth] fen [fen]");
-    println!("  dperft [depth] moves [moves]");
+    println!("=== Divided Perft ===");
+    println!(" dperft [depth]");
+    println!(" dperft [depth] fen [fen]");
+    println!(" dperft [depth] moves [moves]");
     println!();
-    println!(" === Quick Perft === ");
-    println!("  qperft [depth] [threads_count] [hashtable_size_mb]");
-    println!("  qperft [depth] [threads_count] [hashtable_size_mb] fen [fen]");
-    println!("  qperft [depth] [threads_count] [hashtable_size_mb] moves [moves]");
+    println!("=== Quick Perft ===");
+    println!(" qperft [depth] [threads_count] [hashtable_size_mb]");
+    println!(" qperft [depth] [threads_count] [hashtable_size_mb] fen [fen]");
+    println!(" qperft [depth] [threads_count] [hashtable_size_mb] moves [moves]");
 }
 
 fn handle_magic() {

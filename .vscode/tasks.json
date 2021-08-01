@@ -4,7 +4,7 @@
         {
             "label": "cargo build",
             "type": "shell",
-            "command": "cargo rustc --bin ina --target=x86_64-pc-windows-msvc -- -C target-feature=+bmi,+bmi2,+popcnt -C llvm-args=-x86-asm-syntax=intel --emit asm",
+            "command": "cargo rustc --bin ina --target=x86_64-pc-windows-msvc -- -C target-feature=+bmi,+bmi2,+popcnt",
             "args": [],
             "group": {
                 "kind": "build",
