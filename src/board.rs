@@ -226,7 +226,7 @@ impl Bitboard {
         }
 
         if self.en_passant != 0 {
-            zobrist::toggle_en_passant(&mut hash, (self.en_passant % 8) as u8);
+            zobrist::toggle_en_passant(&mut hash, (bit_scan(self.en_passant) % 8) as u8);
         }
 
         if self.active_color == BLACK {
