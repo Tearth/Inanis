@@ -1,5 +1,6 @@
 use crate::bit::*;
 use crate::common::*;
+use crate::evaluation::evaluate;
 use crate::fen;
 use crate::movegen;
 use crate::movescan::{self, Move, MoveFlags};
@@ -234,6 +235,10 @@ impl Bitboard {
         }
 
         hash
+    }
+
+    pub fn evaluate(&self) -> i16 {
+        evaluate(self)
     }
 
     fn get_moves_internal<const COLOR: u8>(&self, mut moves: &mut [Move]) -> usize {
