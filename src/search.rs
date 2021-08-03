@@ -4,17 +4,17 @@ use crate::movescan::Move;
 use crate::movescan::MoveFlags;
 use std::mem::MaybeUninit;
 
-macro_rules! search_internal {
+macro_rules! run_internal {
     ($color:expr, $context:expr, $depth:expr, $invert:expr) => {
         match $invert {
             true => match $color {
-                WHITE => search_internal::<BLACK>($context, $depth),
-                BLACK => search_internal::<WHITE>($context, $depth),
+                WHITE => run_internal::<BLACK>($context, $depth),
+                BLACK => run_internal::<WHITE>($context, $depth),
                 _ => panic!("Invalid value: $color={}", $color),
             },
             false => match $color {
-                WHITE => search_internal::<WHITE>($context, $depth),
-                BLACK => search_internal::<BLACK>($context, $depth),
+                WHITE => run_internal::<WHITE>($context, $depth),
+                BLACK => run_internal::<BLACK>($context, $depth),
                 _ => panic!("Invalid value: $color={}", $color),
             },
         }
@@ -25,12 +25,12 @@ pub struct SearchContext<'a> {
     pub board: &'a mut Bitboard,
 }
 
-pub fn search(board: &mut Bitboard, depth: i32) -> Move {
+pub fn run(board: &mut Bitboard, depth: i32) -> Move {
     let mut context = SearchContext { board };
-    search_internal!(context.board.active_color, &mut context, depth, false).1
+    run_internal!(context.board.active_color, &mut context, depth, false).1
 }
 
-pub fn search_internal<const COLOR: u8>(context: &mut SearchContext, depth: i32) -> (i16, Move) {
+pub fn run_internal<const COLOR: u8>(context: &mut SearchContext, depth: i32) -> (i16, Move) {
     if context.board.pieces[COLOR as usize][KING as usize] == 0 {
         return (-32000, Move::new(0, 0, MoveFlags::QUIET));
     }
@@ -52,7 +52,7 @@ pub fn search_internal<const COLOR: u8>(context: &mut SearchContext, depth: i32)
         context.board.make_move::<COLOR>(r#move);
 
         if !context.board.is_king_checked(COLOR) {
-            let (search_score, _) = search_internal!(COLOR, context, depth - 1, true);
+            let (search_score, _) = run_internal!(COLOR, context, depth - 1, true);
 
             if search_score > score {
                 score = search_score;

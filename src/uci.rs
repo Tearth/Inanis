@@ -1,8 +1,8 @@
 use crate::board::Bitboard;
 use crate::movescan::Move;
+use crate::search;
 use std::collections::HashMap;
 use std::io;
-use std::ops::Index;
 use std::process;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -36,14 +36,12 @@ pub fn run() {
         let mut input = String::new();
         io::stdin().read_line(&mut input).unwrap();
 
-        let split: Vec<&str> = input.split(' ').collect();
-        let trimmed = split[0].trim().to_lowercase();
-
-        match trimmed.as_str() {
-            "go" => handle_go(),
+        let tokens: Vec<String> = input.split(' ').map(|p| p.trim().to_lowercase()).collect();
+        match tokens[0].as_str() {
+            "go" => handle_go(&tokens, &mut state),
             "isready" => handle_isready(),
-            "position" => handle_position(&split, &mut state),
-            "setoption" => handle_setoption(&split, &mut state),
+            "position" => handle_position(&tokens, &mut state),
+            "setoption" => handle_setoption(&tokens, &mut state),
             "ucinewgame" => handle_ucinewgame(&mut state),
             "quit" => handle_quit(),
             _ => {}
@@ -51,18 +49,43 @@ pub fn run() {
     }
 }
 
-fn handle_go() {}
+fn handle_go(parameters: &[String], state: &mut UciState) {
+    let mut white_time = 1000;
+    let mut black_time = 1000;
+
+    let mut iter = parameters[1..].iter().peekable();
+    while let Some(token) = iter.next() {
+        match token.as_str() {
+            "wtime" => {
+                white_time = match iter.peek() {
+                    Some(value) => value.parse().unwrap_or(white_time),
+                    None => white_time,
+                }
+            }
+            "btime" => {
+                black_time = match iter.peek() {
+                    Some(value) => value.parse().unwrap_or(black_time),
+                    None => black_time,
+                }
+            }
+            _ => {}
+        }
+    }
+
+    let best_move = search::run(&mut state.board, 5);
+    println!("bestmove {}", best_move.to_text());
+}
 
 fn handle_isready() {
     println!("readyok");
 }
 
-fn handle_position(parameters: &[&str], state: &mut UciState) {
+fn handle_position(parameters: &[String], state: &mut UciState) {
     if parameters.len() < 2 {
         return;
     }
 
-    state.board = match parameters[1] {
+    state.board = match parameters[1].as_str() {
         "fen" => {
             let fen = parameters[2..].join(" ");
             match Bitboard::new_from_fen(fen.as_str()) {
@@ -75,7 +98,7 @@ fn handle_position(parameters: &[&str], state: &mut UciState) {
         _ => Bitboard::new_default(),
     };
 
-    if let Some(index) = parameters.iter().position(|&s| s == "moves") {
+    if let Some(index) = parameters.iter().position(|s| s == "moves") {
         for premade_move in &parameters[index + 1..] {
             let parsed_move = match Move::from_text(premade_move.trim(), &state.board) {
                 Ok(r#move) => r#move,
@@ -88,7 +111,7 @@ fn handle_position(parameters: &[&str], state: &mut UciState) {
     };
 }
 
-fn handle_setoption(parameters: &[&str], state: &mut UciState) {
+fn handle_setoption(parameters: &[String], state: &mut UciState) {
     if parameters.len() < 2 {
         return;
     }
