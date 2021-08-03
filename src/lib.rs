@@ -21,4 +21,5 @@ pub mod patterns;
 pub mod perft;
 pub mod search;
 pub mod terminal;
+pub mod uci;
 pub mod zobrist;

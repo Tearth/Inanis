@@ -7,7 +7,5 @@ fn main() {
     patterns::init();
     movegen::init();
     zobrist::init();
-
-    terminal::init();
     terminal::run();
 }

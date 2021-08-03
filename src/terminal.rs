@@ -1,6 +1,7 @@
 use crate::board::Bitboard;
 use crate::movegen;
 use crate::perft;
+use crate::uci;
 use chrono::Utc;
 use std::io;
 use std::process;
@@ -11,17 +12,17 @@ const REPOSITORY: &str = env!("CARGO_PKG_REPOSITORY");
 const DATE: &str = env!("DATE");
 const HASH: &str = env!("HASH");
 
-pub fn init() {
+pub fn run() {
     println!("Ina v{} ({}), created by {}", VERSION, DATE, AUTHOR);
     println!("Executable hash: {}", HASH);
     println!("Homepage: {}", REPOSITORY);
     println!();
     println!("Type \"help\" to get a list of available commands");
-}
 
-pub fn run() {
     loop {
-        let input = read_line();
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).unwrap();
+
         let split: Vec<&str> = input.split(' ').collect();
         let trimmed = split[0].trim().to_lowercase();
 
@@ -31,6 +32,7 @@ pub fn run() {
             "perft" => handle_perft(split),
             "dperft" => handle_dperft(split),
             "qperft" => handle_qperft(split),
+            "uci" => handle_uci(),
             "wah" => handle_wah(),
             "quit" => handle_quit(),
             _ => handle_unknown_command(),
@@ -41,6 +43,7 @@ pub fn run() {
 fn handle_help() {
     println!("=== General ===");
     println!(" magic - generate magic numbers");
+    println!(" uci - run Universal Chess Interface");
     println!(" quit - close the application");
     println!();
     println!("=== Perft ===");
@@ -218,6 +221,10 @@ fn handle_qperft(input: Vec<&str>) {
     println!("Perft done!");
 }
 
+fn handle_uci() {
+    uci::run();
+}
+
 fn handle_wah() {
     println!("WAH");
 }
@@ -228,13 +235,6 @@ fn handle_quit() {
 
 fn handle_unknown_command() {
     println!("Unknown command, type \"help\" to get a list of available ones");
-}
-
-fn read_line() -> String {
-    let mut buffer = String::new();
-    io::stdin().read_line(&mut buffer).unwrap();
-
-    buffer
 }
 
 fn prepare_board(parameters: &[&str]) -> Result<Bitboard, &'static str> {
