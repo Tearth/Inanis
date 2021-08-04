@@ -12,6 +12,7 @@ extern crate bitflags;
 
 pub mod bit;
 pub mod board;
+pub mod clock;
 pub mod common;
 pub mod evaluation;
 pub mod fen;

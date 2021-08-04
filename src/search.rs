@@ -1,7 +1,11 @@
+use chrono::Utc;
+
 use crate::board::Bitboard;
+use crate::clock;
 use crate::common::*;
 use crate::movescan::Move;
 use crate::movescan::MoveFlags;
+use crate::search;
 use std::mem::MaybeUninit;
 
 macro_rules! run_internal {
@@ -25,9 +29,26 @@ pub struct SearchContext<'a> {
     pub board: &'a mut Bitboard,
 }
 
-pub fn run(board: &mut Bitboard, depth: i32) -> Move {
+pub fn run(board: &mut Bitboard, time: u32) -> Move {
+    let time_for_move = clock::get_time_for_move(time);
     let mut context = SearchContext { board };
-    run_internal!(context.board.active_color, &mut context, depth, false).1
+
+    let mut last_search_time = 1.0;
+    for depth in 1..32 {
+        let search_time_start = Utc::now();
+
+        let best_move = run_internal!(context.board.active_color, &mut context, depth, false).1;
+        let search_time = (Utc::now() - search_time_start).num_microseconds().unwrap() as f64 / 1000.0;
+        let time_ratio = search_time / (last_search_time as f64);
+
+        if search_time * time_ratio > time_for_move as f64 {
+            return best_move;
+        }
+
+        last_search_time = search_time;
+    }
+
+    Move::new(0, 0, MoveFlags::QUIET)
 }
 
 pub fn run_internal<const COLOR: u8>(context: &mut SearchContext, depth: i32) -> (i16, Move) {

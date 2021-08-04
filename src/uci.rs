@@ -72,7 +72,13 @@ fn handle_go(parameters: &[String], state: &mut UciState) {
         }
     }
 
-    let best_move = search::run(&mut state.board, 5);
+    let time = match state.board.active_color {
+        WHITE => white_time,
+        BLACK => black_time,
+        _ => panic!("Invalid value: state.board.active_color={}", state.board.active_color),
+    };
+
+    let best_move = search::run(&mut state.board, time);
     println!("bestmove {}", best_move.to_text());
 }
 
