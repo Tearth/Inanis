@@ -29,21 +29,22 @@ pub struct SearchContext<'a> {
     pub board: &'a mut Bitboard,
 }
 
-pub fn run(board: &mut Bitboard, time: u32) -> Move {
-    let time_for_move = clock::get_time_for_move(time);
+pub fn run(board: &mut Bitboard, time: u32, inc_time: u32) -> Move {
+    let time_for_move = clock::get_time_for_move(time, inc_time);
     let mut context = SearchContext { board };
 
     let mut last_search_time = 1.0;
     for depth in 1..32 {
         let search_time_start = Utc::now();
 
-        let best_move = run_internal!(context.board.active_color, &mut context, depth, -32000, 32000, false).1;
+        let (score, best_move) = run_internal!(context.board.active_color, &mut context, depth, -32000, 32000, false);
         let search_time = (Utc::now() - search_time_start).num_microseconds().unwrap() as f64 / 1000.0;
         let time_ratio = search_time / (last_search_time as f64);
 
         // Temporary
         println!(
-            "info score cp 0 nodes 0 depth {} time {} pv {}",
+            "info score cp {} nodes 0 depth {} time {} pv {}",
+            score,
             depth,
             search_time as u32,
             best_move.to_text()
@@ -61,7 +62,7 @@ pub fn run(board: &mut Bitboard, time: u32) -> Move {
 
 pub fn run_internal<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut alpha: i16, beta: i16) -> (i16, Move) {
     if context.board.pieces[COLOR as usize][KING as usize] == 0 {
-        return (-32000, Move::new(0, 0, MoveFlags::QUIET));
+        return (-31900 - (depth as i16), Move::new(0, 0, MoveFlags::QUIET));
     }
 
     if depth <= 0 {

@@ -24,7 +24,7 @@ macro_rules! run_internal {
 
 pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut alpha: i16, beta: i16) -> i16 {
     if context.board.pieces[COLOR as usize][KING as usize] == 0 {
-        return -32000;
+        return -31900 - (depth as i16);
     }
 
     let stand_pat = ((COLOR as i16) * 2 - 1) * context.board.evaluate();

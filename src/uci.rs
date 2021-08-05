@@ -54,6 +54,9 @@ fn handle_go(parameters: &[String], state: &mut UciState) {
     let mut white_time = 1000;
     let mut black_time = 1000;
 
+    let mut white_inc_time = 0;
+    let mut black_inc_time = 0;
+
     let mut iter = parameters[1..].iter().peekable();
     while let Some(token) = iter.next() {
         match token.as_str() {
@@ -69,6 +72,18 @@ fn handle_go(parameters: &[String], state: &mut UciState) {
                     None => black_time,
                 }
             }
+            "winc" => {
+                white_inc_time = match iter.peek() {
+                    Some(value) => value.parse().unwrap_or(white_inc_time),
+                    None => white_inc_time,
+                }
+            }
+            "binc" => {
+                black_inc_time = match iter.peek() {
+                    Some(value) => value.parse().unwrap_or(black_inc_time),
+                    None => black_inc_time,
+                }
+            }
             _ => {}
         }
     }
@@ -79,7 +94,13 @@ fn handle_go(parameters: &[String], state: &mut UciState) {
         _ => panic!("Invalid value: state.board.active_color={}", state.board.active_color),
     };
 
-    let best_move = search::run(&mut state.board, time);
+    let inc_time = match state.board.active_color {
+        WHITE => white_inc_time,
+        BLACK => black_inc_time,
+        _ => panic!("Invalid value: state.board.active_color={}", state.board.active_color),
+    };
+
+    let best_move = search::run(&mut state.board, time, inc_time);
     println!("bestmove {}", best_move.to_text());
 }
 
