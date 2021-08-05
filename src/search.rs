@@ -41,6 +41,14 @@ pub fn run(board: &mut Bitboard, time: u32) -> Move {
         let search_time = (Utc::now() - search_time_start).num_microseconds().unwrap() as f64 / 1000.0;
         let time_ratio = search_time / (last_search_time as f64);
 
+        // Temporary
+        println!(
+            "info score cp 0 nodes 0 depth {} time {} pv {}",
+            depth,
+            search_time as u32,
+            best_move.to_text()
+        );
+
         if search_time * time_ratio > time_for_move as f64 {
             return best_move;
         }

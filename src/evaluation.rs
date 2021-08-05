@@ -17,3 +17,7 @@ pub fn evaluate(board: &Bitboard) -> i16 {
 
     result
 }
+
+pub fn get_piece_value(piece_index: u8) -> i16 {
+    PIECE_VALUE[piece_index as usize]
+}
