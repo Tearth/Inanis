@@ -5,20 +5,20 @@ use crate::clock;
 use crate::common::*;
 use crate::movescan::Move;
 use crate::movescan::MoveFlags;
-use crate::search;
+use crate::qsearch;
 use std::mem::MaybeUninit;
 
 macro_rules! run_internal {
-    ($color:expr, $context:expr, $depth:expr, $invert:expr) => {
+    ($color:expr, $context:expr, $depth:expr, $alpha:expr, $beta:expr, $invert:expr) => {
         match $invert {
             true => match $color {
-                WHITE => run_internal::<BLACK>($context, $depth),
-                BLACK => run_internal::<WHITE>($context, $depth),
+                WHITE => run_internal::<BLACK>($context, $depth, $alpha, $beta),
+                BLACK => run_internal::<WHITE>($context, $depth, $alpha, $beta),
                 _ => panic!("Invalid value: $color={}", $color),
             },
             false => match $color {
-                WHITE => run_internal::<WHITE>($context, $depth),
-                BLACK => run_internal::<BLACK>($context, $depth),
+                WHITE => run_internal::<WHITE>($context, $depth, $alpha, $beta),
+                BLACK => run_internal::<BLACK>($context, $depth, $alpha, $beta),
                 _ => panic!("Invalid value: $color={}", $color),
             },
         }
@@ -37,7 +37,7 @@ pub fn run(board: &mut Bitboard, time: u32) -> Move {
     for depth in 1..32 {
         let search_time_start = Utc::now();
 
-        let best_move = run_internal!(context.board.active_color, &mut context, depth, false).1;
+        let best_move = run_internal!(context.board.active_color, &mut context, depth, -32000, 32000, false).1;
         let search_time = (Utc::now() - search_time_start).num_microseconds().unwrap() as f64 / 1000.0;
         let time_ratio = search_time / (last_search_time as f64);
 
@@ -51,14 +51,14 @@ pub fn run(board: &mut Bitboard, time: u32) -> Move {
     Move::new(0, 0, MoveFlags::QUIET)
 }
 
-pub fn run_internal<const COLOR: u8>(context: &mut SearchContext, depth: i32) -> (i16, Move) {
+pub fn run_internal<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut alpha: i16, beta: i16) -> (i16, Move) {
     if context.board.pieces[COLOR as usize][KING as usize] == 0 {
         return (-32000, Move::new(0, 0, MoveFlags::QUIET));
     }
 
     if depth <= 0 {
         return (
-            ((COLOR as i16) * 2 - 1) * context.board.evaluate(),
+            qsearch::run::<COLOR>(context, depth, alpha, beta),
             Move::new(0, 0, MoveFlags::QUIET),
         );
     }
@@ -66,23 +66,22 @@ pub fn run_internal<const COLOR: u8>(context: &mut SearchContext, depth: i32) ->
     let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
     let moves_count = context.board.get_moves::<COLOR>(&mut moves);
 
-    let mut score = i16::MIN;
     let mut best_move = Move::new(0, 0, MoveFlags::QUIET);
-
     for r#move in &moves[0..moves_count] {
         context.board.make_move::<COLOR>(r#move);
+        let (search_score, _) = run_internal!(COLOR, context, depth - 1, -beta, -alpha, true);
+        let score = -search_score;
+        context.board.undo_move::<COLOR>(r#move);
 
-        if !context.board.is_king_checked(COLOR) {
-            let (search_score, _) = run_internal!(COLOR, context, depth - 1, true);
+        if score > alpha {
+            alpha = score;
+            best_move = *r#move;
 
-            if search_score > score {
-                score = search_score;
-                best_move = *r#move;
+            if alpha >= beta {
+                break;
             }
         }
-
-        context.board.undo_move::<COLOR>(r#move);
     }
 
-    (score, best_move)
+    (alpha, best_move)
 }

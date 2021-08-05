@@ -1,4 +1,5 @@
 use crate::board::Bitboard;
+use crate::common::*;
 use crate::movescan::Move;
 use crate::search;
 use std::collections::HashMap;

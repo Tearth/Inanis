@@ -20,6 +20,7 @@ pub mod movegen;
 pub mod movescan;
 pub mod patterns;
 pub mod perft;
+pub mod qsearch;
 pub mod search;
 pub mod terminal;
 pub mod uci;
