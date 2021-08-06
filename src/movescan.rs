@@ -43,6 +43,7 @@ impl Move {
         let from_rank = chars.next().ok_or("Invalid move: bad source rank")? as u8;
         let to_file = chars.next().ok_or("Invalid move: bad destination file")? as u8;
         let to_rank = chars.next().ok_or("Invalid move: bad destination rank")? as u8;
+        let promotion = chars.next();
 
         if !(b'a'..=b'h').contains(&from_file) || !(b'a'..=b'h').contains(&to_file) {
             return Err("Invalid move: bad source field");
@@ -52,14 +53,34 @@ impl Move {
             return Err("Invalid move: bad destination field");
         }
 
+        if let Some(promotion_piece) = promotion {
+            if !['n', 'b', 'r', 'q'].contains(&promotion_piece) {
+                return Err("Invalid move: bad promotion piece");
+            }
+        }
+
         let from = (7 - (from_file - b'a')) + 8 * (from_rank - b'1');
         let to = (7 - (to_file - b'a')) + 8 * (to_rank - b'1');
+        let promotion_flags = match promotion {
+            Some(promotion_piece) => match promotion_piece {
+                'n' => MoveFlags::KNIGHT_PROMOTION,
+                'b' => MoveFlags::BISHOP_PROMOTION,
+                'r' => MoveFlags::ROOK_PROMOTION,
+                'q' => MoveFlags::QUEEN_PROMOTION,
+                _ => panic!("Invalid value: promotion_piece={}", promotion_piece),
+            },
+            None => MoveFlags::QUIET,
+        };
 
         let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
         let moves_count = board.get_moves_active_color(&mut moves);
 
         for r#move in &moves[0..moves_count] {
             if r#move.get_from() == from && r#move.get_to() == to {
+                if promotion_flags != MoveFlags::QUIET && (r#move.get_flags() & promotion_flags).bits == 0 {
+                    continue;
+                }
+
                 return Ok(*r#move);
             }
         }
@@ -71,12 +92,23 @@ impl Move {
         let from = self.get_from();
         let to = self.get_to();
 
-        let result = vec![
+        let mut result = vec![
             char::from(b'a' + (7 - from % 8)),
             char::from(b'1' + from / 8),
             char::from(b'a' + (7 - to % 8)),
             char::from(b'1' + to / 8),
         ];
+
+        let flags = self.get_flags();
+        if flags.contains(MoveFlags::KNIGHT_PROMOTION) {
+            result.push(match flags {
+                MoveFlags::KNIGHT_PROMOTION | MoveFlags::KNIGHT_PROMOTION_CAPTURE => 'n',
+                MoveFlags::BISHOP_PROMOTION | MoveFlags::BISHOP_PROMOTION_CAPTURE => 'b',
+                MoveFlags::ROOK_PROMOTION | MoveFlags::ROOK_PROMOTION_CAPTURE => 'r',
+                MoveFlags::QUEEN_PROMOTION | MoveFlags::QUEEN_PROMOTION_CAPTURE => 'q',
+                _ => panic!("Invalid value: flags={:?}", flags),
+            });
+        }
 
         result.into_iter().collect()
     }
