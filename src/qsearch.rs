@@ -43,8 +43,9 @@ pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut alpha: 
     assign_move_scores(context, &moves, &mut move_scores, moves_count);
 
     for move_index in 0..moves_count {
-        let r#move = get_next_move(&moves, &move_scores, move_index, moves_count);
+        sort_next_move(&mut moves, &mut move_scores, move_index, moves_count);
 
+        let r#move = moves[move_index];
         if r#move.get_flags() != MoveFlags::CAPTURE {
             continue;
         }
@@ -84,7 +85,7 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
     }
 }
 
-fn get_next_move(moves: &[Move], move_scores: &[i16], start_index: usize, moves_count: usize) -> Move {
+fn sort_next_move(moves: &mut [Move], move_scores: &mut [i16], start_index: usize, moves_count: usize) {
     let mut best_score = move_scores[start_index];
     let mut best_index = start_index;
 
@@ -95,5 +96,8 @@ fn get_next_move(moves: &[Move], move_scores: &[i16], start_index: usize, moves_
         }
     }
 
-    moves[best_index]
+    if best_index != start_index {
+        moves.swap(start_index, best_index);
+        move_scores.swap(start_index, best_index);
+    }
 }
