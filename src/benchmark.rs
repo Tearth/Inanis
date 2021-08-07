@@ -7,6 +7,11 @@ pub struct BenchmarkResult {
     pub q_leafs_count: u64,
     pub beta_cutoffs: u64,
     pub q_beta_cutoffs: u64,
+
+    pub perfect_cutoffs: u64,
+    pub q_perfect_cutoffs: u64,
+    pub non_perfect_cutoffs: u64,
+    pub q_non_perfect_cutoffs: u64,
 }
 
 impl BenchmarkResult {
@@ -18,6 +23,11 @@ impl BenchmarkResult {
             q_leafs_count: 0,
             beta_cutoffs: 0,
             q_beta_cutoffs: 0,
+
+            perfect_cutoffs: 0,
+            q_perfect_cutoffs: 0,
+            non_perfect_cutoffs: 0,
+            q_non_perfect_cutoffs: 0,
         }
     }
 }
@@ -48,6 +58,11 @@ pub fn run() -> BenchmarkResult {
         benchmark_result.q_leafs_count += result.statistics.q_leafs_count;
         benchmark_result.beta_cutoffs += result.statistics.beta_cutoffs;
         benchmark_result.q_beta_cutoffs += result.statistics.q_beta_cutoffs;
+
+        benchmark_result.perfect_cutoffs += result.statistics.perfect_cutoffs;
+        benchmark_result.q_perfect_cutoffs += result.statistics.q_perfect_cutoffs;
+        benchmark_result.non_perfect_cutoffs += result.statistics.non_perfect_cutoffs;
+        benchmark_result.q_non_perfect_cutoffs += result.statistics.q_non_perfect_cutoffs;
     }
 
     benchmark_result

@@ -89,6 +89,14 @@ fn handle_benchmark() {
     let q_mlps = ((result.q_leafs_count as f64) / 1000000.0) / diff;
     let t_mlps = (((result.leafs_count + result.q_leafs_count) as f64) / 1000000.0) / diff;
 
+    let ordering_hits = result.perfect_cutoffs + result.non_perfect_cutoffs;
+    let q_ordering_hits = result.q_perfect_cutoffs + result.q_non_perfect_cutoffs;
+    let t_ordering_hits = ordering_hits + q_ordering_hits;
+
+    let ordering_quality = (result.perfect_cutoffs as f32) / (ordering_hits as f32) * 100.0;
+    let q_ordering_quality = (result.q_perfect_cutoffs as f32) / (q_ordering_hits as f32) * 100.0;
+    let t_ordering_quality = ((result.perfect_cutoffs + result.q_perfect_cutoffs) as f32) / (t_ordering_hits as f32) * 100.0;
+
     let branching_factor = (result.nodes_count as f64) / ((result.nodes_count - result.leafs_count) as f64);
     let q_branching_factor = (result.q_nodes_count as f64) / ((result.q_nodes_count - result.q_leafs_count) as f64);
     let t_branching_factor = (t_nodes_count as f64) / ((t_nodes_count - t_leafs_count) as f64);
@@ -114,6 +122,12 @@ fn handle_benchmark() {
         format!("{}", result.beta_cutoffs),
         format!("{}", result.q_beta_cutoffs),
         format!("{}", result.beta_cutoffs + result.q_beta_cutoffs)
+    ]);
+    table.add_row(row![
+        "Ordering quality",
+        format!("{:.2} %", ordering_quality),
+        format!("{:.2} %", q_ordering_quality),
+        format!("{:.2} %", t_ordering_quality)
     ]);
     table.add_row(row![
         "Branching factor",

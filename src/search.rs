@@ -99,6 +99,11 @@ pub struct SearchStatistics {
     pub q_leafs_count: u64,
     pub beta_cutoffs: u64,
     pub q_beta_cutoffs: u64,
+
+    pub perfect_cutoffs: u64,
+    pub q_perfect_cutoffs: u64,
+    pub non_perfect_cutoffs: u64,
+    pub q_non_perfect_cutoffs: u64,
 }
 
 impl SearchStatistics {
@@ -110,6 +115,11 @@ impl SearchStatistics {
             q_leafs_count: 0,
             beta_cutoffs: 0,
             q_beta_cutoffs: 0,
+
+            perfect_cutoffs: 0,
+            q_perfect_cutoffs: 0,
+            non_perfect_cutoffs: 0,
+            q_non_perfect_cutoffs: 0,
         }
     }
 }
@@ -149,18 +159,26 @@ fn run_internal<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut al
     let moves_count = context.board.get_moves::<COLOR>(&mut moves);
 
     let mut best_move = Move::new(0, 0, MoveFlags::QUIET);
-    for r#move in &moves[0..moves_count] {
-        context.board.make_move::<COLOR>(r#move);
+    for move_index in 0..moves_count {
+        let r#move = moves[move_index];
+
+        context.board.make_move::<COLOR>(&r#move);
         let (search_score, _) = run_internal!(COLOR, context, depth - 1, -beta, -alpha, true);
         let score = -search_score;
-        context.board.undo_move::<COLOR>(r#move);
+        context.board.undo_move::<COLOR>(&r#move);
 
         if score > alpha {
             alpha = score;
-            best_move = *r#move;
+            best_move = r#move;
 
             if alpha >= beta {
                 context.statistics.beta_cutoffs += 1;
+                if move_index == 0 {
+                    context.statistics.perfect_cutoffs += 1;
+                } else {
+                    context.statistics.non_perfect_cutoffs += 1;
+                }
+
                 break;
             }
         }

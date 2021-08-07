@@ -67,6 +67,12 @@ pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut alpha: 
 
             if alpha >= beta {
                 context.statistics.q_beta_cutoffs += 1;
+                if move_index == 0 {
+                    context.statistics.q_perfect_cutoffs += 1;
+                } else {
+                    context.statistics.q_non_perfect_cutoffs += 1;
+                }
+
                 break;
             }
         }
