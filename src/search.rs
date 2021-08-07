@@ -27,11 +27,43 @@ macro_rules! run_internal {
 
 pub struct SearchContext<'a> {
     pub board: &'a mut Bitboard,
+    pub statistics: SearchStatistics,
+}
+
+impl<'a> SearchContext<'a> {
+    pub fn new(board: &mut Bitboard) -> SearchContext {
+        SearchContext {
+            board: board,
+            statistics: SearchStatistics::new(),
+        }
+    }
+}
+
+pub struct SearchStatistics {
+    pub nodes_count: u64,
+    pub q_nodes_count: u64,
+    pub leafs_count: u64,
+    pub q_leafs_count: u64,
+    pub beta_cutoffs: u64,
+    pub q_beta_cutoffs: u64,
+}
+
+impl SearchStatistics {
+    fn new() -> SearchStatistics {
+        SearchStatistics {
+            nodes_count: 0,
+            q_nodes_count: 0,
+            leafs_count: 0,
+            q_leafs_count: 0,
+            beta_cutoffs: 0,
+            q_beta_cutoffs: 0,
+        }
+    }
 }
 
 pub fn run(board: &mut Bitboard, time: u32, inc_time: u32) -> Move {
     let time_for_move = clock::get_time_for_move(time, inc_time);
-    let mut context = SearchContext { board };
+    let mut context = SearchContext::new(board);
 
     let mut last_search_time = 1.0;
     for depth in 1..32 {
@@ -60,12 +92,28 @@ pub fn run(board: &mut Bitboard, time: u32, inc_time: u32) -> Move {
     Move::new(0, 0, MoveFlags::QUIET)
 }
 
-pub fn run_internal<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut alpha: i16, beta: i16) -> (i16, Move) {
+pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> (Move, SearchStatistics) {
+    let mut context = SearchContext::new(board);
+    let mut best_move = Move::new(0, 0, MoveFlags::QUIET);
+
+    for depth in 1..=depth {
+        let (_, r#move) = run_internal!(context.board.active_color, &mut context, depth, -32000, 32000, false);
+        best_move = r#move;
+    }
+
+    (best_move, context.statistics)
+}
+
+fn run_internal<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut alpha: i16, beta: i16) -> (i16, Move) {
+    context.statistics.nodes_count += 1;
+
     if context.board.pieces[COLOR as usize][KING as usize] == 0 {
+        context.statistics.leafs_count += 1;
         return (-31900 - (depth as i16), Move::new(0, 0, MoveFlags::QUIET));
     }
 
     if depth <= 0 {
+        context.statistics.leafs_count += 1;
         return (
             qsearch::run::<COLOR>(context, depth, alpha, beta),
             Move::new(0, 0, MoveFlags::QUIET),
@@ -87,6 +135,7 @@ pub fn run_internal<const COLOR: u8>(context: &mut SearchContext, depth: i32, mu
             best_move = *r#move;
 
             if alpha >= beta {
+                context.statistics.beta_cutoffs += 1;
                 break;
             }
         }

@@ -23,12 +23,17 @@ macro_rules! run_internal {
 }
 
 pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut alpha: i16, beta: i16) -> i16 {
+    context.statistics.q_nodes_count += 1;
+
     if context.board.pieces[COLOR as usize][KING as usize] == 0 {
+        context.statistics.q_leafs_count += 1;
         return -31900 - (depth as i16);
     }
 
     let stand_pat = ((COLOR as i16) * 2 - 1) * context.board.evaluate();
     if stand_pat >= beta {
+        context.statistics.q_leafs_count += 1;
+        context.statistics.q_beta_cutoffs += 1;
         return beta;
     }
 
@@ -42,6 +47,7 @@ pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut alpha: 
 
     assign_move_scores(context, &moves, &mut move_scores, moves_count);
 
+    let mut found = false;
     for move_index in 0..moves_count {
         sort_next_move(&mut moves, &mut move_scores, move_index, moves_count);
 
@@ -49,6 +55,8 @@ pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut alpha: 
         if r#move.get_flags() != MoveFlags::CAPTURE {
             continue;
         }
+
+        found = true;
 
         context.board.make_move::<COLOR>(&r#move);
         let score = -run_internal!(COLOR, context, depth - 1, -beta, -alpha, true);
@@ -58,9 +66,14 @@ pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut alpha: 
             alpha = score;
 
             if alpha >= beta {
-                return beta;
+                context.statistics.q_beta_cutoffs += 1;
+                break;
             }
         }
+    }
+
+    if !found {
+        context.statistics.q_leafs_count += 1;
     }
 
     alpha

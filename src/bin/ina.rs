@@ -4,6 +4,8 @@ use ina::terminal;
 use ina::zobrist;
 
 fn main() {
+    fastrand::seed(584578);
+
     patterns::init();
     movegen::init();
     zobrist::init();

@@ -10,6 +10,7 @@
 #[macro_use]
 extern crate bitflags;
 
+pub mod benchmark;
 pub mod bit;
 pub mod board;
 pub mod clock;

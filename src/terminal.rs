@@ -1,8 +1,13 @@
+use crate::benchmark;
 use crate::board::Bitboard;
 use crate::movegen;
 use crate::perft;
 use crate::uci;
 use chrono::Utc;
+use prettytable::cell;
+use prettytable::format;
+use prettytable::row;
+use prettytable::Table;
 use std::io;
 use std::process;
 
@@ -28,6 +33,7 @@ pub fn run() {
 
         match trimmed.as_str() {
             "help" => handle_help(),
+            "benchmark" => handle_benchmark(),
             "magic" => handle_magic(),
             "perft" => handle_perft(split),
             "dperft" => handle_dperft(split),
@@ -42,6 +48,7 @@ pub fn run() {
 
 fn handle_help() {
     println!("=== General ===");
+    println!(" benchmark - run test for a set of positions");
     println!(" magic - generate magic numbers");
     println!(" uci - run Universal Chess Interface");
     println!(" quit - close the application");
@@ -60,6 +67,62 @@ fn handle_help() {
     println!(" qperft [depth] [threads_count] [hashtable_size_mb]");
     println!(" qperft [depth] [threads_count] [hashtable_size_mb] fen [fen]");
     println!(" qperft [depth] [threads_count] [hashtable_size_mb] moves [moves]");
+}
+
+fn handle_benchmark() {
+    let now = Utc::now();
+    println!("Starting benchmark...");
+
+    let result = benchmark::run();
+    let diff = ((Utc::now() - now).num_milliseconds() as f64) / 1000.0;
+
+    println!("Benchmark done in {:.2} s", diff);
+
+    let t_nodes_count = result.nodes_count + result.q_nodes_count;
+    let t_leafs_count = result.leafs_count + result.q_leafs_count;
+
+    let mnps = ((result.nodes_count as f64) / 1000000.0) / diff;
+    let q_mnps = ((result.q_nodes_count as f64) / 1000000.0) / diff;
+    let t_mnps = (((result.nodes_count + result.q_nodes_count) as f64) / 1000000.0) / diff;
+
+    let mlps = ((result.leafs_count as f64) / 1000000.0) / diff;
+    let q_mlps = ((result.q_leafs_count as f64) / 1000000.0) / diff;
+    let t_mlps = (((result.leafs_count + result.q_leafs_count) as f64) / 1000000.0) / diff;
+
+    let branching_factor = (result.nodes_count as f64) / ((result.nodes_count - result.leafs_count) as f64);
+    let q_branching_factor = (result.q_nodes_count as f64) / ((result.q_nodes_count - result.q_leafs_count) as f64);
+    let t_branching_factor = (t_nodes_count as f64) / ((t_nodes_count - t_leafs_count) as f64);
+
+    let mut table = Table::new();
+    table.set_format(*format::consts::FORMAT_NO_LINESEP_WITH_TITLE);
+    table.set_titles(row!["", "Normal", "Quiescence", "Total"]);
+
+    table.add_row(row![
+        "Nodes count",
+        format!("{} ({:.2} MN/s)", result.nodes_count, mnps),
+        format!("{} ({:.2} MN/s)", result.q_nodes_count, q_mnps),
+        format!("{} ({:.2} MN/s)", t_nodes_count, t_mnps)
+    ]);
+    table.add_row(row![
+        "Leafs count",
+        format!("{} ({:.2} MN/s)", result.leafs_count, mlps),
+        format!("{} ({:.2} MN/s)", result.q_leafs_count, q_mlps),
+        format!("{} ({:.2} MN/s)", t_leafs_count, t_mlps)
+    ]);
+    table.add_row(row![
+        "Beta cutoffs",
+        format!("{}", result.beta_cutoffs),
+        format!("{}", result.q_beta_cutoffs),
+        format!("{}", result.beta_cutoffs + result.q_beta_cutoffs)
+    ]);
+    table.add_row(row![
+        "Branching factor",
+        format!("{:.2}", branching_factor),
+        format!("{:.2}", q_branching_factor),
+        format!("{:.2}", t_branching_factor)
+    ]);
+
+    table.printstd();
 }
 
 fn handle_magic() {
