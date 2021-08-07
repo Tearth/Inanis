@@ -40,14 +40,14 @@ pub fn run() -> BenchmarkResult {
 
     for fen in benchmark_positions {
         let mut board = Bitboard::new_from_fen(fen).unwrap();
-        let (_, statistics) = search::run_fixed_depth(&mut board, 5);
+        let result = search::run_fixed_depth(&mut board, 5);
 
-        benchmark_result.nodes_count += statistics.nodes_count;
-        benchmark_result.q_nodes_count += statistics.q_nodes_count;
-        benchmark_result.leafs_count += statistics.leafs_count;
-        benchmark_result.q_leafs_count += statistics.q_leafs_count;
-        benchmark_result.beta_cutoffs += statistics.beta_cutoffs;
-        benchmark_result.q_beta_cutoffs += statistics.q_beta_cutoffs;
+        benchmark_result.nodes_count += result.statistics.nodes_count;
+        benchmark_result.q_nodes_count += result.statistics.q_nodes_count;
+        benchmark_result.leafs_count += result.statistics.leafs_count;
+        benchmark_result.q_leafs_count += result.statistics.q_leafs_count;
+        benchmark_result.beta_cutoffs += result.statistics.beta_cutoffs;
+        benchmark_result.q_beta_cutoffs += result.statistics.q_beta_cutoffs;
     }
 
     benchmark_result

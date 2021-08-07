@@ -28,17 +28,70 @@ macro_rules! run_internal {
 pub struct SearchContext<'a> {
     pub board: &'a mut Bitboard,
     pub statistics: SearchStatistics,
+    pub time: u32,
+    pub inc_time: u32,
+    pub current_depth: i32,
+    pub last_search_time: f64,
+    pub search_done: bool,
 }
 
 impl<'a> SearchContext<'a> {
-    pub fn new(board: &mut Bitboard) -> SearchContext {
+    pub fn new(board: &mut Bitboard, time: u32, inc_time: u32) -> SearchContext {
         SearchContext {
             board: board,
             statistics: SearchStatistics::new(),
+            time: time,
+            inc_time: inc_time,
+            current_depth: 1,
+            last_search_time: 1.0,
+            search_done: false,
         }
     }
 }
 
+impl<'a> Iterator for SearchContext<'a> {
+    type Item = SearchResult;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.search_done {
+            return None;
+        }
+
+        let search_time_start = Utc::now();
+        let (score, best_move) = run_internal!(self.board.active_color, self, self.current_depth, -32000, 32000, false);
+        let search_time = (Utc::now() - search_time_start).num_microseconds().unwrap() as f64 / 1000.0;
+        let time_ratio = search_time / (self.last_search_time as f64);
+
+        if search_time * time_ratio > clock::get_time_for_move(self.time, self.inc_time) as f64 {
+            self.search_done = true;
+        }
+
+        self.last_search_time = search_time;
+        self.current_depth += 1;
+
+        Some(SearchResult::new(self.current_depth - 1, score, best_move, self.statistics))
+    }
+}
+
+pub struct SearchResult {
+    pub depth: i32,
+    pub score: i16,
+    pub best_move: Move,
+    pub statistics: SearchStatistics,
+}
+
+impl SearchResult {
+    pub fn new(depth: i32, score: i16, best_move: Move, statistics: SearchStatistics) -> SearchResult {
+        SearchResult {
+            depth,
+            score,
+            best_move,
+            statistics,
+        }
+    }
+}
+
+#[derive(Copy, Clone)]
 pub struct SearchStatistics {
     pub nodes_count: u64,
     pub q_nodes_count: u64,
@@ -61,47 +114,19 @@ impl SearchStatistics {
     }
 }
 
-pub fn run(board: &mut Bitboard, time: u32, inc_time: u32) -> Move {
-    let time_for_move = clock::get_time_for_move(time, inc_time);
-    let mut context = SearchContext::new(board);
-
-    let mut last_search_time = 1.0;
-    for depth in 1..32 {
-        let search_time_start = Utc::now();
-
-        let (score, best_move) = run_internal!(context.board.active_color, &mut context, depth, -32000, 32000, false);
-        let search_time = (Utc::now() - search_time_start).num_microseconds().unwrap() as f64 / 1000.0;
-        let time_ratio = search_time / (last_search_time as f64);
-
-        // Temporary
-        println!(
-            "info score cp {} nodes 0 depth {} time {} pv {}",
-            score,
-            depth,
-            search_time as u32,
-            best_move.to_text()
-        );
-
-        if search_time * time_ratio > time_for_move as f64 {
-            return best_move;
-        }
-
-        last_search_time = search_time;
-    }
-
-    Move::new(0, 0, MoveFlags::QUIET)
-}
-
-pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> (Move, SearchStatistics) {
-    let mut context = SearchContext::new(board);
+pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
+    let mut context = SearchContext::new(board, 0, 0);
     let mut best_move = Move::new(0, 0, MoveFlags::QUIET);
+    let mut best_score = 0;
 
     for depth in 1..=depth {
-        let (_, r#move) = run_internal!(context.board.active_color, &mut context, depth, -32000, 32000, false);
+        let (score, r#move) = run_internal!(context.board.active_color, &mut context, depth, -32000, 32000, false);
+
+        best_score = score;
         best_move = r#move;
     }
 
-    (best_move, context.statistics)
+    SearchResult::new(depth, best_score, best_move, context.statistics)
 }
 
 fn run_internal<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut alpha: i16, beta: i16) -> (i16, Move) {
