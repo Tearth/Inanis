@@ -3,7 +3,7 @@ use crate::search;
 use chrono::Utc;
 
 pub struct BenchmarkResult {
-    pub time: f64,
+    pub time: f32,
 
     pub nodes_count: u64,
     pub q_nodes_count: u64,
@@ -35,6 +35,12 @@ impl BenchmarkResult {
             non_perfect_cutoffs: 0,
             q_non_perfect_cutoffs: 0,
         }
+    }
+}
+
+impl Default for BenchmarkResult {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -72,6 +78,6 @@ pub fn run() -> BenchmarkResult {
         benchmark_result.q_non_perfect_cutoffs += result.statistics.q_non_perfect_cutoffs;
     }
 
-    benchmark_result.time = ((Utc::now() - benchmark_time_start).num_milliseconds() as f64) / 1000.0;
+    benchmark_result.time = ((Utc::now() - benchmark_time_start).num_milliseconds() as f32) / 1000.0;
     benchmark_result
 }
