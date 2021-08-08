@@ -10,19 +10,10 @@
 #[macro_use]
 extern crate bitflags;
 
-pub mod benchmark;
-pub mod bit;
 pub mod board;
-pub mod clock;
-pub mod common;
+pub mod cache;
+pub mod engine;
 pub mod evaluation;
-pub mod fen;
-pub mod movegen;
-pub mod movescan;
-pub mod patterns;
+pub mod frontend;
 pub mod perft;
-pub mod qsearch;
-pub mod search;
-pub mod terminal;
-pub mod uci;
-pub mod zobrist;
+pub mod utils;

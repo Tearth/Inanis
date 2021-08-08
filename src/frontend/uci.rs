@@ -1,8 +1,8 @@
-use crate::board::Bitboard;
-use crate::common::*;
-use crate::movescan::Move;
-use crate::movescan::MoveFlags;
-use crate::search::SearchContext;
+use crate::board::movescan::Move;
+use crate::board::movescan::MoveFlags;
+use crate::board::representation::Bitboard;
+use crate::board::representation::CastlingRights;
+use crate::engine::search::SearchContext;
 use std::collections::HashMap;
 use std::io;
 use std::process;

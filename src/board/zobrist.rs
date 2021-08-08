@@ -1,5 +1,5 @@
-use crate::bit::*;
-use crate::board::CastlingRights;
+use super::bit::*;
+use super::representation::CastlingRights;
 
 static mut PIECE_HASHES: [[[u64; 64]; 6]; 2] = [[[0; 64]; 6]; 2];
 static mut CASTLING_HASHES: [u64; 4] = [0; 4];

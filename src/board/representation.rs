@@ -1,12 +1,12 @@
-use crate::bit::*;
-use crate::common::*;
+use super::bit::*;
+use super::common::*;
+use super::fen;
+use super::movescan;
+use super::movescan::Move;
+use super::movescan::MoveFlags;
+use super::zobrist;
+use crate::board::movegen;
 use crate::evaluation;
-use crate::fen;
-use crate::movegen;
-use crate::movescan;
-use crate::movescan::Move;
-use crate::movescan::MoveFlags;
-use crate::zobrist;
 
 bitflags! {
     pub struct CastlingRights: u8 {
@@ -240,7 +240,7 @@ impl Bitboard {
     }
 
     pub fn evaluate(&self) -> i16 {
-        evaluation::evaluate(self)
+        evaluation::material::evaluate(self)
     }
 
     fn get_moves_internal<const COLOR: u8>(&self, mut moves: &mut [Move]) -> usize {

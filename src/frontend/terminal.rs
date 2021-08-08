@@ -1,8 +1,9 @@
-use crate::benchmark;
-use crate::board::Bitboard;
-use crate::movegen;
+use super::uci;
+use crate::board::movegen;
+use crate::board::representation::Bitboard;
+use crate::board::representation::CastlingRights;
 use crate::perft;
-use crate::uci;
+use crate::utils::benchmark;
 use chrono::Utc;
 use prettytable::cell;
 use prettytable::format;
@@ -182,7 +183,7 @@ fn handle_perft(input: Vec<&str>) {
 
     for depth in 1..max_depth + 1 {
         let now = Utc::now();
-        let count = perft::run(depth, &mut board, false);
+        let count = perft::normal::run(depth, &mut board, false);
 
         let diff = ((Utc::now() - now).num_milliseconds() as f64) / 1000.0;
         let mnps = ((count as f64) / 1000000.0) / diff;
@@ -215,7 +216,7 @@ fn handle_dperft(input: Vec<&str>) {
         }
     };
 
-    let result = perft::run_divided(depth, &mut board);
+    let result = perft::divided::run(depth, &mut board);
 
     let mut total_leafs = 0;
     for r#move in result {
@@ -284,7 +285,7 @@ fn handle_qperft(input: Vec<&str>) {
 
     for depth in 1..=max_depth {
         let now = Utc::now();
-        let (count, hashtable_usage) = perft::run_fast(depth, &mut board, hashtable_size_bytes, threads_count);
+        let (count, hashtable_usage) = perft::fast::run(depth, &mut board, hashtable_size_bytes, threads_count);
 
         let diff = ((Utc::now() - now).num_milliseconds() as f64) / 1000.0;
         let mnps = ((count as f64) / 1000000.0) / diff;

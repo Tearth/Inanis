@@ -1,6 +1,5 @@
 use criterion::*;
-use ina::movegen;
-use ina::patterns;
+use ina::board::{movegen, patterns};
 
 fn criterion_benchmark(criterion: &mut Criterion) {
     patterns::init();

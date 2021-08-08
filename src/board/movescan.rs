@@ -1,8 +1,10 @@
-use crate::bit::*;
-use crate::board::Bitboard;
-use crate::board::CastlingRights;
-use crate::common::*;
-use crate::movegen;
+use crate::board::movegen;
+
+use super::bit::*;
+use super::common::*;
+use super::patterns;
+use super::representation::Bitboard;
+use super::representation::CastlingRights;
 use std::mem::MaybeUninit;
 
 bitflags! {

@@ -1,10 +1,11 @@
 #[cfg(test)]
 mod integrity_tests {
-    use ina::board::Bitboard;
-    use ina::movegen;
-    use ina::patterns;
+    use ina::board::movegen;
+    use ina::board::movescan;
+    use ina::board::patterns;
+    use ina::board::representation::Bitboard;
+    use ina::board::zobrist;
     use ina::perft;
-    use ina::zobrist;
     use std::sync::Once;
 
     static INIT: Once = Once::new();
@@ -20,7 +21,7 @@ mod integrity_tests {
                         zobrist::init();
                     });
 
-                    perft::run($depth, &mut Bitboard::new_from_fen($fen).unwrap(), true);
+                    perft::normal::run($depth, &mut Bitboard::new_from_fen($fen).unwrap(), true);
                 }
             )*
         }

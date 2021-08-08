@@ -1,10 +1,11 @@
 #[cfg(test)]
 mod perft_tests {
-    use ina::board::Bitboard;
-    use ina::movegen;
-    use ina::patterns;
+    use ina::board::movegen;
+    use ina::board::movescan;
+    use ina::board::patterns;
+    use ina::board::representation::Bitboard;
+    use ina::board::zobrist;
     use ina::perft;
-    use ina::zobrist;
     use std::sync::Once;
 
     static INIT: Once = Once::new();
@@ -20,7 +21,7 @@ mod perft_tests {
                         zobrist::init();
                     });
 
-                    assert_eq!($expected_leafs_count, perft::run($depth, &mut Bitboard::new_from_fen($fen).unwrap(), false));
+                    assert_eq!($expected_leafs_count, perft::normal::run($depth, &mut Bitboard::new_from_fen($fen).unwrap(), false));
                 }
             )*
         }

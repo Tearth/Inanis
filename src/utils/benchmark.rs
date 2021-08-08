@@ -1,5 +1,4 @@
-use crate::board::Bitboard;
-use crate::search;
+use crate::{board::representation::Bitboard, engine::search};
 use chrono::Utc;
 
 pub struct BenchmarkResult {

@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod fen_tests {
-    use ina::board::Bitboard;
+    use ina::board::representation::Bitboard;
 
     macro_rules! fen_tests {
         ($($name:ident: $original_fen:expr,)*) => {

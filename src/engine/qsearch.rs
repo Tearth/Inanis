@@ -1,10 +1,12 @@
-use crate::common::*;
+use crate::board::common::*;
+use crate::board::movescan::Move;
+use crate::board::movescan::MoveFlags;
+use crate::board::representation::Bitboard;
+use crate::engine::search;
 use crate::evaluation;
-use crate::movescan::Move;
-use crate::movescan::MoveFlags;
-use crate::search;
-use crate::search::SearchContext;
 use std::mem::MaybeUninit;
+
+use super::search::SearchContext;
 
 macro_rules! run_internal {
     ($color:expr, $context:expr, $depth:expr, $alpha:expr, $beta:expr, $invert:expr) => {
@@ -98,8 +100,8 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
         let attacking_piece = context.board.get_piece(r#move.get_from());
         let captured_piece = context.board.get_piece(r#move.get_to());
 
-        let attacking_piece_value = evaluation::get_piece_value(attacking_piece);
-        let captured_piece_value = evaluation::get_piece_value(captured_piece);
+        let attacking_piece_value = evaluation::material::get_piece_value(attacking_piece);
+        let captured_piece_value = evaluation::material::get_piece_value(captured_piece);
 
         move_scores[move_index] = captured_piece_value - attacking_piece_value;
     }

@@ -1,7 +1,8 @@
-use crate::bit::*;
-use crate::common::*;
-use crate::patterns;
 use arr_macro::arr;
+
+use super::bit::*;
+use super::common::*;
+use super::patterns;
 
 #[rustfmt::skip]
 static ROOK_SHIFTS: [u8; 64] =
