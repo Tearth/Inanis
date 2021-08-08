@@ -1,3 +1,4 @@
+use chrono::DateTime;
 use chrono::Utc;
 
 use crate::board::Bitboard;
@@ -31,6 +32,7 @@ pub struct SearchContext<'a> {
     pub time: u32,
     pub inc_time: u32,
     pub current_depth: i32,
+    pub search_time_start: DateTime<Utc>,
     pub last_search_time: f64,
     pub search_done: bool,
 }
@@ -43,6 +45,7 @@ impl<'a> SearchContext<'a> {
             time: time,
             inc_time: inc_time,
             current_depth: 1,
+            search_time_start: Utc::now(),
             last_search_time: 1.0,
             search_done: false,
         }
@@ -69,11 +72,19 @@ impl<'a> Iterator for SearchContext<'a> {
         self.last_search_time = search_time;
         self.current_depth += 1;
 
-        Some(SearchResult::new(self.current_depth - 1, score, best_move, self.statistics))
+        let total_search_time = (Utc::now() - self.search_time_start).num_milliseconds() as u64;
+        Some(SearchResult::new(
+            total_search_time,
+            self.current_depth - 1,
+            score,
+            best_move,
+            self.statistics,
+        ))
     }
 }
 
 pub struct SearchResult {
+    pub time: u64,
     pub depth: i32,
     pub score: i16,
     pub best_move: Move,
@@ -81,8 +92,9 @@ pub struct SearchResult {
 }
 
 impl SearchResult {
-    pub fn new(depth: i32, score: i16, best_move: Move, statistics: SearchStatistics) -> SearchResult {
+    pub fn new(time: u64, depth: i32, score: i16, best_move: Move, statistics: SearchStatistics) -> SearchResult {
         SearchResult {
+            time,
             depth,
             score,
             best_move,
@@ -129,6 +141,7 @@ pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
     let mut best_move = Move::new(0, 0, MoveFlags::QUIET);
     let mut best_score = 0;
 
+    let search_time_start = Utc::now();
     for depth in 1..=depth {
         let (score, r#move) = run_internal!(context.board.active_color, &mut context, depth, -32000, 32000, false);
 
@@ -136,7 +149,8 @@ pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
         best_move = r#move;
     }
 
-    SearchResult::new(depth, best_score, best_move, context.statistics)
+    let time = (Utc::now() - search_time_start).num_milliseconds() as u64;
+    SearchResult::new(time, depth, best_score, best_move, context.statistics)
 }
 
 fn run_internal<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut alpha: i16, beta: i16) -> (i16, Move) {

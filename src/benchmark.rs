@@ -1,6 +1,10 @@
-use crate::{board::Bitboard, search};
+use crate::board::Bitboard;
+use crate::search;
+use chrono::Utc;
 
 pub struct BenchmarkResult {
+    pub time: f64,
+
     pub nodes_count: u64,
     pub q_nodes_count: u64,
     pub leafs_count: u64,
@@ -17,6 +21,8 @@ pub struct BenchmarkResult {
 impl BenchmarkResult {
     pub fn new() -> BenchmarkResult {
         BenchmarkResult {
+            time: 0.0,
+
             nodes_count: 0,
             q_nodes_count: 0,
             leafs_count: 0,
@@ -47,6 +53,7 @@ pub fn run() -> BenchmarkResult {
     ];
 
     let mut benchmark_result = BenchmarkResult::new();
+    let benchmark_time_start = Utc::now();
 
     for fen in benchmark_positions {
         let mut board = Bitboard::new_from_fen(fen).unwrap();
@@ -65,5 +72,6 @@ pub fn run() -> BenchmarkResult {
         benchmark_result.q_non_perfect_cutoffs += result.statistics.q_non_perfect_cutoffs;
     }
 
+    benchmark_result.time = ((Utc::now() - benchmark_time_start).num_milliseconds() as f64) / 1000.0;
     benchmark_result
 }

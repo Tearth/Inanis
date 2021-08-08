@@ -70,24 +70,20 @@ fn handle_help() {
 }
 
 fn handle_benchmark() {
-    let now = Utc::now();
     println!("Starting benchmark...");
-
     let result = benchmark::run();
-    let diff = ((Utc::now() - now).num_milliseconds() as f64) / 1000.0;
-
-    println!("Benchmark done in {:.2} s", diff);
+    println!("Benchmark done in {:.2} s", result.time);
 
     let t_nodes_count = result.nodes_count + result.q_nodes_count;
     let t_leafs_count = result.leafs_count + result.q_leafs_count;
 
-    let mnps = ((result.nodes_count as f64) / 1000000.0) / diff;
-    let q_mnps = ((result.q_nodes_count as f64) / 1000000.0) / diff;
-    let t_mnps = (((result.nodes_count + result.q_nodes_count) as f64) / 1000000.0) / diff;
+    let mnps = ((result.nodes_count as f64) / 1000000.0) / result.time;
+    let q_mnps = ((result.q_nodes_count as f64) / 1000000.0) / result.time;
+    let t_mnps = (((result.nodes_count + result.q_nodes_count) as f64) / 1000000.0) / result.time;
 
-    let mlps = ((result.leafs_count as f64) / 1000000.0) / diff;
-    let q_mlps = ((result.q_leafs_count as f64) / 1000000.0) / diff;
-    let t_mlps = (((result.leafs_count + result.q_leafs_count) as f64) / 1000000.0) / diff;
+    let mlps = ((result.leafs_count as f64) / 1000000.0) / result.time;
+    let q_mlps = ((result.q_leafs_count as f64) / 1000000.0) / result.time;
+    let t_mlps = (((result.leafs_count + result.q_leafs_count) as f64) / 1000000.0) / result.time;
 
     let beta_cutoffs_percent = ((result.beta_cutoffs as f32) / (result.nodes_count as f32)) * 100.0;
     let q_beta_cutoffs_percent = ((result.q_beta_cutoffs as f32) / (result.q_nodes_count as f32)) * 100.0;
