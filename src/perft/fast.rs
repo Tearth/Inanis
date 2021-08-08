@@ -1,10 +1,8 @@
+use super::common::PerftContext;
 use crate::board::movescan::Move;
 use crate::board::representation::Bitboard;
 use crate::cache::perft::PerftHashTable;
-use crate::perft::core::PerftContext;
 use crate::run_internal;
-use std::cell::UnsafeCell;
-use std::mem;
 use std::mem::MaybeUninit;
 use std::sync::Arc;
 use std::sync::Mutex;

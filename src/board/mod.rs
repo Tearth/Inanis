@@ -1,4 +1,3 @@
-pub mod bit;
 pub mod common;
 pub mod fen;
 pub mod movegen;

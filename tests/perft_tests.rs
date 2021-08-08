@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod perft_tests {
     use ina::board::movegen;
-    use ina::board::movescan;
     use ina::board::patterns;
     use ina::board::representation::Bitboard;
     use ina::board::zobrist;

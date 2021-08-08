@@ -1,15 +1,14 @@
-use chrono::DateTime;
-use chrono::Utc;
-
+use super::common::*;
+use super::qsearch;
 use crate::board::common::*;
 use crate::board::movescan::Move;
 use crate::board::movescan::MoveFlags;
 use crate::board::representation::Bitboard;
 use crate::engine::clock;
 use crate::evaluation;
+use chrono::DateTime;
+use chrono::Utc;
 use std::mem::MaybeUninit;
-
-use super::qsearch;
 
 macro_rules! run_internal {
     ($color:expr, $context:expr, $depth:expr, $alpha:expr, $beta:expr, $invert:expr) => {
@@ -153,23 +152,6 @@ pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
 
     let time = (Utc::now() - search_time_start).num_milliseconds() as u64;
     SearchResult::new(time, depth, best_score, best_move, context.statistics)
-}
-
-pub fn sort_next_move(moves: &mut [Move], move_scores: &mut [i16], start_index: usize, moves_count: usize) {
-    let mut best_score = move_scores[start_index];
-    let mut best_index = start_index;
-
-    for index in (start_index + 1)..moves_count {
-        if move_scores[index] > best_score {
-            best_score = move_scores[index];
-            best_index = index;
-        }
-    }
-
-    if best_index != start_index {
-        moves.swap(start_index, best_index);
-        move_scores.swap(start_index, best_index);
-    }
 }
 
 fn run_internal<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut alpha: i16, beta: i16) -> (i16, Move) {

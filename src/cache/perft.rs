@@ -1,9 +1,5 @@
 use std::cell::UnsafeCell;
 use std::mem;
-use std::mem::MaybeUninit;
-use std::sync::Arc;
-use std::sync::Mutex;
-use std::thread;
 use std::u64;
 
 const BUCKET_SLOTS: usize = 4;
@@ -11,6 +7,18 @@ const BUCKET_SLOTS: usize = 4;
 pub struct PerftHashTable {
     table: UnsafeCell<Vec<PerftHashTableBucket>>,
     slots: usize,
+}
+
+#[repr(align(64))]
+#[derive(Clone, Copy)]
+struct PerftHashTableBucket {
+    pub entries: [PerftHashTableEntry; BUCKET_SLOTS],
+}
+
+#[derive(Clone, Copy)]
+pub struct PerftHashTableEntry {
+    pub key_and_depth: u64,
+    pub leafs_count: u64,
 }
 
 impl PerftHashTable {
@@ -76,24 +84,12 @@ impl PerftHashTable {
 
 unsafe impl Sync for PerftHashTable {}
 
-#[repr(align(64))]
-#[derive(Clone, Copy)]
-struct PerftHashTableBucket {
-    pub entries: [PerftHashTableEntry; BUCKET_SLOTS],
-}
-
 impl PerftHashTableBucket {
     fn new() -> PerftHashTableBucket {
         PerftHashTableBucket {
             entries: [PerftHashTableEntry::new(0, 0, 0); BUCKET_SLOTS],
         }
     }
-}
-
-#[derive(Clone, Copy)]
-pub struct PerftHashTableEntry {
-    pub key_and_depth: u64,
-    pub leafs_count: u64,
 }
 
 impl PerftHashTableEntry {

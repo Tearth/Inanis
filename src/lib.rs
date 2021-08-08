@@ -14,6 +14,6 @@ pub mod board;
 pub mod cache;
 pub mod engine;
 pub mod evaluation;
-pub mod frontend;
+pub mod interface;
 pub mod perft;
 pub mod utils;

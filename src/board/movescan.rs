@@ -1,8 +1,5 @@
-use crate::board::movegen;
-
-use super::bit::*;
 use super::common::*;
-use super::patterns;
+use super::movegen;
 use super::representation::Bitboard;
 use super::representation::CastlingRights;
 use std::mem::MaybeUninit;

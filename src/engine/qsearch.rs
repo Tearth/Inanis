@@ -1,12 +1,10 @@
+use super::common::*;
+use super::search::SearchContext;
 use crate::board::common::*;
 use crate::board::movescan::Move;
 use crate::board::movescan::MoveFlags;
-use crate::board::representation::Bitboard;
-use crate::engine::search;
 use crate::evaluation;
 use std::mem::MaybeUninit;
-
-use super::search::SearchContext;
 
 macro_rules! run_internal {
     ($color:expr, $context:expr, $depth:expr, $alpha:expr, $beta:expr, $invert:expr) => {
@@ -52,7 +50,7 @@ pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut alpha: 
 
     let mut found = false;
     for move_index in 0..moves_count {
-        search::sort_next_move(&mut moves, &mut move_scores, move_index, moves_count);
+        sort_next_move(&mut moves, &mut move_scores, move_index, moves_count);
 
         let r#move = moves[move_index];
         if r#move.get_flags() != MoveFlags::CAPTURE {

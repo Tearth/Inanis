@@ -1,11 +1,10 @@
-use super::bit::*;
 use super::common::*;
 use super::fen;
+use super::movegen;
 use super::movescan;
 use super::movescan::Move;
 use super::movescan::MoveFlags;
 use super::zobrist;
-use crate::board::movegen;
 use crate::evaluation;
 
 bitflags! {

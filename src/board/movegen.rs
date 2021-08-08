@@ -1,8 +1,6 @@
-use arr_macro::arr;
-
-use super::bit::*;
 use super::common::*;
 use super::patterns;
+use arr_macro::arr;
 
 #[rustfmt::skip]
 static ROOK_SHIFTS: [u8; 64] =
@@ -164,6 +162,9 @@ static BISHOP_MAGIC_NUMBERS: [u64; 64] = [
     9377059641948700736,
 ];
 
+static mut ROOK_FIELDS: [MagicField; 64] = arr!(MagicField::new(); 64);
+static mut BISHOP_FIELDS: [MagicField; 64] = arr!(MagicField::new(); 64);
+
 struct MagicField {
     pub mask: u64,
     pub shift: u8,
@@ -181,9 +182,6 @@ impl MagicField {
         }
     }
 }
-
-static mut ROOK_FIELDS: [MagicField; 64] = arr!(MagicField::new(); 64);
-static mut BISHOP_FIELDS: [MagicField; 64] = arr!(MagicField::new(); 64);
 
 pub fn init() {
     for index in 0..64 {

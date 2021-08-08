@@ -1,7 +1,7 @@
-use ina::{
-    board::{movegen, patterns, zobrist},
-    frontend::terminal,
-};
+use ina::board::movegen;
+use ina::board::patterns;
+use ina::board::zobrist;
+use ina::interface::terminal;
 
 fn main() {
     fastrand::seed(584578);

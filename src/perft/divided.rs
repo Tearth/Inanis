@@ -2,15 +2,11 @@ use crate::board::movescan::Move;
 use crate::board::representation::Bitboard;
 use crate::cache::perft::PerftHashTable;
 use crate::run_internal;
-use std::cell::UnsafeCell;
-use std::mem;
 use std::mem::MaybeUninit;
 use std::sync::Arc;
-use std::sync::Mutex;
-use std::thread;
 use std::u64;
 
-use super::core::PerftContext;
+use super::common::PerftContext;
 
 pub fn run(depth: i32, board: &mut Bitboard) -> Vec<(String, u64)> {
     let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };

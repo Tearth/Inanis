@@ -1,14 +1,8 @@
-use crate::board::common::*;
 use crate::board::movescan::Move;
 use crate::board::representation::Bitboard;
-use crate::board::representation::CastlingRights;
 use crate::cache::perft::PerftHashTable;
-use std::cell::UnsafeCell;
-use std::mem;
 use std::mem::MaybeUninit;
 use std::sync::Arc;
-use std::sync::Mutex;
-use std::thread;
 use std::u64;
 
 #[macro_export]
@@ -16,13 +10,13 @@ macro_rules! run_internal {
     ($color:expr, $context:expr, $depth:expr, $invert:expr) => {
         match $invert {
             true => match $color {
-                WHITE => crate::perft::core::run_internal::<{ crate::board::common::BLACK }>($context, $depth),
-                BLACK => crate::perft::core::run_internal::<{ crate::board::common::WHITE }>($context, $depth),
+                crate::board::common::WHITE => crate::perft::common::run_internal::<{ crate::board::common::BLACK }>($context, $depth),
+                crate::board::common::BLACK => crate::perft::common::run_internal::<{ crate::board::common::WHITE }>($context, $depth),
                 _ => panic!("Invalid value: $color={}", $color),
             },
             false => match $color {
-                WHITE => crate::perft::core::run_internal::<{ crate::board::common::WHITE }>($context, $depth),
-                BLACK => crate::perft::core::run_internal::<{ crate::board::common::BLACK }>($context, $depth),
+                crate::board::common::WHITE => crate::perft::common::run_internal::<{ crate::board::common::WHITE }>($context, $depth),
+                crate::board::common::BLACK => crate::perft::common::run_internal::<{ crate::board::common::BLACK }>($context, $depth),
                 _ => panic!("Invalid value: $color={}", $color),
             },
         }
