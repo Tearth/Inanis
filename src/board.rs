@@ -1,9 +1,11 @@
 use crate::bit::*;
 use crate::common::*;
-use crate::evaluation::evaluate;
+use crate::evaluation;
 use crate::fen;
 use crate::movegen;
-use crate::movescan::{self, Move, MoveFlags};
+use crate::movescan;
+use crate::movescan::Move;
+use crate::movescan::MoveFlags;
 use crate::zobrist;
 
 bitflags! {
@@ -145,7 +147,7 @@ impl Bitboard {
         let attacking_enemy_pawns = match color {
             WHITE => field & ((potential_enemy_pawns >> 7) | (potential_enemy_pawns >> 9)),
             BLACK => field & ((potential_enemy_pawns << 7) | (potential_enemy_pawns << 9)),
-            _ => panic!("Invalid value: COLOR={}", color),
+            _ => panic!("Invalid value: color={}", color),
         };
 
         if attacking_enemy_pawns != 0 {
@@ -238,7 +240,7 @@ impl Bitboard {
     }
 
     pub fn evaluate(&self) -> i16 {
-        evaluate(self)
+        evaluation::evaluate(self)
     }
 
     fn get_moves_internal<const COLOR: u8>(&self, mut moves: &mut [Move]) -> usize {

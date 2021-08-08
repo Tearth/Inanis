@@ -2,9 +2,12 @@ use crate::board::Bitboard;
 use crate::common::*;
 use crate::movescan::Move;
 use std::cell::UnsafeCell;
-use std::mem::{size_of, MaybeUninit};
-use std::sync::{Arc, Mutex};
-use std::{thread, u64};
+use std::mem;
+use std::mem::MaybeUninit;
+use std::sync::Arc;
+use std::sync::Mutex;
+use std::thread;
+use std::u64;
 
 const BUCKET_SLOTS: usize = 4;
 
@@ -50,7 +53,7 @@ struct PerftHashTable {
 
 impl PerftHashTable {
     fn new(size: usize) -> PerftHashTable {
-        let buckets = size / size_of::<PerftHashTableBucket>();
+        let buckets = size / mem::size_of::<PerftHashTableBucket>();
         let hashtable = PerftHashTable {
             table: UnsafeCell::new(Vec::with_capacity(buckets)),
             slots: buckets,

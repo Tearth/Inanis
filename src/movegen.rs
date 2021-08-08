@@ -1,4 +1,6 @@
-use crate::{bit::*, common::*, patterns};
+use crate::bit::*;
+use crate::common::*;
+use crate::patterns;
 use arr_macro::arr;
 
 #[rustfmt::skip]

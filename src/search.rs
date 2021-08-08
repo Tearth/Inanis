@@ -41,10 +41,10 @@ pub struct SearchContext<'a> {
 impl<'a> SearchContext<'a> {
     pub fn new(board: &mut Bitboard, time: u32, inc_time: u32) -> SearchContext {
         SearchContext {
-            board: board,
+            board,
             statistics: SearchStatistics::new(),
-            time: time,
-            inc_time: inc_time,
+            time,
+            inc_time,
             current_depth: 1,
             search_time_start: Utc::now(),
             last_search_time: 1.0,

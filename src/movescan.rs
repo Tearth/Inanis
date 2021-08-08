@@ -1,5 +1,6 @@
 use crate::bit::*;
-use crate::board::{Bitboard, CastlingRights};
+use crate::board::Bitboard;
+use crate::board::CastlingRights;
 use crate::common::*;
 use crate::movegen;
 use std::mem::MaybeUninit;

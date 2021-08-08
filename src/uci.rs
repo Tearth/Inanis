@@ -1,10 +1,7 @@
-use chrono::Utc;
-
 use crate::board::Bitboard;
 use crate::common::*;
 use crate::movescan::Move;
 use crate::movescan::MoveFlags;
-use crate::search;
 use crate::search::SearchContext;
 use std::collections::HashMap;
 use std::io;
@@ -104,7 +101,7 @@ fn handle_go(parameters: &[String], state: &mut UciState) {
         _ => panic!("Invalid value: state.board.active_color={}", state.board.active_color),
     };
 
-    let mut context = SearchContext::new(&mut state.board, time, inc_time);
+    let context = SearchContext::new(&mut state.board, time, inc_time);
     let mut best_move = Move::new(0, 0, MoveFlags::QUIET);
 
     for depth_result in context {
@@ -116,6 +113,7 @@ fn handle_go(parameters: &[String], state: &mut UciState) {
             depth_result.time,
             depth_result.best_move.to_text()
         );
+
         best_move = depth_result.best_move;
     }
 
