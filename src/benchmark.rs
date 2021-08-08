@@ -63,7 +63,7 @@ pub fn run() -> BenchmarkResult {
 
     for fen in benchmark_positions {
         let mut board = Bitboard::new_from_fen(fen).unwrap();
-        let result = search::run_fixed_depth(&mut board, 5);
+        let result = search::run_fixed_depth(&mut board, 6);
 
         benchmark_result.nodes_count += result.statistics.nodes_count;
         benchmark_result.q_nodes_count += result.statistics.q_nodes_count;

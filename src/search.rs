@@ -4,6 +4,7 @@ use chrono::Utc;
 use crate::board::Bitboard;
 use crate::clock;
 use crate::common::*;
+use crate::evaluation;
 use crate::movescan::Move;
 use crate::movescan::MoveFlags;
 use crate::qsearch;
@@ -153,6 +154,23 @@ pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
     SearchResult::new(time, depth, best_score, best_move, context.statistics)
 }
 
+pub fn sort_next_move(moves: &mut [Move], move_scores: &mut [i16], start_index: usize, moves_count: usize) {
+    let mut best_score = move_scores[start_index];
+    let mut best_index = start_index;
+
+    for index in (start_index + 1)..moves_count {
+        if move_scores[index] > best_score {
+            best_score = move_scores[index];
+            best_index = index;
+        }
+    }
+
+    if best_index != start_index {
+        moves.swap(start_index, best_index);
+        move_scores.swap(start_index, best_index);
+    }
+}
+
 fn run_internal<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut alpha: i16, beta: i16) -> (i16, Move) {
     context.statistics.nodes_count += 1;
 
@@ -170,10 +188,15 @@ fn run_internal<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut al
     }
 
     let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
+    let mut move_scores: [i16; 218] = unsafe { MaybeUninit::uninit().assume_init() };
     let moves_count = context.board.get_moves::<COLOR>(&mut moves);
+
+    assign_move_scores(context, &moves, &mut move_scores, moves_count);
 
     let mut best_move = Move::new(0, 0, MoveFlags::QUIET);
     for move_index in 0..moves_count {
+        sort_next_move(&mut moves, &mut move_scores, move_index, moves_count);
+
         let r#move = moves[move_index];
 
         context.board.make_move::<COLOR>(&r#move);
@@ -199,4 +222,23 @@ fn run_internal<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut al
     }
 
     (alpha, best_move)
+}
+
+fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut [i16], moves_count: usize) {
+    for move_index in 0..moves_count {
+        let r#move = moves[move_index];
+
+        if r#move.get_flags() != MoveFlags::CAPTURE {
+            move_scores[move_index] = 0;
+            continue;
+        }
+
+        let attacking_piece = context.board.get_piece(r#move.get_from());
+        let captured_piece = context.board.get_piece(r#move.get_to());
+
+        let attacking_piece_value = evaluation::get_piece_value(attacking_piece);
+        let captured_piece_value = evaluation::get_piece_value(captured_piece);
+
+        move_scores[move_index] = captured_piece_value - attacking_piece_value;
+    }
 }
