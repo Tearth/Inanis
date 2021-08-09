@@ -3,7 +3,7 @@ use super::context::SearchContext;
 use crate::board::common::*;
 use crate::board::movescan::Move;
 use crate::board::movescan::MoveFlags;
-use crate::evaluation;
+use crate::evaluation::values;
 use std::mem::MaybeUninit;
 
 macro_rules! run_qsearch {
@@ -98,8 +98,8 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
         let attacking_piece = context.board.get_piece(r#move.get_from());
         let captured_piece = context.board.get_piece(r#move.get_to());
 
-        let attacking_piece_value = evaluation::material::PIECE_VALUE[attacking_piece as usize];
-        let captured_piece_value = evaluation::material::PIECE_VALUE[captured_piece as usize];
+        let attacking_piece_value = values::PIECE_VALUE[attacking_piece as usize];
+        let captured_piece_value = values::PIECE_VALUE[captured_piece as usize];
 
         move_scores[move_index] = captured_piece_value - attacking_piece_value;
     }

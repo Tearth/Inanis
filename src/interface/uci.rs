@@ -1,7 +1,7 @@
 use crate::board::common::*;
 use crate::board::movescan::Move;
 use crate::board::movescan::MoveFlags;
-use crate::board::representation::Bitboard;
+use crate::board::repr::Bitboard;
 use crate::engine::context::SearchContext;
 use std::collections::HashMap;
 use std::io;

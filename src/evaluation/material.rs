@@ -1,7 +1,6 @@
+use super::values::*;
 use crate::board::common::*;
-use crate::board::representation::Bitboard;
-
-pub static PIECE_VALUE: [i16; 6] = [100, 300, 330, 500, 900, 10000];
+use crate::board::repr::Bitboard;
 
 pub fn evaluate(board: &Bitboard) -> i16 {
     let mut result = 0;

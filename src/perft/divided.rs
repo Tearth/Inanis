@@ -1,6 +1,6 @@
 use super::context::PerftContext;
 use crate::board::movescan::Move;
-use crate::board::representation::Bitboard;
+use crate::board::repr::Bitboard;
 use crate::cache::perft::PerftHashTable;
 use crate::run_perft;
 use std::mem::MaybeUninit;

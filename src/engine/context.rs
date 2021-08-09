@@ -1,5 +1,5 @@
 use crate::board::movescan::Move;
-use crate::board::representation::Bitboard;
+use crate::board::repr::Bitboard;
 use crate::engine::clock;
 use crate::run_search;
 use chrono::DateTime;

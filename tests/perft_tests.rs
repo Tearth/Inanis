@@ -2,7 +2,7 @@
 mod perft_tests {
     use ina::board::movegen;
     use ina::board::patterns;
-    use ina::board::representation::Bitboard;
+    use ina::board::repr::Bitboard;
     use ina::board::zobrist;
     use ina::perft;
     use std::sync::Once;

@@ -1,6 +1,6 @@
 use super::common::*;
-use super::representation::Bitboard;
-use super::representation::CastlingRights;
+use super::repr::Bitboard;
+use super::repr::CastlingRights;
 
 pub fn fen_to_board(fen: &str) -> Result<Bitboard, &'static str> {
     let parts: Vec<&str> = fen.split(' ').collect();

@@ -1,4 +1,4 @@
-use crate::board::representation::Bitboard;
+use crate::board::repr::Bitboard;
 use crate::cache::perft::PerftHashTable;
 use std::sync::Arc;
 

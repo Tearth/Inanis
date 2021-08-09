@@ -1,5 +1,5 @@
 use super::common::*;
-use super::representation::CastlingRights;
+use super::repr::CastlingRights;
 
 static mut PIECE_HASHES: [[[u64; 64]; 6]; 2] = [[[0; 64]; 6]; 2];
 static mut CASTLING_HASHES: [u64; 4] = [0; 4];
