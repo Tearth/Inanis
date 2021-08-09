@@ -1,47 +1,27 @@
+use super::context::PerftContext;
 use crate::board::movescan::Move;
-use crate::board::representation::Bitboard;
-use crate::cache::perft::PerftHashTable;
 use std::mem::MaybeUninit;
-use std::sync::Arc;
 use std::u64;
 
 #[macro_export]
-macro_rules! run_internal {
+macro_rules! run_perft {
     ($color:expr, $context:expr, $depth:expr, $invert:expr) => {
         match $invert {
             true => match $color {
-                crate::board::common::WHITE => crate::perft::common::run_internal::<{ crate::board::common::BLACK }>($context, $depth),
-                crate::board::common::BLACK => crate::perft::common::run_internal::<{ crate::board::common::WHITE }>($context, $depth),
+                crate::board::common::WHITE => crate::perft::common::run::<{ crate::board::common::BLACK }>($context, $depth),
+                crate::board::common::BLACK => crate::perft::common::run::<{ crate::board::common::WHITE }>($context, $depth),
                 _ => panic!("Invalid value: $color={}", $color),
             },
             false => match $color {
-                crate::board::common::WHITE => crate::perft::common::run_internal::<{ crate::board::common::WHITE }>($context, $depth),
-                crate::board::common::BLACK => crate::perft::common::run_internal::<{ crate::board::common::BLACK }>($context, $depth),
+                crate::board::common::WHITE => crate::perft::common::run::<{ crate::board::common::WHITE }>($context, $depth),
+                crate::board::common::BLACK => crate::perft::common::run::<{ crate::board::common::BLACK }>($context, $depth),
                 _ => panic!("Invalid value: $color={}", $color),
             },
         }
     };
 }
 
-pub struct PerftContext<'a> {
-    pub board: &'a mut Bitboard,
-    pub hashtable: &'a Arc<PerftHashTable>,
-    pub check_integrity: bool,
-    pub fast: bool,
-}
-
-impl<'a> PerftContext<'a> {
-    pub fn new(board: &'a mut Bitboard, hashtable: &'a Arc<PerftHashTable>, check_integrity: bool, fast: bool) -> PerftContext<'a> {
-        PerftContext {
-            board,
-            hashtable,
-            check_integrity,
-            fast,
-        }
-    }
-}
-
-pub fn run_internal<const COLOR: u8>(context: &mut PerftContext, depth: i32) -> u64 {
+pub fn run<const COLOR: u8>(context: &mut PerftContext, depth: i32) -> u64 {
     if context.check_integrity {
         if context.board.hash != context.board.calculate_hash() {
             panic!("Integrity check failed: invalid hash");
@@ -66,7 +46,7 @@ pub fn run_internal<const COLOR: u8>(context: &mut PerftContext, depth: i32) -> 
         context.board.make_move::<COLOR>(r#move);
 
         if !context.board.is_king_checked(COLOR) {
-            count += run_internal!(COLOR, context, depth - 1, true);
+            count += run_perft!(COLOR, context, depth - 1, true);
         }
 
         context.board.undo_move::<COLOR>(r#move);

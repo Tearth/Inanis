@@ -48,15 +48,10 @@ fn fen_to_pieces(board: &mut Bitboard, pieces: &str) -> Result<(), &'static str>
                 'r' | 'R' => ROOK,
                 'q' | 'Q' => QUEEN,
                 'k' | 'K' => KING,
-                _ => return Err("Invalid FEN: bad pieec symbol"),
+                _ => return Err("Invalid FEN: bad piece symbol"),
             };
 
-            match color {
-                WHITE => board.add_piece(WHITE, piece, current_field_index as u8),
-                BLACK => board.add_piece(BLACK, piece, current_field_index as u8),
-                _ => panic!("Invalid value: color={}", color),
-            };
-
+            board.add_piece(color, piece, current_field_index as u8);
             current_field_index -= 1;
         }
     }

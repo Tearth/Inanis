@@ -1,7 +1,7 @@
 use crate::board::common::*;
 use crate::board::representation::Bitboard;
 
-static PIECE_VALUE: [i16; 6] = [100, 300, 330, 500, 900, 10000];
+pub static PIECE_VALUE: [i16; 6] = [100, 300, 330, 500, 900, 10000];
 
 pub fn evaluate(board: &Bitboard) -> i16 {
     let mut result = 0;
@@ -17,8 +17,4 @@ pub fn evaluate(board: &Bitboard) -> i16 {
     }
 
     result
-}
-
-pub fn get_piece_value(piece_index: u8) -> i16 {
-    PIECE_VALUE[piece_index as usize]
 }

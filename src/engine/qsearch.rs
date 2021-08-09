@@ -1,12 +1,12 @@
 use super::common::*;
-use super::search::SearchContext;
+use super::context::SearchContext;
 use crate::board::common::*;
 use crate::board::movescan::Move;
 use crate::board::movescan::MoveFlags;
 use crate::evaluation;
 use std::mem::MaybeUninit;
 
-macro_rules! run_internal {
+macro_rules! run_qsearch {
     ($color:expr, $context:expr, $depth:expr, $alpha:expr, $beta:expr, $invert:expr) => {
         match $invert {
             true => match $color {
@@ -60,7 +60,7 @@ pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut alpha: 
         found = true;
 
         context.board.make_move::<COLOR>(&r#move);
-        let score = -run_internal!(COLOR, context, depth - 1, -beta, -alpha, true);
+        let score = -run_qsearch!(COLOR, context, depth - 1, -beta, -alpha, true);
         context.board.undo_move::<COLOR>(&r#move);
 
         if score > alpha {
@@ -98,8 +98,8 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
         let attacking_piece = context.board.get_piece(r#move.get_from());
         let captured_piece = context.board.get_piece(r#move.get_to());
 
-        let attacking_piece_value = evaluation::material::get_piece_value(attacking_piece);
-        let captured_piece_value = evaluation::material::get_piece_value(captured_piece);
+        let attacking_piece_value = evaluation::material::PIECE_VALUE[attacking_piece as usize];
+        let captured_piece_value = evaluation::material::PIECE_VALUE[captured_piece as usize];
 
         move_scores[move_index] = captured_piece_value - attacking_piece_value;
     }
