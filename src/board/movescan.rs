@@ -37,6 +37,10 @@ impl Move {
         }
     }
 
+    pub fn new_empty() -> Move {
+        Move::new(0, 0, MoveFlags::QUIET)
+    }
+
     pub fn from_text(text: &str, board: &Bitboard) -> Result<Move, &'static str> {
         let mut chars = text.chars();
         let from_file = chars.next().ok_or("Invalid move: bad source file")? as u8;
