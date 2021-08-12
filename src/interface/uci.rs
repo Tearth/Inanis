@@ -38,8 +38,8 @@ pub fn run() {
         let mut input = String::new();
         io::stdin().read_line(&mut input).unwrap();
 
-        let tokens: Vec<String> = input.split(' ').map(|p| p.trim().to_lowercase()).collect();
-        match tokens[0].as_str() {
+        let tokens: Vec<String> = input.split(' ').map(|p| p.trim().to_string()).collect();
+        match tokens[0].to_lowercase().as_str() {
             "go" => handle_go(&tokens, &mut state),
             "isready" => handle_isready(),
             "position" => handle_position(&tokens, &mut state),
@@ -160,7 +160,7 @@ fn handle_setoption(parameters: &[String], state: &mut UciState) {
         return;
     }
 
-    state.options.insert(parameters[0].to_string(), parameters[1].to_string());
+    state.options.insert(parameters[2].to_string(), parameters[4].to_string());
 }
 
 fn handle_ucinewgame(state: &mut UciState) {
