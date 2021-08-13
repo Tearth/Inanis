@@ -16,6 +16,10 @@ pub struct BenchmarkResult {
     pub q_perfect_cutoffs: u64,
     pub non_perfect_cutoffs: u64,
     pub q_non_perfect_cutoffs: u64,
+
+    pub tt_hits: u64,
+    pub tt_misses: u64,
+    pub tt_added_entries: u64,
 }
 
 impl BenchmarkResult {
@@ -34,6 +38,10 @@ impl BenchmarkResult {
             q_perfect_cutoffs: 0,
             non_perfect_cutoffs: 0,
             q_non_perfect_cutoffs: 0,
+
+            tt_hits: 0,
+            tt_misses: 0,
+            tt_added_entries: 0,
         }
     }
 }
@@ -76,6 +84,10 @@ pub fn run() -> BenchmarkResult {
         benchmark_result.q_perfect_cutoffs += result.statistics.q_perfect_cutoffs;
         benchmark_result.non_perfect_cutoffs += result.statistics.non_perfect_cutoffs;
         benchmark_result.q_non_perfect_cutoffs += result.statistics.q_non_perfect_cutoffs;
+
+        benchmark_result.tt_hits += result.statistics.tt_hits;
+        benchmark_result.tt_misses += result.statistics.tt_misses;
+        benchmark_result.tt_added_entries += result.statistics.tt_added_entries;
     }
 
     benchmark_result.time = ((Utc::now() - benchmark_time_start).num_milliseconds() as f32) / 1000.0;

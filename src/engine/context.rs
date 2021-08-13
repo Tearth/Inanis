@@ -1,5 +1,8 @@
+use std::sync::Arc;
+
 use crate::board::movescan::Move;
 use crate::board::repr::Bitboard;
+use crate::cache::search::TranspositionTable;
 use crate::engine::clock;
 use crate::run_search;
 use chrono::DateTime;
@@ -14,6 +17,7 @@ pub struct SearchContext<'a> {
     pub search_time_start: DateTime<Utc>,
     pub last_search_time: f64,
     pub search_done: bool,
+    pub transposition_table: &'a mut TranspositionTable,
 }
 
 pub struct SearchResult {
@@ -37,10 +41,14 @@ pub struct SearchStatistics {
     pub q_perfect_cutoffs: u64,
     pub non_perfect_cutoffs: u64,
     pub q_non_perfect_cutoffs: u64,
+
+    pub tt_hits: u64,
+    pub tt_misses: u64,
+    pub tt_added_entries: u64,
 }
 
 impl<'a> SearchContext<'a> {
-    pub fn new(board: &mut Bitboard, time: u32, inc_time: u32) -> SearchContext {
+    pub fn new(board: &'a mut Bitboard, time: u32, inc_time: u32, transposition_table: &'a mut TranspositionTable) -> SearchContext<'a> {
         SearchContext {
             board,
             statistics: SearchStatistics::new(),
@@ -50,6 +58,7 @@ impl<'a> SearchContext<'a> {
             search_time_start: Utc::now(),
             last_search_time: 1.0,
             search_done: false,
+            transposition_table,
         }
     }
 }
@@ -63,7 +72,7 @@ impl<'a> Iterator for SearchContext<'a> {
         }
 
         let search_time_start = Utc::now();
-        let (score, best_move) = run_search!(self.board.active_color, self, self.current_depth, -32000, 32000, false);
+        let score = run_search!(self.board.active_color, self, self.current_depth, -32000, 32000, false);
         let search_time = (Utc::now() - search_time_start).num_microseconds().unwrap() as f64 / 1000.0;
         let time_ratio = search_time / (self.last_search_time as f64);
 
@@ -75,6 +84,8 @@ impl<'a> Iterator for SearchContext<'a> {
         self.current_depth += 1;
 
         let total_search_time = (Utc::now() - self.search_time_start).num_milliseconds() as u64;
+        let best_move = self.transposition_table.get(self.board.hash, 0).best_move;
+
         Some(SearchResult::new(
             total_search_time,
             self.current_depth - 1,
@@ -111,6 +122,10 @@ impl SearchStatistics {
             q_perfect_cutoffs: 0,
             non_perfect_cutoffs: 0,
             q_non_perfect_cutoffs: 0,
+
+            tt_hits: 0,
+            tt_misses: 0,
+            tt_added_entries: 0,
         }
     }
 }

@@ -2,10 +2,12 @@ use crate::board::common::*;
 use crate::board::movescan::Move;
 use crate::board::movescan::MoveFlags;
 use crate::board::repr::Bitboard;
+use crate::cache::search::TranspositionTable;
 use crate::engine::context::SearchContext;
 use std::collections::HashMap;
 use std::io;
 use std::process;
+use std::sync::Arc;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
@@ -101,8 +103,12 @@ fn handle_go(parameters: &[String], state: &mut UciState) {
         _ => panic!("Invalid value: state.board.active_color={}", state.board.active_color),
     };
 
-    let context = SearchContext::new(&mut state.board, time, inc_time);
-    let mut best_move = Move::new(0, 0, MoveFlags::QUIET);
+    let transposition_table_size = state.options["Hash"].parse::<usize>().unwrap();
+    let transposition_table_size_mb = transposition_table_size * 1024 * 1024;
+    let mut transposition_table = TranspositionTable::new(transposition_table_size_mb);
+
+    let context = SearchContext::new(&mut state.board, time, inc_time, &mut transposition_table);
+    let mut best_move = Move::new_empty();
 
     for depth_result in context {
         println!(

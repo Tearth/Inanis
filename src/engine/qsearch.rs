@@ -28,7 +28,7 @@ pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut alpha: 
 
     if context.board.pieces[COLOR as usize][KING as usize] == 0 {
         context.statistics.q_leafs_count += 1;
-        return -31900 - (depth as i16);
+        return -31900;
     }
 
     let stand_pat = ((COLOR as i16) * 2 - 1) * context.board.evaluate();

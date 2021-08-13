@@ -137,6 +137,11 @@ fn handle_benchmark() {
     ]);
 
     table.printstd();
+
+    println!(
+        "Transposition table: {} added entries, {} hits, {} misses",
+        result.tt_added_entries, result.tt_hits, result.tt_misses
+    );
 }
 
 fn handle_magic() {

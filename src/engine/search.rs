@@ -6,9 +6,12 @@ use crate::board::common::*;
 use crate::board::movescan::Move;
 use crate::board::movescan::MoveFlags;
 use crate::board::repr::Bitboard;
+use crate::cache::search::TranspositionTable;
+use crate::cache::search::TranspositionTableScoreType;
 use crate::evaluation::values;
 use chrono::Utc;
 use std::mem::MaybeUninit;
+use std::sync::Arc;
 
 #[macro_export]
 macro_rules! run_search {
@@ -37,13 +40,17 @@ macro_rules! run_search {
 }
 
 pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
-    let mut context = SearchContext::new(board, 0, 0);
-    let mut best_move = Move::new(0, 0, MoveFlags::QUIET);
+    let transposition_table_size_mb = 32 * 1024 * 1024;
+    let mut transposition_table = TranspositionTable::new(transposition_table_size_mb);
+
+    let mut context = SearchContext::new(board, 0, 0, &mut transposition_table);
+    let mut best_move = Move::new_empty();
     let mut best_score = 0;
 
     let search_time_start = Utc::now();
     for depth in 1..=depth {
-        let (score, r#move) = run_search!(context.board.active_color, &mut context, depth, -32000, 32000, false);
+        let score = run_search!(context.board.active_color, &mut context, depth, -32000, 32000, false);
+        let r#move = context.transposition_table.get(context.board.hash, 0).best_move;
 
         best_score = score;
         best_move = r#move;
@@ -53,37 +60,65 @@ pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
     SearchResult::new(time, depth, best_score, best_move, context.statistics)
 }
 
-pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut alpha: i16, beta: i16) -> (i16, Move) {
+pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut alpha: i16, mut beta: i16) -> i16 {
     context.statistics.nodes_count += 1;
 
     if context.board.pieces[COLOR as usize][KING as usize] == 0 {
         context.statistics.leafs_count += 1;
-        return (-31900 - (depth as i16), Move::new(0, 0, MoveFlags::QUIET));
+        return -31900;
     }
 
     if depth <= 0 {
         context.statistics.leafs_count += 1;
-        return (
-            qsearch::run::<COLOR>(context, depth, alpha, beta),
-            Move::new(0, 0, MoveFlags::QUIET),
-        );
+        return qsearch::run::<COLOR>(context, depth, alpha, beta);
+    }
+
+    let original_alpha = alpha;
+    let mut tt_entry_found = false;
+    let tt_entry = context.transposition_table.get(context.board.hash, depth as i8);
+
+    if tt_entry.key == (context.board.hash >> 32) as u32 {
+        context.statistics.tt_hits += 1;
+
+        if tt_entry.depth >= depth as i8 {
+            tt_entry_found = true;
+            match tt_entry.score_type {
+                TranspositionTableScoreType::ALPHA_SCORE => {
+                    if tt_entry.score < beta {
+                        beta = tt_entry.score;
+                    }
+                }
+                TranspositionTableScoreType::BETA_SCORE => {
+                    if tt_entry.score > alpha {
+                        alpha = tt_entry.score;
+                    }
+                }
+                _ => return tt_entry.score,
+            }
+
+            if alpha >= beta {
+                context.statistics.beta_cutoffs += 1;
+                return tt_entry.score;
+            }
+        }
+    } else {
+        context.statistics.tt_misses += 1;
     }
 
     let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
     let mut move_scores: [i16; 218] = unsafe { MaybeUninit::uninit().assume_init() };
     let moves_count = context.board.get_moves::<COLOR>(&mut moves);
 
-    assign_move_scores(context, &moves, &mut move_scores, moves_count);
+    assign_move_scores(context, &moves, &mut move_scores, moves_count, tt_entry.best_move);
 
-    let mut best_move = Move::new(0, 0, MoveFlags::QUIET);
+    let mut best_move = Move::new_empty();
     for move_index in 0..moves_count {
         sort_next_move(&mut moves, &mut move_scores, move_index, moves_count);
 
         let r#move = moves[move_index];
 
         context.board.make_move::<COLOR>(&r#move);
-        let (search_score, _) = run_search!(COLOR, context, depth - 1, -beta, -alpha, true);
-        let score = -search_score;
+        let score = -run_search!(COLOR, context, depth - 1, -beta, -alpha, true);
         context.board.undo_move::<COLOR>(&r#move);
 
         if score > alpha {
@@ -103,12 +138,32 @@ pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut alpha: 
         }
     }
 
-    (alpha, best_move)
+    if !tt_entry_found || alpha != original_alpha {
+        let score_type = if alpha <= original_alpha {
+            TranspositionTableScoreType::ALPHA_SCORE
+        } else if alpha >= beta {
+            TranspositionTableScoreType::BETA_SCORE
+        } else {
+            TranspositionTableScoreType::EXACT_SCORE
+        };
+
+        context
+            .transposition_table
+            .add(context.board.hash, alpha, best_move, depth as i8, score_type);
+        context.statistics.tt_added_entries += 1;
+    }
+
+    alpha
 }
 
-fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut [i16], moves_count: usize) {
+fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut [i16], moves_count: usize, tt_move: Move) {
     for move_index in 0..moves_count {
         let r#move = moves[move_index];
+
+        if r#move == tt_move {
+            move_scores[move_index] = 10000;
+            continue;
+        }
 
         if r#move.get_flags() != MoveFlags::CAPTURE {
             move_scores[move_index] = 0;
