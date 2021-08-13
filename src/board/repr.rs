@@ -242,6 +242,21 @@ impl Bitboard {
         evaluation::material::evaluate(self)
     }
 
+    pub fn is_threefold_repetition_draw(&self) -> bool {
+        let mut repetitions_count = 1;
+        for hash in &self.hash_stack {
+            if *hash == self.hash {
+                repetitions_count += 1;
+            }
+        }
+
+        repetitions_count >= 3
+    }
+
+    pub fn is_fifty_move_rule_draw(&self) -> bool {
+        self.halfmove_clock >= 100
+    }
+
     fn get_moves_internal<const COLOR: u8>(&self, mut moves: &mut [Move]) -> usize {
         let mut index = 0;
         index = movescan::scan_pawn_moves::<COLOR>(self, &mut moves, index);

@@ -68,6 +68,11 @@ pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, ply: u8, mu
         return -CHECKMATE_SCORE + (ply as i16);
     }
 
+    if context.board.is_threefold_repetition_draw() || context.board.is_fifty_move_rule_draw() {
+        context.statistics.leafs_count += 1;
+        return 0;
+    }
+
     if depth <= 0 {
         context.statistics.leafs_count += 1;
         return qsearch::run::<COLOR>(context, depth, ply, alpha, beta);
@@ -145,10 +150,12 @@ pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, ply: u8, mu
     }
 
     if best_score == -(-CHECKMATE_SCORE + (ply as i16) + 1) {
+        context.statistics.leafs_count += 1;
         return best_score;
     }
 
     if best_score == -CHECKMATE_SCORE + (ply as i16) + 2 && !context.board.is_king_checked(COLOR) {
+        context.statistics.leafs_count += 1;
         return 0;
     }
 
