@@ -15,23 +15,23 @@ use std::sync::Arc;
 
 #[macro_export]
 macro_rules! run_search {
-    ($color:expr, $context:expr, $depth:expr, $alpha:expr, $beta:expr, $invert:expr) => {
+    ($color:expr, $context:expr, $depth:expr, $ply:expr, $alpha:expr, $beta:expr, $invert:expr) => {
         match $invert {
             true => match $color {
                 crate::board::common::WHITE => {
-                    crate::engine::search::run::<{ crate::board::common::BLACK }>($context, $depth, $alpha, $beta)
+                    crate::engine::search::run::<{ crate::board::common::BLACK }>($context, $depth, $ply, $alpha, $beta)
                 }
                 crate::board::common::BLACK => {
-                    crate::engine::search::run::<{ crate::board::common::WHITE }>($context, $depth, $alpha, $beta)
+                    crate::engine::search::run::<{ crate::board::common::WHITE }>($context, $depth, $ply, $alpha, $beta)
                 }
                 _ => panic!("Invalid value: $color={}", $color),
             },
             false => match $color {
                 crate::board::common::WHITE => {
-                    crate::engine::search::run::<{ crate::board::common::WHITE }>($context, $depth, $alpha, $beta)
+                    crate::engine::search::run::<{ crate::board::common::WHITE }>($context, $depth, $ply, $alpha, $beta)
                 }
                 crate::board::common::BLACK => {
-                    crate::engine::search::run::<{ crate::board::common::BLACK }>($context, $depth, $alpha, $beta)
+                    crate::engine::search::run::<{ crate::board::common::BLACK }>($context, $depth, $ply, $alpha, $beta)
                 }
                 _ => panic!("Invalid value: $color={}", $color),
             },
@@ -49,7 +49,7 @@ pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
 
     let search_time_start = Utc::now();
     for depth in 1..=depth {
-        let score = run_search!(context.board.active_color, &mut context, depth, -32000, 32000, false);
+        let score = run_search!(context.board.active_color, &mut context, depth, 0, -32000, 32000, false);
         let r#move = context.transposition_table.get(context.board.hash, 0).best_move;
 
         best_score = score;
@@ -60,17 +60,17 @@ pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
     SearchResult::new(time, depth, best_score, best_move, context.statistics)
 }
 
-pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut alpha: i16, mut beta: i16) -> i16 {
+pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, ply: u8, mut alpha: i16, mut beta: i16) -> i16 {
     context.statistics.nodes_count += 1;
 
     if context.board.pieces[COLOR as usize][KING as usize] == 0 {
         context.statistics.leafs_count += 1;
-        return -31900;
+        return -CHECKMATE_SCORE + (ply as i16);
     }
 
     if depth <= 0 {
         context.statistics.leafs_count += 1;
-        return qsearch::run::<COLOR>(context, depth, alpha, beta);
+        return qsearch::run::<COLOR>(context, depth, ply, alpha, beta);
     }
 
     let original_alpha = alpha;
@@ -112,17 +112,23 @@ pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut alpha: 
     assign_move_scores(context, &moves, &mut move_scores, moves_count, tt_entry.best_move);
 
     let mut best_move = Move::new_empty();
+    let mut best_score = i16::MIN;
+
     for move_index in 0..moves_count {
         sort_next_move(&mut moves, &mut move_scores, move_index, moves_count);
 
         let r#move = moves[move_index];
 
         context.board.make_move::<COLOR>(&r#move);
-        let score = -run_search!(COLOR, context, depth - 1, -beta, -alpha, true);
+        let score = -run_search!(COLOR, context, depth - 1, ply + 1, -beta, -alpha, true);
         context.board.undo_move::<COLOR>(&r#move);
 
-        if score > alpha {
-            alpha = score;
+        if score > best_score {
+            best_score = score;
+        }
+
+        if best_score > alpha {
+            alpha = best_score;
             best_move = r#move;
 
             if alpha >= beta {
@@ -136,6 +142,14 @@ pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut alpha: 
                 break;
             }
         }
+    }
+
+    if best_score == -(-CHECKMATE_SCORE + (ply as i16) + 1) {
+        return best_score;
+    }
+
+    if best_score == -CHECKMATE_SCORE + (ply as i16) + 2 && !context.board.is_king_checked(COLOR) {
+        return 0;
     }
 
     if !tt_entry_found || alpha != original_alpha {
@@ -153,7 +167,7 @@ pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut alpha: 
         context.statistics.tt_added_entries += 1;
     }
 
-    alpha
+    best_score
 }
 
 fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut [i16], moves_count: usize, tt_move: Move) {

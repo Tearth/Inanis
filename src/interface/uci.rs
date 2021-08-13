@@ -3,9 +3,11 @@ use crate::board::movescan::Move;
 use crate::board::movescan::MoveFlags;
 use crate::board::repr::Bitboard;
 use crate::cache::search::TranspositionTable;
+use crate::engine::common::*;
 use crate::engine::context::SearchContext;
 use std::collections::HashMap;
 use std::io;
+use std::ops::Add;
 use std::process;
 use std::sync::Arc;
 
@@ -111,14 +113,28 @@ fn handle_go(parameters: &[String], state: &mut UciState) {
     let mut best_move = Move::new_empty();
 
     for depth_result in context {
-        println!(
-            "info score cp {} nodes {} depth {} time {} pv {}",
-            depth_result.score,
-            depth_result.statistics.nodes_count + depth_result.statistics.q_nodes_count,
-            depth_result.depth,
-            depth_result.time,
-            depth_result.best_move.to_text()
+        let mut output = String::new();
+        output = output.add(
+            &format!(
+                "info nodes {} depth {} time {} pv {}",
+                depth_result.statistics.nodes_count + depth_result.statistics.q_nodes_count,
+                depth_result.depth,
+                depth_result.time,
+                depth_result.best_move.to_text()
+            )
+            .to_string(),
         );
+
+        if is_score_near_checkmate(depth_result.score) {
+            let mut moves_to_mate = (depth_result.score.abs() - CHECKMATE_SCORE).abs() / 2;
+            moves_to_mate *= depth_result.score.signum();
+
+            output = output.add(&format!(" score mate {}", moves_to_mate).to_string());
+        } else {
+            output = output.add(&format!(" score cp {}", depth_result.score).to_string());
+        }
+
+        println!("{}", output);
 
         best_move = depth_result.best_move;
     }

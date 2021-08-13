@@ -7,28 +7,28 @@ use crate::evaluation::values;
 use std::mem::MaybeUninit;
 
 macro_rules! run_qsearch {
-    ($color:expr, $context:expr, $depth:expr, $alpha:expr, $beta:expr, $invert:expr) => {
+    ($color:expr, $context:expr, $depth:expr, $ply:expr, $alpha:expr, $beta:expr, $invert:expr) => {
         match $invert {
             true => match $color {
-                WHITE => run::<BLACK>($context, $depth, $alpha, $beta),
-                BLACK => run::<WHITE>($context, $depth, $alpha, $beta),
+                WHITE => run::<BLACK>($context, $depth, $ply, $alpha, $beta),
+                BLACK => run::<WHITE>($context, $depth, $ply, $alpha, $beta),
                 _ => panic!("Invalid value: $color={}", $color),
             },
             false => match $color {
-                WHITE => run::<WHITE>($context, $depth, $alpha, $beta),
-                BLACK => run::<BLACK>($context, $depth, $alpha, $beta),
+                WHITE => run::<WHITE>($context, $depth, $ply, $alpha, $beta),
+                BLACK => run::<BLACK>($context, $depth, $ply, $alpha, $beta),
                 _ => panic!("Invalid value: $color={}", $color),
             },
         }
     };
 }
 
-pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut alpha: i16, beta: i16) -> i16 {
+pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, ply: u8, mut alpha: i16, beta: i16) -> i16 {
     context.statistics.q_nodes_count += 1;
 
     if context.board.pieces[COLOR as usize][KING as usize] == 0 {
         context.statistics.q_leafs_count += 1;
-        return -31900;
+        return -CHECKMATE_SCORE + (ply as i16);
     }
 
     let stand_pat = ((COLOR as i16) * 2 - 1) * context.board.evaluate();
@@ -60,7 +60,7 @@ pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, mut alpha: 
         found = true;
 
         context.board.make_move::<COLOR>(&r#move);
-        let score = -run_qsearch!(COLOR, context, depth - 1, -beta, -alpha, true);
+        let score = -run_qsearch!(COLOR, context, depth - 1, ply + 1, -beta, -alpha, true);
         context.board.undo_move::<COLOR>(&r#move);
 
         if score > alpha {

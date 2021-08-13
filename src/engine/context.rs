@@ -4,6 +4,7 @@ use crate::board::movescan::Move;
 use crate::board::repr::Bitboard;
 use crate::cache::search::TranspositionTable;
 use crate::engine::clock;
+use crate::engine::common::is_score_near_checkmate;
 use crate::run_search;
 use chrono::DateTime;
 use chrono::Utc;
@@ -72,9 +73,13 @@ impl<'a> Iterator for SearchContext<'a> {
         }
 
         let search_time_start = Utc::now();
-        let score = run_search!(self.board.active_color, self, self.current_depth, -32000, 32000, false);
+        let score = run_search!(self.board.active_color, self, self.current_depth, 0, -32000, 32000, false);
         let search_time = (Utc::now() - search_time_start).num_microseconds().unwrap() as f64 / 1000.0;
         let time_ratio = search_time / (self.last_search_time as f64);
+
+        if is_score_near_checkmate(score) {
+            self.search_done = true;
+        }
 
         if search_time * time_ratio > clock::get_time_for_move(self.time, self.inc_time) as f64 {
             self.search_done = true;
