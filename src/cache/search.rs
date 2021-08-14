@@ -1,4 +1,5 @@
 use crate::board::movescan::Move;
+use crate::engine::common::is_score_near_checkmate;
 use std::cell::UnsafeCell;
 use std::mem;
 use std::u64;
@@ -44,13 +45,31 @@ impl TranspositionTable {
         hashtable
     }
 
-    pub fn add(&mut self, hash: u64, score: i16, best_move: Move, depth: i8, score_type: TranspositionTableScoreType) {
+    pub fn add(&mut self, hash: u64, mut score: i16, best_move: Move, depth: i8, ply: u16, score_type: TranspositionTableScoreType) {
+        if is_score_near_checkmate(score) {
+            if score > 0 {
+                score += ply as i16;
+            } else {
+                score -= ply as i16;
+            }
+        }
+
         self.table[(hash as usize) % self.slots] = TranspositionTableEntry::new((hash >> 32) as u32, score, best_move, depth, score_type);
     }
 
-    pub fn get(&self, hash: u64, depth: i8) -> TranspositionTableEntry {
-        self.table[(hash as usize) % self.slots]
-    }
+    pub fn get(&self, hash: u64, ply: u16) -> TranspositionTableEntry {
+        let mut entry = self.table[(hash as usize) % self.slots];
+        
+        if is_score_near_checkmate(entry.score) {
+            if entry.score > 0 {
+                entry.score -= ply as i16;
+            } else {
+                entry.score += ply as i16;
+            }
+        }
+
+        entry
+    } 
 
     /*pub fn get_usage(&self) -> f32 {
         const RESOLUTION: usize = 10000;

@@ -60,7 +60,7 @@ pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
     SearchResult::new(time, depth, best_score, best_move, context.statistics)
 }
 
-pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, ply: u8, mut alpha: i16, mut beta: i16) -> i16 {
+pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, ply: u16, mut alpha: i16, mut beta: i16) -> i16 {
     context.statistics.nodes_count += 1;
 
     if context.board.pieces[COLOR as usize][KING as usize] == 0 {
@@ -80,7 +80,7 @@ pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, ply: u8, mu
 
     let original_alpha = alpha;
     let mut tt_entry_found = false;
-    let tt_entry = context.transposition_table.get(context.board.hash, depth as i8);
+    let tt_entry = context.transposition_table.get(context.board.hash, ply);
 
     if tt_entry.key == (context.board.hash >> 32) as u32 {
         context.statistics.tt_hits += 1;
@@ -170,7 +170,7 @@ pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, ply: u8, mu
 
         context
             .transposition_table
-            .add(context.board.hash, alpha, best_move, depth as i8, score_type);
+            .add(context.board.hash, alpha, best_move, depth as i8, ply, score_type);
         context.statistics.tt_added_entries += 1;
     }
 

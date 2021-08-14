@@ -23,7 +23,7 @@ macro_rules! run_qsearch {
     };
 }
 
-pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, ply: u8, mut alpha: i16, beta: i16) -> i16 {
+pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, ply: u16, mut alpha: i16, beta: i16) -> i16 {
     context.statistics.q_nodes_count += 1;
 
     if context.board.pieces[COLOR as usize][KING as usize] == 0 {
