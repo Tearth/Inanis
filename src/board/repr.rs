@@ -6,6 +6,7 @@ use super::movescan::Move;
 use super::movescan::MoveFlags;
 use super::zobrist;
 use crate::evaluation;
+use crate::evaluation::material;
 
 bitflags! {
     pub struct CastlingRights: u8 {
@@ -37,6 +38,7 @@ pub struct Bitboard {
     pub castling_rights_stack: Vec<CastlingRights>,
     pub en_passant_stack: Vec<u64>,
     pub hash_stack: Vec<u64>,
+    pub material_scores: [i16; 2],
 }
 
 impl Bitboard {
@@ -56,6 +58,7 @@ impl Bitboard {
             castling_rights_stack: Vec::with_capacity(32),
             en_passant_stack: Vec::with_capacity(32),
             hash_stack: Vec::with_capacity(32),
+            material_scores: [0, 0],
         }
     }
 
@@ -178,12 +181,14 @@ impl Bitboard {
         self.pieces[color as usize][piece as usize] |= 1u64 << field;
         self.occupancy[color as usize] |= 1u64 << field;
         self.piece_table[field as usize] = piece;
+        self.material_scores[color as usize] += material::PIECE_VALUE[piece as usize];
     }
 
     pub fn remove_piece(&mut self, color: u8, piece: u8, field: u8) {
         self.pieces[color as usize][piece as usize] &= !(1u64 << field);
         self.occupancy[color as usize] &= !(1u64 << field);
         self.piece_table[field as usize] = u8::MAX;
+        self.material_scores[color as usize] -= material::PIECE_VALUE[piece as usize];
     }
 
     pub fn move_piece(&mut self, color: u8, piece: u8, from: u8, to: u8) {
@@ -198,48 +203,16 @@ impl Bitboard {
         fen::board_to_fen(self)
     }
 
-    pub fn calculate_hash(&self) -> u64 {
-        let mut hash = 0u64;
-
-        for color in 0..2 {
-            for piece_index in 0..6 {
-                let mut pieces = self.pieces[color as usize][piece_index as usize];
-                while pieces != 0 {
-                    let field = get_lsb(pieces);
-                    let field_index = bit_scan(field);
-                    pieces = pop_lsb(pieces);
-
-                    zobrist::toggle_piece(&mut hash, color, piece_index, field_index);
-                }
-            }
-        }
-
-        if self.castling_rights.contains(CastlingRights::WHITE_SHORT_CASTLING) {
-            zobrist::toggle_castling_right(&mut hash, self.castling_rights, CastlingRights::WHITE_SHORT_CASTLING);
-        }
-        if self.castling_rights.contains(CastlingRights::WHITE_LONG_CASTLING) {
-            zobrist::toggle_castling_right(&mut hash, self.castling_rights, CastlingRights::WHITE_LONG_CASTLING);
-        }
-        if self.castling_rights.contains(CastlingRights::BLACK_SHORT_CASTLING) {
-            zobrist::toggle_castling_right(&mut hash, self.castling_rights, CastlingRights::BLACK_SHORT_CASTLING);
-        }
-        if self.castling_rights.contains(CastlingRights::BLACK_LONG_CASTLING) {
-            zobrist::toggle_castling_right(&mut hash, self.castling_rights, CastlingRights::BLACK_LONG_CASTLING);
-        }
-
-        if self.en_passant != 0 {
-            zobrist::toggle_en_passant(&mut hash, (bit_scan(self.en_passant) % 8) as u8);
-        }
-
-        if self.active_color == BLACK {
-            zobrist::toggle_active_color(&mut hash);
-        }
-
-        hash
+    pub fn recalculate_hash(&mut self) {
+        zobrist::recalculate_hash(self);
     }
 
     pub fn evaluate(&self) -> i16 {
-        evaluation::material::evaluate(self)
+        material::evaluate(self)
+    }
+
+    pub fn recalculate_incremental_values(&mut self) {
+        material::recalculate_incremental_values(self);
     }
 
     pub fn is_threefold_repetition_draw(&self) -> bool {

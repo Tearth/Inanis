@@ -1,5 +1,7 @@
 use super::context::PerftContext;
 use crate::board::movescan::Move;
+use crate::evaluation::material;
+use std::borrow::Borrow;
 use std::mem::MaybeUninit;
 use std::u64;
 
@@ -23,8 +25,18 @@ macro_rules! run_perft {
 
 pub fn run<const COLOR: u8>(context: &mut PerftContext, depth: i32) -> u64 {
     if context.check_integrity {
-        if context.board.hash != context.board.calculate_hash() {
+        let original_hash = context.board.hash;
+        let original_evaluation = context.board.evaluate();
+
+        context.board.recalculate_hash();
+        context.board.recalculate_incremental_values();
+
+        if original_hash != context.board.hash {
             panic!("Integrity check failed: invalid hash");
+        }
+
+        if original_evaluation != context.board.evaluate() {
+            panic!("Integrity check failed: invalid evaluation")
         }
     }
 

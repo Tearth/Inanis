@@ -3,7 +3,7 @@ use super::context::SearchContext;
 use crate::board::common::*;
 use crate::board::movescan::Move;
 use crate::board::movescan::MoveFlags;
-use crate::evaluation::values;
+use crate::evaluation::material;
 use std::mem::MaybeUninit;
 
 macro_rules! run_qsearch {
@@ -31,7 +31,7 @@ pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, ply: u16, m
         return -CHECKMATE_SCORE + (ply as i16);
     }
 
-    let stand_pat = ((COLOR as i16) * 2 - 1) * context.board.evaluate();
+    let stand_pat = -((COLOR as i16) * 2 - 1) * context.board.evaluate();
     if stand_pat >= beta {
         context.statistics.q_leafs_count += 1;
         context.statistics.q_beta_cutoffs += 1;
@@ -98,8 +98,8 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
         let attacking_piece = context.board.get_piece(r#move.get_from());
         let captured_piece = context.board.get_piece(r#move.get_to());
 
-        let attacking_piece_value = values::PIECE_VALUE[attacking_piece as usize];
-        let captured_piece_value = values::PIECE_VALUE[captured_piece as usize];
+        let attacking_piece_value = material::PIECE_VALUE[attacking_piece as usize];
+        let captured_piece_value = material::PIECE_VALUE[captured_piece as usize];
 
         move_scores[move_index] = captured_piece_value - attacking_piece_value;
     }

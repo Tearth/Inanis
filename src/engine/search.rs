@@ -8,7 +8,7 @@ use crate::board::movescan::MoveFlags;
 use crate::board::repr::Bitboard;
 use crate::cache::search::TranspositionTable;
 use crate::cache::search::TranspositionTableScoreType;
-use crate::evaluation::values;
+use crate::evaluation::material;
 use chrono::Utc;
 use std::mem::MaybeUninit;
 use std::sync::Arc;
@@ -194,8 +194,8 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
         let attacking_piece = context.board.get_piece(r#move.get_from());
         let captured_piece = context.board.get_piece(r#move.get_to());
 
-        let attacking_piece_value = values::PIECE_VALUE[attacking_piece as usize];
-        let captured_piece_value = values::PIECE_VALUE[captured_piece as usize];
+        let attacking_piece_value = material::PIECE_VALUE[attacking_piece as usize];
+        let captured_piece_value = material::PIECE_VALUE[captured_piece as usize];
 
         move_scores[move_index] = captured_piece_value - attacking_piece_value;
     }
