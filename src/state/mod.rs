@@ -8,6 +8,9 @@ pub mod zobrist;
 pub const WHITE: u8 = 0;
 pub const BLACK: u8 = 1;
 
+pub const OPENING: u8 = 0;
+pub const ENDING: u8 = 1;
+
 pub const PAWN: u8 = 0;
 pub const KNIGHT: u8 = 1;
 pub const BISHOP: u8 = 2;

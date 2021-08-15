@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod integrity_tests {
+    use ina::evaluation::pst;
     use ina::perft;
     use ina::state::board::Bitboard;
     use ina::state::movegen;
@@ -15,6 +16,7 @@ mod integrity_tests {
                 #[test]
                 fn $name() {
                     INIT.call_once(|| {
+                        pst::init();
                         patterns::init();
                         movegen::init();
                         zobrist::init();

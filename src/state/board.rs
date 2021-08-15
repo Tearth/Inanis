@@ -7,6 +7,7 @@ use super::zobrist;
 use super::*;
 use crate::evaluation;
 use crate::evaluation::material;
+use crate::evaluation::pst;
 
 bitflags! {
     pub struct CastlingRights: u8 {
@@ -39,13 +40,14 @@ pub struct Bitboard {
     pub en_passant_stack: Vec<u64>,
     pub hash_stack: Vec<u64>,
     pub material_scores: [i16; 2],
+    pub pst_scores: [[i16; 2]; 2],
 }
 
 impl Bitboard {
     pub fn new() -> Bitboard {
         Bitboard {
             pieces: [[0; 6], [0; 6]],
-            occupancy: [0, 0],
+            occupancy: [0; 2],
             piece_table: [u8::MAX; 64],
             castling_rights: CastlingRights::NONE,
             en_passant: 0,
@@ -58,7 +60,8 @@ impl Bitboard {
             castling_rights_stack: Vec::with_capacity(32),
             en_passant_stack: Vec::with_capacity(32),
             hash_stack: Vec::with_capacity(32),
-            material_scores: [0, 0],
+            material_scores: [0; 2],
+            pst_scores: [[0, 2]; 2],
         }
     }
 
@@ -182,6 +185,13 @@ impl Bitboard {
         self.occupancy[color as usize] |= 1u64 << field;
         self.piece_table[field as usize] = piece;
         self.material_scores[color as usize] += material::PIECE_VALUE[piece as usize];
+
+        unsafe {
+            self.pst_scores[color as usize][OPENING as usize] +=
+                pst::TABLE[piece as usize][color as usize][OPENING as usize][field as usize] as i16;
+            self.pst_scores[color as usize][ENDING as usize] +=
+                pst::TABLE[piece as usize][color as usize][ENDING as usize][field as usize] as i16;
+        }
     }
 
     pub fn remove_piece(&mut self, color: u8, piece: u8, field: u8) {
@@ -189,6 +199,13 @@ impl Bitboard {
         self.occupancy[color as usize] &= !(1u64 << field);
         self.piece_table[field as usize] = u8::MAX;
         self.material_scores[color as usize] -= material::PIECE_VALUE[piece as usize];
+
+        unsafe {
+            self.pst_scores[color as usize][OPENING as usize] -=
+                pst::TABLE[piece as usize][color as usize][OPENING as usize][field as usize] as i16;
+            self.pst_scores[color as usize][ENDING as usize] -=
+                pst::TABLE[piece as usize][color as usize][ENDING as usize][field as usize] as i16;
+        }
     }
 
     pub fn move_piece(&mut self, color: u8, piece: u8, from: u8, to: u8) {
@@ -197,6 +214,18 @@ impl Bitboard {
 
         self.piece_table[to as usize] = self.piece_table[from as usize];
         self.piece_table[from as usize] = u8::MAX;
+
+        unsafe {
+            self.pst_scores[color as usize][OPENING as usize] -=
+                pst::TABLE[piece as usize][color as usize][OPENING as usize][from as usize] as i16;
+            self.pst_scores[color as usize][ENDING as usize] -=
+                pst::TABLE[piece as usize][color as usize][ENDING as usize][from as usize] as i16;
+
+            self.pst_scores[color as usize][OPENING as usize] +=
+                pst::TABLE[piece as usize][color as usize][OPENING as usize][to as usize] as i16;
+            self.pst_scores[color as usize][ENDING as usize] +=
+                pst::TABLE[piece as usize][color as usize][ENDING as usize][to as usize] as i16;
+        }
     }
 
     pub fn to_fen(&self) -> String {
@@ -208,11 +237,12 @@ impl Bitboard {
     }
 
     pub fn evaluate(&self) -> i16 {
-        material::evaluate(self)
+        material::evaluate(self) + pst::evaluate(self)
     }
 
     pub fn recalculate_incremental_values(&mut self) {
         material::recalculate_incremental_values(self);
+        pst::recalculate_incremental_values(self);
     }
 
     pub fn is_threefold_repetition_draw(&self) -> bool {
