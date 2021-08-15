@@ -17,7 +17,9 @@ pub struct SearchContext<'a> {
     pub current_depth: i32,
     pub search_time_start: DateTime<Utc>,
     pub last_search_time: f64,
+    pub deadline: u32,
     pub search_done: bool,
+    pub aborted: bool,
     pub transposition_table: &'a mut TranspositionTable,
 }
 
@@ -58,7 +60,9 @@ impl<'a> SearchContext<'a> {
             current_depth: 1,
             search_time_start: Utc::now(),
             last_search_time: 1.0,
+            deadline: 0,
             search_done: false,
+            aborted: false,
             transposition_table,
         }
     }
@@ -72,10 +76,20 @@ impl<'a> Iterator for SearchContext<'a> {
             return None;
         }
 
-        let search_time_start = Utc::now();
+        // Make sure we have at least one depth done before abort
+        if self.current_depth > 1 {
+            self.deadline = clock::get_time_for_move(self.time, self.inc_time) * 2;
+        } else {
+            self.deadline = u32::MAX;
+        }
+
         let score = run_search!(self.board.active_color, self, self.current_depth, 0, -32000, 32000, false);
-        let search_time = (Utc::now() - search_time_start).num_microseconds().unwrap() as f64 / 1000.0;
+        let search_time = (Utc::now() - self.search_time_start).num_milliseconds() as f64;
         let time_ratio = search_time / (self.last_search_time as f64);
+
+        if self.aborted {
+            return None;
+        }
 
         if is_score_near_checkmate(score) {
             self.search_done = true;
@@ -85,7 +99,10 @@ impl<'a> Iterator for SearchContext<'a> {
             self.search_done = true;
         }
 
-        self.last_search_time = search_time;
+        if search_time > 0.0 {
+            self.last_search_time = search_time;
+        }
+
         self.current_depth += 1;
 
         let total_search_time = (Utc::now() - self.search_time_start).num_milliseconds() as u64;

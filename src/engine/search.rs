@@ -47,6 +47,8 @@ pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
     let mut best_move = Move::new_empty();
     let mut best_score = 0;
 
+    context.deadline = u32::MAX;
+
     let search_time_start = Utc::now();
     for depth in 1..=depth {
         let score = run_search!(context.board.active_color, &mut context, depth, 0, -32000, 32000, false);
@@ -61,6 +63,14 @@ pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
 }
 
 pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, ply: u16, mut alpha: i16, mut beta: i16) -> i16 {
+    // Check every 100 000 node
+    if context.statistics.nodes_count % 100_000 == 0 {
+        if (Utc::now() - context.search_time_start).num_milliseconds() >= context.deadline as i64 {
+            context.aborted = true;
+            return 0;
+        }
+    }
+
     context.statistics.nodes_count += 1;
 
     if context.board.pieces[COLOR as usize][KING as usize] == 0 {
@@ -147,6 +157,10 @@ pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, ply: u16, m
                 break;
             }
         }
+    }
+
+    if context.aborted {
+        return -1;
     }
 
     if best_score == -(-CHECKMATE_SCORE + (ply as i16) + 1) {
