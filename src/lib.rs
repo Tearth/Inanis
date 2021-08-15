@@ -10,10 +10,10 @@
 #[macro_use]
 extern crate bitflags;
 
-pub mod board;
 pub mod cache;
 pub mod engine;
 pub mod evaluation;
 pub mod interface;
 pub mod perft;
+pub mod state;
 pub mod utils;

@@ -1,10 +1,10 @@
-use crate::board::common::*;
-use crate::board::movescan::Move;
-use crate::board::movescan::MoveFlags;
-use crate::board::repr::Bitboard;
 use crate::cache::search::TranspositionTable;
 use crate::engine::common::*;
 use crate::engine::context::SearchContext;
+use crate::state::common::*;
+use crate::state::movescan::Move;
+use crate::state::movescan::MoveFlags;
+use crate::state::board::Bitboard;
 use std::collections::HashMap;
 use std::io;
 use std::ops::Add;

@@ -1,5 +1,5 @@
-use crate::board::movescan::Move;
-use crate::board::repr::Bitboard;
+use crate::state::movescan::Move;
+use crate::state::board::Bitboard;
 use crate::cache::perft::PerftHashTable;
 use crate::perft::context::PerftContext;
 use crate::run_perft;

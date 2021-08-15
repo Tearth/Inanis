@@ -1,6 +1,6 @@
-use ina::board::movegen;
-use ina::board::patterns;
-use ina::board::zobrist;
+use ina::state::movegen;
+use ina::state::patterns;
+use ina::state::zobrist;
 use ina::interface::terminal;
 
 fn main() {

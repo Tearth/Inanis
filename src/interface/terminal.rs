@@ -1,6 +1,6 @@
 use super::uci;
-use crate::board::movegen;
-use crate::board::repr::Bitboard;
+use crate::state::movegen;
+use crate::state::board::Bitboard;
 use crate::perft;
 use crate::utils::benchmark;
 use chrono::Utc;

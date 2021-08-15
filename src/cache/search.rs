@@ -1,4 +1,4 @@
-use crate::board::movescan::Move;
+use crate::state::movescan::Move;
 use crate::engine::common::is_score_near_checkmate;
 use std::cell::UnsafeCell;
 use std::mem;

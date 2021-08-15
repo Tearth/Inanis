@@ -1,4 +1,4 @@
-use crate::board::movescan::Move;
+use crate::state::movescan::Move;
 
 pub const MAX_DEPTH: i8 = 32;
 pub const CHECKMATE_SCORE: i16 = 31900;

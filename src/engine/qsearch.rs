@@ -1,9 +1,9 @@
 use super::common::*;
 use super::context::SearchContext;
-use crate::board::common::*;
-use crate::board::movescan::Move;
-use crate::board::movescan::MoveFlags;
 use crate::evaluation::material;
+use crate::state::common::*;
+use crate::state::movescan::Move;
+use crate::state::movescan::MoveFlags;
 use std::mem::MaybeUninit;
 
 macro_rules! run_qsearch {

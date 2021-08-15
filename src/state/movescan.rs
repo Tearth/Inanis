@@ -1,7 +1,7 @@
+use super::board::Bitboard;
+use super::board::CastlingRights;
 use super::common::*;
 use super::movegen;
-use super::repr::Bitboard;
-use super::repr::CastlingRights;
 use std::mem::MaybeUninit;
 
 bitflags! {

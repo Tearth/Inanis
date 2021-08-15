@@ -2,13 +2,13 @@ use super::common::*;
 use super::context::SearchContext;
 use super::context::SearchResult;
 use super::qsearch;
-use crate::board::common::*;
-use crate::board::movescan::Move;
-use crate::board::movescan::MoveFlags;
-use crate::board::repr::Bitboard;
 use crate::cache::search::TranspositionTable;
 use crate::cache::search::TranspositionTableScoreType;
 use crate::evaluation::material;
+use crate::state::board::Bitboard;
+use crate::state::common::*;
+use crate::state::movescan::Move;
+use crate::state::movescan::MoveFlags;
 use chrono::Utc;
 use std::mem::MaybeUninit;
 use std::sync::Arc;
@@ -18,20 +18,20 @@ macro_rules! run_search {
     ($color:expr, $context:expr, $depth:expr, $ply:expr, $alpha:expr, $beta:expr, $invert:expr) => {
         match $invert {
             true => match $color {
-                crate::board::common::WHITE => {
-                    crate::engine::search::run::<{ crate::board::common::BLACK }>($context, $depth, $ply, $alpha, $beta)
+                crate::state::common::WHITE => {
+                    crate::engine::search::run::<{ crate::state::common::BLACK }>($context, $depth, $ply, $alpha, $beta)
                 }
-                crate::board::common::BLACK => {
-                    crate::engine::search::run::<{ crate::board::common::WHITE }>($context, $depth, $ply, $alpha, $beta)
+                crate::state::common::BLACK => {
+                    crate::engine::search::run::<{ crate::state::common::WHITE }>($context, $depth, $ply, $alpha, $beta)
                 }
                 _ => panic!("Invalid value: $color={}", $color),
             },
             false => match $color {
-                crate::board::common::WHITE => {
-                    crate::engine::search::run::<{ crate::board::common::WHITE }>($context, $depth, $ply, $alpha, $beta)
+                crate::state::common::WHITE => {
+                    crate::engine::search::run::<{ crate::state::common::WHITE }>($context, $depth, $ply, $alpha, $beta)
                 }
-                crate::board::common::BLACK => {
-                    crate::engine::search::run::<{ crate::board::common::BLACK }>($context, $depth, $ply, $alpha, $beta)
+                crate::state::common::BLACK => {
+                    crate::engine::search::run::<{ crate::state::common::BLACK }>($context, $depth, $ply, $alpha, $beta)
                 }
                 _ => panic!("Invalid value: $color={}", $color),
             },

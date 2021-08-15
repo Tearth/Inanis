@@ -1,7 +1,7 @@
-use crate::board::repr::Bitboard;
 use crate::cache::perft::PerftHashTable;
 use crate::perft::context::PerftContext;
 use crate::run_perft;
+use crate::state::board::Bitboard;
 use std::sync::Arc;
 use std::u64;
 

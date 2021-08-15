@@ -1,5 +1,5 @@
-use crate::board::repr::Bitboard;
 use crate::cache::perft::PerftHashTable;
+use crate::state::board::Bitboard;
 use std::sync::Arc;
 
 pub struct PerftContext<'a> {

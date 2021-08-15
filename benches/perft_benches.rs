@@ -1,7 +1,7 @@
 use criterion::*;
-use ina::board::movegen;
-use ina::board::patterns;
-use ina::board::repr::Bitboard;
+use ina::state::movegen;
+use ina::state::patterns;
+use ina::state::board::Bitboard;
 use ina::perft;
 
 fn criterion_benchmark(criterion: &mut Criterion) {

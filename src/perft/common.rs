@@ -1,6 +1,6 @@
 use super::context::PerftContext;
-use crate::board::movescan::Move;
 use crate::evaluation::material;
+use crate::state::movescan::Move;
 use std::borrow::Borrow;
 use std::mem::MaybeUninit;
 use std::u64;
@@ -10,13 +10,13 @@ macro_rules! run_perft {
     ($color:expr, $context:expr, $depth:expr, $invert:expr) => {
         match $invert {
             true => match $color {
-                crate::board::common::WHITE => crate::perft::common::run::<{ crate::board::common::BLACK }>($context, $depth),
-                crate::board::common::BLACK => crate::perft::common::run::<{ crate::board::common::WHITE }>($context, $depth),
+                crate::state::common::WHITE => crate::perft::common::run::<{ crate::state::common::BLACK }>($context, $depth),
+                crate::state::common::BLACK => crate::perft::common::run::<{ crate::state::common::WHITE }>($context, $depth),
                 _ => panic!("Invalid value: $color={}", $color),
             },
             false => match $color {
-                crate::board::common::WHITE => crate::perft::common::run::<{ crate::board::common::WHITE }>($context, $depth),
-                crate::board::common::BLACK => crate::perft::common::run::<{ crate::board::common::BLACK }>($context, $depth),
+                crate::state::common::WHITE => crate::perft::common::run::<{ crate::state::common::WHITE }>($context, $depth),
+                crate::state::common::BLACK => crate::perft::common::run::<{ crate::state::common::BLACK }>($context, $depth),
                 _ => panic!("Invalid value: $color={}", $color),
             },
         }

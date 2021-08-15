@@ -1,10 +1,10 @@
 #[cfg(test)]
 mod perft_tests {
-    use ina::board::movegen;
-    use ina::board::patterns;
-    use ina::board::repr::Bitboard;
-    use ina::board::zobrist;
     use ina::perft;
+    use ina::state::board::Bitboard;
+    use ina::state::movegen;
+    use ina::state::patterns;
+    use ina::state::zobrist;
     use std::sync::Once;
 
     static INIT: Once = Once::new();

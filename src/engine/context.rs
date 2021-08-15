@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
-use crate::board::movescan::Move;
-use crate::board::repr::Bitboard;
 use crate::cache::search::TranspositionTable;
 use crate::engine::clock;
 use crate::engine::common::is_score_near_checkmate;
 use crate::run_search;
+use crate::state::board::Bitboard;
+use crate::state::movescan::Move;
 use chrono::DateTime;
 use chrono::Utc;
 
