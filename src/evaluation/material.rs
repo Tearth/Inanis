@@ -1,5 +1,5 @@
 use crate::state::board::Bitboard;
-use crate::state::common::*;
+use crate::state::*;
 
 pub static PIECE_VALUE: [i16; 6] = [100, 300, 330, 500, 900, 10000];
 

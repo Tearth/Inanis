@@ -1,7 +1,6 @@
 use super::board::Bitboard;
 use super::board::CastlingRights;
-use super::common::*;
-use super::movegen;
+use super::*;
 use std::mem::MaybeUninit;
 
 bitflags! {

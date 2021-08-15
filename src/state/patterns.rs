@@ -1,4 +1,4 @@
-use super::common::*;
+use super::*;
 
 static mut FILE_PATTERNS: [u64; 64] = [0; 64];
 static mut RANK_PATTERNS: [u64; 64] = [0; 64];

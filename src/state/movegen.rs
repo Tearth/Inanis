@@ -1,5 +1,5 @@
-use super::common::*;
 use super::patterns;
+use super::*;
 use arr_macro::arr;
 
 #[rustfmt::skip]

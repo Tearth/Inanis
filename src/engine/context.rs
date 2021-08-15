@@ -1,13 +1,12 @@
-use std::sync::Arc;
-
+use super::*;
 use crate::cache::search::TranspositionTable;
 use crate::engine::clock;
-use crate::engine::common::is_score_near_checkmate;
 use crate::run_search;
 use crate::state::board::Bitboard;
 use crate::state::movescan::Move;
 use chrono::DateTime;
 use chrono::Utc;
+use std::sync::Arc;
 
 pub struct SearchContext<'a> {
     pub board: &'a mut Bitboard,

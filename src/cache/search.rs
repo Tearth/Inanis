@@ -1,5 +1,5 @@
+use crate::engine::*;
 use crate::state::movescan::Move;
-use crate::engine::common::is_score_near_checkmate;
 use std::cell::UnsafeCell;
 use std::mem;
 use std::u64;
@@ -59,7 +59,7 @@ impl TranspositionTable {
 
     pub fn get(&self, hash: u64, ply: u16) -> TranspositionTableEntry {
         let mut entry = self.table[(hash as usize) % self.slots];
-        
+
         if is_score_near_checkmate(entry.score) {
             if entry.score > 0 {
                 entry.score -= ply as i16;
@@ -69,7 +69,7 @@ impl TranspositionTable {
         }
 
         entry
-    } 
+    }
 
     /*pub fn get_usage(&self) -> f32 {
         const RESOLUTION: usize = 10000;
