@@ -1,8 +1,8 @@
 use super::context::PerftContext;
-use crate::state::movescan::Move;
-use crate::state::board::Bitboard;
 use crate::cache::perft::PerftHashTable;
 use crate::run_perft;
+use crate::state::board::Bitboard;
+use crate::state::movescan::Move;
 use std::mem::MaybeUninit;
 use std::sync::Arc;
 use std::u64;
