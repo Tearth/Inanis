@@ -8,7 +8,7 @@ pub mod pawn;
 pub mod queen;
 pub mod rook;
 
-pub static mut TABLE: [[[[i8; 64]; 2]; 2]; 6] = [[[[0; 64]; 2]; 2]; 6];
+static mut TABLE: [[[[i8; 64]; 2]; 2]; 6] = [[[[0; 64]; 2]; 2]; 6];
 
 pub fn init() {
     unsafe {
@@ -34,6 +34,10 @@ pub fn evaluate(board: &Bitboard) -> i16 {
     let ending_score = board.pst_scores[WHITE as usize][ENDING as usize] - board.pst_scores[BLACK as usize][ENDING as usize];
 
     (((opening_score as f32) * game_phase) + ((1.0 - game_phase) * (ending_score as f32))) as i16
+}
+
+pub fn get_value(piece: u8, color: u8, phase: u8, field: u8) -> i16 {
+    unsafe { TABLE[piece as usize][color as usize][phase as usize][field as usize] as i16 }
 }
 
 pub fn recalculate_incremental_values(board: &mut Bitboard) {

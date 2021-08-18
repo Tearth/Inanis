@@ -3,13 +3,11 @@ use crate::engine::context::SearchContext;
 use crate::engine::*;
 use crate::state::board::Bitboard;
 use crate::state::movescan::Move;
-use crate::state::movescan::MoveFlags;
 use crate::state::*;
 use std::collections::HashMap;
 use std::io;
 use std::ops::Add;
 use std::process;
-use std::sync::Arc;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");

@@ -1,7 +1,5 @@
 use self::context::PerftContext;
-use crate::evaluation::material;
 use crate::state::movescan::Move;
-use std::borrow::Borrow;
 use std::mem::MaybeUninit;
 use std::u64;
 

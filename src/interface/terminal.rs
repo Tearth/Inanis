@@ -1,7 +1,9 @@
 use super::uci;
-use crate::state::movegen;
-use crate::state::board::Bitboard;
+use crate::evaluation::material;
+use crate::evaluation::pst;
 use crate::perft;
+use crate::state::board::Bitboard;
+use crate::state::movegen;
 use crate::utils::benchmark;
 use chrono::Utc;
 use prettytable::cell;
@@ -34,6 +36,7 @@ pub fn run() {
         match trimmed.as_str() {
             "help" => handle_help(),
             "benchmark" => handle_benchmark(),
+            "evaluate" => handle_evaluate(split),
             "magic" => handle_magic(),
             "perft" => handle_perft(split),
             "dperft" => handle_dperft(split),
@@ -49,6 +52,7 @@ pub fn run() {
 fn handle_help() {
     println!("=== General ===");
     println!(" benchmark - run test for a set of positions");
+    println!(" evaluate [fen] - show score for the position");
     println!(" magic - generate magic numbers");
     println!(" uci - run Universal Chess Interface");
     println!(" quit - close the application");
@@ -142,6 +146,25 @@ fn handle_benchmark() {
         "Transposition table: {} added entries, {} hits, {} misses",
         result.tt_added_entries, result.tt_hits, result.tt_misses
     );
+}
+
+fn handle_evaluate(input: Vec<&str>) {
+    if input.len() < 2 {
+        println!("FEN not found");
+        return;
+    }
+
+    let fen = input[1..].join(" ");
+    let board = match Bitboard::new_from_fen(fen.as_str()) {
+        Ok(board) => board,
+        Err(message) => {
+            println!("{}", message);
+            return;
+        }
+    };
+
+    println!("Material: {}", material::evaluate(&board));
+    println!("Piece-square table: {}", pst::evaluate(&board));
 }
 
 fn handle_magic() {

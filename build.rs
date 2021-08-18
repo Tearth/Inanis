@@ -1,5 +1,3 @@
-extern crate chrono;
-
 use chrono::prelude::*;
 use std::env;
 use std::process::Command;

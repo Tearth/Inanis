@@ -1,6 +1,5 @@
 use crate::engine::*;
 use crate::state::movescan::Move;
-use std::cell::UnsafeCell;
 use std::mem;
 use std::u64;
 
@@ -71,22 +70,18 @@ impl TranspositionTable {
         entry
     }
 
-    /*pub fn get_usage(&self) -> f32 {
+    pub fn get_usage(&self) -> f32 {
         const RESOLUTION: usize = 10000;
-        const BUCKETS_COUNT_TO_CHECK: usize = RESOLUTION / BUCKET_SLOTS;
-
         let mut filled_entries = 0;
 
-        for bucket_index in 0..BUCKETS_COUNT_TO_CHECK {
-            for entry in unsafe { (*self.table.get())[bucket_index].entries } {
-                if entry.key != 0 {
-                    filled_entries += 1;
-                }
+        for entry_index in 0..RESOLUTION {
+            if self.table[entry_index].key != 0 {
+                filled_entries += 1;
             }
         }
 
         ((filled_entries as f32) / (RESOLUTION as f32)) * 100.0
-    }*/
+    }
 }
 
 impl TranspositionTableEntry {

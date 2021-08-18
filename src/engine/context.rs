@@ -6,7 +6,6 @@ use crate::state::board::Bitboard;
 use crate::state::movescan::Move;
 use chrono::DateTime;
 use chrono::Utc;
-use std::sync::Arc;
 
 pub struct SearchContext<'a> {
     pub board: &'a mut Bitboard,
@@ -71,7 +70,7 @@ impl<'a> Iterator for SearchContext<'a> {
     type Item = SearchResult;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.search_done {
+        if self.search_done || self.current_depth >= 32 {
             return None;
         }
 
