@@ -171,6 +171,84 @@ impl Bitboard {
         false
     }
 
+    pub fn get_attacking_pieces(&self, color: u8, field_index: u8) -> u8 {
+        /*
+            0 - pawn
+            1 - knight/bishop
+            2 - knight/bishop
+            3 - knight/bishop
+            4 - rook
+            5 - rook
+            6 - queen
+            7 - king
+        */
+
+        let mut result = 0;
+        let enemy_color = color ^ 1;
+        let occupancy = self.occupancy[WHITE as usize] | self.occupancy[BLACK as usize];
+
+        let king_attacks = movegen::get_king_moves(field_index as usize);
+        if (king_attacks & self.pieces[enemy_color as usize][KING as usize]) != 0 {
+            result |= 1 << 7;
+        }
+
+        let queen_attacks = movegen::get_queen_moves(occupancy, field_index as usize);
+        if (queen_attacks & self.pieces[enemy_color as usize][QUEEN as usize]) != 0 {
+            result |= 1 << 6;
+        }
+
+        let rook_attacks = movegen::get_rook_moves(occupancy, field_index as usize);
+        let attacking_rooks = rook_attacks & self.pieces[enemy_color as usize][ROOK as usize];
+        if attacking_rooks != 0 {
+            let attacking_rooks_count = bit_count(attacking_rooks);
+            if attacking_rooks_count == 1 {
+                result |= 1 << 4;
+            } else {
+                result |= 3 << 4;
+            }
+        }
+
+        let mut attacking_knights_bishops_count = 0;
+
+        let knight_attacks = movegen::get_knight_moves(field_index as usize);
+        let enemy_knights = self.pieces[enemy_color as usize][KNIGHT as usize];
+        let attacking_knights = knight_attacks & enemy_knights;
+        if (knight_attacks & enemy_knights) != 0 {
+            attacking_knights_bishops_count += bit_count(attacking_knights);
+        }
+
+        let bishop_attacks = movegen::get_bishop_moves(occupancy, field_index as usize);
+        let enemy_bishops = self.pieces[enemy_color as usize][BISHOP as usize];
+        let attacking_bishops = bishop_attacks & enemy_bishops;
+        if (bishop_attacks & enemy_bishops) != 0 {
+            attacking_knights_bishops_count += bit_count(attacking_bishops);
+        }
+
+        if attacking_knights_bishops_count != 0 {
+            if attacking_knights_bishops_count == 1 {
+                result |= 1 << 1;
+            } else if attacking_knights_bishops_count == 2 {
+                result |= 3 << 1;
+            } else {
+                result |= 7 << 1;
+            }
+        }
+
+        let field = 1u64 << field_index;
+        let potential_enemy_pawns = king_attacks & self.pieces[enemy_color as usize][PAWN as usize];
+        let attacking_enemy_pawns = match color {
+            WHITE => field & ((potential_enemy_pawns >> 7) | (potential_enemy_pawns >> 9)),
+            BLACK => field & ((potential_enemy_pawns << 7) | (potential_enemy_pawns << 9)),
+            _ => panic!("Invalid value: color={}", color),
+        };
+
+        if attacking_enemy_pawns != 0 {
+            result |= 1;
+        }
+
+        result
+    }
+
     pub fn is_king_checked(&self, color: u8) -> bool {
         self.is_field_attacked(color, bit_scan(self.pieces[color as usize][KING as usize]))
     }
