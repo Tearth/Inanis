@@ -4,6 +4,7 @@ pub mod clock;
 pub mod context;
 pub mod qsearch;
 pub mod search;
+pub mod see;
 
 pub const MAX_DEPTH: i8 = 32;
 pub const CHECKMATE_SCORE: i16 = 31900;
