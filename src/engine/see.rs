@@ -1,37 +1,35 @@
 use crate::state::*;
 use std::cmp::max;
 
-static mut TABLE: [[[[i8; 256]; 256]; 6]; 6] = [[[[0; 256]; 256]; 6]; 6];
+static mut TABLE: [[[i8; 256]; 256]; 6] = [[[0; 256]; 256]; 6];
 
 pub fn init() {
-    for attacking_piece in 0..6 {
-        let attacker_index = get_piece_index(attacking_piece as u8);
-        for target_piece in 0..6 {
-            for attackers in 0..256 {
-                if ((1 << attacker_index) & attackers) == 0 {
-                    continue;
-                }
-
-                for defenders in 0..256 {
-                    unsafe {
-                        TABLE[attacking_piece][target_piece][attackers][defenders] =
-                            evaluate(attacking_piece as u8, target_piece as u8, attackers as u8, defenders as u8)
-                    };
-                }
+    for target_piece in 0..6 {
+        for attackers in 0..256 {
+            for defenders in 0..256 {
+                unsafe { TABLE[target_piece][attackers][defenders] = evaluate(target_piece as u8, attackers as u8, defenders as u8) };
             }
         }
     }
 }
 
 pub fn get(attacking_piece: u8, target_piece: u8, attackers: u8, defenders: u8) -> i8 {
-    unsafe { TABLE[attacking_piece as usize][target_piece as usize][attackers as usize][defenders as usize] }
+    let attacking_piece_index = get_piece_index(attacking_piece);
+    let target_piece_index = get_piece_index(target_piece);
+    let updated_attackers = attackers & !(1 << attacking_piece_index);
+
+    (get_piece_value(target_piece_index) as i8) - unsafe { TABLE[attacking_piece as usize][defenders as usize][updated_attackers as usize] }
 }
 
-fn evaluate(attacking_piece: u8, target_piece: u8, attackers: u8, defenders: u8) -> i8 {
-    let attacking_piece_index = get_piece_index(attacking_piece);
-    let defending_piece_index = get_piece_index(target_piece);
+fn evaluate(target_piece: u8, attackers: u8, defenders: u8) -> i8 {
+    if attackers == 0 {
+        return 0;
+    }
 
-    evaluate_internal(true, attacking_piece_index, defending_piece_index, attackers, defenders)
+    let attacking_piece_index = bit_scan(get_lsb(attackers as u64)) as u8;
+    let target_piece_index = get_piece_index(target_piece);
+
+    evaluate_internal(false, attacking_piece_index, target_piece_index, attackers, defenders)
 }
 
 fn evaluate_internal(force: bool, attacking_piece: u8, target_piece: u8, attackers: u8, defenders: u8) -> i8 {
