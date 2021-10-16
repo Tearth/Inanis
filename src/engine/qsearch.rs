@@ -1,6 +1,5 @@
 use super::context::SearchContext;
 use super::*;
-use crate::evaluation::material;
 use crate::state::movescan::Move;
 use crate::state::movescan::MoveFlags;
 use crate::state::*;
@@ -95,12 +94,12 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
             continue;
         }
 
+        let field = r#move.get_to();
         let attacking_piece = context.board.get_piece(r#move.get_from());
         let captured_piece = context.board.get_piece(r#move.get_to());
+        let attackers = context.board.get_attacking_pieces(context.board.active_color ^ 1, field);
+        let defenders = context.board.get_attacking_pieces(context.board.active_color, field);
 
-        let attacking_piece_value = material::get_value(attacking_piece);
-        let captured_piece_value = material::get_value(captured_piece);
-
-        move_scores[move_index] = captured_piece_value - attacking_piece_value;
+        move_scores[move_index] = (see::get(attacking_piece, captured_piece, attackers, defenders) as i16) * 100;
     }
 }
