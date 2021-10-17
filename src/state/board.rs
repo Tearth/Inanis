@@ -192,12 +192,16 @@ impl Bitboard {
             result |= 1 << 7;
         }
 
-        let queen_attacks = movegen::get_queen_moves(occupancy, field_index as usize);
+        let occupancy_for_queen =
+            occupancy & !(self.pieces[enemy_color as usize][ROOK as usize]) & !(self.pieces[enemy_color as usize][BISHOP as usize]);
+        let queen_attacks = movegen::get_queen_moves(occupancy_for_queen, field_index as usize);
         if (queen_attacks & self.pieces[enemy_color as usize][QUEEN as usize]) != 0 {
             result |= 1 << 6;
         }
 
-        let rook_attacks = movegen::get_rook_moves(occupancy, field_index as usize);
+        let occupancy_for_rook =
+            occupancy & !(self.pieces[enemy_color as usize][ROOK as usize]) & !(self.pieces[enemy_color as usize][QUEEN as usize]);
+        let rook_attacks = movegen::get_rook_moves(occupancy_for_rook, field_index as usize);
         let attacking_rooks = rook_attacks & self.pieces[enemy_color as usize][ROOK as usize];
         if attacking_rooks != 0 {
             let attacking_rooks_count = bit_count(attacking_rooks);
@@ -217,7 +221,9 @@ impl Bitboard {
             attacking_knights_bishops_count += bit_count(attacking_knights);
         }
 
-        let bishop_attacks = movegen::get_bishop_moves(occupancy, field_index as usize);
+        let occupancy_for_bishop =
+            occupancy & !(self.pieces[enemy_color as usize][BISHOP as usize]) & !(self.pieces[enemy_color as usize][QUEEN as usize]);
+        let bishop_attacks = movegen::get_bishop_moves(occupancy_for_bishop, field_index as usize);
         let enemy_bishops = self.pieces[enemy_color as usize][BISHOP as usize];
         let attacking_bishops = bishop_attacks & enemy_bishops;
         if (bishop_attacks & enemy_bishops) != 0 {
