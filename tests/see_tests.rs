@@ -30,7 +30,7 @@ mod see_tests {
                     let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
                     let moves_count = board.get_moves::<$color>(&mut moves);
 
-                    for move_index in 1..moves_count {
+                    for move_index in 0..moves_count {
                         let r#move = moves[move_index];
                         if r#move.to_text() == $move {
                             let attacking_piece = board.get_piece(r#move.get_from());
@@ -50,12 +50,21 @@ mod see_tests {
     }
 
     see_tests! {
-        see_mid_game1: "5rk1/2b1qp1p/1r2p1pB/1ppnn3/3pN3/1P1P2P1/2P1QPBP/R4RK1 b - - 7 22", BLACK, "e5d3", -2,
-        see_mid_game2: "2b2rk1/3nqp1p/1r2pnp1/1pp5/3pN2B/1P1P1QP1/2P2PBP/R4RK1 b - - 7 22", WHITE, "e4f6", 3,
-        see_mid_game3: "2k4r/1p3pp1/p2p4/2P1p2q/P1P1P2n/3PBPP1/2R3Qr/5RK1 b - - 2 22", BLACK, "h4g2", 6,
-        see_mid_game4: "r6k/p1B4p/Pp3rp1/3p4/2nP4/2PQ1PPq/7P/1R3RK1 b - - 0 32", WHITE, "c7b6", -2,
-        see_mid_game5: "r1b2rk1/1p2qppp/8/1P1R4/p7/Pn2B1P1/4QPBP/3R2K1 b - - 1 22", BLACK, "e7a3", 1,
-        see_mid_game6: "rn1qkb1r/3b1pnp/2p1p1p1/1pN5/p2P1B2/2PB1N1P/PP2QPP1/R4RK1 w kq - 0 18", WHITE, "c5e6", -2,
-        see_mid_game7: "r2q3r/2nb1kn1/2p1pp2/6p1/p1BP2Qp/B4N1P/PP2RPP1/3R2K1 b - - 0 33", WHITE, "f3g5", -1,
+        see_simple_01: "8/8/8/4p3/3P4/8/8/8 w - - 0 1", WHITE, "d4e5", 1,
+        see_simple_02: "8/8/5p2/4p3/3P4/8/8/8 w - - 0 1", WHITE, "d4e5", 0,
+        see_simple_03: "8/8/5p2/4p3/3P4/8/7B/8 w - - 0 1", WHITE, "d4e5", 1,
+        see_simple_04: "8/8/5p2/4p3/3P4/8/7B/8 w - - 0 1", WHITE, "h2e5", -1,
+        see_simple_05: "8/8/8/3k4/3P4/8/8/8 b - - 0 1", BLACK, "d5d4", 1,
+        see_simple_06: "8/8/2n2b2/8/3P4/8/4N3/8 b - - 0 1", BLACK, "c6d4", 1,
+        see_complex_01: "8/2bn1n2/8/4p3/6N1/2B2N2/8/8 w - - 0 1", WHITE, "f3e5", -2,
+        see_complex_02: "8/2bn1n2/8/4p3/6N1/2B2N2/8/4Q3 w - - 0 1", WHITE, "f3e5", 1,
+        see_complex_03: "8/3n2b1/2n5/4R3/5P2/3N1N2/8/8 b - - 0 1", BLACK, "d7e5", 2,
+        see_complex_04: "8/3n2b1/2nq4/4R3/5P2/3N1N2/8/8 b - - 0 1", BLACK, "d6e5", -3,
+        see_xray_01: "4r3/8/4p3/8/8/8/4R3/4R3 w - - 0 1", WHITE, "e2e6", 1,
+        see_xray_02: "4n3/8/5p2/8/8/2B5/1Q6/8 w - - 0 1", WHITE, "c3f6", 1,
+        see_xray_03: "8/8/5p1q/8/8/5Q2/8/5R2 w - - 0 1", WHITE, "f3f6", 1,
+        see_xray_04: "4q3/4r3/4r3/8/8/RQR1P3/8/8 w - - 0 1", BLACK, "e6e3", -4,
+        see_xray_05: "7q/8/5b2/8/8/2B5/3P4/8 w - - 0 1", BLACK, "f6c3", 1,
+        see_xray_06: "4r3/8/4q3/8/4P3/5P2/8/8 w - - 0 1", BLACK, "e6e4", -7,
     }
 }
