@@ -43,6 +43,10 @@ pub struct SearchStatistics {
     pub non_perfect_cutoffs: u64,
     pub q_non_perfect_cutoffs: u64,
 
+    pub pvs_full_window_searches: u64,
+    pub pvs_zero_window_searches: u64,
+    pub pvs_rejected_searches: u64,
+
     pub tt_hits: u64,
     pub tt_misses: u64,
     pub tt_added_entries: u64,
@@ -81,7 +85,7 @@ impl<'a> Iterator for SearchContext<'a> {
             self.deadline = u32::MAX;
         }
 
-        let score = run_search!(self.board.active_color, self, self.current_depth, 0, -32000, 32000, false);
+        let score = run_search!(self.board.active_color, true, self, self.current_depth, 0, -32000, 32000, false);
         let search_time = (Utc::now() - self.search_time_start).num_milliseconds() as f64;
         let time_ratio = search_time / (self.last_search_time as f64);
 
@@ -142,6 +146,10 @@ impl SearchStatistics {
             q_perfect_cutoffs: 0,
             non_perfect_cutoffs: 0,
             q_non_perfect_cutoffs: 0,
+
+            pvs_full_window_searches: 0,
+            pvs_zero_window_searches: 0,
+            pvs_rejected_searches: 0,
 
             tt_hits: 0,
             tt_misses: 0,

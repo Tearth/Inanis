@@ -13,16 +13,16 @@ use std::mem::MaybeUninit;
 
 #[macro_export]
 macro_rules! run_search {
-    ($color:expr, $context:expr, $depth:expr, $ply:expr, $alpha:expr, $beta:expr, $invert:expr) => {
+    ($color:expr, $pv:expr, $context:expr, $depth:expr, $ply:expr, $alpha:expr, $beta:expr, $invert:expr) => {
         match $invert {
             true => match $color {
-                crate::state::WHITE => crate::engine::search::run::<{ crate::state::BLACK }>($context, $depth, $ply, $alpha, $beta),
-                crate::state::BLACK => crate::engine::search::run::<{ crate::state::WHITE }>($context, $depth, $ply, $alpha, $beta),
+                crate::state::WHITE => crate::engine::search::run::<{ crate::state::BLACK }, $pv>($context, $depth, $ply, $alpha, $beta),
+                crate::state::BLACK => crate::engine::search::run::<{ crate::state::WHITE }, $pv>($context, $depth, $ply, $alpha, $beta),
                 _ => panic!("Invalid value: $color={}", $color),
             },
             false => match $color {
-                crate::state::WHITE => crate::engine::search::run::<{ crate::state::WHITE }>($context, $depth, $ply, $alpha, $beta),
-                crate::state::BLACK => crate::engine::search::run::<{ crate::state::BLACK }>($context, $depth, $ply, $alpha, $beta),
+                crate::state::WHITE => crate::engine::search::run::<{ crate::state::WHITE }, $pv>($context, $depth, $ply, $alpha, $beta),
+                crate::state::BLACK => crate::engine::search::run::<{ crate::state::BLACK }, $pv>($context, $depth, $ply, $alpha, $beta),
                 _ => panic!("Invalid value: $color={}", $color),
             },
         }
@@ -41,7 +41,7 @@ pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
 
     let search_time_start = Utc::now();
     for depth in 1..=depth {
-        let score = run_search!(context.board.active_color, &mut context, depth, 0, -32000, 32000, false);
+        let score = run_search!(context.board.active_color, true, &mut context, depth, 0, -32000, 32000, false);
         let r#move = context.transposition_table.get(context.board.hash, 0).best_move;
 
         best_score = score;
@@ -52,7 +52,7 @@ pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
     SearchResult::new(time, depth, best_score, best_move, context.statistics)
 }
 
-pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, ply: u16, mut alpha: i16, mut beta: i16) -> i16 {
+pub fn run<const COLOR: u8, const PV: bool>(context: &mut SearchContext, depth: i32, ply: u16, mut alpha: i16, mut beta: i16) -> i16 {
     // Check every 100 000 node
     if context.statistics.nodes_count % 100_000 == 0 {
         if (Utc::now() - context.search_time_start).num_milliseconds() >= context.deadline as i64 {
@@ -123,9 +123,26 @@ pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, ply: u16, m
         sort_next_move(&mut moves, &mut move_scores, move_index, moves_count);
 
         let r#move = moves[move_index];
-
         context.board.make_move::<COLOR>(&r#move);
-        let score = -run_search!(COLOR, context, depth - 1, ply + 1, -beta, -alpha, true);
+
+        // PVS (only in full-window search)
+        let score = if !PV || move_index == 0 {
+            context.statistics.pvs_full_window_searches += 1;
+            -run_search!(COLOR, true, context, depth - 1, ply + 1, -beta, -alpha, true)
+        } else {
+            let zero_window_score = -run_search!(COLOR, false, context, depth - 1, ply + 1, -alpha - 1, -alpha, true);
+            context.statistics.pvs_zero_window_searches += 1;
+
+            if zero_window_score > alpha {
+                context.statistics.pvs_full_window_searches += 1;
+                context.statistics.pvs_rejected_searches += 1;
+
+                -run_search!(COLOR, true, context, depth - 1, ply + 1, -beta, -alpha, true)
+            } else {
+                zero_window_score
+            }
+        };
+
         context.board.undo_move::<COLOR>(&r#move);
 
         if score > best_score {

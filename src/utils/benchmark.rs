@@ -17,6 +17,10 @@ pub struct BenchmarkResult {
     pub non_perfect_cutoffs: u64,
     pub q_non_perfect_cutoffs: u64,
 
+    pub pvs_full_window_searches: u64,
+    pub pvs_zero_window_searches: u64,
+    pub pvs_rejected_searches: u64,
+
     pub tt_hits: u64,
     pub tt_misses: u64,
     pub tt_added_entries: u64,
@@ -38,6 +42,10 @@ impl BenchmarkResult {
             q_perfect_cutoffs: 0,
             non_perfect_cutoffs: 0,
             q_non_perfect_cutoffs: 0,
+
+            pvs_full_window_searches: 0,
+            pvs_zero_window_searches: 0,
+            pvs_rejected_searches: 0,
 
             tt_hits: 0,
             tt_misses: 0,
@@ -71,7 +79,7 @@ pub fn run() -> BenchmarkResult {
 
     for fen in benchmark_positions {
         let mut board = Bitboard::new_from_fen(fen).unwrap();
-        let result = search::run_fixed_depth(&mut board, 7);
+        let result = search::run_fixed_depth(&mut board, 9);
 
         benchmark_result.nodes_count += result.statistics.nodes_count;
         benchmark_result.q_nodes_count += result.statistics.q_nodes_count;
@@ -84,6 +92,10 @@ pub fn run() -> BenchmarkResult {
         benchmark_result.q_perfect_cutoffs += result.statistics.q_perfect_cutoffs;
         benchmark_result.non_perfect_cutoffs += result.statistics.non_perfect_cutoffs;
         benchmark_result.q_non_perfect_cutoffs += result.statistics.q_non_perfect_cutoffs;
+
+        benchmark_result.pvs_full_window_searches += result.statistics.pvs_full_window_searches;
+        benchmark_result.pvs_zero_window_searches += result.statistics.pvs_zero_window_searches;
+        benchmark_result.pvs_rejected_searches += result.statistics.pvs_rejected_searches;
 
         benchmark_result.tt_hits += result.statistics.tt_hits;
         benchmark_result.tt_misses += result.statistics.tt_misses;
