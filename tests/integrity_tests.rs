@@ -1,11 +1,7 @@
 #[cfg(test)]
 mod integrity_tests {
-    use ina::evaluation::pst;
     use ina::perft;
     use ina::state::board::Bitboard;
-    use ina::state::movegen;
-    use ina::state::patterns;
-    use ina::state::zobrist;
     use std::sync::Once;
 
     static INIT: Once = Once::new();
@@ -16,10 +12,7 @@ mod integrity_tests {
                 #[test]
                 fn $name() {
                     INIT.call_once(|| {
-                        pst::init();
-                        patterns::init();
-                        movegen::init();
-                        zobrist::init();
+                        ina::init();
                     });
 
                     perft::normal::run($depth, &mut Bitboard::new_from_fen($fen).unwrap(), true);

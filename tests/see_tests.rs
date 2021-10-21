@@ -1,12 +1,8 @@
 #[cfg(test)]
 mod see_tests {
     use ina::engine::see;
-    use ina::evaluation::pst;
     use ina::state::board::Bitboard;
-    use ina::state::movegen;
     use ina::state::movescan::Move;
-    use ina::state::patterns;
-    use ina::state::zobrist;
     use std::mem::MaybeUninit;
     use std::sync::Once;
 
@@ -18,11 +14,7 @@ mod see_tests {
                 #[test]
                 fn $name() {
                     INIT.call_once(|| {
-                        pst::init();
-                        see::init();
-                        patterns::init();
-                        movegen::init();
-                        zobrist::init();
+                        ina::init();
                     });
 
                     let board = Bitboard::new_from_fen($fen).unwrap();

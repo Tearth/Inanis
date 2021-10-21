@@ -1,17 +1,6 @@
-use ina::engine::see;
-use ina::evaluation::pst;
 use ina::interface::terminal;
-use ina::state::movegen;
-use ina::state::patterns;
-use ina::state::zobrist;
 
 fn main() {
-    fastrand::seed(584578);
-
-    pst::init();
-    see::init();
-    patterns::init();
-    movegen::init();
-    zobrist::init();
+    ina::init();
     terminal::run();
 }

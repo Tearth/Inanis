@@ -1,10 +1,8 @@
 use criterion::*;
 use ina::state::movegen;
-use ina::state::patterns;
 
 fn criterion_benchmark(criterion: &mut Criterion) {
-    patterns::init();
-    movegen::init();
+    ina::init();
 
     criterion.bench_function("get_rook_moves", |bencher| {
         let mut bitboard = 0u64;

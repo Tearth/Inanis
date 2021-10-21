@@ -1,10 +1,6 @@
 #[cfg(test)]
 mod board_tests {
-    use ina::evaluation::pst;
     use ina::state::board::Bitboard;
-    use ina::state::movegen;
-    use ina::state::patterns;
-    use ina::state::zobrist;
     use ina::state::*;
     use std::sync::Once;
 
@@ -16,10 +12,7 @@ mod board_tests {
                 #[test]
                 fn $name() {
                     INIT.call_once(|| {
-                        pst::init();
-                        patterns::init();
-                        movegen::init();
-                        zobrist::init();
+                        ina::init();
                     });
 
                     let board = Bitboard::new_from_fen($fen).unwrap();
@@ -60,10 +53,7 @@ mod board_tests {
                 #[test]
                 fn $name() {
                     INIT.call_once(|| {
-                        pst::init();
-                        patterns::init();
-                        movegen::init();
-                        zobrist::init();
+                        ina::init();
                     });
 
                     let board = Bitboard::new_from_fen($fen).unwrap();
