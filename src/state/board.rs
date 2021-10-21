@@ -210,7 +210,7 @@ impl Bitboard {
 
                     !CastlingRights::BLACK_CASTLING
                 }
-                _ => panic!("Invalid value: COLOR={}", color),
+                _ => panic!("Invalid value: color={}", color),
             }
         }
 
@@ -234,7 +234,7 @@ impl Bitboard {
                         self.castling_rights &= !CastlingRights::BLACK_LONG_CASTLING;
                     }
                 }
-                _ => panic!("Invalid value: COLOR={}", color),
+                _ => panic!("Invalid value: color={}", color),
             }
         }
 
