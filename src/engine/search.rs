@@ -11,27 +11,9 @@ use crate::state::*;
 use chrono::Utc;
 use std::mem::MaybeUninit;
 
-#[macro_export]
-macro_rules! run_search {
-    ($color:expr, $pv:expr, $context:expr, $depth:expr, $ply:expr, $alpha:expr, $beta:expr, $invert:expr) => {
-        match $invert {
-            true => match $color {
-                crate::state::WHITE => crate::engine::search::run::<{ crate::state::BLACK }, $pv>($context, $depth, $ply, $alpha, $beta),
-                crate::state::BLACK => crate::engine::search::run::<{ crate::state::WHITE }, $pv>($context, $depth, $ply, $alpha, $beta),
-                _ => panic!("Invalid value: $color={}", $color),
-            },
-            false => match $color {
-                crate::state::WHITE => crate::engine::search::run::<{ crate::state::WHITE }, $pv>($context, $depth, $ply, $alpha, $beta),
-                crate::state::BLACK => crate::engine::search::run::<{ crate::state::BLACK }, $pv>($context, $depth, $ply, $alpha, $beta),
-                _ => panic!("Invalid value: $color={}", $color),
-            },
-        }
-    };
-}
-
 pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
-    let transposition_table_size_mb = 32 * 1024 * 1024;
-    let mut transposition_table = TranspositionTable::new(transposition_table_size_mb);
+    let transposition_table_size = 32 * 1024 * 1024;
+    let mut transposition_table = TranspositionTable::new(transposition_table_size);
 
     let mut context = SearchContext::new(board, 0, 0, &mut transposition_table);
     let mut best_move = Move::new_empty();
@@ -41,7 +23,7 @@ pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
 
     let search_time_start = Utc::now();
     for depth in 1..=depth {
-        let score = run_search!(context.board.active_color, true, &mut context, depth, 0, -32000, 32000, false);
+        let score = run::<true>(&mut context, depth, 0, -32000, 32000);
         let r#move = context.transposition_table.get(context.board.hash, 0).best_move;
 
         best_score = score;
@@ -52,7 +34,7 @@ pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
     SearchResult::new(time, depth, best_score, best_move, context.statistics)
 }
 
-pub fn run<const COLOR: u8, const PV: bool>(context: &mut SearchContext, depth: i32, ply: u16, mut alpha: i16, mut beta: i16) -> i16 {
+pub fn run<const PV: bool>(context: &mut SearchContext, depth: i32, ply: u16, mut alpha: i16, mut beta: i16) -> i16 {
     // Check every 100 000 node
     if context.statistics.nodes_count % 100_000 == 0 {
         if (Utc::now() - context.search_time_start).num_milliseconds() >= context.deadline as i64 {
@@ -63,7 +45,7 @@ pub fn run<const COLOR: u8, const PV: bool>(context: &mut SearchContext, depth: 
 
     context.statistics.nodes_count += 1;
 
-    if context.board.pieces[COLOR as usize][KING as usize] == 0 {
+    if context.board.pieces[context.board.active_color as usize][KING as usize] == 0 {
         context.statistics.leafs_count += 1;
         return -CHECKMATE_SCORE + (ply as i16);
     }
@@ -75,7 +57,7 @@ pub fn run<const COLOR: u8, const PV: bool>(context: &mut SearchContext, depth: 
 
     if depth <= 0 {
         context.statistics.leafs_count += 1;
-        return qsearch::run::<COLOR>(context, depth, ply, alpha, beta);
+        return qsearch::run(context, depth, ply, alpha, beta);
     }
 
     let original_alpha = alpha;
@@ -112,7 +94,7 @@ pub fn run<const COLOR: u8, const PV: bool>(context: &mut SearchContext, depth: 
 
     let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
     let mut move_scores: [i16; 218] = unsafe { MaybeUninit::uninit().assume_init() };
-    let moves_count = context.board.get_moves::<COLOR>(&mut moves);
+    let moves_count = context.board.get_moves(&mut moves);
 
     assign_move_scores(context, &moves, &mut move_scores, moves_count, tt_entry.best_move);
 
@@ -123,27 +105,27 @@ pub fn run<const COLOR: u8, const PV: bool>(context: &mut SearchContext, depth: 
         sort_next_move(&mut moves, &mut move_scores, move_index, moves_count);
 
         let r#move = moves[move_index];
-        context.board.make_move::<COLOR>(&r#move);
+        context.board.make_move(&r#move);
 
         // PVS (only in full-window search)
         let score = if !PV || move_index == 0 {
             context.statistics.pvs_full_window_searches += 1;
-            -run_search!(COLOR, true, context, depth - 1, ply + 1, -beta, -alpha, true)
+            -run::<true>(context, depth - 1, ply + 1, -beta, -alpha)
         } else {
-            let zero_window_score = -run_search!(COLOR, false, context, depth - 1, ply + 1, -alpha - 1, -alpha, true);
+            let zero_window_score = -run::<false>(context, depth - 1, ply + 1, -alpha - 1, -alpha);
             context.statistics.pvs_zero_window_searches += 1;
 
             if zero_window_score > alpha {
                 context.statistics.pvs_full_window_searches += 1;
                 context.statistics.pvs_rejected_searches += 1;
 
-                -run_search!(COLOR, true, context, depth - 1, ply + 1, -beta, -alpha, true)
+                -run::<true>(context, depth - 1, ply + 1, -beta, -alpha)
             } else {
                 zero_window_score
             }
         };
 
-        context.board.undo_move::<COLOR>(&r#move);
+        context.board.undo_move(&r#move);
 
         if score > best_score {
             best_score = score;
@@ -175,7 +157,7 @@ pub fn run<const COLOR: u8, const PV: bool>(context: &mut SearchContext, depth: 
         return best_score;
     }
 
-    if best_score == -CHECKMATE_SCORE + (ply as i16) + 2 && !context.board.is_king_checked(COLOR) {
+    if best_score == -CHECKMATE_SCORE + (ply as i16) + 2 && !context.board.is_king_checked(context.board.active_color) {
         context.statistics.leafs_count += 1;
         return 0;
     }

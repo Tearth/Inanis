@@ -76,7 +76,7 @@ impl Move {
         };
 
         let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
-        let moves_count = board.get_moves_active_color(&mut moves);
+        let moves_count = board.get_moves(&mut moves);
 
         for r#move in &moves[0..moves_count] {
             if r#move.get_from() == from && r#move.get_to() == to {
@@ -139,9 +139,11 @@ impl Move {
     }
 }
 
-pub fn scan_piece_moves<const COLOR: u8, const PIECE: u8>(board: &Bitboard, moves: &mut [Move], mut index: usize) -> usize {
-    let mut pieces = board.pieces[COLOR as usize][PIECE as usize];
-    let enemy_color = COLOR ^ 1;
+pub fn scan_piece_moves<const PIECE: u8>(board: &Bitboard, moves: &mut [Move], mut index: usize) -> usize {
+    let color = board.active_color;
+    let enemy_color = color ^ 1;
+
+    let mut pieces = board.pieces[color as usize][PIECE as usize];
 
     while pieces != 0 {
         let from_field = get_lsb(pieces);
@@ -156,7 +158,7 @@ pub fn scan_piece_moves<const COLOR: u8, const PIECE: u8>(board: &Bitboard, move
             QUEEN => movegen::get_queen_moves(occupancy, from_field_index as usize),
             KING => movegen::get_king_moves(from_field_index as usize),
             _ => panic!("Invalid value: PIECE={}", PIECE),
-        } & !board.occupancy[COLOR as usize];
+        } & !board.occupancy[color as usize];
 
         while piece_moves != 0 {
             let to_field = get_lsb(piece_moves);
@@ -171,23 +173,23 @@ pub fn scan_piece_moves<const COLOR: u8, const PIECE: u8>(board: &Bitboard, move
         }
 
         if PIECE == KING {
-            match COLOR {
+            match color {
                 WHITE => {
                     let king_side_castling_rights = board.castling_rights.contains(CastlingRights::WHITE_SHORT_CASTLING);
-                    let king_side_rook_present = (board.pieces[COLOR as usize][ROOK as usize] & 0x1) != 0;
+                    let king_side_rook_present = (board.pieces[color as usize][ROOK as usize] & 0x1) != 0;
 
                     if king_side_castling_rights && king_side_rook_present && (occupancy & 0x6) == 0 {
-                        if !board.are_fields_attacked(COLOR, &[3, 2, 1]) {
+                        if !board.are_fields_attacked(color, &[3, 2, 1]) {
                             moves[index] = Move::new(3, 1, MoveFlags::SHORT_CASTLING);
                             index += 1;
                         }
                     }
 
                     let queen_side_castling_rights = board.castling_rights.contains(CastlingRights::WHITE_LONG_CASTLING);
-                    let queen_side_rook_present = (board.pieces[COLOR as usize][ROOK as usize] & 0x80) != 0;
+                    let queen_side_rook_present = (board.pieces[color as usize][ROOK as usize] & 0x80) != 0;
 
                     if queen_side_castling_rights && queen_side_rook_present && (occupancy & 0x70) == 0 {
-                        if !board.are_fields_attacked(COLOR, &[3, 4, 5]) {
+                        if !board.are_fields_attacked(color, &[3, 4, 5]) {
                             moves[index] = Move::new(3, 5, MoveFlags::LONG_CASTLING);
                             index += 1;
                         }
@@ -195,26 +197,26 @@ pub fn scan_piece_moves<const COLOR: u8, const PIECE: u8>(board: &Bitboard, move
                 }
                 BLACK => {
                     let king_side_castling_rights = board.castling_rights.contains(CastlingRights::BLACK_SHORT_CASTLING);
-                    let king_side_rook_present = (board.pieces[COLOR as usize][ROOK as usize] & 0x100000000000000) != 0;
+                    let king_side_rook_present = (board.pieces[color as usize][ROOK as usize] & 0x100000000000000) != 0;
 
                     if king_side_castling_rights && king_side_rook_present && (occupancy & 0x600000000000000) == 0 {
-                        if !board.are_fields_attacked(COLOR, &[59, 58, 57]) {
+                        if !board.are_fields_attacked(color, &[59, 58, 57]) {
                             moves[index] = Move::new(59, 57, MoveFlags::SHORT_CASTLING);
                             index += 1;
                         }
                     }
 
                     let queen_side_castling_rights = board.castling_rights.contains(CastlingRights::BLACK_LONG_CASTLING);
-                    let queen_side_rook_present = (board.pieces[COLOR as usize][ROOK as usize] & 0x8000000000000000) != 0;
+                    let queen_side_rook_present = (board.pieces[color as usize][ROOK as usize] & 0x8000000000000000) != 0;
 
                     if queen_side_castling_rights && queen_side_rook_present && (occupancy & 0x7000000000000000) == 0 {
-                        if !board.are_fields_attacked(COLOR, &[59, 60, 61]) {
+                        if !board.are_fields_attacked(color, &[59, 60, 61]) {
                             moves[index] = Move::new(59, 61, MoveFlags::LONG_CASTLING);
                             index += 1;
                         }
                     }
                 }
-                _ => panic!("Invalid value: COLOR={}", COLOR),
+                _ => panic!("Invalid value: color={}", color),
             }
         }
     }
@@ -222,26 +224,27 @@ pub fn scan_piece_moves<const COLOR: u8, const PIECE: u8>(board: &Bitboard, move
     index
 }
 
-pub fn scan_pawn_moves<const COLOR: u8>(board: &Bitboard, moves: &mut [Move], mut index: usize) -> usize {
-    index = scan_pawn_moves_single_push::<COLOR>(board, moves, index);
-    index = scan_pawn_moves_double_push::<COLOR>(board, moves, index);
-    index = scan_pawn_moves_diagonal_attacks::<COLOR, LEFT>(board, moves, index);
-    index = scan_pawn_moves_diagonal_attacks::<COLOR, RIGHT>(board, moves, index);
+pub fn scan_pawn_moves(board: &Bitboard, moves: &mut [Move], mut index: usize) -> usize {
+    index = scan_pawn_moves_single_push(board, moves, index);
+    index = scan_pawn_moves_double_push(board, moves, index);
+    index = scan_pawn_moves_diagonal_attacks::<LEFT>(board, moves, index);
+    index = scan_pawn_moves_diagonal_attacks::<RIGHT>(board, moves, index);
 
     index
 }
 
-fn scan_pawn_moves_single_push<const COLOR: u8>(board: &Bitboard, moves: &mut [Move], mut index: usize) -> usize {
-    let pieces = board.pieces[COLOR as usize][PAWN as usize];
+fn scan_pawn_moves_single_push(board: &Bitboard, moves: &mut [Move], mut index: usize) -> usize {
+    let color = board.active_color;
+    let pieces = board.pieces[color as usize][PAWN as usize];
     let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
 
-    let shift = 8 - 16 * (COLOR as i8);
-    let promotion_line = 0xff00000000000000 >> (56 * (COLOR as u8));
-    let mut target_fields = match COLOR {
+    let shift = 8 - 16 * (color as i8);
+    let promotion_line = 0xff00000000000000 >> (56 * (color as u8));
+    let mut target_fields = match color {
         WHITE => (pieces << 8),
         BLACK => (pieces >> 8),
         _ => {
-            panic!("Invalid value: COLOR={}", COLOR);
+            panic!("Invalid value: color={}", color);
         }
     } & !occupancy;
 
@@ -266,16 +269,17 @@ fn scan_pawn_moves_single_push<const COLOR: u8>(board: &Bitboard, moves: &mut [M
     index
 }
 
-fn scan_pawn_moves_double_push<const COLOR: u8>(board: &Bitboard, moves: &mut [Move], mut index: usize) -> usize {
-    let pieces = board.pieces[COLOR as usize][PAWN as usize];
+fn scan_pawn_moves_double_push(board: &Bitboard, moves: &mut [Move], mut index: usize) -> usize {
+    let color = board.active_color;
+    let pieces = board.pieces[color as usize][PAWN as usize];
     let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
 
-    let shift = 16 - 32 * (COLOR as i8);
-    let mut target_fields = match COLOR {
+    let shift = 16 - 32 * (color as i8);
+    let mut target_fields = match color {
         WHITE => ((((pieces & RANK_B) << 8) & !occupancy) << 8),
         BLACK => ((((pieces & RANK_G) >> 8) & !occupancy) >> 8),
         _ => {
-            panic!("Invalid value: COLOR={}", COLOR);
+            panic!("Invalid value: color={}", color);
         }
     } & !occupancy;
 
@@ -292,20 +296,21 @@ fn scan_pawn_moves_double_push<const COLOR: u8>(board: &Bitboard, moves: &mut [M
     index
 }
 
-fn scan_pawn_moves_diagonal_attacks<const COLOR: u8, const DIR: u8>(board: &Bitboard, moves: &mut [Move], mut index: usize) -> usize {
-    let pieces = board.pieces[COLOR as usize][PAWN as usize];
-    let enemy_color = COLOR ^ 1;
+fn scan_pawn_moves_diagonal_attacks<const DIR: u8>(board: &Bitboard, moves: &mut [Move], mut index: usize) -> usize {
+    let color = board.active_color;
+    let enemy_color = color ^ 1;
+    let pieces = board.pieces[color as usize][PAWN as usize];
 
     let forbidden_file = FILE_A >> (DIR * 7);
-    let shift = 9 - (COLOR ^ DIR) * 2;
-    let signed_shift = (shift as i8) - ((COLOR as i8) * 2 * (shift as i8));
-    let promotion_line = 0xff00000000000000 >> (56 * (COLOR as u8));
+    let shift = 9 - (color ^ DIR) * 2;
+    let signed_shift = (shift as i8) - ((color as i8) * 2 * (shift as i8));
+    let promotion_line = 0xff00000000000000 >> (56 * (color as u8));
 
-    let mut target_fields = match COLOR {
+    let mut target_fields = match color {
         WHITE => ((pieces & !forbidden_file) << shift),
         BLACK => ((pieces & !forbidden_file) >> shift),
         _ => {
-            panic!("Invalid value: COLOR={}", COLOR);
+            panic!("Invalid value: color={}", color);
         }
     } & (board.occupancy[enemy_color as usize] | board.en_passant);
 

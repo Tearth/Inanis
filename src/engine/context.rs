@@ -1,7 +1,6 @@
 use super::*;
 use crate::cache::search::TranspositionTable;
 use crate::engine::clock;
-use crate::run_search;
 use crate::state::board::Bitboard;
 use crate::state::movescan::Move;
 use chrono::DateTime;
@@ -85,7 +84,7 @@ impl<'a> Iterator for SearchContext<'a> {
             self.deadline = u32::MAX;
         }
 
-        let score = run_search!(self.board.active_color, true, self, self.current_depth, 0, -32000, 32000, false);
+        let score = search::run::<true>(self, self.current_depth, 0, -32000, 32000);
         let search_time = (Utc::now() - self.search_time_start).num_milliseconds() as f64;
         let time_ratio = search_time / (self.last_search_time as f64);
 

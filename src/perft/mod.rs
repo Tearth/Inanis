@@ -54,17 +54,17 @@ pub fn run<const COLOR: u8>(context: &mut PerftContext, depth: i32) -> u64 {
     }
 
     let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
-    let moves_count = context.board.get_moves::<COLOR>(&mut moves);
+    let moves_count = context.board.get_moves(&mut moves);
 
     let mut count = 0;
     for r#move in &moves[0..moves_count] {
-        context.board.make_move::<COLOR>(r#move);
+        context.board.make_move(r#move);
 
         if !context.board.is_king_checked(COLOR) {
             count += run_perft!(COLOR, context, depth - 1, true);
         }
 
-        context.board.undo_move::<COLOR>(r#move);
+        context.board.undo_move(r#move);
     }
 
     if context.fast {

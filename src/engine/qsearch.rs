@@ -5,32 +5,15 @@ use crate::state::movescan::MoveFlags;
 use crate::state::*;
 use std::mem::MaybeUninit;
 
-macro_rules! run_qsearch {
-    ($color:expr, $context:expr, $depth:expr, $ply:expr, $alpha:expr, $beta:expr, $invert:expr) => {
-        match $invert {
-            true => match $color {
-                WHITE => run::<BLACK>($context, $depth, $ply, $alpha, $beta),
-                BLACK => run::<WHITE>($context, $depth, $ply, $alpha, $beta),
-                _ => panic!("Invalid value: $color={}", $color),
-            },
-            false => match $color {
-                WHITE => run::<WHITE>($context, $depth, $ply, $alpha, $beta),
-                BLACK => run::<BLACK>($context, $depth, $ply, $alpha, $beta),
-                _ => panic!("Invalid value: $color={}", $color),
-            },
-        }
-    };
-}
-
-pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, ply: u16, mut alpha: i16, beta: i16) -> i16 {
+pub fn run(context: &mut SearchContext, depth: i32, ply: u16, mut alpha: i16, beta: i16) -> i16 {
     context.statistics.q_nodes_count += 1;
 
-    if context.board.pieces[COLOR as usize][KING as usize] == 0 {
+    if context.board.pieces[context.board.active_color as usize][KING as usize] == 0 {
         context.statistics.q_leafs_count += 1;
         return -CHECKMATE_SCORE + (ply as i16);
     }
 
-    let stand_pat = -((COLOR as i16) * 2 - 1) * context.board.evaluate();
+    let stand_pat = -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate();
     if stand_pat >= beta {
         context.statistics.q_leafs_count += 1;
         context.statistics.q_beta_cutoffs += 1;
@@ -43,7 +26,7 @@ pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, ply: u16, m
 
     let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
     let mut move_scores: [i16; 218] = unsafe { MaybeUninit::uninit().assume_init() };
-    let moves_count = context.board.get_moves::<COLOR>(&mut moves);
+    let moves_count = context.board.get_moves(&mut moves);
 
     assign_move_scores(context, &moves, &mut move_scores, moves_count);
 
@@ -58,9 +41,9 @@ pub fn run<const COLOR: u8>(context: &mut SearchContext, depth: i32, ply: u16, m
 
         found = true;
 
-        context.board.make_move::<COLOR>(&r#move);
-        let score = -run_qsearch!(COLOR, context, depth - 1, ply + 1, -beta, -alpha, true);
-        context.board.undo_move::<COLOR>(&r#move);
+        context.board.make_move(&r#move);
+        let score = -run(context, depth - 1, ply + 1, -beta, -alpha);
+        context.board.undo_move(&r#move);
 
         if score > alpha {
             alpha = score;

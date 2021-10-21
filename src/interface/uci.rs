@@ -104,8 +104,8 @@ fn handle_go(parameters: &[String], state: &mut UciState) {
     };
 
     let transposition_table_size = state.options["Hash"].parse::<usize>().unwrap();
-    let transposition_table_size_mb = transposition_table_size * 1024 * 1024;
-    let mut transposition_table = TranspositionTable::new(transposition_table_size_mb);
+    let transposition_table_size = transposition_table_size * 1024 * 1024;
+    let mut transposition_table = TranspositionTable::new(transposition_table_size);
 
     let context = SearchContext::new(&mut state.board, time, inc_time, &mut transposition_table);
     let mut best_move = Move::new_empty();
@@ -170,7 +170,7 @@ fn handle_position(parameters: &[String], state: &mut UciState) {
                     return;
                 }
             };
-            state.board.make_move_active_color(&parsed_move);
+            state.board.make_move(&parsed_move);
         }
     };
 }

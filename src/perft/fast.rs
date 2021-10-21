@@ -15,11 +15,11 @@ pub fn run(depth: i32, board: &mut Bitboard, hashtable_size: usize, threads_coun
     let mut threads = Vec::new();
 
     let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
-    let moves_count = board.get_moves_active_color(&mut moves);
+    let moves_count = board.get_moves(&mut moves);
 
     for r#move in &moves[0..moves_count] {
         let mut cloned_board = board.clone();
-        cloned_board.make_move_active_color(r#move);
+        cloned_board.make_move(r#move);
 
         queue.lock().unwrap().push(cloned_board);
     }

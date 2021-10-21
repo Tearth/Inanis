@@ -7,14 +7,13 @@ mod see_tests {
     use ina::state::movescan::Move;
     use ina::state::patterns;
     use ina::state::zobrist;
-    use ina::state::*;
     use std::mem::MaybeUninit;
     use std::sync::Once;
 
     static INIT: Once = Once::new();
 
     macro_rules! see_tests {
-        ($($name:ident: $fen:expr, $color:expr, $move:expr, $expected_result:expr, )*) => {
+        ($($name:ident: $fen:expr, $move:expr, $expected_result:expr, )*) => {
             $(
                 #[test]
                 fn $name() {
@@ -28,15 +27,15 @@ mod see_tests {
 
                     let board = Bitboard::new_from_fen($fen).unwrap();
                     let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
-                    let moves_count = board.get_moves::<$color>(&mut moves);
+                    let moves_count = board.get_moves(&mut moves);
 
                     for move_index in 0..moves_count {
                         let r#move = moves[move_index];
                         if r#move.to_text() == $move {
                             let attacking_piece = board.get_piece(r#move.get_from());
                             let target_piece = board.get_piece(r#move.get_to());
-                            let attackers = board.get_attacking_pieces($color ^ 1, r#move.get_to());
-                            let defenders = board.get_attacking_pieces($color, r#move.get_to());
+                            let attackers = board.get_attacking_pieces(board.active_color ^ 1, r#move.get_to());
+                            let defenders = board.get_attacking_pieces(board.active_color, r#move.get_to());
 
                             assert_eq!($expected_result, see::get(attacking_piece, target_piece, attackers, defenders));
                             return;
@@ -50,21 +49,21 @@ mod see_tests {
     }
 
     see_tests! {
-        see_simple_01: "8/8/8/4p3/3P4/8/8/8 w - - 0 1", WHITE, "d4e5", 1,
-        see_simple_02: "8/8/5p2/4p3/3P4/8/8/8 w - - 0 1", WHITE, "d4e5", 0,
-        see_simple_03: "8/8/5p2/4p3/3P4/8/7B/8 w - - 0 1", WHITE, "d4e5", 1,
-        see_simple_04: "8/8/5p2/4p3/3P4/8/7B/8 w - - 0 1", WHITE, "h2e5", -1,
-        see_simple_05: "8/8/8/3k4/3P4/8/8/8 b - - 0 1", BLACK, "d5d4", 1,
-        see_simple_06: "8/8/2n2b2/8/3P4/8/4N3/8 b - - 0 1", BLACK, "c6d4", 1,
-        see_complex_01: "8/2bn1n2/8/4p3/6N1/2B2N2/8/8 w - - 0 1", WHITE, "f3e5", -2,
-        see_complex_02: "8/2bn1n2/8/4p3/6N1/2B2N2/8/4Q3 w - - 0 1", WHITE, "f3e5", 1,
-        see_complex_03: "8/3n2b1/2n5/4R3/5P2/3N1N2/8/8 b - - 0 1", BLACK, "d7e5", 2,
-        see_complex_04: "8/3n2b1/2nq4/4R3/5P2/3N1N2/8/8 b - - 0 1", BLACK, "d6e5", -3,
-        see_xray_01: "4r3/8/4p3/8/8/8/4R3/4R3 w - - 0 1", WHITE, "e2e6", 1,
-        see_xray_02: "4n3/8/5p2/8/8/2B5/1Q6/8 w - - 0 1", WHITE, "c3f6", 1,
-        see_xray_03: "8/8/5p1q/8/8/5Q2/8/5R2 w - - 0 1", WHITE, "f3f6", 1,
-        see_xray_04: "4q3/4r3/4r3/8/8/RQR1P3/8/8 w - - 0 1", BLACK, "e6e3", -4,
-        see_xray_05: "7q/8/5b2/8/8/2B5/3P4/8 w - - 0 1", BLACK, "f6c3", 1,
-        see_xray_06: "4r3/8/4q3/8/4P3/5P2/8/8 w - - 0 1", BLACK, "e6e4", -7,
+        see_simple_01: "8/8/8/4p3/3P4/8/8/8 w - - 0 1", "d4e5", 1,
+        see_simple_02: "8/8/5p2/4p3/3P4/8/8/8 w - - 0 1", "d4e5", 0,
+        see_simple_03: "8/8/5p2/4p3/3P4/8/7B/8 w - - 0 1", "d4e5", 1,
+        see_simple_04: "8/8/5p2/4p3/3P4/8/7B/8 w - - 0 1", "h2e5", -1,
+        see_simple_05: "8/8/8/3k4/3P4/8/8/8 b - - 0 1", "d5d4", 1,
+        see_simple_06: "8/8/2n2b2/8/3P4/8/4N3/8 b - - 0 1", "c6d4", 1,
+        see_complex_01: "8/2bn1n2/8/4p3/6N1/2B2N2/8/8 w - - 0 1", "f3e5", -2,
+        see_complex_02: "8/2bn1n2/8/4p3/6N1/2B2N2/8/4Q3 w - - 0 1", "f3e5", 1,
+        see_complex_03: "8/3n2b1/2n5/4R3/5P2/3N1N2/8/8 b - - 0 1", "d7e5", 2,
+        see_complex_04: "8/3n2b1/2nq4/4R3/5P2/3N1N2/8/8 b - - 0 1", "d6e5", -3,
+        see_xray_01: "4r3/8/4p3/8/8/8/4R3/4R3 w - - 0 1", "e2e6", 1,
+        see_xray_02: "4n3/8/5p2/8/8/2B5/1Q6/8 w - - 0 1", "c3f6", 1,
+        see_xray_03: "8/8/5p1q/8/8/5Q2/8/5R2 w - - 0 1", "f3f6", 1,
+        see_xray_04: "4q3/4r3/4r3/8/8/RQR1P3/8/8 b - - 0 1", "e6e3", -4,
+        see_xray_05: "7q/8/5b2/8/8/2B5/3P4/8 b - - 0 1", "f6c3", 1,
+        see_xray_06: "4r3/8/4q3/8/4P3/5P2/8/8 b - - 0 1", "e6e4", -7,
     }
 }
