@@ -147,7 +147,7 @@ fn handle_benchmark() {
         result.tt_added_entries, result.tt_hits, result.tt_misses
     );
 
-    let pvs_rejected_percent = ((result.pvs_rejected_searches as f32) / (result.pvs_full_window_searches as f32)) * 100.0;
+    let pvs_rejected_percent = ((result.pvs_rejected_searches as f32) / (result.pvs_zero_window_searches as f32)) * 100.0;
     println!(
         "PVS: {} full-window searches, {} zero-window searches, {} rejected ({:.2}%)",
         result.pvs_full_window_searches, result.pvs_zero_window_searches, result.pvs_rejected_searches, pvs_rejected_percent

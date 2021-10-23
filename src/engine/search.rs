@@ -129,22 +129,23 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i32, ply: u16, mu
         let r#move = moves[move_index];
         context.board.make_move(&r#move);
 
-        // PVS (only in full-window search)
-        let score = if !PV || move_index == 0 {
-            context.statistics.pvs_full_window_searches += 1;
-            -run::<true>(context, depth - 1, ply + 1, -beta, -alpha, allow_null_move)
-        } else {
-            let zero_window_score = -run::<false>(context, depth - 1, ply + 1, -alpha - 1, -alpha, allow_null_move);
-            context.statistics.pvs_zero_window_searches += 1;
-
-            if zero_window_score > alpha {
+        let score = if PV {
+            if move_index == 0 {
                 context.statistics.pvs_full_window_searches += 1;
-                context.statistics.pvs_rejected_searches += 1;
-
                 -run::<true>(context, depth - 1, ply + 1, -beta, -alpha, allow_null_move)
             } else {
-                zero_window_score
+                let zero_window_score = -run::<false>(context, depth - 1, ply + 1, -alpha - 1, -alpha, allow_null_move);
+                context.statistics.pvs_zero_window_searches += 1;
+
+                if zero_window_score > alpha {
+                    context.statistics.pvs_rejected_searches += 1;
+                    -run::<true>(context, depth - 1, ply + 1, -beta, -alpha, allow_null_move)
+                } else {
+                    zero_window_score
+                }
             }
+        } else {
+            -run::<false>(context, depth - 1, ply + 1, -beta, -alpha, allow_null_move)
         };
 
         context.board.undo_move(&r#move);
