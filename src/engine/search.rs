@@ -23,7 +23,7 @@ pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
 
     let search_time_start = Utc::now();
     for depth in 1..=depth {
-        let score = run::<true>(&mut context, depth, 0, -32000, 32000);
+        let score = run::<true>(&mut context, depth, 0, -32000, 32000, true);
         let r#move = context.transposition_table.get(context.board.hash, 0).best_move;
 
         best_score = score;
@@ -34,7 +34,7 @@ pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
     SearchResult::new(time, depth, best_score, best_move, context.statistics)
 }
 
-pub fn run<const PV: bool>(context: &mut SearchContext, depth: i32, ply: u16, mut alpha: i16, mut beta: i16) -> i16 {
+pub fn run<const PV: bool>(context: &mut SearchContext, depth: i32, ply: u16, mut alpha: i16, mut beta: i16, allow_null_move: bool) -> i16 {
     // Check every 100 000 node
     if context.statistics.nodes_count % 100_000 == 0 {
         if (Utc::now() - context.search_time_start).num_milliseconds() >= context.deadline as i64 {
@@ -92,6 +92,28 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i32, ply: u16, mu
         context.statistics.tt_misses += 1;
     }
 
+    // Null-move pruning
+    if !PV
+        && allow_null_move
+        && depth > 3
+        && context.board.get_game_phase() > 0.15
+        && !context.board.is_king_checked(context.board.active_color)
+    {
+        let r = if depth > 6 { 3 } else { 2 };
+        context.statistics.null_window_searches += 1;
+
+        context.board.make_null_move();
+        let score = -run::<false>(context, depth - r - 1, ply + 1, -beta, -beta + 1, false);
+        context.board.undo_null_move();
+
+        if score >= beta {
+            context.statistics.null_window_accepted += 1;
+            return score;
+        } else {
+            context.statistics.null_window_rejected += 1;
+        }
+    }
+
     let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
     let mut move_scores: [i16; 218] = unsafe { MaybeUninit::uninit().assume_init() };
     let moves_count = context.board.get_moves(&mut moves);
@@ -110,16 +132,16 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i32, ply: u16, mu
         // PVS (only in full-window search)
         let score = if !PV || move_index == 0 {
             context.statistics.pvs_full_window_searches += 1;
-            -run::<true>(context, depth - 1, ply + 1, -beta, -alpha)
+            -run::<true>(context, depth - 1, ply + 1, -beta, -alpha, allow_null_move)
         } else {
-            let zero_window_score = -run::<false>(context, depth - 1, ply + 1, -alpha - 1, -alpha);
+            let zero_window_score = -run::<false>(context, depth - 1, ply + 1, -alpha - 1, -alpha, allow_null_move);
             context.statistics.pvs_zero_window_searches += 1;
 
             if zero_window_score > alpha {
                 context.statistics.pvs_full_window_searches += 1;
                 context.statistics.pvs_rejected_searches += 1;
 
-                -run::<true>(context, depth - 1, ply + 1, -beta, -alpha)
+                -run::<true>(context, depth - 1, ply + 1, -beta, -alpha, allow_null_move)
             } else {
                 zero_window_score
             }

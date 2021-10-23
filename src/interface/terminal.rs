@@ -152,6 +152,12 @@ fn handle_benchmark() {
         "PVS: {} full-window searches, {} zero-window searches, {} rejected ({:.2}%)",
         result.pvs_full_window_searches, result.pvs_zero_window_searches, result.pvs_rejected_searches, pvs_rejected_percent
     );
+
+    let null_window_rejected_percent = ((result.null_window_rejected as f32) / (result.null_window_searches as f32)) * 100.0;
+    println!(
+        "Null window: {} searches, {} accepted, {} rejected ({:.2}%)",
+        result.null_window_searches, result.null_window_accepted, result.null_window_rejected, null_window_rejected_percent
+    );
 }
 
 fn handle_evaluate(input: Vec<&str>) {

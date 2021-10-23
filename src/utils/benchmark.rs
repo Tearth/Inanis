@@ -21,6 +21,10 @@ pub struct BenchmarkResult {
     pub pvs_zero_window_searches: u64,
     pub pvs_rejected_searches: u64,
 
+    pub null_window_searches: u64,
+    pub null_window_accepted: u64,
+    pub null_window_rejected: u64,
+
     pub tt_hits: u64,
     pub tt_misses: u64,
     pub tt_added_entries: u64,
@@ -46,6 +50,10 @@ impl BenchmarkResult {
             pvs_full_window_searches: 0,
             pvs_zero_window_searches: 0,
             pvs_rejected_searches: 0,
+
+            null_window_searches: 0,
+            null_window_accepted: 0,
+            null_window_rejected: 0,
 
             tt_hits: 0,
             tt_misses: 0,
@@ -96,6 +104,10 @@ pub fn run() -> BenchmarkResult {
         benchmark_result.pvs_full_window_searches += result.statistics.pvs_full_window_searches;
         benchmark_result.pvs_zero_window_searches += result.statistics.pvs_zero_window_searches;
         benchmark_result.pvs_rejected_searches += result.statistics.pvs_rejected_searches;
+        
+        benchmark_result.null_window_searches += result.statistics.null_window_searches;
+        benchmark_result.null_window_accepted += result.statistics.null_window_accepted;
+        benchmark_result.null_window_rejected += result.statistics.null_window_rejected;
 
         benchmark_result.tt_hits += result.statistics.tt_hits;
         benchmark_result.tt_misses += result.statistics.tt_misses;

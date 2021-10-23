@@ -33,6 +33,7 @@ pub struct Bitboard {
     pub fullmove_number: u16,
     pub active_color: u8,
     pub hash: u64,
+    pub null_moves: u8,
     pub halfmove_clocks_stack: Vec<u16>,
     pub captured_pieces_stack: Vec<u8>,
     pub castling_rights_stack: Vec<CastlingRights>,
@@ -54,6 +55,7 @@ impl Bitboard {
             fullmove_number: 0,
             active_color: WHITE,
             hash: 0,
+            null_moves: 0,
             halfmove_clocks_stack: Vec::with_capacity(32),
             captured_pieces_stack: Vec::with_capacity(32),
             castling_rights_stack: Vec::with_capacity(32),
@@ -309,6 +311,45 @@ impl Bitboard {
         self.active_color = color;
     }
 
+    pub fn make_null_move(&mut self) {
+        let color = self.active_color;
+        let enemy_color = self.active_color ^ 1;
+
+        self.halfmove_clocks_stack.push(self.halfmove_clock);
+        self.castling_rights_stack.push(self.castling_rights);
+        self.en_passant_stack.push(self.en_passant);
+        self.hash_stack.push(self.hash);
+
+        if self.en_passant != 0 {
+            self.hash ^= zobrist::get_en_passant_hash((bit_scan(self.en_passant) % 8) as u8);
+            self.en_passant = 0;
+        }
+
+        if color == BLACK {
+            self.fullmove_number += 1;
+        }
+
+        self.active_color = enemy_color;
+        self.hash ^= zobrist::get_active_color_hash();
+        self.null_moves += 1;
+    }
+
+    pub fn undo_null_move(&mut self) {
+        let color = self.active_color ^ 1;
+
+        self.halfmove_clock = self.halfmove_clocks_stack.pop().unwrap();
+        self.castling_rights = self.castling_rights_stack.pop().unwrap();
+        self.en_passant = self.en_passant_stack.pop().unwrap();
+        self.hash = self.hash_stack.pop().unwrap();
+
+        if color == BLACK {
+            self.fullmove_number -= 1;
+        }
+
+        self.active_color = color;
+        self.null_moves -= 1;
+    }
+
     pub fn is_field_attacked(&self, color: u8, field_index: u8) -> bool {
         let enemy_color = color ^ 1;
         let occupancy = self.occupancy[WHITE as usize] | self.occupancy[BLACK as usize];
@@ -499,6 +540,10 @@ impl Bitboard {
     }
 
     pub fn is_threefold_repetition_draw(&self) -> bool {
+        if self.null_moves > 0 {
+            return false;
+        }
+
         let mut repetitions_count = 1;
         for hash in &self.hash_stack {
             if *hash == self.hash {
@@ -510,7 +555,18 @@ impl Bitboard {
     }
 
     pub fn is_fifty_move_rule_draw(&self) -> bool {
+        if self.null_moves > 0 {
+            return false;
+        }
+
         self.halfmove_clock >= 100
+    }
+
+    pub fn get_game_phase(&self) -> f32 {
+        let initial_material = 7920;
+        let total_material = self.material_scores[WHITE as usize] + self.material_scores[BLACK as usize] - 20000;
+
+        (total_material as f32) / (initial_material as f32)
     }
 }
 
