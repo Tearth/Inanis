@@ -1,5 +1,6 @@
 use super::context::SearchContext;
 use super::context::SearchResult;
+use super::killers::KillersTable;
 use super::qsearch;
 use super::*;
 use crate::cache::pawns::PawnsHashTable;
@@ -16,8 +17,9 @@ pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
     let transposition_table_size = 32 * 1024 * 1024;
     let mut transposition_table = TranspositionTable::new(transposition_table_size);
     let mut pawns_table = PawnsHashTable::new(4 * 1024 * 1024);
+    let mut killers_table = KillersTable::new();
 
-    let mut context = SearchContext::new(board, 0, 0, &mut transposition_table, &mut pawns_table);
+    let mut context = SearchContext::new(board, 0, 0, &mut transposition_table, &mut pawns_table, &mut killers_table);
     let mut best_move = Move::new_empty();
     let mut best_score = 0;
 
@@ -120,7 +122,7 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i32, ply: u16, mu
     let mut move_scores: [i16; 218] = unsafe { MaybeUninit::uninit().assume_init() };
     let moves_count = context.board.get_moves(&mut moves);
 
-    assign_move_scores(context, &moves, &mut move_scores, moves_count, tt_entry.best_move);
+    assign_move_scores(context, &moves, &mut move_scores, moves_count, tt_entry.best_move, ply);
 
     let mut best_move = Move::new_empty();
     let mut best_score = i16::MIN;
@@ -161,6 +163,10 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i32, ply: u16, mu
             best_move = r#move;
 
             if alpha >= beta {
+                if r#move.get_flags() == MoveFlags::QUIET || r#move.get_flags() == MoveFlags::DOUBLE_PUSH {
+                    context.killers_table.add(context.board.active_color, ply, r#move);
+                }
+
                 context.statistics.beta_cutoffs += 1;
                 if move_index == 0 {
                     context.statistics.perfect_cutoffs += 1;
@@ -205,12 +211,17 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i32, ply: u16, mu
     best_score
 }
 
-fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut [i16], moves_count: usize, tt_move: Move) {
+fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut [i16], moves_count: usize, tt_move: Move, ply: u16) {
     for move_index in 0..moves_count {
         let r#move = moves[move_index];
 
         if r#move == tt_move {
             move_scores[move_index] = 10000;
+            continue;
+        }
+
+        if context.killers_table.exists(context.board.active_color, ply, r#move) {
+            move_scores[move_index] = 120;
             continue;
         }
 

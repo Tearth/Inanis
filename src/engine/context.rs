@@ -1,3 +1,4 @@
+use super::killers::KillersTable;
 use super::*;
 use crate::cache::pawns::PawnsHashTable;
 use crate::cache::search::TranspositionTable;
@@ -20,6 +21,7 @@ pub struct SearchContext<'a> {
     pub aborted: bool,
     pub transposition_table: &'a mut TranspositionTable,
     pub pawns_table: &'a mut PawnsHashTable,
+    pub killers_table: &'a mut KillersTable,
 }
 
 pub struct SearchResult {
@@ -68,6 +70,7 @@ impl<'a> SearchContext<'a> {
         inc_time: u32,
         transposition_table: &'a mut TranspositionTable,
         pawns_table: &'a mut PawnsHashTable,
+        killers_table: &'a mut KillersTable,
     ) -> SearchContext<'a> {
         SearchContext {
             board,
@@ -82,6 +85,7 @@ impl<'a> SearchContext<'a> {
             aborted: false,
             transposition_table,
             pawns_table,
+            killers_table,
         }
     }
 }
