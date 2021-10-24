@@ -5,8 +5,11 @@ use super::movescan::Move;
 use super::movescan::MoveFlags;
 use super::zobrist;
 use super::*;
+use crate::cache::pawns::PawnsHashTable;
+use crate::engine::context::SearchStatistics;
 use crate::evaluation::material;
 use crate::evaluation::mobility;
+use crate::evaluation::pawns;
 use crate::evaluation::pst;
 use crate::evaluation::safety;
 
@@ -35,12 +38,14 @@ pub struct Bitboard {
     pub fullmove_number: u16,
     pub active_color: u8,
     pub hash: u64,
+    pub pawn_hash: u64,
     pub null_moves: u8,
     pub halfmove_clocks_stack: Vec<u16>,
     pub captured_pieces_stack: Vec<u8>,
     pub castling_rights_stack: Vec<CastlingRights>,
     pub en_passant_stack: Vec<u64>,
     pub hash_stack: Vec<u64>,
+    pub pawn_hash_stack: Vec<u64>,
     pub material_scores: [i16; 2],
     pub pst_scores: [[i16; 2]; 2],
 }
@@ -57,12 +62,14 @@ impl Bitboard {
             fullmove_number: 0,
             active_color: WHITE,
             hash: 0,
+            pawn_hash: 0,
             null_moves: 0,
             halfmove_clocks_stack: Vec::with_capacity(32),
             captured_pieces_stack: Vec::with_capacity(32),
             castling_rights_stack: Vec::with_capacity(32),
             en_passant_stack: Vec::with_capacity(32),
             hash_stack: Vec::with_capacity(32),
+            pawn_hash_stack: Vec::with_capacity(32),
             material_scores: [0; 2],
             pst_scores: [[0, 2]; 2],
         }
@@ -111,6 +118,7 @@ impl Bitboard {
         self.castling_rights_stack.push(self.castling_rights);
         self.en_passant_stack.push(self.en_passant);
         self.hash_stack.push(self.hash);
+        self.pawn_hash_stack.push(self.pawn_hash);
 
         if self.en_passant != 0 {
             self.hash ^= zobrist::get_en_passant_hash((bit_scan(self.en_passant) % 8) as u8);
@@ -122,11 +130,19 @@ impl Bitboard {
                 self.move_piece(color, piece, from, to);
                 self.hash ^= zobrist::get_piece_hash(color, piece, from);
                 self.hash ^= zobrist::get_piece_hash(color, piece, to);
+
+                if piece == PAWN {
+                    self.pawn_hash ^= zobrist::get_piece_hash(color, piece, from);
+                    self.pawn_hash ^= zobrist::get_piece_hash(color, piece, to);
+                }
             }
             MoveFlags::DOUBLE_PUSH => {
                 self.move_piece(color, piece, from, to);
                 self.hash ^= zobrist::get_piece_hash(color, piece, from);
                 self.hash ^= zobrist::get_piece_hash(color, piece, to);
+
+                self.pawn_hash ^= zobrist::get_piece_hash(color, piece, from);
+                self.pawn_hash ^= zobrist::get_piece_hash(color, piece, to);
 
                 self.en_passant = 1u64 << ((to as i8) + 8 * ((color as i8) * 2 - 1));
                 self.hash ^= zobrist::get_en_passant_hash((bit_scan(self.en_passant) % 8) as u8);
@@ -138,9 +154,18 @@ impl Bitboard {
                 self.remove_piece(enemy_color, captured_piece, to);
                 self.hash ^= zobrist::get_piece_hash(enemy_color, captured_piece, to);
 
+                if captured_piece == PAWN {
+                    self.pawn_hash ^= zobrist::get_piece_hash(enemy_color, captured_piece, to);
+                }
+
                 self.move_piece(color, piece, from, to);
                 self.hash ^= zobrist::get_piece_hash(color, piece, from);
                 self.hash ^= zobrist::get_piece_hash(color, piece, to);
+
+                if piece == PAWN {
+                    self.pawn_hash ^= zobrist::get_piece_hash(color, piece, from);
+                    self.pawn_hash ^= zobrist::get_piece_hash(color, piece, to);
+                }
             }
             MoveFlags::SHORT_CASTLING => {
                 let king_from = 3 + 56 * (color as u8);
@@ -177,10 +202,14 @@ impl Bitboard {
                 self.hash ^= zobrist::get_piece_hash(color, piece, from);
                 self.hash ^= zobrist::get_piece_hash(color, piece, to);
 
+                self.pawn_hash ^= zobrist::get_piece_hash(color, piece, from);
+                self.pawn_hash ^= zobrist::get_piece_hash(color, piece, to);
+
                 let enemy_pawn_field_index = ((to as i8) + 8 * ((color as i8) * 2 - 1)) as u8;
 
                 self.remove_piece(enemy_color, PAWN, enemy_pawn_field_index);
-                self.hash ^= zobrist::get_piece_hash(enemy_color, PAWN, enemy_pawn_field_index);
+                self.hash ^= zobrist::get_piece_hash(enemy_color, piece, enemy_pawn_field_index);
+                self.pawn_hash ^= zobrist::get_piece_hash(enemy_color, piece, enemy_pawn_field_index);
             }
             _ => {
                 let promotion_piece = r#move.get_promotion_piece();
@@ -194,6 +223,7 @@ impl Bitboard {
 
                 self.remove_piece(color, PAWN, from);
                 self.hash ^= zobrist::get_piece_hash(color, PAWN, from);
+                self.pawn_hash ^= zobrist::get_piece_hash(color, PAWN, from);
 
                 self.add_piece(color, promotion_piece, to);
                 self.hash ^= zobrist::get_piece_hash(color, promotion_piece, to);
@@ -269,6 +299,7 @@ impl Bitboard {
         self.castling_rights = self.castling_rights_stack.pop().unwrap();
         self.en_passant = self.en_passant_stack.pop().unwrap();
         self.hash = self.hash_stack.pop().unwrap();
+        self.pawn_hash = self.pawn_hash_stack.pop().unwrap();
 
         match flags {
             MoveFlags::QUIET => {
@@ -532,12 +563,32 @@ impl Bitboard {
         zobrist::recalculate_hash(self);
     }
 
-    pub fn evaluate(&self) -> i16 {
+    pub fn recalculate_pawn_hash(&mut self) {
+        zobrist::recalculate_pawn_hash(self);
+    }
+
+    pub fn evaluate(&self, pawns_table: &mut PawnsHashTable, statistics: &mut SearchStatistics) -> i16 {
+        //let mut white_attack_mask = 0;
+        //let mut black_attack_mask = 0;
+        //let mobility_score = mobility::evaluate(self, &mut white_attack_mask, &mut black_attack_mask);
+
+        material::evaluate(self)
+            + pst::evaluate(self)
+            //+ mobility_score
+            //+ safety::evaluate(self, white_attack_mask, black_attack_mask)
+            + pawns::evaluate(self, pawns_table, statistics)
+    }
+
+    pub fn evaluate_without_cache(&self) -> i16 {
         let mut white_attack_mask = 0;
         let mut black_attack_mask = 0;
         let mobility_score = mobility::evaluate(self, &mut white_attack_mask, &mut black_attack_mask);
 
-        material::evaluate(self) + pst::evaluate(self) + mobility_score + safety::evaluate(self, white_attack_mask, black_attack_mask)
+        material::evaluate(self)
+            + pst::evaluate(self)
+            + mobility_score
+            + safety::evaluate(self, white_attack_mask, black_attack_mask)
+            + pawns::evaluate_without_cache(self)
     }
 
     pub fn recalculate_incremental_values(&mut self) {

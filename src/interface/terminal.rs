@@ -1,6 +1,9 @@
 use super::uci;
+use crate::cache::pawns::PawnsHashTable;
+use crate::engine::context::SearchStatistics;
 use crate::evaluation::material;
 use crate::evaluation::mobility;
+use crate::evaluation::pawns;
 use crate::evaluation::pst;
 use crate::evaluation::safety;
 use crate::perft;
@@ -149,6 +152,11 @@ fn handle_benchmark() {
         result.tt_added_entries, result.tt_hits, result.tt_misses
     );
 
+    println!(
+        "Pawn hash table: {} added entries, {} hits, {} misses",
+        result.pawns_table_added_entries, result.pawns_table_hits, result.pawns_table_misses
+    );
+
     let pvs_rejected_percent = ((result.pvs_rejected_searches as f32) / (result.pvs_zero_window_searches as f32)) * 100.0;
     println!(
         "PVS: {} full-window searches, {} zero-window searches, {} rejected ({:.2}%)",
@@ -180,13 +188,26 @@ fn handle_evaluate(input: Vec<&str>) {
     let mut white_attack_mask = 0;
     let mut black_attack_mask = 0;
 
-    println!("Material: {}", material::evaluate(&board));
-    println!("Piece-square table: {}", pst::evaluate(&board));
-    println!(
-        "Mobility: {}",
-        mobility::evaluate(&board, &mut white_attack_mask, &mut black_attack_mask)
-    );
-    println!("Safety: {}", safety::evaluate(&board, white_attack_mask, black_attack_mask));
+    let material_evaluation = material::evaluate(&board);
+    let pst_evaluation = pst::evaluate(&board);
+    let mobility_evaluation = mobility::evaluate(&board, &mut white_attack_mask, &mut black_attack_mask);
+    let safety_evaluation = safety::evaluate(&board, white_attack_mask, black_attack_mask);
+    let pawns_evaluation = pawns::evaluate_without_cache(&board);
+
+    println!("Material: {}", material_evaluation);
+    println!("Piece-square table: {}", pst_evaluation);
+    println!("Mobility: {}", mobility_evaluation);
+    println!("Safety: {}", safety_evaluation);
+    println!("Pawns: {}", pawns_evaluation);
+
+    let sum = material_evaluation + pst_evaluation + mobility_evaluation + safety_evaluation + pawns_evaluation;
+    let board_evaluation = board.evaluate_without_cache();
+
+    if sum != board_evaluation {
+        println!("--- Integration check failed--- ");
+    } else {
+        println!(" --- Total: {} --- ", sum);
+    }
 }
 
 fn handle_magic() {

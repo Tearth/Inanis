@@ -17,6 +17,7 @@ pub fn fen_to_board(fen: &str) -> Result<Bitboard, &'static str> {
     fen_to_fullmove_number(&mut board, parts[5].trim())?;
 
     board.recalculate_hash();
+    board.recalculate_pawn_hash();
     board.recalculate_incremental_values();
 
     Ok(board)

@@ -5,6 +5,8 @@ static mut RANK_PATTERNS: [u64; 64] = [0; 64];
 static mut DIAGONAL_PATTERNS: [u64; 64] = [0; 64];
 static mut JUMP_PATTERNS: [u64; 64] = [0; 64];
 static mut BOX_PATTERNS: [u64; 64] = [0; 64];
+static mut RAIL_PATTERNS: [u64; 8] = [0; 8];
+static mut STAR_PATTERNS: [u64; 64] = [0; 64];
 
 pub fn init() {
     generate_files();
@@ -12,6 +14,8 @@ pub fn init() {
     generate_diagonals();
     generate_jumps();
     generate_boxes();
+    generate_rails();
+    generate_stars();
 }
 
 pub fn get_file(field_index: usize) -> u64 {
@@ -32,6 +36,14 @@ pub fn get_jumps(field_index: usize) -> u64 {
 
 pub fn get_box(field_index: usize) -> u64 {
     unsafe { BOX_PATTERNS[field_index] }
+}
+
+pub fn get_rail(file: usize) -> u64 {
+    unsafe { RAIL_PATTERNS[file] }
+}
+
+pub fn get_star(field_index: usize) -> u64 {
+    unsafe { STAR_PATTERNS[field_index] }
 }
 
 fn generate_files() {
@@ -96,5 +108,19 @@ fn generate_boxes() {
                 | ((field & !FILE_A) << 9)
                 | ((field & !FILE_H) >> 9)
         };
+    }
+}
+
+fn generate_rails() {
+    for file in 0..8 {
+        let left_file = if file > 0 { 0x101010101010101 << (file - 1) } else { 0 };
+        let right_file = if file < 7 { 0x101010101010101 << (file + 1) } else { 0 };
+        unsafe { RAIL_PATTERNS[file] = left_file | right_file };
+    }
+}
+
+fn generate_stars() {
+    for field_index in 0..64 {
+        unsafe { STAR_PATTERNS[field_index] = DIAGONAL_PATTERNS[field_index] & BOX_PATTERNS[field_index] };
     }
 }

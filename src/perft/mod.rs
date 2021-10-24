@@ -29,16 +29,22 @@ macro_rules! run_perft {
 pub fn run<const COLOR: u8>(context: &mut PerftContext, depth: i32) -> u64 {
     if context.check_integrity {
         let original_hash = context.board.hash;
-        let original_evaluation = context.board.evaluate();
+        let original_pawn_hash = context.board.pawn_hash;
+        let original_evaluation = context.board.evaluate_without_cache();
 
         context.board.recalculate_hash();
+        context.board.recalculate_pawn_hash();
         context.board.recalculate_incremental_values();
 
         if original_hash != context.board.hash {
             panic!("Integrity check failed: invalid hash");
         }
 
-        if original_evaluation != context.board.evaluate() {
+        if original_pawn_hash != context.board.pawn_hash {
+            panic!("Integrity check failed: invalid pawn hash");
+        }
+
+        if original_evaluation != context.board.evaluate_without_cache() {
             panic!("Integrity check failed: invalid evaluation")
         }
     }

@@ -1,4 +1,5 @@
 use super::*;
+use crate::cache::pawns::PawnsHashTable;
 use crate::cache::search::TranspositionTable;
 use crate::engine::clock;
 use crate::state::board::Bitboard;
@@ -18,6 +19,7 @@ pub struct SearchContext<'a> {
     pub search_done: bool,
     pub aborted: bool,
     pub transposition_table: &'a mut TranspositionTable,
+    pub pawns_table: &'a mut PawnsHashTable,
 }
 
 pub struct SearchResult {
@@ -53,10 +55,20 @@ pub struct SearchStatistics {
     pub tt_hits: u64,
     pub tt_misses: u64,
     pub tt_added_entries: u64,
+
+    pub pawns_table_hits: u64,
+    pub pawns_table_misses: u64,
+    pub pawns_table_added_entries: u64,
 }
 
 impl<'a> SearchContext<'a> {
-    pub fn new(board: &'a mut Bitboard, time: u32, inc_time: u32, transposition_table: &'a mut TranspositionTable) -> SearchContext<'a> {
+    pub fn new(
+        board: &'a mut Bitboard,
+        time: u32,
+        inc_time: u32,
+        transposition_table: &'a mut TranspositionTable,
+        pawns_table: &'a mut PawnsHashTable,
+    ) -> SearchContext<'a> {
         SearchContext {
             board,
             statistics: SearchStatistics::new(),
@@ -69,6 +81,7 @@ impl<'a> SearchContext<'a> {
             search_done: false,
             aborted: false,
             transposition_table,
+            pawns_table,
         }
     }
 }
@@ -161,6 +174,10 @@ impl SearchStatistics {
             tt_hits: 0,
             tt_misses: 0,
             tt_added_entries: 0,
+
+            pawns_table_hits: 0,
+            pawns_table_misses: 0,
+            pawns_table_added_entries: 0,
         }
     }
 }
