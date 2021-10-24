@@ -1,6 +1,8 @@
 use super::uci;
 use crate::evaluation::material;
+use crate::evaluation::mobility;
 use crate::evaluation::pst;
+use crate::evaluation::safety;
 use crate::perft;
 use crate::state::board::Bitboard;
 use crate::state::movegen;
@@ -175,8 +177,16 @@ fn handle_evaluate(input: Vec<&str>) {
         }
     };
 
+    let mut white_attack_mask = 0;
+    let mut black_attack_mask = 0;
+
     println!("Material: {}", material::evaluate(&board));
     println!("Piece-square table: {}", pst::evaluate(&board));
+    println!(
+        "Mobility: {}",
+        mobility::evaluate(&board, &mut white_attack_mask, &mut black_attack_mask)
+    );
+    println!("Safety: {}", safety::evaluate(&board, white_attack_mask, black_attack_mask));
 }
 
 fn handle_magic() {

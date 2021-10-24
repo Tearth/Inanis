@@ -224,6 +224,32 @@ pub fn scan_piece_moves<const PIECE: u8>(board: &Bitboard, moves: &mut [Move], m
     index
 }
 
+pub fn get_piece_mobility<const PIECE: u8>(board: &Bitboard, color: u8, attack_mask: &mut u64) -> u8 {
+    let mut pieces = board.pieces[color as usize][PIECE as usize];
+    let mut mobility = 0;
+
+    while pieces != 0 {
+        let from_field = get_lsb(pieces);
+        let from_field_index = bit_scan(from_field);
+        pieces = pop_lsb(pieces);
+
+        let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
+        let piece_moves = match PIECE {
+            KNIGHT => movegen::get_knight_moves(from_field_index as usize),
+            BISHOP => movegen::get_bishop_moves(occupancy, from_field_index as usize),
+            ROOK => movegen::get_rook_moves(occupancy, from_field_index as usize),
+            QUEEN => movegen::get_queen_moves(occupancy, from_field_index as usize),
+            KING => movegen::get_king_moves(from_field_index as usize),
+            _ => panic!("Invalid value: PIECE={}", PIECE),
+        } & !board.occupancy[color as usize];
+
+        mobility += 3 * bit_count(piece_moves & CENTER) + bit_count(piece_moves & OUTSIDE);
+        *attack_mask |= piece_moves;
+    }
+
+    mobility
+}
+
 pub fn scan_pawn_moves(board: &Bitboard, moves: &mut [Move], mut index: usize) -> usize {
     index = scan_pawn_moves_single_push(board, moves, index);
     index = scan_pawn_moves_double_push(board, moves, index);

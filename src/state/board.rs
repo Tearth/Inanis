@@ -6,7 +6,9 @@ use super::movescan::MoveFlags;
 use super::zobrist;
 use super::*;
 use crate::evaluation::material;
+use crate::evaluation::mobility;
 use crate::evaluation::pst;
+use crate::evaluation::safety;
 
 bitflags! {
     pub struct CastlingRights: u8 {
@@ -531,7 +533,11 @@ impl Bitboard {
     }
 
     pub fn evaluate(&self) -> i16 {
-        material::evaluate(self) + pst::evaluate(self)
+        let mut white_attack_mask = 0;
+        let mut black_attack_mask = 0;
+        let mobility_score = mobility::evaluate(self, &mut white_attack_mask, &mut black_attack_mask);
+
+        material::evaluate(self) + pst::evaluate(self) + mobility_score + safety::evaluate(self, white_attack_mask, black_attack_mask)
     }
 
     pub fn recalculate_incremental_values(&mut self) {

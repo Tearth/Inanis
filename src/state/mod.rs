@@ -39,6 +39,8 @@ pub const RANK_F: u64 = 0x0000FF0000000000;
 pub const RANK_G: u64 = 0x00FF000000000000;
 pub const RANK_H: u64 = 0xFF00000000000000;
 
+pub const CENTER: u64 = 0x3c3c3c3c0000;
+pub const OUTSIDE: u64 = 0xffffc3c3c3c3ffff;
 pub const EDGE: u64 = 0xff818181818181ff;
 
 #[inline(always)]
