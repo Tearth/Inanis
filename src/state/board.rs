@@ -568,15 +568,17 @@ impl Bitboard {
     }
 
     pub fn evaluate(&self, pawns_table: &mut PawnsHashTable, statistics: &mut SearchStatistics) -> i16 {
-        //let mut white_attack_mask = 0;
-        //let mut black_attack_mask = 0;
-        //let mobility_score = mobility::evaluate(self, &mut white_attack_mask, &mut black_attack_mask);
+        /*let mut white_attack_mask = 0;
+        let mut black_attack_mask = 0;
+        let mobility_score = mobility::evaluate(self, &mut white_attack_mask, &mut black_attack_mask);
 
         material::evaluate(self)
             + pst::evaluate(self)
-            //+ mobility_score
-            //+ safety::evaluate(self, white_attack_mask, black_attack_mask)
-            + pawns::evaluate(self, pawns_table, statistics)
+            + mobility_score
+            + safety::evaluate(self, white_attack_mask, black_attack_mask)
+            + pawns::evaluate(self, pawns_table, statistics)*/
+
+        material::evaluate(self) + pst::evaluate(self)
     }
 
     pub fn evaluate_without_cache(&self) -> i16 {

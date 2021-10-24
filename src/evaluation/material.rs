@@ -1,7 +1,7 @@
 use crate::state::board::Bitboard;
 use crate::state::*;
 
-static PIECE_VALUE: [i16; 6] = [100, 300, 330, 500, 1100, 10000];
+static PIECE_VALUE: [i16; 6] = [100, 300, 330, 500, 900, 10000];
 
 pub fn evaluate(board: &Bitboard) -> i16 {
     board.material_scores[WHITE as usize] - board.material_scores[BLACK as usize]
