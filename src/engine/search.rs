@@ -1,5 +1,6 @@
 use super::context::SearchContext;
 use super::context::SearchResult;
+use super::history::HistoryTable;
 use super::killers::KillersTable;
 use super::qsearch;
 use super::*;
@@ -18,8 +19,17 @@ pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
     let mut transposition_table = TranspositionTable::new(transposition_table_size);
     let mut pawns_table = PawnsHashTable::new(4 * 1024 * 1024);
     let mut killers_table = KillersTable::new();
+    let mut history_table = HistoryTable::new();
 
-    let mut context = SearchContext::new(board, 0, 0, &mut transposition_table, &mut pawns_table, &mut killers_table);
+    let mut context = SearchContext::new(
+        board,
+        0,
+        0,
+        &mut transposition_table,
+        &mut pawns_table,
+        &mut killers_table,
+        &mut history_table,
+    );
     let mut best_move = Move::new_empty();
     let mut best_score = 0;
 
@@ -165,6 +175,7 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i32, ply: u16, mu
             if alpha >= beta {
                 if r#move.get_flags() == MoveFlags::QUIET || r#move.get_flags() == MoveFlags::DOUBLE_PUSH {
                     context.killers_table.add(context.board.active_color, ply, r#move);
+                    context.history_table.add(r#move.get_from(), r#move.get_to(), depth as u8);
                 }
 
                 context.statistics.beta_cutoffs += 1;
@@ -225,17 +236,17 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
             continue;
         }
 
-        if r#move.get_flags() != MoveFlags::CAPTURE {
-            move_scores[move_index] = 0;
+        if r#move.get_flags() == MoveFlags::CAPTURE {
+            let field = r#move.get_to();
+            let attacking_piece = context.board.get_piece(r#move.get_from());
+            let captured_piece = context.board.get_piece(r#move.get_to());
+            let attackers = context.board.get_attacking_pieces(context.board.active_color ^ 1, field);
+            let defenders = context.board.get_attacking_pieces(context.board.active_color, field);
+
+            move_scores[move_index] = (see::get(attacking_piece, captured_piece, attackers, defenders) as i16) * 100;
             continue;
         }
 
-        let field = r#move.get_to();
-        let attacking_piece = context.board.get_piece(r#move.get_from());
-        let captured_piece = context.board.get_piece(r#move.get_to());
-        let attackers = context.board.get_attacking_pieces(context.board.active_color ^ 1, field);
-        let defenders = context.board.get_attacking_pieces(context.board.active_color, field);
-
-        move_scores[move_index] = (see::get(attacking_piece, captured_piece, attackers, defenders) as i16) * 100;
+        move_scores[move_index] = context.history_table.get(r#move.get_from(), r#move.get_to(), 90) as i16;
     }
 }

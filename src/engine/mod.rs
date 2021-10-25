@@ -2,6 +2,7 @@ use crate::state::movescan::Move;
 
 pub mod clock;
 pub mod context;
+pub mod history;
 pub mod killers;
 pub mod qsearch;
 pub mod search;

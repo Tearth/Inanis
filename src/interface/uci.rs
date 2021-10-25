@@ -1,6 +1,7 @@
 use crate::cache::pawns::PawnsHashTable;
 use crate::cache::search::TranspositionTable;
 use crate::engine::context::SearchContext;
+use crate::engine::history::HistoryTable;
 use crate::engine::killers::KillersTable;
 use crate::engine::*;
 use crate::state::board::Bitboard;
@@ -110,6 +111,7 @@ fn handle_go(parameters: &[String], state: &mut UciState) {
     let mut transposition_table = TranspositionTable::new(transposition_table_size);
     let mut pawn_table = PawnsHashTable::new(4 * 1024 * 1024);
     let mut killers_table = KillersTable::new();
+    let mut history_table = HistoryTable::new();
 
     let context = SearchContext::new(
         &mut state.board,
@@ -118,6 +120,7 @@ fn handle_go(parameters: &[String], state: &mut UciState) {
         &mut transposition_table,
         &mut pawn_table,
         &mut killers_table,
+        &mut history_table,
     );
     let mut best_move = Move::new_empty();
 
