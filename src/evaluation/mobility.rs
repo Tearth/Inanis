@@ -12,5 +12,5 @@ fn evaluate_color(board: &Bitboard, color: u8, attack_mask: &mut u64) -> i16 {
     let rook_mobility = get_piece_mobility::<ROOK>(board, color, attack_mask);
     let queen_mobility = get_piece_mobility::<QUEEN>(board, color, attack_mask);
 
-    ((knight_mobility + bishop_mobility + rook_mobility + queen_mobility) * 2) as i16
+    (board.get_game_phase() * ((knight_mobility + bishop_mobility + rook_mobility + queen_mobility) * 2) as f32) as i16
 }
