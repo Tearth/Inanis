@@ -582,7 +582,7 @@ impl Bitboard {
         let mut black_attack_mask = 0;
         let mobility_score = mobility::evaluate(self, &mut white_attack_mask, &mut black_attack_mask);
 
-        material::evaluate(self) + pst::evaluate(self) + mobility_score
+        material::evaluate(self) + pst::evaluate(self) + pawns::evaluate(self, pawns_table, statistics) + mobility_score
     }
 
     pub fn evaluate_without_cache(&self) -> i16 {

@@ -19,6 +19,7 @@ const DATE: &str = env!("DATE");
 struct UciState {
     board: Bitboard,
     options: HashMap<String, String>,
+    pawns_table: PawnsHashTable,
 }
 
 impl UciState {
@@ -26,6 +27,7 @@ impl UciState {
         UciState {
             board: Bitboard::new_default(),
             options: HashMap::new(),
+            pawns_table: PawnsHashTable::new(4 * 1024 * 1024),
         }
     }
 }
@@ -109,7 +111,6 @@ fn handle_go(parameters: &[String], state: &mut UciState) {
     let transposition_table_size = state.options["Hash"].parse::<usize>().unwrap();
     let transposition_table_size = transposition_table_size * 1024 * 1024;
     let mut transposition_table = TranspositionTable::new(transposition_table_size);
-    let mut pawn_table = PawnsHashTable::new(4 * 1024 * 1024);
     let mut killers_table = KillersTable::new();
     let mut history_table = HistoryTable::new();
 
@@ -118,7 +119,7 @@ fn handle_go(parameters: &[String], state: &mut UciState) {
         time,
         inc_time,
         &mut transposition_table,
-        &mut pawn_table,
+        &mut state.pawns_table,
         &mut killers_table,
         &mut history_table,
     );
@@ -199,6 +200,7 @@ fn handle_setoption(parameters: &[String], state: &mut UciState) {
 
 fn handle_ucinewgame(state: &mut UciState) {
     state.board = Bitboard::new_default();
+    state.pawns_table = PawnsHashTable::new(4 * 1024 * 1024);
 }
 
 fn handle_quit() {

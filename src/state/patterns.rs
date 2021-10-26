@@ -7,6 +7,7 @@ static mut JUMP_PATTERNS: [u64; 64] = [0; 64];
 static mut BOX_PATTERNS: [u64; 64] = [0; 64];
 static mut RAIL_PATTERNS: [u64; 8] = [0; 8];
 static mut STAR_PATTERNS: [u64; 64] = [0; 64];
+static mut FRONT_PATTERNS: [[u64; 64]; 2] = [[0; 64]; 2];
 
 pub fn init() {
     generate_files();
@@ -16,6 +17,7 @@ pub fn init() {
     generate_boxes();
     generate_rails();
     generate_stars();
+    generate_fronts();
 }
 
 pub fn get_file(field_index: usize) -> u64 {
@@ -44,6 +46,10 @@ pub fn get_rail(file: usize) -> u64 {
 
 pub fn get_star(field_index: usize) -> u64 {
     unsafe { STAR_PATTERNS[field_index] }
+}
+
+pub fn get_front(color: usize, field_index: usize) -> u64 {
+    unsafe { FRONT_PATTERNS[color][field_index] }
 }
 
 fn generate_files() {
@@ -122,5 +128,27 @@ fn generate_rails() {
 fn generate_stars() {
     for field_index in 0..64 {
         unsafe { STAR_PATTERNS[field_index] = DIAGONAL_PATTERNS[field_index] & BOX_PATTERNS[field_index] };
+    }
+}
+
+fn generate_fronts() {
+    for color in 0..2 {
+        for field_index in 0..64 {
+            let file = field_index % 8;
+            let rank = field_index / 8;
+
+            let center_file = 0x101010101010101 << file;
+            let left_file = if file > 0 { 0x101010101010101 << (file - 1) } else { 0 };
+            let right_file = if file < 7 { 0x101010101010101 << (file + 1) } else { 0 };
+
+            let mut current_rank = rank;
+            let mut forbidden_area = 0;
+            while current_rank >= 0 && current_rank <= 7 {
+                forbidden_area |= 255 << (current_rank * 8);
+                current_rank += (color as i8) * 2 - 1;
+            }
+
+            unsafe { FRONT_PATTERNS[color][field_index as usize] = (left_file | center_file | right_file) & !forbidden_area };
+        }
     }
 }
