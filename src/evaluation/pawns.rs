@@ -1,3 +1,5 @@
+use std::cmp::{max, min};
+
 use crate::cache::pawns::PawnsHashTable;
 use crate::engine::context::SearchStatistics;
 use crate::state::board::Bitboard;
@@ -61,11 +63,31 @@ fn evaluate_color(board: &Bitboard, color: u8) -> i16 {
         }
     }
 
+    let king = board.pieces[color as usize][KING as usize];
+    let king_field = bit_scan(king);
+    let fields_to_check = get_box(king_field as usize);
+    let pawn_shield = bit_count(fields_to_check & board.pieces[color as usize][PAWN as usize]);
+    let mut opened_files = 0;
+    let king_field_file = (king_field % 8) as i8;
+    for file in max(0, king_field_file - 1)..=(min(7, king_field_file + 1)) {
+        if (get_file(file as usize) & board.pieces[color as usize][PAWN as usize]) == 0 {
+            opened_files += 1;
+        }
+    }
+
     let game_phase = board.get_game_phase();
-    let opening_score =
-        (doubled_pawns as i16) * -20 + (isolated_pawns as i16) * -30 + (chained_pawns as i16) * 5 + (passing_pawns as i16) * 20;
-    let ending_score =
-        (doubled_pawns as i16) * -10 + (isolated_pawns as i16) * -5 + (chained_pawns as i16) * 0 + (passing_pawns as i16) * 60;
+    let opening_score = (doubled_pawns as i16) * -20
+        + (isolated_pawns as i16) * -30
+        + (chained_pawns as i16) * 5
+        + (passing_pawns as i16) * 20
+        + (pawn_shield as i16) * 10
+        + (opened_files as i16) * -15;
+    let ending_score = (doubled_pawns as i16) * -10
+        + (isolated_pawns as i16) * -5
+        + (chained_pawns as i16) * 0
+        + (passing_pawns as i16) * 60
+        + (pawn_shield as i16) * 0
+        + (opened_files as i16) * 0;
 
     ((game_phase * (opening_score as f32)) + ((1.0 - game_phase) * (ending_score as f32))) as i16
 }

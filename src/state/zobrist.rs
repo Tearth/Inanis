@@ -73,13 +73,15 @@ pub fn recalculate_pawn_hash(board: &mut Bitboard) {
     let mut hash = 0u64;
 
     for color in 0..2 {
-        let mut pieces = board.pieces[color as usize][PAWN as usize];
-        while pieces != 0 {
-            let field = get_lsb(pieces);
-            let field_index = bit_scan(field);
-            pieces = pop_lsb(pieces);
+        for piece in [PAWN, KING] {
+            let mut pieces = board.pieces[color as usize][piece as usize];
+            while pieces != 0 {
+                let field = get_lsb(pieces);
+                let field_index = bit_scan(field);
+                pieces = pop_lsb(pieces);
 
-            hash ^= get_piece_hash(color, PAWN, field_index);
+                hash ^= get_piece_hash(color, piece, field_index);
+            }
         }
     }
 

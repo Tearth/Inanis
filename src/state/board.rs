@@ -245,7 +245,10 @@ impl Bitboard {
                     !CastlingRights::BLACK_CASTLING
                 }
                 _ => panic!("Invalid value: color={}", color),
-            }
+            };
+
+            self.pawn_hash ^= zobrist::get_piece_hash(color, KING, from);
+            self.pawn_hash ^= zobrist::get_piece_hash(color, KING, to);
         }
 
         if piece == ROOK {
