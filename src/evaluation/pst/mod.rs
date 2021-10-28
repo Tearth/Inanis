@@ -1,6 +1,8 @@
 use crate::state::board::Bitboard;
 use crate::state::*;
 
+use super::taper_score;
+
 pub mod bishop;
 pub mod king;
 pub mod knight;
@@ -28,12 +30,12 @@ pub fn init() {
 pub fn evaluate(board: &Bitboard) -> i16 {
     let initial_material = 7920;
     let total_material = board.material_scores[WHITE as usize] + board.material_scores[BLACK as usize] - 20000;
-    let game_phase = (total_material as f32) / (initial_material as f32);
 
+    let game_phase = (total_material as f32) / (initial_material as f32);
     let opening_score = board.pst_scores[WHITE as usize][OPENING as usize] - board.pst_scores[BLACK as usize][OPENING as usize];
     let ending_score = board.pst_scores[WHITE as usize][ENDING as usize] - board.pst_scores[BLACK as usize][ENDING as usize];
 
-    (((opening_score as f32) * game_phase) + ((1.0 - game_phase) * (ending_score as f32))) as i16
+    taper_score(game_phase, opening_score, ending_score)
 }
 
 pub fn get_value(piece: u8, color: u8, phase: u8, field: u8) -> i16 {

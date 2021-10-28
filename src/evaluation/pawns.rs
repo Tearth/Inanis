@@ -1,10 +1,10 @@
-use std::cmp::{max, min};
-
+use super::{parameters::*, taper_score};
 use crate::cache::pawns::PawnsHashTable;
 use crate::engine::context::SearchStatistics;
 use crate::state::board::Bitboard;
 use crate::state::patterns::*;
 use crate::state::*;
+use std::cmp::{max, min};
 
 pub fn evaluate(board: &Bitboard, pawns_table: &mut PawnsHashTable, statistics: &mut SearchStatistics) -> i16 {
     let entry = pawns_table.get(board.pawn_hash);
@@ -76,18 +76,20 @@ fn evaluate_color(board: &Bitboard, color: u8) -> i16 {
     }
 
     let game_phase = board.get_game_phase();
-    let opening_score = (doubled_pawns as i16) * -20
-        + (isolated_pawns as i16) * -30
-        + (chained_pawns as i16) * 5
-        + (passing_pawns as i16) * 20
-        + (pawn_shield as i16) * 10
-        + (opened_files as i16) * -15;
-    let ending_score = (doubled_pawns as i16) * -10
-        + (isolated_pawns as i16) * -5
-        + (chained_pawns as i16) * 0
-        + (passing_pawns as i16) * 60
-        + (pawn_shield as i16) * 0
-        + (opened_files as i16) * 0;
+    let opening_score = 0
+        + (doubled_pawns as i16) * DOUBLED_PAWN_OPENING
+        + (isolated_pawns as i16) * ISOLATED_PAWN_OPENING
+        + (chained_pawns as i16) * CHAINED_PAWN_OPENING
+        + (passing_pawns as i16) * PASSING_PAWN_OPENING
+        + (pawn_shield as i16) * PAWN_SHIELD_OPENING
+        + (opened_files as i16) * PAWN_SHIELD_OPEN_FILE_OPENING;
+    let ending_score = 0
+        + (doubled_pawns as i16) * DOUBLED_PAWN_ENDING
+        + (isolated_pawns as i16) * ISOLATED_PAWN_ENDING
+        + (chained_pawns as i16) * CHAINED_PAWN_ENDING
+        + (passing_pawns as i16) * PASSING_PAWN_ENDING
+        + (pawn_shield as i16) * PAWN_SHIELD_ENDING
+        + (opened_files as i16) * PAWN_SHIELD_OPEN_FILE_ENDING;
 
-    ((game_phase * (opening_score as f32)) + ((1.0 - game_phase) * (ending_score as f32))) as i16
+    taper_score(game_phase, opening_score, ending_score)
 }
