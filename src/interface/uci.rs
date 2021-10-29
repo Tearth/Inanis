@@ -1,4 +1,4 @@
-use crate::cache::pawns::PawnsHashTable;
+use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
 use crate::engine::context::SearchContext;
 use crate::engine::history::HistoryTable;
@@ -19,7 +19,7 @@ const DATE: &str = env!("DATE");
 struct UciState {
     board: Bitboard,
     options: HashMap<String, String>,
-    pawns_table: PawnsHashTable,
+    pawns_table: PawnHashTable,
 }
 
 impl UciState {
@@ -27,7 +27,7 @@ impl UciState {
         UciState {
             board: Bitboard::new_default(),
             options: HashMap::new(),
-            pawns_table: PawnsHashTable::new(4 * 1024 * 1024),
+            pawns_table: PawnHashTable::new(4 * 1024 * 1024),
         }
     }
 }
@@ -200,7 +200,7 @@ fn handle_setoption(parameters: &[String], state: &mut UciState) {
 
 fn handle_ucinewgame(state: &mut UciState) {
     state.board = Bitboard::new_default();
-    state.pawns_table = PawnsHashTable::new(4 * 1024 * 1024);
+    state.pawns_table = PawnHashTable::new(4 * 1024 * 1024);
 }
 
 fn handle_quit() {

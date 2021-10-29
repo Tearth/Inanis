@@ -1,37 +1,37 @@
 use std::mem;
 use std::u64;
 
-pub struct PawnsHashTable {
-    table: Vec<PawnsHashTableEntry>,
+pub struct PawnHashTable {
+    table: Vec<PawnHashTableEntry>,
     slots: usize,
 }
 
 #[derive(Clone, Copy)]
-pub struct PawnsHashTableEntry {
+pub struct PawnHashTableEntry {
     pub key: u16,
     pub score: i16,
 }
 
-impl PawnsHashTable {
-    pub fn new(size: usize) -> PawnsHashTable {
-        let buckets = size / mem::size_of::<PawnsHashTableEntry>();
-        let mut hashtable = PawnsHashTable {
+impl PawnHashTable {
+    pub fn new(size: usize) -> PawnHashTable {
+        let buckets = size / mem::size_of::<PawnHashTableEntry>();
+        let mut hashtable = PawnHashTable {
             table: Vec::with_capacity(buckets),
             slots: buckets,
         };
 
         if size != 0 {
-            hashtable.table.resize(hashtable.slots, PawnsHashTableEntry::new(0, 0));
+            hashtable.table.resize(hashtable.slots, PawnHashTableEntry::new(0, 0));
         }
 
         hashtable
     }
 
     pub fn add(&mut self, hash: u64, score: i16) {
-        self.table[(hash as usize) % self.slots] = PawnsHashTableEntry::new((hash >> 48) as u16, score);
+        self.table[(hash as usize) % self.slots] = PawnHashTableEntry::new((hash >> 48) as u16, score);
     }
 
-    pub fn get(&self, hash: u64) -> PawnsHashTableEntry {
+    pub fn get(&self, hash: u64) -> PawnHashTableEntry {
         self.table[(hash as usize) % self.slots]
     }
 
@@ -49,8 +49,8 @@ impl PawnsHashTable {
     }
 }
 
-impl PawnsHashTableEntry {
-    pub fn new(key: u16, score: i16) -> PawnsHashTableEntry {
-        PawnsHashTableEntry { key, score }
+impl PawnHashTableEntry {
+    pub fn new(key: u16, score: i16) -> PawnHashTableEntry {
+        PawnHashTableEntry { key, score }
     }
 }

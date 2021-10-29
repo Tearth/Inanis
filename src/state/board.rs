@@ -5,7 +5,7 @@ use super::movescan::Move;
 use super::movescan::MoveFlags;
 use super::zobrist;
 use super::*;
-use crate::cache::pawns::PawnsHashTable;
+use crate::cache::pawns::PawnHashTable;
 use crate::engine::context::SearchStatistics;
 use crate::evaluation::material;
 use crate::evaluation::mobility;
@@ -570,7 +570,7 @@ impl Bitboard {
         zobrist::recalculate_pawn_hash(self);
     }
 
-    pub fn evaluate(&self, pawns_table: &mut PawnsHashTable, statistics: &mut SearchStatistics) -> i16 {
+    pub fn evaluate(&self, pawns_table: &mut PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
         let mut white_attack_mask = 0;
         let mut black_attack_mask = 0;
         let mobility_score = mobility::evaluate(self, &mut white_attack_mask, &mut black_attack_mask);

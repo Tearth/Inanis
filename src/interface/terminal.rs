@@ -1,5 +1,5 @@
 use super::uci;
-use crate::cache::pawns::PawnsHashTable;
+use crate::cache::pawns::PawnHashTable;
 use crate::engine::context::SearchStatistics;
 use crate::evaluation::material;
 use crate::evaluation::mobility;

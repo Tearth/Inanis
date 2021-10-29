@@ -1,7 +1,7 @@
 use super::history::HistoryTable;
 use super::killers::KillersTable;
 use super::*;
-use crate::cache::pawns::PawnsHashTable;
+use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
 use crate::engine::clock;
 use crate::state::board::Bitboard;
@@ -21,7 +21,7 @@ pub struct SearchContext<'a> {
     pub search_done: bool,
     pub aborted: bool,
     pub transposition_table: &'a mut TranspositionTable,
-    pub pawns_table: &'a mut PawnsHashTable,
+    pub pawns_table: &'a mut PawnHashTable,
     pub killers_table: &'a mut KillersTable,
     pub history_table: &'a mut HistoryTable,
 }
@@ -71,7 +71,7 @@ impl<'a> SearchContext<'a> {
         time: u32,
         inc_time: u32,
         transposition_table: &'a mut TranspositionTable,
-        pawns_table: &'a mut PawnsHashTable,
+        pawns_table: &'a mut PawnHashTable,
         killers_table: &'a mut KillersTable,
         history_table: &'a mut HistoryTable,
     ) -> SearchContext<'a> {

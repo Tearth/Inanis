@@ -4,7 +4,7 @@ use super::history::HistoryTable;
 use super::killers::KillersTable;
 use super::qsearch;
 use super::*;
-use crate::cache::pawns::PawnsHashTable;
+use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
 use crate::cache::search::TranspositionTableScoreType;
 use crate::state::board::Bitboard;
@@ -17,7 +17,7 @@ use std::mem::MaybeUninit;
 pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
     let transposition_table_size = 32 * 1024 * 1024;
     let mut transposition_table = TranspositionTable::new(transposition_table_size);
-    let mut pawns_table = PawnsHashTable::new(4 * 1024 * 1024);
+    let mut pawns_table = PawnHashTable::new(4 * 1024 * 1024);
     let mut killers_table = KillersTable::new();
     let mut history_table = HistoryTable::new();
 

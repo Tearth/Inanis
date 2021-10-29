@@ -1,12 +1,12 @@
 use super::{parameters::*, taper_score};
-use crate::cache::pawns::PawnsHashTable;
+use crate::cache::pawns::PawnHashTable;
 use crate::engine::context::SearchStatistics;
 use crate::state::board::Bitboard;
 use crate::state::patterns::*;
 use crate::state::*;
 use std::cmp::{max, min};
 
-pub fn evaluate(board: &Bitboard, pawns_table: &mut PawnsHashTable, statistics: &mut SearchStatistics) -> i16 {
+pub fn evaluate(board: &Bitboard, pawns_table: &mut PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
     let entry = pawns_table.get(board.pawn_hash);
     if entry.key == (board.pawn_hash >> 48) as u16 {
         statistics.pawns_table_hits += 1;
