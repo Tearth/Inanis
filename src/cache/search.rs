@@ -82,6 +82,14 @@ impl TranspositionTable {
 
         ((filled_entries as f32) / (RESOLUTION as f32)) * 100.0
     }
+
+    pub fn clear(&mut self) {
+        self.table.clear();
+        self.table.resize(
+            self.slots,
+            TranspositionTableEntry::new(0, 0, Move::new_empty(), 0, TranspositionTableScoreType::INVALID),
+        );
+    }
 }
 
 impl TranspositionTableEntry {

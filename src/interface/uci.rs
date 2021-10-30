@@ -19,6 +19,7 @@ const DATE: &str = env!("DATE");
 struct UciState {
     board: Bitboard,
     options: HashMap<String, String>,
+    transposition_table: TranspositionTable,
     pawns_table: PawnHashTable,
 }
 
@@ -27,6 +28,7 @@ impl UciState {
         UciState {
             board: Bitboard::new_default(),
             options: HashMap::new(),
+            transposition_table: TranspositionTable::new(1 * 1024 * 1024),
             pawns_table: PawnHashTable::new(4 * 1024 * 1024),
         }
     }
@@ -108,23 +110,21 @@ fn handle_go(parameters: &[String], state: &mut UciState) {
         _ => panic!("Invalid value: state.board.active_color={}", state.board.active_color),
     };
 
-    let transposition_table_size = state.options["Hash"].parse::<usize>().unwrap();
-    let transposition_table_size = transposition_table_size * 1024 * 1024;
-    let mut transposition_table = TranspositionTable::new(transposition_table_size);
     let mut killers_table = KillersTable::new();
     let mut history_table = HistoryTable::new();
 
+    state.transposition_table.clear();
     let context = SearchContext::new(
         &mut state.board,
         time,
         inc_time,
-        &mut transposition_table,
+        &mut state.transposition_table,
         &mut state.pawns_table,
         &mut killers_table,
         &mut history_table,
     );
-    let mut best_move = Move::new_empty();
 
+    let mut best_move = Move::new_empty();
     for depth_result in context {
         let mut output = String::new();
         output = output.add(
@@ -199,8 +199,11 @@ fn handle_setoption(parameters: &[String], state: &mut UciState) {
 }
 
 fn handle_ucinewgame(state: &mut UciState) {
+    let transposition_table_size = state.options["Hash"].parse::<usize>().unwrap() * 1024 * 1024;
+
     state.board = Bitboard::new_default();
     state.pawns_table = PawnHashTable::new(4 * 1024 * 1024);
+    state.transposition_table = TranspositionTable::new(transposition_table_size);
 }
 
 fn handle_quit() {
