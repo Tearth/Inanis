@@ -80,11 +80,10 @@ impl Move {
 
         for r#move in &moves[0..moves_count] {
             if r#move.get_from() == from && r#move.get_to() == to {
-                if promotion_flags != MoveFlags::QUIET && (r#move.get_flags() & promotion_flags).bits == 0 {
-                    continue;
+                let flags = r#move.get_flags();
+                if promotion_flags == MoveFlags::QUIET || (flags & promotion_flags).bits == flags.bits {
+                    return Ok(*r#move);
                 }
-
-                return Ok(*r#move);
             }
         }
 
