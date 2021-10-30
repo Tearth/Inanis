@@ -110,52 +110,68 @@ fn handle_benchmark() {
     let q_branching_factor = (result.q_nodes_count as f64) / ((result.q_nodes_count - result.q_leafs_count) as f64);
     let t_branching_factor = (t_nodes_count as f64) / ((t_nodes_count - t_leafs_count) as f64);
 
-    let mut table = Table::new();
-    table.set_format(*format::consts::FORMAT_NO_LINESEP_WITH_TITLE);
-    table.set_titles(row!["", "Normal", "Quiescence", "Total"]);
+    let mut search_table = Table::new();
+    search_table.set_format(*format::consts::FORMAT_NO_LINESEP_WITH_TITLE);
+    search_table.set_titles(row!["", "Normal", "Quiescence", "Total"]);
 
-    table.add_row(row![
+    search_table.add_row(row![
         "Nodes count",
         format!("{} ({:.2} MN/s)", result.nodes_count, mnps),
         format!("{} ({:.2} MN/s)", result.q_nodes_count, q_mnps),
         format!("{} ({:.2} MN/s)", t_nodes_count, t_mnps)
     ]);
-    table.add_row(row![
+    search_table.add_row(row![
         "Leafs count",
         format!("{} ({:.2} MN/s)", result.leafs_count, mlps),
         format!("{} ({:.2} MN/s)", result.q_leafs_count, q_mlps),
         format!("{} ({:.2} MN/s)", t_leafs_count, t_mlps)
     ]);
-    table.add_row(row![
+    search_table.add_row(row![
         "Beta cutoffs",
         format!("{} ({:.2}%)", result.beta_cutoffs, beta_cutoffs_percent),
         format!("{} ({:.2}%)", result.q_beta_cutoffs, q_beta_cutoffs_percent),
         format!("{} ({:.2}%)", result.beta_cutoffs + result.q_beta_cutoffs, t_beta_cutoffs_percent)
     ]);
-    table.add_row(row![
+    search_table.add_row(row![
         "Ordering quality",
         format!("{:.2}%", ordering_quality),
         format!("{:.2}%", q_ordering_quality),
         format!("{:.2}%", t_ordering_quality)
     ]);
-    table.add_row(row![
+    search_table.add_row(row![
         "Branching factor",
         format!("{:.2}", branching_factor),
         format!("{:.2}", q_branching_factor),
         format!("{:.2}", t_branching_factor)
     ]);
 
-    table.printstd();
+    search_table.printstd();
 
-    println!(
-        "Transposition table: {} added, {} hits, {} misses, {} collisions",
-        result.tt_added, result.tt_hits, result.tt_misses, result.tt_collisions
-    );
+    let mut cache_table = Table::new();
+    cache_table.set_format(*format::consts::FORMAT_NO_LINESEP_WITH_TITLE);
+    cache_table.set_titles(row!["", "Added", "Hits", "Misses", "Collisions"]);
 
-    println!(
-        "Pawn hash table: {} added, {} hits, {} misses, {} collisions",
-        result.pawn_table_added, result.pawn_table_hits, result.pawn_table_misses, result.pawn_table_collisions
-    );
+    let tt_misses_percent = ((result.tt_misses as f32) / (result.tt_hits as f32)) * 100.0;
+    let tt_collisions_percent = ((result.tt_collisions as f32) / (result.tt_hits as f32)) * 100.0;
+    cache_table.add_row(row![
+        "Transposition table",
+        format!("{}", result.tt_added),
+        format!("{}", result.tt_hits),
+        format!("{} ({:.2}%)", result.tt_misses, tt_misses_percent),
+        format!("{} ({:.2}%)", result.tt_collisions, tt_collisions_percent)
+    ]);
+
+    let pawn_table_misses_percent = ((result.pawn_table_misses as f32) / (result.pawn_table_hits as f32)) * 100.0;
+    let pawn_table_collisions_percent = ((result.pawn_table_collisions as f32) / (result.pawn_table_hits as f32)) * 100.0;
+    cache_table.add_row(row![
+        "Pawn hash table",
+        format!("{}", result.pawn_table_added),
+        format!("{}", result.pawn_table_hits),
+        format!("{} ({:.2}%)", result.pawn_table_misses, pawn_table_misses_percent),
+        format!("{} ({:.2}%)", result.pawn_table_collisions, pawn_table_collisions_percent)
+    ]);
+
+    cache_table.printstd();
 
     let pvs_rejected_percent = ((result.pvs_rejected_searches as f32) / (result.pvs_zero_window_searches as f32)) * 100.0;
     println!(
@@ -338,9 +354,8 @@ fn handle_qperft(input: Vec<&str>) {
             return;
         }
     };
-    let hashtable_size_bytes = hashtable_size * 1024 * 1024;
 
-    if hashtable_size_bytes == 0 {
+    if hashtable_size == 0 {
         println!("Hashtable size must be greater than zero");
         return;
     }
@@ -355,7 +370,7 @@ fn handle_qperft(input: Vec<&str>) {
 
     for depth in 1..=max_depth {
         let now = Utc::now();
-        let (count, hashtable_usage) = perft::fast::run(depth, &mut board, hashtable_size_bytes, threads_count);
+        let (count, hashtable_usage) = perft::fast::run(depth, &mut board, hashtable_size * 1024 * 1024, threads_count);
 
         let diff = ((Utc::now() - now).num_milliseconds() as f64) / 1000.0;
         let mnps = ((count as f64) / 1000000.0) / diff;
