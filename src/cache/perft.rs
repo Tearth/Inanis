@@ -64,7 +64,7 @@ impl PerftHashTable {
         None
     }
 
-    pub unsafe fn get_usage(&self) -> f32 {
+    pub fn get_usage(&self) -> f32 {
         const RESOLUTION: usize = 10000;
         const BUCKETS_COUNT_TO_CHECK: usize = RESOLUTION / BUCKET_SLOTS;
 
