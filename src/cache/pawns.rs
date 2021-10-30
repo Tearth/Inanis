@@ -31,8 +31,17 @@ impl PawnHashTable {
         self.table[(hash as usize) % self.slots] = PawnHashTableEntry::new((hash >> 48) as u16, score);
     }
 
-    pub fn get(&self, hash: u64) -> PawnHashTableEntry {
-        self.table[(hash as usize) % self.slots]
+    pub fn get(&self, hash: u64, collision: &mut bool) -> Option<PawnHashTableEntry> {
+        let entry = self.table[(hash as usize) % self.slots];
+        if entry.key == (hash >> 48) as u16 {
+            return Some(entry);
+        }
+
+        if entry.key != 0 {
+            *collision = true;
+        }
+
+        None
     }
 
     pub fn get_usage(&self) -> f32 {

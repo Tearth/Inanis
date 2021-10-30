@@ -38,7 +38,7 @@ pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
     let search_time_start = Utc::now();
     for depth in 1..=depth {
         let score = run::<true>(&mut context, depth, 0, -32000, 32000, true);
-        let r#move = context.transposition_table.get(context.board.hash, 0).best_move;
+        let r#move = context.transposition_table.get_best_move(context.board.hash).unwrap();
 
         best_score = score;
         best_move = r#move;
@@ -76,35 +76,44 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i32, ply: u16, mu
 
     let original_alpha = alpha;
     let mut tt_entry_found = false;
-    let tt_entry = context.transposition_table.get(context.board.hash, ply);
+    let mut hash_move = Move::new_empty();
+    let mut collision = false;
 
-    if tt_entry.key == (context.board.hash >> 32) as u32 {
-        context.statistics.tt_hits += 1;
+    match context.transposition_table.get(context.board.hash, ply, &mut collision) {
+        Some(entry) => {
+            context.statistics.tt_hits += 1;
+            hash_move = entry.best_move;
 
-        if tt_entry.depth >= depth as i8 {
-            tt_entry_found = true;
-            match tt_entry.score_type {
-                TranspositionTableScoreType::ALPHA_SCORE => {
-                    if tt_entry.score < beta {
-                        beta = tt_entry.score;
+            if entry.depth >= depth as i8 {
+                tt_entry_found = true;
+                match entry.score_type {
+                    TranspositionTableScoreType::ALPHA_SCORE => {
+                        if entry.score < beta {
+                            beta = entry.score;
+                        }
                     }
-                }
-                TranspositionTableScoreType::BETA_SCORE => {
-                    if tt_entry.score > alpha {
-                        alpha = tt_entry.score;
+                    TranspositionTableScoreType::BETA_SCORE => {
+                        if entry.score > alpha {
+                            alpha = entry.score;
+                        }
                     }
+                    _ => return entry.score,
                 }
-                _ => return tt_entry.score,
-            }
 
-            if alpha >= beta {
-                context.statistics.beta_cutoffs += 1;
-                return tt_entry.score;
+                if alpha >= beta {
+                    context.statistics.beta_cutoffs += 1;
+                    return entry.score;
+                }
             }
         }
-    } else {
-        context.statistics.tt_misses += 1;
-    }
+        None => {
+            if collision {
+                context.statistics.tt_collisions += 1;
+            }
+
+            context.statistics.tt_misses += 1;
+        }
+    };
 
     // Null-move pruning
     if !PV
@@ -132,7 +141,7 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i32, ply: u16, mu
     let mut move_scores: [i16; 218] = unsafe { MaybeUninit::uninit().assume_init() };
     let moves_count = context.board.get_moves(&mut moves);
 
-    assign_move_scores(context, &moves, &mut move_scores, moves_count, tt_entry.best_move, ply);
+    assign_move_scores(context, &moves, &mut move_scores, moves_count, hash_move, ply);
 
     let mut best_move = Move::new_empty();
     let mut best_score = i16::MIN;
@@ -216,7 +225,7 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i32, ply: u16, mu
         context
             .transposition_table
             .add(context.board.hash, alpha, best_move, depth as i8, ply, score_type);
-        context.statistics.tt_added_entries += 1;
+        context.statistics.tt_added += 1;
     }
 
     best_score

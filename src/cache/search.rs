@@ -56,18 +56,30 @@ impl TranspositionTable {
         self.table[(hash as usize) % self.slots] = TranspositionTableEntry::new((hash >> 32) as u32, score, best_move, depth, score_type);
     }
 
-    pub fn get(&self, hash: u64, ply: u16) -> TranspositionTableEntry {
+    pub fn get(&self, hash: u64, ply: u16, collision: &mut bool) -> Option<TranspositionTableEntry> {
         let mut entry = self.table[(hash as usize) % self.slots];
-
-        if is_score_near_checkmate(entry.score) {
-            if entry.score > 0 {
-                entry.score -= ply as i16;
-            } else {
-                entry.score += ply as i16;
+        if entry.key == (hash >> 32) as u32 {
+            if is_score_near_checkmate(entry.score) {
+                if entry.score > 0 {
+                    entry.score -= ply as i16;
+                } else {
+                    entry.score += ply as i16;
+                }
             }
-        }
 
-        entry
+            Some(entry)
+        } else {
+            if entry.key != 0 {
+                *collision = true;
+            }
+
+            None
+        }
+    }
+
+    pub fn get_best_move(&self, hash: u64) -> Option<Move> {
+        let mut collision = false;
+        self.get(hash, 0, &mut collision).map(|entry| entry.best_move)
     }
 
     pub fn get_usage(&self) -> f32 {

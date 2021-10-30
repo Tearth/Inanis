@@ -25,13 +25,15 @@ pub struct BenchmarkResult {
     pub null_window_accepted: u64,
     pub null_window_rejected: u64,
 
+    pub tt_added: u64,
     pub tt_hits: u64,
     pub tt_misses: u64,
-    pub tt_added_entries: u64,
+    pub tt_collisions: u64,
 
-    pub pawns_table_hits: u64,
-    pub pawns_table_misses: u64,
-    pub pawns_table_added_entries: u64,
+    pub pawn_table_added: u64,
+    pub pawn_table_hits: u64,
+    pub pawn_table_misses: u64,
+    pub pawn_table_collisions: u64,
 }
 
 impl BenchmarkResult {
@@ -61,11 +63,13 @@ impl BenchmarkResult {
 
             tt_hits: 0,
             tt_misses: 0,
-            tt_added_entries: 0,
+            tt_added: 0,
+            tt_collisions: 0,
 
-            pawns_table_added_entries: 0,
-            pawns_table_hits: 0,
-            pawns_table_misses: 0,
+            pawn_table_added: 0,
+            pawn_table_hits: 0,
+            pawn_table_misses: 0,
+            pawn_table_collisions: 0,
         }
     }
 }
@@ -117,13 +121,15 @@ pub fn run() -> BenchmarkResult {
         benchmark_result.null_window_accepted += result.statistics.null_window_accepted;
         benchmark_result.null_window_rejected += result.statistics.null_window_rejected;
 
+        benchmark_result.tt_added += result.statistics.tt_added;
         benchmark_result.tt_hits += result.statistics.tt_hits;
         benchmark_result.tt_misses += result.statistics.tt_misses;
-        benchmark_result.tt_added_entries += result.statistics.tt_added_entries;
+        benchmark_result.tt_collisions += result.statistics.tt_collisions;
 
-        benchmark_result.pawns_table_hits += result.statistics.pawns_table_hits;
-        benchmark_result.pawns_table_misses += result.statistics.pawns_table_misses;
-        benchmark_result.pawns_table_added_entries += result.statistics.pawns_table_added_entries;
+        benchmark_result.pawn_table_added += result.statistics.pawn_table_added;
+        benchmark_result.pawn_table_hits += result.statistics.pawn_table_hits;
+        benchmark_result.pawn_table_misses += result.statistics.pawn_table_misses;
+        benchmark_result.pawn_table_collisions += result.statistics.pawn_table_collisions;
     }
 
     benchmark_result.time = ((Utc::now() - benchmark_time_start).num_milliseconds() as f32) / 1000.0;

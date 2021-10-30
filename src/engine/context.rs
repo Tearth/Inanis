@@ -56,13 +56,15 @@ pub struct SearchStatistics {
     pub null_window_accepted: u64,
     pub null_window_rejected: u64,
 
+    pub tt_added: u64,
     pub tt_hits: u64,
     pub tt_misses: u64,
-    pub tt_added_entries: u64,
+    pub tt_collisions: u64,
 
-    pub pawns_table_hits: u64,
-    pub pawns_table_misses: u64,
-    pub pawns_table_added_entries: u64,
+    pub pawn_table_added: u64,
+    pub pawn_table_hits: u64,
+    pub pawn_table_misses: u64,
+    pub pawn_table_collisions: u64,
 }
 
 impl<'a> SearchContext<'a> {
@@ -132,7 +134,7 @@ impl<'a> Iterator for SearchContext<'a> {
         self.current_depth += 1;
 
         let total_search_time = (Utc::now() - self.search_time_start).num_milliseconds() as u64;
-        let best_move = self.transposition_table.get(self.board.hash, 0).best_move;
+        let best_move = self.transposition_table.get_best_move(self.board.hash).unwrap();
 
         Some(SearchResult::new(
             total_search_time,
@@ -181,11 +183,13 @@ impl SearchStatistics {
 
             tt_hits: 0,
             tt_misses: 0,
-            tt_added_entries: 0,
+            tt_added: 0,
+            tt_collisions: 0,
 
-            pawns_table_hits: 0,
-            pawns_table_misses: 0,
-            pawns_table_added_entries: 0,
+            pawn_table_hits: 0,
+            pawn_table_misses: 0,
+            pawn_table_added: 0,
+            pawn_table_collisions: 0,
         }
     }
 }

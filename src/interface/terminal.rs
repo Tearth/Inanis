@@ -148,13 +148,13 @@ fn handle_benchmark() {
     table.printstd();
 
     println!(
-        "Transposition table: {} added entries, {} hits, {} misses",
-        result.tt_added_entries, result.tt_hits, result.tt_misses
+        "Transposition table: {} added, {} hits, {} misses, {} collisions",
+        result.tt_added, result.tt_hits, result.tt_misses, result.tt_collisions
     );
 
     println!(
-        "Pawn hash table: {} added entries, {} hits, {} misses",
-        result.pawns_table_added_entries, result.pawns_table_hits, result.pawns_table_misses
+        "Pawn hash table: {} added, {} hits, {} misses, {} collisions",
+        result.pawn_table_added, result.pawn_table_hits, result.pawn_table_misses, result.pawn_table_collisions
     );
 
     let pvs_rejected_percent = ((result.pvs_rejected_searches as f32) / (result.pvs_zero_window_searches as f32)) * 100.0;
