@@ -1,8 +1,6 @@
-use std::cmp::{max, min};
-
 use super::{parameters::*, taper_score};
 use crate::state::board::Bitboard;
-use crate::state::patterns::{get_box, get_file};
+use crate::state::patterns::*;
 use crate::state::*;
 
 pub fn evaluate(board: &Bitboard, white_attack_mask: u64, black_attack_mask: u64) -> i16 {

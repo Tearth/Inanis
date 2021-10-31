@@ -51,30 +51,6 @@ pub struct Bitboard {
 }
 
 impl Bitboard {
-    pub fn new() -> Bitboard {
-        Bitboard {
-            pieces: [[0; 6], [0; 6]],
-            occupancy: [0; 2],
-            piece_table: [u8::MAX; 64],
-            castling_rights: CastlingRights::NONE,
-            en_passant: 0,
-            halfmove_clock: 0,
-            fullmove_number: 0,
-            active_color: WHITE,
-            hash: 0,
-            pawn_hash: 0,
-            null_moves: 0,
-            halfmove_clocks_stack: Vec::with_capacity(32),
-            captured_pieces_stack: Vec::with_capacity(32),
-            castling_rights_stack: Vec::with_capacity(32),
-            en_passant_stack: Vec::with_capacity(32),
-            hash_stack: Vec::with_capacity(32),
-            pawn_hash_stack: Vec::with_capacity(32),
-            material_scores: [0; 2],
-            pst_scores: [[0, 2]; 2],
-        }
-    }
-
     pub fn new_default() -> Bitboard {
         Bitboard::new_from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap()
     }
@@ -632,6 +608,26 @@ impl Bitboard {
 
 impl Default for Bitboard {
     fn default() -> Self {
-        Self::new()
+        Bitboard {
+            pieces: [[0; 6], [0; 6]],
+            occupancy: [0; 2],
+            piece_table: [u8::MAX; 64],
+            castling_rights: CastlingRights::NONE,
+            en_passant: 0,
+            halfmove_clock: 0,
+            fullmove_number: 0,
+            active_color: WHITE,
+            hash: 0,
+            pawn_hash: 0,
+            null_moves: 0,
+            halfmove_clocks_stack: Vec::with_capacity(32),
+            captured_pieces_stack: Vec::with_capacity(32),
+            castling_rights_stack: Vec::with_capacity(32),
+            en_passant_stack: Vec::with_capacity(32),
+            hash_stack: Vec::with_capacity(32),
+            pawn_hash_stack: Vec::with_capacity(32),
+            material_scores: [0; 2],
+            pst_scores: [[0, 2]; 2],
+        }
     }
 }

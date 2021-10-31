@@ -1,7 +1,5 @@
 use super::context::SearchContext;
 use super::context::SearchResult;
-use super::history::HistoryTable;
-use super::killers::KillersTable;
 use super::qsearch;
 use super::*;
 use crate::cache::pawns::PawnHashTable;
@@ -17,8 +15,8 @@ use std::mem::MaybeUninit;
 pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
     let mut transposition_table = TranspositionTable::new(32 * 1024 * 1024);
     let mut pawns_table = PawnHashTable::new(1 * 1024 * 1024);
-    let mut killers_table = KillersTable::new();
-    let mut history_table = HistoryTable::new();
+    let mut killers_table = Default::default();
+    let mut history_table = Default::default();
 
     let mut context = SearchContext::new(
         board,

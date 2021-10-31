@@ -2,6 +2,7 @@ use crate::engine::search;
 use crate::state::board::Bitboard;
 use chrono::Utc;
 
+#[derive(Default)]
 pub struct BenchmarkResult {
     pub time: f32,
 
@@ -36,50 +37,6 @@ pub struct BenchmarkResult {
     pub pawn_table_collisions: u64,
 }
 
-impl BenchmarkResult {
-    pub fn new() -> BenchmarkResult {
-        BenchmarkResult {
-            time: 0.0,
-
-            nodes_count: 0,
-            q_nodes_count: 0,
-            leafs_count: 0,
-            q_leafs_count: 0,
-            beta_cutoffs: 0,
-            q_beta_cutoffs: 0,
-
-            perfect_cutoffs: 0,
-            q_perfect_cutoffs: 0,
-            non_perfect_cutoffs: 0,
-            q_non_perfect_cutoffs: 0,
-
-            pvs_full_window_searches: 0,
-            pvs_zero_window_searches: 0,
-            pvs_rejected_searches: 0,
-
-            null_window_searches: 0,
-            null_window_accepted: 0,
-            null_window_rejected: 0,
-
-            tt_hits: 0,
-            tt_misses: 0,
-            tt_added: 0,
-            tt_collisions: 0,
-
-            pawn_table_added: 0,
-            pawn_table_hits: 0,
-            pawn_table_misses: 0,
-            pawn_table_collisions: 0,
-        }
-    }
-}
-
-impl Default for BenchmarkResult {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 pub fn run() -> BenchmarkResult {
     let benchmark_positions = [
         "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -94,7 +51,7 @@ pub fn run() -> BenchmarkResult {
         "8/7q/5K2/2q5/6k1/8/8/8 b - - 5 60",
     ];
 
-    let mut benchmark_result = BenchmarkResult::new();
+    let mut benchmark_result: BenchmarkResult = Default::default();
     let benchmark_time_start = Utc::now();
 
     for fen in benchmark_positions {

@@ -31,7 +31,7 @@ impl PerftHashTable {
         };
 
         if size != 0 {
-            unsafe { (*hashtable.table.get()).resize(hashtable.slots, PerftHashTableBucket::new()) };
+            unsafe { (*hashtable.table.get()).resize(hashtable.slots, Default::default()) };
         }
 
         hashtable
@@ -87,8 +87,8 @@ impl PerftHashTable {
 
 unsafe impl Sync for PerftHashTable {}
 
-impl PerftHashTableBucket {
-    fn new() -> PerftHashTableBucket {
+impl Default for PerftHashTableBucket {
+    fn default() -> Self {
         PerftHashTableBucket {
             entries: [Default::default(); BUCKET_SLOTS],
         }

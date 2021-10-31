@@ -44,7 +44,7 @@ impl TranspositionTable {
         };
 
         if size != 0 {
-            hashtable.table.resize(hashtable.slots, TranspositionTableBucket::new());
+            hashtable.table.resize(hashtable.slots, Default::default());
         }
 
         hashtable
@@ -135,12 +135,12 @@ impl TranspositionTable {
 
     pub fn clear(&mut self) {
         self.table.clear();
-        self.table.resize(self.slots, TranspositionTableBucket::new());
+        self.table.resize(self.slots, Default::default());
     }
 }
 
-impl TranspositionTableBucket {
-    fn new() -> TranspositionTableBucket {
+impl Default for TranspositionTableBucket {
+    fn default() -> Self {
         TranspositionTableBucket {
             entries: [Default::default(); BUCKET_SLOTS],
         }

@@ -5,12 +5,6 @@ pub struct KillersTable {
 }
 
 impl KillersTable {
-    pub fn new() -> KillersTable {
-        KillersTable {
-            table: [[[Default::default(); 3]; 32]; 2],
-        }
-    }
-
     pub fn add(&mut self, color: u8, ply: u16, r#move: Move) {
         for slot_index in 0..2 {
             self.table[color as usize][ply as usize][slot_index + 1] = self.table[color as usize][ply as usize][slot_index];
@@ -27,5 +21,13 @@ impl KillersTable {
         }
 
         false
+    }
+}
+
+impl Default for KillersTable {
+    fn default() -> Self {
+        KillersTable {
+            table: [[[Default::default(); 3]; 32]; 2],
+        }
     }
 }

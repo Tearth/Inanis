@@ -1,8 +1,6 @@
 use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
 use crate::engine::context::SearchContext;
-use crate::engine::history::HistoryTable;
-use crate::engine::killers::KillersTable;
 use crate::engine::*;
 use crate::state::board::Bitboard;
 use crate::state::movescan::Move;
@@ -23,8 +21,8 @@ struct UciState {
     pawns_table: PawnHashTable,
 }
 
-impl UciState {
-    pub fn new() -> UciState {
+impl Default for UciState {
+    fn default() -> Self {
         UciState {
             board: Bitboard::new_default(),
             options: HashMap::new(),
@@ -35,7 +33,7 @@ impl UciState {
 }
 
 pub fn run() {
-    let mut state = UciState::new();
+    let mut state: UciState = Default::default();
     state.options.insert("Hash".to_string(), "1".to_string());
 
     println!("id name Ina v{} ({})", VERSION, DATE);
@@ -110,8 +108,8 @@ fn handle_go(parameters: &[String], state: &mut UciState) {
         _ => panic!("Invalid value: state.board.active_color={}", state.board.active_color),
     };
 
-    let mut killers_table = KillersTable::new();
-    let mut history_table = HistoryTable::new();
+    let mut killers_table = Default::default();
+    let mut history_table = Default::default();
 
     state.transposition_table.clear();
     let context = SearchContext::new(

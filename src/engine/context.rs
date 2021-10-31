@@ -34,7 +34,7 @@ pub struct SearchResult {
     pub statistics: SearchStatistics,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Default, Copy, Clone)]
 pub struct SearchStatistics {
     pub nodes_count: u64,
     pub q_nodes_count: u64,
@@ -79,7 +79,7 @@ impl<'a> SearchContext<'a> {
     ) -> SearchContext<'a> {
         SearchContext {
             board,
-            statistics: SearchStatistics::new(),
+            statistics: Default::default(),
             time,
             inc_time,
             current_depth: 1,
@@ -119,11 +119,7 @@ impl<'a> Iterator for SearchContext<'a> {
             return None;
         }
 
-        if is_score_near_checkmate(score) {
-            self.search_done = true;
-        }
-
-        if search_time * time_ratio > clock::get_time_for_move(self.time, self.inc_time) as f64 {
+        if is_score_near_checkmate(score) || search_time * time_ratio > clock::get_time_for_move(self.time, self.inc_time) as f64 {
             self.search_done = true;
         }
 
@@ -154,42 +150,6 @@ impl SearchResult {
             score,
             best_move,
             statistics,
-        }
-    }
-}
-
-impl SearchStatistics {
-    fn new() -> SearchStatistics {
-        SearchStatistics {
-            nodes_count: 0,
-            q_nodes_count: 0,
-            leafs_count: 0,
-            q_leafs_count: 0,
-            beta_cutoffs: 0,
-            q_beta_cutoffs: 0,
-
-            perfect_cutoffs: 0,
-            q_perfect_cutoffs: 0,
-            non_perfect_cutoffs: 0,
-            q_non_perfect_cutoffs: 0,
-
-            pvs_full_window_searches: 0,
-            pvs_zero_window_searches: 0,
-            pvs_rejected_searches: 0,
-
-            null_window_searches: 0,
-            null_window_accepted: 0,
-            null_window_rejected: 0,
-
-            tt_hits: 0,
-            tt_misses: 0,
-            tt_added: 0,
-            tt_collisions: 0,
-
-            pawn_table_hits: 0,
-            pawn_table_misses: 0,
-            pawn_table_added: 0,
-            pawn_table_collisions: 0,
         }
     }
 }

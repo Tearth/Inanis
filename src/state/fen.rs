@@ -8,7 +8,7 @@ pub fn fen_to_board(fen: &str) -> Result<Bitboard, &'static str> {
         return Err("Invalid FEN: input too short");
     }
 
-    let mut board = Bitboard::new();
+    let mut board = Default::default();
     fen_to_pieces(&mut board, parts[0].trim())?;
     fen_to_active_color(&mut board, parts[1].trim())?;
     fen_to_castling(&mut board, parts[2].trim())?;

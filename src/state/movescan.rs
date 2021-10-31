@@ -2,7 +2,6 @@ use super::board::Bitboard;
 use super::board::CastlingRights;
 use super::*;
 use std::mem::MaybeUninit;
-use std::num;
 
 bitflags! {
     pub struct MoveFlags: u8 {
