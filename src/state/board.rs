@@ -546,14 +546,14 @@ impl Bitboard {
         zobrist::recalculate_pawn_hash(self);
     }
 
-    pub fn evaluate(&self, pawns_table: &mut PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
+    pub fn evaluate(&self, pawn_hash_table: &mut PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
         let mut white_attack_mask = 0;
         let mut black_attack_mask = 0;
         let mobility_score = mobility::evaluate(self, &mut white_attack_mask, &mut black_attack_mask);
 
         material::evaluate(self)
             + pst::evaluate(self)
-            + pawns::evaluate(self, pawns_table, statistics)
+            + pawns::evaluate(self, pawn_hash_table, statistics)
             + safety::evaluate(self, white_attack_mask, black_attack_mask)
             + mobility_score
     }

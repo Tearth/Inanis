@@ -14,7 +14,7 @@ pub fn run(context: &mut SearchContext, depth: i32, ply: u16, mut alpha: i16, be
     }
 
     let stand_pat =
-        -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate(&mut context.pawns_table, &mut context.statistics);
+        -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate(&mut context.pawn_hash_table, &mut context.statistics);
     if stand_pat >= beta {
         context.statistics.q_leafs_count += 1;
         context.statistics.q_beta_cutoffs += 1;

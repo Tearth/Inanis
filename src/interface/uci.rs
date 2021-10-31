@@ -18,7 +18,7 @@ struct UciState {
     board: Bitboard,
     options: HashMap<String, String>,
     transposition_table: TranspositionTable,
-    pawns_table: PawnHashTable,
+    pawn_hash_table: PawnHashTable,
 }
 
 impl Default for UciState {
@@ -27,7 +27,7 @@ impl Default for UciState {
             board: Bitboard::new_default(),
             options: HashMap::new(),
             transposition_table: TranspositionTable::new(1 * 1024 * 1024),
-            pawns_table: PawnHashTable::new(1 * 1024 * 1024),
+            pawn_hash_table: PawnHashTable::new(1 * 1024 * 1024),
         }
     }
 }
@@ -117,7 +117,7 @@ fn handle_go(parameters: &[String], state: &mut UciState) {
         time,
         inc_time,
         &mut state.transposition_table,
-        &mut state.pawns_table,
+        &mut state.pawn_hash_table,
         &mut killers_table,
         &mut history_table,
     );
@@ -203,7 +203,7 @@ fn handle_ucinewgame(state: &mut UciState) {
 
     state.board = Bitboard::new_default();
     state.transposition_table = TranspositionTable::new(transposition_table_size);
-    state.pawns_table = PawnHashTable::new(1 * 1024 * 1024);
+    state.pawn_hash_table = PawnHashTable::new(1 * 1024 * 1024);
 }
 
 fn handle_quit() {

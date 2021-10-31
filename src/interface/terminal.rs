@@ -159,14 +159,14 @@ fn handle_benchmark() {
         format!("{} ({:.2}%)", result.tt_collisions, tt_collisions_percent)
     ]);
 
-    let pawn_table_misses_percent = ((result.pawn_table_misses as f32) / (result.pawn_table_hits as f32)) * 100.0;
-    let pawn_table_collisions_percent = ((result.pawn_table_collisions as f32) / (result.pawn_table_hits as f32)) * 100.0;
+    let pawn_hash_table_misses_percent = ((result.pawn_hash_table_misses as f32) / (result.pawn_hash_table_hits as f32)) * 100.0;
+    let pawn_hash_table_collisions_percent = ((result.pawn_hash_table_collisions as f32) / (result.pawn_hash_table_hits as f32)) * 100.0;
     cache_table.add_row(row![
         "Pawn hash table",
-        format!("{}", result.pawn_table_added),
-        format!("{}", result.pawn_table_hits),
-        format!("{} ({:.2}%)", result.pawn_table_misses, pawn_table_misses_percent),
-        format!("{} ({:.2}%)", result.pawn_table_collisions, pawn_table_collisions_percent)
+        format!("{}", result.pawn_hash_table_added),
+        format!("{}", result.pawn_hash_table_hits),
+        format!("{} ({:.2}%)", result.pawn_hash_table_misses, pawn_hash_table_misses_percent),
+        format!("{} ({:.2}%)", result.pawn_hash_table_collisions, pawn_hash_table_collisions_percent)
     ]);
 
     cache_table.printstd();

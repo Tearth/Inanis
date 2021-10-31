@@ -14,7 +14,7 @@ use std::mem::MaybeUninit;
 
 pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
     let mut transposition_table = TranspositionTable::new(32 * 1024 * 1024);
-    let mut pawns_table = PawnHashTable::new(1 * 1024 * 1024);
+    let mut pawn_hash_table = PawnHashTable::new(1 * 1024 * 1024);
     let mut killers_table = Default::default();
     let mut history_table = Default::default();
 
@@ -23,7 +23,7 @@ pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
         0,
         0,
         &mut transposition_table,
-        &mut pawns_table,
+        &mut pawn_hash_table,
         &mut killers_table,
         &mut history_table,
     );

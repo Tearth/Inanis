@@ -6,25 +6,25 @@ use crate::state::patterns::*;
 use crate::state::*;
 use std::cmp::{max, min};
 
-pub fn evaluate(board: &Bitboard, pawns_table: &mut PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
+pub fn evaluate(board: &Bitboard, pawn_hash_table: &mut PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
     let mut collision = false;
-    match pawns_table.get(board.pawn_hash, &mut collision) {
+    match pawn_hash_table.get(board.pawn_hash, &mut collision) {
         Some(entry) => {
-            statistics.pawn_table_hits += 1;
+            statistics.pawn_hash_table_hits += 1;
             return entry.score;
         }
         None => {
             if collision {
-                statistics.pawn_table_collisions += 1;
+                statistics.pawn_hash_table_collisions += 1;
             }
 
-            statistics.pawn_table_misses += 1;
+            statistics.pawn_hash_table_misses += 1;
         }
     }
 
     let score = evaluate_color(board, WHITE) - evaluate_color(board, BLACK);
-    pawns_table.add(board.pawn_hash, score);
-    statistics.pawn_table_added += 1;
+    pawn_hash_table.add(board.pawn_hash, score);
+    statistics.pawn_hash_table_added += 1;
 
     score
 }
