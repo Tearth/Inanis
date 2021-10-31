@@ -53,7 +53,7 @@ impl TranspositionTable {
     pub fn add(&mut self, hash: u64, mut score: i16, best_move: Move, depth: i8, ply: u16, score_type: TranspositionTableScoreType) {
         let key = (hash >> 32) as u32;
         let mut bucket = self.table[(hash as usize) % self.slots];
-        let mut smallest_depth = (bucket.entries[0].depth & 0xf) as u8;
+        let mut smallest_depth = bucket.entries[0].depth as u8;
         let mut smallest_depth_index = 0;
 
         for entry_index in 0..BUCKET_SLOTS {
@@ -98,10 +98,8 @@ impl TranspositionTable {
                 }
 
                 return Some(entry);
-            } else {
-                if entry.key != 0 {
-                    entry_with_key_present = true;
-                }
+            } else if entry.key != 0 {
+                entry_with_key_present = true;
             }
         }
 
@@ -144,7 +142,7 @@ impl TranspositionTable {
 impl TranspositionTableBucket {
     fn new() -> TranspositionTableBucket {
         TranspositionTableBucket {
-            entries: [TranspositionTableEntry::new(0, 0, Move::new_empty(), 0, TranspositionTableScoreType::INVALID); BUCKET_SLOTS],
+            entries: [Default::default(); BUCKET_SLOTS],
         }
     }
 }
@@ -158,5 +156,11 @@ impl TranspositionTableEntry {
             depth,
             score_type,
         }
+    }
+}
+
+impl Default for TranspositionTableEntry {
+    fn default() -> Self {
+        TranspositionTableEntry::new(0, 0, Default::default(), 0, TranspositionTableScoreType::INVALID)
     }
 }

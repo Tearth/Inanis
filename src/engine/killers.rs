@@ -7,7 +7,7 @@ pub struct KillersTable {
 impl KillersTable {
     pub fn new() -> KillersTable {
         KillersTable {
-            table: [[[Move::new_empty(); 3]; 32]; 2],
+            table: [[[Default::default(); 3]; 32]; 2],
         }
     }
 

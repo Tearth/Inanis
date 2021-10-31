@@ -22,7 +22,7 @@ impl PawnHashTable {
         };
 
         if size != 0 {
-            hashtable.table.resize(hashtable.slots, PawnHashTableEntry::new(0, 0));
+            hashtable.table.resize(hashtable.slots, Default::default());
         }
 
         hashtable
@@ -62,5 +62,11 @@ impl PawnHashTable {
 impl PawnHashTableEntry {
     pub fn new(key: u16, score: i16) -> PawnHashTableEntry {
         PawnHashTableEntry { key, score }
+    }
+}
+
+impl Default for PawnHashTableEntry {
+    fn default() -> Self {
+        PawnHashTableEntry::new(0, 0)
     }
 }

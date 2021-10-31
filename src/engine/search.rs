@@ -29,7 +29,7 @@ pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
         &mut killers_table,
         &mut history_table,
     );
-    let mut best_move = Move::new_empty();
+    let mut best_move = Default::default();
     let mut best_score = 0;
 
     context.deadline = u32::MAX;
@@ -75,7 +75,7 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i32, ply: u16, mu
 
     let original_alpha = alpha;
     let mut tt_entry_found = false;
-    let mut hash_move = Move::new_empty();
+    let mut hash_move = Default::default();
     let mut collision = false;
 
     match context.transposition_table.get(context.board.hash, ply, &mut collision) {
@@ -142,7 +142,7 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i32, ply: u16, mu
 
     assign_move_scores(context, &moves, &mut move_scores, moves_count, hash_move, ply);
 
-    let mut best_move = Move::new_empty();
+    let mut best_move = Default::default();
     let mut best_score = i16::MIN;
 
     for move_index in 0..moves_count {

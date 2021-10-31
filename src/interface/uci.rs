@@ -124,7 +124,7 @@ fn handle_go(parameters: &[String], state: &mut UciState) {
         &mut history_table,
     );
 
-    let mut best_move = Move::new_empty();
+    let mut best_move = Default::default();
     for depth_result in context {
         let mut output = String::new();
         output = output.add(

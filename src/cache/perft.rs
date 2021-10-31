@@ -90,7 +90,7 @@ unsafe impl Sync for PerftHashTable {}
 impl PerftHashTableBucket {
     fn new() -> PerftHashTableBucket {
         PerftHashTableBucket {
-            entries: [PerftHashTableEntry::new(0, 0, 0); BUCKET_SLOTS],
+            entries: [Default::default(); BUCKET_SLOTS],
         }
     }
 }
@@ -101,5 +101,11 @@ impl PerftHashTableEntry {
             key_and_depth: (key & !0xf) | (depth as u64),
             leafs_count,
         }
+    }
+}
+
+impl Default for PerftHashTableEntry {
+    fn default() -> Self {
+        PerftHashTableEntry::new(0, 0, 0)
     }
 }
