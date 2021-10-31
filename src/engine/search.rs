@@ -33,8 +33,8 @@ pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
     context.deadline = u32::MAX;
 
     let search_time_start = Utc::now();
-    for depth in 1..=depth {
-        let score = run::<true>(&mut context, depth, 0, -32000, 32000, true);
+    for current_depth in 1..=depth {
+        let score = run::<true>(&mut context, current_depth, 0, -32000, 32000, true);
         let r#move = context.transposition_table.get_best_move(context.board.hash).unwrap();
 
         best_score = score;

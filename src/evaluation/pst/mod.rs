@@ -43,10 +43,10 @@ pub fn get_value(piece: u8, color: u8, phase: u8, field: u8) -> i16 {
 }
 
 pub fn recalculate_incremental_values(board: &mut Bitboard) {
-    for color_index in 0..=1 {
+    for color_index in 0..2 {
         for phase in [OPENING, ENDING] {
             let mut score = 0;
-            for piece_index in 0..=5 {
+            for piece_index in 0..6 {
                 let mut pieces = board.pieces[color_index][piece_index];
                 while pieces != 0 {
                     let field = get_lsb(pieces);

@@ -143,7 +143,7 @@ fn generate_fronts() {
 
             let mut current_rank = rank;
             let mut forbidden_area = 0;
-            while current_rank >= 0 && current_rank <= 7 {
+            while (0..8).contains(&current_rank) {
                 forbidden_area |= 255 << (current_rank * 8);
                 current_rank += (color as i8) * 2 - 1;
             }
