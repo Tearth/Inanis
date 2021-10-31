@@ -169,7 +169,8 @@ fn handle_position(parameters: &[String], state: &mut UciState) {
             let fen = parameters[2..].join(" ");
             match Bitboard::new_from_fen(fen.as_str()) {
                 Ok(board) => board,
-                Err(_) => {
+                Err(message) => {
+                    println!("info string Error: {}", message);
                     return;
                 }
             }
@@ -181,7 +182,8 @@ fn handle_position(parameters: &[String], state: &mut UciState) {
         for premade_move in &parameters[index + 1..] {
             let parsed_move = match Move::from_text(premade_move.trim(), &state.board) {
                 Ok(r#move) => r#move,
-                Err(_) => {
+                Err(message) => {
+                    println!("info string Error: {}", message);
                     return;
                 }
             };

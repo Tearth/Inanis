@@ -2,6 +2,7 @@ use super::board::Bitboard;
 use super::board::CastlingRights;
 use super::*;
 use std::mem::MaybeUninit;
+use std::num;
 
 bitflags! {
     pub struct MoveFlags: u8 {
@@ -65,13 +66,21 @@ impl Move {
         let from = (7 - (from_file - b'a')) + 8 * (from_rank - b'1');
         let to = (7 - (to_file - b'a')) + 8 * (to_rank - b'1');
         let promotion_flags = match promotion {
-            Some(promotion_piece) => match promotion_piece {
-                'n' => MoveFlags::KNIGHT_PROMOTION,
-                'b' => MoveFlags::BISHOP_PROMOTION,
-                'r' => MoveFlags::ROOK_PROMOTION,
-                'q' => MoveFlags::QUEEN_PROMOTION,
-                _ => panic!("Invalid value: promotion_piece={}", promotion_piece),
-            },
+            Some(promotion_piece) => {
+                let mut flags = match promotion_piece {
+                    'n' => MoveFlags::KNIGHT_PROMOTION,
+                    'b' => MoveFlags::BISHOP_PROMOTION,
+                    'r' => MoveFlags::ROOK_PROMOTION,
+                    'q' => MoveFlags::QUEEN_PROMOTION,
+                    _ => panic!("Invalid value: promotion_piece={}", promotion_piece),
+                };
+
+                if ((from as i8) - (to as i8)).abs() != 8 {
+                    flags |= MoveFlags::CAPTURE;
+                };
+
+                flags
+            }
             None => MoveFlags::QUIET,
         };
 
