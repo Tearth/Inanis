@@ -8,25 +8,7 @@ pub mod divided;
 pub mod fast;
 pub mod normal;
 
-#[macro_export]
-macro_rules! run_perft {
-    ($color:expr, $context:expr, $depth:expr, $invert:expr) => {
-        match $invert {
-            true => match $color {
-                crate::state::WHITE => crate::perft::run::<{ crate::state::BLACK }>($context, $depth),
-                crate::state::BLACK => crate::perft::run::<{ crate::state::WHITE }>($context, $depth),
-                _ => panic!("Invalid value: $color={}", $color),
-            },
-            false => match $color {
-                crate::state::WHITE => crate::perft::run::<{ crate::state::WHITE }>($context, $depth),
-                crate::state::BLACK => crate::perft::run::<{ crate::state::BLACK }>($context, $depth),
-                _ => panic!("Invalid value: $color={}", $color),
-            },
-        }
-    };
-}
-
-pub fn run<const COLOR: u8>(context: &mut PerftContext, depth: i32) -> u64 {
+pub fn run_internal(context: &mut PerftContext, depth: i32) -> u64 {
     if context.check_integrity {
         let original_hash = context.board.hash;
         let original_pawn_hash = context.board.pawn_hash;
@@ -66,8 +48,8 @@ pub fn run<const COLOR: u8>(context: &mut PerftContext, depth: i32) -> u64 {
     for r#move in &moves[0..moves_count] {
         context.board.make_move(r#move);
 
-        if !context.board.is_king_checked(COLOR) {
-            count += run_perft!(COLOR, context, depth - 1, true);
+        if !context.board.is_king_checked(context.board.active_color ^ 1) {
+            count += run_internal(context, depth - 1);
         }
 
         context.board.undo_move(r#move);

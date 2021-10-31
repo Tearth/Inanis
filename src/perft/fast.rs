@@ -1,6 +1,5 @@
 use crate::cache::perft::PerftHashTable;
 use crate::perft::context::PerftContext;
-use crate::run_perft;
 use crate::state::board::Bitboard;
 use crate::state::movescan::Move;
 use std::mem::MaybeUninit;
@@ -8,6 +7,8 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
 use std::u64;
+
+use super::run_internal;
 
 pub fn run(depth: i32, board: &mut Bitboard, hashtable_size: usize, threads_count: usize) -> (u64, f32) {
     let queue = Arc::new(Mutex::new(Vec::new()));
@@ -41,7 +42,7 @@ pub fn run(depth: i32, board: &mut Bitboard, hashtable_size: usize, threads_coun
                 };
 
                 let mut context = PerftContext::new(&mut board, &hashtable_arc, false, true);
-                count += run_perft!(context.board.active_color, &mut context, depth - 1, false);
+                count += run_internal(&mut context, depth - 1);
 
                 hashtable_usage = context.hashtable.get_usage();
             }
