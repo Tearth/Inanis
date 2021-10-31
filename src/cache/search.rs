@@ -3,6 +3,8 @@ use crate::state::movescan::Move;
 use std::mem;
 use std::u64;
 
+const BUCKET_SLOTS: usize = 5;
+
 bitflags! {
     pub struct TranspositionTableScoreType: u8 {
         const INVALID = 0;
@@ -13,8 +15,14 @@ bitflags! {
 }
 
 pub struct TranspositionTable {
-    table: Vec<TranspositionTableEntry>,
+    table: Vec<TranspositionTableBucket>,
     slots: usize,
+}
+
+#[repr(align(64))]
+#[derive(Clone, Copy)]
+struct TranspositionTableBucket {
+    pub entries: [TranspositionTableEntry; BUCKET_SLOTS],
 }
 
 #[derive(Clone, Copy)]
@@ -28,23 +36,39 @@ pub struct TranspositionTableEntry {
 
 impl TranspositionTable {
     pub fn new(size: usize) -> TranspositionTable {
-        let buckets = size / mem::size_of::<TranspositionTableEntry>();
+        let bucket_size = mem::size_of::<TranspositionTableBucket>();
+        let buckets = size / bucket_size;
         let mut hashtable = TranspositionTable {
             table: Vec::with_capacity(buckets),
             slots: buckets,
         };
 
         if size != 0 {
-            hashtable.table.resize(
-                hashtable.slots,
-                TranspositionTableEntry::new(0, 0, Move::new_empty(), 0, TranspositionTableScoreType::INVALID),
-            );
+            hashtable.table.resize(hashtable.slots, TranspositionTableBucket::new());
         }
 
         hashtable
     }
 
     pub fn add(&mut self, hash: u64, mut score: i16, best_move: Move, depth: i8, ply: u16, score_type: TranspositionTableScoreType) {
+        let key = (hash >> 32) as u32;
+        let mut bucket = self.table[(hash as usize) % self.slots];
+        let mut smallest_depth = (bucket.entries[0].depth & 0xf) as u8;
+        let mut smallest_depth_index = 0;
+
+        for entry_index in 0..BUCKET_SLOTS {
+            if bucket.entries[entry_index].key == key {
+                smallest_depth_index = entry_index;
+                break;
+            }
+
+            let entry_depth = bucket.entries[entry_index].depth as u8;
+            if entry_depth < smallest_depth {
+                smallest_depth = entry_depth;
+                smallest_depth_index = entry_index;
+            }
+        }
+
         if is_score_near_checkmate(score) {
             if score > 0 {
                 score += ply as i16;
@@ -53,28 +77,39 @@ impl TranspositionTable {
             }
         }
 
-        self.table[(hash as usize) % self.slots] = TranspositionTableEntry::new((hash >> 32) as u32, score, best_move, depth, score_type);
+        bucket.entries[smallest_depth_index] = TranspositionTableEntry::new(key, score, best_move, depth, score_type);
+        self.table[(hash as usize) % self.slots] = bucket;
     }
 
     pub fn get(&self, hash: u64, ply: u16, collision: &mut bool) -> Option<TranspositionTableEntry> {
-        let mut entry = self.table[(hash as usize) % self.slots];
-        if entry.key == (hash >> 32) as u32 {
-            if is_score_near_checkmate(entry.score) {
-                if entry.score > 0 {
-                    entry.score -= ply as i16;
-                } else {
-                    entry.score += ply as i16;
+        let key = (hash >> 32) as u32;
+        let bucket = self.table[(hash as usize) % self.slots];
+        let mut entry_with_key_present = false;
+
+        for entry_index in 0..BUCKET_SLOTS {
+            let mut entry = bucket.entries[entry_index];
+            if entry.key == key {
+                if is_score_near_checkmate(entry.score) {
+                    if entry.score > 0 {
+                        entry.score -= ply as i16;
+                    } else {
+                        entry.score += ply as i16;
+                    }
+                }
+
+                return Some(entry);
+            } else {
+                if entry.key != 0 {
+                    entry_with_key_present = true;
                 }
             }
-
-            Some(entry)
-        } else {
-            if entry.key != 0 {
-                *collision = true;
-            }
-
-            None
         }
+
+        if entry_with_key_present {
+            *collision = true;
+        }
+
+        None
     }
 
     pub fn get_best_move(&self, hash: u64) -> Option<Move> {
@@ -84,11 +119,16 @@ impl TranspositionTable {
 
     pub fn get_usage(&self) -> f32 {
         const RESOLUTION: usize = 10000;
+        const BUCKETS_COUNT_TO_CHECK: usize = RESOLUTION / BUCKET_SLOTS;
+
         let mut filled_entries = 0;
 
-        for entry_index in 0..RESOLUTION {
-            if self.table[entry_index].key != 0 {
-                filled_entries += 1;
+        for bucket_index in 0..BUCKETS_COUNT_TO_CHECK {
+            for entry_index in 0..BUCKET_SLOTS {
+                let entry = self.table[bucket_index].entries[entry_index];
+                if entry.key != 0 {
+                    filled_entries += 1;
+                }
             }
         }
 
@@ -97,10 +137,15 @@ impl TranspositionTable {
 
     pub fn clear(&mut self) {
         self.table.clear();
-        self.table.resize(
-            self.slots,
-            TranspositionTableEntry::new(0, 0, Move::new_empty(), 0, TranspositionTableScoreType::INVALID),
-        );
+        self.table.resize(self.slots, TranspositionTableBucket::new());
+    }
+}
+
+impl TranspositionTableBucket {
+    fn new() -> TranspositionTableBucket {
+        TranspositionTableBucket {
+            entries: [TranspositionTableEntry::new(0, 0, Move::new_empty(), 0, TranspositionTableScoreType::INVALID); BUCKET_SLOTS],
+        }
     }
 }
 
