@@ -29,7 +29,7 @@ impl UciState {
             board: Bitboard::new_default(),
             options: HashMap::new(),
             transposition_table: TranspositionTable::new(1 * 1024 * 1024),
-            pawns_table: PawnHashTable::new(4 * 1024 * 1024),
+            pawns_table: PawnHashTable::new(1 * 1024 * 1024),
         }
     }
 }
@@ -202,8 +202,8 @@ fn handle_ucinewgame(state: &mut UciState) {
     let transposition_table_size = state.options["Hash"].parse::<usize>().unwrap() * 1024 * 1024;
 
     state.board = Bitboard::new_default();
-    state.pawns_table = PawnHashTable::new(4 * 1024 * 1024);
     state.transposition_table = TranspositionTable::new(transposition_table_size);
+    state.pawns_table = PawnHashTable::new(1 * 1024 * 1024);
 }
 
 fn handle_quit() {

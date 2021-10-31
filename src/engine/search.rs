@@ -15,9 +15,8 @@ use chrono::Utc;
 use std::mem::MaybeUninit;
 
 pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
-    let transposition_table_size = 32 * 1024 * 1024;
-    let mut transposition_table = TranspositionTable::new(transposition_table_size);
-    let mut pawns_table = PawnHashTable::new(4 * 1024 * 1024);
+    let mut transposition_table = TranspositionTable::new(32 * 1024 * 1024);
+    let mut pawns_table = PawnHashTable::new(1 * 1024 * 1024);
     let mut killers_table = KillersTable::new();
     let mut history_table = HistoryTable::new();
 
