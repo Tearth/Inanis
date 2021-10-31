@@ -14,7 +14,8 @@ pub struct PawnHashTableEntry {
 
 impl PawnHashTable {
     pub fn new(size: usize) -> PawnHashTable {
-        let buckets = size / mem::size_of::<PawnHashTableEntry>();
+        let bucket_size = mem::size_of::<PawnHashTableEntry>();
+        let buckets = size / bucket_size;
         let mut hashtable = PawnHashTable {
             table: Vec::with_capacity(buckets),
             slots: buckets,

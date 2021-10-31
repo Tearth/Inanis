@@ -23,7 +23,8 @@ pub struct PerftHashTableEntry {
 
 impl PerftHashTable {
     pub fn new(size: usize) -> PerftHashTable {
-        let buckets = size / mem::size_of::<PerftHashTableBucket>();
+        let bucket_size = mem::size_of::<PerftHashTableBucket>();
+        let buckets = size / bucket_size;
         let hashtable = PerftHashTable {
             table: UnsafeCell::new(Vec::with_capacity(buckets)),
             slots: buckets,
@@ -55,7 +56,8 @@ impl PerftHashTable {
 
     pub fn get(&self, hash: u64, depth: u8) -> Option<PerftHashTableEntry> {
         let bucket = unsafe { (*self.table.get())[(hash as usize) % self.slots] };
-        for entry in bucket.entries {
+        for entry_index in 0..BUCKET_SLOTS {
+            let entry = bucket.entries[entry_index];
             if entry.key_and_depth == ((hash & !0xf) | (depth as u64)) {
                 return Some(entry);
             }
@@ -71,7 +73,8 @@ impl PerftHashTable {
         let mut filled_entries = 0;
 
         for bucket_index in 0..BUCKETS_COUNT_TO_CHECK {
-            for entry in unsafe { (*self.table.get())[bucket_index].entries } {
+            for entry_index in 0..BUCKET_SLOTS {
+                let entry = unsafe { (*self.table.get())[bucket_index].entries[entry_index] };
                 if entry.key_and_depth != 0 && entry.leafs_count != 0 {
                     filled_entries += 1;
                 }
