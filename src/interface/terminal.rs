@@ -8,6 +8,7 @@ use crate::perft;
 use crate::state::board::Bitboard;
 use crate::state::movegen;
 use crate::utils::benchmark;
+use crate::utils::tuning;
 use chrono::Utc;
 use prettytable::cell;
 use prettytable::format;
@@ -44,6 +45,7 @@ pub fn run() {
             "perft" => handle_perft(split),
             "dperft" => handle_dperft(split),
             "qperft" => handle_qperft(split),
+            "tuning" => handle_tuning(),
             "uci" => handle_uci(),
             "wah" => handle_wah(),
             "quit" => handle_quit(),
@@ -380,6 +382,10 @@ fn handle_qperft(input: Vec<&str>) {
     }
 
     println!("Perft done!");
+}
+
+fn handle_tuning() {
+    tuning::run();
 }
 
 fn handle_uci() {
