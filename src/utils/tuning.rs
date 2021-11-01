@@ -5,13 +5,33 @@ use crate::evaluation::pst::knight;
 use crate::evaluation::pst::pawn;
 use crate::evaluation::pst::queen;
 use crate::evaluation::pst::rook;
+use crate::state::board::Bitboard;
+use crate::state::fen::fen_to_board;
 use chrono::Utc;
 use nameof::name_of;
 use std::fs;
 use std::fs::File;
+use std::io;
+use std::io::BufRead;
+use std::io::BufReader;
 use std::io::Write;
 
+struct TuningPosition {
+    board: Bitboard,
+    result: f32,
+}
+
+impl TuningPosition {
+    pub fn new(board: Bitboard, result: f32) -> TuningPosition {
+        TuningPosition { board, result }
+    }
+}
+
 pub fn run() {
+    println!("Loading EPD file...");
+    let positions = load_positions();
+    println!("Loaded {} positions", positions.len());
+
     save_evaluation_parameters();
     save_piece_square_table("pawn", unsafe { &pawn::PATTERN[0] }, unsafe { &pawn::PATTERN[1] });
     save_piece_square_table("knight", unsafe { &knight::PATTERN[0] }, unsafe { &knight::PATTERN[1] });
@@ -19,6 +39,29 @@ pub fn run() {
     save_piece_square_table("rook", unsafe { &rook::PATTERN[0] }, unsafe { &rook::PATTERN[1] });
     save_piece_square_table("queen", unsafe { &queen::PATTERN[0] }, unsafe { &queen::PATTERN[1] });
     save_piece_square_table("king", unsafe { &king::PATTERN[0] }, unsafe { &king::PATTERN[1] });
+}
+
+fn load_positions() -> Vec<TuningPosition> {
+    let mut positions = Vec::new();
+    let file = File::open("./input/quiet.epd").unwrap();
+
+    for line in BufReader::new(file).lines() {
+        let position = line.unwrap();
+        let board = fen_to_board(position.as_str()).unwrap();
+        let result = if position.contains("1-0") {
+            1.0
+        } else if position.contains("0-1") {
+            0.0
+        } else if position.contains("1/2-1/2") {
+            0.5
+        } else {
+            panic!("Invalid game result: position={}", position);
+        };
+
+        positions.push(TuningPosition::new(board, result));
+    }
+
+    positions
 }
 
 fn save_evaluation_parameters() {
@@ -81,6 +124,15 @@ fn save_piece_square_table(name: &str, opening: &[i8], ending: &[i8]) {
     .unwrap();
 }
 
+fn get_header() -> String {
+    let mut output = String::new();
+
+    output.push_str("// ------------------------------------ //\n");
+    output.push_str(format!("// Generated at {} UTC //\n", Utc::now().format("%Y-%m-%d %H:%M:%S")).as_str());
+    output.push_str("// ------------------------------------ //\n");
+    output
+}
+
 fn get_material(name: &str, values: &[i16]) -> String {
     format!(
         "pub static mut {}: [i16; 6] = [{}, {}, {}, {}, {}, {}];\n",
@@ -106,14 +158,5 @@ fn get_piece_square_table(values: &[i8]) -> String {
         }
     }
 
-    output
-}
-
-fn get_header() -> String {
-    let mut output = String::new();
-
-    output.push_str("// ------------------------------------ //\n");
-    output.push_str(format!("// Generated at {} UTC //\n", Utc::now().format("%Y-%m-%d %H:%M:%S")).as_str());
-    output.push_str("// ------------------------------------ //\n");
     output
 }

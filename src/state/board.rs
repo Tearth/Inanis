@@ -615,7 +615,7 @@ impl Default for Bitboard {
             castling_rights: CastlingRights::NONE,
             en_passant: 0,
             halfmove_clock: 0,
-            fullmove_number: 0,
+            fullmove_number: 1,
             active_color: WHITE,
             hash: 0,
             pawn_hash: 0,

@@ -4,7 +4,7 @@ use super::*;
 
 pub fn fen_to_board(fen: &str) -> Result<Bitboard, &'static str> {
     let parts: Vec<&str> = fen.split(' ').collect();
-    if parts.len() < 6 {
+    if parts.len() < 4 {
         return Err("Invalid FEN: input too short");
     }
 
@@ -13,8 +13,10 @@ pub fn fen_to_board(fen: &str) -> Result<Bitboard, &'static str> {
     fen_to_active_color(&mut board, parts[1].trim())?;
     fen_to_castling(&mut board, parts[2].trim())?;
     fen_to_en_passant(&mut board, parts[3].trim())?;
-    fen_to_halfmove_clock(&mut board, parts[4].trim())?;
-    fen_to_fullmove_number(&mut board, parts[5].trim())?;
+
+    // Ignore halfmove clock and fullmove number if not present (EPD)
+    let _ = fen_to_halfmove_clock(&mut board, parts[4].trim());
+    let _ = fen_to_fullmove_number(&mut board, parts[5].trim());
 
     board.recalculate_hash();
     board.recalculate_pawn_hash();
