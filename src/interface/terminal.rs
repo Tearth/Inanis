@@ -400,7 +400,7 @@ fn handle_unknown_command() {
 
 fn prepare_board(parameters: &[&str]) -> Result<Bitboard, &'static str> {
     if parameters.is_empty() {
-        return Ok(Bitboard::new_default());
+        return Ok(Bitboard::new_initial_position());
     }
 
     match parameters[0] {

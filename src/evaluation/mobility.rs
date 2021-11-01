@@ -1,5 +1,5 @@
 use super::parameters::*;
-use super::taper_score;
+use super::*;
 use crate::state::board::*;
 use crate::state::movescan::*;
 use crate::state::*;

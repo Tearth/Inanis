@@ -1,10 +1,11 @@
-use super::{parameters::*, taper_score};
+use super::parameters::*;
+use super::*;
 use crate::cache::pawns::PawnHashTable;
 use crate::engine::context::SearchStatistics;
 use crate::state::board::Bitboard;
 use crate::state::patterns::*;
 use crate::state::*;
-use std::cmp::{max, min};
+use std::cmp::*;
 
 pub fn evaluate(board: &Bitboard, pawn_hash_table: &mut PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
     let mut collision = false;

@@ -1,4 +1,5 @@
-use super::{parameters::*, taper_score};
+use super::parameters::*;
+use super::*;
 use crate::state::board::Bitboard;
 use crate::state::patterns::*;
 use crate::state::*;

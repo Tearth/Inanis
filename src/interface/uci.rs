@@ -24,7 +24,7 @@ struct UciState {
 impl Default for UciState {
     fn default() -> Self {
         UciState {
-            board: Bitboard::new_default(),
+            board: Bitboard::new_initial_position(),
             options: HashMap::new(),
             transposition_table: TranspositionTable::new(1 * 1024 * 1024),
             pawn_hash_table: PawnHashTable::new(1 * 1024 * 1024),
@@ -173,7 +173,7 @@ fn handle_position(parameters: &[String], state: &mut UciState) {
                 }
             }
         }
-        _ => Bitboard::new_default(),
+        _ => Bitboard::new_initial_position(),
     };
 
     if let Some(index) = parameters.iter().position(|s| s == "moves") {
@@ -201,7 +201,7 @@ fn handle_setoption(parameters: &[String], state: &mut UciState) {
 fn handle_ucinewgame(state: &mut UciState) {
     let transposition_table_size = state.options["Hash"].parse::<usize>().unwrap() * 1024 * 1024;
 
-    state.board = Bitboard::new_default();
+    state.board = Bitboard::new_initial_position();
     state.transposition_table = TranspositionTable::new(transposition_table_size);
     state.pawn_hash_table = PawnHashTable::new(1 * 1024 * 1024);
 }

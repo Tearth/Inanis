@@ -1,5 +1,5 @@
 use crate::state::*;
-use std::cmp::max;
+use std::cmp::*;
 
 static mut TABLE: [[[i8; 256]; 256]; 6] = [[[0; 256]; 256]; 6];
 

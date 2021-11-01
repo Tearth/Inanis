@@ -51,7 +51,7 @@ pub struct Bitboard {
 }
 
 impl Bitboard {
-    pub fn new_default() -> Bitboard {
+    pub fn new_initial_position() -> Bitboard {
         Bitboard::new_from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap()
     }
 
@@ -60,7 +60,7 @@ impl Bitboard {
     }
 
     pub fn new_from_moves(moves: &[&str]) -> Result<Bitboard, &'static str> {
-        let mut board = Bitboard::new_default();
+        let mut board = Bitboard::new_initial_position();
         for premade_move in moves {
             let parsed_move = Move::from_text(premade_move.trim(), &board)?;
             board.make_move(&parsed_move);
