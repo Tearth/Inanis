@@ -18,19 +18,20 @@ use std::io::Write;
 
 struct TuningPosition {
     board: Bitboard,
-    result: f32,
+    result: f64,
 }
 
 impl TuningPosition {
-    pub fn new(board: Bitboard, result: f32) -> TuningPosition {
+    pub fn new(board: Bitboard, result: f64) -> TuningPosition {
         TuningPosition { board, result }
     }
 }
 
 pub fn run() {
     println!("Loading EPD file...");
-    let positions = load_positions();
+    let mut positions = load_positions();
     println!("Loaded {} positions", positions.len());
+    println!("Error: {}", calculate_error(&mut positions, 1.13));
 
     save_evaluation_parameters();
     save_piece_square_table("pawn", unsafe { &pawn::PATTERN[0] }, unsafe { &pawn::PATTERN[1] });
@@ -62,6 +63,21 @@ fn load_positions() -> Vec<TuningPosition> {
     }
 
     positions
+}
+
+fn calculate_error(positions: &mut Vec<TuningPosition>, scaling_constant: f64) -> f64 {
+    let mut sum_of_errors = 0.0;
+    let positions_count = positions.len();
+
+    for position in positions {
+        position.board.recalculate_incremental_values();
+
+        let evaluation = position.board.evaluate_without_cache() as f64;
+        let sigmoid = 1.0 / (1.0 + 10.0f64.powf(-scaling_constant * evaluation / 400.0));
+        sum_of_errors += position.result - sigmoid;
+    }
+
+    sum_of_errors.powi(2) / (positions_count as f64)
 }
 
 fn save_evaluation_parameters() {
