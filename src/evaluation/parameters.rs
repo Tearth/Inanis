@@ -1,3 +1,7 @@
+// ------------------------------------ //
+// Generated at 2021-11-01 15:10:06 UTC //
+// ------------------------------------ //
+
 pub static PIECE_VALUE: [i16; 6] = [100, 300, 330, 500, 900, 10000];
 
 pub static MOBILITY_OPENING: i16 = 2;
@@ -23,3 +27,4 @@ pub static PAWN_SHIELD_OPEN_FILE_ENDING: i16 = 0;
 
 pub static KING_ATTACKED_FIELDS_OPENING: i16 = -15;
 pub static KING_ATTACKED_FIELDS_ENDING: i16 = -5;
+
