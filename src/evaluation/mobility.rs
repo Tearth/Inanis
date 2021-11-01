@@ -15,8 +15,8 @@ fn evaluate_color(board: &Bitboard, color: u8, attack_mask: &mut u64) -> i16 {
     let queen_mobility = get_piece_mobility::<QUEEN>(board, color, attack_mask) as i16;
 
     let game_phase = board.get_game_phase();
-    let opening_score = (knight_mobility + bishop_mobility + rook_mobility + queen_mobility) * MOBILITY_OPENING;
-    let ending_score = (knight_mobility + bishop_mobility + rook_mobility + queen_mobility) * MOBILITY_ENDING;
+    let opening_score = (knight_mobility + bishop_mobility + rook_mobility + queen_mobility) * unsafe { MOBILITY_OPENING };
+    let ending_score = (knight_mobility + bishop_mobility + rook_mobility + queen_mobility) * unsafe { MOBILITY_ENDING };
 
     taper_score(game_phase, opening_score, ending_score)
 }

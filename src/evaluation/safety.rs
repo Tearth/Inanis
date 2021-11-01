@@ -15,8 +15,8 @@ fn evaluate_color(board: &Bitboard, color: u8, enemy_attack_mask: u64) -> i16 {
     let attacked_fields = bit_count(fields_to_check & enemy_attack_mask);
 
     let game_phase = board.get_game_phase();
-    let opening_score = (attacked_fields as i16) * KING_ATTACKED_FIELDS_OPENING;
-    let ending_score = (attacked_fields as i16) * KING_ATTACKED_FIELDS_ENDING;
+    let opening_score = (attacked_fields as i16) * unsafe { KING_ATTACKED_FIELDS_OPENING };
+    let ending_score = (attacked_fields as i16) * unsafe { KING_ATTACKED_FIELDS_ENDING };
 
     taper_score(game_phase, opening_score, ending_score)
 }

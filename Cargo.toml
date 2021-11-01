@@ -14,6 +14,7 @@ fastrand = { version = "1.4.1" }
 chrono = { version = "0.4.19" }
 bitflags = { version = "1.2.1" }
 prettytable-rs = { version = "0.8" }
+nameof = { version = "1.2.2" }
 
 [build-dependencies]
 chrono = { version = "0.4.19" }

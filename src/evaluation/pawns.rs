@@ -83,19 +83,19 @@ fn evaluate_color(board: &Bitboard, color: u8) -> i16 {
 
     let game_phase = board.get_game_phase();
     let opening_score = 0
-        + (doubled_pawns as i16) * DOUBLED_PAWN_OPENING
-        + (isolated_pawns as i16) * ISOLATED_PAWN_OPENING
-        + (chained_pawns as i16) * CHAINED_PAWN_OPENING
-        + (passing_pawns as i16) * PASSING_PAWN_OPENING
-        + (pawn_shield as i16) * PAWN_SHIELD_OPENING
-        + (opened_files as i16) * PAWN_SHIELD_OPEN_FILE_OPENING;
+        + (doubled_pawns as i16) * unsafe { DOUBLED_PAWN_OPENING }
+        + (isolated_pawns as i16) * unsafe { ISOLATED_PAWN_OPENING }
+        + (chained_pawns as i16) * unsafe { CHAINED_PAWN_OPENING }
+        + (passing_pawns as i16) * unsafe { PASSING_PAWN_OPENING }
+        + (pawn_shield as i16) * unsafe { PAWN_SHIELD_OPENING }
+        + (opened_files as i16) * unsafe { PAWN_SHIELD_OPEN_FILE_OPENING };
     let ending_score = 0
-        + (doubled_pawns as i16) * DOUBLED_PAWN_ENDING
-        + (isolated_pawns as i16) * ISOLATED_PAWN_ENDING
-        + (chained_pawns as i16) * CHAINED_PAWN_ENDING
-        + (passing_pawns as i16) * PASSING_PAWN_ENDING
-        + (pawn_shield as i16) * PAWN_SHIELD_ENDING
-        + (opened_files as i16) * PAWN_SHIELD_OPEN_FILE_ENDING;
+        + (doubled_pawns as i16) * unsafe { DOUBLED_PAWN_ENDING }
+        + (isolated_pawns as i16) * unsafe { ISOLATED_PAWN_ENDING }
+        + (chained_pawns as i16) * unsafe { CHAINED_PAWN_ENDING }
+        + (passing_pawns as i16) * unsafe { PASSING_PAWN_ENDING }
+        + (pawn_shield as i16) * unsafe { PAWN_SHIELD_ENDING }
+        + (opened_files as i16) * unsafe { PAWN_SHIELD_OPEN_FILE_ENDING };
 
     taper_score(game_phase, opening_score, ending_score)
 }
