@@ -39,6 +39,9 @@ pub fn run(epd_filename: &str, output_directory: &str) {
     };
     println!("Loaded {} positions, starting tuner", positions.len());
 
+    let mut tendence = Vec::new();
+    tendence.resize(positions.len(), 1i8);
+
     let mut best_values = load_values();
     let mut best_error = calculate_error(&mut positions, 1.13);
     let mut improved = true;
@@ -58,9 +61,7 @@ pub fn run(epd_filename: &str, output_directory: &str) {
                 continue;
             }
 
-            // Bigger step for material values
-            let step = if value_index < 5 { 5 } else { 1 };
-
+            let step = tendence[value_index] as i16;
             let mut values = best_values.to_vec();
             let mut value_changed = false;
 
@@ -69,6 +70,7 @@ pub fn run(epd_filename: &str, output_directory: &str) {
 
             let error = calculate_error(&mut positions, 1.13);
             if error < best_error {
+                tendence[value_index] *= 2;
                 best_error = error;
                 best_values = values;
                 improved = true;
@@ -77,38 +79,42 @@ pub fn run(epd_filename: &str, output_directory: &str) {
 
                 println!("Value {} changed by {} (new error: {:.6})", value_index, step, best_error);
             } else if error > best_error {
-                values[value_index] -= step * 2;
+                values[value_index] -= step;
+                values[value_index] -= step.signum();
                 save_values(&mut values);
 
                 let error = calculate_error(&mut positions, 1.13);
                 if error < best_error {
+                    tendence[value_index] = -step.signum() as i8;
                     best_error = error;
                     best_values = values;
                     improved = true;
                     value_changed = true;
                     changes += 1;
 
-                    println!("Value {} changed by {} (new error: {:.6})", value_index, -step, best_error);
+                    println!(
+                        "Value {} changed by {} (tendence change, new error: {:.6})",
+                        value_index,
+                        -step.signum(),
+                        best_error
+                    );
                 }
             }
 
             if !value_changed {
                 println!("Value {} skipped", value_index);
+
+                // Step may be too big, reset it
+                tendence[value_index] = step.signum() as i8;
             }
         }
 
         save_evaluation_parameters(output_directory);
         save_piece_square_table(output_directory, "pawn", unsafe { &pawn::PATTERN[0] }, unsafe { &pawn::PATTERN[1] });
-        save_piece_square_table(output_directory, "knight", unsafe { &knight::PATTERN[0] }, unsafe {
-            &knight::PATTERN[1]
-        });
-        save_piece_square_table(output_directory, "bishop", unsafe { &bishop::PATTERN[0] }, unsafe {
-            &bishop::PATTERN[1]
-        });
+        save_piece_square_table(output_directory, "knight", unsafe { &knight::PATTERN[0] }, unsafe { &knight::PATTERN[1] });
+        save_piece_square_table(output_directory, "bishop", unsafe { &bishop::PATTERN[0] }, unsafe { &bishop::PATTERN[1] });
         save_piece_square_table(output_directory, "rook", unsafe { &rook::PATTERN[0] }, unsafe { &rook::PATTERN[1] });
-        save_piece_square_table(output_directory, "queen", unsafe { &queen::PATTERN[0] }, unsafe {
-            &queen::PATTERN[1]
-        });
+        save_piece_square_table(output_directory, "queen", unsafe { &queen::PATTERN[0] }, unsafe { &queen::PATTERN[1] });
         save_piece_square_table(output_directory, "king", unsafe { &king::PATTERN[0] }, unsafe { &king::PATTERN[1] });
 
         println!(
