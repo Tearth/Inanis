@@ -109,13 +109,15 @@ pub fn run(epd_filename: &str, output_directory: &str) {
             }
         }
 
-        save_evaluation_parameters(output_directory);
-        save_piece_square_table(output_directory, "pawn", unsafe { &pawn::PATTERN[0] }, unsafe { &pawn::PATTERN[1] });
-        save_piece_square_table(output_directory, "knight", unsafe { &knight::PATTERN[0] }, unsafe { &knight::PATTERN[1] });
-        save_piece_square_table(output_directory, "bishop", unsafe { &bishop::PATTERN[0] }, unsafe { &bishop::PATTERN[1] });
-        save_piece_square_table(output_directory, "rook", unsafe { &rook::PATTERN[0] }, unsafe { &rook::PATTERN[1] });
-        save_piece_square_table(output_directory, "queen", unsafe { &queen::PATTERN[0] }, unsafe { &queen::PATTERN[1] });
-        save_piece_square_table(output_directory, "king", unsafe { &king::PATTERN[0] }, unsafe { &king::PATTERN[1] });
+        unsafe {
+            save_evaluation_parameters(output_directory, best_error);
+            save_piece_square_table(output_directory, best_error, "pawn", &pawn::PATTERN[0], &pawn::PATTERN[1]);
+            save_piece_square_table(output_directory, best_error, "knight", &knight::PATTERN[0], &knight::PATTERN[1]);
+            save_piece_square_table(output_directory, best_error, "bishop", &bishop::PATTERN[0], &bishop::PATTERN[1]);
+            save_piece_square_table(output_directory, best_error, "rook", &rook::PATTERN[0], &rook::PATTERN[1]);
+            save_piece_square_table(output_directory, best_error, "queen", &queen::PATTERN[0], &queen::PATTERN[1]);
+            save_piece_square_table(output_directory, best_error, "king", &king::PATTERN[0], &king::PATTERN[1]);
+        }
 
         println!(
             "Iteration {} done in {} seconds, {} changes made, error reduced from {:.6} to {:.6} ({:.6})",
@@ -291,9 +293,9 @@ fn save_values_to_i16_array_internal(values: &mut Vec<i16>, array: &mut [i16], i
     *index += array.len();
 }
 
-fn save_evaluation_parameters(output_directory: &str) {
+fn save_evaluation_parameters(output_directory: &str, best_error: f64) {
     let mut output = String::new();
-    output.push_str(get_header().as_str());
+    output.push_str(get_header(best_error).as_str());
     output.push_str("\n");
     output.push_str(unsafe { get_material(name_of!(PIECE_VALUE), &PIECE_VALUE).as_str() });
     output.push_str("\n");
@@ -329,10 +331,10 @@ fn save_evaluation_parameters(output_directory: &str) {
     write!(&mut File::create(path).unwrap(), "{}", output.to_string()).unwrap();
 }
 
-fn save_piece_square_table(output_directory: &str, name: &str, opening: &[i8], ending: &[i8]) {
+fn save_piece_square_table(output_directory: &str, best_error: f64, name: &str, opening: &[i8], ending: &[i8]) {
     let mut output = String::new();
 
-    output.push_str(get_header().as_str());
+    output.push_str(get_header(best_error).as_str());
     output.push_str("\n");
     output.push_str("#[rustfmt::skip]\n");
     output.push_str("pub static mut PATTERN: [[i8; 64]; 2] =\n");
@@ -352,12 +354,19 @@ fn save_piece_square_table(output_directory: &str, name: &str, opening: &[i8], e
     write!(&mut File::create(path).unwrap(), "{}", output.to_string()).unwrap();
 }
 
-fn get_header() -> String {
+fn get_header(best_error: f64) -> String {
     let mut output = String::new();
 
-    output.push_str("// ------------------------------------ //\n");
-    output.push_str(format!("// Generated at {} UTC //\n", Utc::now().format("%Y-%m-%d %H:%M:%S")).as_str());
-    output.push_str("// ------------------------------------ //\n");
+    output.push_str("// --------------------------------------------------- //\n");
+    output.push_str(
+        format!(
+            "// Generated at {} UTC (e = {:.6}) //\n",
+            Utc::now().format("%Y-%m-%d %H:%M:%S"),
+            best_error
+        )
+        .as_str(),
+    );
+    output.push_str("// --------------------------------------------------- //\n");
     output
 }
 
