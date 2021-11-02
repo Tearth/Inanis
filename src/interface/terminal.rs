@@ -45,7 +45,7 @@ pub fn run() {
             "perft" => handle_perft(split),
             "dperft" => handle_dperft(split),
             "qperft" => handle_qperft(split),
-            "tuning" => handle_tuning(),
+            "tuner" => handle_tuner(split),
             "uci" => handle_uci(),
             "wah" => handle_wah(),
             "quit" => handle_quit(),
@@ -59,6 +59,7 @@ fn handle_help() {
     println!(" benchmark - run test for a set of positions");
     println!(" evaluate [fen] - show score for the position");
     println!(" magic - generate magic numbers");
+    println!(" tuner [epd] [output] - run tuning");
     println!(" uci - run Universal Chess Interface");
     println!(" quit - close the application");
     println!();
@@ -384,8 +385,18 @@ fn handle_qperft(input: Vec<&str>) {
     println!("Perft done!");
 }
 
-fn handle_tuning() {
-    tuner::run();
+fn handle_tuner(input: Vec<&str>) {
+    if input.len() < 2 {
+        println!("EPD filename parameter not found");
+        return;
+    }
+
+    if input.len() < 3 {
+        println!("Output directory parameter not found");
+        return;
+    }
+
+    tuner::run(input[1], input[2]);
 }
 
 fn handle_uci() {

@@ -16,28 +16,41 @@ use std::io::BufRead;
 use std::io::BufReader;
 use std::io::Write;
 
-struct TuningPosition {
+struct TunerPosition {
     board: Bitboard,
     result: f64,
 }
 
-impl TuningPosition {
-    pub fn new(board: Bitboard, result: f64) -> TuningPosition {
-        TuningPosition { board, result }
+impl TunerPosition {
+    pub fn new(board: Bitboard, result: f64) -> TunerPosition {
+        TunerPosition { board, result }
     }
 }
 
-pub fn run() {
+pub fn run(epd_filename: &str, output_directory: &str) {
     println!("Loading EPD file...");
-    let mut positions = load_positions();
-    println!("Loaded {} positions", positions.len());
+    let mut positions = match load_positions(epd_filename) {
+        Ok(value) => value,
+        Err(message) => {
+            println!("{}", message);
+            return;
+        }
+    };
+    println!("Loaded {} positions, starting tuner", positions.len());
 
     let mut best_values = load_values();
     let mut best_error = calculate_error(&mut positions, 1.13);
     let mut improved = true;
+    let mut iterations_count = 0;
 
     while improved {
         improved = false;
+        iterations_count += 1;
+
+        let mut changes = 0;
+        let last_best_error = best_error;
+        let start_time = Utc::now();
+
         for value_index in 0..best_values.len() {
             // Ignore king value (no point to tune it)
             if value_index == 5 {
@@ -56,6 +69,7 @@ pub fn run() {
                 best_values = values;
                 improved = true;
                 value_changed = true;
+                changes += 1;
 
                 println!("Value {} changed by {} (new error: {})", value_index, 1, best_error);
             } else if error > best_error {
@@ -68,6 +82,7 @@ pub fn run() {
                     best_values = values;
                     improved = true;
                     value_changed = true;
+                    changes += 1;
 
                     println!("Value {} changed by {} (new error: {})", value_index, -1, best_error);
                 }
@@ -78,13 +93,29 @@ pub fn run() {
             }
         }
 
-        save_evaluation_parameters();
-        save_piece_square_table("pawn", unsafe { &pawn::PATTERN[0] }, unsafe { &pawn::PATTERN[1] });
-        save_piece_square_table("knight", unsafe { &knight::PATTERN[0] }, unsafe { &knight::PATTERN[1] });
-        save_piece_square_table("bishop", unsafe { &bishop::PATTERN[0] }, unsafe { &bishop::PATTERN[1] });
-        save_piece_square_table("rook", unsafe { &rook::PATTERN[0] }, unsafe { &rook::PATTERN[1] });
-        save_piece_square_table("queen", unsafe { &queen::PATTERN[0] }, unsafe { &queen::PATTERN[1] });
-        save_piece_square_table("king", unsafe { &king::PATTERN[0] }, unsafe { &king::PATTERN[1] });
+        save_evaluation_parameters(output_directory);
+        save_piece_square_table(output_directory, "pawn", unsafe { &pawn::PATTERN[0] }, unsafe { &pawn::PATTERN[1] });
+        save_piece_square_table(output_directory, "knight", unsafe { &knight::PATTERN[0] }, unsafe {
+            &knight::PATTERN[1]
+        });
+        save_piece_square_table(output_directory, "bishop", unsafe { &bishop::PATTERN[0] }, unsafe {
+            &bishop::PATTERN[1]
+        });
+        save_piece_square_table(output_directory, "rook", unsafe { &rook::PATTERN[0] }, unsafe { &rook::PATTERN[1] });
+        save_piece_square_table(output_directory, "queen", unsafe { &queen::PATTERN[0] }, unsafe {
+            &queen::PATTERN[1]
+        });
+        save_piece_square_table(output_directory, "king", unsafe { &king::PATTERN[0] }, unsafe { &king::PATTERN[1] });
+
+        println!(
+            "Iteration {} done in {}, {} changes made, error reduced from {} to {} ({})",
+            iterations_count,
+            (start_time - Utc::now()).num_seconds(),
+            changes,
+            last_best_error,
+            best_error,
+            last_best_error - best_error
+        );
     }
 }
 
@@ -96,13 +127,16 @@ pub fn validate() -> bool {
     values.iter().zip(&values_after_save).all(|(a, b)| a == b)
 }
 
-fn load_positions() -> Vec<TuningPosition> {
+fn load_positions(epd_filename: &str) -> Result<Vec<TunerPosition>, &'static str> {
     let mut positions = Vec::new();
-    let file = File::open("./input/quiet.epd").unwrap();
+    let file = match File::open(epd_filename) {
+        Ok(value) => value,
+        Err(_) => return Err("Can't open EPD file"),
+    };
 
     for line in BufReader::new(file).lines() {
         let position = line.unwrap();
-        let board = fen_to_board(position.as_str()).unwrap();
+        let board = fen_to_board(position.as_str())?;
         let result = if position.contains("1-0") {
             1.0
         } else if position.contains("0-1") {
@@ -110,16 +144,16 @@ fn load_positions() -> Vec<TuningPosition> {
         } else if position.contains("1/2-1/2") {
             0.5
         } else {
-            panic!("Invalid game result: position={}", position);
+            return Err("Invalid game result");
         };
 
-        positions.push(TuningPosition::new(board, result));
+        positions.push(TunerPosition::new(board, result));
     }
 
-    positions
+    Ok(positions)
 }
 
-fn calculate_error(positions: &mut Vec<TuningPosition>, scaling_constant: f64) -> f64 {
+fn calculate_error(positions: &mut Vec<TunerPosition>, scaling_constant: f64) -> f64 {
     let mut sum_of_errors = 0.0;
     let positions_count = positions.len();
 
@@ -247,7 +281,7 @@ fn save_values_to_i16_array_internal(values: &mut Vec<i16>, array: &mut [i16], i
     *index += array.len();
 }
 
-fn save_evaluation_parameters() {
+fn save_evaluation_parameters(output_directory: &str) {
     let mut output = String::new();
     output.push_str(get_header().as_str());
     output.push_str("\n");
@@ -279,10 +313,15 @@ fn save_evaluation_parameters() {
     output.push_str("\n");
 
     fs::create_dir_all("output/").unwrap();
-    write!(&mut File::create("output/parameters.rs").unwrap(), "{}", output.to_string()).unwrap();
+    write!(
+        &mut File::create(format!("{}parameters.rs", output_directory)).unwrap(),
+        "{}",
+        output.to_string()
+    )
+    .unwrap();
 }
 
-fn save_piece_square_table(name: &str, opening: &[i8], ending: &[i8]) {
+fn save_piece_square_table(output_directory: &str, name: &str, opening: &[i8], ending: &[i8]) {
     let mut output = String::new();
 
     output.push_str(get_header().as_str());
@@ -300,7 +339,7 @@ fn save_piece_square_table(name: &str, opening: &[i8], ending: &[i8]) {
 
     fs::create_dir_all("output/pst/").unwrap();
     write!(
-        &mut File::create(format!("output/pst/{}.rs", name)).unwrap(),
+        &mut File::create(format!("{}{}.rs", output_directory, name)).unwrap(),
         "{}",
         output.to_string()
     )
