@@ -57,10 +57,13 @@ pub fn run(epd_filename: &str, output_directory: &str) {
                 continue;
             }
 
+            // Bigger step for material values
+            let step = if value_index < 5 { 5 } else { 1 };
+
             let mut values = best_values.to_vec();
             let mut value_changed = false;
 
-            values[value_index] += 1;
+            values[value_index] += step;
             save_values(&mut values);
 
             let error = calculate_error(&mut positions, 1.13);
@@ -71,9 +74,9 @@ pub fn run(epd_filename: &str, output_directory: &str) {
                 value_changed = true;
                 changes += 1;
 
-                println!("Value {} changed by {} (new error: {})", value_index, 1, best_error);
+                println!("Value {} changed by {} (new error: {:.6})", value_index, step, best_error);
             } else if error > best_error {
-                values[value_index] -= 2;
+                values[value_index] -= step * 2;
                 save_values(&mut values);
 
                 let error = calculate_error(&mut positions, 1.13);
@@ -84,7 +87,7 @@ pub fn run(epd_filename: &str, output_directory: &str) {
                     value_changed = true;
                     changes += 1;
 
-                    println!("Value {} changed by {} (new error: {})", value_index, -1, best_error);
+                    println!("Value {} changed by {} (new error: {:.6})", value_index, -step, best_error);
                 }
             }
 
@@ -108,9 +111,9 @@ pub fn run(epd_filename: &str, output_directory: &str) {
         save_piece_square_table(output_directory, "king", unsafe { &king::PATTERN[0] }, unsafe { &king::PATTERN[1] });
 
         println!(
-            "Iteration {} done in {}, {} changes made, error reduced from {} to {} ({})",
+            "Iteration {} done in {} seconds, {} changes made, error reduced from {:.6} to {:.6} ({:.6})",
             iterations_count,
-            (start_time - Utc::now()).num_seconds(),
+            (Utc::now() - start_time).num_seconds(),
             changes,
             last_best_error,
             best_error,
