@@ -386,7 +386,7 @@ fn get_piece_square_table(values: &[i8]) -> String {
 
     output.push_str("        ");
     for index in 0..64 {
-        output.push_str(format!("{:3}, ", values[index]).as_str());
+        output.push_str(format!("{:4}, ", values[index]).as_str());
         if index % 8 == 7 {
             output.push_str("\n");
             if index != 63 {
