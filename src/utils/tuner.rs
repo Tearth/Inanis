@@ -1,4 +1,5 @@
 use crate::evaluation::parameters::*;
+use crate::evaluation::pst;
 use crate::evaluation::pst::bishop;
 use crate::evaluation::pst::king;
 use crate::evaluation::pst::knight;
@@ -27,29 +28,64 @@ impl TuningPosition {
 }
 
 pub fn run() {
-    validate();
-
-    let mut test = load_values();
-    save_values(&mut test);
-
     println!("Loading EPD file...");
     let mut positions = load_positions();
     println!("Loaded {} positions", positions.len());
-    loop {
-        let now = Utc::now();
-        let error = calculate_error(&mut positions, 1.13);
-        let diff = (Utc::now() - now).num_milliseconds();
 
-        println!("Error: {} in {} ms", error, diff);
+    let mut best_values = load_values();
+    let mut best_error = calculate_error(&mut positions, 1.13);
+    let mut improved = true;
+
+    while improved {
+        improved = false;
+        for value_index in 0..best_values.len() {
+            // Ignore king value (no point to tune it)
+            if value_index == 5 {
+                continue;
+            }
+
+            let mut values = best_values.to_vec();
+            let mut value_changed = false;
+
+            values[value_index] += 1;
+            save_values(&mut values);
+
+            let error = calculate_error(&mut positions, 1.13);
+            if error < best_error {
+                best_error = error;
+                best_values = values;
+                improved = true;
+                value_changed = true;
+
+                println!("Value {} changed by {} (new error: {})", value_index, 1, best_error);
+            } else if error > best_error {
+                values[value_index] -= 2;
+                save_values(&mut values);
+
+                let error = calculate_error(&mut positions, 1.13);
+                if error < best_error {
+                    best_error = error;
+                    best_values = values;
+                    improved = true;
+                    value_changed = true;
+
+                    println!("Value {} changed by {} (new error: {})", value_index, -1, best_error);
+                }
+            }
+
+            if !value_changed {
+                println!("Value {} skipped", value_index);
+            }
+        }
+
+        save_evaluation_parameters();
+        save_piece_square_table("pawn", unsafe { &pawn::PATTERN[0] }, unsafe { &pawn::PATTERN[1] });
+        save_piece_square_table("knight", unsafe { &knight::PATTERN[0] }, unsafe { &knight::PATTERN[1] });
+        save_piece_square_table("bishop", unsafe { &bishop::PATTERN[0] }, unsafe { &bishop::PATTERN[1] });
+        save_piece_square_table("rook", unsafe { &rook::PATTERN[0] }, unsafe { &rook::PATTERN[1] });
+        save_piece_square_table("queen", unsafe { &queen::PATTERN[0] }, unsafe { &queen::PATTERN[1] });
+        save_piece_square_table("king", unsafe { &king::PATTERN[0] }, unsafe { &king::PATTERN[1] });
     }
-
-    save_evaluation_parameters();
-    save_piece_square_table("pawn", unsafe { &pawn::PATTERN[0] }, unsafe { &pawn::PATTERN[1] });
-    save_piece_square_table("knight", unsafe { &knight::PATTERN[0] }, unsafe { &knight::PATTERN[1] });
-    save_piece_square_table("bishop", unsafe { &bishop::PATTERN[0] }, unsafe { &bishop::PATTERN[1] });
-    save_piece_square_table("rook", unsafe { &rook::PATTERN[0] }, unsafe { &rook::PATTERN[1] });
-    save_piece_square_table("queen", unsafe { &queen::PATTERN[0] }, unsafe { &queen::PATTERN[1] });
-    save_piece_square_table("king", unsafe { &king::PATTERN[0] }, unsafe { &king::PATTERN[1] });
 }
 
 pub fn validate() -> bool {
@@ -92,10 +128,10 @@ fn calculate_error(positions: &mut Vec<TuningPosition>, scaling_constant: f64) -
 
         let evaluation = position.board.evaluate_without_cache() as f64;
         let sigmoid = 1.0 / (1.0 + 10.0f64.powf(-scaling_constant * evaluation / 400.0));
-        sum_of_errors += position.result - sigmoid;
+        sum_of_errors += (position.result - sigmoid).powi(2);
     }
 
-    sum_of_errors.powi(2) / (positions_count as f64)
+    sum_of_errors / (positions_count as f64)
 }
 
 fn load_values() -> Vec<i16> {
@@ -192,6 +228,8 @@ fn save_values(values: &mut Vec<i16>) {
 
     save_values_to_i8_array_internal(values, unsafe { &mut king::PATTERN[0] }, &mut index);
     save_values_to_i8_array_internal(values, unsafe { &mut king::PATTERN[1] }, &mut index);
+
+    pst::init();
 }
 
 fn save_values_internal(values: &mut Vec<i16>, destination: &mut i16, index: &mut usize) {
