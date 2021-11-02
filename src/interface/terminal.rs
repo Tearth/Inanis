@@ -396,7 +396,7 @@ fn handle_tuner(input: Vec<&str>) {
         return;
     }
 
-    tuner::run(input[1], input[2]);
+    tuner::run(input[1].trim(), input[2].trim());
 }
 
 fn handle_uci() {

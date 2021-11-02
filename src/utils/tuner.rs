@@ -15,6 +15,7 @@ use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
 use std::io::Write;
+use std::path::Path;
 
 struct TunerPosition {
     board: Bitboard,
@@ -315,13 +316,11 @@ fn save_evaluation_parameters(output_directory: &str) {
     output.push_str(unsafe { get_parameter(name_of!(KING_ATTACKED_FIELDS_ENDING), KING_ATTACKED_FIELDS_ENDING).as_str() });
     output.push_str("\n");
 
-    fs::create_dir_all("output/").unwrap();
-    write!(
-        &mut File::create(format!("{}parameters.rs", output_directory)).unwrap(),
-        "{}",
-        output.to_string()
-    )
-    .unwrap();
+    let path = Path::new(output_directory);
+    fs::create_dir_all(path).unwrap();
+
+    let path = path.join("parameters.rs");
+    write!(&mut File::create(path).unwrap(), "{}", output.to_string()).unwrap();
 }
 
 fn save_piece_square_table(output_directory: &str, name: &str, opening: &[i8], ending: &[i8]) {
@@ -340,13 +339,11 @@ fn save_piece_square_table(output_directory: &str, name: &str, opening: &[i8], e
     output.push_str("    ],\n");
     output.push_str("];\n");
 
-    fs::create_dir_all("output/pst/").unwrap();
-    write!(
-        &mut File::create(format!("{}{}.rs", output_directory, name)).unwrap(),
-        "{}",
-        output.to_string()
-    )
-    .unwrap();
+    let path = Path::new(output_directory).join("pst");
+    fs::create_dir_all(path).unwrap();
+
+    let path = Path::new(output_directory).join("pst").join(format!("{}.rs", name));
+    write!(&mut File::create(path).unwrap(), "{}", output.to_string()).unwrap();
 }
 
 fn get_header() -> String {
