@@ -11,6 +11,6 @@ mod tuner_tests {
             ina::init();
         });
 
-        assert_eq!(tuner::validate(), true);
+        assert!(tuner::validate())
     }
 }
