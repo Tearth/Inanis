@@ -11,7 +11,6 @@ use chrono::Utc;
 use nameof::name_of;
 use std::fs;
 use std::fs::File;
-use std::io;
 use std::io::BufRead;
 use std::io::BufReader;
 use std::io::Write;
@@ -28,10 +27,21 @@ impl TuningPosition {
 }
 
 pub fn run() {
+    validate();
+
+    let mut test = load_values();
+    save_values(&mut test);
+
     println!("Loading EPD file...");
     let mut positions = load_positions();
     println!("Loaded {} positions", positions.len());
-    println!("Error: {}", calculate_error(&mut positions, 1.13));
+    loop {
+        let now = Utc::now();
+        let error = calculate_error(&mut positions, 1.13);
+        let diff = (Utc::now() - now).num_milliseconds();
+
+        println!("Error: {} in {} ms", error, diff);
+    }
 
     save_evaluation_parameters();
     save_piece_square_table("pawn", unsafe { &pawn::PATTERN[0] }, unsafe { &pawn::PATTERN[1] });
@@ -40,6 +50,14 @@ pub fn run() {
     save_piece_square_table("rook", unsafe { &rook::PATTERN[0] }, unsafe { &rook::PATTERN[1] });
     save_piece_square_table("queen", unsafe { &queen::PATTERN[0] }, unsafe { &queen::PATTERN[1] });
     save_piece_square_table("king", unsafe { &king::PATTERN[0] }, unsafe { &king::PATTERN[1] });
+}
+
+pub fn validate() -> bool {
+    let mut values = load_values();
+    save_values(&mut values);
+
+    let values_after_save = load_values();
+    values.iter().zip(&values_after_save).all(|(a, b)| a == b)
 }
 
 fn load_positions() -> Vec<TuningPosition> {
@@ -78,6 +96,117 @@ fn calculate_error(positions: &mut Vec<TuningPosition>, scaling_constant: f64) -
     }
 
     sum_of_errors.powi(2) / (positions_count as f64)
+}
+
+fn load_values() -> Vec<i16> {
+    let mut values = Vec::new();
+    values.append(unsafe { &mut PIECE_VALUE.to_vec() });
+
+    values.push(unsafe { MOBILITY_OPENING });
+    values.push(unsafe { MOBILITY_ENDING });
+
+    values.push(unsafe { DOUBLED_PAWN_OPENING });
+    values.push(unsafe { DOUBLED_PAWN_ENDING });
+
+    values.push(unsafe { ISOLATED_PAWN_OPENING });
+    values.push(unsafe { ISOLATED_PAWN_ENDING });
+
+    values.push(unsafe { CHAINED_PAWN_OPENING });
+    values.push(unsafe { CHAINED_PAWN_ENDING });
+
+    values.push(unsafe { PASSING_PAWN_OPENING });
+    values.push(unsafe { PASSING_PAWN_ENDING });
+
+    values.push(unsafe { PAWN_SHIELD_OPENING });
+    values.push(unsafe { PAWN_SHIELD_ENDING });
+
+    values.push(unsafe { PAWN_SHIELD_OPEN_FILE_OPENING });
+    values.push(unsafe { PAWN_SHIELD_OPEN_FILE_ENDING });
+
+    values.push(unsafe { KING_ATTACKED_FIELDS_OPENING });
+    values.push(unsafe { KING_ATTACKED_FIELDS_ENDING });
+
+    values.append(unsafe { &mut pawn::PATTERN[0].iter().map(|v| *v as i16).collect::<Vec<i16>>() });
+    values.append(unsafe { &mut pawn::PATTERN[1].iter().map(|v| *v as i16).collect::<Vec<i16>>() });
+
+    values.append(unsafe { &mut knight::PATTERN[0].iter().map(|v| *v as i16).collect::<Vec<i16>>() });
+    values.append(unsafe { &mut knight::PATTERN[1].iter().map(|v| *v as i16).collect::<Vec<i16>>() });
+
+    values.append(unsafe { &mut bishop::PATTERN[0].iter().map(|v| *v as i16).collect::<Vec<i16>>() });
+    values.append(unsafe { &mut bishop::PATTERN[1].iter().map(|v| *v as i16).collect::<Vec<i16>>() });
+
+    values.append(unsafe { &mut rook::PATTERN[0].iter().map(|v| *v as i16).collect::<Vec<i16>>() });
+    values.append(unsafe { &mut rook::PATTERN[1].iter().map(|v| *v as i16).collect::<Vec<i16>>() });
+
+    values.append(unsafe { &mut queen::PATTERN[0].iter().map(|v| *v as i16).collect::<Vec<i16>>() });
+    values.append(unsafe { &mut queen::PATTERN[1].iter().map(|v| *v as i16).collect::<Vec<i16>>() });
+
+    values.append(unsafe { &mut king::PATTERN[0].iter().map(|v| *v as i16).collect::<Vec<i16>>() });
+    values.append(unsafe { &mut king::PATTERN[1].iter().map(|v| *v as i16).collect::<Vec<i16>>() });
+
+    values
+}
+
+fn save_values(values: &mut Vec<i16>) {
+    let mut index = 0;
+    save_values_to_i16_array_internal(values, unsafe { &mut PIECE_VALUE }, &mut index);
+
+    save_values_internal(values, unsafe { &mut MOBILITY_OPENING }, &mut index);
+    save_values_internal(values, unsafe { &mut MOBILITY_ENDING }, &mut index);
+
+    save_values_internal(values, unsafe { &mut DOUBLED_PAWN_OPENING }, &mut index);
+    save_values_internal(values, unsafe { &mut DOUBLED_PAWN_ENDING }, &mut index);
+
+    save_values_internal(values, unsafe { &mut ISOLATED_PAWN_OPENING }, &mut index);
+    save_values_internal(values, unsafe { &mut ISOLATED_PAWN_ENDING }, &mut index);
+
+    save_values_internal(values, unsafe { &mut CHAINED_PAWN_OPENING }, &mut index);
+    save_values_internal(values, unsafe { &mut CHAINED_PAWN_ENDING }, &mut index);
+
+    save_values_internal(values, unsafe { &mut PASSING_PAWN_OPENING }, &mut index);
+    save_values_internal(values, unsafe { &mut PASSING_PAWN_ENDING }, &mut index);
+
+    save_values_internal(values, unsafe { &mut PAWN_SHIELD_OPENING }, &mut index);
+    save_values_internal(values, unsafe { &mut PAWN_SHIELD_ENDING }, &mut index);
+
+    save_values_internal(values, unsafe { &mut PAWN_SHIELD_OPEN_FILE_OPENING }, &mut index);
+    save_values_internal(values, unsafe { &mut PAWN_SHIELD_OPEN_FILE_ENDING }, &mut index);
+
+    save_values_internal(values, unsafe { &mut KING_ATTACKED_FIELDS_OPENING }, &mut index);
+    save_values_internal(values, unsafe { &mut KING_ATTACKED_FIELDS_ENDING }, &mut index);
+
+    save_values_to_i8_array_internal(values, unsafe { &mut pawn::PATTERN[0] }, &mut index);
+    save_values_to_i8_array_internal(values, unsafe { &mut pawn::PATTERN[1] }, &mut index);
+
+    save_values_to_i8_array_internal(values, unsafe { &mut knight::PATTERN[0] }, &mut index);
+    save_values_to_i8_array_internal(values, unsafe { &mut knight::PATTERN[1] }, &mut index);
+
+    save_values_to_i8_array_internal(values, unsafe { &mut bishop::PATTERN[0] }, &mut index);
+    save_values_to_i8_array_internal(values, unsafe { &mut bishop::PATTERN[1] }, &mut index);
+
+    save_values_to_i8_array_internal(values, unsafe { &mut rook::PATTERN[0] }, &mut index);
+    save_values_to_i8_array_internal(values, unsafe { &mut rook::PATTERN[1] }, &mut index);
+
+    save_values_to_i8_array_internal(values, unsafe { &mut queen::PATTERN[0] }, &mut index);
+    save_values_to_i8_array_internal(values, unsafe { &mut queen::PATTERN[1] }, &mut index);
+
+    save_values_to_i8_array_internal(values, unsafe { &mut king::PATTERN[0] }, &mut index);
+    save_values_to_i8_array_internal(values, unsafe { &mut king::PATTERN[1] }, &mut index);
+}
+
+fn save_values_internal(values: &mut Vec<i16>, destination: &mut i16, index: &mut usize) {
+    *destination = values[*index];
+    *index += 1;
+}
+
+fn save_values_to_i8_array_internal(values: &mut Vec<i16>, array: &mut [i8], index: &mut usize) {
+    array.copy_from_slice(&values[*index..(*index + array.len())].iter().map(|v| *v as i8).collect::<Vec<i8>>());
+    *index += array.len();
+}
+
+fn save_values_to_i16_array_internal(values: &mut Vec<i16>, array: &mut [i16], index: &mut usize) {
+    array.copy_from_slice(&values[*index..(*index + array.len())]);
+    *index += array.len();
 }
 
 fn save_evaluation_parameters() {

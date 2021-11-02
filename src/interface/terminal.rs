@@ -8,7 +8,7 @@ use crate::perft;
 use crate::state::board::Bitboard;
 use crate::state::movegen;
 use crate::utils::benchmark;
-use crate::utils::tuning;
+use crate::utils::tuner;
 use chrono::Utc;
 use prettytable::cell;
 use prettytable::format;
@@ -385,7 +385,7 @@ fn handle_qperft(input: Vec<&str>) {
 }
 
 fn handle_tuning() {
-    tuning::run();
+    tuner::run();
 }
 
 fn handle_uci() {
