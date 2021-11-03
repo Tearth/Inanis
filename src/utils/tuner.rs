@@ -290,7 +290,12 @@ fn save_values_internal(values: &mut Vec<i16>, destination: &mut i16, index: &mu
 }
 
 fn save_values_to_i8_array_internal(values: &mut Vec<i16>, array: &mut [i8], index: &mut usize) {
-    array.copy_from_slice(&values[*index..(*index + array.len())].iter().map(|v| *v as i8).collect::<Vec<i8>>());
+    array.copy_from_slice(
+        &values[*index..(*index + array.len())]
+            .iter()
+            .map(|v| (*v).clamp(i8::MIN as i16, i8::MAX as i16) as i8)
+            .collect::<Vec<i8>>(),
+    );
     *index += array.len();
 }
 
