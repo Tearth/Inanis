@@ -2,7 +2,7 @@
 // Generated at 2021-11-02 20:29:37 UTC //
 // ------------------------------------ //
 
-pub static mut PIECE_VALUE: [i16; 6] = [92, 332, 375, 561, 1155, 10000];
+pub static mut PIECE_VALUE: [i16; 6] = [95, 335, 375, 560, 1150, 10000];
 
 pub static mut MOBILITY_OPENING: i16 = 2;
 pub static mut MOBILITY_ENDING: i16 = 3;
@@ -27,4 +27,3 @@ pub static mut PAWN_SHIELD_OPEN_FILE_ENDING: i16 = 4;
 
 pub static mut KING_ATTACKED_FIELDS_OPENING: i16 = -16;
 pub static mut KING_ATTACKED_FIELDS_ENDING: i16 = 6;
-

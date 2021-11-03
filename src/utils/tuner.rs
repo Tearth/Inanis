@@ -28,7 +28,7 @@ impl TunerPosition {
     }
 }
 
-pub fn run(epd_filename: &str, output_directory: &str) {
+pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool) {
     println!("Loading EPD file...");
     let mut positions = match load_positions(epd_filename) {
         Ok(value) => value,
@@ -42,7 +42,7 @@ pub fn run(epd_filename: &str, output_directory: &str) {
     let mut tendence = Vec::new();
     tendence.resize(positions.len(), 1i8);
 
-    let mut best_values = load_values();
+    let mut best_values = load_values(lock_material);
     let mut best_error = calculate_error(&mut positions, 1.13);
     let mut improved = true;
     let mut iterations_count = 0;
@@ -57,7 +57,7 @@ pub fn run(epd_filename: &str, output_directory: &str) {
 
         for value_index in 0..best_values.len() {
             // Ignore king value (no point to tune it)
-            if value_index == 5 {
+            if !lock_material && value_index == 5 {
                 continue;
             }
 
@@ -66,7 +66,7 @@ pub fn run(epd_filename: &str, output_directory: &str) {
             let mut value_changed = false;
 
             values[value_index] += step;
-            save_values(&mut values);
+            save_values(&mut values, lock_material);
 
             let error = calculate_error(&mut positions, 1.13);
             if error < best_error {
@@ -81,7 +81,7 @@ pub fn run(epd_filename: &str, output_directory: &str) {
             } else if error > best_error {
                 values[value_index] -= step;
                 values[value_index] -= step.signum();
-                save_values(&mut values);
+                save_values(&mut values, lock_material);
 
                 let error = calculate_error(&mut positions, 1.13);
                 if error < best_error {
@@ -132,10 +132,10 @@ pub fn run(epd_filename: &str, output_directory: &str) {
 }
 
 pub fn validate() -> bool {
-    let mut values = load_values();
-    save_values(&mut values);
+    let mut values = load_values(false);
+    save_values(&mut values, false);
 
-    let values_after_save = load_values();
+    let values_after_save = load_values(false);
     values.iter().zip(&values_after_save).all(|(a, b)| a == b)
 }
 
@@ -180,9 +180,12 @@ fn calculate_error(positions: &mut Vec<TunerPosition>, scaling_constant: f64) ->
     sum_of_errors / (positions_count as f64)
 }
 
-fn load_values() -> Vec<i16> {
+fn load_values(lock_material: bool) -> Vec<i16> {
     let mut values = Vec::new();
-    values.append(unsafe { &mut PIECE_VALUE.to_vec() });
+
+    if !lock_material {
+        values.append(unsafe { &mut PIECE_VALUE.to_vec() });
+    }
 
     values.push(unsafe { MOBILITY_OPENING });
     values.push(unsafe { MOBILITY_ENDING });
@@ -229,9 +232,12 @@ fn load_values() -> Vec<i16> {
     values
 }
 
-fn save_values(values: &mut Vec<i16>) {
+fn save_values(values: &mut Vec<i16>, lock_material: bool) {
     let mut index = 0;
-    save_values_to_i16_array_internal(values, unsafe { &mut PIECE_VALUE }, &mut index);
+
+    if !lock_material {
+        save_values_to_i16_array_internal(values, unsafe { &mut PIECE_VALUE }, &mut index);
+    }
 
     save_values_internal(values, unsafe { &mut MOBILITY_OPENING }, &mut index);
     save_values_internal(values, unsafe { &mut MOBILITY_ENDING }, &mut index);

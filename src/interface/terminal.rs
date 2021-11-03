@@ -59,7 +59,7 @@ fn handle_help() {
     println!(" benchmark - run test for a set of positions");
     println!(" evaluate [fen] - show score for the position");
     println!(" magic - generate magic numbers");
-    println!(" tuner [epd] [output] - run tuning");
+    println!(" tuner [epd] [output] [lock_material] - run tuning");
     println!(" uci - run Universal Chess Interface");
     println!(" quit - close the application");
     println!();
@@ -396,7 +396,21 @@ fn handle_tuner(input: Vec<&str>) {
         return;
     }
 
-    tuner::run(input[1].trim(), input[2].trim());
+    if input.len() < 4 {
+        println!("Flag parameter not found");
+        return;
+    }
+
+    let lock_material = match input[3].trim() {
+        "true" => true,
+        "false" => false,
+        _ => {
+            println!("Invalid flag");
+            return;
+        }
+    };
+
+    tuner::run(input[1].trim(), input[2].trim(), lock_material);
 }
 
 fn handle_uci() {
