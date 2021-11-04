@@ -28,7 +28,7 @@ impl TunerPosition {
     }
 }
 
-pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool) {
+pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, random_values: bool) {
     println!("Loading EPD file...");
     let mut positions = match load_positions(epd_filename) {
         Ok(value) => value,
@@ -42,7 +42,9 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool) {
     let mut tendence = Vec::new();
     tendence.resize(positions.len(), 1i8);
 
-    let mut best_values = load_values(lock_material);
+    let mut best_values = load_values(lock_material, random_values);
+    save_values(&mut best_values, lock_material);
+
     let mut best_error = calculate_error(&mut positions, 1.13);
     let mut improved = true;
     let mut iterations_count = 0;
@@ -110,13 +112,13 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool) {
         }
 
         unsafe {
-            save_evaluation_parameters(output_directory, best_error);
-            save_piece_square_table(output_directory, best_error, "pawn", &pawn::PATTERN[0], &pawn::PATTERN[1]);
-            save_piece_square_table(output_directory, best_error, "knight", &knight::PATTERN[0], &knight::PATTERN[1]);
-            save_piece_square_table(output_directory, best_error, "bishop", &bishop::PATTERN[0], &bishop::PATTERN[1]);
-            save_piece_square_table(output_directory, best_error, "rook", &rook::PATTERN[0], &rook::PATTERN[1]);
-            save_piece_square_table(output_directory, best_error, "queen", &queen::PATTERN[0], &queen::PATTERN[1]);
-            save_piece_square_table(output_directory, best_error, "king", &king::PATTERN[0], &king::PATTERN[1]);
+            write_evaluation_parameters(output_directory, best_error);
+            write_piece_square_table(output_directory, best_error, "pawn", &pawn::PATTERN[0], &pawn::PATTERN[1]);
+            write_piece_square_table(output_directory, best_error, "knight", &knight::PATTERN[0], &knight::PATTERN[1]);
+            write_piece_square_table(output_directory, best_error, "bishop", &bishop::PATTERN[0], &bishop::PATTERN[1]);
+            write_piece_square_table(output_directory, best_error, "rook", &rook::PATTERN[0], &rook::PATTERN[1]);
+            write_piece_square_table(output_directory, best_error, "queen", &queen::PATTERN[0], &queen::PATTERN[1]);
+            write_piece_square_table(output_directory, best_error, "king", &king::PATTERN[0], &king::PATTERN[1]);
         }
 
         println!(
@@ -132,10 +134,10 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool) {
 }
 
 pub fn validate() -> bool {
-    let mut values = load_values(false);
+    let mut values = load_values(false, false);
     save_values(&mut values, false);
 
-    let values_after_save = load_values(false);
+    let values_after_save = load_values(false, false);
     values.iter().zip(&values_after_save).all(|(a, b)| a == b)
 }
 
@@ -180,7 +182,7 @@ fn calculate_error(positions: &mut Vec<TunerPosition>, scaling_constant: f64) ->
     sum_of_errors / (positions_count as f64)
 }
 
-fn load_values(lock_material: bool) -> Vec<i16> {
+fn load_values(lock_material: bool, random_values: bool) -> Vec<i16> {
     let mut values = Vec::new();
 
     if !lock_material {
@@ -228,6 +230,12 @@ fn load_values(lock_material: bool) -> Vec<i16> {
 
     values.append(unsafe { &mut king::PATTERN[0].iter().map(|v| *v as i16).collect::<Vec<i16>>() });
     values.append(unsafe { &mut king::PATTERN[1].iter().map(|v| *v as i16).collect::<Vec<i16>>() });
+
+    if random_values {
+        for value in &mut values {
+            *value = fastrand::i16(-16..16);
+        }
+    }
 
     values
 }
@@ -304,7 +312,7 @@ fn save_values_to_i16_array_internal(values: &mut Vec<i16>, array: &mut [i16], i
     *index += array.len();
 }
 
-fn save_evaluation_parameters(output_directory: &str, best_error: f64) {
+fn write_evaluation_parameters(output_directory: &str, best_error: f64) {
     let mut output = String::new();
     output.push_str(get_header(best_error).as_str());
     output.push_str("\n");
@@ -342,7 +350,7 @@ fn save_evaluation_parameters(output_directory: &str, best_error: f64) {
     write!(&mut File::create(path).unwrap(), "{}", output.to_string()).unwrap();
 }
 
-fn save_piece_square_table(output_directory: &str, best_error: f64, name: &str, opening: &[i8], ending: &[i8]) {
+fn write_piece_square_table(output_directory: &str, best_error: f64, name: &str, opening: &[i8], ending: &[i8]) {
     let mut output = String::new();
 
     output.push_str(get_header(best_error).as_str());

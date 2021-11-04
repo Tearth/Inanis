@@ -397,7 +397,12 @@ fn handle_tuner(input: Vec<&str>) {
     }
 
     if input.len() < 4 {
-        println!("Flag parameter not found");
+        println!("Lock material parameter not found");
+        return;
+    }
+
+    if input.len() < 5 {
+        println!("Random values parameter not found");
         return;
     }
 
@@ -410,7 +415,16 @@ fn handle_tuner(input: Vec<&str>) {
         }
     };
 
-    tuner::run(input[1].trim(), input[2].trim(), lock_material);
+    let random_values = match input[4].trim() {
+        "true" => true,
+        "false" => false,
+        _ => {
+            println!("Invalid flag");
+            return;
+        }
+    };
+
+    tuner::run(input[1].trim(), input[2].trim(), lock_material, random_values);
 }
 
 fn handle_uci() {
