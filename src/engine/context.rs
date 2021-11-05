@@ -14,7 +14,7 @@ pub struct SearchContext<'a> {
     pub statistics: SearchStatistics,
     pub time: u32,
     pub inc_time: u32,
-    pub current_depth: i32,
+    pub current_depth: i8,
     pub search_time_start: DateTime<Utc>,
     pub last_search_time: f64,
     pub deadline: u32,
@@ -28,7 +28,7 @@ pub struct SearchContext<'a> {
 
 pub struct SearchResult {
     pub time: u64,
-    pub depth: i32,
+    pub depth: i8,
     pub score: i16,
     pub best_move: Move,
     pub statistics: SearchStatistics,
@@ -100,18 +100,20 @@ impl<'a> Iterator for SearchContext<'a> {
     type Item = SearchResult;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.search_done || self.current_depth >= 32 {
+        if self.search_done || self.current_depth >= MAX_DEPTH {
             return None;
         }
 
+        let desired_time = clock::get_time_for_move(self.time, self.inc_time);
+
         // Make sure we have at least one depth done before abort
         if self.current_depth > 1 {
-            self.deadline = clock::get_time_for_move(self.time, self.inc_time) * 2;
+            self.deadline = ((desired_time as f32) * DEADLINE_MULTIPLIER) as u32;
         } else {
             self.deadline = u32::MAX;
         }
 
-        let score = search::run::<true>(self, self.current_depth, 0, -32000, 32000, true);
+        let score = search::run::<true>(self, self.current_depth, 0, MIN_ALPHA, MIN_BETA, true);
         let search_time = (Utc::now() - self.search_time_start).num_milliseconds() as f64;
         let time_ratio = search_time / (self.last_search_time as f64);
 
@@ -119,7 +121,7 @@ impl<'a> Iterator for SearchContext<'a> {
             return None;
         }
 
-        if is_score_near_checkmate(score) || search_time * time_ratio > clock::get_time_for_move(self.time, self.inc_time) as f64 {
+        if is_score_near_checkmate(score) || search_time * time_ratio > desired_time as f64 {
             self.search_done = true;
         }
 
@@ -143,7 +145,7 @@ impl<'a> Iterator for SearchContext<'a> {
 }
 
 impl SearchResult {
-    pub fn new(time: u64, depth: i32, score: i16, best_move: Move, statistics: SearchStatistics) -> SearchResult {
+    pub fn new(time: u64, depth: i8, score: i16, best_move: Move, statistics: SearchStatistics) -> SearchResult {
         SearchResult {
             time,
             depth,

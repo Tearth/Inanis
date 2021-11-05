@@ -1,3 +1,5 @@
+use crate::engine::MAX_MOVES_COUNT;
+
 use super::board::Bitboard;
 use super::board::CastlingRights;
 use super::*;
@@ -79,7 +81,7 @@ impl Move {
             None => MoveFlags::QUIET,
         };
 
-        let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
+        let mut moves: [Move; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
         let moves_count = board.get_moves(&mut moves);
 
         for r#move in &moves[0..moves_count] {

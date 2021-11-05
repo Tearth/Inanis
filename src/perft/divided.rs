@@ -1,6 +1,7 @@
 use super::context::PerftContext;
 use super::run_internal;
 use crate::cache::perft::PerftHashTable;
+use crate::engine::MAX_MOVES_COUNT;
 use crate::state::board::Bitboard;
 use crate::state::movescan::Move;
 use std::mem::MaybeUninit;
@@ -8,7 +9,7 @@ use std::sync::Arc;
 use std::u64;
 
 pub fn run(depth: i32, board: &mut Bitboard) -> Vec<(String, u64)> {
-    let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
+    let mut moves: [Move; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
     let moves_count = board.get_moves(&mut moves);
 
     let hashtable = Arc::new(PerftHashTable::new(0));

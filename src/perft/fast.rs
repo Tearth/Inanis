@@ -1,4 +1,5 @@
 use crate::cache::perft::PerftHashTable;
+use crate::engine::MAX_MOVES_COUNT;
 use crate::perft::context::PerftContext;
 use crate::state::board::Bitboard;
 use crate::state::movescan::Move;
@@ -15,7 +16,7 @@ pub fn run(depth: i32, board: &mut Bitboard, hashtable_size: usize, threads_coun
     let hashtable = Arc::new(PerftHashTable::new(hashtable_size));
     let mut threads = Vec::new();
 
-    let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
+    let mut moves: [Move; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
     let moves_count = board.get_moves(&mut moves);
 
     for r#move in &moves[0..moves_count] {

@@ -113,12 +113,7 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i32, ply: u16, mu
     };
 
     // Null-move pruning
-    if !PV
-        && allow_null_move
-        && depth > 3
-        && context.board.get_game_phase() > 0.15
-        && !context.board.is_king_checked(context.board.active_color)
-    {
+    if !PV && allow_null_move && depth > 3 && context.board.get_game_phase() > 0.15 && !context.board.is_king_checked(context.board.active_color) {
         let r = if depth > 6 { 3 } else { 2 };
         context.statistics.null_window_searches += 1;
 
@@ -134,8 +129,8 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i32, ply: u16, mu
         }
     }
 
-    let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
-    let mut move_scores: [i16; 218] = unsafe { MaybeUninit::uninit().assume_init() };
+    let mut moves: [Move; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
+    let mut move_scores: [i16; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
     let moves_count = context.board.get_moves(&mut moves);
 
     assign_move_scores(context, &moves, &mut move_scores, moves_count, hash_move, ply);

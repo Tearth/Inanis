@@ -29,12 +29,12 @@ impl PawnHashTable {
     }
 
     pub fn add(&mut self, hash: u64, score: i16) {
-        self.table[(hash as usize) % self.slots] = PawnHashTableEntry::new((hash >> 48) as u16, score);
+        self.table[(hash as usize) % self.slots] = PawnHashTableEntry::new(self.get_key(hash), score);
     }
 
     pub fn get(&self, hash: u64, collision: &mut bool) -> Option<PawnHashTableEntry> {
         let entry = self.table[(hash as usize) % self.slots];
-        if entry.key == (hash >> 48) as u16 {
+        if entry.key == self.get_key(hash) {
             return Some(entry);
         }
 
@@ -56,6 +56,10 @@ impl PawnHashTable {
         }
 
         ((filled_entries as f32) / (RESOLUTION as f32)) * 100.0
+    }
+
+    fn get_key(&self, hash: u64) -> u16 {
+        (hash >> 48) as u16
     }
 }
 

@@ -5,7 +5,7 @@ use crate::state::movescan::MoveFlags;
 use crate::state::*;
 use std::mem::MaybeUninit;
 
-pub fn run(context: &mut SearchContext, depth: i32, ply: u16, mut alpha: i16, beta: i16) -> i16 {
+pub fn run(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, beta: i16) -> i16 {
     context.statistics.q_nodes_count += 1;
 
     if context.board.pieces[context.board.active_color as usize][KING as usize] == 0 {
@@ -13,8 +13,7 @@ pub fn run(context: &mut SearchContext, depth: i32, ply: u16, mut alpha: i16, be
         return -CHECKMATE_SCORE + (ply as i16);
     }
 
-    let stand_pat =
-        -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate(&mut context.pawn_hash_table, &mut context.statistics);
+    let stand_pat = -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate(&mut context.pawn_hash_table, &mut context.statistics);
     if stand_pat >= beta {
         context.statistics.q_leafs_count += 1;
         context.statistics.q_beta_cutoffs += 1;
@@ -25,8 +24,8 @@ pub fn run(context: &mut SearchContext, depth: i32, ply: u16, mut alpha: i16, be
         alpha = stand_pat;
     }
 
-    let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
-    let mut move_scores: [i16; 218] = unsafe { MaybeUninit::uninit().assume_init() };
+    let mut moves: [Move; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
+    let mut move_scores: [i16; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
     let moves_count = context.board.get_moves(&mut moves);
 
     assign_move_scores(context, &moves, &mut move_scores, moves_count);

@@ -51,7 +51,7 @@ impl TranspositionTable {
     }
 
     pub fn add(&mut self, hash: u64, mut score: i16, best_move: Move, depth: i8, ply: u16, score_type: TranspositionTableScoreType) {
-        let key = (hash >> 32) as u32;
+        let key = self.get_key(hash);
         let mut bucket = self.table[(hash as usize) % self.slots];
         let mut smallest_depth = bucket.entries[0].depth as u8;
         let mut smallest_depth_index = 0;
@@ -82,7 +82,7 @@ impl TranspositionTable {
     }
 
     pub fn get(&self, hash: u64, ply: u16, collision: &mut bool) -> Option<TranspositionTableEntry> {
-        let key = (hash >> 32) as u32;
+        let key = self.get_key(hash);
         let bucket = self.table[(hash as usize) % self.slots];
         let mut entry_with_key_present = false;
 
@@ -118,7 +118,6 @@ impl TranspositionTable {
     pub fn get_usage(&self) -> f32 {
         const RESOLUTION: usize = 10000;
         const BUCKETS_COUNT_TO_CHECK: usize = RESOLUTION / BUCKET_SLOTS;
-
         let mut filled_entries = 0;
 
         for bucket_index in 0..BUCKETS_COUNT_TO_CHECK {
@@ -136,6 +135,10 @@ impl TranspositionTable {
     pub fn clear(&mut self) {
         self.table.clear();
         self.table.resize(self.slots, Default::default());
+    }
+
+    fn get_key(&self, hash: u64) -> u32 {
+        (hash >> 32) as u32
     }
 }
 
