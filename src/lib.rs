@@ -33,4 +33,5 @@ pub fn init() {
     patterns::init();
     movegen::init();
     zobrist::init();
+    evaluation::init();
 }

@@ -1,3 +1,4 @@
+use crate::evaluation;
 use crate::evaluation::parameters::*;
 use crate::evaluation::pst;
 use crate::evaluation::pst::bishop;
@@ -290,6 +291,7 @@ fn save_values(values: &mut Vec<i16>, lock_material: bool) {
     save_values_to_i8_array_internal(values, unsafe { &mut king::PATTERN[1] }, &mut index);
 
     pst::init();
+    evaluation::init();
 }
 
 fn save_values_internal(values: &mut Vec<i16>, destination: &mut i16, index: &mut usize) {

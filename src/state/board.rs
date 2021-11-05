@@ -9,9 +9,11 @@ use crate::cache::pawns::PawnHashTable;
 use crate::engine::context::SearchStatistics;
 use crate::evaluation::material;
 use crate::evaluation::mobility;
+use crate::evaluation::parameters::PIECE_VALUE;
 use crate::evaluation::pawns;
 use crate::evaluation::pst;
 use crate::evaluation::safety;
+use crate::evaluation::INITIAL_MATERIAL;
 
 bitflags! {
     pub struct CastlingRights: u8 {
@@ -599,10 +601,8 @@ impl Bitboard {
     }
 
     pub fn get_game_phase(&self) -> f32 {
-        let initial_material = 7920;
-        let total_material = self.material_scores[WHITE as usize] + self.material_scores[BLACK as usize] - 20000;
-
-        (total_material as f32) / (initial_material as f32)
+        let total_material = self.material_scores[WHITE as usize] + self.material_scores[BLACK as usize] - 2 * unsafe { PIECE_VALUE[KING as usize] };
+        (total_material as f32) / (unsafe { INITIAL_MATERIAL } as f32)
     }
 }
 
