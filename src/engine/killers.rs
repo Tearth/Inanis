@@ -8,8 +8,8 @@ pub struct KillersTable {
 
 impl KillersTable {
     pub fn add(&mut self, color: u8, ply: u16, r#move: Move) {
-        for slot_index in 0..KILLER_SLOTS - 1 {
-            self.table[color as usize][ply as usize][slot_index + 1] = self.table[color as usize][ply as usize][slot_index];
+        for slot_index in (1..KILLER_SLOTS).rev() {
+            self.table[color as usize][ply as usize][slot_index] = self.table[color as usize][ply as usize][slot_index - 1];
         }
 
         self.table[color as usize][ply as usize][0] = r#move;
