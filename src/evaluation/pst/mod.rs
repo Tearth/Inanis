@@ -28,10 +28,7 @@ pub fn init() {
 }
 
 pub fn evaluate(board: &Bitboard) -> i16 {
-    let initial_material = 7920;
-    let total_material = board.material_scores[WHITE as usize] + board.material_scores[BLACK as usize] - 20000;
-
-    let game_phase = (total_material as f32) / (initial_material as f32);
+    let game_phase = board.get_game_phase();
     let opening_score = board.pst_scores[WHITE as usize][OPENING as usize] - board.pst_scores[BLACK as usize][OPENING as usize];
     let ending_score = board.pst_scores[WHITE as usize][ENDING as usize] - board.pst_scores[BLACK as usize][ENDING as usize];
 
