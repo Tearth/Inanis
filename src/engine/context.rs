@@ -15,6 +15,7 @@ pub struct SearchContext<'a> {
     pub time: u32,
     pub inc_time: u32,
     pub current_depth: i8,
+    pub forced_depth: i8,
     pub search_time_start: DateTime<Utc>,
     pub last_search_time: f64,
     pub deadline: u32,
@@ -72,6 +73,7 @@ impl<'a> SearchContext<'a> {
         board: &'a mut Bitboard,
         time: u32,
         inc_time: u32,
+        forced_depth: i8,
         transposition_table: &'a mut TranspositionTable,
         pawn_hash_table: &'a mut PawnHashTable,
         killers_table: &'a mut KillersTable,
@@ -83,6 +85,7 @@ impl<'a> SearchContext<'a> {
             time,
             inc_time,
             current_depth: 1,
+            forced_depth,
             search_time_start: Utc::now(),
             last_search_time: 1.0,
             deadline: 0,
@@ -100,6 +103,10 @@ impl<'a> Iterator for SearchContext<'a> {
     type Item = SearchResult;
 
     fn next(&mut self) -> Option<Self::Item> {
+        if self.forced_depth != 0 && self.current_depth == self.forced_depth + 1 {
+            return None;
+        }
+
         if self.search_done || self.current_depth >= MAX_DEPTH {
             return None;
         }
@@ -121,8 +128,10 @@ impl<'a> Iterator for SearchContext<'a> {
             return None;
         }
 
-        if is_score_near_checkmate(score) || search_time * time_ratio > desired_time as f64 {
-            self.search_done = true;
+        if self.forced_depth == 0 {
+            if is_score_near_checkmate(score) || search_time * time_ratio > desired_time as f64 {
+                self.search_done = true;
+            }
         }
 
         if search_time > 0.0 {

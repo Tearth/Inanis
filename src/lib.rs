@@ -5,7 +5,8 @@
     clippy::uninit_assumed_init,
     clippy::nonminimal_bool,
     clippy::collapsible_if,
-    clippy::single_char_add_str
+    clippy::single_char_add_str,
+    clippy::too_many_arguments
 )]
 
 use engine::see;

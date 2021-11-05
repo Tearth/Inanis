@@ -1,53 +1,16 @@
 use super::context::SearchContext;
-use super::context::SearchResult;
 use super::qsearch;
 use super::*;
-use crate::cache::pawns::PawnHashTable;
-use crate::cache::search::TranspositionTable;
 use crate::cache::search::TranspositionTableScoreType;
-use crate::state::board::Bitboard;
 use crate::state::movescan::Move;
 use crate::state::movescan::MoveFlags;
 use crate::state::*;
 use chrono::Utc;
 use std::mem::MaybeUninit;
 
-pub fn run_fixed_depth(board: &mut Bitboard, depth: i32) -> SearchResult {
-    let mut transposition_table = TranspositionTable::new(32 * 1024 * 1024);
-    let mut pawn_hash_table = PawnHashTable::new(1 * 1024 * 1024);
-    let mut killers_table = Default::default();
-    let mut history_table = Default::default();
-
-    let mut context = SearchContext::new(
-        board,
-        0,
-        0,
-        &mut transposition_table,
-        &mut pawn_hash_table,
-        &mut killers_table,
-        &mut history_table,
-    );
-    let mut best_move = Default::default();
-    let mut best_score = 0;
-
-    context.deadline = u32::MAX;
-
-    let search_time_start = Utc::now();
-    for current_depth in 1..=depth {
-        let score = run::<true>(&mut context, current_depth, 0, -32000, 32000, true);
-        let r#move = context.transposition_table.get_best_move(context.board.hash).unwrap();
-
-        best_score = score;
-        best_move = r#move;
-    }
-
-    let time = (Utc::now() - search_time_start).num_milliseconds() as u64;
-    SearchResult::new(time, depth, best_score, best_move, context.statistics)
-}
-
-pub fn run<const PV: bool>(context: &mut SearchContext, depth: i32, ply: u16, mut alpha: i16, mut beta: i16, allow_null_move: bool) -> i16 {
-    // Check every 100 000 node
-    if context.statistics.nodes_count % 100_000 == 0 {
+pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, mut beta: i16, allow_null_move: bool) -> i16 {
+    // Check every 100 000 node (only if we don't search to the specified depth)
+    if context.forced_depth == 0 && context.statistics.nodes_count % 100_000 == 0 {
         if (Utc::now() - context.search_time_start).num_milliseconds() >= context.deadline as i64 {
             context.aborted = true;
             return 0;

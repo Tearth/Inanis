@@ -1,3 +1,6 @@
+use crate::cache::pawns::PawnHashTable;
+use crate::cache::search::TranspositionTable;
+use crate::engine::context::SearchContext;
 use crate::engine::search;
 use crate::state::board::Bitboard;
 use chrono::Utc;
@@ -55,8 +58,24 @@ pub fn run() -> BenchmarkResult {
     let benchmark_time_start = Utc::now();
 
     for fen in benchmark_positions {
+        let mut transposition_table = TranspositionTable::new(32 * 1024 * 1024);
+        let mut pawn_hash_table = PawnHashTable::new(1 * 1024 * 1024);
+        let mut killers_table = Default::default();
+        let mut history_table = Default::default();
+
         let mut board = Bitboard::new_from_fen(fen).unwrap();
-        let result = search::run_fixed_depth(&mut board, 9);
+        let context = SearchContext::new(
+            &mut board,
+            0,
+            0,
+            9,
+            &mut transposition_table,
+            &mut pawn_hash_table,
+            &mut killers_table,
+            &mut history_table,
+        );
+
+        let result = context.last().unwrap();
 
         benchmark_result.nodes_count += result.statistics.nodes_count;
         benchmark_result.q_nodes_count += result.statistics.q_nodes_count;

@@ -116,6 +116,7 @@ fn handle_go(parameters: &[String], state: &mut UciState) {
         &mut state.board,
         time,
         inc_time,
+        0,
         &mut state.transposition_table,
         &mut state.pawn_hash_table,
         &mut killers_table,
