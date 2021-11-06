@@ -24,13 +24,13 @@ pub fn run(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, bet
         alpha = stand_pat;
     }
 
+    let mut found = false;
     let mut moves: [Move; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
     let mut move_scores: [i16; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
     let moves_count = context.board.get_moves(&mut moves);
 
     assign_move_scores(context, &moves, &mut move_scores, moves_count);
 
-    let mut found = false;
     for move_index in 0..moves_count {
         sort_next_move(&mut moves, &mut move_scores, move_index, moves_count);
 

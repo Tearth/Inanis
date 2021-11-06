@@ -38,14 +38,14 @@ pub fn run() {
 
     println!("id name Ina v{} ({})", VERSION, DATE);
     println!("id author {}", AUTHOR);
-    println!("option name Hash type spin default 1 min 1 max 128");
+    println!("option name Hash type spin default 1 min 1 max 32768");
     println!("uciok");
 
     loop {
         let mut input = String::new();
         io::stdin().read_line(&mut input).unwrap();
 
-        let tokens: Vec<String> = input.split(' ').map(|p| p.trim().to_string()).collect();
+        let tokens: Vec<String> = input.split(' ').map(|v| v.trim().to_string()).collect();
         match tokens[0].to_lowercase().as_str() {
             "go" => handle_go(&tokens, &mut state),
             "isready" => handle_isready(),
@@ -179,7 +179,7 @@ fn handle_position(parameters: &[String], state: &mut UciState) {
 
     if let Some(index) = parameters.iter().position(|s| s == "moves") {
         for premade_move in &parameters[index + 1..] {
-            let parsed_move = match Move::from_text(premade_move.trim(), &state.board) {
+            let parsed_move = match Move::from_text(premade_move, &state.board) {
                 Ok(r#move) => r#move,
                 Err(message) => {
                     println!("info string Error: {}", message);

@@ -8,12 +8,26 @@ use crate::state::*;
 use chrono::Utc;
 use std::mem::MaybeUninit;
 
+pub const NULL_MOVE_MIN_DEPTH: i8 = 4;
+pub const NULL_MOVE_R_CHANGE_DEPTH: i8 = 6;
+pub const NULL_MOVE_MIN_GAME_PHASE: f32 = 0.15;
+pub const NULL_MOVE_SMALL_R: i8 = 2;
+pub const NULL_MOVE_BIG_R: i8 = 3;
+
+pub const MOVE_ORDERING_HAS_MOVE: i16 = 10000;
+pub const MOVE_ORDERING_KILLER_MOVE: i16 = 120;
+pub const MOVE_ORDERING_HISTORY_MOVE: u8 = 90;
+
 pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, mut beta: i16, allow_null_move: bool) -> i16 {
+    if context.aborted {
+        return INVALID_SCORE;
+    }
+
     // Check every 100 000 node (only if we don't search to the specified depth)
     if context.forced_depth == 0 && context.statistics.nodes_count % 100_000 == 0 {
         if (Utc::now() - context.search_time_start).num_milliseconds() >= context.deadline as i64 {
             context.aborted = true;
-            return 0;
+            return INVALID_SCORE;
         }
     }
 
@@ -26,7 +40,7 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
 
     if context.board.is_threefold_repetition_draw() || context.board.is_fifty_move_rule_draw() {
         context.statistics.leafs_count += 1;
-        return 0;
+        return DRAW_SCORE;
     }
 
     if depth <= 0 {
@@ -41,8 +55,8 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
 
     match context.transposition_table.get(context.board.hash, ply, &mut collision) {
         Some(entry) => {
-            context.statistics.tt_hits += 1;
             hash_move = entry.best_move;
+            context.statistics.tt_hits += 1;
 
             if entry.depth >= depth as i8 {
                 tt_entry_found = true;
@@ -57,10 +71,14 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
                             alpha = entry.score;
                         }
                     }
-                    _ => return entry.score,
+                    _ => {
+                        context.statistics.leafs_count += 1;
+                        return entry.score;
+                    }
                 }
 
                 if alpha >= beta {
+                    context.statistics.leafs_count += 1;
                     context.statistics.beta_cutoffs += 1;
                     return entry.score;
                 }
@@ -75,31 +93,34 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
         }
     };
 
-    // Null-move pruning
-    if !PV && allow_null_move && depth > 3 && context.board.get_game_phase() > 0.15 && !context.board.is_king_checked(context.board.active_color) {
-        let r = if depth > 6 { 3 } else { 2 };
-        context.statistics.null_window_searches += 1;
+    if null_move_can_be_applied::<PV>(context, depth, allow_null_move) {
+        let r = if depth <= NULL_MOVE_R_CHANGE_DEPTH {
+            NULL_MOVE_SMALL_R
+        } else {
+            NULL_MOVE_BIG_R
+        };
+        context.statistics.null_move_searches += 1;
 
         context.board.make_null_move();
         let score = -run::<false>(context, depth - r - 1, ply + 1, -beta, -beta + 1, false);
         context.board.undo_null_move();
 
         if score >= beta {
-            context.statistics.null_window_accepted += 1;
+            context.statistics.leafs_count += 1;
+            context.statistics.null_move_accepted += 1;
             return score;
         } else {
-            context.statistics.null_window_rejected += 1;
+            context.statistics.null_move_rejected += 1;
         }
     }
 
+    let mut best_score = i16::MIN;
+    let mut best_move = Default::default();
     let mut moves: [Move; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
     let mut move_scores: [i16; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
     let moves_count = context.board.get_moves(&mut moves);
 
     assign_move_scores(context, &moves, &mut move_scores, moves_count, hash_move, ply);
-
-    let mut best_move = Default::default();
-    let mut best_score = i16::MIN;
 
     for move_index in 0..moves_count {
         sort_next_move(&mut moves, &mut move_scores, move_index, moves_count);
@@ -137,7 +158,7 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
             best_move = r#move;
 
             if alpha >= beta {
-                if r#move.get_flags() == MoveFlags::QUIET || r#move.get_flags() == MoveFlags::DOUBLE_PUSH {
+                if r#move.is_quiet() {
                     context.killers_table.add(context.board.active_color, ply, r#move);
                     context.history_table.add(r#move.get_from(), r#move.get_to(), depth as u8);
                 }
@@ -155,7 +176,7 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
     }
 
     if context.aborted {
-        return -1;
+        return INVALID_SCORE;
     }
 
     if best_score == -(-CHECKMATE_SCORE + (ply as i16) + 1) {
@@ -165,7 +186,7 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
 
     if best_score == -CHECKMATE_SCORE + (ply as i16) + 2 && !context.board.is_king_checked(context.board.active_color) {
         context.statistics.leafs_count += 1;
-        return 0;
+        return DRAW_SCORE;
     }
 
     if !tt_entry_found || alpha != original_alpha {
@@ -191,12 +212,12 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
         let r#move = moves[move_index];
 
         if r#move == tt_move {
-            move_scores[move_index] = 10000;
+            move_scores[move_index] = MOVE_ORDERING_HAS_MOVE;
             continue;
         }
 
         if context.killers_table.exists(context.board.active_color, ply, r#move) {
-            move_scores[move_index] = 120;
+            move_scores[move_index] = MOVE_ORDERING_KILLER_MOVE;
             continue;
         }
 
@@ -211,6 +232,13 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
             continue;
         }
 
-        move_scores[move_index] = context.history_table.get(r#move.get_from(), r#move.get_to(), 90) as i16;
+        move_scores[move_index] = context.history_table.get(r#move.get_from(), r#move.get_to(), MOVE_ORDERING_HISTORY_MOVE) as i16;
     }
+}
+
+fn null_move_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, allow_null_move: bool) -> bool {
+    !PV && allow_null_move
+        && depth >= NULL_MOVE_MIN_DEPTH
+        && context.board.get_game_phase() > NULL_MOVE_MIN_GAME_PHASE
+        && !context.board.is_king_checked(context.board.active_color)
 }

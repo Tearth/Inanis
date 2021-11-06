@@ -142,6 +142,10 @@ impl Move {
             _ => panic!("Invalid value: self.get_flags()={:?}", self.get_flags()),
         }
     }
+
+    pub fn is_quiet(&self) -> bool {
+        self.get_flags() == MoveFlags::QUIET || self.get_flags() == MoveFlags::DOUBLE_PUSH
+    }
 }
 
 impl Default for Move {

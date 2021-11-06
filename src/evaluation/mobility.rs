@@ -2,7 +2,6 @@ use super::parameters::*;
 use super::*;
 use crate::state::board::*;
 use crate::state::movescan::*;
-use crate::state::*;
 
 pub fn evaluate(board: &Bitboard, white_attack_mask: &mut u64, black_attack_mask: &mut u64) -> i16 {
     evaluate_color(board, WHITE, white_attack_mask) - evaluate_color(board, BLACK, black_attack_mask)

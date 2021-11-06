@@ -53,9 +53,9 @@ pub struct SearchStatistics {
     pub pvs_zero_window_searches: u64,
     pub pvs_rejected_searches: u64,
 
-    pub null_window_searches: u64,
-    pub null_window_accepted: u64,
-    pub null_window_rejected: u64,
+    pub null_move_searches: u64,
+    pub null_move_accepted: u64,
+    pub null_move_rejected: u64,
 
     pub tt_added: u64,
     pub tt_hits: u64,

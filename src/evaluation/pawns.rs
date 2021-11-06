@@ -4,7 +4,6 @@ use crate::cache::pawns::PawnHashTable;
 use crate::engine::context::SearchStatistics;
 use crate::state::board::Bitboard;
 use crate::state::patterns::*;
-use crate::state::*;
 use std::cmp::*;
 
 pub fn evaluate(board: &Bitboard, pawn_hash_table: &mut PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
@@ -39,6 +38,7 @@ fn evaluate_color(board: &Bitboard, color: u8) -> i16 {
     let mut isolated_pawns = 0;
     let mut chained_pawns = 0;
     let mut passing_pawns = 0;
+    let mut opened_files = 0;
 
     for file in 0..8 {
         let pawns_on_file_count = bit_count(get_file(file) & board.pieces[color as usize][PAWN as usize]);
@@ -62,8 +62,7 @@ fn evaluate_color(board: &Bitboard, color: u8) -> i16 {
 
         chained_pawns += bit_count(get_star(field_index as usize) & board.pieces[color as usize][PAWN as usize]);
 
-        let enemy_pawns_ahead_count =
-            bit_count(get_front(color as usize, field_index as usize) & board.pieces[(color ^ 1) as usize][PAWN as usize]);
+        let enemy_pawns_ahead_count = bit_count(get_front(color as usize, field_index as usize) & board.pieces[(color ^ 1) as usize][PAWN as usize]);
         if enemy_pawns_ahead_count == 0 {
             passing_pawns += 1;
         }
@@ -71,10 +70,9 @@ fn evaluate_color(board: &Bitboard, color: u8) -> i16 {
 
     let king = board.pieces[color as usize][KING as usize];
     let king_field = bit_scan(king);
-    let fields_to_check = get_box(king_field as usize);
-    let pawn_shield = bit_count(fields_to_check & board.pieces[color as usize][PAWN as usize]);
-    let mut opened_files = 0;
     let king_field_file = (king_field % 8) as i8;
+    let pawn_shield = bit_count(get_box(king_field as usize) & board.pieces[color as usize][PAWN as usize]);
+
     for file in max(0, king_field_file - 1)..=(min(7, king_field_file + 1)) {
         if (get_file(file as usize) & board.pieces[color as usize][PAWN as usize]) == 0 {
             opened_files += 1;

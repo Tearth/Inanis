@@ -1,6 +1,5 @@
+use self::parameters::*;
 use crate::state::*;
-
-use self::parameters::PIECE_VALUE;
 
 pub mod material;
 pub mod mobility;

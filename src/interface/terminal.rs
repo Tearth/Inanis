@@ -34,18 +34,16 @@ pub fn run() {
         let mut input = String::new();
         io::stdin().read_line(&mut input).unwrap();
 
-        let split: Vec<&str> = input.split(' ').collect();
-        let trimmed = split[0].trim().to_lowercase();
-
-        match trimmed.as_str() {
+        let tokens: Vec<&str> = input.split(' ').map(|p| p.trim()).collect();
+        match tokens[0] {
             "help" => handle_help(),
             "benchmark" => handle_benchmark(),
-            "evaluate" => handle_evaluate(split),
+            "evaluate" => handle_evaluate(tokens),
             "magic" => handle_magic(),
-            "perft" => handle_perft(split),
-            "dperft" => handle_dperft(split),
-            "qperft" => handle_qperft(split),
-            "tuner" => handle_tuner(split),
+            "perft" => handle_perft(tokens),
+            "dperft" => handle_dperft(tokens),
+            "qperft" => handle_qperft(tokens),
+            "tuner" => handle_tuner(tokens),
             "uci" => handle_uci(),
             "wah" => handle_wah(),
             "quit" => handle_quit(),
@@ -180,10 +178,10 @@ fn handle_benchmark() {
         result.pvs_full_window_searches, result.pvs_zero_window_searches, result.pvs_rejected_searches, pvs_rejected_percent
     );
 
-    let null_window_rejected_percent = ((result.null_window_rejected as f32) / (result.null_window_searches as f32)) * 100.0;
+    let null_move_rejected_percent = ((result.null_move_rejected as f32) / (result.null_move_searches as f32)) * 100.0;
     println!(
-        "Null window: {} searches, {} accepted, {} rejected ({:.2}%)",
-        result.null_window_searches, result.null_window_accepted, result.null_window_rejected, null_window_rejected_percent
+        "Null move: {} searches, {} accepted, {} rejected ({:.2}%)",
+        result.null_move_searches, result.null_move_accepted, result.null_move_rejected, null_move_rejected_percent
     );
 }
 
@@ -406,19 +404,17 @@ fn handle_tuner(input: Vec<&str>) {
         return;
     }
 
-    let lock_material = match input[3].trim() {
-        "true" => true,
-        "false" => false,
-        _ => {
+    let lock_material = match input[3].parse() {
+        Ok(value) => value,
+        Err(_) => {
             println!("Invalid flag");
             return;
         }
     };
 
-    let random_values = match input[4].trim() {
-        "true" => true,
-        "false" => false,
-        _ => {
+    let random_values = match input[4].parse() {
+        Ok(value) => value,
+        Err(_) => {
             println!("Invalid flag");
             return;
         }
