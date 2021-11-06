@@ -22,7 +22,7 @@ pub struct SearchContext<'a> {
     pub search_done: bool,
     pub aborted: bool,
     pub transposition_table: &'a mut TranspositionTable,
-    pub pawn_hash_table: &'a mut PawnHashTable,
+    pub pawn_hashtable: &'a mut PawnHashTable,
     pub killers_table: &'a mut KillersTable,
     pub history_table: &'a mut HistoryTable,
 }
@@ -62,10 +62,10 @@ pub struct SearchStatistics {
     pub tt_misses: u64,
     pub tt_collisions: u64,
 
-    pub pawn_hash_table_added: u64,
-    pub pawn_hash_table_hits: u64,
-    pub pawn_hash_table_misses: u64,
-    pub pawn_hash_table_collisions: u64,
+    pub pawn_hashtable_added: u64,
+    pub pawn_hashtable_hits: u64,
+    pub pawn_hashtable_misses: u64,
+    pub pawn_hashtable_collisions: u64,
 }
 
 impl<'a> SearchContext<'a> {
@@ -75,7 +75,7 @@ impl<'a> SearchContext<'a> {
         inc_time: u32,
         forced_depth: i8,
         transposition_table: &'a mut TranspositionTable,
-        pawn_hash_table: &'a mut PawnHashTable,
+        pawn_hashtable: &'a mut PawnHashTable,
         killers_table: &'a mut KillersTable,
         history_table: &'a mut HistoryTable,
     ) -> SearchContext<'a> {
@@ -92,7 +92,7 @@ impl<'a> SearchContext<'a> {
             search_done: false,
             aborted: false,
             transposition_table,
-            pawn_hash_table,
+            pawn_hashtable,
             killers_table,
             history_table,
         }

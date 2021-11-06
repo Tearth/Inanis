@@ -54,13 +54,13 @@ pub fn get_front(color: usize, field_index: usize) -> u64 {
 
 fn generate_files() {
     for field_index in 0..64 {
-        unsafe { FILE_PATTERNS[field_index] = (0x101010101010101 << (field_index % 8)) & !(1u64 << field_index) };
+        unsafe { FILE_PATTERNS[field_index] = (FILE_H << (field_index % 8)) & !(1u64 << field_index) };
     }
 }
 
 fn generate_ranks() {
     for field_index in 0..64 {
-        unsafe { RANK_PATTERNS[field_index] = (0xff << (8 * (field_index / 8))) & !(1u64 << field_index) };
+        unsafe { RANK_PATTERNS[field_index] = (RANK_A << (8 * (field_index / 8))) & !(1u64 << field_index) };
     }
 }
 
@@ -119,8 +119,8 @@ fn generate_boxes() {
 
 fn generate_rails() {
     for file in 0..8 {
-        let left_file = if file > 0 { 0x101010101010101 << (file - 1) } else { 0 };
-        let right_file = if file < 7 { 0x101010101010101 << (file + 1) } else { 0 };
+        let left_file = if file > 0 { FILE_H << (file - 1) } else { 0 };
+        let right_file = if file < 7 { FILE_H << (file + 1) } else { 0 };
         unsafe { RAIL_PATTERNS[file] = left_file | right_file };
     }
 }
@@ -137,9 +137,9 @@ fn generate_fronts() {
             let file = field_index % 8;
             let rank = field_index / 8;
 
-            let center_file = 0x101010101010101 << file;
-            let left_file = if file > 0 { 0x101010101010101 << (file - 1) } else { 0 };
-            let right_file = if file < 7 { 0x101010101010101 << (file + 1) } else { 0 };
+            let center_file = FILE_H << file;
+            let left_file = if file > 0 { FILE_H << (file - 1) } else { 0 };
+            let right_file = if file < 7 { FILE_H << (file + 1) } else { 0 };
 
             let mut current_rank = rank;
             let mut forbidden_area = 0;

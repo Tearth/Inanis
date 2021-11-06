@@ -1,7 +1,6 @@
 use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
 use crate::engine::context::SearchContext;
-use crate::engine::search;
 use crate::state::board::Bitboard;
 use chrono::Utc;
 
@@ -34,10 +33,10 @@ pub struct BenchmarkResult {
     pub tt_misses: u64,
     pub tt_collisions: u64,
 
-    pub pawn_hash_table_added: u64,
-    pub pawn_hash_table_hits: u64,
-    pub pawn_hash_table_misses: u64,
-    pub pawn_hash_table_collisions: u64,
+    pub pawn_hashtable_added: u64,
+    pub pawn_hashtable_hits: u64,
+    pub pawn_hashtable_misses: u64,
+    pub pawn_hashtable_collisions: u64,
 }
 
 pub fn run() -> BenchmarkResult {
@@ -59,7 +58,7 @@ pub fn run() -> BenchmarkResult {
 
     for fen in benchmark_positions {
         let mut transposition_table = TranspositionTable::new(32 * 1024 * 1024);
-        let mut pawn_hash_table = PawnHashTable::new(1 * 1024 * 1024);
+        let mut pawn_hashtable = PawnHashTable::new(1 * 1024 * 1024);
         let mut killers_table = Default::default();
         let mut history_table = Default::default();
 
@@ -70,7 +69,7 @@ pub fn run() -> BenchmarkResult {
             0,
             9,
             &mut transposition_table,
-            &mut pawn_hash_table,
+            &mut pawn_hashtable,
             &mut killers_table,
             &mut history_table,
         );
@@ -102,10 +101,10 @@ pub fn run() -> BenchmarkResult {
         benchmark_result.tt_misses += result.statistics.tt_misses;
         benchmark_result.tt_collisions += result.statistics.tt_collisions;
 
-        benchmark_result.pawn_hash_table_added += result.statistics.pawn_hash_table_added;
-        benchmark_result.pawn_hash_table_hits += result.statistics.pawn_hash_table_hits;
-        benchmark_result.pawn_hash_table_misses += result.statistics.pawn_hash_table_misses;
-        benchmark_result.pawn_hash_table_collisions += result.statistics.pawn_hash_table_collisions;
+        benchmark_result.pawn_hashtable_added += result.statistics.pawn_hashtable_added;
+        benchmark_result.pawn_hashtable_hits += result.statistics.pawn_hashtable_hits;
+        benchmark_result.pawn_hashtable_misses += result.statistics.pawn_hashtable_misses;
+        benchmark_result.pawn_hashtable_collisions += result.statistics.pawn_hashtable_collisions;
     }
 
     benchmark_result.time = ((Utc::now() - benchmark_time_start).num_milliseconds() as f32) / 1000.0;

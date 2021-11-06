@@ -1,5 +1,5 @@
 use crate::cache::perft::PerftHashTable;
-use crate::engine::MAX_MOVES_COUNT;
+use crate::engine::*;
 use crate::perft::context::PerftContext;
 use crate::state::board::Bitboard;
 use crate::state::movescan::Move;

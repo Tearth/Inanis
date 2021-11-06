@@ -34,7 +34,7 @@ pub fn run() {
         let mut input = String::new();
         io::stdin().read_line(&mut input).unwrap();
 
-        let tokens: Vec<&str> = input.split(' ').map(|p| p.trim()).collect();
+        let tokens: Vec<&str> = input.split(' ').map(|v| v.trim()).collect();
         match tokens[0] {
             "help" => handle_help(),
             "benchmark" => handle_benchmark(),
@@ -160,14 +160,14 @@ fn handle_benchmark() {
         format!("{} ({:.2}%)", result.tt_collisions, tt_collisions_percent)
     ]);
 
-    let pawn_hash_table_misses_percent = ((result.pawn_hash_table_misses as f32) / (result.pawn_hash_table_hits as f32)) * 100.0;
-    let pawn_hash_table_collisions_percent = ((result.pawn_hash_table_collisions as f32) / (result.pawn_hash_table_hits as f32)) * 100.0;
+    let pawn_hashtable_misses_percent = ((result.pawn_hashtable_misses as f32) / (result.pawn_hashtable_hits as f32)) * 100.0;
+    let pawn_hashtable_collisions_percent = ((result.pawn_hashtable_collisions as f32) / (result.pawn_hashtable_hits as f32)) * 100.0;
     cache_table.add_row(row![
         "Pawn hash table",
-        format!("{}", result.pawn_hash_table_added),
-        format!("{}", result.pawn_hash_table_hits),
-        format!("{} ({:.2}%)", result.pawn_hash_table_misses, pawn_hash_table_misses_percent),
-        format!("{} ({:.2}%)", result.pawn_hash_table_collisions, pawn_hash_table_collisions_percent)
+        format!("{}", result.pawn_hashtable_added),
+        format!("{}", result.pawn_hashtable_hits),
+        format!("{} ({:.2}%)", result.pawn_hashtable_misses, pawn_hashtable_misses_percent),
+        format!("{} ({:.2}%)", result.pawn_hashtable_collisions, pawn_hashtable_collisions_percent)
     ]);
 
     cache_table.printstd();
@@ -250,7 +250,7 @@ fn handle_perft(input: Vec<&str>) {
         return;
     }
 
-    let max_depth: i32 = match input[1].trim().parse() {
+    let max_depth: i32 = match input[1].parse() {
         Ok(result) => result,
         Err(_) => {
             println!("Invalid depth parameter");
@@ -285,7 +285,7 @@ fn handle_dperft(input: Vec<&str>) {
         return;
     }
 
-    let depth: i32 = match input[1].trim().parse() {
+    let depth: i32 = match input[1].parse() {
         Ok(result) => result,
         Err(_) => {
             println!("Invalid depth parameter");
@@ -330,7 +330,7 @@ fn handle_qperft(input: Vec<&str>) {
         return;
     }
 
-    let max_depth: i32 = match input[1].trim().parse() {
+    let max_depth: i32 = match input[1].parse() {
         Ok(result) => result,
         Err(_) => {
             println!("Invalid depth parameter");
@@ -338,7 +338,7 @@ fn handle_qperft(input: Vec<&str>) {
         }
     };
 
-    let threads_count: usize = match input[2].trim().parse() {
+    let threads_count: usize = match input[2].parse() {
         Ok(result) => result,
         Err(_) => {
             println!("Invalid threads count parameter");
@@ -346,7 +346,7 @@ fn handle_qperft(input: Vec<&str>) {
         }
     };
 
-    let hashtable_size: usize = match input[3].trim().parse() {
+    let hashtable_size: usize = match input[3].parse() {
         Ok(result) => result,
         Err(_) => {
             println!("Invalid hashtable size parameter");
@@ -420,7 +420,7 @@ fn handle_tuner(input: Vec<&str>) {
         }
     };
 
-    tuner::run(input[1].trim(), input[2].trim(), lock_material, random_values);
+    tuner::run(input[1], input[2], lock_material, random_values);
 }
 
 fn handle_uci() {

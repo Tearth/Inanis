@@ -8,7 +8,7 @@ use crate::evaluation::pst::pawn;
 use crate::evaluation::pst::queen;
 use crate::evaluation::pst::rook;
 use crate::state::board::Bitboard;
-use crate::state::fen::fen_to_board;
+use crate::state::fen::*;
 use chrono::Utc;
 use nameof::name_of;
 use std::fs;
@@ -185,52 +185,54 @@ fn calculate_error(positions: &mut Vec<TunerPosition>, scaling_constant: f64) ->
 
 fn load_values(lock_material: bool, random_values: bool) -> Vec<i16> {
     let mut values = Vec::new();
+    unsafe {
+        if !lock_material {
+            values.append(&mut PIECE_VALUE.to_vec());
+        }
 
-    if !lock_material {
-        values.append(unsafe { &mut PIECE_VALUE.to_vec() });
+        values.push(MOBILITY_OPENING);
+        values.push(MOBILITY_ENDING);
+        values.push(MOBILITY_CENTER_MULTIPLIER);
+
+        values.push(DOUBLED_PAWN_OPENING);
+        values.push(DOUBLED_PAWN_ENDING);
+
+        values.push(ISOLATED_PAWN_OPENING);
+        values.push(ISOLATED_PAWN_ENDING);
+
+        values.push(CHAINED_PAWN_OPENING);
+        values.push(CHAINED_PAWN_ENDING);
+
+        values.push(PASSING_PAWN_OPENING);
+        values.push(PASSING_PAWN_ENDING);
+
+        values.push(PAWN_SHIELD_OPENING);
+        values.push(PAWN_SHIELD_ENDING);
+
+        values.push(PAWN_SHIELD_OPEN_FILE_OPENING);
+        values.push(PAWN_SHIELD_OPEN_FILE_ENDING);
+
+        values.push(KING_ATTACKED_FIELDS_OPENING);
+        values.push(KING_ATTACKED_FIELDS_ENDING);
+
+        values.append(&mut pawn::PATTERN[0].iter().map(|v| *v as i16).collect::<Vec<i16>>());
+        values.append(&mut pawn::PATTERN[1].iter().map(|v| *v as i16).collect::<Vec<i16>>());
+
+        values.append(&mut knight::PATTERN[0].iter().map(|v| *v as i16).collect::<Vec<i16>>());
+        values.append(&mut knight::PATTERN[1].iter().map(|v| *v as i16).collect::<Vec<i16>>());
+
+        values.append(&mut bishop::PATTERN[0].iter().map(|v| *v as i16).collect::<Vec<i16>>());
+        values.append(&mut bishop::PATTERN[1].iter().map(|v| *v as i16).collect::<Vec<i16>>());
+
+        values.append(&mut rook::PATTERN[0].iter().map(|v| *v as i16).collect::<Vec<i16>>());
+        values.append(&mut rook::PATTERN[1].iter().map(|v| *v as i16).collect::<Vec<i16>>());
+
+        values.append(&mut queen::PATTERN[0].iter().map(|v| *v as i16).collect::<Vec<i16>>());
+        values.append(&mut queen::PATTERN[1].iter().map(|v| *v as i16).collect::<Vec<i16>>());
+
+        values.append(&mut king::PATTERN[0].iter().map(|v| *v as i16).collect::<Vec<i16>>());
+        values.append(&mut king::PATTERN[1].iter().map(|v| *v as i16).collect::<Vec<i16>>());
     }
-
-    values.push(unsafe { MOBILITY_OPENING });
-    values.push(unsafe { MOBILITY_ENDING });
-
-    values.push(unsafe { DOUBLED_PAWN_OPENING });
-    values.push(unsafe { DOUBLED_PAWN_ENDING });
-
-    values.push(unsafe { ISOLATED_PAWN_OPENING });
-    values.push(unsafe { ISOLATED_PAWN_ENDING });
-
-    values.push(unsafe { CHAINED_PAWN_OPENING });
-    values.push(unsafe { CHAINED_PAWN_ENDING });
-
-    values.push(unsafe { PASSING_PAWN_OPENING });
-    values.push(unsafe { PASSING_PAWN_ENDING });
-
-    values.push(unsafe { PAWN_SHIELD_OPENING });
-    values.push(unsafe { PAWN_SHIELD_ENDING });
-
-    values.push(unsafe { PAWN_SHIELD_OPEN_FILE_OPENING });
-    values.push(unsafe { PAWN_SHIELD_OPEN_FILE_ENDING });
-
-    values.push(unsafe { KING_ATTACKED_FIELDS_OPENING });
-    values.push(unsafe { KING_ATTACKED_FIELDS_ENDING });
-
-    values.append(unsafe { &mut pawn::PATTERN[0].iter().map(|v| *v as i16).collect::<Vec<i16>>() });
-    values.append(unsafe { &mut pawn::PATTERN[1].iter().map(|v| *v as i16).collect::<Vec<i16>>() });
-
-    values.append(unsafe { &mut knight::PATTERN[0].iter().map(|v| *v as i16).collect::<Vec<i16>>() });
-    values.append(unsafe { &mut knight::PATTERN[1].iter().map(|v| *v as i16).collect::<Vec<i16>>() });
-
-    values.append(unsafe { &mut bishop::PATTERN[0].iter().map(|v| *v as i16).collect::<Vec<i16>>() });
-    values.append(unsafe { &mut bishop::PATTERN[1].iter().map(|v| *v as i16).collect::<Vec<i16>>() });
-
-    values.append(unsafe { &mut rook::PATTERN[0].iter().map(|v| *v as i16).collect::<Vec<i16>>() });
-    values.append(unsafe { &mut rook::PATTERN[1].iter().map(|v| *v as i16).collect::<Vec<i16>>() });
-
-    values.append(unsafe { &mut queen::PATTERN[0].iter().map(|v| *v as i16).collect::<Vec<i16>>() });
-    values.append(unsafe { &mut queen::PATTERN[1].iter().map(|v| *v as i16).collect::<Vec<i16>>() });
-
-    values.append(unsafe { &mut king::PATTERN[0].iter().map(|v| *v as i16).collect::<Vec<i16>>() });
-    values.append(unsafe { &mut king::PATTERN[1].iter().map(|v| *v as i16).collect::<Vec<i16>>() });
 
     if random_values {
         for value in &mut values {
@@ -243,52 +245,54 @@ fn load_values(lock_material: bool, random_values: bool) -> Vec<i16> {
 
 fn save_values(values: &mut Vec<i16>, lock_material: bool) {
     let mut index = 0;
+    unsafe {
+        if !lock_material {
+            save_values_to_i16_array_internal(values, &mut PIECE_VALUE, &mut index);
+        }
 
-    if !lock_material {
-        save_values_to_i16_array_internal(values, unsafe { &mut PIECE_VALUE }, &mut index);
+        save_values_internal(values, &mut MOBILITY_OPENING, &mut index);
+        save_values_internal(values, &mut MOBILITY_ENDING, &mut index);
+        save_values_internal(values, &mut MOBILITY_CENTER_MULTIPLIER, &mut index);
+
+        save_values_internal(values, &mut DOUBLED_PAWN_OPENING, &mut index);
+        save_values_internal(values, &mut DOUBLED_PAWN_ENDING, &mut index);
+
+        save_values_internal(values, &mut ISOLATED_PAWN_OPENING, &mut index);
+        save_values_internal(values, &mut ISOLATED_PAWN_ENDING, &mut index);
+
+        save_values_internal(values, &mut CHAINED_PAWN_OPENING, &mut index);
+        save_values_internal(values, &mut CHAINED_PAWN_ENDING, &mut index);
+
+        save_values_internal(values, &mut PASSING_PAWN_OPENING, &mut index);
+        save_values_internal(values, &mut PASSING_PAWN_ENDING, &mut index);
+
+        save_values_internal(values, &mut PAWN_SHIELD_OPENING, &mut index);
+        save_values_internal(values, &mut PAWN_SHIELD_ENDING, &mut index);
+
+        save_values_internal(values, &mut PAWN_SHIELD_OPEN_FILE_OPENING, &mut index);
+        save_values_internal(values, &mut PAWN_SHIELD_OPEN_FILE_ENDING, &mut index);
+
+        save_values_internal(values, &mut KING_ATTACKED_FIELDS_OPENING, &mut index);
+        save_values_internal(values, &mut KING_ATTACKED_FIELDS_ENDING, &mut index);
+
+        save_values_to_i8_array_internal(values, &mut pawn::PATTERN[0], &mut index);
+        save_values_to_i8_array_internal(values, &mut pawn::PATTERN[1], &mut index);
+
+        save_values_to_i8_array_internal(values, &mut knight::PATTERN[0], &mut index);
+        save_values_to_i8_array_internal(values, &mut knight::PATTERN[1], &mut index);
+
+        save_values_to_i8_array_internal(values, &mut bishop::PATTERN[0], &mut index);
+        save_values_to_i8_array_internal(values, &mut bishop::PATTERN[1], &mut index);
+
+        save_values_to_i8_array_internal(values, &mut rook::PATTERN[0], &mut index);
+        save_values_to_i8_array_internal(values, &mut rook::PATTERN[1], &mut index);
+
+        save_values_to_i8_array_internal(values, &mut queen::PATTERN[0], &mut index);
+        save_values_to_i8_array_internal(values, &mut queen::PATTERN[1], &mut index);
+
+        save_values_to_i8_array_internal(values, &mut king::PATTERN[0], &mut index);
+        save_values_to_i8_array_internal(values, &mut king::PATTERN[1], &mut index);
     }
-
-    save_values_internal(values, unsafe { &mut MOBILITY_OPENING }, &mut index);
-    save_values_internal(values, unsafe { &mut MOBILITY_ENDING }, &mut index);
-
-    save_values_internal(values, unsafe { &mut DOUBLED_PAWN_OPENING }, &mut index);
-    save_values_internal(values, unsafe { &mut DOUBLED_PAWN_ENDING }, &mut index);
-
-    save_values_internal(values, unsafe { &mut ISOLATED_PAWN_OPENING }, &mut index);
-    save_values_internal(values, unsafe { &mut ISOLATED_PAWN_ENDING }, &mut index);
-
-    save_values_internal(values, unsafe { &mut CHAINED_PAWN_OPENING }, &mut index);
-    save_values_internal(values, unsafe { &mut CHAINED_PAWN_ENDING }, &mut index);
-
-    save_values_internal(values, unsafe { &mut PASSING_PAWN_OPENING }, &mut index);
-    save_values_internal(values, unsafe { &mut PASSING_PAWN_ENDING }, &mut index);
-
-    save_values_internal(values, unsafe { &mut PAWN_SHIELD_OPENING }, &mut index);
-    save_values_internal(values, unsafe { &mut PAWN_SHIELD_ENDING }, &mut index);
-
-    save_values_internal(values, unsafe { &mut PAWN_SHIELD_OPEN_FILE_OPENING }, &mut index);
-    save_values_internal(values, unsafe { &mut PAWN_SHIELD_OPEN_FILE_ENDING }, &mut index);
-
-    save_values_internal(values, unsafe { &mut KING_ATTACKED_FIELDS_OPENING }, &mut index);
-    save_values_internal(values, unsafe { &mut KING_ATTACKED_FIELDS_ENDING }, &mut index);
-
-    save_values_to_i8_array_internal(values, unsafe { &mut pawn::PATTERN[0] }, &mut index);
-    save_values_to_i8_array_internal(values, unsafe { &mut pawn::PATTERN[1] }, &mut index);
-
-    save_values_to_i8_array_internal(values, unsafe { &mut knight::PATTERN[0] }, &mut index);
-    save_values_to_i8_array_internal(values, unsafe { &mut knight::PATTERN[1] }, &mut index);
-
-    save_values_to_i8_array_internal(values, unsafe { &mut bishop::PATTERN[0] }, &mut index);
-    save_values_to_i8_array_internal(values, unsafe { &mut bishop::PATTERN[1] }, &mut index);
-
-    save_values_to_i8_array_internal(values, unsafe { &mut rook::PATTERN[0] }, &mut index);
-    save_values_to_i8_array_internal(values, unsafe { &mut rook::PATTERN[1] }, &mut index);
-
-    save_values_to_i8_array_internal(values, unsafe { &mut queen::PATTERN[0] }, &mut index);
-    save_values_to_i8_array_internal(values, unsafe { &mut queen::PATTERN[1] }, &mut index);
-
-    save_values_to_i8_array_internal(values, unsafe { &mut king::PATTERN[0] }, &mut index);
-    save_values_to_i8_array_internal(values, unsafe { &mut king::PATTERN[1] }, &mut index);
 
     pst::init();
     evaluation::init();
@@ -316,34 +320,37 @@ fn save_values_to_i16_array_internal(values: &mut Vec<i16>, array: &mut [i16], i
 
 fn write_evaluation_parameters(output_directory: &str, best_error: f64) {
     let mut output = String::new();
-    output.push_str(get_header(best_error).as_str());
-    output.push_str("\n");
-    output.push_str(unsafe { get_material(name_of!(PIECE_VALUE), &PIECE_VALUE).as_str() });
-    output.push_str("\n");
-    output.push_str(unsafe { get_parameter(name_of!(MOBILITY_OPENING), MOBILITY_OPENING).as_str() });
-    output.push_str(unsafe { get_parameter(name_of!(MOBILITY_ENDING), MOBILITY_ENDING).as_str() });
-    output.push_str("\n");
-    output.push_str(unsafe { get_parameter(name_of!(DOUBLED_PAWN_OPENING), DOUBLED_PAWN_OPENING).as_str() });
-    output.push_str(unsafe { get_parameter(name_of!(DOUBLED_PAWN_ENDING), DOUBLED_PAWN_ENDING).as_str() });
-    output.push_str("\n");
-    output.push_str(unsafe { get_parameter(name_of!(ISOLATED_PAWN_OPENING), ISOLATED_PAWN_OPENING).as_str() });
-    output.push_str(unsafe { get_parameter(name_of!(ISOLATED_PAWN_ENDING), ISOLATED_PAWN_ENDING).as_str() });
-    output.push_str("\n");
-    output.push_str(unsafe { get_parameter(name_of!(CHAINED_PAWN_OPENING), CHAINED_PAWN_OPENING).as_str() });
-    output.push_str(unsafe { get_parameter(name_of!(CHAINED_PAWN_ENDING), CHAINED_PAWN_ENDING).as_str() });
-    output.push_str("\n");
-    output.push_str(unsafe { get_parameter(name_of!(PASSING_PAWN_OPENING), PASSING_PAWN_OPENING).as_str() });
-    output.push_str(unsafe { get_parameter(name_of!(PASSING_PAWN_ENDING), PASSING_PAWN_ENDING).as_str() });
-    output.push_str("\n");
-    output.push_str(unsafe { get_parameter(name_of!(PAWN_SHIELD_OPENING), PAWN_SHIELD_OPENING).as_str() });
-    output.push_str(unsafe { get_parameter(name_of!(PAWN_SHIELD_ENDING), PAWN_SHIELD_ENDING).as_str() });
-    output.push_str("\n");
-    output.push_str(unsafe { get_parameter(name_of!(PAWN_SHIELD_OPEN_FILE_OPENING), PAWN_SHIELD_OPEN_FILE_OPENING).as_str() });
-    output.push_str(unsafe { get_parameter(name_of!(PAWN_SHIELD_OPEN_FILE_ENDING), PAWN_SHIELD_OPEN_FILE_ENDING).as_str() });
-    output.push_str("\n");
-    output.push_str(unsafe { get_parameter(name_of!(KING_ATTACKED_FIELDS_OPENING), KING_ATTACKED_FIELDS_OPENING).as_str() });
-    output.push_str(unsafe { get_parameter(name_of!(KING_ATTACKED_FIELDS_ENDING), KING_ATTACKED_FIELDS_ENDING).as_str() });
-    output.push_str("\n");
+    unsafe {
+        output.push_str(get_header(best_error).as_str());
+        output.push_str("\n");
+        output.push_str(get_material(name_of!(PIECE_VALUE), &PIECE_VALUE).as_str());
+        output.push_str("\n");
+        output.push_str(get_parameter(name_of!(MOBILITY_OPENING), MOBILITY_OPENING).as_str());
+        output.push_str(get_parameter(name_of!(MOBILITY_ENDING), MOBILITY_ENDING).as_str());
+        output.push_str(get_parameter(name_of!(MOBILITY_CENTER_MULTIPLIER), MOBILITY_CENTER_MULTIPLIER).as_str());
+        output.push_str("\n");
+        output.push_str(get_parameter(name_of!(DOUBLED_PAWN_OPENING), DOUBLED_PAWN_OPENING).as_str());
+        output.push_str(get_parameter(name_of!(DOUBLED_PAWN_ENDING), DOUBLED_PAWN_ENDING).as_str());
+        output.push_str("\n");
+        output.push_str(get_parameter(name_of!(ISOLATED_PAWN_OPENING), ISOLATED_PAWN_OPENING).as_str());
+        output.push_str(get_parameter(name_of!(ISOLATED_PAWN_ENDING), ISOLATED_PAWN_ENDING).as_str());
+        output.push_str("\n");
+        output.push_str(get_parameter(name_of!(CHAINED_PAWN_OPENING), CHAINED_PAWN_OPENING).as_str());
+        output.push_str(get_parameter(name_of!(CHAINED_PAWN_ENDING), CHAINED_PAWN_ENDING).as_str());
+        output.push_str("\n");
+        output.push_str(get_parameter(name_of!(PASSING_PAWN_OPENING), PASSING_PAWN_OPENING).as_str());
+        output.push_str(get_parameter(name_of!(PASSING_PAWN_ENDING), PASSING_PAWN_ENDING).as_str());
+        output.push_str("\n");
+        output.push_str(get_parameter(name_of!(PAWN_SHIELD_OPENING), PAWN_SHIELD_OPENING).as_str());
+        output.push_str(get_parameter(name_of!(PAWN_SHIELD_ENDING), PAWN_SHIELD_ENDING).as_str());
+        output.push_str("\n");
+        output.push_str(get_parameter(name_of!(PAWN_SHIELD_OPEN_FILE_OPENING), PAWN_SHIELD_OPEN_FILE_OPENING).as_str());
+        output.push_str(get_parameter(name_of!(PAWN_SHIELD_OPEN_FILE_ENDING), PAWN_SHIELD_OPEN_FILE_ENDING).as_str());
+        output.push_str("\n");
+        output.push_str(get_parameter(name_of!(KING_ATTACKED_FIELDS_OPENING), KING_ATTACKED_FIELDS_OPENING).as_str());
+        output.push_str(get_parameter(name_of!(KING_ATTACKED_FIELDS_ENDING), KING_ATTACKED_FIELDS_ENDING).as_str());
+        output.push_str("\n");
+    }
 
     let path = Path::new(output_directory);
     fs::create_dir_all(path).unwrap();

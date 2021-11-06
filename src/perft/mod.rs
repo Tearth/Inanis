@@ -1,5 +1,5 @@
 use self::context::PerftContext;
-use crate::engine::MAX_MOVES_COUNT;
+use crate::engine::*;
 use crate::state::movescan::Move;
 use std::mem::MaybeUninit;
 use std::u64;

@@ -1,7 +1,6 @@
 use super::context::PerftContext;
-use super::run_internal;
+use super::*;
 use crate::cache::perft::PerftHashTable;
-use crate::engine::MAX_MOVES_COUNT;
 use crate::state::board::Bitboard;
 use crate::state::movescan::Move;
 use std::mem::MaybeUninit;

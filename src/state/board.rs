@@ -9,11 +9,11 @@ use crate::cache::pawns::PawnHashTable;
 use crate::engine::context::SearchStatistics;
 use crate::evaluation::material;
 use crate::evaluation::mobility;
-use crate::evaluation::parameters::PIECE_VALUE;
+use crate::evaluation::parameters::*;
 use crate::evaluation::pawns;
 use crate::evaluation::pst;
 use crate::evaluation::safety;
-use crate::evaluation::INITIAL_MATERIAL;
+use crate::evaluation::*;
 
 bitflags! {
     pub struct CastlingRights: u8 {
@@ -548,14 +548,14 @@ impl Bitboard {
         zobrist::recalculate_pawn_hash(self);
     }
 
-    pub fn evaluate(&self, pawn_hash_table: &mut PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
+    pub fn evaluate(&self, pawn_hashtable: &mut PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
         let mut white_attack_mask = 0;
         let mut black_attack_mask = 0;
         let mobility_score = mobility::evaluate(self, &mut white_attack_mask, &mut black_attack_mask);
 
         material::evaluate(self)
             + pst::evaluate(self)
-            + pawns::evaluate(self, pawn_hash_table, statistics)
+            + pawns::evaluate(self, pawn_hashtable, statistics)
             + safety::evaluate(self, white_attack_mask, black_attack_mask)
             + mobility_score
     }
