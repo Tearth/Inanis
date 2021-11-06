@@ -12,7 +12,6 @@ use std::process;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
-const DATE: &str = env!("DATE");
 
 struct UciState {
     board: Bitboard,
@@ -36,7 +35,7 @@ pub fn run() {
     let mut state: UciState = Default::default();
     state.options.insert("Hash".to_string(), "1".to_string());
 
-    println!("id name Inanis v{} ({})", VERSION, DATE);
+    println!("id name Inanis {}", VERSION);
     println!("id author {}", AUTHOR);
     println!("option name Hash type spin default 1 min 1 max 32768");
     println!("uciok");
@@ -61,9 +60,9 @@ pub fn run() {
 fn handle_go(parameters: &[String], state: &mut UciState) {
     let mut white_time = 1000;
     let mut black_time = 1000;
-
     let mut white_inc_time = 0;
     let mut black_inc_time = 0;
+    let mut forced_depth = 0;
 
     let mut iter = parameters[1..].iter().peekable();
     while let Some(token) = iter.next() {
@@ -92,6 +91,12 @@ fn handle_go(parameters: &[String], state: &mut UciState) {
                     None => black_inc_time,
                 }
             }
+            "depth" => {
+                forced_depth = match iter.peek() {
+                    Some(value) => value.parse().unwrap_or(forced_depth),
+                    None => forced_depth,
+                }
+            }
             _ => {}
         }
     }
@@ -116,7 +121,7 @@ fn handle_go(parameters: &[String], state: &mut UciState) {
         &mut state.board,
         time,
         inc_time,
-        0,
+        forced_depth,
         &mut state.transposition_table,
         &mut state.pawn_hashtable,
         &mut killers_table,
