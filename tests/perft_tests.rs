@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod perft_tests {
-    use ina::perft;
-    use ina::state::board::Bitboard;
+    use inanis::perft;
+    use inanis::state::board::Bitboard;
     use std::sync::Once;
 
     static INIT: Once = Once::new();
@@ -12,7 +12,7 @@ mod perft_tests {
                 #[test]
                 fn $name() {
                     INIT.call_once(|| {
-                        ina::init();
+                        inanis::init();
                     });
 
                     assert_eq!($expected_leafs_count, perft::normal::run($depth, &mut Bitboard::new_from_fen($fen).unwrap(), false));

@@ -36,7 +36,7 @@ pub fn run() {
     let mut state: UciState = Default::default();
     state.options.insert("Hash".to_string(), "1".to_string());
 
-    println!("id name Ina v{} ({})", VERSION, DATE);
+    println!("id name Inanis v{} ({})", VERSION, DATE);
     println!("id author {}", AUTHOR);
     println!("option name Hash type spin default 1 min 1 max 32768");
     println!("uciok");

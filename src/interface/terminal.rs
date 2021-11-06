@@ -24,7 +24,7 @@ const DATE: &str = env!("DATE");
 const HASH: &str = env!("HASH");
 
 pub fn run() {
-    println!("Ina v{} ({}), created by {}", VERSION, DATE, AUTHOR);
+    println!("Inanis v{} ({}), created by {}", VERSION, DATE, AUTHOR);
     println!("Executable hash: {}", HASH);
     println!("Homepage: {}", REPOSITORY);
     println!();

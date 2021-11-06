@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tuner_tests {
-    use ina::utils::tuner;
+    use inanis::utils::tuner;
     use std::sync::Once;
 
     static INIT: Once = Once::new();
@@ -8,7 +8,7 @@ mod tuner_tests {
     #[test]
     fn tuner_validate() {
         INIT.call_once(|| {
-            ina::init();
+            inanis::init();
         });
 
         assert!(tuner::validate())

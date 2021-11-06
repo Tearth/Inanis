@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod see_tests {
-    use ina::engine::see;
-    use ina::state::board::Bitboard;
-    use ina::state::movescan::Move;
+    use inanis::engine::see;
+    use inanis::state::board::Bitboard;
+    use inanis::state::movescan::Move;
     use std::mem::MaybeUninit;
     use std::sync::Once;
 
@@ -14,7 +14,7 @@ mod see_tests {
                 #[test]
                 fn $name() {
                     INIT.call_once(|| {
-                        ina::init();
+                        inanis::init();
                     });
 
                     let board = Bitboard::new_from_fen($fen).unwrap();

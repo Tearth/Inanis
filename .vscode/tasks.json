@@ -4,7 +4,7 @@
         {
             "label": "cargo build",
             "type": "shell",
-            "command": "cargo rustc --bin ina --target=x86_64-pc-windows-msvc -- -C target-feature=+bmi,+bmi2,+popcnt",
+            "command": "cargo rustc --bin inanis --target=x86_64-pc-windows-msvc -- -C target-feature=+bmi,+bmi2,+popcnt",
             "args": [],
             "group": {
                 "kind": "build",
@@ -15,7 +15,7 @@
         {
             "label": "cargo build release windows",
             "type": "shell",
-            "command": "cargo rustc --bin ina --release --target=x86_64-pc-windows-msvc -- -C target-feature=+bmi,bmi2,+popcnt -C llvm-args=-x86-asm-syntax=intel --emit asm",
+            "command": "cargo rustc --bin inanis --release --target=x86_64-pc-windows-msvc -- -C target-feature=+bmi,bmi2,+popcnt -C llvm-args=-x86-asm-syntax=intel --emit asm",
             "args": [],
             "group": {
                 "kind": "build",
@@ -26,7 +26,7 @@
         {
             "label": "cargo build release linux",
             "type": "shell",
-            "command": "cargo rustc --bin ina --release --target=x86_64-unknown-linux-musl -- -C linker=rust-lld --emit asm",
+            "command": "cargo rustc --bin inanis --release --target=x86_64-unknown-linux-musl -- -C linker=rust-lld --emit asm",
             "args": [],
             "group": {
                 "kind": "build",
@@ -37,7 +37,7 @@
         {
             "label": "build and run release windows",
             "type": "shell",
-            "command": "${workspaceFolder}/target/x86_64-pc-windows-msvc/release/ina.exe",
+            "command": "${workspaceFolder}/target/x86_64-pc-windows-msvc/release/inanis.exe",
             "args": [],
             "group": {
                 "kind": "build",

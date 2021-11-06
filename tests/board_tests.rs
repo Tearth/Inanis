@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod board_tests {
-    use ina::state::board::Bitboard;
-    use ina::state::*;
+    use inanis::state::board::Bitboard;
+    use inanis::state::*;
     use std::sync::Once;
 
     static INIT: Once = Once::new();
@@ -12,7 +12,7 @@ mod board_tests {
                 #[test]
                 fn $name() {
                     INIT.call_once(|| {
-                        ina::init();
+                        inanis::init();
                     });
 
                     let board = Bitboard::new_from_fen($fen).unwrap();
@@ -53,7 +53,7 @@ mod board_tests {
                 #[test]
                 fn $name() {
                     INIT.call_once(|| {
-                        ina::init();
+                        inanis::init();
                     });
 
                     let board = Bitboard::new_from_fen($fen).unwrap();

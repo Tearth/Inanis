@@ -1,8 +1,8 @@
 [package]
-name = "ina"
+name = "inanis"
 version = "1.0.0"
 authors = ["Pawel Osikowski"]
-repository = "https://github.com/Tearth/Ina"
+repository = "https://github.com/Tearth/Inanis"
 edition = "2018"
 
 [lib]
