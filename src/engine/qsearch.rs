@@ -35,7 +35,7 @@ pub fn run(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, bet
         sort_next_move(&mut moves, &mut move_scores, move_index, moves_count);
 
         let r#move = moves[move_index];
-        if r#move.get_flags() != MoveFlags::CAPTURE {
+        if !r#move.is_capture() {
             continue;
         }
 
@@ -72,7 +72,7 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
     for move_index in 0..moves_count {
         let r#move = moves[move_index];
 
-        if r#move.get_flags() != MoveFlags::CAPTURE {
+        if !r#move.is_capture() {
             move_scores[move_index] = 0;
             continue;
         }

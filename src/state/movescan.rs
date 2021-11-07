@@ -146,6 +146,10 @@ impl Move {
     pub fn is_quiet(&self) -> bool {
         self.get_flags() == MoveFlags::QUIET || self.get_flags() == MoveFlags::DOUBLE_PUSH
     }
+
+    pub fn is_capture(&self) -> bool {
+        self.get_flags().contains(MoveFlags::CAPTURE)
+    }
 }
 
 impl Default for Move {
