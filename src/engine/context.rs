@@ -22,6 +22,7 @@ pub struct SearchContext<'a> {
     pub current_depth: i8,
     pub forced_depth: i8,
     pub max_nodes_count: u64,
+    pub max_move_time: u32,
     pub search_time_start: DateTime<Utc>,
     pub last_search_time: f64,
     pub deadline: u32,
@@ -81,6 +82,7 @@ impl<'a> SearchContext<'a> {
         inc_time: u32,
         forced_depth: i8,
         max_nodes_count: u64,
+        max_move_time: u32,
         transposition_table: &'a mut TranspositionTable,
         pawn_hashtable: &'a mut PawnHashTable,
         killers_table: &'a mut KillersTable,
@@ -95,6 +97,7 @@ impl<'a> SearchContext<'a> {
             current_depth: 1,
             forced_depth,
             max_nodes_count,
+            max_move_time,
             search_time_start: Utc::now(),
             last_search_time: 1.0,
             deadline: 0,
@@ -120,14 +123,19 @@ impl<'a> Iterator for SearchContext<'a> {
             return None;
         }
 
-        let desired_time = clock::get_time_for_move(self.time, self.inc_time);
-
-        // Make sure we have at least one depth done before abort
-        if self.current_depth > 1 {
-            self.deadline = ((desired_time as f32) * DEADLINE_MULTIPLIER) as u32;
+        let desired_time = if self.max_move_time != 0 {
+            self.max_move_time
         } else {
-            self.deadline = u32::MAX;
-        }
+            clock::get_time_for_move(self.time, self.inc_time)
+        };
+
+        self.deadline = if self.max_move_time != 0 {
+            self.max_move_time
+        } else if self.current_depth > 1 {
+            ((desired_time as f32) * DEADLINE_MULTIPLIER) as u32
+        } else {
+            u32::MAX
+        };
 
         let score = search::run::<true>(self, self.current_depth, 0, MIN_ALPHA, MIN_BETA, true);
         let search_time = (Utc::now() - self.search_time_start).num_milliseconds() as f64;
