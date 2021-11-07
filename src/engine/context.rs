@@ -9,6 +9,11 @@ use crate::state::movescan::Move;
 use chrono::DateTime;
 use chrono::Utc;
 
+#[derive(Default)]
+pub struct AbortToken {
+    pub aborted: bool,
+}
+
 pub struct SearchContext<'a> {
     pub board: &'a mut Bitboard,
     pub statistics: SearchStatistics,
@@ -20,7 +25,7 @@ pub struct SearchContext<'a> {
     pub last_search_time: f64,
     pub deadline: u32,
     pub search_done: bool,
-    pub aborted: bool,
+    pub abort_token: &'a mut AbortToken,
     pub transposition_table: &'a mut TranspositionTable,
     pub pawn_hashtable: &'a mut PawnHashTable,
     pub killers_table: &'a mut KillersTable,
@@ -78,6 +83,7 @@ impl<'a> SearchContext<'a> {
         pawn_hashtable: &'a mut PawnHashTable,
         killers_table: &'a mut KillersTable,
         history_table: &'a mut HistoryTable,
+        abort_token: &'a mut AbortToken,
     ) -> SearchContext<'a> {
         SearchContext {
             board,
@@ -90,7 +96,7 @@ impl<'a> SearchContext<'a> {
             last_search_time: 1.0,
             deadline: 0,
             search_done: false,
-            aborted: false,
+            abort_token,
             transposition_table,
             pawn_hashtable,
             killers_table,
@@ -124,7 +130,7 @@ impl<'a> Iterator for SearchContext<'a> {
         let search_time = (Utc::now() - self.search_time_start).num_milliseconds() as f64;
         let time_ratio = search_time / (self.last_search_time as f64);
 
-        if self.aborted {
+        if self.abort_token.aborted {
             return None;
         }
 

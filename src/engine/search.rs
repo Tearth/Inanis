@@ -19,14 +19,14 @@ pub const MOVE_ORDERING_KILLER_MOVE: i16 = 120;
 pub const MOVE_ORDERING_HISTORY_MOVE: u8 = 90;
 
 pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, mut beta: i16, allow_null_move: bool) -> i16 {
-    if context.aborted {
+    if context.abort_token.aborted {
         return INVALID_SCORE;
     }
 
     // Check every 100 000 node (only if we don't search to the specified depth)
     if context.forced_depth == 0 && context.statistics.nodes_count % 100_000 == 0 {
         if (Utc::now() - context.search_time_start).num_milliseconds() >= context.deadline as i64 {
-            context.aborted = true;
+            context.abort_token.aborted = true;
             return INVALID_SCORE;
         }
     }
@@ -175,7 +175,7 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
         }
     }
 
-    if context.aborted {
+    if context.abort_token.aborted {
         return INVALID_SCORE;
     }
 

@@ -1,5 +1,6 @@
 use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
+use crate::engine::context::AbortToken;
 use crate::engine::context::SearchContext;
 use crate::engine::*;
 use crate::state::board::Bitboard;
@@ -131,6 +132,7 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
         *state.search_thread.get() = Some(thread::spawn(move || {
             let mut killers_table = Default::default();
             let mut history_table = Default::default();
+            let mut abort_token = Default::default();
 
             (*state_arc.transposition_table.get()).clear();
             let context = SearchContext::new(
@@ -142,6 +144,7 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
                 &mut *state_arc.pawn_hashtable.get(),
                 &mut killers_table,
                 &mut history_table,
+                &mut abort_token,
             );
 
             let mut best_move = Default::default();
@@ -234,7 +237,7 @@ fn handle_ucinewgame(state: &mut Arc<UciState>) {
 
 fn handle_stop(state: &mut Arc<UciState>) {
     unsafe {
-        // *state.abort_flag.get() = true;
+        // (*state.abort_token.get()).unwrap().aborted = true;
     }
 }
 
