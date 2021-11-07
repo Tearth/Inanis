@@ -170,15 +170,18 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
             );
 
             let mut best_move = Default::default();
+
             for depth_result in context {
                 let mut output = String::new();
+                let pv_line_converted: Vec<String> = depth_result.pv_line.iter().map(|v| v.to_text()).collect();
+
                 output = output.add(
                     &format!(
                         "info nodes {} depth {} time {} pv {}",
                         depth_result.statistics.nodes_count + depth_result.statistics.q_nodes_count,
                         depth_result.depth,
                         depth_result.time,
-                        depth_result.best_move.to_text()
+                        pv_line_converted.join(" ").as_str()
                     )
                     .to_string(),
                 );
@@ -192,7 +195,7 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
                     output = output.add(&format!(" score cp {}", depth_result.score).to_string());
                 }
 
-                best_move = depth_result.best_move;
+                best_move = depth_result.pv_line[0];
                 println!("{}", output);
             }
 

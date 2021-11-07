@@ -3,11 +3,13 @@ use super::killers::KillersTable;
 use super::*;
 use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
+use crate::cache::search::TranspositionTableScoreType;
 use crate::engine::clock;
 use crate::state::board::Bitboard;
 use crate::state::movescan::Move;
 use chrono::DateTime;
 use chrono::Utc;
+use std::mem::MaybeUninit;
 
 #[derive(Default)]
 pub struct AbortToken {
@@ -38,7 +40,7 @@ pub struct SearchResult {
     pub time: u64,
     pub depth: i8,
     pub score: i16,
-    pub best_move: Move,
+    pub pv_line: Vec<Move>,
     pub statistics: SearchStatistics,
 }
 
@@ -109,6 +111,47 @@ impl<'a> SearchContext<'a> {
             history_table,
         }
     }
+
+    fn get_pv_line(&mut self, board: &mut Bitboard, ply: i8) -> Vec<Move> {
+        if ply >= MAX_DEPTH {
+            return Vec::new();
+        }
+
+        let mut pv_line = Vec::new();
+        let mut collision = false;
+        match self.transposition_table.get(board.hash, 0, &mut collision) {
+            Some(entry) => {
+                if entry.score_type != TranspositionTableScoreType::EXACT_SCORE {
+                    return Vec::new();
+                }
+
+                let mut moves: [Move; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
+                let moves_count = board.get_moves(&mut moves);
+                let mut found = false;
+
+                for r#move in &moves[0..moves_count] {
+                    if *r#move == entry.best_move {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if found {
+                    board.make_move(&entry.best_move);
+                    if !board.is_king_checked(board.active_color ^ 1) {
+                        pv_line.push(entry.best_move);
+                        pv_line.append(&mut self.get_pv_line(board, ply + 1));
+                    }
+                    board.undo_move(&entry.best_move);
+                }
+            }
+            None => {
+                return Vec::new();
+            }
+        }
+
+        pv_line
+    }
 }
 
 impl<'a> Iterator for SearchContext<'a> {
@@ -158,25 +201,25 @@ impl<'a> Iterator for SearchContext<'a> {
         self.current_depth += 1;
 
         let total_search_time = (Utc::now() - self.search_time_start).num_milliseconds() as u64;
-        let best_move = self.transposition_table.get_best_move(self.board.hash).unwrap();
+        let pv_line = self.get_pv_line(&mut self.board.clone(), 0);
 
         Some(SearchResult::new(
             total_search_time,
             self.current_depth - 1,
             score,
-            best_move,
+            pv_line,
             self.statistics,
         ))
     }
 }
 
 impl SearchResult {
-    pub fn new(time: u64, depth: i8, score: i16, best_move: Move, statistics: SearchStatistics) -> SearchResult {
+    pub fn new(time: u64, depth: i8, score: i16, pv_line: Vec<Move>, statistics: SearchStatistics) -> SearchResult {
         SearchResult {
             time,
             depth,
             score,
-            best_move,
+            pv_line,
             statistics,
         }
     }
