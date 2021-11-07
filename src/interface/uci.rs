@@ -235,6 +235,8 @@ fn handle_setoption(parameters: &[String], state: &mut Arc<UciState>) {
 
 fn handle_ucinewgame(state: &mut Arc<UciState>) {
     unsafe {
+        (*state.abort_token.get()).aborted = true;
+
         let transposition_table_size = (*state.options.get())["Hash"].parse::<usize>().unwrap() * 1024 * 1024;
         *state.board.get() = Bitboard::new_initial_position();
         *state.transposition_table.get() = TranspositionTable::new(transposition_table_size);
