@@ -11,7 +11,6 @@ use std::collections::HashMap;
 use std::io;
 use std::ops::Add;
 use std::process;
-use std::ptr::*;
 use std::sync::Arc;
 use std::thread;
 use std::thread::JoinHandle;
@@ -25,6 +24,7 @@ struct UciState {
     transposition_table: UnsafeCell<TranspositionTable>,
     pawn_hashtable: UnsafeCell<PawnHashTable>,
     search_thread: UnsafeCell<Option<JoinHandle<()>>>,
+    abort_token: UnsafeCell<AbortToken>,
 }
 
 impl Default for UciState {
@@ -35,6 +35,7 @@ impl Default for UciState {
             transposition_table: UnsafeCell::new(TranspositionTable::new(1 * 1024 * 1024)),
             pawn_hashtable: UnsafeCell::new(PawnHashTable::new(1 * 1024 * 1024)),
             search_thread: UnsafeCell::new(None),
+            abort_token: UnsafeCell::new(Default::default()),
         }
     }
 }
@@ -75,6 +76,10 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
         let mut white_inc_time = 0;
         let mut black_inc_time = 0;
         let mut forced_depth = 0;
+
+        if (*state.search_thread.get()).is_some() {
+            return;
+        }
 
         let mut iter = parameters[1..].iter().peekable();
         while let Some(token) = iter.next() {
@@ -129,10 +134,11 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
         };
 
         let state_arc = state.clone();
+
+        (*state.abort_token.get()).aborted = false;
         *state.search_thread.get() = Some(thread::spawn(move || {
             let mut killers_table = Default::default();
             let mut history_table = Default::default();
-            let mut abort_token = Default::default();
 
             (*state_arc.transposition_table.get()).clear();
             let context = SearchContext::new(
@@ -144,7 +150,7 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
                 &mut *state_arc.pawn_hashtable.get(),
                 &mut killers_table,
                 &mut history_table,
-                &mut abort_token,
+                &mut *state_arc.abort_token.get(),
             );
 
             let mut best_move = Default::default();
@@ -175,6 +181,7 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
             }
 
             println!("bestmove {}", best_move.to_text());
+            (*state_arc.search_thread.get()) = None;
         }));
     }
 }
@@ -232,12 +239,13 @@ fn handle_ucinewgame(state: &mut Arc<UciState>) {
         *state.board.get() = Bitboard::new_initial_position();
         *state.transposition_table.get() = TranspositionTable::new(transposition_table_size);
         *state.pawn_hashtable.get() = PawnHashTable::new(1 * 1024 * 1024);
+        *state.abort_token.get() = Default::default();
     }
 }
 
 fn handle_stop(state: &mut Arc<UciState>) {
     unsafe {
-        // (*state.abort_token.get()).unwrap().aborted = true;
+        (*state.abort_token.get()).aborted = true;
     }
 }
 
