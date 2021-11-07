@@ -199,8 +199,8 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
                 println!("{}", output);
             }
 
-            println!("bestmove {}", best_move.to_text());
             (*state_arc.search_thread.get()) = None;
+            println!("bestmove {}", best_move.to_text());
         }));
     }
 }
