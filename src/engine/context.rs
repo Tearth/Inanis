@@ -21,6 +21,7 @@ pub struct SearchContext<'a> {
     pub inc_time: u32,
     pub current_depth: i8,
     pub forced_depth: i8,
+    pub max_nodes_count: u64,
     pub search_time_start: DateTime<Utc>,
     pub last_search_time: f64,
     pub deadline: u32,
@@ -79,6 +80,7 @@ impl<'a> SearchContext<'a> {
         time: u32,
         inc_time: u32,
         forced_depth: i8,
+        max_nodes_count: u64,
         transposition_table: &'a mut TranspositionTable,
         pawn_hashtable: &'a mut PawnHashTable,
         killers_table: &'a mut KillersTable,
@@ -92,6 +94,7 @@ impl<'a> SearchContext<'a> {
             inc_time,
             current_depth: 1,
             forced_depth,
+            max_nodes_count,
             search_time_start: Utc::now(),
             last_search_time: 1.0,
             deadline: 0,
@@ -134,7 +137,7 @@ impl<'a> Iterator for SearchContext<'a> {
             return None;
         }
 
-        if self.forced_depth == 0 {
+        if self.forced_depth == 0 && self.max_nodes_count == 0 {
             if is_score_near_checkmate(score) || search_time * time_ratio > desired_time as f64 {
                 self.search_done = true;
             }

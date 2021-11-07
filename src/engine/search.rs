@@ -23,9 +23,17 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
         return INVALID_SCORE;
     }
 
-    // Check every 100 000 node (only if we don't search to the specified depth)
-    if context.forced_depth == 0 && context.statistics.nodes_count % 100_000 == 0 {
+    // Check deadline every 100 000 node (only if we don't search to the specified depth or nodes count)
+    if context.forced_depth == 0 && context.max_nodes_count == 0 && context.statistics.nodes_count % 100_000 == 0 {
         if (Utc::now() - context.search_time_start).num_milliseconds() >= context.deadline as i64 {
+            context.abort_token.aborted = true;
+            return INVALID_SCORE;
+        }
+    }
+
+    // Check nodes count (only in PV nodes, doesn't need to be very accurate)
+    if PV && context.max_nodes_count != 0 {
+        if context.statistics.nodes_count + context.statistics.q_nodes_count >= context.max_nodes_count {
             context.abort_token.aborted = true;
             return INVALID_SCORE;
         }
