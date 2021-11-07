@@ -10,6 +10,7 @@ use std::collections::HashMap;
 use std::io;
 use std::ops::Add;
 use std::process;
+use std::ptr::*;
 use std::sync::Arc;
 use std::thread;
 use std::thread::JoinHandle;
@@ -59,6 +60,7 @@ pub fn run() {
             "position" => handle_position(&tokens, &mut state),
             "setoption" => handle_setoption(&tokens, &mut state),
             "ucinewgame" => handle_ucinewgame(&mut state),
+            "stop" => handle_stop(&mut state),
             "quit" => handle_quit(),
             _ => {}
         }
@@ -105,6 +107,9 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
                         Some(value) => value.parse().unwrap_or(forced_depth),
                         None => forced_depth,
                     }
+                }
+                "infinite" => {
+                    forced_depth = MAX_DEPTH;
                 }
                 _ => {}
             }
@@ -224,6 +229,12 @@ fn handle_ucinewgame(state: &mut Arc<UciState>) {
         *state.board.get() = Bitboard::new_initial_position();
         *state.transposition_table.get() = TranspositionTable::new(transposition_table_size);
         *state.pawn_hashtable.get() = PawnHashTable::new(1 * 1024 * 1024);
+    }
+}
+
+fn handle_stop(state: &mut Arc<UciState>) {
+    unsafe {
+        // *state.abort_flag.get() = true;
     }
 }
 
