@@ -148,7 +148,7 @@ impl Move {
     }
 
     pub fn is_capture(&self) -> bool {
-        self.get_flags().contains(MoveFlags::CAPTURE)
+        self.get_flags().contains(MoveFlags::CAPTURE) && self.get_flags() != MoveFlags::EN_PASSANT
     }
 }
 
