@@ -229,7 +229,7 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
             continue;
         }
 
-        if r#move.get_flags() == MoveFlags::CAPTURE {
+        if r#move.is_capture() {
             let field = r#move.get_to();
             let attacking_piece = context.board.get_piece(r#move.get_from());
             let captured_piece = context.board.get_piece(r#move.get_to());
