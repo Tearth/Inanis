@@ -24,10 +24,9 @@ pub fn run(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, bet
         alpha = stand_pat;
     }
 
-    let mut found = false;
     let mut moves: [Move; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
     let mut move_scores: [i16; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
-    let moves_count = context.board.get_moves(&mut moves);
+    let moves_count = context.board.get_moves::<true>(&mut moves);
 
     assign_move_scores(context, &moves, &mut move_scores, moves_count);
 
@@ -35,13 +34,8 @@ pub fn run(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, bet
         sort_next_move(&mut moves, &mut move_scores, move_index, moves_count);
 
         let r#move = moves[move_index];
-        if !r#move.is_capture() {
-            continue;
-        }
-
-        found = true;
-
         context.board.make_move(&r#move);
+
         let score = -run(context, depth - 1, ply + 1, -beta, -alpha);
         context.board.undo_move(&r#move);
 
@@ -61,7 +55,7 @@ pub fn run(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, bet
         }
     }
 
-    if !found {
+    if moves_count == 0 {
         context.statistics.q_leafs_count += 1;
     }
 
@@ -72,7 +66,7 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
     for move_index in 0..moves_count {
         let r#move = moves[move_index];
 
-        if !r#move.is_capture() {
+        if r#move.get_flags() == MoveFlags::EN_PASSANT {
             move_scores[move_index] = 0;
             continue;
         }

@@ -19,7 +19,7 @@ mod see_tests {
 
                     let board = Bitboard::new_from_fen($fen).unwrap();
                     let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
-                    let moves_count = board.get_moves(&mut moves);
+                    let moves_count = board.get_moves::<false>(&mut moves);
 
                     for move_index in 0..moves_count {
                         let r#move = moves[move_index];

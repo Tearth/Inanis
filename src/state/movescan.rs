@@ -82,7 +82,7 @@ impl Move {
         };
 
         let mut moves: [Move; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
-        let moves_count = board.get_moves(&mut moves);
+        let moves_count = board.get_moves::<false>(&mut moves);
 
         for r#move in &moves[0..moves_count] {
             if r#move.get_from() == from && r#move.get_to() == to {
@@ -158,7 +158,7 @@ impl Default for Move {
     }
 }
 
-pub fn scan_piece_moves<const PIECE: u8>(board: &Bitboard, moves: &mut [Move], mut index: usize) -> usize {
+pub fn scan_piece_moves<const PIECE: u8, const CAPTURES_ONLY: bool>(board: &Bitboard, moves: &mut [Move], mut index: usize) -> usize {
     let enemy_color = board.active_color ^ 1;
     let mut pieces = board.pieces[board.active_color as usize][PIECE as usize];
 
@@ -177,19 +177,27 @@ pub fn scan_piece_moves<const PIECE: u8>(board: &Bitboard, moves: &mut [Move], m
             _ => panic!("Invalid value: PIECE={}", PIECE),
         } & !board.occupancy[board.active_color as usize];
 
+        if CAPTURES_ONLY {
+            piece_moves &= board.occupancy[enemy_color as usize];
+        }
+
         while piece_moves != 0 {
             let to_field = get_lsb(piece_moves);
             let to_field_index = bit_scan(to_field);
             piece_moves = pop_lsb(piece_moves);
 
             let capture = (to_field & board.occupancy[enemy_color as usize]) != 0;
-            let flags = if capture { MoveFlags::CAPTURE } else { MoveFlags::QUIET };
+            let flags = if CAPTURES_ONLY || capture {
+                MoveFlags::CAPTURE
+            } else {
+                MoveFlags::QUIET
+            };
 
             moves[index] = Move::new(from_field_index, to_field_index, flags);
             index += 1;
         }
 
-        if PIECE == KING {
+        if PIECE == KING && !CAPTURES_ONLY {
             match board.active_color {
                 WHITE => {
                     let king_side_castling_rights = board.castling_rights.contains(CastlingRights::WHITE_SHORT_CASTLING);
@@ -270,12 +278,14 @@ pub fn get_piece_mobility<const PIECE: u8>(board: &Bitboard, color: u8, attack_m
     mobility
 }
 
-pub fn scan_pawn_moves(board: &Bitboard, moves: &mut [Move], mut index: usize) -> usize {
-    index = scan_pawn_moves_single_push(board, moves, index);
-    index = scan_pawn_moves_double_push(board, moves, index);
+pub fn scan_pawn_moves<const CAPTURES_ONLY: bool>(board: &Bitboard, moves: &mut [Move], mut index: usize) -> usize {
+    if !CAPTURES_ONLY {
+        index = scan_pawn_moves_single_push(board, moves, index);
+        index = scan_pawn_moves_double_push(board, moves, index);
+    }
+
     index = scan_pawn_moves_diagonal_attacks::<LEFT>(board, moves, index);
     index = scan_pawn_moves_diagonal_attacks::<RIGHT>(board, moves, index);
-
     index
 }
 

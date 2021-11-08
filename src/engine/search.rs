@@ -3,7 +3,6 @@ use super::qsearch;
 use super::*;
 use crate::cache::search::TranspositionTableScoreType;
 use crate::state::movescan::Move;
-use crate::state::movescan::MoveFlags;
 use crate::state::*;
 use chrono::Utc;
 use std::mem::MaybeUninit;
@@ -126,7 +125,7 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
     let mut best_move = Default::default();
     let mut moves: [Move; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
     let mut move_scores: [i16; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
-    let moves_count = context.board.get_moves(&mut moves);
+    let moves_count = context.board.get_moves::<false>(&mut moves);
 
     assign_move_scores(context, &moves, &mut move_scores, moves_count, hash_move, ply);
 

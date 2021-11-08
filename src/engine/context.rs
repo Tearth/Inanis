@@ -126,7 +126,7 @@ impl<'a> SearchContext<'a> {
                 }
 
                 let mut moves: [Move; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
-                let moves_count = board.get_moves(&mut moves);
+                let moves_count = board.get_moves::<false>(&mut moves);
                 let mut found = false;
 
                 for r#move in &moves[0..moves_count] {

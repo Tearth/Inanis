@@ -71,14 +71,14 @@ impl Bitboard {
         Ok(board)
     }
 
-    pub fn get_moves(&self, moves: &mut [Move]) -> usize {
+    pub fn get_moves<const CAPTURES_ONLY: bool>(&self, moves: &mut [Move]) -> usize {
         let mut index = 0;
-        index = movescan::scan_pawn_moves(self, moves, index);
-        index = movescan::scan_piece_moves::<KNIGHT>(self, moves, index);
-        index = movescan::scan_piece_moves::<BISHOP>(self, moves, index);
-        index = movescan::scan_piece_moves::<ROOK>(self, moves, index);
-        index = movescan::scan_piece_moves::<QUEEN>(self, moves, index);
-        index = movescan::scan_piece_moves::<KING>(self, moves, index);
+        index = movescan::scan_pawn_moves::<CAPTURES_ONLY>(self, moves, index);
+        index = movescan::scan_piece_moves::<KNIGHT, CAPTURES_ONLY>(self, moves, index);
+        index = movescan::scan_piece_moves::<BISHOP, CAPTURES_ONLY>(self, moves, index);
+        index = movescan::scan_piece_moves::<ROOK, CAPTURES_ONLY>(self, moves, index);
+        index = movescan::scan_piece_moves::<QUEEN, CAPTURES_ONLY>(self, moves, index);
+        index = movescan::scan_piece_moves::<KING, CAPTURES_ONLY>(self, moves, index);
 
         index
     }
