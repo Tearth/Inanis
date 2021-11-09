@@ -159,7 +159,10 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
             }
         } else {
             let zero_window_score = -run::<false>(context, depth - r - 1, ply + 1, -beta, -alpha, allow_null_move);
+            context.statistics.pvs_zero_window_searches += 1;
+
             if zero_window_score > alpha && r > 0 {
+                context.statistics.pvs_rejected_searches += 1;
                 -run::<false>(context, depth - 1, ply + 1, -beta, -alpha, allow_null_move)
             } else {
                 zero_window_score
