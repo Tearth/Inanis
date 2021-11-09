@@ -349,7 +349,6 @@ fn write_evaluation_parameters(output_directory: &str, best_error: f64) {
         output.push_str("\n");
         output.push_str(get_parameter(name_of!(KING_ATTACKED_FIELDS_OPENING), KING_ATTACKED_FIELDS_OPENING).as_str());
         output.push_str(get_parameter(name_of!(KING_ATTACKED_FIELDS_ENDING), KING_ATTACKED_FIELDS_ENDING).as_str());
-        output.push_str("\n");
     }
 
     let path = Path::new(output_directory);

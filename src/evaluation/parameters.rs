@@ -28,4 +28,3 @@ pub static mut PAWN_SHIELD_OPEN_FILE_ENDING: i16 = 2;
 
 pub static mut KING_ATTACKED_FIELDS_OPENING: i16 = -17;
 pub static mut KING_ATTACKED_FIELDS_ENDING: i16 = 6;
-
