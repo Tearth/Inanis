@@ -8,7 +8,7 @@ At the current stage, it's too early to make any official releases, thus you hav
  - **board representation**: bitboards (make/undo scheme)
  - **move generator**: magic bitboards, precalculated arrays for knight and king
  - **move ordering**: hash move, good captures (SEE with support for x-ray attacks), killer/history table
- - **search**: negamax, alpha-beta pruning, quiescence search, null-move pruning, 
+ - **search**: negamax, alpha-beta pruning, quiescence search, null-move pruning, late move reduction
  - **cache**: transposition table, pawn hash table
  - **evaluation**: material, piece-square table, pawn structure, mobility, king safety
 
@@ -18,6 +18,7 @@ At the current stage, it's too early to make any official releases, thus you hav
  benchmark - run test for a set of positions
  evaluate [fen] - show score for the position
  magic - generate magic numbers
+ tuner [epd] [output] [lock_material] [randomize] - run tuning
  uci - run Universal Chess Interface
  quit - close the application
 
