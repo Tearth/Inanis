@@ -13,6 +13,11 @@ pub const NULL_MOVE_MIN_GAME_PHASE: f32 = 0.15;
 pub const NULL_MOVE_SMALL_R: i8 = 2;
 pub const NULL_MOVE_BIG_R: i8 = 3;
 
+pub const LATE_MOVE_REDUCTION_MIN_DEPTH: i8 = 4;
+pub const LATE_MOVE_REDUCTION_MIN_MOVE_INDEX: usize = 3;
+pub const LATE_MOVE_REDUCTION_REDUCTION_BASE: usize = 1;
+pub const LATE_MOVE_REDUCTION_REDUCTION_STEP: usize = 8;
+
 pub const MOVE_ORDERING_HAS_MOVE: i16 = 10000;
 pub const MOVE_ORDERING_KILLER_MOVE: i16 = 120;
 pub const MOVE_ORDERING_HISTORY_MOVE: u8 = 90;
@@ -101,11 +106,7 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
     };
 
     if null_move_can_be_applied::<PV>(context, depth, allow_null_move) {
-        let r = if depth <= NULL_MOVE_R_CHANGE_DEPTH {
-            NULL_MOVE_SMALL_R
-        } else {
-            NULL_MOVE_BIG_R
-        };
+        let r = null_move_get_r(depth);
         context.statistics.null_move_searches += 1;
 
         context.board.make_null_move();
@@ -135,12 +136,18 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
         let r#move = moves[move_index];
         context.board.make_move(&r#move);
 
+        let r = if late_move_reduction_can_be_applied(context, depth, &r#move, move_index) {
+            late_move_reduction_get_r(move_index)
+        } else {
+            0
+        };
+
         let score = if PV {
             if move_index == 0 {
                 context.statistics.pvs_full_window_searches += 1;
                 -run::<true>(context, depth - 1, ply + 1, -beta, -alpha, allow_null_move)
             } else {
-                let zero_window_score = -run::<false>(context, depth - 1, ply + 1, -alpha - 1, -alpha, allow_null_move);
+                let zero_window_score = -run::<false>(context, depth - r - 1, ply + 1, -alpha - 1, -alpha, allow_null_move);
                 context.statistics.pvs_zero_window_searches += 1;
 
                 if zero_window_score > alpha {
@@ -151,7 +158,12 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
                 }
             }
         } else {
-            -run::<false>(context, depth - 1, ply + 1, -beta, -alpha, allow_null_move)
+            let zero_window_score = -run::<false>(context, depth - r - 1, ply + 1, -beta, -alpha, allow_null_move);
+            if zero_window_score > alpha && r > 0 {
+                -run::<false>(context, depth - 1, ply + 1, -beta, -alpha, allow_null_move)
+            } else {
+                zero_window_score
+            }
         };
 
         context.board.undo_move(&r#move);
@@ -248,4 +260,23 @@ fn null_move_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: 
         && depth >= NULL_MOVE_MIN_DEPTH
         && context.board.get_game_phase() > NULL_MOVE_MIN_GAME_PHASE
         && !context.board.is_king_checked(context.board.active_color)
+}
+
+fn null_move_get_r(depth: i8) -> i8 {
+    if depth <= NULL_MOVE_R_CHANGE_DEPTH {
+        NULL_MOVE_SMALL_R
+    } else {
+        NULL_MOVE_BIG_R
+    }
+}
+
+fn late_move_reduction_can_be_applied(context: &mut SearchContext, depth: i8, r#move: &Move, move_index: usize) -> bool {
+    depth >= LATE_MOVE_REDUCTION_MIN_DEPTH
+        && move_index >= LATE_MOVE_REDUCTION_MIN_MOVE_INDEX
+        && r#move.is_quiet()
+        && !context.board.is_king_checked(context.board.active_color)
+}
+
+fn late_move_reduction_get_r(move_index: usize) -> i8 {
+    (LATE_MOVE_REDUCTION_REDUCTION_BASE + move_index / LATE_MOVE_REDUCTION_REDUCTION_STEP) as i8
 }
