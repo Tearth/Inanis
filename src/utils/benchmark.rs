@@ -68,7 +68,7 @@ pub fn run() -> BenchmarkResult {
             &mut board,
             0,
             0,
-            9,
+            13,
             0,
             0,
             &mut transposition_table,
