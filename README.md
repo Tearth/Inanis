@@ -1,5 +1,5 @@
 # Inanis
-Experimental UCI chess engine written in Rust, proud successor of [Proxima b](https://github.com/Tearth/Proxima-b), [Proxima b 2.0](https://github.com/Tearth/Proxima-b-2.0) and [Cosette](https://github.com/Tearth/Cosette). The project is written after hours for educational purposes, with the goal to reach 2600 Elo (or at least to be stronger than the last version of [Cosette](https://github.com/Tearth/Cosette) which was about 2500 Elo). The name is subject to change.
+Experimental UCI chess engine written in Rust, proud successor of [Proxima b](https://github.com/Tearth/Proxima-b), [Proxima b 2.0](https://github.com/Tearth/Proxima-b-2.0) and [Cosette](https://github.com/Tearth/Cosette). The project is written after hours for educational purposes, with the goal to reach 2600 Elo (or at least to be stronger than the last version of [Cosette](https://github.com/Tearth/Cosette) which was about 2500 Elo).
 
 ## How to play
 At the current stage, it's too early to make any official releases, thus you have to compile the binary yourself using Rust toolkit. After this, use your favorite GUI client compatible with UCI protocol (the engine still doesn't support some commands, but should be playable in typical games). Also, I expect in the future to make the Lichess account to make it more available.
