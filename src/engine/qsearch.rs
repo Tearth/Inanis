@@ -5,6 +5,8 @@ use crate::state::movescan::MoveFlags;
 use crate::state::*;
 use std::mem::MaybeUninit;
 
+pub const SCORE_PRUNING_THRESHOLD: i16 = 0;
+
 pub fn run(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, beta: i16) -> i16 {
     context.statistics.q_nodes_count += 1;
 
@@ -30,8 +32,14 @@ pub fn run(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, bet
 
     assign_move_scores(context, &moves, &mut move_scores, moves_count);
 
+    let mut found = false;
     for move_index in 0..moves_count {
         sort_next_move(&mut moves, &mut move_scores, move_index, moves_count);
+        if score_pruning_can_be_applied(move_scores[move_index]) {
+            break;
+        }
+
+        found = true;
 
         let r#move = moves[move_index];
         context.board.make_move(&r#move);
@@ -55,7 +63,7 @@ pub fn run(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, bet
         }
     }
 
-    if moves_count == 0 {
+    if !found {
         context.statistics.q_leafs_count += 1;
     }
 
@@ -79,4 +87,8 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
 
         move_scores[move_index] = (see::get(attacking_piece, captured_piece, attackers, defenders) as i16) * 100;
     }
+}
+
+fn score_pruning_can_be_applied(move_score: i16) -> bool {
+    move_score < SCORE_PRUNING_THRESHOLD
 }
