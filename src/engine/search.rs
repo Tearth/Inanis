@@ -250,7 +250,7 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
             let attackers = context.board.get_attacking_pieces(context.board.active_color ^ 1, field);
             let defenders = context.board.get_attacking_pieces(context.board.active_color, field);
 
-            move_scores[move_index] = (see::get(attacking_piece, captured_piece, attackers, defenders) as i16) * 100;
+            move_scores[move_index] = see::get(attacking_piece, captured_piece, attackers, defenders);
             continue;
         }
 
