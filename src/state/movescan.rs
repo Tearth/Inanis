@@ -23,6 +23,11 @@ bitflags! {
         const BISHOP_PROMOTION_CAPTURE = 13;
         const ROOK_PROMOTION_CAPTURE = 14;
         const QUEEN_PROMOTION_CAPTURE = 15;
+
+        const FIELD_SPECIAL_0 = 1;
+        const FIELD_SPECIAL_1 = 2;
+        const FIELD_CAPTURE = 4;
+        const FIELD_PROMOTION = 8;
     }
 }
 
@@ -149,6 +154,10 @@ impl Move {
 
     pub fn is_capture(&self) -> bool {
         self.get_flags().contains(MoveFlags::CAPTURE) && self.get_flags() != MoveFlags::EN_PASSANT
+    }
+
+    pub fn is_promotion(&self) -> bool {
+        self.get_flags().contains(MoveFlags::FIELD_PROMOTION)
     }
 }
 

@@ -66,6 +66,12 @@ pub struct SearchStatistics {
     pub null_move_accepted: u64,
     pub null_move_rejected: u64,
 
+    pub q_score_prunings_accepted: u64,
+    pub q_score_prunings_rejected: u64,
+
+    pub q_futility_prunings_accepted: u64,
+    pub q_futility_prunings_rejected: u64,
+
     pub tt_added: u64,
     pub tt_hits: u64,
     pub tt_misses: u64,

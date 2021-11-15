@@ -183,6 +183,30 @@ fn handle_benchmark() {
         "Null move: {} searches, {} accepted, {} rejected ({:.2}%)",
         result.null_move_searches, result.null_move_accepted, result.null_move_rejected, null_move_rejected_percent
     );
+
+    let total_q_score_pruning_attempts = result.q_score_prunings_accepted + result.q_score_prunings_rejected;
+    let q_score_pruning_accepted_percent = ((result.q_score_prunings_accepted as f32) / (total_q_score_pruning_attempts as f32)) * 100.0;
+    let q_score_pruning_rejected_percent = ((result.q_score_prunings_rejected as f32) / (total_q_score_pruning_attempts as f32)) * 100.0;
+    println!(
+        "Q score pruning: {} total, {} accepted ({:.2}%), {} rejected ({:.2}%)",
+        total_q_score_pruning_attempts,
+        result.q_score_prunings_accepted,
+        q_score_pruning_accepted_percent,
+        result.q_score_prunings_rejected,
+        q_score_pruning_rejected_percent
+    );
+
+    let total_q_futility_prunings_attempts = result.q_futility_prunings_accepted + result.q_futility_prunings_rejected;
+    let q_futility_pruning_accepted_percent = ((result.q_futility_prunings_accepted as f32) / (total_q_futility_prunings_attempts as f32)) * 100.0;
+    let q_futility_pruning_rejected_percent = ((result.q_futility_prunings_rejected as f32) / (total_q_futility_prunings_attempts as f32)) * 100.0;
+    println!(
+        "Q futility pruning: {} total, {} accepted ({:.2}%), {} rejected ({:.2}%)",
+        total_q_futility_prunings_attempts,
+        result.q_futility_prunings_accepted,
+        q_futility_pruning_accepted_percent,
+        result.q_futility_prunings_rejected,
+        q_futility_pruning_rejected_percent
+    );
 }
 
 fn handle_evaluate(input: Vec<&str>) {

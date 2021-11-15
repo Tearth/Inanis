@@ -1,11 +1,13 @@
 use super::context::SearchContext;
 use super::*;
+use crate::evaluation::parameters::*;
 use crate::state::movescan::Move;
 use crate::state::movescan::MoveFlags;
 use crate::state::*;
 use std::mem::MaybeUninit;
 
 pub const SCORE_PRUNING_THRESHOLD: i16 = 0;
+pub const FUTILITY_PRUNING_MARGIN: i16 = 300;
 
 pub fn run(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, beta: i16) -> i16 {
     context.statistics.q_nodes_count += 1;
@@ -36,7 +38,17 @@ pub fn run(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, bet
     for move_index in 0..moves_count {
         sort_next_move(&mut moves, &mut move_scores, move_index, moves_count);
         if score_pruning_can_be_applied(move_scores[move_index]) {
+            context.statistics.q_score_prunings_accepted += 1;
             break;
+        } else {
+            context.statistics.q_score_prunings_rejected += 1;
+        }
+
+        if futility_pruning_can_be_applied(move_scores[move_index], stand_pat, alpha) {
+            context.statistics.q_futility_prunings_accepted += 1;
+            break;
+        } else {
+            context.statistics.q_futility_prunings_rejected += 1;
         }
 
         found = true;
@@ -79,6 +91,11 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
             continue;
         }
 
+        if r#move.is_promotion() {
+            move_scores[move_index] = unsafe { PIECE_VALUE[r#move.get_promotion_piece() as usize] };
+            continue;
+        }
+
         let field = r#move.get_to();
         let attacking_piece = context.board.get_piece(r#move.get_from());
         let captured_piece = context.board.get_piece(r#move.get_to());
@@ -91,4 +108,8 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
 
 fn score_pruning_can_be_applied(move_score: i16) -> bool {
     move_score < SCORE_PRUNING_THRESHOLD
+}
+
+fn futility_pruning_can_be_applied(move_score: i16, stand_pat: i16, alpha: i16) -> bool {
+    stand_pat + move_score + FUTILITY_PRUNING_MARGIN < alpha
 }
