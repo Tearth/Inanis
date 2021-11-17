@@ -132,9 +132,9 @@ fn handle_benchmark() {
         format!("{:.2}%", t_ordering_quality)
     ]);
 
-    let branching_factor = percent(result.nodes_count, result.nodes_count - result.leafs_count);
-    let q_branching_factor = percent(result.q_nodes_count, result.q_nodes_count - result.q_leafs_count);
-    let t_branching_factor = percent(t_nodes_count, t_nodes_count - t_leafs_count);
+    let branching_factor = (result.nodes_count as f64) / ((result.nodes_count - result.leafs_count) as f64);
+    let q_branching_factor = (result.q_nodes_count as f64) / ((result.q_nodes_count - result.q_leafs_count) as f64);
+    let t_branching_factor = (t_nodes_count as f64) / ((t_nodes_count - t_leafs_count) as f64);
     search_table.add_row(row![
         "Branching factor",
         format!("{:.2}", branching_factor),
