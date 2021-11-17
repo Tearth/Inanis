@@ -82,61 +82,59 @@ fn handle_benchmark() {
     let result = benchmark::run();
     println!("Benchmark done in {:.2} s", result.time);
 
-    let t_nodes_count = result.nodes_count + result.q_nodes_count;
-    let t_leafs_count = result.leafs_count + result.q_leafs_count;
-
-    let mnps = ((result.nodes_count as f32) / 1000000.0) / result.time;
-    let q_mnps = ((result.q_nodes_count as f32) / 1000000.0) / result.time;
-    let t_mnps = (((result.nodes_count + result.q_nodes_count) as f32) / 1000000.0) / result.time;
-
-    let mlps = ((result.leafs_count as f32) / 1000000.0) / result.time;
-    let q_mlps = ((result.q_leafs_count as f32) / 1000000.0) / result.time;
-    let t_mlps = (((result.leafs_count + result.q_leafs_count) as f32) / 1000000.0) / result.time;
-
-    let beta_cutoffs_percent = ((result.beta_cutoffs as f32) / (result.nodes_count as f32)) * 100.0;
-    let q_beta_cutoffs_percent = ((result.q_beta_cutoffs as f32) / (result.q_nodes_count as f32)) * 100.0;
-    let t_beta_cutoffs_percent = (((result.beta_cutoffs + result.q_beta_cutoffs) as f32) / (t_nodes_count as f32)) * 100.0;
-
-    let ordering_hits = result.perfect_cutoffs + result.non_perfect_cutoffs;
-    let q_ordering_hits = result.q_perfect_cutoffs + result.q_non_perfect_cutoffs;
-    let t_ordering_hits = ordering_hits + q_ordering_hits;
-
-    let ordering_quality = (result.perfect_cutoffs as f32) / (ordering_hits as f32) * 100.0;
-    let q_ordering_quality = (result.q_perfect_cutoffs as f32) / (q_ordering_hits as f32) * 100.0;
-    let t_ordering_quality = ((result.perfect_cutoffs + result.q_perfect_cutoffs) as f32) / (t_ordering_hits as f32) * 100.0;
-
-    let branching_factor = (result.nodes_count as f64) / ((result.nodes_count - result.leafs_count) as f64);
-    let q_branching_factor = (result.q_nodes_count as f64) / ((result.q_nodes_count - result.q_leafs_count) as f64);
-    let t_branching_factor = (t_nodes_count as f64) / ((t_nodes_count - t_leafs_count) as f64);
-
     let mut search_table = Table::new();
     search_table.set_format(*format::consts::FORMAT_NO_LINESEP_WITH_TITLE);
     search_table.set_titles(row!["", "Normal", "Quiescence", "Total"]);
 
+    let t_nodes_count = result.nodes_count + result.q_nodes_count;
+    let t_leafs_count = result.leafs_count + result.q_leafs_count;
+    let mnps = ((result.nodes_count as f32) / 1000000.0) / result.time;
+    let q_mnps = ((result.q_nodes_count as f32) / 1000000.0) / result.time;
+    let t_mnps = (((result.nodes_count + result.q_nodes_count) as f32) / 1000000.0) / result.time;
     search_table.add_row(row![
         "Nodes count",
         format!("{} ({:.2} MN/s)", result.nodes_count, mnps),
         format!("{} ({:.2} MN/s)", result.q_nodes_count, q_mnps),
         format!("{} ({:.2} MN/s)", t_nodes_count, t_mnps)
     ]);
+
+    let mlps = ((result.leafs_count as f32) / 1000000.0) / result.time;
+    let q_mlps = ((result.q_leafs_count as f32) / 1000000.0) / result.time;
+    let t_mlps = (((result.leafs_count + result.q_leafs_count) as f32) / 1000000.0) / result.time;
     search_table.add_row(row![
         "Leafs count",
         format!("{} ({:.2} MN/s)", result.leafs_count, mlps),
         format!("{} ({:.2} MN/s)", result.q_leafs_count, q_mlps),
         format!("{} ({:.2} MN/s)", t_leafs_count, t_mlps)
     ]);
+
+    let beta_cutoffs_percent = percent(result.beta_cutoffs, result.nodes_count);
+    let q_beta_cutoffs_percent = percent(result.q_beta_cutoffs, result.q_nodes_count);
+    let t_beta_cutoffs_percent = percent(result.beta_cutoffs + result.q_beta_cutoffs, t_nodes_count);
     search_table.add_row(row![
         "Beta cutoffs",
         format!("{} ({:.2}%)", result.beta_cutoffs, beta_cutoffs_percent),
         format!("{} ({:.2}%)", result.q_beta_cutoffs, q_beta_cutoffs_percent),
         format!("{} ({:.2}%)", result.beta_cutoffs + result.q_beta_cutoffs, t_beta_cutoffs_percent)
     ]);
+
+    let ordering_hits = result.perfect_cutoffs + result.non_perfect_cutoffs;
+    let q_ordering_hits = result.q_perfect_cutoffs + result.q_non_perfect_cutoffs;
+    let t_ordering_hits = ordering_hits + q_ordering_hits;
+
+    let ordering_quality = percent(result.perfect_cutoffs, ordering_hits);
+    let q_ordering_quality = percent(result.q_perfect_cutoffs, q_ordering_hits);
+    let t_ordering_quality = percent(result.perfect_cutoffs + result.q_perfect_cutoffs, t_ordering_hits);
     search_table.add_row(row![
         "Ordering quality",
         format!("{:.2}%", ordering_quality),
         format!("{:.2}%", q_ordering_quality),
         format!("{:.2}%", t_ordering_quality)
     ]);
+
+    let branching_factor = percent(result.nodes_count, result.nodes_count - result.leafs_count);
+    let q_branching_factor = percent(result.q_nodes_count, result.q_nodes_count - result.q_leafs_count);
+    let t_branching_factor = percent(t_nodes_count, t_nodes_count - t_leafs_count);
     search_table.add_row(row![
         "Branching factor",
         format!("{:.2}", branching_factor),
@@ -150,8 +148,8 @@ fn handle_benchmark() {
     cache_table.set_format(*format::consts::FORMAT_NO_LINESEP_WITH_TITLE);
     cache_table.set_titles(row!["", "Added", "Hits", "Misses", "Collisions"]);
 
-    let tt_misses_percent = ((result.tt_misses as f32) / (result.tt_hits as f32)) * 100.0;
-    let tt_collisions_percent = ((result.tt_collisions as f32) / (result.tt_hits as f32)) * 100.0;
+    let tt_misses_percent = percent(result.tt_misses, result.tt_hits);
+    let tt_collisions_percent = percent(result.tt_collisions, result.tt_hits);
     cache_table.add_row(row![
         "Transposition table",
         format!("{}", result.tt_added),
@@ -160,20 +158,14 @@ fn handle_benchmark() {
         format!("{} ({:.2}%)", result.tt_collisions, tt_collisions_percent)
     ]);
 
+    let pawn_hash_table_misses_percent = percent(result.pawn_hashtable_misses, result.pawn_hashtable_hits);
+    let pawn_hash_table_collisions_percent = percent(result.pawn_hashtable_collisions, result.pawn_hashtable_hits);
     cache_table.add_row(row![
         "Pawn hash table",
         format!("{}", result.pawn_hashtable_added),
         format!("{}", result.pawn_hashtable_hits),
-        format!(
-            "{} ({:.2}%)",
-            result.pawn_hashtable_misses,
-            ((result.pawn_hashtable_misses as f32) / (result.pawn_hashtable_hits as f32)) * 100.0
-        ),
-        format!(
-            "{} ({:.2}%)",
-            result.pawn_hashtable_collisions,
-            ((result.pawn_hashtable_collisions as f32) / (result.pawn_hashtable_hits as f32)) * 100.0
-        )
+        format!("{} ({:.2}%)", result.pawn_hashtable_misses, pawn_hash_table_misses_percent),
+        format!("{} ({:.2}%)", result.pawn_hashtable_collisions, pawn_hash_table_collisions_percent)
     ]);
 
     cache_table.printstd();
@@ -182,76 +174,56 @@ fn handle_benchmark() {
     prunings_reductions_table.set_format(*format::consts::FORMAT_NO_LINESEP_WITH_TITLE);
     prunings_reductions_table.set_titles(row!["", "Attempts", "Accepted", "Rejected"]);
 
+    let static_null_move_pruning_accepted_percent = percent(result.static_null_move_pruning_accepted, result.static_null_move_pruning_attempts);
+    let static_null_move_pruning_rejected_percent = percent(result.static_null_move_pruning_rejected, result.static_null_move_pruning_attempts);
     prunings_reductions_table.add_row(row![
         "Static null move pruning",
         format!("{:.2}", result.static_null_move_pruning_attempts),
         format!(
             "{} ({:.2}%)",
-            result.static_null_move_pruning_accepted,
-            ((result.static_null_move_pruning_accepted as f32) / (result.static_null_move_pruning_attempts as f32)) * 100.0
+            result.static_null_move_pruning_accepted, static_null_move_pruning_accepted_percent
         ),
         format!(
             "{} ({:.2}%)",
-            result.static_null_move_pruning_rejected,
-            ((result.static_null_move_pruning_rejected as f32) / (result.static_null_move_pruning_attempts as f32)) * 100.0
+            result.static_null_move_pruning_rejected, static_null_move_pruning_rejected_percent
         )
     ]);
 
+    let null_move_pruning_accepted_percent = percent(result.null_move_pruning_accepted, result.null_move_pruning_attempts);
+    let null_move_pruning_rejected_percent = percent(result.null_move_pruning_rejected, result.null_move_pruning_attempts);
     prunings_reductions_table.add_row(row![
         "Null move pruning",
         format!("{:.2}", result.null_move_pruning_attempts),
-        format!(
-            "{} ({:.2}%)",
-            result.null_move_pruning_accepted,
-            ((result.null_move_pruning_accepted as f32) / (result.null_move_pruning_attempts as f32)) * 100.0
-        ),
-        format!(
-            "{} ({:.2}%)",
-            result.null_move_pruning_rejected,
-            ((result.null_move_pruning_rejected as f32) / (result.null_move_pruning_attempts as f32)) * 100.0
-        )
+        format!("{} ({:.2}%)", result.null_move_pruning_accepted, null_move_pruning_accepted_percent),
+        format!("{} ({:.2}%)", result.null_move_pruning_rejected, null_move_pruning_rejected_percent)
     ]);
 
     let total_q_score_pruning_attempts = result.q_score_pruning_accepted + result.q_score_pruning_rejected;
+    let q_score_pruning_accepted_percent = percent(result.q_score_pruning_accepted, total_q_score_pruning_attempts);
+    let q_score_pruning_rejected_percent = percent(result.q_score_pruning_rejected, total_q_score_pruning_attempts);
     prunings_reductions_table.add_row(row![
         "Q score pruning",
         format!("{:.2}", total_q_score_pruning_attempts),
-        format!(
-            "{} ({:.2}%)",
-            result.q_score_pruning_accepted,
-            ((result.q_score_pruning_accepted as f32) / (total_q_score_pruning_attempts as f32)) * 100.0
-        ),
-        format!(
-            "{} ({:.2}%)",
-            result.q_score_pruning_rejected,
-            ((result.q_score_pruning_rejected as f32) / (total_q_score_pruning_attempts as f32)) * 100.0
-        )
+        format!("{} ({:.2}%)", result.q_score_pruning_accepted, q_score_pruning_accepted_percent),
+        format!("{} ({:.2}%)", result.q_score_pruning_rejected, q_score_pruning_rejected_percent)
     ]);
 
     let total_q_futility_prunings_attempts = result.q_futility_pruning_accepted + result.q_futility_pruning_rejected;
+    let q_futility_pruning_accepted_percent = percent(result.q_futility_pruning_accepted, total_q_futility_prunings_attempts);
+    let q_futility_pruning_rejected_percent = percent(result.q_futility_pruning_rejected, total_q_futility_prunings_attempts);
     prunings_reductions_table.add_row(row![
         "Q futility pruning",
         format!("{:.2}", total_q_futility_prunings_attempts),
-        format!(
-            "{} ({:.2}%)",
-            result.q_futility_pruning_accepted,
-            ((result.q_futility_pruning_accepted as f32) / (total_q_futility_prunings_attempts as f32)) * 100.0
-        ),
-        format!(
-            "{} ({:.2}%)",
-            result.q_futility_pruning_rejected,
-            ((result.q_futility_pruning_rejected as f32) / (total_q_futility_prunings_attempts as f32)) * 100.0
-        )
+        format!("{} ({:.2}%)", result.q_futility_pruning_accepted, q_futility_pruning_accepted_percent),
+        format!("{} ({:.2}%)", result.q_futility_pruning_rejected, q_futility_pruning_rejected_percent)
     ]);
 
     prunings_reductions_table.printstd();
 
+    let pvs_rejected_searches_percent = percent(result.pvs_rejected_searches, result.pvs_zero_window_searches);
     println!(
         "PVS: {} full-window searches, {} zero-window searches, {} rejected ({:.2}%)",
-        result.pvs_full_window_searches,
-        result.pvs_zero_window_searches,
-        result.pvs_rejected_searches,
-        ((result.pvs_rejected_searches as f32) / (result.pvs_zero_window_searches as f32)) * 100.0
+        result.pvs_full_window_searches, result.pvs_zero_window_searches, result.pvs_rejected_searches, pvs_rejected_searches_percent
     );
 }
 
@@ -522,4 +494,8 @@ fn prepare_board(parameters: &[&str]) -> Result<Bitboard, &'static str> {
         "moves" => Bitboard::new_from_moves(&parameters[1..]),
         _ => Err("Invalid parameters"),
     }
+}
+
+fn percent(from: u64, all: u64) -> f32 {
+    ((from as f32) / (all as f32)) * 100.0
 }
