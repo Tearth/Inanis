@@ -32,11 +32,11 @@ pub struct BenchmarkResult {
     pub null_move_pruning_accepted: u64,
     pub null_move_pruning_rejected: u64,
 
-    pub q_score_prunings_accepted: u64,
-    pub q_score_prunings_rejected: u64,
+    pub q_score_pruning_accepted: u64,
+    pub q_score_pruning_rejected: u64,
 
-    pub q_futility_prunings_accepted: u64,
-    pub q_futility_prunings_rejected: u64,
+    pub q_futility_pruning_accepted: u64,
+    pub q_futility_pruning_rejected: u64,
 
     pub tt_added: u64,
     pub tt_hits: u64,
@@ -114,11 +114,11 @@ pub fn run() -> BenchmarkResult {
         benchmark_result.null_move_pruning_accepted += result.statistics.null_move_pruning_accepted;
         benchmark_result.null_move_pruning_rejected += result.statistics.null_move_pruning_rejected;
 
-        benchmark_result.q_score_prunings_accepted += result.statistics.q_score_prunings_accepted;
-        benchmark_result.q_score_prunings_rejected += result.statistics.q_score_prunings_rejected;
+        benchmark_result.q_score_pruning_accepted += result.statistics.q_score_pruning_accepted;
+        benchmark_result.q_score_pruning_rejected += result.statistics.q_score_pruning_rejected;
 
-        benchmark_result.q_futility_prunings_accepted += result.statistics.q_futility_prunings_accepted;
-        benchmark_result.q_futility_prunings_rejected += result.statistics.q_futility_prunings_rejected;
+        benchmark_result.q_futility_pruning_accepted += result.statistics.q_futility_pruning_accepted;
+        benchmark_result.q_futility_pruning_rejected += result.statistics.q_futility_pruning_rejected;
 
         benchmark_result.tt_added += result.statistics.tt_added;
         benchmark_result.tt_hits += result.statistics.tt_hits;

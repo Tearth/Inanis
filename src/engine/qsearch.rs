@@ -38,17 +38,17 @@ pub fn run(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, bet
     for move_index in 0..moves_count {
         sort_next_move(&mut moves, &mut move_scores, move_index, moves_count);
         if score_pruning_can_be_applied(move_scores[move_index]) {
-            context.statistics.q_score_prunings_accepted += 1;
+            context.statistics.q_score_pruning_accepted += 1;
             break;
         } else {
-            context.statistics.q_score_prunings_rejected += 1;
+            context.statistics.q_score_pruning_rejected += 1;
         }
 
         if futility_pruning_can_be_applied(move_scores[move_index], stand_pat, alpha) {
-            context.statistics.q_futility_prunings_accepted += 1;
+            context.statistics.q_futility_pruning_accepted += 1;
             break;
         } else {
-            context.statistics.q_futility_prunings_rejected += 1;
+            context.statistics.q_futility_pruning_rejected += 1;
         }
 
         found = true;

@@ -70,11 +70,11 @@ pub struct SearchStatistics {
     pub null_move_pruning_accepted: u64,
     pub null_move_pruning_rejected: u64,
 
-    pub q_score_prunings_accepted: u64,
-    pub q_score_prunings_rejected: u64,
+    pub q_score_pruning_accepted: u64,
+    pub q_score_pruning_rejected: u64,
 
-    pub q_futility_prunings_accepted: u64,
-    pub q_futility_prunings_rejected: u64,
+    pub q_futility_pruning_accepted: u64,
+    pub q_futility_pruning_rejected: u64,
 
     pub tt_added: u64,
     pub tt_hits: u64,

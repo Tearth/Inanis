@@ -160,62 +160,98 @@ fn handle_benchmark() {
         format!("{} ({:.2}%)", result.tt_collisions, tt_collisions_percent)
     ]);
 
-    let pawn_hashtable_misses_percent = ((result.pawn_hashtable_misses as f32) / (result.pawn_hashtable_hits as f32)) * 100.0;
-    let pawn_hashtable_collisions_percent = ((result.pawn_hashtable_collisions as f32) / (result.pawn_hashtable_hits as f32)) * 100.0;
     cache_table.add_row(row![
         "Pawn hash table",
         format!("{}", result.pawn_hashtable_added),
         format!("{}", result.pawn_hashtable_hits),
-        format!("{} ({:.2}%)", result.pawn_hashtable_misses, pawn_hashtable_misses_percent),
-        format!("{} ({:.2}%)", result.pawn_hashtable_collisions, pawn_hashtable_collisions_percent)
+        format!(
+            "{} ({:.2}%)",
+            result.pawn_hashtable_misses,
+            ((result.pawn_hashtable_misses as f32) / (result.pawn_hashtable_hits as f32)) * 100.0
+        ),
+        format!(
+            "{} ({:.2}%)",
+            result.pawn_hashtable_collisions,
+            ((result.pawn_hashtable_collisions as f32) / (result.pawn_hashtable_hits as f32)) * 100.0
+        )
     ]);
 
     cache_table.printstd();
 
-    let pvs_rejected_percent = ((result.pvs_rejected_searches as f32) / (result.pvs_zero_window_searches as f32)) * 100.0;
+    let mut prunings_reductions_table = Table::new();
+    prunings_reductions_table.set_format(*format::consts::FORMAT_NO_LINESEP_WITH_TITLE);
+    prunings_reductions_table.set_titles(row!["", "Attempts", "Accepted", "Rejected"]);
+
+    prunings_reductions_table.add_row(row![
+        "Static null move pruning",
+        format!("{:.2}", result.static_null_move_pruning_attempts),
+        format!(
+            "{} ({:.2}%)",
+            result.static_null_move_pruning_accepted,
+            ((result.static_null_move_pruning_accepted as f32) / (result.static_null_move_pruning_attempts as f32)) * 100.0
+        ),
+        format!(
+            "{} ({:.2}%)",
+            result.static_null_move_pruning_rejected,
+            ((result.static_null_move_pruning_rejected as f32) / (result.static_null_move_pruning_attempts as f32)) * 100.0
+        )
+    ]);
+
+    prunings_reductions_table.add_row(row![
+        "Null move pruning",
+        format!("{:.2}", result.null_move_pruning_attempts),
+        format!(
+            "{} ({:.2}%)",
+            result.null_move_pruning_accepted,
+            ((result.null_move_pruning_accepted as f32) / (result.null_move_pruning_attempts as f32)) * 100.0
+        ),
+        format!(
+            "{} ({:.2}%)",
+            result.null_move_pruning_rejected,
+            ((result.null_move_pruning_rejected as f32) / (result.null_move_pruning_attempts as f32)) * 100.0
+        )
+    ]);
+
+    let total_q_score_pruning_attempts = result.q_score_pruning_accepted + result.q_score_pruning_rejected;
+    prunings_reductions_table.add_row(row![
+        "Q score pruning",
+        format!("{:.2}", total_q_score_pruning_attempts),
+        format!(
+            "{} ({:.2}%)",
+            result.q_score_pruning_accepted,
+            ((result.q_score_pruning_accepted as f32) / (total_q_score_pruning_attempts as f32)) * 100.0
+        ),
+        format!(
+            "{} ({:.2}%)",
+            result.q_score_pruning_rejected,
+            ((result.q_score_pruning_rejected as f32) / (total_q_score_pruning_attempts as f32)) * 100.0
+        )
+    ]);
+
+    let total_q_futility_prunings_attempts = result.q_futility_pruning_accepted + result.q_futility_pruning_rejected;
+    prunings_reductions_table.add_row(row![
+        "Q futility pruning",
+        format!("{:.2}", total_q_futility_prunings_attempts),
+        format!(
+            "{} ({:.2}%)",
+            result.q_futility_pruning_accepted,
+            ((result.q_futility_pruning_accepted as f32) / (total_q_futility_prunings_attempts as f32)) * 100.0
+        ),
+        format!(
+            "{} ({:.2}%)",
+            result.q_futility_pruning_rejected,
+            ((result.q_futility_pruning_rejected as f32) / (total_q_futility_prunings_attempts as f32)) * 100.0
+        )
+    ]);
+
+    prunings_reductions_table.printstd();
+
     println!(
         "PVS: {} full-window searches, {} zero-window searches, {} rejected ({:.2}%)",
-        result.pvs_full_window_searches, result.pvs_zero_window_searches, result.pvs_rejected_searches, pvs_rejected_percent
-    );
-
-    let static_null_move_rejected_percent =
-        ((result.static_null_move_pruning_rejected as f32) / (result.static_null_move_pruning_attempts as f32)) * 100.0;
-    println!(
-        "Static null move pruning: {} searches, {} accepted, {} rejected ({:.2}%)",
-        result.static_null_move_pruning_attempts,
-        result.static_null_move_pruning_accepted,
-        result.static_null_move_pruning_rejected,
-        static_null_move_rejected_percent
-    );
-
-    let null_move_rejected_percent = ((result.null_move_pruning_rejected as f32) / (result.null_move_pruning_attempts as f32)) * 100.0;
-    println!(
-        "Null move: {} searches, {} accepted, {} rejected ({:.2}%)",
-        result.null_move_pruning_attempts, result.null_move_pruning_accepted, result.null_move_pruning_rejected, null_move_rejected_percent
-    );
-
-    let total_q_score_pruning_attempts = result.q_score_prunings_accepted + result.q_score_prunings_rejected;
-    let q_score_pruning_accepted_percent = ((result.q_score_prunings_accepted as f32) / (total_q_score_pruning_attempts as f32)) * 100.0;
-    let q_score_pruning_rejected_percent = ((result.q_score_prunings_rejected as f32) / (total_q_score_pruning_attempts as f32)) * 100.0;
-    println!(
-        "Q score pruning: {} total, {} accepted ({:.2}%), {} rejected ({:.2}%)",
-        total_q_score_pruning_attempts,
-        result.q_score_prunings_accepted,
-        q_score_pruning_accepted_percent,
-        result.q_score_prunings_rejected,
-        q_score_pruning_rejected_percent
-    );
-
-    let total_q_futility_prunings_attempts = result.q_futility_prunings_accepted + result.q_futility_prunings_rejected;
-    let q_futility_pruning_accepted_percent = ((result.q_futility_prunings_accepted as f32) / (total_q_futility_prunings_attempts as f32)) * 100.0;
-    let q_futility_pruning_rejected_percent = ((result.q_futility_prunings_rejected as f32) / (total_q_futility_prunings_attempts as f32)) * 100.0;
-    println!(
-        "Q futility pruning: {} total, {} accepted ({:.2}%), {} rejected ({:.2}%)",
-        total_q_futility_prunings_attempts,
-        result.q_futility_prunings_accepted,
-        q_futility_pruning_accepted_percent,
-        result.q_futility_prunings_rejected,
-        q_futility_pruning_rejected_percent
+        result.pvs_full_window_searches,
+        result.pvs_zero_window_searches,
+        result.pvs_rejected_searches,
+        ((result.pvs_rejected_searches as f32) / (result.pvs_zero_window_searches as f32)) * 100.0
     );
 }
 
