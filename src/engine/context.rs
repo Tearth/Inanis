@@ -62,9 +62,13 @@ pub struct SearchStatistics {
     pub pvs_zero_window_searches: u64,
     pub pvs_rejected_searches: u64,
 
-    pub null_move_searches: u64,
-    pub null_move_accepted: u64,
-    pub null_move_rejected: u64,
+    pub static_null_move_pruning_attempts: u64,
+    pub static_null_move_pruning_accepted: u64,
+    pub static_null_move_pruning_rejected: u64,
+
+    pub null_move_pruning_attempts: u64,
+    pub null_move_pruning_accepted: u64,
+    pub null_move_pruning_rejected: u64,
 
     pub q_score_prunings_accepted: u64,
     pub q_score_prunings_rejected: u64,

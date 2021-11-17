@@ -178,10 +178,20 @@ fn handle_benchmark() {
         result.pvs_full_window_searches, result.pvs_zero_window_searches, result.pvs_rejected_searches, pvs_rejected_percent
     );
 
-    let null_move_rejected_percent = ((result.null_move_rejected as f32) / (result.null_move_searches as f32)) * 100.0;
+    let static_null_move_rejected_percent =
+        ((result.static_null_move_pruning_rejected as f32) / (result.static_null_move_pruning_attempts as f32)) * 100.0;
+    println!(
+        "Static null move pruning: {} searches, {} accepted, {} rejected ({:.2}%)",
+        result.static_null_move_pruning_attempts,
+        result.static_null_move_pruning_accepted,
+        result.static_null_move_pruning_rejected,
+        static_null_move_rejected_percent
+    );
+
+    let null_move_rejected_percent = ((result.null_move_pruning_rejected as f32) / (result.null_move_pruning_attempts as f32)) * 100.0;
     println!(
         "Null move: {} searches, {} accepted, {} rejected ({:.2}%)",
-        result.null_move_searches, result.null_move_accepted, result.null_move_rejected, null_move_rejected_percent
+        result.null_move_pruning_attempts, result.null_move_pruning_accepted, result.null_move_pruning_rejected, null_move_rejected_percent
     );
 
     let total_q_score_pruning_attempts = result.q_score_prunings_accepted + result.q_score_prunings_rejected;

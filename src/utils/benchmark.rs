@@ -24,9 +24,13 @@ pub struct BenchmarkResult {
     pub pvs_zero_window_searches: u64,
     pub pvs_rejected_searches: u64,
 
-    pub null_move_searches: u64,
-    pub null_move_accepted: u64,
-    pub null_move_rejected: u64,
+    pub static_null_move_pruning_attempts: u64,
+    pub static_null_move_pruning_accepted: u64,
+    pub static_null_move_pruning_rejected: u64,
+
+    pub null_move_pruning_attempts: u64,
+    pub null_move_pruning_accepted: u64,
+    pub null_move_pruning_rejected: u64,
 
     pub q_score_prunings_accepted: u64,
     pub q_score_prunings_rejected: u64,
@@ -102,9 +106,13 @@ pub fn run() -> BenchmarkResult {
         benchmark_result.pvs_zero_window_searches += result.statistics.pvs_zero_window_searches;
         benchmark_result.pvs_rejected_searches += result.statistics.pvs_rejected_searches;
 
-        benchmark_result.null_move_searches += result.statistics.null_move_searches;
-        benchmark_result.null_move_accepted += result.statistics.null_move_accepted;
-        benchmark_result.null_move_rejected += result.statistics.null_move_rejected;
+        benchmark_result.static_null_move_pruning_attempts += result.statistics.static_null_move_pruning_attempts;
+        benchmark_result.static_null_move_pruning_accepted += result.statistics.static_null_move_pruning_accepted;
+        benchmark_result.static_null_move_pruning_rejected += result.statistics.static_null_move_pruning_rejected;
+
+        benchmark_result.null_move_pruning_attempts += result.statistics.null_move_pruning_attempts;
+        benchmark_result.null_move_pruning_accepted += result.statistics.null_move_pruning_accepted;
+        benchmark_result.null_move_pruning_rejected += result.statistics.null_move_pruning_rejected;
 
         benchmark_result.q_score_prunings_accepted += result.statistics.q_score_prunings_accepted;
         benchmark_result.q_score_prunings_rejected += result.statistics.q_score_prunings_rejected;

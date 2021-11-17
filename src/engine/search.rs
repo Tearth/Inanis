@@ -7,6 +7,10 @@ use crate::state::*;
 use chrono::Utc;
 use std::mem::MaybeUninit;
 
+pub const STATIC_NULL_MOVE_PRUNING_MIN_DEPTH: i8 = 1;
+pub const STATIC_NULL_MOVE_PRUNING_MAX_DEPTH: i8 = 2;
+pub const STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_MULTIPLIER: i16 = 300;
+
 pub const NULL_MOVE_MIN_DEPTH: i8 = 4;
 pub const NULL_MOVE_R_CHANGE_DEPTH: i8 = 6;
 pub const NULL_MOVE_MIN_GAME_PHASE: f32 = 0.15;
@@ -105,9 +109,23 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
         }
     };
 
-    if null_move_can_be_applied::<PV>(context, depth, allow_null_move) {
-        let r = null_move_get_r(depth);
-        context.statistics.null_move_searches += 1;
+    if static_null_move_pruning_can_be_applied::<PV>(context, depth) {
+        let margin = static_null_move_pruning_get_margin(depth);
+        let lazy_evaluation = -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate_lazy();
+
+        context.statistics.static_null_move_pruning_attempts += 1;
+        if lazy_evaluation - margin >= beta {
+            context.statistics.leafs_count += 1;
+            context.statistics.static_null_move_pruning_accepted += 1;
+            return lazy_evaluation - margin;
+        } else {
+            context.statistics.static_null_move_pruning_rejected += 1;
+        }
+    }
+
+    if null_move_pruning_can_be_applied::<PV>(context, depth, allow_null_move) {
+        let r = null_move_pruning_get_r(depth);
+        context.statistics.null_move_pruning_attempts += 1;
 
         context.board.make_null_move();
         let score = -run::<false>(context, depth - r - 1, ply + 1, -beta, -beta + 1, false);
@@ -115,10 +133,10 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
 
         if score >= beta {
             context.statistics.leafs_count += 1;
-            context.statistics.null_move_accepted += 1;
+            context.statistics.null_move_pruning_accepted += 1;
             return score;
         } else {
-            context.statistics.null_move_rejected += 1;
+            context.statistics.null_move_pruning_rejected += 1;
         }
     }
 
@@ -258,14 +276,24 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
     }
 }
 
-fn null_move_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, allow_null_move: bool) -> bool {
+fn static_null_move_pruning_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8) -> bool {
+    !PV && depth >= STATIC_NULL_MOVE_PRUNING_MIN_DEPTH
+        && depth <= STATIC_NULL_MOVE_PRUNING_MAX_DEPTH
+        && !context.board.is_king_checked(context.board.active_color)
+}
+
+fn static_null_move_pruning_get_margin(depth: i8) -> i16 {
+    (depth as i16) * STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_MULTIPLIER
+}
+
+fn null_move_pruning_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, allow_null_move: bool) -> bool {
     !PV && allow_null_move
         && depth >= NULL_MOVE_MIN_DEPTH
         && context.board.get_game_phase() > NULL_MOVE_MIN_GAME_PHASE
         && !context.board.is_king_checked(context.board.active_color)
 }
 
-fn null_move_get_r(depth: i8) -> i8 {
+fn null_move_pruning_get_r(depth: i8) -> i8 {
     if depth <= NULL_MOVE_R_CHANGE_DEPTH {
         NULL_MOVE_SMALL_R
     } else {

@@ -572,6 +572,10 @@ impl Bitboard {
             + mobility_score
     }
 
+    pub fn evaluate_lazy(&self) -> i16 {
+        material::evaluate(self) + pst::evaluate(self)
+    }
+
     pub fn recalculate_incremental_values(&mut self) {
         material::recalculate_incremental_values(self);
         pst::recalculate_incremental_values(self);
