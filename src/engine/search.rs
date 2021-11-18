@@ -109,7 +109,7 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
         }
     };
 
-    if static_null_move_pruning_can_be_applied::<PV>(context, depth) {
+    if static_null_move_pruning_can_be_applied::<PV>(context, depth, beta) {
         let margin = static_null_move_pruning_get_margin(depth);
         let lazy_evaluation = -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate_lazy();
 
@@ -123,7 +123,7 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
         }
     }
 
-    if null_move_pruning_can_be_applied::<PV>(context, depth, allow_null_move) {
+    if null_move_pruning_can_be_applied::<PV>(context, depth, beta, allow_null_move) {
         let r = null_move_pruning_get_r(depth);
         context.statistics.null_move_pruning_attempts += 1;
 
@@ -276,9 +276,10 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
     }
 }
 
-fn static_null_move_pruning_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8) -> bool {
+fn static_null_move_pruning_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, beta: i16) -> bool {
     !PV && depth >= STATIC_NULL_MOVE_PRUNING_MIN_DEPTH
         && depth <= STATIC_NULL_MOVE_PRUNING_MAX_DEPTH
+        && !is_score_near_checkmate(beta)
         && !context.board.is_king_checked(context.board.active_color)
 }
 
@@ -286,10 +287,11 @@ fn static_null_move_pruning_get_margin(depth: i8) -> i16 {
     (depth as i16) * STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_MULTIPLIER
 }
 
-fn null_move_pruning_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, allow_null_move: bool) -> bool {
+fn null_move_pruning_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, beta: i16, allow_null_move: bool) -> bool {
     !PV && allow_null_move
         && depth >= NULL_MOVE_MIN_DEPTH
         && context.board.get_game_phase() > NULL_MOVE_MIN_GAME_PHASE
+        && !is_score_near_checkmate(beta)
         && !context.board.is_king_checked(context.board.active_color)
 }
 
