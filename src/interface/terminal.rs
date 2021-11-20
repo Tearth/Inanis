@@ -198,6 +198,15 @@ fn handle_benchmark() {
         format!("{} ({:.2}%)", result.null_move_pruning_rejected, null_move_pruning_rejected_percent)
     ]);
 
+    let razoring_accepted_percent = percent(result.razoring_accepted, result.razoring_attempts);
+    let razoring_rejected_percent = percent(result.razoring_rejected, result.razoring_attempts);
+    prunings_reductions_table.add_row(row![
+        "Razoring",
+        format!("{:.2}", result.razoring_attempts),
+        format!("{} ({:.2}%)", result.razoring_accepted, razoring_accepted_percent),
+        format!("{} ({:.2}%)", result.razoring_rejected, razoring_rejected_percent)
+    ]);
+
     let total_q_score_pruning_attempts = result.q_score_pruning_accepted + result.q_score_pruning_rejected;
     let q_score_pruning_accepted_percent = percent(result.q_score_pruning_accepted, total_q_score_pruning_attempts);
     let q_score_pruning_rejected_percent = percent(result.q_score_pruning_rejected, total_q_score_pruning_attempts);

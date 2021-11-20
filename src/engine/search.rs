@@ -7,6 +7,10 @@ use crate::state::*;
 use chrono::Utc;
 use std::mem::MaybeUninit;
 
+pub const RAZORING_MIN_DEPTH: i8 = 1;
+pub const RAZORING_MAX_DEPTH: i8 = 3;
+pub const RAZORING_DEPTH_MARGIN_MULTIPLIER: i16 = 300;
+
 pub const STATIC_NULL_MOVE_PRUNING_MIN_DEPTH: i8 = 1;
 pub const STATIC_NULL_MOVE_PRUNING_MAX_DEPTH: i8 = 2;
 pub const STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_MULTIPLIER: i16 = 200;
@@ -108,6 +112,23 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
             context.statistics.tt_misses += 1;
         }
     };
+
+    if razoring_can_be_applied::<PV>(context, depth, alpha) {
+        let margin = razoring_get_margin(depth);
+        let lazy_evaluation = -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate_lazy();
+
+        context.statistics.razoring_attempts += 1;
+        if lazy_evaluation + margin <= alpha {
+            let score = qsearch::run(context, depth, ply, alpha, beta);
+            if score <= alpha {
+                context.statistics.leafs_count += 1;
+                context.statistics.razoring_accepted += 1;
+                return score;
+            } else {
+                context.statistics.razoring_rejected += 1;
+            }
+        }
+    }
 
     if static_null_move_pruning_can_be_applied::<PV>(context, depth, beta) {
         let margin = static_null_move_pruning_get_margin(depth);
@@ -274,6 +295,17 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
 
         move_scores[move_index] = context.history_table.get(r#move.get_from(), r#move.get_to(), MOVE_ORDERING_HISTORY_MOVE) as i16;
     }
+}
+
+fn razoring_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, alpha: i16) -> bool {
+    !PV && depth >= RAZORING_MIN_DEPTH
+        && depth <= RAZORING_MAX_DEPTH
+        && !is_score_near_checkmate(alpha)
+        && !context.board.is_king_checked(context.board.active_color)
+}
+
+fn razoring_get_margin(depth: i8) -> i16 {
+    (depth as i16) * RAZORING_DEPTH_MARGIN_MULTIPLIER
 }
 
 fn static_null_move_pruning_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, beta: i16) -> bool {

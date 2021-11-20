@@ -32,6 +32,10 @@ pub struct BenchmarkResult {
     pub null_move_pruning_accepted: u64,
     pub null_move_pruning_rejected: u64,
 
+    pub razoring_attempts: u64,
+    pub razoring_accepted: u64,
+    pub razoring_rejected: u64,
+
     pub q_score_pruning_accepted: u64,
     pub q_score_pruning_rejected: u64,
 
@@ -113,6 +117,10 @@ pub fn run() -> BenchmarkResult {
         benchmark_result.null_move_pruning_attempts += result.statistics.null_move_pruning_attempts;
         benchmark_result.null_move_pruning_accepted += result.statistics.null_move_pruning_accepted;
         benchmark_result.null_move_pruning_rejected += result.statistics.null_move_pruning_rejected;
+
+        benchmark_result.razoring_attempts += result.statistics.razoring_attempts;
+        benchmark_result.razoring_accepted += result.statistics.razoring_accepted;
+        benchmark_result.razoring_rejected += result.statistics.razoring_rejected;
 
         benchmark_result.q_score_pruning_accepted += result.statistics.q_score_pruning_accepted;
         benchmark_result.q_score_pruning_rejected += result.statistics.q_score_pruning_rejected;
