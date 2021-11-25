@@ -234,11 +234,11 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
 
         if score > best_score {
             best_score = score;
+            best_move = r#move;
         }
 
         if best_score > alpha {
             alpha = best_score;
-            best_move = r#move;
 
             if alpha >= beta {
                 if r#move.is_quiet() {
