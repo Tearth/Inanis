@@ -206,25 +206,25 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
         let score = if PV {
             if move_index == 0 {
                 context.statistics.pvs_full_window_searches += 1;
-                -run::<true>(context, depth - 1, ply + 1, -beta, -alpha, allow_null_move)
+                -run::<true>(context, depth - 1, ply + 1, -beta, -alpha, true)
             } else {
-                let zero_window_score = -run::<false>(context, depth - r - 1, ply + 1, -alpha - 1, -alpha, allow_null_move);
+                let zero_window_score = -run::<false>(context, depth - r - 1, ply + 1, -alpha - 1, -alpha, true);
                 context.statistics.pvs_zero_window_searches += 1;
 
                 if zero_window_score > alpha {
                     context.statistics.pvs_rejected_searches += 1;
-                    -run::<true>(context, depth - 1, ply + 1, -beta, -alpha, allow_null_move)
+                    -run::<true>(context, depth - 1, ply + 1, -beta, -alpha, true)
                 } else {
                     zero_window_score
                 }
             }
         } else {
-            let zero_window_score = -run::<false>(context, depth - r - 1, ply + 1, -beta, -alpha, allow_null_move);
+            let zero_window_score = -run::<false>(context, depth - r - 1, ply + 1, -beta, -alpha, true);
             context.statistics.pvs_zero_window_searches += 1;
 
             if zero_window_score > alpha && r > 0 {
                 context.statistics.pvs_rejected_searches += 1;
-                -run::<false>(context, depth - 1, ply + 1, -beta, -alpha, allow_null_move)
+                -run::<false>(context, depth - 1, ply + 1, -beta, -alpha, true)
             } else {
                 zero_window_score
             }
