@@ -94,7 +94,7 @@ pub fn run() -> BenchmarkResult {
     let benchmark_time_start = Utc::now();
 
     for fen in benchmark_positions {
-        let mut transposition_table = TranspositionTable::new(32 * 1024 * 1024);
+        let mut transposition_table = TranspositionTable::new(64 * 1024 * 1024);
         let mut pawn_hashtable = PawnHashTable::new(1 * 1024 * 1024);
         let mut killers_table = Default::default();
         let mut history_table = Default::default();
@@ -105,7 +105,7 @@ pub fn run() -> BenchmarkResult {
             &mut board,
             0,
             0,
-            13,
+            14,
             0,
             0,
             &mut transposition_table,
