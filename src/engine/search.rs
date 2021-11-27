@@ -169,32 +169,10 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
 
     assign_move_scores(context, &moves, &mut move_scores, moves_count, hash_move, ply);
 
-    let mut futility_pruning = !PV && depth == 1 && !is_score_near_checkmate(alpha) && !is_score_near_checkmate(beta);
-    let mut lazy_evaluation = 0;
-    if futility_pruning {
-        if context.board.is_king_checked(context.board.active_color) {
-            futility_pruning = false;
-        } else {
-            lazy_evaluation = -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate_lazy();
-        }
-    }
-
-    let mut all_pruned = true;
     for move_index in 0..moves_count {
         sort_next_move(&mut moves, &mut move_scores, move_index, moves_count);
 
         let r#move = moves[move_index];
-        if futility_pruning {
-            if r#move.is_quiet() && lazy_evaluation + 200 <= alpha {
-                // println!("{} {}", context.board.to_fen(), moves[move_index].to_text());
-                continue;
-            } else if r#move.is_capture() && lazy_evaluation + move_scores[move_index] + 200 <= alpha {
-                // println!("{} {}", context.board.to_fen(), moves[move_index].to_text());
-                continue;
-            }
-        }
-
-        all_pruned = false;
         context.board.make_move(&r#move);
 
         let r = if late_move_reduction_can_be_applied(context, depth, &r#move, move_index) {
@@ -256,10 +234,6 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
                 break;
             }
         }
-    }
-
-    if all_pruned {
-        return alpha;
     }
 
     if context.abort_token.aborted {
