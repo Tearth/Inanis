@@ -26,9 +26,10 @@ pub const LATE_MOVE_REDUCTION_MIN_MOVE_INDEX: usize = 3;
 pub const LATE_MOVE_REDUCTION_REDUCTION_BASE: usize = 1;
 pub const LATE_MOVE_REDUCTION_REDUCTION_STEP: usize = 8;
 
-pub const MOVE_ORDERING_HAS_MOVE: i16 = 10000;
-pub const MOVE_ORDERING_KILLER_MOVE: i16 = 120;
-pub const MOVE_ORDERING_HISTORY_MOVE: u8 = 90;
+pub const MOVE_ORDERING_HASH_MOVE: i16 = 10000;
+pub const MOVE_ORDERING_KILLER_MOVE: i16 = 35;
+pub const MOVE_ORDERING_HISTORY_MOVE: u8 = 60;
+pub const MOVE_ORDERING_HISTORY_MOVE_OFFSET: i16 = -30;
 
 pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, mut beta: i16, allow_null_move: bool) -> i16 {
     if context.abort_token.aborted {
@@ -220,7 +221,7 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
 
             if alpha >= beta {
                 if r#move.is_quiet() {
-                    context.killers_table.add(context.board.active_color, ply, r#move);
+                    context.killers_table.add(ply, r#move);
                     context.history_table.add(r#move.get_from(), r#move.get_to(), depth as u8);
                 }
 
@@ -273,11 +274,11 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
         let r#move = moves[move_index];
 
         if r#move == tt_move {
-            move_scores[move_index] = MOVE_ORDERING_HAS_MOVE;
+            move_scores[move_index] = MOVE_ORDERING_HASH_MOVE;
             continue;
         }
 
-        if context.killers_table.exists(context.board.active_color, ply, r#move) {
+        if context.killers_table.exists(ply, r#move) {
             move_scores[move_index] = MOVE_ORDERING_KILLER_MOVE;
             continue;
         }
@@ -294,6 +295,7 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
         }
 
         move_scores[move_index] = context.history_table.get(r#move.get_from(), r#move.get_to(), MOVE_ORDERING_HISTORY_MOVE) as i16;
+        move_scores[move_index] += MOVE_ORDERING_HISTORY_MOVE_OFFSET;
     }
 }
 
