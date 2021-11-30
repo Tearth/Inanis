@@ -24,7 +24,7 @@ pub const NULL_MOVE_BIG_R: i8 = 3;
 pub const LATE_MOVE_REDUCTION_MIN_DEPTH: i8 = 4;
 pub const LATE_MOVE_REDUCTION_MIN_MOVE_INDEX: usize = 3;
 pub const LATE_MOVE_REDUCTION_REDUCTION_BASE: usize = 1;
-pub const LATE_MOVE_REDUCTION_REDUCTION_STEP: usize = 8;
+pub const LATE_MOVE_REDUCTION_REDUCTION_STEP: usize = 7;
 
 pub const MOVE_ORDERING_HASH_MOVE: i16 = 10000;
 pub const MOVE_ORDERING_KILLER_MOVE: i16 = 95;
@@ -353,5 +353,5 @@ fn late_move_reduction_can_be_applied(context: &mut SearchContext, depth: i8, r#
 }
 
 fn late_move_reduction_get_r(move_index: usize) -> i8 {
-    (LATE_MOVE_REDUCTION_REDUCTION_BASE + move_index / LATE_MOVE_REDUCTION_REDUCTION_STEP) as i8
+    (LATE_MOVE_REDUCTION_REDUCTION_BASE + (move_index - LATE_MOVE_REDUCTION_MIN_MOVE_INDEX) / LATE_MOVE_REDUCTION_REDUCTION_STEP) as i8
 }
