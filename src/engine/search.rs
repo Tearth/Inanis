@@ -27,9 +27,11 @@ pub const LATE_MOVE_REDUCTION_REDUCTION_BASE: usize = 1;
 pub const LATE_MOVE_REDUCTION_REDUCTION_STEP: usize = 8;
 
 pub const MOVE_ORDERING_HASH_MOVE: i16 = 10000;
-pub const MOVE_ORDERING_KILLER_MOVE: i16 = 35;
-pub const MOVE_ORDERING_HISTORY_MOVE: u8 = 60;
-pub const MOVE_ORDERING_HISTORY_MOVE_OFFSET: i16 = -30;
+pub const MOVE_ORDERING_KILLER_MOVE: i16 = 95;
+pub const MOVE_ORDERING_WINNING_CAPTURES_OFFSET: i16 = 100;
+pub const MOVE_ORDERING_LOSING_CAPTURES_OFFSET: i16 = -100;
+pub const MOVE_ORDERING_HISTORY_MOVE: u8 = 180;
+pub const MOVE_ORDERING_HISTORY_MOVE_OFFSET: i16 = -90;
 
 pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, mut beta: i16, allow_null_move: bool) -> i16 {
     if context.abort_token.aborted {
@@ -289,8 +291,14 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
             let captured_piece = context.board.get_piece(r#move.get_to());
             let attackers = context.board.get_attacking_pieces(context.board.active_color ^ 1, field);
             let defenders = context.board.get_attacking_pieces(context.board.active_color, field);
+            let see = see::get(attacking_piece, captured_piece, attackers, defenders);
 
-            move_scores[move_index] = see::get(attacking_piece, captured_piece, attackers, defenders);
+            move_scores[move_index] = if see >= 0 {
+                see + MOVE_ORDERING_WINNING_CAPTURES_OFFSET
+            } else {
+                see + MOVE_ORDERING_LOSING_CAPTURES_OFFSET
+            };
+
             continue;
         }
 
