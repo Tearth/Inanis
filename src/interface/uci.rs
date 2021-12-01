@@ -71,8 +71,8 @@ pub fn run() {
 
 fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
     unsafe {
-        let mut white_time = 1000;
-        let mut black_time = 1000;
+        let mut white_time = u32::MAX;
+        let mut black_time = u32::MAX;
         let mut white_inc_time = 0;
         let mut black_inc_time = 0;
         let mut forced_depth = 0;
