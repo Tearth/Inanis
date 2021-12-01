@@ -62,8 +62,10 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
     }
 
     if context.board.is_threefold_repetition_draw() || context.board.is_fifty_move_rule_draw() {
-        context.statistics.leafs_count += 1;
-        return DRAW_SCORE;
+        if !context.board.is_king_checked(context.board.active_color) && !context.board.is_king_checked(context.board.active_color ^ 1) {
+            context.statistics.leafs_count += 1;
+            return DRAW_SCORE;
+        }
     }
 
     if depth <= 0 {
