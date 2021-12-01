@@ -178,7 +178,7 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
         let r#move = moves[move_index];
         context.board.make_move(&r#move);
 
-        let r = if late_move_reduction_can_be_applied(context, depth, &r#move, move_index) {
+        let r = if late_move_reduction_can_be_applied(context, depth, &r#move, move_index, move_scores[move_index]) {
             late_move_reduction_get_r(move_index)
         } else {
             0
@@ -345,9 +345,10 @@ fn null_move_pruning_get_r(depth: i8) -> i8 {
     }
 }
 
-fn late_move_reduction_can_be_applied(context: &mut SearchContext, depth: i8, r#move: &Move, move_index: usize) -> bool {
+fn late_move_reduction_can_be_applied(context: &mut SearchContext, depth: i8, r#move: &Move, move_index: usize, move_score: i16) -> bool {
     depth >= LATE_MOVE_REDUCTION_MIN_DEPTH
         && move_index >= LATE_MOVE_REDUCTION_MIN_MOVE_INDEX
+        && move_score != MOVE_ORDERING_KILLER_MOVE
         && r#move.is_quiet()
         && !context.board.is_king_checked(context.board.active_color)
 }
