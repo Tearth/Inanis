@@ -172,31 +172,29 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
             let mut best_move = Default::default();
 
             for depth_result in context {
-                let mut output = String::new();
-                let pv_line_converted: Vec<String> = depth_result.pv_line.iter().map(|v| v.to_text()).collect();
-
-                output = output.add(
-                    &format!(
-                        "info nodes {} depth {} time {} pv {}",
-                        depth_result.statistics.nodes_count + depth_result.statistics.q_nodes_count,
-                        depth_result.depth,
-                        depth_result.time,
-                        pv_line_converted.join(" ").as_str()
-                    )
-                    .to_string(),
-                );
-
-                if is_score_near_checkmate(depth_result.score) {
+                let pv_line: Vec<String> = depth_result.pv_line.iter().map(|v| v.to_text()).collect();
+                let formatted_score = if is_score_near_checkmate(depth_result.score) {
                     let mut moves_to_mate = (depth_result.score.abs() - CHECKMATE_SCORE).abs() / 2;
                     moves_to_mate *= depth_result.score.signum();
 
-                    output = output.add(&format!(" score mate {}", moves_to_mate).to_string());
+                    format!("score mate {}", moves_to_mate).to_string()
                 } else {
-                    output = output.add(&format!(" score cp {}", depth_result.score).to_string());
-                }
+                    format!("score cp {}", depth_result.score).to_string()
+                };
 
                 best_move = depth_result.pv_line[0];
-                println!("{}", output);
+                println!(
+                    "{}",
+                    &format!(
+                        "info time {} {} depth {} seldepth {} nodes {} pv {}",
+                        depth_result.time,
+                        formatted_score,
+                        depth_result.depth,
+                        depth_result.statistics.max_ply,
+                        depth_result.statistics.nodes_count + depth_result.statistics.q_nodes_count,
+                        pv_line.join(" ").as_str()
+                    )
+                );
             }
 
             (*state_arc.search_thread.get()) = None;

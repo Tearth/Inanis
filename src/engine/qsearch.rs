@@ -4,6 +4,7 @@ use crate::evaluation::parameters::*;
 use crate::state::movescan::Move;
 use crate::state::movescan::MoveFlags;
 use crate::state::*;
+use std::cmp::*;
 use std::mem::MaybeUninit;
 
 pub const SCORE_PRUNING_THRESHOLD: i16 = 0;
@@ -11,6 +12,7 @@ pub const FUTILITY_PRUNING_MARGIN: i16 = 300;
 
 pub fn run(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, beta: i16) -> i16 {
     context.statistics.q_nodes_count += 1;
+    context.statistics.max_ply = max(ply, context.statistics.max_ply);
 
     if context.board.pieces[context.board.active_color as usize][KING as usize] == 0 {
         context.statistics.q_leafs_count += 1;

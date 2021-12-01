@@ -89,6 +89,8 @@ pub struct SearchStatistics {
     pub pawn_hashtable_hits: u64,
     pub pawn_hashtable_misses: u64,
     pub pawn_hashtable_collisions: u64,
+
+    pub max_ply: u16,
 }
 
 impl<'a> SearchContext<'a> {
