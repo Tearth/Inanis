@@ -282,12 +282,17 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
             continue;
         }
 
-        if context.killers_table.exists(ply, r#move) {
-            move_scores[move_index] = MOVE_ORDERING_KILLER_MOVE;
-            continue;
-        }
+        if r#move.is_quiet() {
+            if context.killers_table.exists(ply, r#move) {
+                move_scores[move_index] = MOVE_ORDERING_KILLER_MOVE;
+                continue;
+            }
 
-        if r#move.is_capture() {
+            move_scores[move_index] = context.history_table.get(r#move.get_from(), r#move.get_to(), MOVE_ORDERING_HISTORY_MOVE) as i16;
+            move_scores[move_index] += MOVE_ORDERING_HISTORY_MOVE_OFFSET;
+
+            continue;
+        } else if r#move.is_capture() {
             let field = r#move.get_to();
             let attacking_piece = context.board.get_piece(r#move.get_from());
             let captured_piece = context.board.get_piece(r#move.get_to());
@@ -304,8 +309,7 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
             continue;
         }
 
-        move_scores[move_index] = context.history_table.get(r#move.get_from(), r#move.get_to(), MOVE_ORDERING_HISTORY_MOVE) as i16;
-        move_scores[move_index] += MOVE_ORDERING_HISTORY_MOVE_OFFSET;
+        move_scores[move_index] = 0;
     }
 }
 
