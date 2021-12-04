@@ -14,6 +14,16 @@ impl HistoryTable {
     pub fn get(&self, from: u8, to: u8, max: u8) -> u8 {
         ((self.table[from as usize][to as usize] as f32) * (max as f32) / (self.max as f32)).ceil() as u8
     }
+
+    pub fn age_values(&mut self) {
+        for x in 0..64 {
+            for y in 0..64 {
+                self.table[x][y] = (self.table[x][y] as f32).sqrt().ceil() as u32;
+            }
+        }
+
+        self.max = (self.max as f32).sqrt().ceil() as u32;
+    }
 }
 
 impl Default for HistoryTable {
