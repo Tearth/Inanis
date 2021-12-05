@@ -5,7 +5,7 @@ pub struct HistoryTable {
 
 impl HistoryTable {
     pub fn add(&mut self, from: u8, to: u8, depth: u8) {
-        self.table[from as usize][to as usize] += (depth * depth) as u32;
+        self.table[from as usize][to as usize] += (depth as u32) * (depth as u32);
         if self.table[from as usize][to as usize] > self.max {
             self.max = self.table[from as usize][to as usize];
         }
