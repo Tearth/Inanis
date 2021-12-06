@@ -25,6 +25,15 @@ impl KillersTable {
 
         false
     }
+
+    pub fn age_moves(&mut self) {
+        for ply in 3..MAX_DEPTH {
+            self.table[(ply as usize) - 2] = self.table[ply as usize];
+        }
+
+        self.table[(MAX_DEPTH - 2) as usize] = [Default::default(); KILLER_SLOTS];
+        self.table[(MAX_DEPTH - 1) as usize] = [Default::default(); KILLER_SLOTS];
+    }
 }
 
 impl Default for KillersTable {

@@ -3,6 +3,7 @@ use crate::cache::search::TranspositionTable;
 use crate::engine::context::AbortToken;
 use crate::engine::context::SearchContext;
 use crate::engine::history::HistoryTable;
+use crate::engine::killers::KillersTable;
 use crate::engine::*;
 use crate::state::board::Bitboard;
 use crate::state::movescan::Move;
@@ -24,6 +25,7 @@ struct UciState {
     options: UnsafeCell<HashMap<String, String>>,
     transposition_table: UnsafeCell<TranspositionTable>,
     pawn_hashtable: UnsafeCell<PawnHashTable>,
+    killers_table: UnsafeCell<KillersTable>,
     history_table: UnsafeCell<HistoryTable>,
     search_thread: UnsafeCell<Option<JoinHandle<()>>>,
     abort_token: UnsafeCell<AbortToken>,
@@ -37,6 +39,7 @@ impl Default for UciState {
             transposition_table: UnsafeCell::new(TranspositionTable::new(1 * 1024 * 1024)),
             pawn_hashtable: UnsafeCell::new(PawnHashTable::new(1 * 1024 * 1024)),
             history_table: UnsafeCell::new(Default::default()),
+            killers_table: UnsafeCell::new(Default::default()),
             search_thread: UnsafeCell::new(None),
             abort_token: UnsafeCell::new(Default::default()),
         }
@@ -154,9 +157,8 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
 
         (*state.abort_token.get()).aborted = false;
         *state.search_thread.get() = Some(thread::spawn(move || {
-            let mut killers_table = Default::default();
-
             (*state_arc.transposition_table.get()).clear();
+            (*state_arc.killers_table.get()).age_moves();
             (*state_arc.history_table.get()).age_values();
 
             let context = SearchContext::new(
@@ -168,7 +170,7 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
                 max_move_time,
                 &mut *state_arc.transposition_table.get(),
                 &mut *state_arc.pawn_hashtable.get(),
-                &mut killers_table,
+                &mut *state_arc.killers_table.get(),
                 &mut *state_arc.history_table.get(),
                 &mut *state_arc.abort_token.get(),
             );
@@ -262,6 +264,7 @@ fn handle_ucinewgame(state: &mut Arc<UciState>) {
         *state.board.get() = Bitboard::new_initial_position();
         *state.transposition_table.get() = TranspositionTable::new(transposition_table_size);
         *state.pawn_hashtable.get() = PawnHashTable::new(1 * 1024 * 1024);
+        *state.killers_table.get() = Default::default();
         *state.history_table.get() = Default::default();
         *state.abort_token.get() = Default::default();
     }
