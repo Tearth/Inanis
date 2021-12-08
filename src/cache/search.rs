@@ -10,7 +10,7 @@ bitflags! {
         const INVALID = 0;
         const EXACT_SCORE = 1;
         const ALPHA_SCORE = 2;
-        const BETA_SCORE = 3;
+        const BETA_SCORE = 4;
     }
 }
 
@@ -204,7 +204,7 @@ impl TranspositionTableEntry {
     }
 
     pub fn get_flags(&self) -> TranspositionTableScoreType {
-        TranspositionTableScoreType::from_bits(self.type_age & 3).unwrap()
+        TranspositionTableScoreType::from_bits(self.type_age & 7).unwrap()
     }
 
     pub fn get_age(&self) -> u8 {
@@ -212,7 +212,7 @@ impl TranspositionTableEntry {
     }
 
     pub fn set_age(&mut self, age: u8) {
-        self.type_age = (self.type_age & 3) | (age << 3);
+        self.type_age = (self.type_age & 7) | (age << 3);
     }
 }
 
