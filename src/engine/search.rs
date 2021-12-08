@@ -83,9 +83,9 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
             hash_move = entry.best_move;
             context.statistics.tt_hits += 1;
 
-            if entry.depth >= depth as i8 {
+            if ply > 0 && entry.depth >= depth as i8 {
                 tt_entry_found = true;
-                match entry.score_type {
+                match entry.get_flags() {
                     TranspositionTableScoreType::ALPHA_SCORE => {
                         if entry.score < beta {
                             beta = entry.score;
@@ -97,8 +97,10 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
                         }
                     }
                     _ => {
-                        context.statistics.leafs_count += 1;
-                        return entry.score;
+                        if !PV || entry.get_age() == 0 {
+                            context.statistics.leafs_count += 1;
+                            return entry.score;
+                        }
                     }
                 }
 

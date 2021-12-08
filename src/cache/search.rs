@@ -10,7 +10,7 @@ bitflags! {
         const INVALID = 0;
         const EXACT_SCORE = 1;
         const ALPHA_SCORE = 2;
-        const BETA_SCORE = 4;
+        const BETA_SCORE = 3;
     }
 }
 
@@ -31,7 +31,7 @@ pub struct TranspositionTableEntry {
     pub score: i16,
     pub best_move: Move,
     pub depth: i8,
-    pub score_type: TranspositionTableScoreType,
+    pub type_age: u8,
 }
 
 impl TranspositionTable {
@@ -53,21 +53,46 @@ impl TranspositionTable {
     pub fn add(&mut self, hash: u64, mut score: i16, best_move: Move, depth: i8, ply: u16, score_type: TranspositionTableScoreType) {
         let key = self.get_key(hash);
         let mut bucket = self.table[(hash as usize) % self.slots];
-        let mut smallest_depth = bucket.entries[0].depth as u8;
-        let mut smallest_depth_index = 0;
+        let mut smallest_depth = u8::MAX;
+        let mut smallest_depth_index = usize::MAX;
+        let mut oldest_entry_age = 0;
+        let mut oldest_entry_index = usize::MAX;
 
         for entry_index in 0..BUCKET_SLOTS {
             if bucket.entries[entry_index].key == key {
                 smallest_depth_index = entry_index;
+                oldest_entry_index = entry_index;
                 break;
+            }
+
+            if bucket.entries[entry_index].depth == 0 {
+                smallest_depth = 0;
+                smallest_depth_index = entry_index;
+                oldest_entry_age = u8::MAX;
+                oldest_entry_index = entry_index;
+                continue;
+            }
+
+            let entry_age = bucket.entries[entry_index].get_age();
+            if entry_age > oldest_entry_age {
+                oldest_entry_age = entry_age;
+                oldest_entry_index = entry_index;
+                continue;
             }
 
             let entry_depth = bucket.entries[entry_index].depth as u8;
             if entry_depth < smallest_depth {
                 smallest_depth = entry_depth;
                 smallest_depth_index = entry_index;
+                continue;
             }
         }
+
+        let target_index = if oldest_entry_index != usize::MAX {
+            oldest_entry_index
+        } else {
+            smallest_depth_index
+        };
 
         if is_score_near_checkmate(score) {
             if score > 0 {
@@ -77,7 +102,7 @@ impl TranspositionTable {
             }
         }
 
-        bucket.entries[smallest_depth_index] = TranspositionTableEntry::new(key, score, best_move, depth, score_type);
+        bucket.entries[target_index] = TranspositionTableEntry::new(key, score, best_move, depth, score_type);
         self.table[(hash as usize) % self.slots] = bucket;
     }
 
@@ -137,6 +162,22 @@ impl TranspositionTable {
         self.table.resize(self.slots, Default::default());
     }
 
+    pub fn age_entries(&mut self) {
+        for bucket_index in 0..self.table.len() {
+            for entry_index in 0..BUCKET_SLOTS {
+                let mut entry = self.table[bucket_index].entries[entry_index];
+                if entry.depth > 0 {
+                    if entry.get_age() == 31 {
+                        self.table[bucket_index].entries[entry_index] = Default::default();
+                    } else {
+                        entry.set_age(entry.get_age() + 1);
+                        self.table[bucket_index].entries[entry_index] = entry;
+                    }
+                }
+            }
+        }
+    }
+
     fn get_key(&self, hash: u64) -> u32 {
         (hash >> 32) as u32
     }
@@ -151,14 +192,27 @@ impl Default for TranspositionTableBucket {
 }
 
 impl TranspositionTableEntry {
-    pub fn new(key: u32, score: i16, best_move: Move, depth: i8, score_type: TranspositionTableScoreType) -> TranspositionTableEntry {
+    pub fn new(key: u32, score: i16, best_move: Move, depth: i8, r#type: TranspositionTableScoreType) -> TranspositionTableEntry {
+        let type_age = r#type.bits;
         TranspositionTableEntry {
             key,
             score,
             best_move,
             depth,
-            score_type,
+            type_age,
         }
+    }
+
+    pub fn get_flags(&self) -> TranspositionTableScoreType {
+        TranspositionTableScoreType::from_bits(self.type_age & 3).unwrap()
+    }
+
+    pub fn get_age(&self) -> u8 {
+        self.type_age >> 3
+    }
+
+    pub fn set_age(&mut self, age: u8) {
+        self.type_age = (self.type_age & 3) | (age << 3);
     }
 }
 

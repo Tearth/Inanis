@@ -11,7 +11,6 @@ use crate::state::*;
 use std::cell::UnsafeCell;
 use std::collections::HashMap;
 use std::io;
-use std::ops::Add;
 use std::process;
 use std::sync::Arc;
 use std::thread;
@@ -157,10 +156,6 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
 
         (*state.abort_token.get()).aborted = false;
         *state.search_thread.get() = Some(thread::spawn(move || {
-            (*state_arc.transposition_table.get()).clear();
-            (*state_arc.killers_table.get()).age_moves();
-            (*state_arc.history_table.get()).age_values();
-
             let context = SearchContext::new(
                 &mut *state_arc.board.get(),
                 time,
@@ -205,6 +200,10 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
 
             (*state_arc.search_thread.get()) = None;
             println!("bestmove {}", best_move.to_text());
+            
+            (*state_arc.transposition_table.get()).age_entries();
+            (*state_arc.killers_table.get()).age_moves();
+            (*state_arc.history_table.get()).age_values();
         }));
     }
 }

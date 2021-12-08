@@ -137,7 +137,7 @@ impl<'a> SearchContext<'a> {
         let mut collision = false;
         match self.transposition_table.get(board.hash, 0, &mut collision) {
             Some(entry) => {
-                if entry.score_type != TranspositionTableScoreType::EXACT_SCORE {
+                if entry.get_flags() != TranspositionTableScoreType::EXACT_SCORE {
                     return Vec::new();
                 }
 
