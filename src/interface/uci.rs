@@ -12,6 +12,8 @@ use std::cell::UnsafeCell;
 use std::collections::HashMap;
 use std::io;
 use std::process;
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::thread;
 use std::thread::JoinHandle;
@@ -28,6 +30,7 @@ struct UciState {
     history_table: UnsafeCell<HistoryTable>,
     search_thread: UnsafeCell<Option<JoinHandle<()>>>,
     abort_token: UnsafeCell<AbortToken>,
+    busy_flag: AtomicBool,
 }
 
 impl Default for UciState {
@@ -41,6 +44,7 @@ impl Default for UciState {
             killers_table: UnsafeCell::new(Default::default()),
             search_thread: UnsafeCell::new(None),
             abort_token: UnsafeCell::new(Default::default()),
+            busy_flag: AtomicBool::new(false),
         }
     }
 }
@@ -63,7 +67,7 @@ pub fn run() {
         let tokens: Vec<String> = input.split(' ').map(|v| v.trim().to_string()).collect();
         match tokens[0].to_lowercase().as_str() {
             "go" => handle_go(&tokens, &mut state),
-            "isready" => handle_isready(),
+            "isready" => handle_isready(&mut state),
             "position" => handle_position(&tokens, &mut state),
             "setoption" => handle_setoption(&tokens, &mut state),
             "ucinewgame" => handle_ucinewgame(&mut state),
@@ -75,6 +79,7 @@ pub fn run() {
 }
 
 fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
+    wait_for_busy_flag(state);
     unsafe {
         let mut white_time = u32::MAX;
         let mut black_time = u32::MAX;
@@ -83,10 +88,6 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
         let mut forced_depth = 0;
         let mut max_nodes_count = 0;
         let mut max_move_time = 0;
-
-        if (*state.search_thread.get()).is_some() {
-            return;
-        }
 
         let mut iter = parameters[1..].iter().peekable();
         while let Some(token) = iter.next() {
@@ -155,6 +156,8 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
         let state_arc = state.clone();
 
         (*state.abort_token.get()).aborted = false;
+        (*state).busy_flag.store(true, Ordering::Relaxed);
+
         *state.search_thread.get() = Some(thread::spawn(move || {
             let context = SearchContext::new(
                 &mut *state_arc.board.get(),
@@ -198,26 +201,31 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
                 );
             }
 
-            (*state_arc.search_thread.get()) = None;
             println!("bestmove {}", best_move.to_text());
-            
+
+            (*state_arc.search_thread.get()) = None;
             (*state_arc.transposition_table.get()).age_entries();
             (*state_arc.killers_table.get()).age_moves();
             (*state_arc.history_table.get()).age_values();
+            (*state_arc).busy_flag.store(false, Ordering::Relaxed);
         }));
     }
 }
 
-fn handle_isready() {
+fn handle_isready(state: &mut Arc<UciState>) {
+    wait_for_busy_flag(state);
     println!("readyok");
 }
 
 fn handle_position(parameters: &[String], state: &mut Arc<UciState>) {
+    wait_for_busy_flag(state);
+
     if parameters.len() < 2 {
         return;
     }
 
     unsafe {
+        while (*state).busy_flag.fetch_and(true, Ordering::Release) {}
         *state.board.get() = match parameters[1].as_str() {
             "fen" => {
                 let fen = parameters[2..].join(" ");
@@ -248,6 +256,8 @@ fn handle_position(parameters: &[String], state: &mut Arc<UciState>) {
 }
 
 fn handle_setoption(parameters: &[String], state: &mut Arc<UciState>) {
+    wait_for_busy_flag(state);
+
     if parameters.len() < 2 {
         return;
     }
@@ -258,6 +268,7 @@ fn handle_setoption(parameters: &[String], state: &mut Arc<UciState>) {
 fn handle_ucinewgame(state: &mut Arc<UciState>) {
     unsafe {
         (*state.abort_token.get()).aborted = true;
+        wait_for_busy_flag(state);
 
         let transposition_table_size = (*state.options.get())["Hash"].parse::<usize>().unwrap() * 1024 * 1024;
         *state.board.get() = Bitboard::new_initial_position();
@@ -277,4 +288,8 @@ fn handle_stop(state: &mut Arc<UciState>) {
 
 fn handle_quit() {
     process::exit(0);
+}
+
+fn wait_for_busy_flag(state: &mut Arc<UciState>) {
+    while (*state).busy_flag.fetch_and(true, Ordering::Release) {}
 }
