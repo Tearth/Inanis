@@ -295,6 +295,11 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
 
             continue;
         } else if r#move.is_capture() {
+            if r#move.is_en_passant() {
+                move_scores[move_index] = MOVE_ORDERING_WINNING_CAPTURES_OFFSET;
+                continue;
+            }
+
             let field = r#move.get_to();
             let attacking_piece = context.board.get_piece(r#move.get_from());
             let captured_piece = context.board.get_piece(r#move.get_to());

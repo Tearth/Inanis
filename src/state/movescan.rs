@@ -153,7 +153,11 @@ impl Move {
     }
 
     pub fn is_capture(&self) -> bool {
-        self.get_flags().contains(MoveFlags::CAPTURE) && self.get_flags() != MoveFlags::EN_PASSANT
+        self.get_flags().contains(MoveFlags::CAPTURE)
+    }
+
+    pub fn is_en_passant(&self) -> bool {
+        self.get_flags() == MoveFlags::EN_PASSANT
     }
 
     pub fn is_promotion(&self) -> bool {
