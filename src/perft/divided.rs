@@ -17,7 +17,7 @@ pub fn run(depth: i32, board: &mut Bitboard) -> Vec<(String, u64)> {
 
     for r#move in &moves[0..moves_count] {
         context.board.make_move(r#move);
-        result.push((r#move.to_text(), run_internal(&mut context, depth - 1)));
+        result.push((r#move.to_long_notation(), run_internal(&mut context, depth - 1)));
         context.board.undo_move(r#move);
     }
 

@@ -64,7 +64,7 @@ impl Bitboard {
     pub fn new_from_moves(moves: &[&str]) -> Result<Bitboard, &'static str> {
         let mut board = Bitboard::new_initial_position();
         for premade_move in moves {
-            let parsed_move = Move::from_text(premade_move, &board)?;
+            let parsed_move = Move::from_long_notation(premade_move, &board)?;
             board.make_move(&parsed_move);
         }
 

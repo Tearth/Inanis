@@ -43,7 +43,162 @@ impl Move {
         }
     }
 
-    pub fn from_text(text: &str, board: &Bitboard) -> Result<Move, &'static str> {
+    pub fn from_short_notation(mut text: &str, board: &Bitboard) -> Result<Move, &'static str> {
+        let mut moves: [Move; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
+        let moves_count = board.get_moves::<false>(&mut moves);
+
+        let mut desired_to: Option<u8> = None;
+        let mut desired_file: Option<u8> = None;
+        let mut desired_rank: Option<u8> = None;
+        let mut desired_piece: Option<u8> = None;
+        let mut desired_flags: Option<MoveFlags> = None;
+        let mut desired_capture: Option<bool> = None;
+        let mut desired_promotion: Option<u8> = None;
+
+        if text.contains('=') {
+            desired_promotion = match &text[text.len() - 2..] {
+                "=Q" => Some(QUEEN),
+                "=R" => Some(ROOK),
+                "=B" => Some(BISHOP),
+                "=N" => Some(KNIGHT),
+                _ => return Err("Invalid promotion piece"),
+            }
+        }
+
+        text = text.trim_matches('#');
+        text = text.trim_matches('+');
+        text = text.trim_matches('=');
+        text = text.trim_matches('?');
+        text = text.trim_matches('!');
+        text = text.trim_end_matches('Q');
+        text = text.trim_end_matches('R');
+        text = text.trim_end_matches('B');
+        text = text.trim_end_matches('N');
+
+        if text == "0-0" {
+            desired_piece = Some(KING);
+            desired_flags = Some(MoveFlags::SHORT_CASTLING);
+        } else if text == "0-0-0" {
+            desired_piece = Some(KING);
+            desired_flags = Some(MoveFlags::LONG_CASTLING);
+        } else {
+            let mut chars = text.chars();
+            match text.len() {
+                // e4
+                2 => {
+                    let file = chars.next().ok_or("Invalid move: bad source file")? as u8;
+                    let rank = chars.next().ok_or("Invalid move: bad source rank")? as u8;
+                    let to = (7 - (file - b'a')) + 8 * (rank - b'1');
+
+                    desired_to = Some(to);
+                    desired_piece = Some(PAWN);
+                }
+                // Nd5
+                3 => {
+                    let piece = chars.next().ok_or("Invalid move: bad source file")?;
+                    let file = chars.next().ok_or("Invalid move: bad source file")? as u8;
+                    let rank = chars.next().ok_or("Invalid move: bad source rank")? as u8;
+                    let to = (7 - (file - b'a')) + 8 * (rank - b'1');
+                    let piece_type = symbol_to_piece(piece)?;
+
+                    desired_to = Some(to);
+                    desired_piece = Some(piece_type);
+                }
+                // exf5, Rxf5, N3e4, Nde4
+                4 => {
+                    let piece_or_file = chars.next().ok_or("Invalid move: bad source file")?;
+                    let capture_or_file_rank = chars.next().ok_or("Invalid move: symbol")?;
+                    let file = chars.next().ok_or("Invalid move: bad source file")? as u8;
+                    let rank = chars.next().ok_or("Invalid move: bad source rank")? as u8;
+                    let to = (7 - (file - b'a')) + 8 * (rank - b'1');
+
+                    // exf5, Rxf5
+                    if capture_or_file_rank == 'x' {
+                        // exf5
+                        if piece_or_file.is_lowercase() {
+                            let file_from = 7 - ((piece_or_file as u8) - b'a');
+
+                            desired_to = Some(to);
+                            desired_file = Some(file_from);
+                            desired_piece = Some(PAWN);
+                            desired_capture = Some(true);
+                        // Rxf5
+                        } else {
+                            let piece_type = symbol_to_piece(piece_or_file)?;
+
+                            desired_to = Some(to);
+                            desired_piece = Some(piece_type);
+                            desired_capture = Some(true);
+                        }
+                    // N3e4
+                    } else if capture_or_file_rank.is_digit(10) {
+                        let piece_type = symbol_to_piece(piece_or_file)?;
+                        let rank_from = (capture_or_file_rank as u8) - b'1';
+
+                        desired_to = Some(to);
+                        desired_piece = Some(piece_type);
+                        desired_rank = Some(rank_from);
+                    }
+                    // Nde4
+                    else {
+                        let file_from = 7 - ((capture_or_file_rank as u8) - b'a');
+                        let piece_type = symbol_to_piece(piece_or_file)?;
+
+                        desired_to = Some(to);
+                        desired_piece = Some(piece_type);
+                        desired_file = Some(file_from);
+                    }
+                }
+                // R2xc2, Rexc2
+                5 => {
+                    let piece = chars.next().ok_or("Invalid move: bad source file")?;
+                    let file_rank = chars.next().ok_or("Invalid move: symbol")?;
+                    let _ = chars.next().ok_or("Invalid move: symbol")?;
+                    let file = chars.next().ok_or("Invalid move: bad source file")? as u8;
+                    let rank = chars.next().ok_or("Invalid move: bad source rank")? as u8;
+                    let to = (7 - (file - b'a')) + 8 * (rank - b'1');
+                    let piece_type = symbol_to_piece(piece)?;
+
+                    // R2xc2
+                    if file_rank.is_digit(10) {
+                        let rank_from = (file_rank as u8) - b'1';
+
+                        desired_to = Some(to);
+                        desired_rank = Some(rank_from);
+                        desired_piece = Some(PAWN);
+                        desired_capture = Some(true);
+                    // Rexc2
+                    } else {
+                        let file_from = 7 - ((file_rank as u8) - b'a');
+
+                        desired_to = Some(to);
+                        desired_file = Some(file_from);
+                        desired_piece = Some(piece_type);
+                        desired_capture = Some(true);
+                    }
+                }
+                _ => return Err("Invalid move: unknown length"),
+            }
+        }
+
+        for move_index in 0..moves_count {
+            let r#move = moves[move_index];
+            if (desired_to.is_some() && desired_to.unwrap() == r#move.get_to())
+                || (desired_file.is_some() && (r#move.get_from() % 8) == desired_file.unwrap())
+                || (desired_rank.is_some() && (r#move.get_from() / 8) == desired_rank.unwrap())
+                || (desired_piece.is_some() && board.get_piece(r#move.get_from()) == desired_piece.unwrap())
+                || (desired_flags.is_some() && r#move.get_flags() == desired_flags.unwrap())
+                || (desired_capture.is_some() && r#move.is_capture() == desired_capture.unwrap())
+                || (desired_promotion.is_some() && r#move.is_promotion() && r#move.get_promotion_piece() == desired_promotion.unwrap())
+            {
+                return Ok(r#move);
+            }
+        }
+
+        Err("Invalid move")
+    }
+
+    pub fn from_long_notation(text: &str, board: &Bitboard) -> Result<Move, &'static str> {
         let mut chars = text.chars();
         let from_file = chars.next().ok_or("Invalid move: bad source file")? as u8;
         let from_rank = chars.next().ok_or("Invalid move: bad source rank")? as u8;
@@ -101,7 +256,7 @@ impl Move {
         Err("Invalid move: not found")
     }
 
-    pub fn to_text(self) -> String {
+    pub fn to_long_notation(self) -> String {
         let from = self.get_from();
         let to = self.get_to();
 

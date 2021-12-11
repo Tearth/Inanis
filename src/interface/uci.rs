@@ -176,7 +176,7 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
             let mut best_move = Default::default();
 
             for depth_result in context {
-                let pv_line: Vec<String> = depth_result.pv_line.iter().map(|v| v.to_text()).collect();
+                let pv_line: Vec<String> = depth_result.pv_line.iter().map(|v| v.to_long_notation()).collect();
                 let formatted_score = if is_score_near_checkmate(depth_result.score) {
                     let mut moves_to_mate = (depth_result.score.abs() - CHECKMATE_SCORE).abs() / 2;
                     moves_to_mate *= depth_result.score.signum();
@@ -201,7 +201,7 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
                 );
             }
 
-            println!("bestmove {}", best_move.to_text());
+            println!("bestmove {}", best_move.to_long_notation());
 
             (*state_arc.search_thread.get()) = None;
             (*state_arc.transposition_table.get()).age_entries();
@@ -243,7 +243,7 @@ fn handle_position(parameters: &[String], state: &mut Arc<UciState>) {
 
     if let Some(index) = parameters.iter().position(|s| s == "moves") {
         for premade_move in &parameters[index + 1..] {
-            let parsed_move = match Move::from_text(premade_move, unsafe { &mut *state.board.get() }) {
+            let parsed_move = match Move::from_long_notation(premade_move, unsafe { &mut *state.board.get() }) {
                 Ok(r#move) => r#move,
                 Err(message) => {
                     println!("info string Error: {}", message);

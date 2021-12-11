@@ -62,3 +62,27 @@ pub fn bit_count(value: u64) -> u8 {
 pub fn bit_scan(value: u64) -> u8 {
     value.trailing_zeros() as u8
 }
+
+pub fn symbol_to_piece(symbol: char) -> Result<u8, &'static str> {
+    match symbol {
+        'p' | 'P' => Ok(PAWN),
+        'n' | 'N' => Ok(KNIGHT),
+        'b' | 'B' => Ok(BISHOP),
+        'r' | 'R' => Ok(ROOK),
+        'q' | 'Q' => Ok(QUEEN),
+        'k' | 'K' => Ok(KING),
+        _ => Err("Invalid FEN: bad piece symbol"),
+    }
+}
+
+pub fn piece_to_symbol(piece: u8) -> Result<char, &'static str> {
+    match piece {
+        PAWN => Ok('P'),
+        KNIGHT => Ok('N'),
+        BISHOP => Ok('B'),
+        ROOK => Ok('R'),
+        QUEEN => Ok('Q'),
+        KING => Ok('K'),
+        _ => Err("Invalid piece symbol"),
+    }
+}

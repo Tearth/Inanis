@@ -46,15 +46,7 @@ fn fen_to_pieces(board: &mut Bitboard, pieces: &str) -> Result<(), &'static str>
             current_field_index -= char.to_digit(10).ok_or("Invalid FEN: bad piece")? as i32;
         } else {
             let color = if char.is_uppercase() { WHITE } else { BLACK };
-            let piece = match char {
-                'p' | 'P' => PAWN,
-                'n' | 'N' => KNIGHT,
-                'b' | 'B' => BISHOP,
-                'r' | 'R' => ROOK,
-                'q' | 'Q' => QUEEN,
-                'k' | 'K' => KING,
-                _ => return Err("Invalid FEN: bad piece symbol"),
-            };
+            let piece = symbol_to_piece(char)?;
 
             board.add_piece(color, piece, current_field_index as u8);
             current_field_index -= 1;
@@ -78,16 +70,7 @@ fn pieces_to_fen(board: &Bitboard) -> String {
                 fields_without_piece = 0;
             }
 
-            let mut piece_symbol = match piece {
-                PAWN => 'P',
-                KNIGHT => 'N',
-                BISHOP => 'B',
-                ROOK => 'R',
-                QUEEN => 'Q',
-                KING => 'K',
-                _ => panic!("Invalid value: piece={}", piece),
-            };
-
+            let mut piece_symbol = piece_to_symbol(piece).unwrap();
             if (board.pieces[WHITE as usize][piece as usize] & (1u64 << field_index)) == 0 {
                 piece_symbol = piece_symbol.to_lowercase().collect::<Vec<char>>()[0];
             }

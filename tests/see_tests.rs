@@ -32,7 +32,7 @@ mod see_tests {
 
                     for move_index in 0..moves_count {
                         let r#move = moves[move_index];
-                        if r#move.to_text() == $move {
+                        if r#move.to_long_notation() == $move {
                             let attacking_piece = board.get_piece(r#move.get_from());
                             let target_piece = board.get_piece(r#move.get_to());
                             let attackers = board.get_attacking_pieces(board.active_color ^ 1, r#move.get_to());
