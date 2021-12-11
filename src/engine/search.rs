@@ -27,11 +27,15 @@ pub const LATE_MOVE_REDUCTION_REDUCTION_BASE: usize = 1;
 pub const LATE_MOVE_REDUCTION_REDUCTION_STEP: usize = 7;
 
 pub const MOVE_ORDERING_HASH_MOVE: i16 = 10000;
-pub const MOVE_ORDERING_KILLER_MOVE: i16 = 95;
 pub const MOVE_ORDERING_WINNING_CAPTURES_OFFSET: i16 = 100;
-pub const MOVE_ORDERING_LOSING_CAPTURES_OFFSET: i16 = -100;
+pub const MOVE_ORDERING_QUEEN_PROMOTION: i16 = 99;
+pub const MOVE_ORDERING_ROOK_PROMOTION: i16 = 98;
+pub const MOVE_ORDERING_BISHOP_PROMOTION: i16 = 97;
+pub const MOVE_ORDERING_KNIGHT_PROMOTION: i16 = 96;
+pub const MOVE_ORDERING_KILLER_MOVE: i16 = 95;
 pub const MOVE_ORDERING_HISTORY_MOVE: u8 = 180;
 pub const MOVE_ORDERING_HISTORY_MOVE_OFFSET: i16 = -90;
+pub const MOVE_ORDERING_LOSING_CAPTURES_OFFSET: i16 = -100;
 
 pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, mut beta: i16, allow_null_move: bool) -> i16 {
     if context.abort_token.aborted {
@@ -311,6 +315,16 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
                 see + MOVE_ORDERING_WINNING_CAPTURES_OFFSET
             } else {
                 see + MOVE_ORDERING_LOSING_CAPTURES_OFFSET
+            };
+
+            continue;
+        } else if r#move.is_promotion() {
+            move_scores[move_index] = match r#move.get_promotion_piece() {
+                QUEEN => MOVE_ORDERING_QUEEN_PROMOTION,
+                ROOK => MOVE_ORDERING_ROOK_PROMOTION,
+                BISHOP => MOVE_ORDERING_BISHOP_PROMOTION,
+                KNIGHT => MOVE_ORDERING_KNIGHT_PROMOTION,
+                _ => panic!("Invalid promotion piece"),
             };
 
             continue;
