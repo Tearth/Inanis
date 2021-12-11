@@ -311,7 +311,7 @@ fn apply_rook_magic_for_field(field_index: usize) {
     field.mask = mask;
     field.magic = ROOK_MAGIC_NUMBERS[field_index];
 
-    apply_magic_for_field(&permutations, &attacks, &mut field)
+    apply_magic_for_field(&permutations, &attacks, field)
 }
 
 fn apply_bishop_magic_for_field(field_index: usize) {
@@ -334,7 +334,7 @@ fn apply_bishop_magic_for_field(field_index: usize) {
     field.mask = mask;
     field.magic = BISHOP_MAGIC_NUMBERS[field_index];
 
-    apply_magic_for_field(&permutations, &attacks, &mut field)
+    apply_magic_for_field(&permutations, &attacks, field)
 }
 
 fn apply_magic_for_field(permutations: &[u64], attacks: &[u64], field: &mut MagicField) {
