@@ -33,6 +33,7 @@ pub const MOVE_ORDERING_ROOK_PROMOTION: i16 = 98;
 pub const MOVE_ORDERING_BISHOP_PROMOTION: i16 = 97;
 pub const MOVE_ORDERING_KNIGHT_PROMOTION: i16 = 96;
 pub const MOVE_ORDERING_KILLER_MOVE: i16 = 95;
+pub const MOVE_ORDERING_CASTLING: i16 = 94;
 pub const MOVE_ORDERING_HISTORY_MOVE: u8 = 180;
 pub const MOVE_ORDERING_HISTORY_MOVE_OFFSET: i16 = -90;
 pub const MOVE_ORDERING_LOSING_CAPTURES_OFFSET: i16 = -100;
@@ -327,6 +328,9 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
                 _ => panic!("Invalid promotion piece"),
             };
 
+            continue;
+        } else if r#move.is_castling() {
+            move_scores[move_index] = MOVE_ORDERING_CASTLING;
             continue;
         }
 

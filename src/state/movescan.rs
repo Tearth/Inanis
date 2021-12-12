@@ -318,6 +318,10 @@ impl Move {
     pub fn is_promotion(&self) -> bool {
         self.get_flags().contains(MoveFlags::FIELD_PROMOTION)
     }
+
+    pub fn is_castling(&self) -> bool {
+        self.get_flags() == MoveFlags::SHORT_CASTLING || self.get_flags() == MoveFlags::LONG_CASTLING
+    }
 }
 
 impl Default for Move {
