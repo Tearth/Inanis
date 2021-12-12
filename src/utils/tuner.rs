@@ -151,18 +151,20 @@ fn load_positions(epd_filename: &str) -> Result<Vec<TunerPosition>, &'static str
 
     for line in BufReader::new(file).lines() {
         let position = line.unwrap();
-        let board = fen_to_board(position.as_str())?;
-        let result = if position.contains("1-0") {
-            1.0
-        } else if position.contains("0-1") {
-            0.0
-        } else if position.contains("1/2-1/2") {
-            0.5
-        } else {
+        let parsed_epd = epd_to_board(position.as_str())?;
+
+        if parsed_epd.comment == None {
             return Err("Invalid game result");
+        }
+
+        let result = match parsed_epd.comment.unwrap().as_str() {
+            "1-0" => 1.0,
+            "0-1" => 0.0,
+            "1/2-1/2" => 0.5,
+            _ => return Err("Invalid game result"),
         };
 
-        positions.push(TunerPosition::new(board, result));
+        positions.push(TunerPosition::new(parsed_epd.board, result));
     }
 
     Ok(positions)

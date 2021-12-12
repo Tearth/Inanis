@@ -2,8 +2,29 @@ use super::board::Bitboard;
 use super::board::CastlingRights;
 use super::*;
 
+pub struct ParsedEPD {
+    pub board: Bitboard,
+    pub best_move: Option<String>,
+    pub comment: Option<String>,
+}
+
+impl ParsedEPD {
+    pub fn new(board: Bitboard) -> ParsedEPD {
+        ParsedEPD {
+            board,
+            best_move: None,
+            comment: None,
+        }
+    }
+}
+
 pub fn fen_to_board(fen: &str) -> Result<Bitboard, &'static str> {
-    let tokens: Vec<&str> = fen.split(' ').map(|v| v.trim()).collect();
+    let result = epd_to_board(fen)?;
+    Ok(result.board)
+}
+
+pub fn epd_to_board(epd: &str) -> Result<ParsedEPD, &'static str> {
+    let tokens: Vec<&str> = epd.split(' ').map(|v| v.trim()).collect();
     if tokens.len() < 4 {
         return Err("Invalid FEN: input too short");
     }
@@ -14,15 +35,23 @@ pub fn fen_to_board(fen: &str) -> Result<Bitboard, &'static str> {
     fen_to_castling(&mut board, tokens[2])?;
     fen_to_en_passant(&mut board, tokens[3])?;
 
-    // Ignore halfmove clock and fullmove number if not present (EPD)
-    let _ = fen_to_halfmove_clock(&mut board, tokens[4]);
-    let _ = fen_to_fullmove_number(&mut board, tokens[5]);
-
     board.recalculate_hash();
     board.recalculate_pawn_hash();
     board.recalculate_incremental_values();
 
-    Ok(board)
+    let halfmove_clock_result = fen_to_halfmove_clock(&mut board, tokens[4]);
+    let fullmove_number_result = fen_to_fullmove_number(&mut board, tokens[5]);
+
+    // We are in EPD mode if halfmove clock and fullmove number are not present
+    if halfmove_clock_result.is_err() && fullmove_number_result.is_err() {
+        let mut parsed_epd = ParsedEPD::new(board);
+        parsed_epd.best_move = get_epd_parameter(epd, &["bm"]);
+        parsed_epd.comment = get_epd_parameter(epd, &["c0", "c9"]);
+
+        return Ok(parsed_epd);
+    }
+
+    Ok(ParsedEPD::new(board))
 }
 
 pub fn board_to_fen(board: &Bitboard) -> String {
@@ -37,6 +66,33 @@ pub fn board_to_fen(board: &Bitboard) -> String {
         "{} {} {} {} {} {}",
         pieces, active_color, castling, en_passant, halfmove_clock, fullmove_number
     )
+}
+
+fn get_epd_parameter(mut epd: &str, name: &[&str]) -> Option<String> {
+    let parameter_index = name.iter().find_map(|p| epd.find(p));
+    if parameter_index == None {
+        return None;
+    }
+
+    epd = &epd[parameter_index.unwrap()..];
+
+    let value_index = epd.find(' ');
+    if value_index == None {
+        return None;
+    }
+
+    epd = &epd[value_index.unwrap()..];
+
+    let separator_index = epd.find(';');
+    if separator_index == None {
+        return None;
+    }
+
+    let mut value = &epd[0..separator_index.unwrap()];
+    value = value.trim_matches(' ');
+    value = value.trim_matches('\"');
+
+    Some(value.to_string())
 }
 
 fn fen_to_pieces(board: &mut Bitboard, pieces: &str) -> Result<(), &'static str> {
