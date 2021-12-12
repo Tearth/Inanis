@@ -1,4 +1,5 @@
 #![allow(
+    unused_assignments,
     clippy::needless_range_loop,
     clippy::identity_op,
     clippy::let_and_return,
