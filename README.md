@@ -18,6 +18,7 @@ At the current stage, it's too early to make any official releases, thus you hav
  benchmark - run test for a set of positions
  evaluate [fen] - show score for the position
  magic - generate magic numbers
+ test [epd] [depth] [tries_to_confirm] - run test of positions
  tuner [epd] [output] [lock_material] [randomize] - run tuning
  uci - run Universal Chess Interface
  quit - close the application

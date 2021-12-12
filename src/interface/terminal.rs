@@ -59,7 +59,7 @@ fn handle_help() {
     println!(" benchmark - run test for a set of positions");
     println!(" evaluate [fen] - show score for the position");
     println!(" magic - generate magic numbers");
-    println!(" test [epd] [depth] [tires_to_confirm] - run test of positions");
+    println!(" test [epd] [depth] [tries_to_confirm] - run test of positions");
     println!(" tuner [epd] [output] [lock_material] [randomize] - run tuning");
     println!(" uci - run Universal Chess Interface");
     println!(" quit - close the application");
