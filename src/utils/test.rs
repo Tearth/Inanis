@@ -116,7 +116,7 @@ fn load_positions(epd_filename: &str) -> Result<Vec<TestPosition>, &'static str>
         let position = line.unwrap();
         let parsed_epd = epd_to_board(position.as_str())?;
 
-        if parsed_epd.id == None || parsed_epd.comment == None {
+        if parsed_epd.id == None {
             return Err("Not enough data");
         }
 
