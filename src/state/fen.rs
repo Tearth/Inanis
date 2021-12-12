@@ -4,6 +4,7 @@ use super::*;
 
 pub struct ParsedEPD {
     pub board: Bitboard,
+    pub id: Option<String>,
     pub best_move: Option<String>,
     pub comment: Option<String>,
 }
@@ -12,6 +13,7 @@ impl ParsedEPD {
     pub fn new(board: Bitboard) -> ParsedEPD {
         ParsedEPD {
             board,
+            id: None,
             best_move: None,
             comment: None,
         }
@@ -45,6 +47,7 @@ pub fn epd_to_board(epd: &str) -> Result<ParsedEPD, &'static str> {
     // We are in EPD mode if halfmove clock and fullmove number are not present
     if halfmove_clock_result.is_err() && fullmove_number_result.is_err() {
         let mut parsed_epd = ParsedEPD::new(board);
+        parsed_epd.id = get_epd_parameter(epd, &["id"]);
         parsed_epd.best_move = get_epd_parameter(epd, &["bm"]);
         parsed_epd.comment = get_epd_parameter(epd, &["c0", "c9"]);
 

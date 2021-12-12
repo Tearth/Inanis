@@ -8,6 +8,7 @@ use crate::perft;
 use crate::state::board::Bitboard;
 use crate::state::movegen;
 use crate::utils::benchmark;
+use crate::utils::test;
 use crate::utils::tuner;
 use chrono::Utc;
 use prettytable::cell;
@@ -43,6 +44,7 @@ pub fn run() {
             "perft" => handle_perft(tokens),
             "dperft" => handle_dperft(tokens),
             "qperft" => handle_qperft(tokens),
+            "test" => handle_test(tokens),
             "tuner" => handle_tuner(tokens),
             "uci" => handle_uci(),
             "wah" => handle_wah(),
@@ -57,6 +59,7 @@ fn handle_help() {
     println!(" benchmark - run test for a set of positions");
     println!(" evaluate [fen] - show score for the position");
     println!(" magic - generate magic numbers");
+    println!(" test [epd] [depth] [tires_to_confirm] - run test of positions");
     println!(" tuner [epd] [output] [lock_material] [randomize] - run tuning");
     println!(" uci - run Universal Chess Interface");
     println!(" quit - close the application");
@@ -432,6 +435,41 @@ fn handle_qperft(input: Vec<&str>) {
     }
 
     println!("Perft done!");
+}
+
+fn handle_test(input: Vec<&str>) {
+    if input.len() < 2 {
+        println!("EPD filename parameter not found");
+        return;
+    }
+
+    if input.len() < 3 {
+        println!("Depth parameter not found");
+        return;
+    }
+
+    if input.len() < 4 {
+        println!("Tries to confirm parameter not found");
+        return;
+    }
+
+    let depth = match input[2].parse() {
+        Ok(value) => value,
+        Err(_) => {
+            println!("Invalid depth");
+            return;
+        }
+    };
+
+    let tries_to_confirm = match input[3].parse() {
+        Ok(value) => value,
+        Err(_) => {
+            println!("Invalid depth");
+            return;
+        }
+    };
+
+    test::run(input[1], depth, tries_to_confirm);
 }
 
 fn handle_tuner(input: Vec<&str>) {

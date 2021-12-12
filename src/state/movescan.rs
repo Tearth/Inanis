@@ -183,13 +183,13 @@ impl Move {
 
         for move_index in 0..moves_count {
             let r#move = moves[move_index];
-            if (desired_to.is_some() && desired_to.unwrap() == r#move.get_to())
-                || (desired_file.is_some() && (r#move.get_from() % 8) == desired_file.unwrap())
-                || (desired_rank.is_some() && (r#move.get_from() / 8) == desired_rank.unwrap())
-                || (desired_piece.is_some() && board.get_piece(r#move.get_from()) == desired_piece.unwrap())
-                || (desired_flags.is_some() && r#move.get_flags() == desired_flags.unwrap())
-                || (desired_capture.is_some() && r#move.is_capture() == desired_capture.unwrap())
-                || (desired_promotion.is_some() && r#move.is_promotion() && r#move.get_promotion_piece() == desired_promotion.unwrap())
+            if (desired_to.is_none() || desired_to.unwrap() == r#move.get_to())
+                && (desired_file.is_none() || (r#move.get_from() % 8) == desired_file.unwrap())
+                && (desired_rank.is_none() || (r#move.get_from() / 8) == desired_rank.unwrap())
+                && (desired_piece.is_none() || board.get_piece(r#move.get_from()) == desired_piece.unwrap())
+                && (desired_flags.is_none() || r#move.get_flags() == desired_flags.unwrap())
+                && (desired_capture.is_none() || r#move.is_capture() == desired_capture.unwrap())
+                && (desired_promotion.is_none() || (r#move.is_promotion() && r#move.get_promotion_piece() == desired_promotion.unwrap()))
             {
                 return Ok(r#move);
             }
