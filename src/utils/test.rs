@@ -65,8 +65,11 @@ pub fn run(epd_filename: &str, depth: i8, tries_to_confirm: i8) {
         for result in context {
             last_best_move = result.pv_line[0];
             if last_best_move == position.best_move {
+                if best_moves_count == 0 {
+                    recognition_depth = result.depth;
+                }
+
                 best_moves_count += 1;
-                recognition_depth = result.depth;
             } else {
                 best_moves_count = 0;
             }
