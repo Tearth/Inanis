@@ -22,7 +22,7 @@ pub const NULL_MOVE_SMALL_R: i8 = 2;
 pub const NULL_MOVE_BIG_R: i8 = 3;
 
 pub const LATE_MOVE_REDUCTION_MIN_DEPTH: i8 = 2;
-pub const LATE_MOVE_REDUCTION_MIN_MOVE_INDEX: usize = 3;
+pub const LATE_MOVE_REDUCTION_MIN_MOVE_INDEX: usize = 2;
 pub const LATE_MOVE_REDUCTION_REDUCTION_BASE: usize = 1;
 pub const LATE_MOVE_REDUCTION_REDUCTION_STEP: usize = 7;
 
