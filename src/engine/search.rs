@@ -253,12 +253,10 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
     }
 
     if best_score == -(-CHECKMATE_SCORE + (ply as i16) + 1) {
-        context.statistics.leafs_count += 1;
         return best_score;
     }
 
     if best_score == -CHECKMATE_SCORE + (ply as i16) + 2 && !context.board.is_king_checked(context.board.active_color) {
-        context.statistics.leafs_count += 1;
         return DRAW_SCORE;
     }
 
