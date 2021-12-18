@@ -9,6 +9,7 @@ use crate::evaluation::pst::queen;
 use crate::evaluation::pst::rook;
 use crate::state::board::Bitboard;
 use crate::state::fen::*;
+use crate::state::*;
 use chrono::Utc;
 use nameof::name_of;
 use std::fs;
@@ -23,9 +24,30 @@ struct TunerPosition {
     result: f64,
 }
 
+#[derive(Clone, Copy)]
+struct TunerParameter {
+    value: i16,
+    min: i16,
+    min_init: i16,
+    max_init: i16,
+    max: i16,
+}
+
 impl TunerPosition {
     pub fn new(board: Bitboard, result: f64) -> TunerPosition {
         TunerPosition { board, result }
+    }
+}
+
+impl TunerParameter {
+    pub fn new(value: i16, min: i16, min_init: i16, max_init: i16, max: i16) -> TunerParameter {
+        TunerParameter {
+            value,
+            min,
+            min_init,
+            max_init,
+            max,
+        }
     }
 }
 
@@ -59,8 +81,8 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
         let start_time = Utc::now();
 
         for value_index in 0..best_values.len() {
-            // Ignore king value (no point to tune it)
-            if !lock_material && value_index == 5 {
+            // Ignore pawn and king value (no point to tune it)
+            if !lock_material && (value_index == 0 || value_index == 5) {
                 continue;
             }
 
@@ -68,10 +90,20 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
             let mut values = best_values.to_vec();
             let mut value_changed = false;
 
-            values[value_index] += step;
-            save_values(&mut values, lock_material);
+            let original_value = values[value_index].value;
+            let error = if original_value == values[value_index].max {
+                f64::MAX
+            } else {
+                let min = values[value_index].min;
+                let max = values[value_index].max;
 
-            let error = calculate_error(&mut positions, 1.13);
+                values[value_index].value += step;
+                values[value_index].value = values[value_index].value.clamp(min, max);
+
+                save_values(&mut values, lock_material);
+                calculate_error(&mut positions, 1.13)
+            };
+
             if error < best_error {
                 tendence[value_index] *= 2;
                 best_error = error;
@@ -82,11 +114,20 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
 
                 println!("Value {} changed by {} (new error: {:.6})", value_index, step, best_error);
             } else if error > best_error {
-                values[value_index] -= step;
-                values[value_index] -= step.signum();
-                save_values(&mut values, lock_material);
+                let mut values = best_values.to_vec();
+                let error = if original_value == values[value_index].min {
+                    f64::MAX
+                } else {
+                    let min = values[value_index].min;
+                    let max = values[value_index].max;
 
-                let error = calculate_error(&mut positions, 1.13);
+                    values[value_index].value -= step.signum();
+                    values[value_index].value = values[value_index].value.clamp(min, max);
+
+                    save_values(&mut values, lock_material);
+                    calculate_error(&mut positions, 1.13)
+                };
+
                 if error < best_error {
                     tendence[value_index] = -step.signum() as i8;
                     best_error = error;
@@ -139,7 +180,7 @@ pub fn validate() -> bool {
     save_values(&mut values, false);
 
     let values_after_save = load_values(false, false);
-    values.iter().zip(&values_after_save).all(|(a, b)| a == b)
+    values.iter().zip(&values_after_save).all(|(a, b)| a.value == b.value)
 }
 
 fn load_positions(epd_filename: &str) -> Result<Vec<TunerPosition>, &'static str> {
@@ -185,67 +226,73 @@ fn calculate_error(positions: &mut Vec<TunerPosition>, scaling_constant: f64) ->
     sum_of_errors / (positions_count as f64)
 }
 
-fn load_values(lock_material: bool, random_values: bool) -> Vec<i16> {
-    let mut values = Vec::new();
+fn load_values(lock_material: bool, random_values: bool) -> Vec<TunerParameter> {
+    let mut parameters = Vec::new();
     unsafe {
         if !lock_material {
-            values.append(&mut PIECE_VALUE.to_vec());
+            parameters.push(TunerParameter::new(PIECE_VALUE[PAWN as usize], 100, 100, 100, 100));
+            parameters.push(TunerParameter::new(PIECE_VALUE[KNIGHT as usize], 300, 300, 400, 400));
+            parameters.push(TunerParameter::new(PIECE_VALUE[BISHOP as usize], 300, 300, 400, 400));
+            parameters.push(TunerParameter::new(PIECE_VALUE[ROOK as usize], 400, 400, 600, 600));
+            parameters.push(TunerParameter::new(PIECE_VALUE[QUEEN as usize], 900, 900, 1200, 1200));
+            parameters.push(TunerParameter::new(PIECE_VALUE[KING as usize], 10000, 10000, 10000, 10000));
         }
 
-        values.push(MOBILITY_OPENING);
-        values.push(MOBILITY_ENDING);
-        values.push(MOBILITY_CENTER_MULTIPLIER);
+        parameters.push(TunerParameter::new(MOBILITY_OPENING, 0, 0, 5, 10));
+        parameters.push(TunerParameter::new(MOBILITY_ENDING, 0, 0, 5, 10));
+        parameters.push(TunerParameter::new(MOBILITY_CENTER_MULTIPLIER, 0, 0, 5, 10));
 
-        values.push(DOUBLED_PAWN_OPENING);
-        values.push(DOUBLED_PAWN_ENDING);
+        parameters.push(TunerParameter::new(DOUBLED_PAWN_OPENING, -99, -25, 0, 0));
+        parameters.push(TunerParameter::new(DOUBLED_PAWN_ENDING, -99, -25, 0, 0));
 
-        values.push(ISOLATED_PAWN_OPENING);
-        values.push(ISOLATED_PAWN_ENDING);
+        parameters.push(TunerParameter::new(ISOLATED_PAWN_OPENING, -99, -25, 0, 0));
+        parameters.push(TunerParameter::new(ISOLATED_PAWN_ENDING, -99, -25, 0, 0));
 
-        values.push(CHAINED_PAWN_OPENING);
-        values.push(CHAINED_PAWN_ENDING);
+        parameters.push(TunerParameter::new(CHAINED_PAWN_OPENING, 0, 0, 25, 99));
+        parameters.push(TunerParameter::new(CHAINED_PAWN_ENDING, 0, 0, 25, 999));
 
-        values.push(PASSING_PAWN_OPENING);
-        values.push(PASSING_PAWN_ENDING);
+        parameters.push(TunerParameter::new(PASSING_PAWN_OPENING, 0, 0, 25, 999));
+        parameters.push(TunerParameter::new(PASSING_PAWN_ENDING, 0, 0, 25, 999));
 
-        values.push(PAWN_SHIELD_OPENING);
-        values.push(PAWN_SHIELD_ENDING);
+        parameters.push(TunerParameter::new(PAWN_SHIELD_OPENING, 0, 0, 25, 999));
+        parameters.push(TunerParameter::new(PAWN_SHIELD_ENDING, 0, 0, 25, 999));
 
-        values.push(PAWN_SHIELD_OPEN_FILE_OPENING);
-        values.push(PAWN_SHIELD_OPEN_FILE_ENDING);
+        parameters.push(TunerParameter::new(PAWN_SHIELD_OPEN_FILE_OPENING, -99, -25, 0, 0));
+        parameters.push(TunerParameter::new(PAWN_SHIELD_OPEN_FILE_ENDING, -99, -25, 0, 0));
 
-        values.push(KING_ATTACKED_FIELDS_OPENING);
-        values.push(KING_ATTACKED_FIELDS_ENDING);
+        parameters.push(TunerParameter::new(KING_ATTACKED_FIELDS_OPENING, -99, -25, 0, 0));
+        parameters.push(TunerParameter::new(KING_ATTACKED_FIELDS_ENDING, -99, -25, 0, 0));
 
-        values.append(&mut pawn::PATTERN[0].iter().map(|v| *v as i16).collect::<Vec<i16>>());
-        values.append(&mut pawn::PATTERN[1].iter().map(|v| *v as i16).collect::<Vec<i16>>());
+        parameters.append(&mut pawn::PATTERN[0].iter().map(|v| TunerParameter::new(*v as i16, -99, -25, 25, 99)).collect());
+        parameters.append(&mut pawn::PATTERN[1].iter().map(|v| TunerParameter::new(*v as i16, -99, -25, 25, 99)).collect());
 
-        values.append(&mut knight::PATTERN[0].iter().map(|v| *v as i16).collect::<Vec<i16>>());
-        values.append(&mut knight::PATTERN[1].iter().map(|v| *v as i16).collect::<Vec<i16>>());
+        parameters.append(&mut knight::PATTERN[0].iter().map(|v| TunerParameter::new(*v as i16, -99, -25, 25, 99)).collect());
+        parameters.append(&mut knight::PATTERN[1].iter().map(|v| TunerParameter::new(*v as i16, -99, -25, 25, 99)).collect());
 
-        values.append(&mut bishop::PATTERN[0].iter().map(|v| *v as i16).collect::<Vec<i16>>());
-        values.append(&mut bishop::PATTERN[1].iter().map(|v| *v as i16).collect::<Vec<i16>>());
+        parameters.append(&mut bishop::PATTERN[0].iter().map(|v| TunerParameter::new(*v as i16, -99, -25, 25, 99)).collect());
+        parameters.append(&mut bishop::PATTERN[1].iter().map(|v| TunerParameter::new(*v as i16, -99, -25, 25, 99)).collect());
 
-        values.append(&mut rook::PATTERN[0].iter().map(|v| *v as i16).collect::<Vec<i16>>());
-        values.append(&mut rook::PATTERN[1].iter().map(|v| *v as i16).collect::<Vec<i16>>());
+        parameters.append(&mut rook::PATTERN[0].iter().map(|v| TunerParameter::new(*v as i16, -99, -25, 25, 99)).collect());
+        parameters.append(&mut rook::PATTERN[1].iter().map(|v| TunerParameter::new(*v as i16, -99, -25, 25, 99)).collect());
 
-        values.append(&mut queen::PATTERN[0].iter().map(|v| *v as i16).collect::<Vec<i16>>());
-        values.append(&mut queen::PATTERN[1].iter().map(|v| *v as i16).collect::<Vec<i16>>());
+        parameters.append(&mut queen::PATTERN[0].iter().map(|v| TunerParameter::new(*v as i16, -99, -25, 25, 99)).collect());
+        parameters.append(&mut queen::PATTERN[1].iter().map(|v| TunerParameter::new(*v as i16, -99, -25, 25, 99)).collect());
 
-        values.append(&mut king::PATTERN[0].iter().map(|v| *v as i16).collect::<Vec<i16>>());
-        values.append(&mut king::PATTERN[1].iter().map(|v| *v as i16).collect::<Vec<i16>>());
+        parameters.append(&mut king::PATTERN[0].iter().map(|v| TunerParameter::new(*v as i16, -99, -25, 25, 99)).collect());
+        parameters.append(&mut king::PATTERN[1].iter().map(|v| TunerParameter::new(*v as i16, -99, -25, 25, 99)).collect());
     }
 
     if random_values {
-        for value in &mut values {
-            *value = fastrand::i16(-16..16);
+        fastrand::seed(Utc::now().timestamp() as u64);
+        for parameter in &mut parameters {
+            (*parameter).value = fastrand::i16(parameter.min_init..=parameter.max_init);
         }
     }
 
-    values
+    parameters
 }
 
-fn save_values(values: &mut Vec<i16>, lock_material: bool) {
+fn save_values(values: &mut Vec<TunerParameter>, lock_material: bool) {
     let mut index = 0;
     unsafe {
         if !lock_material {
@@ -300,23 +347,23 @@ fn save_values(values: &mut Vec<i16>, lock_material: bool) {
     evaluation::init();
 }
 
-fn save_values_internal(values: &mut Vec<i16>, destination: &mut i16, index: &mut usize) {
-    *destination = values[*index];
+fn save_values_internal(values: &mut Vec<TunerParameter>, destination: &mut i16, index: &mut usize) {
+    *destination = values[*index].value;
     *index += 1;
 }
 
-fn save_values_to_i8_array_internal(values: &mut Vec<i16>, array: &mut [i8], index: &mut usize) {
+fn save_values_to_i8_array_internal(values: &mut Vec<TunerParameter>, array: &mut [i8], index: &mut usize) {
     array.copy_from_slice(
         &values[*index..(*index + array.len())]
             .iter()
-            .map(|v| (*v).clamp(i8::MIN as i16, i8::MAX as i16) as i8)
+            .map(|v| (*v).value.clamp(i8::MIN as i16, i8::MAX as i16) as i8)
             .collect::<Vec<i8>>(),
     );
     *index += array.len();
 }
 
-fn save_values_to_i16_array_internal(values: &mut Vec<i16>, array: &mut [i16], index: &mut usize) {
-    array.copy_from_slice(&values[*index..(*index + array.len())]);
+fn save_values_to_i16_array_internal(values: &mut Vec<TunerParameter>, array: &mut [i16], index: &mut usize) {
+    array.copy_from_slice(&values[*index..(*index + array.len())].iter().map(|v| (*v).value).collect::<Vec<i16>>());
     *index += array.len();
 }
 
@@ -387,14 +434,7 @@ fn get_header(best_error: f64) -> String {
     let mut output = String::new();
 
     output.push_str("// --------------------------------------------------- //\n");
-    output.push_str(
-        format!(
-            "// Generated at {} UTC (e = {:.6}) //\n",
-            Utc::now().format("%Y-%m-%d %H:%M:%S"),
-            best_error
-        )
-        .as_str(),
-    );
+    output.push_str(format!("// Generated at {} UTC (e = {:.6}) //\n", Utc::now().format("%Y-%m-%d %H:%M:%S"), best_error).as_str());
     output.push_str("// --------------------------------------------------- //\n");
     output
 }
@@ -415,7 +455,7 @@ fn get_piece_square_table(values: &[i8]) -> String {
 
     output.push_str("        ");
     for index in 0..64 {
-        output.push_str(format!("{:4}, ", values[index]).as_str());
+        output.push_str(format!("{:3}, ", values[index]).as_str());
         if index % 8 == 7 {
             output.push_str("\n");
             if index != 63 {
