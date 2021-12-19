@@ -249,13 +249,13 @@ fn load_values(lock_material: bool, random_values: bool) -> Vec<TunerParameter> 
         parameters.push(TunerParameter::new(ISOLATED_PAWN_ENDING, -99, -25, 0, 0));
 
         parameters.push(TunerParameter::new(CHAINED_PAWN_OPENING, 0, 0, 25, 99));
-        parameters.push(TunerParameter::new(CHAINED_PAWN_ENDING, 0, 0, 25, 999));
+        parameters.push(TunerParameter::new(CHAINED_PAWN_ENDING, 0, 0, 25, 99));
 
-        parameters.push(TunerParameter::new(PASSING_PAWN_OPENING, 0, 0, 25, 999));
-        parameters.push(TunerParameter::new(PASSING_PAWN_ENDING, 0, 0, 25, 999));
+        parameters.push(TunerParameter::new(PASSING_PAWN_OPENING, 0, 0, 25, 99));
+        parameters.push(TunerParameter::new(PASSING_PAWN_ENDING, 0, 0, 25, 99));
 
-        parameters.push(TunerParameter::new(PAWN_SHIELD_OPENING, 0, 0, 25, 999));
-        parameters.push(TunerParameter::new(PAWN_SHIELD_ENDING, 0, 0, 25, 999));
+        parameters.push(TunerParameter::new(PAWN_SHIELD_OPENING, 0, 0, 25, 99));
+        parameters.push(TunerParameter::new(PAWN_SHIELD_ENDING, 0, 0, 25, 99));
 
         parameters.push(TunerParameter::new(PAWN_SHIELD_OPEN_FILE_OPENING, -99, -25, 0, 0));
         parameters.push(TunerParameter::new(PAWN_SHIELD_OPEN_FILE_ENDING, -99, -25, 0, 0));
@@ -287,6 +287,10 @@ fn load_values(lock_material: bool, random_values: bool) -> Vec<TunerParameter> 
         for parameter in &mut parameters {
             (*parameter).value = fastrand::i16(parameter.min_init..=parameter.max_init);
         }
+    }
+
+    for parameter in &mut parameters {
+        (*parameter).value = (*parameter).value.clamp(parameter.min, parameter.max);
     }
 
     parameters
