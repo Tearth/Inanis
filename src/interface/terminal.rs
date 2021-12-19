@@ -60,7 +60,7 @@ fn handle_help() {
     println!(" evaluate [fen] - show score for the position");
     println!(" magic - generate magic numbers");
     println!(" test [epd] [depth] [tries_to_confirm] - run test of positions");
-    println!(" tuner [epd] [output] [lock_material] [randomize] - run tuning");
+    println!(" tuner [epd] [output] [lock_material] [randomize] [threads_count] - run tuning");
     println!(" uci - run Universal Chess Interface");
     println!(" quit - close the application");
     println!();
@@ -509,7 +509,15 @@ fn handle_tuner(input: Vec<&str>) {
         }
     };
 
-    tuner::run(input[1], input[2], lock_material, random_values);
+    let threads_count = match input[5].parse() {
+        Ok(value) => value,
+        Err(_) => {
+            println!("Invalid threads count");
+            return;
+        }
+    };
+
+    tuner::run(input[1], input[2], lock_material, random_values, threads_count);
 }
 
 fn handle_uci() {

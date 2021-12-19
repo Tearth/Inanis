@@ -12,12 +12,19 @@ use crate::state::fen::*;
 use crate::state::*;
 use chrono::Utc;
 use nameof::name_of;
+use std::cell::UnsafeCell;
 use std::fs;
 use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
 use std::io::Write;
 use std::path::Path;
+use std::sync::Arc;
+use std::thread;
+
+struct TunerContext {
+    positions: UnsafeCell<Vec<TunerPosition>>,
+}
 
 struct TunerPosition {
     board: Bitboard,
@@ -32,6 +39,14 @@ struct TunerParameter {
     max_init: i16,
     max: i16,
 }
+
+impl TunerContext {
+    pub fn new(positions: UnsafeCell<Vec<TunerPosition>>) -> TunerContext {
+        TunerContext { positions }
+    }
+}
+
+unsafe impl Sync for TunerContext {}
 
 impl TunerPosition {
     pub fn new(board: Bitboard, result: f64) -> TunerPosition {
@@ -51,24 +66,25 @@ impl TunerParameter {
     }
 }
 
-pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, random_values: bool) {
+pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, random_values: bool, threads_count: usize) {
     println!("Loading EPD file...");
-    let mut positions = match load_positions(epd_filename) {
+    let positions = match load_positions(epd_filename) {
         Ok(value) => value,
         Err(message) => {
             println!("{}", message);
             return;
         }
     };
-    println!("Loaded {} positions, starting tuner", positions.len());
+    unsafe { println!("Loaded {} positions, starting tuner", (*positions.get()).len()) };
 
+    let context = Arc::new(TunerContext::new(positions));
     let mut tendence = Vec::new();
-    tendence.resize(positions.len(), 1i8);
+    unsafe { tendence.resize((*context.positions.get()).len(), 1i8) };
 
     let mut best_values = load_values(lock_material, random_values);
     save_values(&mut best_values, lock_material);
 
-    let mut best_error = calculate_error(&mut positions, 1.13);
+    let mut best_error = calculate_error(&context, 1.13, threads_count);
     let mut improved = true;
     let mut iterations_count = 0;
 
@@ -101,7 +117,7 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
                 values[value_index].value = values[value_index].value.clamp(min, max);
 
                 save_values(&mut values, lock_material);
-                calculate_error(&mut positions, 1.13)
+                calculate_error(&context, 1.13, threads_count)
             };
 
             if error < best_error {
@@ -125,7 +141,7 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
                     values[value_index].value = values[value_index].value.clamp(min, max);
 
                     save_values(&mut values, lock_material);
-                    calculate_error(&mut positions, 1.13)
+                    calculate_error(&context, 1.13, threads_count)
                 };
 
                 if error < best_error {
@@ -183,7 +199,7 @@ pub fn validate() -> bool {
     values.iter().zip(&values_after_save).all(|(a, b)| a.value == b.value)
 }
 
-fn load_positions(epd_filename: &str) -> Result<Vec<TunerPosition>, &'static str> {
+fn load_positions(epd_filename: &str) -> Result<UnsafeCell<Vec<TunerPosition>>, &'static str> {
     let mut positions = Vec::new();
     let file = match File::open(epd_filename) {
         Ok(value) => value,
@@ -208,22 +224,41 @@ fn load_positions(epd_filename: &str) -> Result<Vec<TunerPosition>, &'static str
         positions.push(TunerPosition::new(parsed_epd.board, result));
     }
 
-    Ok(positions)
+    Ok(UnsafeCell::new(positions))
 }
 
-fn calculate_error(positions: &mut Vec<TunerPosition>, scaling_constant: f64) -> f64 {
-    let mut sum_of_errors = 0.0;
-    let positions_count = positions.len();
+fn calculate_error(context: &Arc<TunerContext>, scaling_constant: f64, threads_count: usize) -> f64 {
+    unsafe {
+        let mut threads = Vec::new();
+        let positions_count = (*context.positions.get()).len();
 
-    for position in positions {
-        position.board.recalculate_incremental_values();
+        for thread_index in 0..threads_count {
+            let context_arc = context.clone();
+            threads.push(thread::spawn(move || {
+                let mut sum_of_errors = 0.0;
+                let from = thread_index * (positions_count / threads_count);
+                let to = (thread_index + 1) * (positions_count / threads_count);
 
-        let evaluation = position.board.evaluate_without_cache() as f64;
-        let sigmoid = 1.0 / (1.0 + 10.0f64.powf(-scaling_constant * evaluation / 400.0));
-        sum_of_errors += (position.result - sigmoid).powi(2);
+                for position in &mut (*context_arc.positions.get())[from..to] {
+                    position.board.recalculate_incremental_values();
+
+                    let evaluation = position.board.evaluate_without_cache() as f64;
+                    let sigmoid = 1.0 / (1.0 + 10.0f64.powf(-scaling_constant * evaluation / 400.0));
+                    sum_of_errors += (position.result - sigmoid).powi(2);
+                }
+
+                sum_of_errors
+            }));
+        }
+
+        let mut sum_of_errors = 0.0;
+
+        for thread in threads {
+            sum_of_errors += thread.join().unwrap();
+        }
+
+        sum_of_errors / (positions_count as f64)
     }
-
-    sum_of_errors / (positions_count as f64)
 }
 
 fn load_values(lock_material: bool, random_values: bool) -> Vec<TunerParameter> {
