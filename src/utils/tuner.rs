@@ -145,7 +145,7 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
                 };
 
                 if error < best_error {
-                    tendence[value_index] = -step.signum() as i8;
+                    tendence[value_index] = 2 * -step.signum() as i8;
                     best_error = error;
                     best_values = values;
                     improved = true;
@@ -266,55 +266,55 @@ fn load_values(lock_material: bool, random_values: bool) -> Vec<TunerParameter> 
     unsafe {
         if !lock_material {
             parameters.push(TunerParameter::new(PIECE_VALUE[PAWN as usize], 100, 100, 100, 100));
-            parameters.push(TunerParameter::new(PIECE_VALUE[KNIGHT as usize], 300, 300, 400, 400));
-            parameters.push(TunerParameter::new(PIECE_VALUE[BISHOP as usize], 300, 300, 400, 400));
-            parameters.push(TunerParameter::new(PIECE_VALUE[ROOK as usize], 400, 400, 600, 600));
-            parameters.push(TunerParameter::new(PIECE_VALUE[QUEEN as usize], 900, 900, 1200, 1200));
+            parameters.push(TunerParameter::new(PIECE_VALUE[KNIGHT as usize], 0, 300, 400, 9999));
+            parameters.push(TunerParameter::new(PIECE_VALUE[BISHOP as usize], 0, 300, 400, 9999));
+            parameters.push(TunerParameter::new(PIECE_VALUE[ROOK as usize], 0, 400, 600, 9999));
+            parameters.push(TunerParameter::new(PIECE_VALUE[QUEEN as usize], 0, 900, 1200, 9999));
             parameters.push(TunerParameter::new(PIECE_VALUE[KING as usize], 10000, 10000, 10000, 10000));
         }
 
-        parameters.push(TunerParameter::new(MOBILITY_OPENING, 0, 0, 5, 10));
-        parameters.push(TunerParameter::new(MOBILITY_ENDING, 0, 0, 5, 10));
-        parameters.push(TunerParameter::new(MOBILITY_CENTER_MULTIPLIER, 0, 0, 5, 10));
+        parameters.push(TunerParameter::new(MOBILITY_OPENING, 0, 2, 6, 10));
+        parameters.push(TunerParameter::new(MOBILITY_ENDING, 0, 2, 6, 10));
+        parameters.push(TunerParameter::new(MOBILITY_CENTER_MULTIPLIER, -10, 2, 6, 10));
 
-        parameters.push(TunerParameter::new(DOUBLED_PAWN_OPENING, -99, -25, 0, 0));
-        parameters.push(TunerParameter::new(DOUBLED_PAWN_ENDING, -99, -25, 0, 0));
+        parameters.push(TunerParameter::new(DOUBLED_PAWN_OPENING, -999, -40, -10, 999));
+        parameters.push(TunerParameter::new(DOUBLED_PAWN_ENDING, -999, -40, -10, 999));
 
-        parameters.push(TunerParameter::new(ISOLATED_PAWN_OPENING, -99, -25, 0, 0));
-        parameters.push(TunerParameter::new(ISOLATED_PAWN_ENDING, -99, -25, 0, 0));
+        parameters.push(TunerParameter::new(ISOLATED_PAWN_OPENING, -999, -40, -10, 999));
+        parameters.push(TunerParameter::new(ISOLATED_PAWN_ENDING, -999, -40, -10, 999));
 
-        parameters.push(TunerParameter::new(CHAINED_PAWN_OPENING, 0, 0, 25, 99));
-        parameters.push(TunerParameter::new(CHAINED_PAWN_ENDING, 0, 0, 25, 99));
+        parameters.push(TunerParameter::new(CHAINED_PAWN_OPENING, -999, 10, 40, 999));
+        parameters.push(TunerParameter::new(CHAINED_PAWN_ENDING, -999, 10, 40, 999));
 
-        parameters.push(TunerParameter::new(PASSING_PAWN_OPENING, 0, 0, 25, 99));
-        parameters.push(TunerParameter::new(PASSING_PAWN_ENDING, 0, 0, 25, 99));
+        parameters.push(TunerParameter::new(PASSING_PAWN_OPENING, -999, 10, 40, 999));
+        parameters.push(TunerParameter::new(PASSING_PAWN_ENDING, -999, 10, 40, 999));
 
-        parameters.push(TunerParameter::new(PAWN_SHIELD_OPENING, 0, 0, 25, 99));
-        parameters.push(TunerParameter::new(PAWN_SHIELD_ENDING, 0, 0, 25, 99));
+        parameters.push(TunerParameter::new(PAWN_SHIELD_OPENING, -999, 10, 40, 999));
+        parameters.push(TunerParameter::new(PAWN_SHIELD_ENDING, -999, 10, 40, 999));
 
-        parameters.push(TunerParameter::new(PAWN_SHIELD_OPEN_FILE_OPENING, -99, -25, 0, 0));
-        parameters.push(TunerParameter::new(PAWN_SHIELD_OPEN_FILE_ENDING, -99, -25, 0, 0));
+        parameters.push(TunerParameter::new(PAWN_SHIELD_OPEN_FILE_OPENING, -999, -40, -10, 999));
+        parameters.push(TunerParameter::new(PAWN_SHIELD_OPEN_FILE_ENDING, -999, -40, -10, 999));
 
-        parameters.push(TunerParameter::new(KING_ATTACKED_FIELDS_OPENING, -99, -25, 0, 0));
-        parameters.push(TunerParameter::new(KING_ATTACKED_FIELDS_ENDING, -99, -25, 0, 0));
+        parameters.push(TunerParameter::new(KING_ATTACKED_FIELDS_OPENING, -999, -40, -10, 999));
+        parameters.push(TunerParameter::new(KING_ATTACKED_FIELDS_ENDING, -999, -40, -10, 999));
 
-        parameters.append(&mut pawn::PATTERN[0].iter().map(|v| TunerParameter::new(*v as i16, -99, -25, 25, 99)).collect());
-        parameters.append(&mut pawn::PATTERN[1].iter().map(|v| TunerParameter::new(*v as i16, -99, -25, 25, 99)).collect());
+        parameters.append(&mut pawn::PATTERN[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
+        parameters.append(&mut pawn::PATTERN[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
 
-        parameters.append(&mut knight::PATTERN[0].iter().map(|v| TunerParameter::new(*v as i16, -99, -25, 25, 99)).collect());
-        parameters.append(&mut knight::PATTERN[1].iter().map(|v| TunerParameter::new(*v as i16, -99, -25, 25, 99)).collect());
+        parameters.append(&mut knight::PATTERN[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
+        parameters.append(&mut knight::PATTERN[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
 
-        parameters.append(&mut bishop::PATTERN[0].iter().map(|v| TunerParameter::new(*v as i16, -99, -25, 25, 99)).collect());
-        parameters.append(&mut bishop::PATTERN[1].iter().map(|v| TunerParameter::new(*v as i16, -99, -25, 25, 99)).collect());
+        parameters.append(&mut bishop::PATTERN[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
+        parameters.append(&mut bishop::PATTERN[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
 
-        parameters.append(&mut rook::PATTERN[0].iter().map(|v| TunerParameter::new(*v as i16, -99, -25, 25, 99)).collect());
-        parameters.append(&mut rook::PATTERN[1].iter().map(|v| TunerParameter::new(*v as i16, -99, -25, 25, 99)).collect());
+        parameters.append(&mut rook::PATTERN[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
+        parameters.append(&mut rook::PATTERN[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
 
-        parameters.append(&mut queen::PATTERN[0].iter().map(|v| TunerParameter::new(*v as i16, -99, -25, 25, 99)).collect());
-        parameters.append(&mut queen::PATTERN[1].iter().map(|v| TunerParameter::new(*v as i16, -99, -25, 25, 99)).collect());
+        parameters.append(&mut queen::PATTERN[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
+        parameters.append(&mut queen::PATTERN[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
 
-        parameters.append(&mut king::PATTERN[0].iter().map(|v| TunerParameter::new(*v as i16, -99, -25, 25, 99)).collect());
-        parameters.append(&mut king::PATTERN[1].iter().map(|v| TunerParameter::new(*v as i16, -99, -25, 25, 99)).collect());
+        parameters.append(&mut king::PATTERN[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
+        parameters.append(&mut king::PATTERN[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
     }
 
     if random_values {
@@ -391,13 +391,8 @@ fn save_values_internal(values: &mut Vec<TunerParameter>, destination: &mut i16,
     *index += 1;
 }
 
-fn save_values_to_i8_array_internal(values: &mut Vec<TunerParameter>, array: &mut [i8], index: &mut usize) {
-    array.copy_from_slice(
-        &values[*index..(*index + array.len())]
-            .iter()
-            .map(|v| (*v).value.clamp(i8::MIN as i16, i8::MAX as i16) as i8)
-            .collect::<Vec<i8>>(),
-    );
+fn save_values_to_i8_array_internal(values: &mut Vec<TunerParameter>, array: &mut [i16], index: &mut usize) {
+    array.copy_from_slice(&values[*index..(*index + array.len())].iter().map(|v| (*v).value).collect::<Vec<i16>>());
     *index += array.len();
 }
 
@@ -446,13 +441,13 @@ fn write_evaluation_parameters(output_directory: &str, best_error: f64) {
     write!(&mut File::create(path).unwrap(), "{}", output.to_string()).unwrap();
 }
 
-fn write_piece_square_table(output_directory: &str, best_error: f64, name: &str, opening: &[i8], ending: &[i8]) {
+fn write_piece_square_table(output_directory: &str, best_error: f64, name: &str, opening: &[i16], ending: &[i16]) {
     let mut output = String::new();
 
     output.push_str(get_header(best_error).as_str());
     output.push_str("\n");
     output.push_str("#[rustfmt::skip]\n");
-    output.push_str("pub static mut PATTERN: [[i8; 64]; 2] =\n");
+    output.push_str("pub static mut PATTERN: [[i16; 64]; 2] =\n");
     output.push_str("[\n");
     output.push_str("    [\n");
     output.push_str(get_piece_square_table(opening).as_str());
@@ -489,7 +484,7 @@ fn get_parameter(name: &str, value: i16) -> String {
     format!("pub static mut {}: i16 = {};\n", name, value)
 }
 
-fn get_piece_square_table(values: &[i8]) -> String {
+fn get_piece_square_table(values: &[i16]) -> String {
     let mut output = String::new();
 
     output.push_str("        ");

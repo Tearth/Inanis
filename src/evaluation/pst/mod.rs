@@ -10,7 +10,7 @@ pub mod pawn;
 pub mod queen;
 pub mod rook;
 
-static mut TABLE: [[[[i8; 64]; 2]; 2]; 6] = [[[[0; 64]; 2]; 2]; 6];
+static mut TABLE: [[[[i16; 64]; 2]; 2]; 6] = [[[[0; 64]; 2]; 2]; 6];
 
 pub fn init() {
     unsafe {
@@ -59,7 +59,7 @@ pub fn recalculate_incremental_values(board: &mut Bitboard) {
     }
 }
 
-fn calculate_pattern(color: u8, pattern: &[i8; 64]) -> [i8; 64] {
+fn calculate_pattern(color: u8, pattern: &[i16; 64]) -> [i16; 64] {
     let mut array = [0; 64];
 
     match color {
