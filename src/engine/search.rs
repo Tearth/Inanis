@@ -61,9 +61,9 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
 
     context.statistics.nodes_count += 1;
 
-    if context.board.pieces[context.board.active_color as usize][KING as usize] == 0 {
+    if context.board.is_king_checked(context.board.active_color ^ 1) {
         context.statistics.leafs_count += 1;
-        return -CHECKMATE_SCORE + (ply as i16);
+        return CHECKMATE_SCORE - (ply as i16);
     }
 
     if context.board.is_threefold_repetition_draw() || context.board.is_fifty_move_rule_draw() {
@@ -250,10 +250,6 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
 
     if context.abort_token.aborted {
         return INVALID_SCORE;
-    }
-
-    if best_score == -(-CHECKMATE_SCORE + (ply as i16) + 1) {
-        return best_score;
     }
 
     if best_score == -CHECKMATE_SCORE + (ply as i16) + 2 && !context.board.is_king_checked(context.board.active_color) {
