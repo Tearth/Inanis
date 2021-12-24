@@ -2,6 +2,7 @@ use super::context::SearchContext;
 use super::qsearch;
 use super::*;
 use crate::cache::search::TranspositionTableScoreType;
+use crate::state::movegen::{get_knight_moves, get_queen_moves};
 use crate::state::movescan::Move;
 use crate::state::*;
 use chrono::Utc;
@@ -38,7 +39,15 @@ pub const MOVE_ORDERING_HISTORY_MOVE: u8 = 180;
 pub const MOVE_ORDERING_HISTORY_MOVE_OFFSET: i16 = -90;
 pub const MOVE_ORDERING_LOSING_CAPTURES_OFFSET: i16 = -100;
 
-pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, mut beta: i16, allow_null_move: bool) -> i16 {
+pub fn run<const PV: bool>(
+    context: &mut SearchContext,
+    depth: i8,
+    ply: u16,
+    mut alpha: i16,
+    mut beta: i16,
+    allow_null_move: bool,
+    friendly_king_checked: bool,
+) -> i16 {
     if context.abort_token.aborted {
         return INVALID_SCORE;
     }
@@ -67,7 +76,7 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
     }
 
     if context.board.is_threefold_repetition_draw() || context.board.is_fifty_move_rule_draw() {
-        if !context.board.is_king_checked(context.board.active_color) && !context.board.is_king_checked(context.board.active_color ^ 1) {
+        if !friendly_king_checked && !context.board.is_king_checked(context.board.active_color ^ 1) {
             context.statistics.leafs_count += 1;
             return DRAW_SCORE;
         }
@@ -125,7 +134,7 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
         }
     };
 
-    if razoring_can_be_applied::<PV>(context, depth, alpha) {
+    if razoring_can_be_applied::<PV>(context, depth, alpha, friendly_king_checked) {
         let margin = razoring_get_margin(depth);
         let lazy_evaluation = -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate_lazy();
 
@@ -142,7 +151,7 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
         }
     }
 
-    if static_null_move_pruning_can_be_applied::<PV>(context, depth, beta) {
+    if static_null_move_pruning_can_be_applied::<PV>(context, depth, beta, friendly_king_checked) {
         let margin = static_null_move_pruning_get_margin(depth);
         let lazy_evaluation = -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate_lazy();
 
@@ -156,12 +165,13 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
         }
     }
 
-    if null_move_pruning_can_be_applied::<PV>(context, depth, beta, allow_null_move) {
+    if null_move_pruning_can_be_applied::<PV>(context, depth, beta, allow_null_move, friendly_king_checked) {
         let r = null_move_pruning_get_r(depth);
         context.statistics.null_move_pruning_attempts += 1;
 
         context.board.make_null_move();
-        let score = -run::<false>(context, depth - r - 1, ply + 1, -beta, -beta + 1, false);
+        let king_checked = context.board.is_king_checked(context.board.active_color);
+        let score = -run::<false>(context, depth - r - 1, ply + 1, -beta, -beta + 1, false, king_checked);
         context.board.undo_null_move();
 
         if score >= beta {
@@ -173,11 +183,24 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
         }
     }
 
+    let evasion_mask = if friendly_king_checked {
+        if context.board.pieces[context.board.active_color as usize][KING as usize] == 0 {
+            u64::MAX
+        } else {
+            let king_field_index = bit_scan(context.board.pieces[context.board.active_color as usize][KING as usize]);
+            let occupancy = context.board.occupancy[WHITE as usize] | context.board.occupancy[BLACK as usize];
+
+            get_queen_moves(occupancy, king_field_index as usize) | get_knight_moves(king_field_index as usize)
+        }
+    } else {
+        u64::MAX
+    };
+
     let mut best_score = i16::MIN;
     let mut best_move = Default::default();
     let mut moves: [Move; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
     let mut move_scores: [i16; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
-    let moves_count = context.board.get_moves::<false>(&mut moves);
+    let moves_count = context.board.get_moves::<false>(&mut moves, evasion_mask);
 
     assign_move_scores(context, &moves, &mut move_scores, moves_count, hash_move, ply);
 
@@ -187,7 +210,8 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
         let r#move = moves[move_index];
         context.board.make_move(&r#move);
 
-        let r = if late_move_reduction_can_be_applied(context, depth, &r#move, move_index, move_scores[move_index]) {
+        let king_checked = context.board.is_king_checked(context.board.active_color);
+        let r = if late_move_reduction_can_be_applied(context, depth, &r#move, move_index, move_scores[move_index], king_checked) {
             late_move_reduction_get_r(move_index)
         } else {
             0
@@ -196,25 +220,25 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
         let score = if PV {
             if move_index == 0 {
                 context.statistics.pvs_full_window_searches += 1;
-                -run::<true>(context, depth - 1, ply + 1, -beta, -alpha, true)
+                -run::<true>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked)
             } else {
-                let zero_window_score = -run::<false>(context, depth - r - 1, ply + 1, -alpha - 1, -alpha, true);
+                let zero_window_score = -run::<false>(context, depth - r - 1, ply + 1, -alpha - 1, -alpha, true, king_checked);
                 context.statistics.pvs_zero_window_searches += 1;
 
                 if zero_window_score > alpha {
                     context.statistics.pvs_rejected_searches += 1;
-                    -run::<true>(context, depth - 1, ply + 1, -beta, -alpha, true)
+                    -run::<true>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked)
                 } else {
                     zero_window_score
                 }
             }
         } else {
-            let zero_window_score = -run::<false>(context, depth - r - 1, ply + 1, -beta, -alpha, true);
+            let zero_window_score = -run::<false>(context, depth - r - 1, ply + 1, -beta, -alpha, true, king_checked);
             context.statistics.pvs_zero_window_searches += 1;
 
             if zero_window_score > alpha && r > 0 {
                 context.statistics.pvs_rejected_searches += 1;
-                -run::<false>(context, depth - 1, ply + 1, -beta, -alpha, true)
+                -run::<false>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked)
             } else {
                 zero_window_score
             }
@@ -252,7 +276,7 @@ pub fn run<const PV: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut
         return INVALID_SCORE;
     }
 
-    if best_score == -CHECKMATE_SCORE + (ply as i16) + 2 && !context.board.is_king_checked(context.board.active_color) {
+    if best_score == -CHECKMATE_SCORE + (ply as i16) + 2 && !friendly_king_checked {
         return DRAW_SCORE;
     }
 
@@ -332,34 +356,37 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
     }
 }
 
-fn razoring_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, alpha: i16) -> bool {
-    !PV && depth >= RAZORING_MIN_DEPTH
-        && depth <= RAZORING_MAX_DEPTH
-        && !is_score_near_checkmate(alpha)
-        && !context.board.is_king_checked(context.board.active_color)
+fn razoring_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, alpha: i16, friendly_king_checked: bool) -> bool {
+    !PV && depth >= RAZORING_MIN_DEPTH && depth <= RAZORING_MAX_DEPTH && !is_score_near_checkmate(alpha) && !friendly_king_checked
 }
 
 fn razoring_get_margin(depth: i8) -> i16 {
     (depth as i16) * RAZORING_DEPTH_MARGIN_MULTIPLIER
 }
 
-fn static_null_move_pruning_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, beta: i16) -> bool {
+fn static_null_move_pruning_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, beta: i16, friendly_king_checked: bool) -> bool {
     !PV && depth >= STATIC_NULL_MOVE_PRUNING_MIN_DEPTH
         && depth <= STATIC_NULL_MOVE_PRUNING_MAX_DEPTH
         && !is_score_near_checkmate(beta)
-        && !context.board.is_king_checked(context.board.active_color)
+        && !friendly_king_checked
 }
 
 fn static_null_move_pruning_get_margin(depth: i8) -> i16 {
     (depth as i16) * STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_MULTIPLIER
 }
 
-fn null_move_pruning_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, beta: i16, allow_null_move: bool) -> bool {
+fn null_move_pruning_can_be_applied<const PV: bool>(
+    context: &mut SearchContext,
+    depth: i8,
+    beta: i16,
+    allow_null_move: bool,
+    friendly_king_checked: bool,
+) -> bool {
     !PV && allow_null_move
         && depth >= NULL_MOVE_MIN_DEPTH
         && context.board.get_game_phase() > NULL_MOVE_MIN_GAME_PHASE
         && !is_score_near_checkmate(beta)
-        && !context.board.is_king_checked(context.board.active_color)
+        && !friendly_king_checked
 }
 
 fn null_move_pruning_get_r(depth: i8) -> i8 {
@@ -370,12 +397,19 @@ fn null_move_pruning_get_r(depth: i8) -> i8 {
     }
 }
 
-fn late_move_reduction_can_be_applied(context: &mut SearchContext, depth: i8, r#move: &Move, move_index: usize, move_score: i16) -> bool {
+fn late_move_reduction_can_be_applied(
+    context: &mut SearchContext,
+    depth: i8,
+    r#move: &Move,
+    move_index: usize,
+    move_score: i16,
+    friendly_king_checked: bool,
+) -> bool {
     depth >= LATE_MOVE_REDUCTION_MIN_DEPTH
         && move_index >= LATE_MOVE_REDUCTION_MIN_MOVE_INDEX
         && move_score != MOVE_ORDERING_KILLER_MOVE
         && r#move.is_quiet()
-        && !context.board.is_king_checked(context.board.active_color)
+        && !friendly_king_checked
 }
 
 fn late_move_reduction_get_r(move_index: usize) -> i8 {

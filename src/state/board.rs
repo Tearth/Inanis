@@ -71,14 +71,14 @@ impl Bitboard {
         Ok(board)
     }
 
-    pub fn get_moves<const CAPTURES_ONLY: bool>(&self, moves: &mut [Move]) -> usize {
+    pub fn get_moves<const CAPTURES_ONLY: bool>(&self, moves: &mut [Move], evasion_mask: u64) -> usize {
         let mut index = 0;
-        index = movescan::scan_pawn_moves::<CAPTURES_ONLY>(self, moves, index);
-        index = movescan::scan_piece_moves::<KNIGHT, CAPTURES_ONLY>(self, moves, index);
-        index = movescan::scan_piece_moves::<BISHOP, CAPTURES_ONLY>(self, moves, index);
-        index = movescan::scan_piece_moves::<ROOK, CAPTURES_ONLY>(self, moves, index);
-        index = movescan::scan_piece_moves::<QUEEN, CAPTURES_ONLY>(self, moves, index);
-        index = movescan::scan_piece_moves::<KING, CAPTURES_ONLY>(self, moves, index);
+        index = movescan::scan_pawn_moves::<CAPTURES_ONLY>(self, moves, index, evasion_mask);
+        index = movescan::scan_piece_moves::<KNIGHT, CAPTURES_ONLY>(self, moves, index, evasion_mask);
+        index = movescan::scan_piece_moves::<BISHOP, CAPTURES_ONLY>(self, moves, index, evasion_mask);
+        index = movescan::scan_piece_moves::<ROOK, CAPTURES_ONLY>(self, moves, index, evasion_mask);
+        index = movescan::scan_piece_moves::<QUEEN, CAPTURES_ONLY>(self, moves, index, evasion_mask);
+        index = movescan::scan_piece_moves::<KING, CAPTURES_ONLY>(self, moves, index, evasion_mask);
 
         index
     }
@@ -496,6 +496,10 @@ impl Bitboard {
     }
 
     pub fn is_king_checked(&self, color: u8) -> bool {
+        if self.pieces[color as usize][KING as usize] == 0 {
+            return false;
+        }
+
         self.is_field_attacked(color, bit_scan(self.pieces[color as usize][KING as usize]))
     }
 

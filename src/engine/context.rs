@@ -142,7 +142,7 @@ impl<'a> SearchContext<'a> {
                 }
 
                 let mut moves: [Move; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
-                let moves_count = board.get_moves::<false>(&mut moves);
+                let moves_count = board.get_moves::<false>(&mut moves, u64::MAX);
                 let mut found = false;
 
                 for r#move in &moves[0..moves_count] {
@@ -196,7 +196,8 @@ impl<'a> Iterator for SearchContext<'a> {
             u32::MAX
         };
 
-        let score = search::run::<true>(self, self.current_depth, 0, MIN_ALPHA, MIN_BETA, true);
+        let king_checked = self.board.is_king_checked(self.board.active_color);
+        let score = search::run::<true>(self, self.current_depth, 0, MIN_ALPHA, MIN_BETA, true, king_checked);
         let search_time = (Utc::now() - self.search_time_start).num_milliseconds() as f64;
         let time_ratio = search_time / (self.last_search_time as f64);
 
@@ -219,13 +220,7 @@ impl<'a> Iterator for SearchContext<'a> {
         let total_search_time = (Utc::now() - self.search_time_start).num_milliseconds() as u64;
         let pv_line = self.get_pv_line(&mut self.board.clone(), 0);
 
-        Some(SearchResult::new(
-            total_search_time,
-            self.current_depth - 1,
-            score,
-            pv_line,
-            self.statistics,
-        ))
+        Some(SearchResult::new(total_search_time, self.current_depth - 1, score, pv_line, self.statistics))
     }
 }
 

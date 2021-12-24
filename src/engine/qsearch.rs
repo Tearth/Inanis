@@ -32,7 +32,7 @@ pub fn run(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, bet
 
     let mut moves: [Move; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
     let mut move_scores: [i16; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
-    let moves_count = context.board.get_moves::<true>(&mut moves);
+    let moves_count = context.board.get_moves::<true>(&mut moves, u64::MAX);
 
     assign_move_scores(context, &moves, &mut move_scores, moves_count);
 

@@ -45,7 +45,7 @@ impl Move {
 
     pub fn from_short_notation(mut text: &str, board: &Bitboard) -> Result<Move, &'static str> {
         let mut moves: [Move; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
-        let moves_count = board.get_moves::<false>(&mut moves);
+        let moves_count = board.get_moves::<false>(&mut moves, u64::MAX);
 
         let mut desired_to: Option<u8> = None;
         let mut desired_file: Option<u8> = None;
@@ -242,7 +242,7 @@ impl Move {
         };
 
         let mut moves: [Move; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
-        let moves_count = board.get_moves::<false>(&mut moves);
+        let moves_count = board.get_moves::<false>(&mut moves, u64::MAX);
 
         for r#move in &moves[0..moves_count] {
             if r#move.get_from() == from && r#move.get_to() == to {
@@ -330,7 +330,7 @@ impl Default for Move {
     }
 }
 
-pub fn scan_piece_moves<const PIECE: u8, const CAPTURES_ONLY: bool>(board: &Bitboard, moves: &mut [Move], mut index: usize) -> usize {
+pub fn scan_piece_moves<const PIECE: u8, const CAPTURES_ONLY: bool>(board: &Bitboard, moves: &mut [Move], mut index: usize, evasion_mask: u64) -> usize {
     let enemy_color = board.active_color ^ 1;
     let mut pieces = board.pieces[board.active_color as usize][PIECE as usize];
 
@@ -347,7 +347,8 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES_ONLY: bool>(board: &Bitb
             QUEEN => movegen::get_queen_moves(occupancy, from_field_index as usize),
             KING => movegen::get_king_moves(from_field_index as usize),
             _ => panic!("Invalid value: PIECE={}", PIECE),
-        } & !board.occupancy[board.active_color as usize];
+        } & !board.occupancy[board.active_color as usize]
+            & evasion_mask;
 
         if CAPTURES_ONLY {
             piece_moves &= board.occupancy[enemy_color as usize];
@@ -359,11 +360,7 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES_ONLY: bool>(board: &Bitb
             piece_moves = pop_lsb(piece_moves);
 
             let capture = (to_field & board.occupancy[enemy_color as usize]) != 0;
-            let flags = if CAPTURES_ONLY || capture {
-                MoveFlags::CAPTURE
-            } else {
-                MoveFlags::QUIET
-            };
+            let flags = if CAPTURES_ONLY || capture { MoveFlags::CAPTURE } else { MoveFlags::QUIET };
 
             moves[index] = Move::new(from_field_index, to_field_index, flags);
             index += 1;
@@ -450,18 +447,18 @@ pub fn get_piece_mobility<const PIECE: u8>(board: &Bitboard, color: u8, attack_m
     mobility
 }
 
-pub fn scan_pawn_moves<const CAPTURES_ONLY: bool>(board: &Bitboard, moves: &mut [Move], mut index: usize) -> usize {
+pub fn scan_pawn_moves<const CAPTURES_ONLY: bool>(board: &Bitboard, moves: &mut [Move], mut index: usize, evasion_mask: u64) -> usize {
     if !CAPTURES_ONLY {
-        index = scan_pawn_moves_single_push(board, moves, index);
-        index = scan_pawn_moves_double_push(board, moves, index);
+        index = scan_pawn_moves_single_push(board, moves, index, evasion_mask);
+        index = scan_pawn_moves_double_push(board, moves, index, evasion_mask);
     }
 
-    index = scan_pawn_moves_diagonal_attacks::<LEFT>(board, moves, index);
-    index = scan_pawn_moves_diagonal_attacks::<RIGHT>(board, moves, index);
+    index = scan_pawn_moves_diagonal_attacks::<LEFT>(board, moves, index, evasion_mask);
+    index = scan_pawn_moves_diagonal_attacks::<RIGHT>(board, moves, index, evasion_mask);
     index
 }
 
-fn scan_pawn_moves_single_push(board: &Bitboard, moves: &mut [Move], mut index: usize) -> usize {
+fn scan_pawn_moves_single_push(board: &Bitboard, moves: &mut [Move], mut index: usize, evasion_mask: u64) -> usize {
     let pieces = board.pieces[board.active_color as usize][PAWN as usize];
     let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
 
@@ -473,7 +470,8 @@ fn scan_pawn_moves_single_push(board: &Bitboard, moves: &mut [Move], mut index: 
         _ => {
             panic!("Invalid value: board.active_color={}", board.active_color);
         }
-    } & !occupancy;
+    } & !occupancy
+        & evasion_mask;
 
     while target_fields != 0 {
         let to_field = get_lsb(target_fields);
@@ -496,7 +494,7 @@ fn scan_pawn_moves_single_push(board: &Bitboard, moves: &mut [Move], mut index: 
     index
 }
 
-fn scan_pawn_moves_double_push(board: &Bitboard, moves: &mut [Move], mut index: usize) -> usize {
+fn scan_pawn_moves_double_push(board: &Bitboard, moves: &mut [Move], mut index: usize, evasion_mask: u64) -> usize {
     let pieces = board.pieces[board.active_color as usize][PAWN as usize];
     let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
 
@@ -507,7 +505,8 @@ fn scan_pawn_moves_double_push(board: &Bitboard, moves: &mut [Move], mut index: 
         _ => {
             panic!("Invalid value: board.active_color={}", board.active_color);
         }
-    } & !occupancy;
+    } & !occupancy
+        & evasion_mask;
 
     while target_fields != 0 {
         let to_field = get_lsb(target_fields);
@@ -522,7 +521,7 @@ fn scan_pawn_moves_double_push(board: &Bitboard, moves: &mut [Move], mut index: 
     index
 }
 
-fn scan_pawn_moves_diagonal_attacks<const DIR: u8>(board: &Bitboard, moves: &mut [Move], mut index: usize) -> usize {
+fn scan_pawn_moves_diagonal_attacks<const DIR: u8>(board: &Bitboard, moves: &mut [Move], mut index: usize, evasion_mask: u64) -> usize {
     let enemy_color = board.active_color ^ 1;
     let pieces = board.pieces[board.active_color as usize][PAWN as usize];
 
@@ -537,7 +536,8 @@ fn scan_pawn_moves_diagonal_attacks<const DIR: u8>(board: &Bitboard, moves: &mut
         _ => {
             panic!("Invalid value: board.active_color={}", board.active_color);
         }
-    } & (board.occupancy[enemy_color as usize] | board.en_passant);
+    } & (board.occupancy[enemy_color as usize] | board.en_passant)
+        & evasion_mask;
 
     while target_fields != 0 {
         let to_field = get_lsb(target_fields);
