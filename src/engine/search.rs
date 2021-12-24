@@ -39,6 +39,12 @@ pub const MOVE_ORDERING_HISTORY_MOVE: u8 = 180;
 pub const MOVE_ORDERING_HISTORY_MOVE_OFFSET: i16 = -90;
 pub const MOVE_ORDERING_LOSING_CAPTURES_OFFSET: i16 = -100;
 
+enum MoveGeneratorStage {
+    Empty,
+    HashMove,
+    AllGenerated,
+}
+
 pub fn run<const PV: bool>(
     context: &mut SearchContext,
     depth: i8,
@@ -200,14 +206,22 @@ pub fn run<const PV: bool>(
     let mut best_move = Default::default();
     let mut moves: [Move; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
     let mut move_scores: [i16; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
-    let moves_count = context.board.get_moves::<false>(&mut moves, evasion_mask);
+    let mut move_generator_stage = MoveGeneratorStage::Empty;
 
-    assign_move_scores(context, &moves, &mut move_scores, moves_count, hash_move, ply);
+    let mut move_index = 0;
+    let mut moves_count = 0;
 
-    for move_index in 0..moves_count {
-        sort_next_move(&mut moves, &mut move_scores, move_index, moves_count);
-
-        let r#move = moves[move_index];
+    while let Some(r#move) = get_next_move(
+        context,
+        &mut move_generator_stage,
+        &mut moves,
+        &mut move_scores,
+        &mut move_index,
+        &mut moves_count,
+        hash_move,
+        evasion_mask,
+        ply,
+    ) {
         context.board.make_move(&r#move);
 
         let king_checked = context.board.is_king_checked(context.board.active_color);
@@ -354,6 +368,56 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
 
         move_scores[move_index] = 0;
     }
+}
+
+fn get_next_move(
+    context: &mut SearchContext,
+    stage: &mut MoveGeneratorStage,
+    moves: &mut [Move],
+    move_scores: &mut [i16],
+    move_index: &mut usize,
+    moves_count: &mut usize,
+    hash_move: Move,
+    evasion_mask: u64,
+    ply: u16,
+) -> Option<Move> {
+    match stage {
+        MoveGeneratorStage::Empty => {
+            context.statistics.move_generator_empty_stages += 1;
+
+            if hash_move == Default::default() {
+                *moves_count = context.board.get_moves::<false>(moves, evasion_mask);
+                assign_move_scores(context, moves, move_scores, *moves_count, hash_move, ply);
+                *stage = MoveGeneratorStage::AllGenerated;
+                context.statistics.move_generator_all_generated_stages += 1;
+            } else {
+                moves[0] = hash_move;
+                move_scores[0] = MOVE_ORDERING_HASH_MOVE;
+                *moves_count = 1;
+                *stage = MoveGeneratorStage::HashMove;
+                context.statistics.move_generator_hash_move_stages += 1;
+            }
+        }
+        MoveGeneratorStage::HashMove => {
+            *moves_count = context.board.get_moves::<false>(moves, evasion_mask);
+            assign_move_scores(context, moves, move_scores, *moves_count, hash_move, ply);
+            sort_next_move(moves, move_scores, *move_index, *moves_count);
+            *stage = MoveGeneratorStage::AllGenerated;
+            *move_index = 1;
+
+            context.statistics.move_generator_all_generated_stages += 1;
+        }
+        MoveGeneratorStage::AllGenerated => {
+            *move_index += 1;
+        }
+    }
+
+    if move_index >= moves_count {
+        return None;
+    }
+
+    sort_next_move(moves, move_scores, *move_index, *moves_count);
+    Some(moves[*move_index])
 }
 
 fn razoring_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, alpha: i16, friendly_king_checked: bool) -> bool {

@@ -237,6 +237,11 @@ fn handle_benchmark() {
         "PVS: {} full-window searches, {} zero-window searches, {} rejected ({:.2}%)",
         result.pvs_full_window_searches, result.pvs_zero_window_searches, result.pvs_rejected_searches, pvs_rejected_searches_percent
     );
+    
+    println!(
+        "Move generator stages: {} empty, {} hash moves, {} all generated",
+        result.move_generator_empty_stages, result.move_generator_hash_move_stages, result.move_generator_all_generated_stages
+    );
 }
 
 fn handle_evaluate(input: Vec<&str>) {

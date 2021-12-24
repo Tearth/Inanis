@@ -51,6 +51,10 @@ pub struct BenchmarkResult {
     pub pawn_hashtable_hits: u64,
     pub pawn_hashtable_misses: u64,
     pub pawn_hashtable_collisions: u64,
+
+    pub move_generator_empty_stages: u64,
+    pub move_generator_hash_move_stages: u64,
+    pub move_generator_all_generated_stages: u64,
 }
 
 pub fn run() -> BenchmarkResult {
@@ -160,6 +164,10 @@ pub fn run() -> BenchmarkResult {
         benchmark_result.pawn_hashtable_hits += result.statistics.pawn_hashtable_hits;
         benchmark_result.pawn_hashtable_misses += result.statistics.pawn_hashtable_misses;
         benchmark_result.pawn_hashtable_collisions += result.statistics.pawn_hashtable_collisions;
+
+        benchmark_result.move_generator_empty_stages += result.statistics.move_generator_empty_stages;
+        benchmark_result.move_generator_hash_move_stages += result.statistics.move_generator_hash_move_stages;
+        benchmark_result.move_generator_all_generated_stages += result.statistics.move_generator_all_generated_stages;
     }
 
     benchmark_result.time = ((Utc::now() - benchmark_time_start).num_milliseconds() as f32) / 1000.0;
