@@ -39,9 +39,12 @@ pub const MOVE_ORDERING_HISTORY_MOVE: u8 = 180;
 pub const MOVE_ORDERING_HISTORY_MOVE_OFFSET: i16 = -90;
 pub const MOVE_ORDERING_LOSING_CAPTURES_OFFSET: i16 = -100;
 
+#[derive(std::cmp::PartialEq)]
 enum MoveGeneratorStage {
-    Empty,
-    HashMove,
+    ReadyToCheckHashMove,
+    ReadyToGenerateCaptures,
+    Captures,
+    ReadyToGenerateQuietMoves,
     AllGenerated,
 }
 
@@ -206,7 +209,7 @@ pub fn run<const PV: bool>(
     let mut best_move = Default::default();
     let mut moves: [Move; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
     let mut move_scores: [i16; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
-    let mut move_generator_stage = MoveGeneratorStage::Empty;
+    let mut move_generator_stage = MoveGeneratorStage::ReadyToCheckHashMove;
 
     let mut move_index = 0;
     let mut moves_count = 0;
@@ -312,8 +315,8 @@ pub fn run<const PV: bool>(
     best_score
 }
 
-fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut [i16], moves_count: usize, tt_move: Move, ply: u16) {
-    for move_index in 0..moves_count {
+fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut [i16], start_index: usize, moves_count: usize, tt_move: Move, ply: u16) {
+    for move_index in start_index..moves_count {
         let r#move = moves[move_index];
 
         if r#move == tt_move {
@@ -381,43 +384,75 @@ fn get_next_move(
     evasion_mask: u64,
     ply: u16,
 ) -> Option<Move> {
-    match stage {
-        MoveGeneratorStage::Empty => {
-            context.statistics.move_generator_empty_stages += 1;
+    if *stage == MoveGeneratorStage::Captures || *stage == MoveGeneratorStage::AllGenerated {
+        *move_index += 1;
+    }
 
-            if hash_move == Default::default() {
-                *moves_count = context.board.get_moves::<false>(moves, evasion_mask);
-                assign_move_scores(context, moves, move_scores, *moves_count, hash_move, ply);
+    loop {
+        match stage {
+            MoveGeneratorStage::ReadyToCheckHashMove => {
+                *stage = MoveGeneratorStage::ReadyToGenerateCaptures;
+
+                if hash_move != Default::default() {
+                    moves[0] = hash_move;
+                    move_scores[0] = MOVE_ORDERING_HASH_MOVE;
+                    context.statistics.move_generator_hash_move_stages += 1;
+
+                    *moves_count = 1;
+                    return Some(hash_move);
+                }
+            }
+            MoveGeneratorStage::ReadyToGenerateCaptures => {
+                *moves_count = context.board.get_moves::<true>(moves, 0, evasion_mask);
+                if *moves_count == 0 {
+                    *stage = MoveGeneratorStage::ReadyToGenerateQuietMoves;
+                    continue;
+                }
+
+                assign_move_scores(context, moves, move_scores, 0, *moves_count, hash_move, ply);
+                *stage = MoveGeneratorStage::Captures;
+            }
+            MoveGeneratorStage::Captures => {
+                if move_index >= moves_count {
+                    *stage = MoveGeneratorStage::ReadyToGenerateQuietMoves;
+                    continue;
+                }
+
+                let r#move = sort_next_move(moves, move_scores, *move_index, *moves_count);
+                if r#move == hash_move {
+                    *move_index += 1;
+                    continue;
+                }
+
+                if move_scores[*move_index] < MOVE_ORDERING_WINNING_CAPTURES_OFFSET {
+                    *stage = MoveGeneratorStage::ReadyToGenerateQuietMoves;
+                    continue;
+                }
+
+                return Some(r#move);
+            }
+            MoveGeneratorStage::ReadyToGenerateQuietMoves => {
+                let original_moves_count = *moves_count;
+                *moves_count = context.board.get_moves::<false>(moves, *moves_count, evasion_mask);
+                assign_move_scores(context, moves, move_scores, original_moves_count, *moves_count, hash_move, ply);
+
                 *stage = MoveGeneratorStage::AllGenerated;
-                context.statistics.move_generator_all_generated_stages += 1;
-            } else {
-                moves[0] = hash_move;
-                move_scores[0] = MOVE_ORDERING_HASH_MOVE;
-                *moves_count = 1;
-                *stage = MoveGeneratorStage::HashMove;
-                context.statistics.move_generator_hash_move_stages += 1;
+            }
+            MoveGeneratorStage::AllGenerated => {
+                if move_index >= moves_count {
+                    return None;
+                }
+
+                let r#move = sort_next_move(moves, move_scores, *move_index, *moves_count);
+                if r#move == hash_move {
+                    *move_index += 1;
+                    continue;
+                }
+
+                return Some(r#move);
             }
         }
-        MoveGeneratorStage::HashMove => {
-            *moves_count = context.board.get_moves::<false>(moves, evasion_mask);
-            assign_move_scores(context, moves, move_scores, *moves_count, hash_move, ply);
-            sort_next_move(moves, move_scores, *move_index, *moves_count);
-            *stage = MoveGeneratorStage::AllGenerated;
-            *move_index = 1;
-
-            context.statistics.move_generator_all_generated_stages += 1;
-        }
-        MoveGeneratorStage::AllGenerated => {
-            *move_index += 1;
-        }
     }
-
-    if move_index >= moves_count {
-        return None;
-    }
-
-    sort_next_move(moves, move_scores, *move_index, *moves_count);
-    Some(moves[*move_index])
 }
 
 fn razoring_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, alpha: i16, friendly_king_checked: bool) -> bool {

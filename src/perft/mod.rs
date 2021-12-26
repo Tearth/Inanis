@@ -43,7 +43,7 @@ pub fn run_internal(context: &mut PerftContext, depth: i32) -> u64 {
     }
 
     let mut moves: [Move; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
-    let moves_count = context.board.get_moves::<false>(&mut moves, u64::MAX);
+    let moves_count = context.board.get_all_moves(&mut moves, u64::MAX);
 
     let mut count = 0;
     for r#move in &moves[0..moves_count] {

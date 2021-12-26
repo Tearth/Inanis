@@ -17,7 +17,7 @@ pub fn run(depth: i32, board: &mut Bitboard, hashtable_size: usize, threads_coun
     let mut threads = Vec::new();
 
     let mut moves: [Move; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
-    let moves_count = board.get_moves::<false>(&mut moves, u64::MAX);
+    let moves_count = board.get_all_moves(&mut moves, u64::MAX);
 
     for r#move in &moves[0..moves_count] {
         let mut cloned_board = board.clone();

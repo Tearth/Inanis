@@ -71,14 +71,21 @@ impl Bitboard {
         Ok(board)
     }
 
-    pub fn get_moves<const CAPTURES_ONLY: bool>(&self, moves: &mut [Move], evasion_mask: u64) -> usize {
+    pub fn get_moves<const CAPTURES: bool>(&self, moves: &mut [Move], mut index: usize, evasion_mask: u64) -> usize {
+        index = movescan::scan_pawn_moves::<CAPTURES>(self, moves, index, evasion_mask);
+        index = movescan::scan_piece_moves::<KNIGHT, CAPTURES>(self, moves, index, evasion_mask);
+        index = movescan::scan_piece_moves::<BISHOP, CAPTURES>(self, moves, index, evasion_mask);
+        index = movescan::scan_piece_moves::<ROOK, CAPTURES>(self, moves, index, evasion_mask);
+        index = movescan::scan_piece_moves::<QUEEN, CAPTURES>(self, moves, index, evasion_mask);
+        index = movescan::scan_piece_moves::<KING, CAPTURES>(self, moves, index, evasion_mask);
+
+        index
+    }
+
+    pub fn get_all_moves(&self, moves: &mut [Move], evasion_mask: u64) -> usize {
         let mut index = 0;
-        index = movescan::scan_pawn_moves::<CAPTURES_ONLY>(self, moves, index, evasion_mask);
-        index = movescan::scan_piece_moves::<KNIGHT, CAPTURES_ONLY>(self, moves, index, evasion_mask);
-        index = movescan::scan_piece_moves::<BISHOP, CAPTURES_ONLY>(self, moves, index, evasion_mask);
-        index = movescan::scan_piece_moves::<ROOK, CAPTURES_ONLY>(self, moves, index, evasion_mask);
-        index = movescan::scan_piece_moves::<QUEEN, CAPTURES_ONLY>(self, moves, index, evasion_mask);
-        index = movescan::scan_piece_moves::<KING, CAPTURES_ONLY>(self, moves, index, evasion_mask);
+        index = self.get_moves::<true>(moves, index, evasion_mask);
+        index = self.get_moves::<false>(moves, index, evasion_mask);
 
         index
     }

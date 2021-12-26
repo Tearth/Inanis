@@ -9,7 +9,7 @@ use std::u64;
 
 pub fn run(depth: i32, board: &mut Bitboard) -> Vec<(String, u64)> {
     let mut moves: [Move; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
-    let moves_count = board.get_moves::<false>(&mut moves, u64::MAX);
+    let moves_count = board.get_all_moves(&mut moves, u64::MAX);
 
     let hashtable = Arc::new(PerftHashTable::new(0));
     let mut context = PerftContext::new(board, &hashtable, false, false);
