@@ -293,7 +293,7 @@ pub fn run<const PV: bool>(
         return INVALID_SCORE;
     }
 
-    if best_score == -CHECKMATE_SCORE + (ply as i16) + 2 && !friendly_king_checked {
+    if best_score == -CHECKMATE_SCORE + (ply as i16) + 1 && !friendly_king_checked {
         return DRAW_SCORE;
     }
 
