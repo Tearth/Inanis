@@ -85,10 +85,8 @@ pub fn run<const PV: bool>(
     }
 
     if context.board.is_threefold_repetition_draw() || context.board.is_fifty_move_rule_draw() {
-        if !friendly_king_checked && !context.board.is_king_checked(context.board.active_color ^ 1) {
-            context.statistics.leafs_count += 1;
-            return DRAW_SCORE;
-        }
+        context.statistics.leafs_count += 1;
+        return DRAW_SCORE;
     }
 
     if depth <= 0 {
