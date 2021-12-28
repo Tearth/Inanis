@@ -598,9 +598,20 @@ impl Bitboard {
         }
 
         let mut repetitions_count = 1;
-        for hash in &self.hash_stack {
-            if *hash == self.hash {
+        let mut from = self.hash_stack.len() - self.halfmove_clock as usize;
+        let to = self.hash_stack.len();
+
+        if from > 1024 {
+            from = 0;
+        }
+
+        for hash_index in from..to {
+            if self.hash_stack[hash_index] == self.hash {
                 repetitions_count += 1;
+
+                if repetitions_count >= 3 {
+                    return true;
+                }
             }
         }
 
