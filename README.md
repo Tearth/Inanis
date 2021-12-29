@@ -6,7 +6,7 @@ At the current stage, it's too early to make any official releases, thus you hav
 
 ## Algorithms
  - **board representation**: bitboards (hybrid of make/undo scheme and storing data on stacks)
- - **move generator**: magic bitboards, precalculated arrays for knight and king
+ - **move generator**: staged (hash move, captures, quiet moves), magic bitboards, precalculated arrays for knight and king
  - **move ordering**: hash move, good captures (SEE with support for x-ray attacks), killer/history table
  - **search**: negamax, alpha-beta pruning, quiescence search, null-move pruning, static null move pruning, razoring, late move reduction
  - **cache**: transposition table, pawn hash table
@@ -19,7 +19,7 @@ At the current stage, it's too early to make any official releases, thus you hav
  evaluate [fen] - show score for the position
  magic - generate magic numbers
  test [epd] [depth] [tries_to_confirm] - run test of positions
- tuner [epd] [output] [lock_material] [randomize] - run tuning
+ tuner [epd] [output] [lock_material] [randomize] [threads_count] - run tuning
  uci - run Universal Chess Interface
  quit - close the application
 
@@ -40,4 +40,5 @@ At the current stage, it's too early to make any official releases, thus you hav
 ```
 
 ## Inspirational music
-[![Violet](https://img.youtube.com/vi/8ZdLXELdF9Q/0.jpg)](https://www.youtube.com/watch?v=8ZdLXELdF9Q)
+[![Music 1](https://www.youtube.com/watch?v=NIv_yYKl9tQ)](https://www.youtube.com/watch?v=NIv_yYKl9tQ)
+[![Music 2](https://img.youtube.com/vi/8ZdLXELdF9Q/0.jpg)](https://www.youtube.com/watch?v=8ZdLXELdF9Q)
