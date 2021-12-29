@@ -1,16 +1,20 @@
 # Inanis
-Experimental UCI chess engine written in Rust, proud successor of [Proxima b](https://github.com/Tearth/Proxima-b), [Proxima b 2.0](https://github.com/Tearth/Proxima-b-2.0) and [Cosette](https://github.com/Tearth/Cosette). The project is written after hours for educational purposes, with the goal to reach 2600 Elo (or at least to be stronger than the last version of [Cosette](https://github.com/Tearth/Cosette) which was about 2500 Elo).
+UCI chess engine written in Rust, proud successor of [Proxima b](https://github.com/Tearth/Proxima-b), [Proxima b 2.0](https://github.com/Tearth/Proxima-b-2.0) and [Cosette](https://github.com/Tearth/Cosette). The project is written after hours for educational purposes, ~~with the goal to reach 2600 Elo (or at least to be stronger than the last version of [Cosette](https://github.com/Tearth/Cosette) which was about 2500 Elo)~~ with the goal to reach 3000 Elo.
 
+**Current estimated strength**: 2700 Elo (29.12.2021)
 ## How to play
 At the current stage, it's too early to make any official releases, thus you have to compile the binary yourself using Rust toolkit. After this, use your favorite GUI client compatible with UCI protocol (the engine still doesn't support some commands, but should be playable in typical games). Also, I expect in the future to make the Lichess account to make it more available.
 
 ## Algorithms
- - **board representation**: bitboards (hybrid of make/undo scheme and storing data on stacks)
+ - **board representation**: bitboards (a hybrid of make/undo scheme and storing data on stacks)
  - **move generator**: staged (hash move, captures, quiet moves), magic bitboards, precalculated arrays for knight and king
  - **move ordering**: hash move, good captures (SEE with support for x-ray attacks), killer/history table
  - **search**: negamax, alpha-beta pruning, quiescence search, null-move pruning, static null move pruning, razoring, late move reduction
  - **cache**: transposition table, pawn hash table
  - **evaluation**: material, piece-square table, pawn structure, mobility, king safety
+
+## Contributing
+Because Inanis is my pet project, I don't currently accept pull requests - this may or may not change in the future, depending on the way the project will go. However, feel free to make issues or suggestions, they are greatly appreciated. 
 
 ## Commands
 ```
