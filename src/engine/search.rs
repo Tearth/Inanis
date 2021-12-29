@@ -141,7 +141,7 @@ pub fn run<const PV: bool>(
         }
     };
 
-    if razoring_can_be_applied::<PV>(context, depth, alpha, friendly_king_checked) {
+    if razoring_can_be_applied::<PV>(depth, alpha, friendly_king_checked) {
         let margin = razoring_get_margin(depth);
         let lazy_evaluation = -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate_lazy();
 
@@ -158,7 +158,7 @@ pub fn run<const PV: bool>(
         }
     }
 
-    if static_null_move_pruning_can_be_applied::<PV>(context, depth, beta, friendly_king_checked) {
+    if static_null_move_pruning_can_be_applied::<PV>(depth, beta, friendly_king_checked) {
         let margin = static_null_move_pruning_get_margin(depth);
         let lazy_evaluation = -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate_lazy();
 
@@ -226,7 +226,7 @@ pub fn run<const PV: bool>(
         context.board.make_move(&r#move);
 
         let king_checked = context.board.is_king_checked(context.board.active_color);
-        let r = if late_move_reduction_can_be_applied(context, depth, &r#move, move_index, move_scores[move_index], king_checked) {
+        let r = if late_move_reduction_can_be_applied(depth, &r#move, move_index, move_scores[move_index], king_checked) {
             late_move_reduction_get_r(move_index)
         } else {
             0
@@ -453,7 +453,7 @@ fn get_next_move(
     }
 }
 
-fn razoring_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, alpha: i16, friendly_king_checked: bool) -> bool {
+fn razoring_can_be_applied<const PV: bool>(depth: i8, alpha: i16, friendly_king_checked: bool) -> bool {
     !PV && depth >= RAZORING_MIN_DEPTH && depth <= RAZORING_MAX_DEPTH && !is_score_near_checkmate(alpha) && !friendly_king_checked
 }
 
@@ -461,7 +461,7 @@ fn razoring_get_margin(depth: i8) -> i16 {
     (depth as i16) * RAZORING_DEPTH_MARGIN_MULTIPLIER
 }
 
-fn static_null_move_pruning_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, beta: i16, friendly_king_checked: bool) -> bool {
+fn static_null_move_pruning_can_be_applied<const PV: bool>(depth: i8, beta: i16, friendly_king_checked: bool) -> bool {
     !PV && depth >= STATIC_NULL_MOVE_PRUNING_MIN_DEPTH
         && depth <= STATIC_NULL_MOVE_PRUNING_MAX_DEPTH
         && !is_score_near_checkmate(beta)
@@ -494,14 +494,7 @@ fn null_move_pruning_get_r(depth: i8) -> i8 {
     }
 }
 
-fn late_move_reduction_can_be_applied(
-    context: &mut SearchContext,
-    depth: i8,
-    r#move: &Move,
-    move_index: usize,
-    move_score: i16,
-    friendly_king_checked: bool,
-) -> bool {
+fn late_move_reduction_can_be_applied(depth: i8, r#move: &Move, move_index: usize, move_score: i16, friendly_king_checked: bool) -> bool {
     depth >= LATE_MOVE_REDUCTION_MIN_DEPTH
         && move_index >= LATE_MOVE_REDUCTION_MIN_MOVE_INDEX
         && move_score != MOVE_ORDERING_KILLER_MOVE
