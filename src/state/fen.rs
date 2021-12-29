@@ -65,10 +65,7 @@ pub fn board_to_fen(board: &Bitboard) -> String {
     let halfmove_clock = halfmove_clock_to_fen(board);
     let fullmove_number = fullmove_number_to_fen(board);
 
-    format!(
-        "{} {} {} {} {} {}",
-        pieces, active_color, castling, en_passant, halfmove_clock, fullmove_number
-    )
+    format!("{} {} {} {} {} {}", pieces, active_color, castling, en_passant, halfmove_clock, fullmove_number)
 }
 
 fn get_epd_parameter(mut epd: &str, name: &[&str]) -> Option<String> {

@@ -28,9 +28,6 @@ impl HistoryTable {
 
 impl Default for HistoryTable {
     fn default() -> Self {
-        HistoryTable {
-            table: [[0; 64]; 64],
-            max: 1,
-        }
+        HistoryTable { table: [[0; 64]; 64], max: 1 }
     }
 }
