@@ -593,19 +593,19 @@ impl Bitboard {
     }
 
     pub fn is_threefold_repetition_draw(&self) -> bool {
-        if self.null_moves > 0 {
+        if self.hash_stack.len() < 6 || self.null_moves > 0 {
             return false;
         }
 
         let mut repetitions_count = 1;
         let mut from = self.hash_stack.len() - self.halfmove_clock as usize;
-        let to = self.hash_stack.len();
+        let to = self.hash_stack.len() - 1;
 
         if from > 1024 {
             from = 0;
         }
 
-        for hash_index in from..to {
+        for hash_index in (from..to).rev().step_by(2) {
             if self.hash_stack[hash_index] == self.hash {
                 repetitions_count += 1;
 
@@ -615,7 +615,7 @@ impl Bitboard {
             }
         }
 
-        repetitions_count >= 3
+        false
     }
 
     pub fn is_fifty_move_rule_draw(&self) -> bool {
