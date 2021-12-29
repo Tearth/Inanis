@@ -157,11 +157,6 @@ impl TranspositionTable {
         ((filled_entries as f32) / (RESOLUTION as f32)) * 100.0
     }
 
-    pub fn clear(&mut self) {
-        self.table.clear();
-        self.table.resize(self.slots, Default::default());
-    }
-
     pub fn age_entries(&mut self) {
         for bucket_index in 0..self.table.len() {
             for entry_index in 0..BUCKET_SLOTS {

@@ -58,6 +58,7 @@ pub fn run() {
     println!("id name Inanis {}", VERSION);
     println!("id author {}", AUTHOR);
     println!("option name Hash type spin default 1 min 1 max 32768");
+    println!("option name Clear Hash type button");
     println!("uciok");
 
     loop {
@@ -258,11 +259,19 @@ fn handle_position(parameters: &[String], state: &mut Arc<UciState>) {
 fn handle_setoption(parameters: &[String], state: &mut Arc<UciState>) {
     wait_for_busy_flag(state);
 
-    if parameters.len() < 2 {
-        return;
+    if parameters.len() == 4 {
+        if parameters[2] == "Clear" && parameters[3] == "Hash" {
+            unsafe {
+                let transposition_table_size = (*state.options.get())["Hash"].parse::<usize>().unwrap() * 1024 * 1024;
+                *state.transposition_table.get() = TranspositionTable::new(transposition_table_size);
+                *state.pawn_hashtable.get() = PawnHashTable::new(1 * 1024 * 1024);
+                *state.killers_table.get() = Default::default();
+                *state.history_table.get() = Default::default();
+            }
+        }
+    } else if parameters.len() == 5 {
+        unsafe { (*state.options.get()).insert(parameters[2].to_string(), parameters[4].to_string()) };
     }
-
-    unsafe { (*state.options.get()).insert(parameters[2].to_string(), parameters[4].to_string()) };
 }
 
 fn handle_ucinewgame(state: &mut Arc<UciState>) {
