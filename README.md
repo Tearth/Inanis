@@ -40,5 +40,6 @@ At the current stage, it's too early to make any official releases, thus you hav
 ```
 
 ## Inspirational music
-[![Music 1](https://www.youtube.com/watch?v=NIv_yYKl9tQ)](https://www.youtube.com/watch?v=NIv_yYKl9tQ)
+[![Music 1](https://img.youtube.com/vi/NIv_yYKl9tQ/0.jpg)](https://www.youtube.com/watch?v=NIv_yYKl9tQ)
+
 [![Music 2](https://img.youtube.com/vi/8ZdLXELdF9Q/0.jpg)](https://www.youtube.com/watch?v=8ZdLXELdF9Q)
