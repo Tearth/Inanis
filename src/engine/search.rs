@@ -203,7 +203,7 @@ pub fn run<const PV: bool>(
         u64::MAX
     };
 
-    let mut best_score = i16::MIN;
+    let mut best_score = -CHECKMATE_SCORE;
     let mut best_move = Default::default();
     let mut moves: [Move; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
     let mut move_scores: [i16; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
