@@ -598,7 +598,7 @@ impl Bitboard {
         }
 
         let mut repetitions_count = 1;
-        let mut from = self.hash_stack.len() - self.halfmove_clock as usize;
+        let mut from = self.hash_stack.len().wrapping_sub(self.halfmove_clock as usize);
         let to = self.hash_stack.len() - 1;
 
         if from > 1024 {
