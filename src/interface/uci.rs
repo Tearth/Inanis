@@ -271,6 +271,13 @@ fn handle_setoption(parameters: &[String], state: &mut Arc<UciState>) {
         }
     } else if parameters.len() == 5 {
         unsafe { (*state.options.get()).insert(parameters[2].to_string(), parameters[4].to_string()) };
+
+        if parameters[2] == "Hash" {
+            unsafe {
+                let transposition_table_size = parameters[4].parse::<usize>().unwrap() * 1024 * 1024;
+                *state.transposition_table.get() = TranspositionTable::new(transposition_table_size);
+            }
+        }
     }
 }
 
