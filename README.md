@@ -2,8 +2,12 @@
 UCI chess engine written in Rust, proud successor of [Proxima b](https://github.com/Tearth/Proxima-b), [Proxima b 2.0](https://github.com/Tearth/Proxima-b-2.0) and [Cosette](https://github.com/Tearth/Cosette). The project is written after hours for educational purposes, ~~with the goal to reach 2600 Elo (or at least to be stronger than the last version of [Cosette](https://github.com/Tearth/Cosette) which was about 2500 Elo)~~ with the goal to reach 3000 Elo.
 
 **Current estimated strength**: 2700 Elo (29.12.2021)
+
+## Releases
+At the current stage, it's too early to make any official releases, thus you have to compile the binary yourself using Rust toolkit. After this, use your favorite GUI client compatible with UCI protocol (the engine still doesn't support some commands, but should be playable in typical games). With the first release, Inanis will be also available on CCRL and other engine lists.
+
 ## How to play
-At the current stage, it's too early to make any official releases, thus you have to compile the binary yourself using Rust toolkit. After this, use your favorite GUI client compatible with UCI protocol (the engine still doesn't support some commands, but should be playable in typical games). Also, I expect in the future to make the Lichess account to make it more available.
+Inanis has an official lichess account, where you can try to challenge her - remember, that it's still a development version, so it might be not available from time to time (especially when I'm doing internal tests): https://lichess.org/@/InanisBot
 
 ## Algorithms
  - **board representation**: bitboards (a hybrid of make/undo scheme and storing data on stacks)
