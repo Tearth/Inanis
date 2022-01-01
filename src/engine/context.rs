@@ -210,7 +210,11 @@ impl<'a> Iterator for SearchContext<'a> {
         }
 
         if self.forced_depth == 0 && self.max_nodes_count == 0 {
-            if is_score_near_checkmate(score) || search_time * time_ratio > desired_time as f64 {
+            if search_time * time_ratio > desired_time as f64 {
+                self.search_done = true;
+            }
+
+            if is_score_near_checkmate(score) && self.current_depth >= (CHECKMATE_SCORE - score.abs()) as i8 {
                 self.search_done = true;
             }
         }
