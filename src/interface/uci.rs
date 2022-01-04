@@ -89,6 +89,7 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
         let mut forced_depth = 0;
         let mut max_nodes_count = 0;
         let mut max_move_time = 0;
+        let mut moves_to_go = 0;
 
         let mut iter = parameters[1..].iter().peekable();
         while let Some(token) = iter.next() {
@@ -135,6 +136,12 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
                         None => max_move_time,
                     }
                 }
+                "movestogo" => {
+                    moves_to_go = match iter.peek() {
+                        Some(value) => value.parse().unwrap_or(moves_to_go),
+                        None => moves_to_go,
+                    }
+                }
                 "infinite" => {
                     forced_depth = MAX_DEPTH;
                 }
@@ -167,6 +174,7 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
                 forced_depth,
                 max_nodes_count,
                 max_move_time,
+                moves_to_go,
                 &mut *state_arc.transposition_table.get(),
                 &mut *state_arc.pawn_hashtable.get(),
                 &mut *state_arc.killers_table.get(),

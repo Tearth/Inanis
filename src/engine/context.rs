@@ -25,6 +25,7 @@ pub struct SearchContext<'a> {
     pub forced_depth: i8,
     pub max_nodes_count: u64,
     pub max_move_time: u32,
+    pub moves_to_go: u32,
     pub search_time_start: DateTime<Utc>,
     pub last_search_time: f64,
     pub deadline: u32,
@@ -105,6 +106,7 @@ impl<'a> SearchContext<'a> {
         forced_depth: i8,
         max_nodes_count: u64,
         max_move_time: u32,
+        moves_to_go: u32,
         transposition_table: &'a mut TranspositionTable,
         pawn_hashtable: &'a mut PawnHashTable,
         killers_table: &'a mut KillersTable,
@@ -120,6 +122,7 @@ impl<'a> SearchContext<'a> {
             forced_depth,
             max_nodes_count,
             max_move_time,
+            moves_to_go,
             search_time_start: Utc::now(),
             last_search_time: 1.0,
             deadline: 0,
@@ -189,7 +192,7 @@ impl<'a> Iterator for SearchContext<'a> {
         let desired_time = if self.max_move_time != 0 {
             self.max_move_time
         } else {
-            clock::get_time_for_move(self.time, self.inc_time)
+            clock::get_time_for_move(self.time, self.inc_time, self.moves_to_go)
         };
 
         self.deadline = if self.max_move_time != 0 {

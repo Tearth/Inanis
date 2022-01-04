@@ -112,6 +112,7 @@ pub fn run() -> BenchmarkResult {
             14,
             0,
             0,
+            0,
             &mut transposition_table,
             &mut pawn_hashtable,
             &mut killers_table,
