@@ -53,6 +53,7 @@ pub fn run(epd_filename: &str, depth: i8, tries_to_confirm: i8) {
             0,
             0,
             0,
+            false,
             &mut transposition_table,
             &mut pawn_hashtable,
             &mut killers_table,

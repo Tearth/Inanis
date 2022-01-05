@@ -31,6 +31,7 @@ struct UciState {
     search_thread: UnsafeCell<Option<JoinHandle<()>>>,
     abort_token: UnsafeCell<AbortToken>,
     busy_flag: AtomicBool,
+    debug_mode: AtomicBool,
 }
 
 impl Default for UciState {
@@ -45,6 +46,7 @@ impl Default for UciState {
             search_thread: UnsafeCell::new(None),
             abort_token: UnsafeCell::new(Default::default()),
             busy_flag: AtomicBool::new(false),
+            debug_mode: AtomicBool::new(false),
         }
     }
 }
@@ -67,6 +69,7 @@ pub fn run() {
 
         let tokens: Vec<String> = input.split(' ').map(|v| v.trim().to_string()).collect();
         match tokens[0].to_lowercase().as_str() {
+            "debug" => handle_debug(&tokens, &mut state),
             "go" => handle_go(&tokens, &mut state),
             "isready" => handle_isready(&mut state),
             "position" => handle_position(&tokens, &mut state),
@@ -77,6 +80,14 @@ pub fn run() {
             _ => {}
         }
     }
+}
+
+fn handle_debug(parameters: &[String], state: &mut Arc<UciState>) {
+    if parameters.len() < 2 {
+        return;
+    }
+
+    (*state).debug_mode.store(matches!(parameters[1].as_str(), "on"), Ordering::Relaxed);
 }
 
 fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
@@ -175,6 +186,7 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
                 max_nodes_count,
                 max_move_time,
                 moves_to_go,
+                state_arc.debug_mode.load(Ordering::Relaxed),
                 &mut *state_arc.transposition_table.get(),
                 &mut *state_arc.pawn_hashtable.get(),
                 &mut *state_arc.killers_table.get(),

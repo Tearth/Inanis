@@ -30,11 +30,12 @@ pub struct SearchContext<'a> {
     pub last_search_time: f64,
     pub deadline: u32,
     pub search_done: bool,
-    pub abort_token: &'a mut AbortToken,
+    pub uci_debug: bool,
     pub transposition_table: &'a mut TranspositionTable,
     pub pawn_hashtable: &'a mut PawnHashTable,
     pub killers_table: &'a mut KillersTable,
     pub history_table: &'a mut HistoryTable,
+    pub abort_token: &'a mut AbortToken,
 }
 
 pub struct SearchResult {
@@ -107,6 +108,7 @@ impl<'a> SearchContext<'a> {
         max_nodes_count: u64,
         max_move_time: u32,
         moves_to_go: u32,
+        uci_debug: bool,
         transposition_table: &'a mut TranspositionTable,
         pawn_hashtable: &'a mut PawnHashTable,
         killers_table: &'a mut KillersTable,
@@ -127,11 +129,12 @@ impl<'a> SearchContext<'a> {
             last_search_time: 1.0,
             deadline: 0,
             search_done: false,
-            abort_token,
+            uci_debug,
             transposition_table,
             pawn_hashtable,
             killers_table,
             history_table,
+            abort_token,
         }
     }
 
@@ -202,6 +205,10 @@ impl<'a> Iterator for SearchContext<'a> {
         } else {
             u32::MAX
         };
+
+        if self.uci_debug {
+            println!("info string desired_time={}", desired_time);
+        }
 
         let king_checked = self.board.is_king_checked(self.board.active_color);
         let score = search::run::<true>(self, self.current_depth, 0, MIN_ALPHA, MIN_BETA, true, king_checked);
