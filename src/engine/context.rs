@@ -5,6 +5,11 @@ use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
 use crate::cache::search::TranspositionTableScoreType;
 use crate::engine::clock;
+use crate::evaluation::material;
+use crate::evaluation::mobility;
+use crate::evaluation::pawns;
+use crate::evaluation::pst;
+use crate::evaluation::safety;
 use crate::state::board::Bitboard;
 use crate::state::movescan::Move;
 use chrono::DateTime;
@@ -207,7 +212,19 @@ impl<'a> Iterator for SearchContext<'a> {
         };
 
         if self.uci_debug {
-            println!("info string desired_time={}", desired_time);
+            let mut white_attack_mask = 0;
+            let mut black_attack_mask = 0;
+
+            let material_evaluation = material::evaluate(self.board);
+            let pst_evaluation = pst::evaluate(self.board);
+            let mobility_evaluation = mobility::evaluate(self.board, &mut white_attack_mask, &mut black_attack_mask);
+            let safety_evaluation = safety::evaluate(self.board, white_attack_mask, black_attack_mask);
+            let pawns_evaluation = pawns::evaluate_without_cache(self.board);
+
+            println!(
+                "info string desired_time={}, material={}, pst={}, mobility={}, safety={}, pawns={}",
+                desired_time, material_evaluation, pst_evaluation, mobility_evaluation, safety_evaluation, pawns_evaluation
+            );
         }
 
         let king_checked = self.board.is_king_checked(self.board.active_color);
