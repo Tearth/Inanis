@@ -402,6 +402,8 @@ fn get_next_move(
             }
             MoveGeneratorStage::ReadyToGenerateCaptures => {
                 *moves_count = context.board.get_moves::<true>(moves, 0, evasion_mask);
+                context.statistics.move_generator_captures_stages += 1;
+
                 if *moves_count == 0 {
                     *stage = MoveGeneratorStage::ReadyToGenerateQuietMoves;
                     continue;
@@ -432,6 +434,8 @@ fn get_next_move(
             MoveGeneratorStage::ReadyToGenerateQuietMoves => {
                 let original_moves_count = *moves_count;
                 *moves_count = context.board.get_moves::<false>(moves, *moves_count, evasion_mask);
+                context.statistics.move_generator_quiet_moves_stages += 1;
+
                 assign_move_scores(context, moves, move_scores, original_moves_count, *moves_count, hash_move, ply);
 
                 *stage = MoveGeneratorStage::AllGenerated;

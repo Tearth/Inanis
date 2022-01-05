@@ -97,9 +97,9 @@ pub struct SearchStatistics {
     pub pawn_hashtable_misses: u64,
     pub pawn_hashtable_collisions: u64,
 
-    pub move_generator_empty_stages: u64,
     pub move_generator_hash_move_stages: u64,
-    pub move_generator_all_generated_stages: u64,
+    pub move_generator_captures_stages: u64,
+    pub move_generator_quiet_moves_stages: u64,
 
     pub max_ply: u16,
 }

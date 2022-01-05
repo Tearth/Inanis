@@ -239,8 +239,8 @@ fn handle_benchmark() {
     );
 
     println!(
-        "Move generator stages: {} empty, {} hash moves, {} all generated",
-        result.move_generator_empty_stages, result.move_generator_hash_move_stages, result.move_generator_all_generated_stages
+        "Move generator stages: {} hash moves, {} captures, {} quiet",
+        result.move_generator_hash_move_stages, result.move_generator_captures_stages, result.move_generator_quiet_moves_stages
     );
 }
 
