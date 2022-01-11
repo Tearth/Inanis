@@ -43,6 +43,9 @@ pub const CENTER: u64 = 0x3c3c3c3c0000;
 pub const OUTSIDE: u64 = 0xffffc3c3c3c3ffff;
 pub const EDGE: u64 = 0xff818181818181ff;
 
+pub const WHITE_FIELDS: u64 = 0xaa55aa55aa55aa55;
+pub const BLACK_FIELDS: u64 = 0x55aa55aa55aa55aa;
+
 #[inline(always)]
 pub fn get_lsb(value: u64) -> u64 {
     value & value.wrapping_neg()

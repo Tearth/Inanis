@@ -84,7 +84,7 @@ pub fn run<const PV: bool>(
         return CHECKMATE_SCORE - (ply as i16);
     }
 
-    if context.board.is_threefold_repetition_draw() || context.board.is_fifty_move_rule_draw() {
+    if context.board.is_threefold_repetition_draw() || context.board.is_fifty_move_rule_draw() || context.board.is_insufficient_material_draw() {
         context.statistics.leafs_count += 1;
         return DRAW_SCORE;
     }

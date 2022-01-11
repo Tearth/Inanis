@@ -626,6 +626,45 @@ impl Bitboard {
         self.halfmove_clock >= 100
     }
 
+    pub fn is_insufficient_material_draw(&self) -> bool {
+        let white_material = self.material_scores[WHITE as usize] - unsafe { PIECE_VALUE[KING as usize] };
+        let black_material = self.material_scores[BLACK as usize] - unsafe { PIECE_VALUE[KING as usize] };
+        let bishop_value = unsafe { PIECE_VALUE[BISHOP as usize] };
+
+        if white_material <= bishop_value && black_material <= bishop_value {
+            // King vs King
+            if white_material == 0 && black_material == 0 {
+                return true;
+            }
+
+            let light_pieces_count = 0
+                + bit_count(self.pieces[WHITE as usize][KNIGHT as usize])
+                + bit_count(self.pieces[WHITE as usize][BISHOP as usize])
+                + bit_count(self.pieces[BLACK as usize][KNIGHT as usize])
+                + bit_count(self.pieces[BLACK as usize][BISHOP as usize]);
+
+            // King + Knight/Bishop vs King
+            if light_pieces_count == 1 {
+                return true;
+            }
+
+            // King + Bishop (same color) vs King + Bishop (same color)
+            if light_pieces_count == 2 {
+                let white_bishops = self.pieces[WHITE as usize][BISHOP as usize];
+                let black_bishops = self.pieces[BLACK as usize][BISHOP as usize];
+
+                if white_bishops != 0 && black_bishops != 0 {
+                    let all_bishops = white_bishops | black_bishops;
+                    if (all_bishops & WHITE_FIELDS) == all_bishops || (all_bishops & BLACK_FIELDS) == all_bishops {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        false
+    }
+
     pub fn get_game_phase(&self) -> f32 {
         let total_material = self.material_scores[WHITE as usize] + self.material_scores[BLACK as usize] - 2 * unsafe { PIECE_VALUE[KING as usize] };
         (total_material as f32) / (unsafe { INITIAL_MATERIAL } as f32)
