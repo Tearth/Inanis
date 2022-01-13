@@ -630,8 +630,9 @@ impl Bitboard {
         let white_material = self.material_scores[WHITE as usize] - unsafe { PIECE_VALUE[KING as usize] };
         let black_material = self.material_scores[BLACK as usize] - unsafe { PIECE_VALUE[KING as usize] };
         let bishop_value = unsafe { PIECE_VALUE[BISHOP as usize] };
+        let pawns_count = bit_count(self.pieces[WHITE as usize][PAWN as usize]) + bit_count(self.pieces[BLACK as usize][PAWN as usize]);
 
-        if white_material <= bishop_value && black_material <= bishop_value {
+        if white_material <= bishop_value && black_material <= bishop_value && pawns_count == 0 {
             // King vs King
             if white_material == 0 && black_material == 0 {
                 return true;
