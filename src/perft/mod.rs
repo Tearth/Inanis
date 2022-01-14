@@ -47,6 +47,10 @@ pub fn run_internal(context: &mut PerftContext, depth: i32) -> u64 {
 
     let mut count = 0;
     for r#move in &moves[0..moves_count] {
+        if context.check_integrity && !r#move.is_legal(context.board) {
+            panic!("Integrity check failed: move detected as illegal");
+        }
+
         context.board.make_move(r#move);
 
         if !context.board.is_king_checked(context.board.active_color ^ 1) {

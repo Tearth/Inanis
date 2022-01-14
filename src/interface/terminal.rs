@@ -242,6 +242,11 @@ fn handle_benchmark() {
         "Move generator stages: {} hash moves, {} captures, {} quiet",
         result.move_generator_hash_move_stages, result.move_generator_captures_stages, result.move_generator_quiet_moves_stages
     );
+
+    println!(
+        "Transposition table move legality check: {} legal, {} illegal",
+        result.tt_legal_hashmoves, result.tt_illegal_hashmoves
+    );
 }
 
 fn handle_evaluate(input: Vec<&str>) {

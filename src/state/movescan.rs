@@ -1,6 +1,15 @@
 use super::board::Bitboard;
 use super::board::CastlingRights;
+use super::movegen::get_bishop_moves;
+use super::movegen::get_king_moves;
+use super::movegen::get_knight_moves;
+use super::movegen::get_queen_moves;
+use super::movegen::get_rook_moves;
+use super::patterns::get_box;
 use super::*;
+use super::patterns::get_diagonals;
+use super::patterns::get_file;
+use super::patterns::get_rank;
 use crate::engine::*;
 use crate::evaluation::parameters::*;
 use std::mem::MaybeUninit;
@@ -321,6 +330,101 @@ impl Move {
 
     pub fn is_castling(&self) -> bool {
         self.get_flags() == MoveFlags::SHORT_CASTLING || self.get_flags() == MoveFlags::LONG_CASTLING
+    }
+
+    pub fn is_legal(&self, board: &Bitboard) -> bool {
+        let from = self.get_from();
+        let to = self.get_to();
+        let piece = board.get_piece(from);
+        let piece_color = board.get_piece_color(from);
+
+        if piece == u8::MAX || piece_color != board.active_color {
+            return false;
+        }
+
+        let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
+        let moves = match piece {
+            PAWN => {
+                if self.get_flags() == MoveFlags::DOUBLE_PUSH {
+                    match board.active_color {
+                        WHITE => (1u64 << (from + 16)),
+                        BLACK => (1u64 << (from - 16)),
+                        _ => panic!("Invalid color"),
+                    }
+                } else if self.get_flags() == MoveFlags::EN_PASSANT {
+                    board.en_passant
+                } else {
+                    (match board.active_color {
+                        WHITE => (1u64 << (from + 7)) | (1u64 << (from + 8)) | (1u64 << (from + 9)),
+                        BLACK => (1u64 << (from - 7)) | (1u64 << (from - 8)) | (1u64 << (from - 9)),
+                        _ => panic!("Invalid color"),
+                    }) & get_box(from as usize)
+                }
+            }
+            KNIGHT => get_knight_moves(from as usize),
+            BISHOP => get_diagonals(from as usize),
+            ROOK => get_file(from as usize) | get_rank(from as usize),
+            QUEEN => get_diagonals(from as usize) | get_file(from as usize) | get_rank(from as usize),
+            KING => {
+                if self.get_flags() == MoveFlags::SHORT_CASTLING {
+                    1u64 << (from - 2)
+                } else if self.get_flags() == MoveFlags::LONG_CASTLING {
+                    1u64 << (from + 2)
+                } else {
+                    get_king_moves(from as usize)
+                }
+            }
+            _ => panic!("Invalid piece"),
+        };
+
+        if (moves & (1u64 << to)) == 0 {
+            return false;
+        }
+
+        let target_piece = board.get_piece(to);
+        let target_piece_color = board.get_piece_color(to);
+
+        if self.is_en_passant() || (self.is_promotion() && !self.is_capture()) {
+            if piece == PAWN && target_piece == u8::MAX {
+                return true;
+            }
+        } else if self.is_capture() {
+            if target_piece != u8::MAX && target_piece != KING && piece_color != target_piece_color {
+                return true;
+            }
+        } else if self.is_quiet() {
+            if target_piece == u8::MAX {
+                return true;
+            }
+        } else if self.is_castling() {
+            if piece == KING && target_piece == u8::MAX {
+                let mut rook_field = 0;
+                let mut rook_target_field = 0;
+
+                match self.get_flags() {
+                    MoveFlags::SHORT_CASTLING => {
+                        rook_field = from - 3;
+                        rook_target_field = from - 1;
+                    }
+                    MoveFlags::LONG_CASTLING => {
+                        rook_field = from + 4;
+                        rook_target_field = from + 1;
+                    }
+                    _ => panic!("Invalid flags in legality check"),
+                };
+
+                if board.get_piece(rook_target_field) == u8::MAX
+                    && board.get_piece(rook_field) == ROOK
+                    && board.get_piece_color(rook_field) == board.active_color
+                {
+                    return true;
+                }
+            }
+        } else {
+            panic!("Can't check move legality")
+        }
+
+        false
     }
 }
 

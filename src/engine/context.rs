@@ -92,6 +92,9 @@ pub struct SearchStatistics {
     pub tt_misses: u64,
     pub tt_collisions: u64,
 
+    pub tt_legal_hashmoves: u64,
+    pub tt_illegal_hashmoves: u64,
+
     pub pawn_hashtable_added: u64,
     pub pawn_hashtable_hits: u64,
     pub pawn_hashtable_misses: u64,

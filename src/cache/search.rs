@@ -3,7 +3,7 @@ use crate::state::movescan::Move;
 use std::mem;
 use std::u64;
 
-const BUCKET_SLOTS: usize = 5;
+const BUCKET_SLOTS: usize = 8;
 
 bitflags! {
     pub struct TranspositionTableScoreType: u8 {
@@ -27,7 +27,7 @@ struct TranspositionTableBucket {
 
 #[derive(Clone, Copy)]
 pub struct TranspositionTableEntry {
-    pub key: u32,
+    pub key: u16,
     pub score: i16,
     pub best_move: Move,
     pub depth: i8,
@@ -173,8 +173,8 @@ impl TranspositionTable {
         }
     }
 
-    fn get_key(&self, hash: u64) -> u32 {
-        (hash >> 32) as u32
+    fn get_key(&self, hash: u64) -> u16 {
+        (hash >> 48) as u16
     }
 }
 
@@ -187,7 +187,7 @@ impl Default for TranspositionTableBucket {
 }
 
 impl TranspositionTableEntry {
-    pub fn new(key: u32, score: i16, best_move: Move, depth: i8, r#type: TranspositionTableScoreType) -> TranspositionTableEntry {
+    pub fn new(key: u16, score: i16, best_move: Move, depth: i8, r#type: TranspositionTableScoreType) -> TranspositionTableEntry {
         let type_age = r#type.bits;
         TranspositionTableEntry {
             key,

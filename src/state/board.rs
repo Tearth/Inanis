@@ -510,8 +510,21 @@ impl Bitboard {
         self.is_field_attacked(color, bit_scan(self.pieces[color as usize][KING as usize]))
     }
 
-    pub fn get_piece(&self, field: u8) -> u8 {
-        self.piece_table[field as usize]
+    pub fn get_piece(&self, field_index: u8) -> u8 {
+        self.piece_table[field_index as usize]
+    }
+
+    pub fn get_piece_color(&self, field_index: u8) -> u8 {
+        let piece = self.piece_table[field_index as usize];
+        if piece == u8::MAX {
+            return u8::MAX;
+        }
+
+        if ((1u64 << field_index) & self.occupancy[WHITE as usize]) != 0 {
+            WHITE
+        } else {
+            BLACK
+        }
     }
 
     pub fn add_piece(&mut self, color: u8, piece: u8, field: u8) {
