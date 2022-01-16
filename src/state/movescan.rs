@@ -1,7 +1,10 @@
 use super::board::Bitboard;
 use super::board::CastlingRights;
+use super::movegen::get_bishop_moves;
 use super::movegen::get_king_moves;
 use super::movegen::get_knight_moves;
+use super::movegen::get_queen_moves;
+use super::movegen::get_rook_moves;
 use super::patterns::get_box;
 use super::patterns::get_diagonals;
 use super::patterns::get_file;
@@ -339,6 +342,7 @@ impl Move {
             return false;
         }
 
+        let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
         let moves = match piece {
             PAWN => match self.get_flags() {
                 MoveFlags::DOUBLE_PUSH => match board.active_color {
@@ -356,9 +360,9 @@ impl Move {
                 }
             },
             KNIGHT => get_knight_moves(from as usize),
-            BISHOP => get_diagonals(from as usize),
-            ROOK => get_file(from as usize) | get_rank(from as usize),
-            QUEEN => get_diagonals(from as usize) | get_file(from as usize) | get_rank(from as usize),
+            BISHOP => get_bishop_moves(occupancy, from as usize),
+            ROOK => get_rook_moves(occupancy, from as usize),
+            QUEEN => get_queen_moves(occupancy, from as usize),
             KING => match self.get_flags() {
                 MoveFlags::SHORT_CASTLING => 1u64 << (from - 2),
                 MoveFlags::LONG_CASTLING => 1u64 << (from + 2),
