@@ -7,7 +7,8 @@
     clippy::nonminimal_bool,
     clippy::collapsible_if,
     clippy::single_char_add_str,
-    clippy::too_many_arguments
+    clippy::too_many_arguments,
+    clippy::if_same_then_else
 )]
 
 use engine::see;

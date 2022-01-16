@@ -390,9 +390,17 @@ impl Move {
             if target_piece == u8::MAX {
                 return true;
             }
-        } else if self.is_en_passant() || (self.is_promotion() && !self.is_capture()) {
+        } else if self.is_en_passant() {
             if piece == PAWN && target_piece == u8::MAX {
                 return true;
+            }
+        } else if self.is_promotion() {
+            if piece == PAWN {
+                if !self.is_capture() && target_piece == u8::MAX {
+                    return true;
+                } else if self.is_capture() && target_piece != u8::MAX && target_piece != KING && piece_color != target_piece_color {
+                    return true;
+                }
             }
         } else if self.is_capture() {
             if target_piece != u8::MAX && target_piece != KING && piece_color != target_piece_color {
