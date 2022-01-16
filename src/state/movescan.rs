@@ -353,8 +353,16 @@ impl Move {
                 MoveFlags::EN_PASSANT => board.en_passant,
                 _ => {
                     (match board.active_color {
-                        WHITE => (1u64 << (from + 7)) | (1u64 << (from + 8)) | (1u64 << (from + 9)),
-                        BLACK => (1u64 << (from - 7)) | (1u64 << (from - 8)) | (1u64 << (from - 9)),
+                        WHITE => {
+                            1u64.wrapping_shl((from.wrapping_add(7)) as u32)
+                                | 1u64.wrapping_shl((from.wrapping_add(8)) as u32)
+                                | 1u64.wrapping_shl((from.wrapping_add(9)) as u32)
+                        }
+                        BLACK => {
+                            1u64.wrapping_shl((from.wrapping_sub(7)) as u32)
+                                | 1u64.wrapping_shl((from.wrapping_sub(8)) as u32)
+                                | 1u64.wrapping_shl((from.wrapping_sub(9)) as u32)
+                        }
                         _ => panic!("Invalid value: board.active_color={}", board.active_color),
                     }) & get_box(from as usize)
                 }
