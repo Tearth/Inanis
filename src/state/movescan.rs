@@ -12,6 +12,8 @@ use super::patterns::get_rank;
 use super::*;
 use crate::engine::*;
 use crate::evaluation::parameters::*;
+use std::cmp::max;
+use std::cmp::min;
 use std::mem::MaybeUninit;
 
 bitflags! {
@@ -387,6 +389,13 @@ impl Move {
         let target_piece_color = board.get_piece_color(to);
 
         if self.is_quiet() {
+            if self.get_flags() == MoveFlags::DOUBLE_PUSH {
+                let middle_field_index = (max(from, to) + min(from, to)) / 2;
+                if board.get_piece(middle_field_index) != u8::MAX {
+                    return false;
+                }
+            }
+
             if target_piece == u8::MAX {
                 return true;
             }
