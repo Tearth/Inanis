@@ -8,6 +8,7 @@ use crate::engine::*;
 use crate::state::board::Bitboard;
 use crate::state::movescan::Move;
 use crate::state::*;
+use chrono::Utc;
 use std::cell::UnsafeCell;
 use std::collections::HashMap;
 use std::io;
@@ -327,5 +328,10 @@ fn handle_quit() {
 }
 
 fn wait_for_busy_flag(state: &mut Arc<UciState>) {
-    while (*state).busy_flag.fetch_and(true, Ordering::Release) {}
+    let now = Utc::now();
+    while (*state).busy_flag.fetch_and(true, Ordering::Release) {
+        if (Utc::now() - now).num_seconds() >= 10 {
+            process::exit(-1);
+        }
+    }
 }
