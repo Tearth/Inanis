@@ -99,7 +99,9 @@ pub fn run() -> BenchmarkResult {
     let mut benchmark_result: BenchmarkResult = Default::default();
     let benchmark_time_start = Utc::now();
 
-    for fen in benchmark_positions {
+    for (current_position_index, fen) in benchmark_positions.into_iter().enumerate() {
+        println!("{}/{}. {}", current_position_index + 1, benchmark_positions.len(), fen);
+
         let mut transposition_table = TranspositionTable::new(64 * 1024 * 1024);
         let mut pawn_hashtable = PawnHashTable::new(1 * 1024 * 1024);
         let mut killers_table = Default::default();
