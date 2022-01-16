@@ -113,7 +113,7 @@ pub fn run() -> BenchmarkResult {
             &mut board,
             0,
             0,
-            14,
+            16,
             0,
             0,
             0,
