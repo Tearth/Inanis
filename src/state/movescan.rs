@@ -346,22 +346,22 @@ impl Move {
         let moves = match piece {
             PAWN => match self.get_flags() {
                 MoveFlags::DOUBLE_PUSH => match board.active_color {
-                    WHITE => (1u64 << (from + 16)),
-                    BLACK => (1u64 << (from - 16)),
+                    WHITE => 1u64.checked_shl(from.wrapping_add(16) as u32).unwrap_or(0),
+                    BLACK => 1u64.checked_shl(from.wrapping_sub(16) as u32).unwrap_or(0),
                     _ => panic!("Invalid value: board.active_color={}", board.active_color),
                 },
                 MoveFlags::EN_PASSANT => board.en_passant,
                 _ => {
                     (match board.active_color {
                         WHITE => {
-                            1u64.wrapping_shl((from.wrapping_add(7)) as u32)
-                                | 1u64.wrapping_shl((from.wrapping_add(8)) as u32)
-                                | 1u64.wrapping_shl((from.wrapping_add(9)) as u32)
+                            1u64.checked_shl((from.wrapping_add(7)) as u32).unwrap_or(0)
+                                | 1u64.checked_shl((from.wrapping_add(8)) as u32).unwrap_or(0)
+                                | 1u64.checked_shl((from.wrapping_add(9)) as u32).unwrap_or(0)
                         }
                         BLACK => {
-                            1u64.wrapping_shl((from.wrapping_sub(7)) as u32)
-                                | 1u64.wrapping_shl((from.wrapping_sub(8)) as u32)
-                                | 1u64.wrapping_shl((from.wrapping_sub(9)) as u32)
+                            1u64.checked_shl((from.wrapping_sub(7)) as u32).unwrap_or(0)
+                                | 1u64.checked_shl((from.wrapping_sub(8)) as u32).unwrap_or(0)
+                                | 1u64.checked_shl((from.wrapping_sub(9)) as u32).unwrap_or(0)
                         }
                         _ => panic!("Invalid value: board.active_color={}", board.active_color),
                     }) & get_box(from as usize)
