@@ -549,7 +549,14 @@ pub fn get_piece_mobility<const PIECE: u8>(board: &Bitboard, color: u8, attack_m
         let from_field_index = bit_scan(from_field);
         pieces = pop_lsb(pieces);
 
-        let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
+        let mut occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
+        occupancy &= !match PIECE {
+            BISHOP => board.pieces[color as usize][BISHOP as usize] | board.pieces[color as usize][QUEEN as usize],
+            ROOK => board.pieces[color as usize][ROOK as usize] | board.pieces[color as usize][QUEEN as usize],
+            QUEEN => board.pieces[color as usize][BISHOP as usize] | board.pieces[color as usize][ROOK as usize] | board.pieces[color as usize][QUEEN as usize],
+            _ => 0,
+        };
+
         let piece_moves = match PIECE {
             KNIGHT => movegen::get_knight_moves(from_field_index as usize),
             BISHOP => movegen::get_bishop_moves(occupancy, from_field_index as usize),
