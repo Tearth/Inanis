@@ -540,9 +540,13 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(board: &Bitboard,
     index
 }
 
-pub fn get_piece_mobility<const PIECE: u8>(board: &Bitboard, color: u8, attack_mask: &mut u64) -> i16 {
+pub fn get_piece_mobility<const PIECE: u8>(board: &Bitboard, color: u8, dangered_king_fields: &mut u32) -> i16 {
     let mut pieces = board.pieces[color as usize][PIECE as usize];
     let mut mobility = 0;
+
+    let enemy_color = color ^ 1;
+    let enemy_king_field = bit_scan(board.pieces[enemy_color as usize][KING as usize]);
+    let enemy_king_box = get_box(enemy_king_field as usize);
 
     while pieces != 0 {
         let from_field = get_lsb(pieces);
@@ -570,7 +574,7 @@ pub fn get_piece_mobility<const PIECE: u8>(board: &Bitboard, color: u8, attack_m
         let outside_mobility = bit_count(piece_moves & OUTSIDE) as i16;
 
         mobility += center_mobility + outside_mobility;
-        *attack_mask |= piece_moves;
+        *dangered_king_fields += bit_count(enemy_king_box & piece_moves) as u32;
     }
 
     mobility
