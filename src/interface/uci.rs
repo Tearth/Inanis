@@ -247,7 +247,6 @@ fn handle_position(parameters: &[String], state: &mut Arc<UciState>) {
     }
 
     unsafe {
-        while (*state).busy_flag.fetch_and(true, Ordering::Release) {}
         *state.board.get() = match parameters[1].as_str() {
             "fen" => {
                 let fen = parameters[2..].join(" ");
@@ -303,9 +302,10 @@ fn handle_setoption(parameters: &[String], state: &mut Arc<UciState>) {
 }
 
 fn handle_ucinewgame(state: &mut Arc<UciState>) {
+    wait_for_busy_flag(state);
+
     unsafe {
         (*state.abort_token.get()).aborted = true;
-        wait_for_busy_flag(state);
 
         let transposition_table_size = (*state.options.get())["Hash"].parse::<usize>().unwrap() * 1024 * 1024;
         *state.board.get() = Bitboard::new_initial_position();
