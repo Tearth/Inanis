@@ -438,7 +438,7 @@ fn write_evaluation_parameters(output_directory: &str, best_error: f64) {
     fs::create_dir_all(path).unwrap();
 
     let path = path.join("parameters.rs");
-    write!(&mut File::create(path).unwrap(), "{}", output.to_string()).unwrap();
+    write!(&mut File::create(path).unwrap(), "{}", output).unwrap();
 }
 
 fn write_piece_square_table(output_directory: &str, best_error: f64, name: &str, opening: &[i16], ending: &[i16]) {
@@ -461,7 +461,7 @@ fn write_piece_square_table(output_directory: &str, best_error: f64, name: &str,
     fs::create_dir_all(path).unwrap();
 
     let path = Path::new(output_directory).join("pst").join(format!("{}.rs", name));
-    write!(&mut File::create(path).unwrap(), "{}", output.to_string()).unwrap();
+    write!(&mut File::create(path).unwrap(), "{}", output).unwrap();
 }
 
 fn get_header(best_error: f64) -> String {
