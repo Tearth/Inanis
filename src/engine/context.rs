@@ -203,7 +203,7 @@ impl<'a> Iterator for SearchContext<'a> {
         let desired_time = if self.max_move_time != 0 {
             self.max_move_time
         } else {
-            clock::get_time_for_move(self.time, self.inc_time, self.moves_to_go)
+            clock::get_time_for_move(self.board.fullmove_number, self.time, self.inc_time, self.moves_to_go)
         };
 
         self.deadline = if self.max_move_time != 0 {
