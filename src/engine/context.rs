@@ -32,7 +32,6 @@ pub struct SearchContext<'a> {
     pub max_move_time: u32,
     pub moves_to_go: u32,
     pub search_time_start: DateTime<Utc>,
-    pub last_search_time: f64,
     pub deadline: u32,
     pub search_done: bool,
     pub uci_debug: bool,
@@ -134,7 +133,6 @@ impl<'a> SearchContext<'a> {
             max_move_time,
             moves_to_go,
             search_time_start: Utc::now(),
-            last_search_time: 1.0,
             deadline: 0,
             search_done: false,
             uci_debug,
@@ -214,6 +212,10 @@ impl<'a> Iterator for SearchContext<'a> {
             u32::MAX
         };
 
+        let king_checked = self.board.is_king_checked(self.board.active_color);
+        let score = search::run::<true>(self, self.current_depth, 0, MIN_ALPHA, MIN_BETA, true, king_checked);
+        let search_time = (Utc::now() - self.search_time_start).num_milliseconds() as u32;
+
         if self.uci_debug {
             let mut white_attack_mask = 0;
             let mut black_attack_mask = 0;
@@ -225,32 +227,27 @@ impl<'a> Iterator for SearchContext<'a> {
             let pawns_evaluation = pawns::evaluate_without_cache(self.board);
 
             println!(
-                "info string desired_time={}, material={}, pst={}, mobility={}, safety={}, pawns={}",
-                desired_time, material_evaluation, pst_evaluation, mobility_evaluation, safety_evaluation, pawns_evaluation
+                "info string search_time={}, desired_time={}, material={}, pst={}, mobility={}, safety={}, pawns={}",
+                search_time, desired_time, material_evaluation, pst_evaluation, mobility_evaluation, safety_evaluation, pawns_evaluation
             );
         }
 
-        let king_checked = self.board.is_king_checked(self.board.active_color);
-        let score = search::run::<true>(self, self.current_depth, 0, MIN_ALPHA, MIN_BETA, true, king_checked);
-        let search_time = (Utc::now() - self.search_time_start).num_milliseconds() as f64;
-        let time_ratio = search_time / (self.last_search_time as f64);
-
         if self.abort_token.aborted {
+            if self.uci_debug {
+                println!("info string search aborted");
+            }
+
             return None;
         }
 
         if self.forced_depth == 0 && self.max_nodes_count == 0 {
-            if search_time * time_ratio > desired_time as f64 {
+            if search_time > desired_time / 2 {
                 self.search_done = true;
             }
 
             if is_score_near_checkmate(score) && self.current_depth >= (CHECKMATE_SCORE - score.abs()) as i8 {
                 self.search_done = true;
             }
-        }
-
-        if search_time > 0.0 {
-            self.last_search_time = search_time;
         }
 
         self.current_depth += 1;
