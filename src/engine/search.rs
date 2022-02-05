@@ -9,7 +9,7 @@ use chrono::Utc;
 use std::mem::MaybeUninit;
 
 pub const RAZORING_MIN_DEPTH: i8 = 1;
-pub const RAZORING_MAX_DEPTH: i8 = 3;
+pub const RAZORING_MAX_DEPTH: i8 = 4;
 pub const RAZORING_DEPTH_MARGIN_MULTIPLIER: i16 = 300;
 
 pub const STATIC_NULL_MOVE_PRUNING_MIN_DEPTH: i8 = 1;
