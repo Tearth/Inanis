@@ -66,7 +66,11 @@ pub fn run() {
 
     loop {
         let mut input = String::new();
-        io::stdin().read_line(&mut input).unwrap();
+        let read_bytes = io::stdin().read_line(&mut input).unwrap();
+
+        if read_bytes == 0 {
+            process::exit(0);
+        }
 
         let tokens: Vec<String> = input.split(' ').map(|v| v.trim().to_string()).collect();
         match tokens[0].to_lowercase().as_str() {
