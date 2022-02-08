@@ -201,13 +201,23 @@ impl<'a> Iterator for SearchContext<'a> {
         let desired_time = if self.max_move_time != 0 {
             self.max_move_time
         } else {
-            clock::get_time_for_move(self.board.fullmove_number, self.time, self.inc_time, self.moves_to_go)
+            let mut desired_time = clock::get_time_for_move(self.board.fullmove_number, self.time, self.inc_time, self.moves_to_go);
+            if desired_time > self.time {
+                desired_time = self.time;
+            }
+
+            desired_time
         };
 
         self.deadline = if self.max_move_time != 0 {
             self.max_move_time
         } else if self.current_depth > 1 {
-            ((desired_time as f32) * DEADLINE_MULTIPLIER) as u32
+            let mut deadline = ((desired_time as f32) * DEADLINE_MULTIPLIER) as u32;
+            if deadline > self.time {
+                deadline = desired_time;
+            }
+
+            deadline
         } else {
             u32::MAX
         };

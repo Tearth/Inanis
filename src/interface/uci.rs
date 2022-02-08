@@ -10,6 +10,7 @@ use crate::state::movescan::Move;
 use crate::state::*;
 use chrono::Utc;
 use std::cell::UnsafeCell;
+use std::cmp::min;
 use std::collections::HashMap;
 use std::io;
 use std::process;
@@ -57,10 +58,12 @@ unsafe impl Sync for UciState {}
 pub fn run() {
     let mut state: Arc<UciState> = Arc::new(Default::default());
     unsafe { (*state.options.get()).insert("Hash".to_string(), "1".to_string()) };
+    unsafe { (*state.options.get()).insert("MoveOverhead".to_string(), "10".to_string()) };
 
     println!("id name Inanis {}", VERSION);
     println!("id author {}", AUTHOR);
-    println!("option name Hash type spin default 1 min 1 max 32768");
+    println!("option name Hash type spin default 1 min 1 max 1048576");
+    println!("option name MoveOverhead type spin default 100 min 0 max 10000");
     println!("option name Clear Hash type button");
     println!("uciok");
 
@@ -165,11 +168,12 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
             }
         }
 
-        let time = match (*state.board.get()).active_color {
+        let mut time = match (*state.board.get()).active_color {
             WHITE => white_time,
             BLACK => black_time,
             _ => panic!("Invalid value: state.board.active_color={}", (*state.board.get()).active_color),
         };
+        time -= min(time, (*state.options.get())["MoveOverhead"].parse::<u32>().unwrap());
 
         let inc_time = match (*state.board.get()).active_color {
             WHITE => white_inc_time,
