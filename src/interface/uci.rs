@@ -59,12 +59,12 @@ unsafe impl Sync for UciState {}
 pub fn run() {
     let mut state: Arc<UciState> = Arc::new(Default::default());
     unsafe { (*state.options.get()).insert("Hash".to_string(), "1".to_string()) };
-    unsafe { (*state.options.get()).insert("MoveOverhead".to_string(), "10".to_string()) };
+    unsafe { (*state.options.get()).insert("Move Overhead".to_string(), "10".to_string()) };
 
     println!("id name Inanis {}", VERSION);
     println!("id author {}", AUTHOR);
     println!("option name Hash type spin default 1 min 1 max 1048576");
-    println!("option name MoveOverhead type spin default 100 min 0 max 10000");
+    println!("option name Move Overhead type spin default 10 min 0 max 3600000");
     println!("option name Clear Hash type button");
     println!("uciok");
 
@@ -174,7 +174,7 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
             BLACK => black_time,
             _ => panic!("Invalid value: state.board.active_color={}", (*state.board.get()).active_color),
         };
-        time -= min(time, (*state.options.get())["MoveOverhead"].parse::<u32>().unwrap());
+        time -= min(time, (*state.options.get())["Move Overhead"].parse::<u32>().unwrap());
 
         let inc_time = match (*state.board.get()).active_color {
             WHITE => white_inc_time,
@@ -288,16 +288,46 @@ fn handle_position(parameters: &[String], state: &mut Arc<UciState>) {
 fn handle_setoption(parameters: &[String], state: &mut Arc<UciState>) {
     wait_for_busy_flag(state);
 
-    if parameters.len() == 4 {
-        if parameters[2] == "Clear" && parameters[3] == "Hash" {
-            clear_state_tables(state);
-        }
-    } else if parameters.len() == 5 {
-        unsafe { (*state.options.get()).insert(parameters[2].to_string(), parameters[4].to_string()) };
+    let mut reading_name = false;
+    let mut reading_value = false;
+    let mut name_tokens = Vec::new();
+    let mut value_tokens = Vec::new();
 
-        if parameters[2] == "Hash" {
+    for parameter in parameters {
+        match parameter.as_str() {
+            "name" => {
+                reading_name = true;
+                reading_value = false;
+            }
+            "value" => {
+                reading_name = false;
+                reading_value = true;
+            }
+            _ => {
+                if reading_name {
+                    name_tokens.push(parameter.to_owned());
+                } else if reading_value {
+                    value_tokens.push(parameter.to_owned());
+                }
+            }
+        }
+    }
+
+    let name = name_tokens.join(" ");
+    let value = value_tokens.join(" ");
+
+    if !name.is_empty() && !value.is_empty() {
+        unsafe { (*state.options.get()).insert(parameters[2].to_string(), parameters[4].to_string()) };
+    }
+
+    match name.as_str() {
+        "Hash" => {
             clear_state_tables(state);
         }
+        "Clear Hash" => {
+            clear_state_tables(state);
+        }
+        _ => {}
     }
 }
 
