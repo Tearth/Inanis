@@ -10,10 +10,12 @@ use std::mem::MaybeUninit;
 
 pub const RAZORING_MIN_DEPTH: i8 = 1;
 pub const RAZORING_MAX_DEPTH: i8 = 4;
+pub const RAZORING_DEPTH_MARGIN_BASE: i16 = 300;
 pub const RAZORING_DEPTH_MARGIN_MULTIPLIER: i16 = 300;
 
 pub const STATIC_NULL_MOVE_PRUNING_MIN_DEPTH: i8 = 1;
 pub const STATIC_NULL_MOVE_PRUNING_MAX_DEPTH: i8 = 2;
+pub const STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_BASE: i16 = 150;
 pub const STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_MULTIPLIER: i16 = 150;
 
 pub const NULL_MOVE_MIN_DEPTH: i8 = 1;
@@ -471,7 +473,7 @@ fn razoring_can_be_applied<const PV: bool>(depth: i8, alpha: i16, friendly_king_
 }
 
 fn razoring_get_margin(depth: i8) -> i16 {
-    (depth as i16) * RAZORING_DEPTH_MARGIN_MULTIPLIER
+    RAZORING_DEPTH_MARGIN_BASE + ((depth - RAZORING_MIN_DEPTH) as i16) * RAZORING_DEPTH_MARGIN_MULTIPLIER
 }
 
 fn static_null_move_pruning_can_be_applied<const PV: bool>(depth: i8, beta: i16, friendly_king_checked: bool) -> bool {
@@ -482,7 +484,7 @@ fn static_null_move_pruning_can_be_applied<const PV: bool>(depth: i8, beta: i16,
 }
 
 fn static_null_move_pruning_get_margin(depth: i8) -> i16 {
-    (depth as i16) * STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_MULTIPLIER
+    STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_BASE + ((depth - STATIC_NULL_MOVE_PRUNING_MIN_DEPTH) as i16) * STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_MULTIPLIER
 }
 
 fn null_move_pruning_can_be_applied<const PV: bool>(
