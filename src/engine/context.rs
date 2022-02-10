@@ -251,7 +251,7 @@ impl<'a> Iterator for SearchContext<'a> {
         }
 
         if self.forced_depth == 0 && self.max_nodes_count == 0 {
-            if search_time > desired_time / 2 {
+            if search_time >= desired_time / 2 {
                 self.search_done = true;
             }
 

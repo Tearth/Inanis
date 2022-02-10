@@ -317,7 +317,7 @@ fn handle_setoption(parameters: &[String], state: &mut Arc<UciState>) {
     let value = value_tokens.join(" ");
 
     if !name.is_empty() && !value.is_empty() {
-        unsafe { (*state.options.get()).insert(parameters[2].to_string(), parameters[4].to_string()) };
+        unsafe { (*state.options.get()).insert(name.to_owned(), value) };
     }
 
     match name.as_str() {
