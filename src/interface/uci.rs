@@ -1,3 +1,4 @@
+use crate::cache::allocator;
 use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
 use crate::engine::context::AbortToken;
@@ -10,7 +11,7 @@ use crate::state::movescan::Move;
 use crate::state::*;
 use chrono::Utc;
 use std::cell::UnsafeCell;
-use std::cmp::min;
+use std::cmp::*;
 use std::collections::HashMap;
 use std::io;
 use std::process;
@@ -289,22 +290,13 @@ fn handle_setoption(parameters: &[String], state: &mut Arc<UciState>) {
 
     if parameters.len() == 4 {
         if parameters[2] == "Clear" && parameters[3] == "Hash" {
-            unsafe {
-                let transposition_table_size = (*state.options.get())["Hash"].parse::<usize>().unwrap() * 1024 * 1024;
-                *state.transposition_table.get() = TranspositionTable::new(transposition_table_size);
-                *state.pawn_hashtable.get() = PawnHashTable::new(1 * 1024 * 1024);
-                *state.killers_table.get() = Default::default();
-                *state.history_table.get() = Default::default();
-            }
+            clear_state_tables(state);
         }
     } else if parameters.len() == 5 {
         unsafe { (*state.options.get()).insert(parameters[2].to_string(), parameters[4].to_string()) };
 
         if parameters[2] == "Hash" {
-            unsafe {
-                let transposition_table_size = parameters[4].parse::<usize>().unwrap() * 1024 * 1024;
-                *state.transposition_table.get() = TranspositionTable::new(transposition_table_size);
-            }
+            clear_state_tables(state);
         }
     }
 }
@@ -315,13 +307,9 @@ fn handle_ucinewgame(state: &mut Arc<UciState>) {
     unsafe {
         (*state.abort_token.get()).aborted = true;
 
-        let transposition_table_size = (*state.options.get())["Hash"].parse::<usize>().unwrap() * 1024 * 1024;
         *state.board.get() = Bitboard::new_initial_position();
-        *state.transposition_table.get() = TranspositionTable::new(transposition_table_size);
-        *state.pawn_hashtable.get() = PawnHashTable::new(1 * 1024 * 1024);
-        *state.killers_table.get() = Default::default();
-        *state.history_table.get() = Default::default();
         *state.abort_token.get() = Default::default();
+        clear_state_tables(state);
     }
 }
 
@@ -341,5 +329,17 @@ fn wait_for_busy_flag(state: &mut Arc<UciState>) {
         if (Utc::now() - now).num_seconds() >= 10 {
             process::exit(-1);
         }
+    }
+}
+
+fn clear_state_tables(state: &mut Arc<UciState>) {
+    unsafe {
+        let total_size = (*state.options.get())["Hash"].parse::<usize>().unwrap();
+        let allocation_result = allocator::get_allocation(total_size);
+
+        *state.transposition_table.get() = TranspositionTable::new(allocation_result.transposition_table_size * 1024 * 1024);
+        *state.pawn_hashtable.get() = PawnHashTable::new(allocation_result.pawn_hashtable_size * 1024 * 1024);
+        *state.killers_table.get() = Default::default();
+        *state.history_table.get() = Default::default();
     }
 }
