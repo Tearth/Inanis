@@ -1,0 +1,19 @@
+on:
+  push:
+    branches: [master]
+
+jobs:
+  generate_docs:
+    name: Generate docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions-rs/cargo@v1
+        with:
+          command: doc
+          args: --no-deps
+      - run: echo "<meta http-equiv=\"refresh\" content=\"0; url=inanis\">" > ./target/doc/index.html
+      - uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./target/doc
