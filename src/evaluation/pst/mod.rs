@@ -1,7 +1,5 @@
+use super::*;
 use crate::state::board::Bitboard;
-use crate::state::*;
-
-use super::taper_score;
 
 pub mod bishop;
 pub mod king;

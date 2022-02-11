@@ -8,7 +8,7 @@ use crate::evaluation::pst::pawn;
 use crate::evaluation::pst::queen;
 use crate::evaluation::pst::rook;
 use crate::state::board::Bitboard;
-use crate::state::fen::*;
+use crate::state::fen;
 use crate::state::*;
 use chrono::Utc;
 use nameof::name_of;
@@ -208,7 +208,7 @@ fn load_positions(epd_filename: &str) -> Result<UnsafeCell<Vec<TunerPosition>>, 
 
     for line in BufReader::new(file).lines() {
         let position = line.unwrap();
-        let parsed_epd = epd_to_board(position.as_str())?;
+        let parsed_epd = fen::epd_to_board(position.as_str())?;
 
         if parsed_epd.comment == None {
             return Err("Invalid game result");

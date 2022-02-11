@@ -1,4 +1,4 @@
-use chrono::prelude::*;
+use chrono::Utc;
 use std::env;
 use std::process::Command;
 

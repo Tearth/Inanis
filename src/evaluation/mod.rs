@@ -1,4 +1,3 @@
-use self::parameters::*;
 use crate::state::*;
 
 pub mod material;
@@ -13,11 +12,11 @@ pub static mut INITIAL_MATERIAL: i16 = 0;
 pub fn init() {
     unsafe {
         INITIAL_MATERIAL = 0
-            + 16 * PIECE_VALUE[PAWN as usize]
-            + 4 * PIECE_VALUE[KNIGHT as usize]
-            + 4 * PIECE_VALUE[BISHOP as usize]
-            + 4 * PIECE_VALUE[ROOK as usize]
-            + 2 * PIECE_VALUE[QUEEN as usize];
+            + 16 * parameters::PIECE_VALUE[PAWN as usize]
+            + 4 * parameters::PIECE_VALUE[KNIGHT as usize]
+            + 4 * parameters::PIECE_VALUE[BISHOP as usize]
+            + 4 * parameters::PIECE_VALUE[ROOK as usize]
+            + 2 * parameters::PIECE_VALUE[QUEEN as usize];
     }
 }
 

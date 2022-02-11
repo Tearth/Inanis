@@ -1,17 +1,17 @@
 use crate::cache::allocator;
 use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
+use crate::engine;
 use crate::engine::context::AbortToken;
 use crate::engine::context::SearchContext;
 use crate::engine::history::HistoryTable;
 use crate::engine::killers::KillersTable;
-use crate::engine::*;
 use crate::state::board::Bitboard;
 use crate::state::movescan::Move;
 use crate::state::*;
 use chrono::Utc;
 use std::cell::UnsafeCell;
-use std::cmp::*;
+use std::cmp;
 use std::collections::HashMap;
 use std::io;
 use std::process;
@@ -163,7 +163,7 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
                     }
                 }
                 "infinite" => {
-                    forced_depth = MAX_DEPTH;
+                    forced_depth = engine::MAX_DEPTH;
                 }
                 _ => {}
             }
@@ -174,7 +174,7 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
             BLACK => black_time,
             _ => panic!("Invalid value: state.board.active_color={}", (*state.board.get()).active_color),
         };
-        time -= min(time, (*state.options.get())["Move Overhead"].parse::<u32>().unwrap());
+        time -= cmp::min(time, (*state.options.get())["Move Overhead"].parse::<u32>().unwrap());
 
         let inc_time = match (*state.board.get()).active_color {
             WHITE => white_inc_time,
@@ -208,8 +208,8 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
 
             for depth_result in context {
                 let pv_line: Vec<String> = depth_result.pv_line.iter().map(|v| v.to_long_notation()).collect();
-                let formatted_score = if is_score_near_checkmate(depth_result.score) {
-                    let mut moves_to_mate = (depth_result.score.abs() - CHECKMATE_SCORE).abs() / 2;
+                let formatted_score = if engine::is_score_near_checkmate(depth_result.score) {
+                    let mut moves_to_mate = (depth_result.score.abs() - engine::CHECKMATE_SCORE).abs() / 2;
                     moves_to_mate *= depth_result.score.signum();
 
                     format!("score mate {}", moves_to_mate).to_string()

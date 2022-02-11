@@ -7,13 +7,13 @@ use super::zobrist;
 use super::*;
 use crate::cache::pawns::PawnHashTable;
 use crate::engine::context::SearchStatistics;
+use crate::evaluation;
 use crate::evaluation::material;
 use crate::evaluation::mobility;
-use crate::evaluation::parameters::*;
+use crate::evaluation::parameters;
 use crate::evaluation::pawns;
 use crate::evaluation::pst;
 use crate::evaluation::safety;
-use crate::evaluation::*;
 
 bitflags! {
     pub struct CastlingRights: u8 {
@@ -640,9 +640,9 @@ impl Bitboard {
     }
 
     pub fn is_insufficient_material_draw(&self) -> bool {
-        let white_material = self.material_scores[WHITE as usize] - unsafe { PIECE_VALUE[KING as usize] };
-        let black_material = self.material_scores[BLACK as usize] - unsafe { PIECE_VALUE[KING as usize] };
-        let bishop_value = unsafe { PIECE_VALUE[BISHOP as usize] };
+        let white_material = self.material_scores[WHITE as usize] - unsafe { parameters::PIECE_VALUE[KING as usize] };
+        let black_material = self.material_scores[BLACK as usize] - unsafe { parameters::PIECE_VALUE[KING as usize] };
+        let bishop_value = unsafe { parameters::PIECE_VALUE[BISHOP as usize] };
         let pawns_count = bit_count(self.pieces[WHITE as usize][PAWN as usize]) + bit_count(self.pieces[BLACK as usize][PAWN as usize]);
 
         if white_material <= bishop_value && black_material <= bishop_value && pawns_count == 0 {
@@ -680,8 +680,9 @@ impl Bitboard {
     }
 
     pub fn get_game_phase(&self) -> f32 {
-        let total_material = self.material_scores[WHITE as usize] + self.material_scores[BLACK as usize] - 2 * unsafe { PIECE_VALUE[KING as usize] };
-        (total_material as f32) / (unsafe { INITIAL_MATERIAL } as f32)
+        let total_material =
+            self.material_scores[WHITE as usize] + self.material_scores[BLACK as usize] - 2 * unsafe { parameters::PIECE_VALUE[KING as usize] };
+        (total_material as f32) / (unsafe { evaluation::INITIAL_MATERIAL } as f32)
     }
 }
 

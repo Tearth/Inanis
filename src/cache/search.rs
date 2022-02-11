@@ -1,4 +1,4 @@
-use crate::engine::*;
+use crate::engine;
 use crate::state::movescan::Move;
 use std::mem;
 use std::u64;
@@ -94,7 +94,7 @@ impl TranspositionTable {
             smallest_depth_index
         };
 
-        if is_score_near_checkmate(score) {
+        if engine::is_score_near_checkmate(score) {
             if score > 0 {
                 score += ply as i16;
             } else {
@@ -114,7 +114,7 @@ impl TranspositionTable {
         for entry_index in 0..BUCKET_SLOTS {
             let mut entry = bucket.entries[entry_index];
             if entry.key == key {
-                if is_score_near_checkmate(entry.score) {
+                if engine::is_score_near_checkmate(entry.score) {
                     if entry.score > 0 {
                         entry.score -= ply as i16;
                     } else {

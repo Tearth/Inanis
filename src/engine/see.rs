@@ -1,6 +1,6 @@
-use crate::evaluation::parameters::*;
+use crate::evaluation::parameters;
 use crate::state::*;
-use std::cmp::*;
+use std::cmp;
 
 static mut TABLE: [[[i16; 256]; 256]; 6] = [[[0; 256]; 256]; 6];
 
@@ -47,7 +47,7 @@ fn evaluate_internal(attacking_piece: u8, target_piece: u8, attackers: u8, defen
     };
 
     let see_result = evaluate_internal(new_attacking_piece, attacking_piece, defenders, new_attackers);
-    max(0, target_piece_value - see_result)
+    cmp::max(0, target_piece_value - see_result)
 }
 
 fn get_piece_index(piece: u8) -> u8 {
@@ -65,11 +65,11 @@ fn get_piece_index(piece: u8) -> u8 {
 fn get_piece_value(piece_index: u8) -> i16 {
     unsafe {
         match piece_index {
-            0 => PIECE_VALUE[PAWN as usize] as i16,           // Pawn
-            1 | 2 | 3 => PIECE_VALUE[BISHOP as usize] as i16, // 3x Knight/bishop
-            4 | 5 => PIECE_VALUE[ROOK as usize] as i16,       // 2x Rook
-            6 => PIECE_VALUE[QUEEN as usize] as i16,          // Queen
-            7 => PIECE_VALUE[KING as usize] as i16,           // King
+            0 => parameters::PIECE_VALUE[PAWN as usize] as i16,           // Pawn
+            1 | 2 | 3 => parameters::PIECE_VALUE[BISHOP as usize] as i16, // 3x Knight/bishop
+            4 | 5 => parameters::PIECE_VALUE[ROOK as usize] as i16,       // 2x Rook
+            6 => parameters::PIECE_VALUE[QUEEN as usize] as i16,          // Queen
+            7 => parameters::PIECE_VALUE[KING as usize] as i16,           // King
             _ => panic!("Invalid value: piece_index={}", piece_index),
         }
     }

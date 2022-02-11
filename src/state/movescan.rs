@@ -1,16 +1,11 @@
 use super::board::Bitboard;
 use super::board::CastlingRights;
-use super::movegen::get_bishop_moves;
-use super::movegen::get_king_moves;
-use super::movegen::get_knight_moves;
-use super::movegen::get_queen_moves;
-use super::movegen::get_rook_moves;
-use super::patterns::get_box;
+use super::movegen;
+use super::patterns;
 use super::*;
-use crate::engine::*;
-use crate::evaluation::parameters::*;
-use std::cmp::max;
-use std::cmp::min;
+use crate::engine;
+use crate::evaluation::parameters;
+use std::cmp;
 use std::mem::MaybeUninit;
 
 bitflags! {
@@ -52,7 +47,7 @@ impl Move {
     }
 
     pub fn from_short_notation(mut text: &str, board: &Bitboard) -> Result<Move, &'static str> {
-        let mut moves: [Move; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
+        let mut moves: [Move; engine::MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
         let moves_count = board.get_all_moves(&mut moves, u64::MAX);
 
         let mut desired_to: Option<u8> = None;
@@ -249,7 +244,7 @@ impl Move {
             None => MoveFlags::QUIET,
         };
 
-        let mut moves: [Move; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
+        let mut moves: [Move; engine::MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
         let moves_count = board.get_all_moves(&mut moves, u64::MAX);
 
         for r#move in &moves[0..moves_count] {
@@ -363,17 +358,17 @@ impl Move {
                                 | 1u64.checked_shl((from.wrapping_sub(9)) as u32).unwrap_or(0)
                         }
                         _ => panic!("Invalid value: board.active_color={}", board.active_color),
-                    }) & get_box(from as usize)
+                    }) & patterns::get_box(from as usize)
                 }
             },
-            KNIGHT => get_knight_moves(from as usize),
-            BISHOP => get_bishop_moves(occupancy, from as usize),
-            ROOK => get_rook_moves(occupancy, from as usize),
-            QUEEN => get_queen_moves(occupancy, from as usize),
+            KNIGHT => movegen::get_knight_moves(from as usize),
+            BISHOP => movegen::get_bishop_moves(occupancy, from as usize),
+            ROOK => movegen::get_rook_moves(occupancy, from as usize),
+            QUEEN => movegen::get_queen_moves(occupancy, from as usize),
             KING => match self.get_flags() {
                 MoveFlags::SHORT_CASTLING => 1u64 << (from - 2),
                 MoveFlags::LONG_CASTLING => 1u64 << (from + 2),
-                _ => get_king_moves(from as usize),
+                _ => movegen::get_king_moves(from as usize),
             },
             _ => panic!("Invalid value: piece={}", piece),
         };
@@ -387,7 +382,7 @@ impl Move {
 
         if self.is_quiet() {
             if self.get_flags() == MoveFlags::DOUBLE_PUSH {
-                let middle_field_index = (max(from, to) + min(from, to)) / 2;
+                let middle_field_index = (cmp::max(from, to) + cmp::min(from, to)) / 2;
                 if board.get_piece(middle_field_index) != u8::MAX {
                     return false;
                 }
@@ -546,7 +541,7 @@ pub fn get_piece_mobility<const PIECE: u8>(board: &Bitboard, color: u8, dangered
 
     let enemy_color = color ^ 1;
     let enemy_king_field = bit_scan(board.pieces[enemy_color as usize][KING as usize]);
-    let enemy_king_box = get_box(enemy_king_field as usize);
+    let enemy_king_box = patterns::get_box(enemy_king_field as usize);
 
     while pieces != 0 {
         let from_field = get_lsb(pieces);
@@ -570,7 +565,7 @@ pub fn get_piece_mobility<const PIECE: u8>(board: &Bitboard, color: u8, dangered
             _ => panic!("Invalid value: PIECE={}", PIECE),
         } & !board.occupancy[color as usize];
 
-        let center_mobility = unsafe { MOBILITY_CENTER_MULTIPLIER } * bit_count(piece_moves & CENTER) as i16;
+        let center_mobility = unsafe { parameters::MOBILITY_CENTER_MULTIPLIER } * bit_count(piece_moves & CENTER) as i16;
         let outside_mobility = bit_count(piece_moves & OUTSIDE) as i16;
 
         mobility += center_mobility + outside_mobility;

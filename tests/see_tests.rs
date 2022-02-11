@@ -3,7 +3,7 @@
 #[cfg(test)]
 mod see_tests {
     use inanis::engine::see;
-    use inanis::evaluation::parameters::*;
+    use inanis::evaluation::parameters;
     use inanis::state::board::Bitboard;
     use inanis::state::movescan::Move;
     use inanis::state::*;
@@ -11,11 +11,11 @@ mod see_tests {
     use std::sync::Once;
 
     static INIT: Once = Once::new();
-    static P: i16 = unsafe { PIECE_VALUE[PAWN as usize] };
-    static N: i16 = unsafe { PIECE_VALUE[BISHOP as usize] };
-    static B: i16 = unsafe { PIECE_VALUE[BISHOP as usize] };
-    static R: i16 = unsafe { PIECE_VALUE[ROOK as usize] };
-    static Q: i16 = unsafe { PIECE_VALUE[QUEEN as usize] };
+    static P: i16 = unsafe { parameters::PIECE_VALUE[PAWN as usize] };
+    static N: i16 = unsafe { parameters::PIECE_VALUE[BISHOP as usize] };
+    static B: i16 = unsafe { parameters::PIECE_VALUE[BISHOP as usize] };
+    static R: i16 = unsafe { parameters::PIECE_VALUE[ROOK as usize] };
+    static Q: i16 = unsafe { parameters::PIECE_VALUE[QUEEN as usize] };
 
     macro_rules! see_tests {
         ($($name:ident: $fen:expr, $move:expr, $expected_result:expr, )*) => {

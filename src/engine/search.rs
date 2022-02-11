@@ -2,7 +2,7 @@ use super::context::SearchContext;
 use super::qsearch;
 use super::*;
 use crate::cache::search::TranspositionTableScoreType;
-use crate::state::movegen::{get_knight_moves, get_queen_moves};
+use crate::state::movegen;
 use crate::state::movescan::Move;
 use crate::state::*;
 use chrono::Utc;
@@ -208,7 +208,7 @@ pub fn run<const PV: bool>(
             let king_field_index = bit_scan(context.board.pieces[context.board.active_color as usize][KING as usize]);
             let occupancy = context.board.occupancy[WHITE as usize] | context.board.occupancy[BLACK as usize];
 
-            get_queen_moves(occupancy, king_field_index as usize) | get_knight_moves(king_field_index as usize)
+            movegen::get_queen_moves(occupancy, king_field_index as usize) | movegen::get_knight_moves(king_field_index as usize)
         }
     } else {
         u64::MAX

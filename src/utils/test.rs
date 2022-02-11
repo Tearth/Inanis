@@ -2,7 +2,7 @@ use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
 use crate::engine::context::SearchContext;
 use crate::state::board::Bitboard;
-use crate::state::fen::*;
+use crate::state::fen;
 use crate::state::movescan::Move;
 use chrono::Utc;
 use std::fs::File;
@@ -116,7 +116,7 @@ fn load_positions(epd_filename: &str) -> Result<Vec<TestPosition>, &'static str>
 
     for line in BufReader::new(file).lines() {
         let position = line.unwrap();
-        let parsed_epd = epd_to_board(position.as_str())?;
+        let parsed_epd = fen::epd_to_board(position.as_str())?;
 
         if parsed_epd.id == None {
             return Err("Not enough data");
