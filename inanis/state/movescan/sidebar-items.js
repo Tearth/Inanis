@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["get_piece_mobility",""],["scan_pawn_moves",""],["scan_piece_moves",""]],"struct":[["Move",""],["MoveFlags",""]]});

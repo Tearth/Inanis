@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["get_box",""],["get_diagonals",""],["get_file",""],["get_front",""],["get_jumps",""],["get_rail",""],["get_rank",""],["get_star",""],["init",""]]});

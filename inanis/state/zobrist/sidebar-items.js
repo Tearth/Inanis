@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["get_active_color_hash",""],["get_castling_right_hash",""],["get_en_passant_hash",""],["get_piece_hash",""],["init",""],["recalculate_hash",""],["recalculate_pawn_hash",""]]});

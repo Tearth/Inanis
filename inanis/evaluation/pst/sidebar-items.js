@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["evaluate",""],["get_value",""],["init",""],["recalculate_incremental_values",""]],"mod":[["bishop",""],["king",""],["knight",""],["pawn",""],["queen",""],["rook",""]]});

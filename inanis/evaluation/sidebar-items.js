@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["init",""],["taper_score",""]],"mod":[["material",""],["mobility",""],["parameters",""],["pawns",""],["pst",""],["safety",""]],"static":[["INITIAL_MATERIAL",""]]});

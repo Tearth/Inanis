@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["generate_bishop_number_for_field",""],["generate_rook_number_for_field",""],["get_bishop_moves",""],["get_king_moves",""],["get_knight_moves",""],["get_queen_moves",""],["get_rook_moves",""],["init",""]]});

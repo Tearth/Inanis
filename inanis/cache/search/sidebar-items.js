@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["TranspositionTable",""],["TranspositionTableEntry",""],["TranspositionTableScoreType",""]]});

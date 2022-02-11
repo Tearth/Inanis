@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["CHECKMATE_SCORE",""],["DEADLINE_MULTIPLIER",""],["DRAW_SCORE",""],["INVALID_SCORE",""],["MAX_DEPTH",""],["MAX_MOVES_COUNT",""],["MIN_ALPHA",""],["MIN_BETA",""]],"fn":[["is_score_near_checkmate",""],["sort_next_move",""]],"mod":[["clock",""],["context",""],["history",""],["killers",""],["qsearch",""],["search",""],["see",""]]});
