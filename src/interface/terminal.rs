@@ -251,6 +251,8 @@ fn handle_benchmark() {
         "Transposition table move legality check: {} legal, {} illegal",
         result.tt_legal_hashmoves, result.tt_illegal_hashmoves
     );
+
+    println!("Result hash: {}", result.result_hash);
 }
 
 fn handle_evaluate(input: Vec<&str>) {
