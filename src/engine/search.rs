@@ -24,6 +24,12 @@ pub const NULL_MOVE_MIN_GAME_PHASE: f32 = 0.15;
 pub const NULL_MOVE_SMALL_R: i8 = 2;
 pub const NULL_MOVE_BIG_R: i8 = 3;
 
+pub const LATE_MOVE_PRUNING_MIN_DEPTH: i8 = 1;
+pub const LATE_MOVE_PRUNING_MAX_DEPTH: i8 = 3;
+pub const LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_BASE: usize = 5;
+pub const LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_MULTIPLIER: usize = 10;
+pub const LATE_MOVE_PRUNING_MAX_SCORE: i16 = 90;
+
 pub const LATE_MOVE_REDUCTION_MIN_DEPTH: i8 = 2;
 pub const LATE_MOVE_REDUCTION_MIN_MOVE_INDEX: usize = 2;
 pub const LATE_MOVE_REDUCTION_REDUCTION_BASE: usize = 1;
@@ -234,6 +240,10 @@ pub fn run<const PV: bool>(
         evasion_mask,
         ply,
     ) {
+        if late_move_pruning_can_be_applied::<PV>(depth, ply, move_index, move_scores[move_index], friendly_king_checked) {
+            break;
+        }
+
         context.board.make_move(&r#move);
 
         let king_checked = context.board.is_king_checked(context.board.active_color);
@@ -507,6 +517,14 @@ fn null_move_pruning_get_r(depth: i8) -> i8 {
     } else {
         NULL_MOVE_BIG_R
     }
+}
+
+fn late_move_pruning_can_be_applied<const PV: bool>(depth: i8, ply: u16, move_index: usize, move_score: i16, friendly_king_checked: bool) -> bool {
+    !PV && depth >= LATE_MOVE_PRUNING_MIN_DEPTH
+        && depth <= LATE_MOVE_PRUNING_MAX_DEPTH
+        && move_index >= LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_BASE + (depth as usize - 1) * LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_MULTIPLIER
+        && move_score <= LATE_MOVE_PRUNING_MAX_SCORE
+        && !friendly_king_checked
 }
 
 fn late_move_reduction_can_be_applied(depth: i8, r#move: &Move, move_index: usize, move_score: i16, friendly_king_checked: bool) -> bool {
