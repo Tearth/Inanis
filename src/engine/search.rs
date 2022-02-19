@@ -35,6 +35,8 @@ pub const LATE_MOVE_REDUCTION_MIN_MOVE_INDEX: usize = 2;
 pub const LATE_MOVE_REDUCTION_REDUCTION_BASE: usize = 1;
 pub const LATE_MOVE_REDUCTION_REDUCTION_STEP: usize = 7;
 
+pub const REDUCTION_PRUNING_DEPTH_THRESHOLD: i8 = 0;
+
 pub const MOVE_ORDERING_HASH_MOVE: i16 = 10000;
 pub const MOVE_ORDERING_WINNING_CAPTURES_OFFSET: i16 = 100;
 pub const MOVE_ORDERING_QUEEN_PROMOTION: i16 = 99;
@@ -252,6 +254,11 @@ pub fn run<const PV: bool>(
         } else {
             0
         };
+
+        if reduction_pruning_can_be_applied::<PV>(depth, r) {
+            context.board.undo_move(&r#move);
+            continue;
+        }
 
         let score = if PV {
             if move_index == 0 {
@@ -525,6 +532,7 @@ fn late_move_pruning_can_be_applied<const PV: bool>(depth: i8, ply: u16, move_in
         && move_index >= LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_BASE + (depth as usize - 1) * LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_MULTIPLIER
         && move_score <= LATE_MOVE_PRUNING_MAX_SCORE
         && !friendly_king_checked
+    // && ply >= 4
 }
 
 fn late_move_reduction_can_be_applied(depth: i8, r#move: &Move, move_index: usize, move_score: i16, friendly_king_checked: bool) -> bool {
@@ -537,4 +545,8 @@ fn late_move_reduction_can_be_applied(depth: i8, r#move: &Move, move_index: usiz
 
 fn late_move_reduction_get_r(move_index: usize) -> i8 {
     (LATE_MOVE_REDUCTION_REDUCTION_BASE + (move_index - LATE_MOVE_REDUCTION_MIN_MOVE_INDEX) / LATE_MOVE_REDUCTION_REDUCTION_STEP) as i8
+}
+
+fn reduction_pruning_can_be_applied<const PV: bool>(depth: i8, reduction: i8) -> bool {
+    !PV && depth - reduction <= REDUCTION_PRUNING_DEPTH_THRESHOLD
 }
