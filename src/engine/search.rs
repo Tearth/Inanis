@@ -73,7 +73,7 @@ pub fn run<const PV: bool>(
 
     // Check deadline every 10000 node (only if we don't search to the specified depth or nodes count)
     if context.forced_depth == 0 && context.max_nodes_count == 0 && context.statistics.nodes_count % 10000 == 0 {
-        if (Utc::now() - context.search_time_start).num_milliseconds() >= context.deadline as i64 {
+        if (Utc::now() - context.search_time_start).num_milliseconds() > context.deadline as i64 {
             context.abort_token.aborted = true;
             return INVALID_SCORE;
         }
