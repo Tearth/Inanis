@@ -18,10 +18,14 @@ pub const INVALID_SCORE: i16 = 0;
 pub const DRAW_SCORE: i16 = 0;
 pub const CHECKMATE_SCORE: i16 = 31900;
 
+/// Checks if `score` is within mate range (from -[CHECKMATE_SCORE] to -[CHECKMATE_SCORE] + [MAX_DEPTH] and
+/// from [CHECKMATE_SCORE] - [MAX_DEPTH] to [CHECKMATE_SCORE]).
 pub fn is_score_near_checkmate(score: i16) -> bool {
     score.abs() >= CHECKMATE_SCORE - (MAX_DEPTH as i16) && score.abs() <= CHECKMATE_SCORE + (MAX_DEPTH as i16)
 }
 
+/// Performs selection sort on `moves` and `move_scores` arrays with length specified in `moves_count`, and starting from `start_index`.
+/// When it completes, the move and corresponding score will be under `start_index`, and the function returns move itself.
 pub fn sort_next_move(moves: &mut [Move], move_scores: &mut [i16], start_index: usize, moves_count: usize) -> Move {
     let mut best_score = move_scores[start_index];
     let mut best_index = start_index;

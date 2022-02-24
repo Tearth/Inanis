@@ -10,6 +10,8 @@ use std::mem::MaybeUninit;
 pub const SCORE_PRUNING_THRESHOLD: i16 = 0;
 pub const FUTILITY_PRUNING_MARGIN: i16 = 100;
 
+/// Entry point of the quiescence search. The main idea here is to reduce the horizon effect by processing capture sequences and eventually
+/// make a quiet position suitable for final evaluation. `context`, `depth`, `ply`, `alpha` and `beta` are provided by the leaf of the regular search.
 pub fn run(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, beta: i16) -> i16 {
     context.statistics.q_nodes_count += 1;
     context.statistics.max_ply = cmp::max(ply, context.statistics.max_ply);
@@ -83,6 +85,11 @@ pub fn run(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, bet
     alpha
 }
 
+/// Assigns scores for `moves` by filling `move_scores` array with `moves_count` length, based on current `context`. Move ordering in
+/// quiescence search is mainly based on SEE and works as follows:
+///  - for every en passant, assign 0.
+///  - for every capture with promotion, assign value of the promoted piece.
+///  - for rest of the moves, assign SEE result.
 fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut [i16], moves_count: usize) {
     for move_index in 0..moves_count {
         let r#move = moves[move_index];
@@ -107,10 +114,15 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
     }
 }
 
+/// Checks if the score pruning can be applied for `move_score`. The main idea here is to omit all capture sequances, which are clearly
+/// loosing material (`move_score` is less than [SCORE_PRUNING_THRESHOLD]) and with high probability won't improve alpha.
 fn score_pruning_can_be_applied(move_score: i16) -> bool {
     move_score < SCORE_PRUNING_THRESHOLD
 }
 
+/// Checks if the futility pruning can be applied for `move_score`. The main idea here is similar to score pruning, but instead of checking
+/// if the specified capture sequence loses some material or not, it checks if the final result added to the `stand_pat` and [FUTILITY_PRUNING_MARGIN]
+/// will be below alpha - if yes, then we can safely assume that this move is not enough good to be relevant for the search.
 fn futility_pruning_can_be_applied(move_score: i16, stand_pat: i16, alpha: i16) -> bool {
     stand_pat + move_score + FUTILITY_PRUNING_MARGIN < alpha
 }

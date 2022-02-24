@@ -107,6 +107,17 @@ pub struct SearchStatistics {
 }
 
 impl<'a> SearchContext<'a> {
+    /// Constructs a new instance of [SearchContext] with parameters as follows:
+    ///  - `board` - initial position of the board.
+    ///  - `time` - total time for the color in a move (in milliseconds).
+    ///  - `inc_time` - incremental time for the color in a move (in milliseconds).
+    ///  - `forced_depth` - depth at which the search will stop (might happen earlier if mate is detected), 0 if there is no constraint.
+    ///  - `max_nodex_count` - total nodes count at which the search will top (might happen earlier if mate is detected), 0 if there is no constraint.
+    /// This value can possibly not be strictly respected due to way of how the check is performed, so expect a bit more nodes count before stop.
+    ///  - `max_move_time` - allocated amount of time for the search (in milliseconds), 0 if we want to use default time allocator.
+    ///  - `uci_debug` - enables or disables additional debug info sent to GUI by `info string` command.
+    ///  - `transposition_table`, `pawn_hashtable`, `killers_table`, `history_table` - hashtables used during search.
+    ///  - `abort_token` - token used to abort search from the outside of the context.
     pub fn new(
         board: &'a mut Bitboard,
         time: u32,
@@ -144,6 +155,7 @@ impl<'a> SearchContext<'a> {
         }
     }
 
+    /// Retrieves PV line from the transposition table, using `board` position and current `ply`.
     fn get_pv_line(&mut self, board: &mut Bitboard, ply: i8) -> Vec<Move> {
         if ply >= MAX_DEPTH {
             return Vec::new();
@@ -189,6 +201,12 @@ impl<'a> SearchContext<'a> {
 impl<'a> Iterator for SearchContext<'a> {
     type Item = SearchResult;
 
+    /// Performs a next iteration of the search, using data stored withing the context. Returns [None] if any of the following conditions is true:
+    ///  - `self.forced_depth` is not 0 and the current depth is about to exceed this value
+    ///  - the current depth is about to exceed [MAX_DEPTH] value
+    ///  - time allocated for the current search has expired
+    ///  - mate score has detected and was recognized as reliable
+    ///  - search was aborted
     fn next(&mut self) -> Option<Self::Item> {
         if self.forced_depth != 0 && self.current_depth == self.forced_depth + 1 {
             return None;
@@ -270,6 +288,7 @@ impl<'a> Iterator for SearchContext<'a> {
 }
 
 impl SearchResult {
+    /// Constructs a new instance of [SearchResult] with stored `time`, `depth`, `score`, `pv_line` and `statistics`.
     pub fn new(time: u64, depth: i8, score: i16, pv_line: Vec<Move>, statistics: SearchStatistics) -> SearchResult {
         SearchResult {
             time,
