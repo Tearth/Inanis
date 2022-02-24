@@ -249,7 +249,7 @@ pub fn run<const PV: bool>(
         context.board.make_move(&r#move);
 
         let king_checked = context.board.is_king_checked(context.board.active_color);
-        let r = if late_move_reduction_can_be_applied(depth, &r#move, move_index, move_scores[move_index], king_checked) {
+        let r = if late_move_reduction_can_be_applied(depth, &r#move, move_index, move_scores[move_index], friendly_king_checked, king_checked) {
             late_move_reduction_get_r(move_index)
         } else {
             0
@@ -535,12 +535,20 @@ fn late_move_pruning_can_be_applied<const PV: bool>(depth: i8, ply: u16, move_in
     // && ply >= 4
 }
 
-fn late_move_reduction_can_be_applied(depth: i8, r#move: &Move, move_index: usize, move_score: i16, friendly_king_checked: bool) -> bool {
+fn late_move_reduction_can_be_applied(
+    depth: i8,
+    r#move: &Move,
+    move_index: usize,
+    move_score: i16,
+    friendly_king_checked: bool,
+    enemy_king_checked: bool,
+) -> bool {
     depth >= LATE_MOVE_REDUCTION_MIN_DEPTH
         && move_index >= LATE_MOVE_REDUCTION_MIN_MOVE_INDEX
         && move_score != MOVE_ORDERING_KILLER_MOVE
         && r#move.is_quiet()
         && !friendly_king_checked
+        && !enemy_king_checked
 }
 
 fn late_move_reduction_get_r(move_index: usize) -> i8 {
