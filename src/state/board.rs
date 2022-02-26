@@ -65,7 +65,7 @@ impl Bitboard {
         let mut board = Bitboard::new_initial_position();
         for premade_move in moves {
             let parsed_move = Move::from_long_notation(premade_move, &board)?;
-            board.make_move(&parsed_move);
+            board.make_move(parsed_move);
         }
 
         Ok(board)
@@ -90,7 +90,7 @@ impl Bitboard {
         index
     }
 
-    pub fn make_move(&mut self, r#move: &Move) {
+    pub fn make_move(&mut self, r#move: Move) {
         let color = self.active_color;
         let enemy_color = self.active_color ^ 1;
 
@@ -274,7 +274,7 @@ impl Bitboard {
         self.hash ^= zobrist::get_active_color_hash();
     }
 
-    pub fn undo_move(&mut self, r#move: &Move) {
+    pub fn undo_move(&mut self, r#move: Move) {
         let color = self.active_color ^ 1;
         let enemy_color = self.active_color;
 

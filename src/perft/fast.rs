@@ -21,7 +21,7 @@ pub fn run(depth: i32, board: &mut Bitboard, hashtable_size: usize, threads_coun
 
     for r#move in &moves[0..moves_count] {
         let mut cloned_board = board.clone();
-        cloned_board.make_move(r#move);
+        cloned_board.make_move(*r#move);
 
         queue.lock().unwrap().push(cloned_board);
     }

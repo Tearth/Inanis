@@ -280,7 +280,7 @@ fn handle_position(parameters: &[String], state: &mut Arc<UciState>) {
                     return;
                 }
             };
-            unsafe { (*state.board.get()).make_move(&parsed_move) };
+            unsafe { (*state.board.get()).make_move(parsed_move) };
         }
     };
 }

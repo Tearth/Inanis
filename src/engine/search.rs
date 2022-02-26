@@ -249,17 +249,17 @@ pub fn run<const PV: bool>(
             context.statistics.late_move_pruning_rejected += 1;
         }
 
-        context.board.make_move(&r#move);
+        context.board.make_move(r#move);
 
         let king_checked = context.board.is_king_checked(context.board.active_color);
-        let r = if late_move_reduction_can_be_applied(depth, &r#move, move_index, move_scores[move_index], friendly_king_checked, king_checked) {
+        let r = if late_move_reduction_can_be_applied(depth, r#move, move_index, move_scores[move_index], friendly_king_checked, king_checked) {
             late_move_reduction_get_r(move_index)
         } else {
             0
         };
 
         if reduction_pruning_can_be_applied::<PV>(depth, r) {
-            context.board.undo_move(&r#move);
+            context.board.undo_move(r#move);
             context.statistics.reduction_pruning_accepted += 1;
 
             continue;
@@ -294,7 +294,7 @@ pub fn run<const PV: bool>(
             }
         };
 
-        context.board.undo_move(&r#move);
+        context.board.undo_move(r#move);
 
         if score > best_score {
             best_score = score;
@@ -543,7 +543,7 @@ fn late_move_pruning_can_be_applied<const PV: bool>(depth: i8, move_index: usize
 
 fn late_move_reduction_can_be_applied(
     depth: i8,
-    r#move: &Move,
+    r#move: Move,
     move_index: usize,
     move_score: i16,
     friendly_king_checked: bool,

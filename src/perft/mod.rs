@@ -51,13 +51,13 @@ pub fn run_internal(context: &mut PerftContext, depth: i32) -> u64 {
             panic!("Integrity check failed: move detected as illegal");
         }
 
-        context.board.make_move(r#move);
+        context.board.make_move(*r#move);
 
         if !context.board.is_king_checked(context.board.active_color ^ 1) {
             count += run_internal(context, depth - 1);
         }
 
-        context.board.undo_move(r#move);
+        context.board.undo_move(*r#move);
     }
 
     if context.fast {

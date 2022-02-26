@@ -187,12 +187,12 @@ impl<'a> SearchContext<'a> {
                 }
 
                 if found {
-                    board.make_move(&entry.best_move);
+                    board.make_move(entry.best_move);
                     if !board.is_king_checked(board.active_color ^ 1) {
                         pv_line.push(entry.best_move);
                         pv_line.append(&mut self.get_pv_line(board, ply + 1));
                     }
-                    board.undo_move(&entry.best_move);
+                    board.undo_move(entry.best_move);
                 }
             }
             None => {
