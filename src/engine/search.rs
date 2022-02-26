@@ -243,7 +243,10 @@ pub fn run<const PV: bool>(
         ply,
     ) {
         if late_move_pruning_can_be_applied::<PV>(depth, move_index, move_scores[move_index], friendly_king_checked) {
+            context.statistics.late_move_pruning_accepted += 1;
             break;
+        } else {
+            context.statistics.late_move_pruning_rejected += 1;
         }
 
         context.board.make_move(&r#move);
@@ -257,7 +260,11 @@ pub fn run<const PV: bool>(
 
         if reduction_pruning_can_be_applied::<PV>(depth, r) {
             context.board.undo_move(&r#move);
+            context.statistics.reduction_pruning_accepted += 1;
+
             continue;
+        } else {
+            context.statistics.reduction_pruning_rejected += 1;
         }
 
         let score = if PV {

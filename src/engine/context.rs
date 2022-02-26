@@ -76,6 +76,12 @@ pub struct SearchStatistics {
     pub null_move_pruning_accepted: u64,
     pub null_move_pruning_rejected: u64,
 
+    pub late_move_pruning_accepted: u64,
+    pub late_move_pruning_rejected: u64,
+
+    pub reduction_pruning_accepted: u64,
+    pub reduction_pruning_rejected: u64,
+
     pub razoring_attempts: u64,
     pub razoring_accepted: u64,
     pub razoring_rejected: u64,
