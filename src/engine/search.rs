@@ -242,7 +242,7 @@ pub fn run<const PV: bool>(
         evasion_mask,
         ply,
     ) {
-        if late_move_pruning_can_be_applied::<PV>(depth, ply, move_index, move_scores[move_index], friendly_king_checked) {
+        if late_move_pruning_can_be_applied::<PV>(depth, move_index, move_scores[move_index], friendly_king_checked) {
             break;
         }
 
@@ -526,13 +526,12 @@ fn null_move_pruning_get_r(depth: i8) -> i8 {
     }
 }
 
-fn late_move_pruning_can_be_applied<const PV: bool>(depth: i8, ply: u16, move_index: usize, move_score: i16, friendly_king_checked: bool) -> bool {
+fn late_move_pruning_can_be_applied<const PV: bool>(depth: i8, move_index: usize, move_score: i16, friendly_king_checked: bool) -> bool {
     !PV && depth >= LATE_MOVE_PRUNING_MIN_DEPTH
         && depth <= LATE_MOVE_PRUNING_MAX_DEPTH
         && move_index >= LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_BASE + (depth as usize - 1) * LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_MULTIPLIER
         && move_score <= LATE_MOVE_PRUNING_MAX_SCORE
         && !friendly_king_checked
-    // && ply >= 4
 }
 
 fn late_move_reduction_can_be_applied(
