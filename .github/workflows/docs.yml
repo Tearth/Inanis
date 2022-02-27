@@ -11,7 +11,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: doc
-          args: --no-deps
+          args: --no-deps --document-private-items
       - run: echo "<meta http-equiv=\"refresh\" content=\"0; url=inanis\">" > ./target/doc/index.html
       - uses: peaceiris/actions-gh-pages@v3
         with:
