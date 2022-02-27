@@ -12,6 +12,13 @@ pub const FUTILITY_PRUNING_MARGIN: i16 = 100;
 
 /// Entry point of the quiescence search. The main idea here is to reduce the horizon effect by processing capture sequences and eventually
 /// make a quiet position suitable for final evaluation. `context`, `depth`, `ply`, `alpha` and `beta` are provided by the leaf of the regular search.
+///
+/// Search steps:
+///  - Test if the friendly king was not captured earlier
+///  - Calculate stand-pat score and process initial pruning/alpha update
+///  - Main loop:
+///     - Score pruning
+///     - Futility pruning (<https://www.chessprogramming.org/Delta_Pruning>)
 pub fn run(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, beta: i16) -> i16 {
     context.statistics.q_nodes_count += 1;
     context.statistics.max_ply = cmp::max(ply, context.statistics.max_ply);
