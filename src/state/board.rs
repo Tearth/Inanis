@@ -531,7 +531,7 @@ impl Bitboard {
         self.pieces[color as usize][piece as usize] |= 1u64 << field;
         self.occupancy[color as usize] |= 1u64 << field;
         self.piece_table[field as usize] = piece;
-        self.material_scores[color as usize] += material::get_value(piece);
+        self.material_scores[color as usize] += unsafe { parameters::PIECE_VALUE[piece as usize] };
 
         self.pst_scores[color as usize][OPENING as usize] += pst::get_value(piece, color, OPENING, field);
         self.pst_scores[color as usize][ENDING as usize] += pst::get_value(piece, color, ENDING, field);
@@ -541,7 +541,7 @@ impl Bitboard {
         self.pieces[color as usize][piece as usize] &= !(1u64 << field);
         self.occupancy[color as usize] &= !(1u64 << field);
         self.piece_table[field as usize] = u8::MAX;
-        self.material_scores[color as usize] -= material::get_value(piece);
+        self.material_scores[color as usize] -= unsafe { parameters::PIECE_VALUE[piece as usize] };
 
         self.pst_scores[color as usize][OPENING as usize] -= pst::get_value(piece, color, OPENING, field);
         self.pst_scores[color as usize][ENDING as usize] -= pst::get_value(piece, color, ENDING, field);

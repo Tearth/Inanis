@@ -6,6 +6,16 @@ use crate::state::board::Bitboard;
 use crate::state::patterns;
 use std::cmp;
 
+/// Evaluates structure of pawns on the `board` and returns score from the white color perspective (more than 0 when advantage,
+/// less than 0 when disadvantage). This evaluator considers:
+///  - doubled pawns (negative score)
+///  - isolated pawns (negative score)
+///  - chained pawns (positive score)
+///  - passing_pawns (positive_score)
+///  - opened files next to the king (negative score)
+///
+/// To improve performance (using the fact that structure of pawns changes relatively rare), each evaluation is saved in the pawn hashtable,
+/// and used again if possible.
 pub fn evaluate(board: &Bitboard, pawn_hashtable: &mut PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
     let mut collision = false;
     match pawn_hashtable.get(board.pawn_hash, &mut collision) {
@@ -29,10 +39,12 @@ pub fn evaluate(board: &Bitboard, pawn_hashtable: &mut PawnHashTable, statistics
     score
 }
 
+/// Does the same thing as [evaluate], but doesn't use pawn hashtable to save evalations.
 pub fn evaluate_without_cache(board: &Bitboard) -> i16 {
     evaluate_color(board, WHITE) - evaluate_color(board, BLACK)
 }
 
+/// Evaluates pawn structure on the `board` for the specified `color`.
 fn evaluate_color(board: &Bitboard, color: u8) -> i16 {
     let mut doubled_pawns = 0;
     let mut isolated_pawns = 0;
