@@ -6,6 +6,7 @@ use crate::state::movegen;
 use crate::state::movescan::Move;
 use crate::state::*;
 use chrono::Utc;
+use std::cmp;
 use std::mem::MaybeUninit;
 
 pub const RAZORING_MIN_DEPTH: i8 = 1;
@@ -33,7 +34,8 @@ pub const LATE_MOVE_PRUNING_MAX_SCORE: i16 = 0;
 pub const LATE_MOVE_REDUCTION_MIN_DEPTH: i8 = 2;
 pub const LATE_MOVE_REDUCTION_MIN_MOVE_INDEX: usize = 2;
 pub const LATE_MOVE_REDUCTION_REDUCTION_BASE: usize = 1;
-pub const LATE_MOVE_REDUCTION_REDUCTION_STEP: usize = 8;
+pub const LATE_MOVE_REDUCTION_REDUCTION_STEP: usize = 4;
+pub const LATE_MOVE_REDUCTION_MAX_REDUCTION: i8 = 3;
 
 pub const REDUCTION_PRUNING_DEPTH_THRESHOLD: i8 = 0;
 
@@ -672,7 +674,10 @@ fn late_move_reduction_can_be_applied(
 
 /// Gets the late move depth reduction, called R, based on `move_index`. The lower the move was scored, the larger reduction will be returned.
 fn late_move_reduction_get_r(move_index: usize) -> i8 {
-    (LATE_MOVE_REDUCTION_REDUCTION_BASE + (move_index - LATE_MOVE_REDUCTION_MIN_MOVE_INDEX) / LATE_MOVE_REDUCTION_REDUCTION_STEP) as i8
+    cmp::min(
+        LATE_MOVE_REDUCTION_MAX_REDUCTION,
+        (LATE_MOVE_REDUCTION_REDUCTION_BASE + (move_index - LATE_MOVE_REDUCTION_MIN_MOVE_INDEX) / LATE_MOVE_REDUCTION_REDUCTION_STEP) as i8,
+    )
 }
 
 /// The main idea of the reduction pruning is to prune all nodes, for which the calculated earlier reduction is so big, tha it's beyond regular
