@@ -33,6 +33,7 @@ pub const LATE_MOVE_PRUNING_MAX_SCORE: i16 = 0;
 
 pub const LATE_MOVE_REDUCTION_MIN_DEPTH: i8 = 2;
 pub const LATE_MOVE_REDUCTION_MIN_MOVE_INDEX: usize = 2;
+pub const LATE_MOVE_REDUCTION_MAX_SCORE: i16 = 90;
 pub const LATE_MOVE_REDUCTION_REDUCTION_BASE: usize = 1;
 pub const LATE_MOVE_REDUCTION_REDUCTION_STEP: usize = 4;
 pub const LATE_MOVE_REDUCTION_MAX_REDUCTION: i8 = 3;
@@ -666,7 +667,7 @@ fn late_move_reduction_can_be_applied(
 ) -> bool {
     depth >= LATE_MOVE_REDUCTION_MIN_DEPTH
         && move_index >= LATE_MOVE_REDUCTION_MIN_MOVE_INDEX
-        && move_score != MOVE_ORDERING_KILLER_MOVE
+        && move_score <= LATE_MOVE_REDUCTION_MAX_SCORE
         && r#move.is_quiet()
         && !friendly_king_checked
         && !enemy_king_checked
