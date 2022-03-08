@@ -653,7 +653,7 @@ fn late_move_pruning_can_be_applied<const PV: bool>(depth: i8, move_index: usize
 /// Conditions:
 ///  - Depth >= [LATE_MOVE_REDUCTION_MIN_DEPTH]
 ///  - Move index >= [LATE_MOVE_REDUCTION_MIN_MOVE_INDEX]
-///  - Move was not retrieved from killers table
+///  - Move score <= [LATE_MOVE_REDUCTION_MAX_SCORE]
 ///  - Move is quiet
 ///  - Friendly king is not checked
 ///  - Enemy king is not checked
