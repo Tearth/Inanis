@@ -56,6 +56,7 @@ impl Default for UciState {
 
 unsafe impl Sync for UciState {}
 
+/// Entry point of the UCI (Universal Chess Interface) and command loop.
 pub fn run() {
     let mut state: Arc<UciState> = Arc::new(Default::default());
     unsafe { (*state.options.get()).insert("Hash".to_string(), "1".to_string()) };
@@ -91,6 +92,7 @@ pub fn run() {
     }
 }
 
+/// Handless `debug [on/off]` command by setting the proper flag.
 fn handle_debug(parameters: &[String], state: &mut Arc<UciState>) {
     if parameters.len() < 2 {
         return;
@@ -99,6 +101,16 @@ fn handle_debug(parameters: &[String], state: &mut Arc<UciState>) {
     (*state).debug_mode.store(matches!(parameters[1].as_str(), "on"), Ordering::Relaxed);
 }
 
+/// Handles `go [parameters]` command by running a new search for a position which was set using `position` command. Supported parameters:
+///  - `wtime x` - amount of total time for white in milliseconds
+///  - `btime x` - amount of total time for black in milliseconds
+///  - `winc x` - incremental time for white
+///  - `binc x` - incremental time for black
+///  - `depth x` - fixed depth, where the search will stop
+///  - `nodes x` - fixed nodes count, after which the search will try to stop as soon as possible
+///  - `movetime x` - fixed time allocated for the search in milliseconds
+///  - `movestogo x` - amount of moves, after which the time will be increased
+///  - `infinite` - tells the search to run until it reaches the maximum depth for the engine
 fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
     wait_for_busy_flag(state);
     unsafe {
@@ -243,11 +255,17 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
     }
 }
 
+/// Handles `isready` commadn by waiting for the busy flag, and then printing response as fast as possible.
 fn handle_isready(state: &mut Arc<UciState>) {
     wait_for_busy_flag(state);
     println!("readyok");
 }
 
+/// Handles `position ...` command with the following variants:
+///  - `position startpos` - sets a default position
+///  - `position startpos moves [list of moves]` - sets a default position and applies a list of moves
+///  - `position fen [fen]` - sets a FEN position
+///  - `position fen [fen] moves [list of moves]` - sets a FEN position and applies a list of moves
 fn handle_position(parameters: &[String], state: &mut Arc<UciState>) {
     wait_for_busy_flag(state);
 
@@ -285,6 +303,8 @@ fn handle_position(parameters: &[String], state: &mut Arc<UciState>) {
     };
 }
 
+/// Handles `setoption [name] value [value]` command by creating or overwriting a `name` option with the specified `value`. Recreates tables if `Hash` or
+/// `Clear Hash` options are modified.
 fn handle_setoption(parameters: &[String], state: &mut Arc<UciState>) {
     wait_for_busy_flag(state);
 
@@ -322,15 +342,16 @@ fn handle_setoption(parameters: &[String], state: &mut Arc<UciState>) {
 
     match name.as_str() {
         "Hash" => {
-            clear_state_tables(state);
+            recreate_state_tables(state);
         }
         "Clear Hash" => {
-            clear_state_tables(state);
+            recreate_state_tables(state);
         }
         _ => {}
     }
 }
 
+/// Handles `ucinewgame` command by resetting a board state, recreating abort token and clearing taables.
 fn handle_ucinewgame(state: &mut Arc<UciState>) {
     wait_for_busy_flag(state);
 
@@ -339,20 +360,23 @@ fn handle_ucinewgame(state: &mut Arc<UciState>) {
 
         *state.board.get() = Bitboard::new_initial_position();
         *state.abort_token.get() = Default::default();
-        clear_state_tables(state);
+        recreate_state_tables(state);
     }
 }
 
+/// Handles `stop` command by setting abort token, which should stop ongoing search as fast as possible.
 fn handle_stop(state: &mut Arc<UciState>) {
     unsafe {
         (*state.abort_token.get()).aborted = true;
     }
 }
 
+/// Handles `quit` command by terminating engine process.
 fn handle_quit() {
     process::exit(0);
 }
 
+/// Wait for the busy flag before continuing. If the deadline is exceeded, the engine process is terminated.
 fn wait_for_busy_flag(state: &mut Arc<UciState>) {
     let now = Utc::now();
     while (*state).busy_flag.fetch_and(true, Ordering::Release) {
@@ -362,7 +386,8 @@ fn wait_for_busy_flag(state: &mut Arc<UciState>) {
     }
 }
 
-fn clear_state_tables(state: &mut Arc<UciState>) {
+/// Recreates transposition table, pawn hashtable, killers table and history table.
+fn recreate_state_tables(state: &mut Arc<UciState>) {
     unsafe {
         let total_size = (*state.options.get())["Hash"].parse::<usize>().unwrap();
         let allocation_result = allocator::get_allocation(total_size);

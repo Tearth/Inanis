@@ -24,6 +24,7 @@ const REPOSITORY: &str = env!("CARGO_PKG_REPOSITORY");
 const DATE: &str = env!("DATE");
 const HASH: &str = env!("HASH");
 
+/// Entry point of the terminal interface and command loop.
 pub fn run() {
     println!("Inanis v{} ({}), created by {}", VERSION, DATE, AUTHOR);
     println!("Executable hash: {}", HASH);
@@ -58,6 +59,7 @@ pub fn run() {
     }
 }
 
+/// Handles `help` command by printing all available ones.
 fn handle_help() {
     println!("=== General ===");
     println!(" benchmark - run test for a set of positions");
@@ -84,6 +86,7 @@ fn handle_help() {
     println!(" qperft [depth] [threads_count] [hashtable_size_mb] moves [moves]");
 }
 
+/// Handles `benchmark` command by running a fixed-depth search for a set of static positions and printing diagnostic data.
 fn handle_benchmark() {
     println!("Starting benchmark...");
     let result = benchmark::run();
@@ -275,6 +278,7 @@ fn handle_benchmark() {
     println!("Result hash: {}", result.result_hash);
 }
 
+/// Handles `evaluate [fen]` command by printing evaluation for the position specified by FEN.
 fn handle_evaluate(input: Vec<&str>) {
     if input.len() < 2 {
         println!("FEN not found");
@@ -315,6 +319,7 @@ fn handle_evaluate(input: Vec<&str>) {
     }
 }
 
+/// Handles `magic` command by printing a fresh set of magic numbers.
 fn handle_magic() {
     let now = Utc::now();
     println!("Generating magic numbers for rook...");
@@ -334,6 +339,8 @@ fn handle_magic() {
     println!("Done! Magic numbers generated in {} ms", diff);
 }
 
+/// Handles `perft [depth]`, `perft [depth] fen [fen]` and `perft [depth] moves [moves]` commands by running a perft test to the depth specified
+/// by `depth` parameter. The initial position can be specified by FEN, a list of moves, or just omitted (so the default start position will be taken).
 fn handle_perft(input: Vec<&str>) {
     if input.len() < 2 {
         println!("Depth parameter not found");
@@ -369,6 +376,8 @@ fn handle_perft(input: Vec<&str>) {
     println!("Perft done!");
 }
 
+/// Handles `dperft [depth]`, `dperft [depth] fen [fen]` and `dperft [depth] moves [moves]` commands by running a divided perft test to the depth specified
+/// by `depth` parameter. The initial position can be specified by FEN, a list of moves, or just omitted (so the default start position will be taken).
 fn handle_dperft(input: Vec<&str>) {
     if input.len() < 2 {
         println!("Depth parameter not found");
@@ -404,6 +413,10 @@ fn handle_dperft(input: Vec<&str>) {
     println!("Perft done!");
 }
 
+/// Handles `qperft [depth] [threads_count] [hashtable_size_mb]`, `qperft [depth] [threads_count] [hashtable_size_mb] fen [fen]` and
+/// `qperft [depth] [threads_count] [hashtable_size_mb] moves [moves]` commands by running a quick perft test to the depth specified by `depth` parameter.
+/// This kind of perft also supports multithreading (specified by `threads_count`) and caching results in the hashtable (with size specified by `hashtable_size_mb`).
+/// The initial position can be specified by FEN, a list of moves, or just omitted (so the default start position will be taken).
 fn handle_qperft(input: Vec<&str>) {
     if input.len() < 2 {
         println!("Depth parameter not found");
@@ -473,6 +486,8 @@ fn handle_qperft(input: Vec<&str>) {
     println!("Perft done!");
 }
 
+/// Handles `test [epd] [depth] [tries_to_confirm]` command by running a fixed-depth search of positions stored in the `epd` file. To classify the test
+/// as successful, there must be at least `tries_to_confirm` search iterations in a row, which returned the best move same as the expected one in the position.
 fn handle_test(input: Vec<&str>) {
     if input.len() < 2 {
         println!("EPD filename parameter not found");
@@ -508,6 +523,9 @@ fn handle_test(input: Vec<&str>) {
     test::run(input[1], depth, tries_to_confirm);
 }
 
+/// Handles `tuner [epd] [output] [lock_material] [randomize] [threads_count]` command by running an evaluation parameters tuner. The input file is specified by `epd`
+/// file with a list of positions and their expected results, and the `output` directory is used to store generated Rust sources with the optimized values. Use
+/// `lock_material` to disable tuner for piece values, and `randomize` to initialize evaluation parameters with random values. Multithreading is supported by `threads_count`.
 fn handle_tuner(input: Vec<&str>) {
     if input.len() < 2 {
         println!("EPD filename parameter not found");
@@ -556,22 +574,27 @@ fn handle_tuner(input: Vec<&str>) {
     tuner::run(input[1], input[2], lock_material, random_values, threads_count);
 }
 
+/// Handles `uci` command by entering into UCI (Universal Chess Interface) mode.
 fn handle_uci() {
     uci::run();
 }
 
+/// Handles `wah` command by printing WAH.                  
 fn handle_wah() {
     println!("WAH");
 }
 
+/// Handles `quit` command by exiting process.
 fn handle_quit() {
     process::exit(0);
 }
 
+/// Handles unknown command by printing warning message.
 fn handle_unknown_command() {
     println!("Unknown command, type \"help\" to get a list of available ones");
 }
 
+/// Creates a new board based on the input with FEN or moves list - returns [Err] if internal parser failed.
 fn prepare_board(parameters: &[&str]) -> Result<Bitboard, &'static str> {
     if parameters.is_empty() {
         return Ok(Bitboard::new_initial_position());
@@ -587,6 +610,7 @@ fn prepare_board(parameters: &[&str]) -> Result<Bitboard, &'static str> {
     }
 }
 
+/// Helper function to calculate percent of `from` within `all`.
 fn percent(from: u64, all: u64) -> f32 {
     ((from as f32) / (all as f32)) * 100.0
 }
