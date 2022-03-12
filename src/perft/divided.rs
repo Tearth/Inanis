@@ -7,6 +7,8 @@ use std::mem::MaybeUninit;
 use std::sync::Arc;
 use std::u64;
 
+/// Entry point of the fixed-`depth` divided perft, which performs a separate perfts for every possible move in the position specified by `board`.
+/// Returns a map with the long notation moves as the key, and calculated nodes count as the associated value.
 pub fn run(depth: i32, board: &mut Bitboard) -> Vec<(String, u64)> {
     let mut moves: [Move; engine::MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
     let moves_count = board.get_all_moves(&mut moves, u64::MAX);

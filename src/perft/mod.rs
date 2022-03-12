@@ -9,6 +9,7 @@ pub mod divided;
 pub mod fast;
 pub mod normal;
 
+/// Internal perft function, common for every mode.
 pub fn run_internal(context: &mut PerftContext, depth: i32) -> u64 {
     if context.check_integrity {
         let original_hash = context.board.hash;

@@ -1,3 +1,4 @@
+use super::*;
 use crate::cache::perft::PerftHashTable;
 use crate::engine;
 use crate::perft::context::PerftContext;
@@ -9,8 +10,8 @@ use std::sync::Mutex;
 use std::thread;
 use std::u64;
 
-use super::run_internal;
-
+/// Entry point of the fixed-`depth` fast perft, which uses both hashtable (with size specified in `hashtable_size`) and multithreading (with `threads_count` threads).
+/// Returns calculated nodes count as the first value, and approximated hashtable usage as the second value.
 pub fn run(depth: i32, board: &mut Bitboard, hashtable_size: usize, threads_count: usize) -> (u64, f32) {
     let queue = Arc::new(Mutex::new(Vec::new()));
     let hashtable = Arc::new(PerftHashTable::new(hashtable_size));
