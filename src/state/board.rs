@@ -53,14 +53,19 @@ pub struct Bitboard {
 }
 
 impl Bitboard {
+    /// Constructs a new instance of [Bitboard] with initial position.
     pub fn new_initial_position() -> Bitboard {
         Bitboard::new_from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap()
     }
 
+    /// Constructs a new instance of [Bitboard] with position specified by `fen`.
+    /// Returns [Err] with proper error message if `fen` couldn't be parsed correctly.
     pub fn new_from_fen(fen: &str) -> Result<Bitboard, &'static str> {
         fen::fen_to_board(fen)
     }
 
+    /// Constructs a new instance of [Bitboard] with position specified by list of `moves`.
+    /// Returns [Err] with proper error message is `moves` couldn't be parsed correctly.
     pub fn new_from_moves(moves: &[&str]) -> Result<Bitboard, &'static str> {
         let mut board = Bitboard::new_initial_position();
         for premade_move in moves {
@@ -71,6 +76,9 @@ impl Bitboard {
         Ok(board)
     }
 
+    /// Generates all possible non-captures (if `CAPTURES` is false) or all possible captures (if `CAPTURES` is true) at the current position, stores
+    /// them into `moves` list (starting from `index`) and returns index of the first free slot. Use `evasion_mask` with value different
+    /// than `u64::MAX` to restrict generator to the specified fields (useful during checks).
     pub fn get_moves<const CAPTURES: bool>(&self, moves: &mut [Move], mut index: usize, evasion_mask: u64) -> usize {
         index = movescan::scan_pawn_moves::<CAPTURES>(self, moves, index, evasion_mask);
         index = movescan::scan_piece_moves::<KNIGHT, CAPTURES>(self, moves, index, evasion_mask);
@@ -82,6 +90,8 @@ impl Bitboard {
         index
     }
 
+    /// Generates all possible moves (non-captures and captures) at the current position, stores them into `moves` list (starting from `index`) and returns
+    /// index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the specified fields (useful during checks).
     pub fn get_all_moves(&self, moves: &mut [Move], evasion_mask: u64) -> usize {
         let mut index = 0;
         index = self.get_moves::<true>(moves, index, evasion_mask);
@@ -90,6 +100,17 @@ impl Bitboard {
         index
     }
 
+    /// Makes a `r#move`, with the assumption that it's perfectly valid at the current position (otherwise, internal state can be irreversibly corrupted).
+    ///
+    /// Steps of making a move:
+    ///  - preserve halfmove clock, castling rights, en passant bitboard, board hash and pawn hash
+    ///  - update piece bitboards
+    ///  - update board hash and pawn hash
+    ///  - update en passant bitboard if needed
+    ///  - update castling rights if needed
+    ///  - increase fullmove number if needed
+    ///  - increase halfmove clock if needed
+    ///  - switch active color
     pub fn make_move(&mut self, r#move: Move) {
         let color = self.active_color;
         let enemy_color = self.active_color ^ 1;
@@ -274,6 +295,14 @@ impl Bitboard {
         self.hash ^= zobrist::get_active_color_hash();
     }
 
+    /// Undoes a `r#move`, with the assumption that it's perfectly valid at the current position (otherwise, internal state can be irreversibly corrupted).
+    ///
+    /// Steps of undoing a move:
+    ///  - restore halfmove clock, castling rights, en passant bitboard, board hash and pawn hash
+    ///  - update piece bitboards
+    ///  - decrease fullmove number if needed
+    ///  - restore halfmove clock if needed
+    ///  - switch active color
     pub fn undo_move(&mut self, r#move: Move) {
         let color = self.active_color ^ 1;
         let enemy_color = self.active_color;
@@ -332,6 +361,14 @@ impl Bitboard {
         self.active_color = color;
     }
 
+    /// Makes a null move, which is basically a switch of the active color with preservation of the internal state.
+    ///
+    /// Steps of making a null move:
+    ///  - preserve halfmove clock, castling rights, en passant bitboard, board hash and pawn hash
+    ///  - update en passant bitboard if needed
+    ///  - increase fullmove number if needed
+    ///  - increase null moves count
+    ///  - switch active color
     pub fn make_null_move(&mut self) {
         let color = self.active_color;
         let enemy_color = self.active_color ^ 1;
@@ -340,6 +377,7 @@ impl Bitboard {
         self.castling_rights_stack.push(self.castling_rights);
         self.en_passant_stack.push(self.en_passant);
         self.hash_stack.push(self.hash);
+        self.pawn_hash_stack.push(self.pawn_hash);
 
         if self.en_passant != 0 {
             self.hash ^= zobrist::get_en_passant_hash((bit_scan(self.en_passant) % 8) as u8);
@@ -350,11 +388,18 @@ impl Bitboard {
             self.fullmove_number += 1;
         }
 
+        self.null_moves += 1;
         self.active_color = enemy_color;
         self.hash ^= zobrist::get_active_color_hash();
-        self.null_moves += 1;
     }
 
+    /// Undoes a null move, which is basically a switch of the active color with restoring of the internal state.
+    ///
+    /// Steps of undoing a null move:
+    ///  - restore halfmove clock, castling rights, en passant bitboard, board hash and pawn hash
+    ///  - decrease fullmove number if needed
+    ///  - switch active color
+    ///  - decrease null moves count
     pub fn undo_null_move(&mut self) {
         let color = self.active_color ^ 1;
 
@@ -362,6 +407,7 @@ impl Bitboard {
         self.castling_rights = self.castling_rights_stack.pop().unwrap();
         self.en_passant = self.en_passant_stack.pop().unwrap();
         self.hash = self.hash_stack.pop().unwrap();
+        self.pawn_hash = self.pawn_hash_stack.pop().unwrap();
 
         if color == BLACK {
             self.fullmove_number -= 1;
@@ -371,6 +417,7 @@ impl Bitboard {
         self.null_moves -= 1;
     }
 
+    /// Checks if the field specified by `field_index` is attacked by enemy, from the `color` perspective.
     pub fn is_field_attacked(&self, color: u8, field_index: u8) -> bool {
         let enemy_color = color ^ 1;
         let occupancy = self.occupancy[WHITE as usize] | self.occupancy[BLACK as usize];
@@ -414,6 +461,7 @@ impl Bitboard {
         false
     }
 
+    /// Checks if any of the field specified by `field_indexes` list is attacked by enemy, from the `color` perspective.
     pub fn are_fields_attacked(&self, color: u8, field_indexes: &[u8]) -> bool {
         for field_index in field_indexes {
             if self.is_field_attacked(color, *field_index) {
@@ -424,18 +472,13 @@ impl Bitboard {
         false
     }
 
+    /// Gets a list of enemy pieces attacking a field specified by `fields_index`, from the `color` perspective. The encoding looks as follows:
+    ///  - bit 0 - Pawn
+    ///  - bit 1, 2, 3 - Knight/Bishop
+    ///  - bit 4, 5 - Rook
+    ///  - bit 6 - Queen
+    ///  - bit 7 - King
     pub fn get_attacking_pieces(&self, color: u8, field_index: u8) -> u8 {
-        /*
-            0 - pawn
-            1 - knight/bishop
-            2 - knight/bishop
-            3 - knight/bishop
-            4 - rook
-            5 - rook
-            6 - queen
-            7 - king
-        */
-
         let mut result = 0;
         let enemy_color = color ^ 1;
         let occupancy = self.occupancy[WHITE as usize] | self.occupancy[BLACK as usize];
@@ -502,6 +545,7 @@ impl Bitboard {
         result
     }
 
+    /// Check if the king of the `color` side is checked.
     pub fn is_king_checked(&self, color: u8) -> bool {
         if self.pieces[color as usize][KING as usize] == 0 {
             return false;
@@ -510,10 +554,12 @@ impl Bitboard {
         self.is_field_attacked(color, bit_scan(self.pieces[color as usize][KING as usize]))
     }
 
+    /// Gets piece on the field specified by `field_index`.
     pub fn get_piece(&self, field_index: u8) -> u8 {
         self.piece_table[field_index as usize]
     }
 
+    /// Gets piece's color on the field specified by `field_index`. Returns `u8::MAX` if there is no piece there.
     pub fn get_piece_color(&self, field_index: u8) -> u8 {
         let piece = self.piece_table[field_index as usize];
         if piece == u8::MAX {
@@ -527,6 +573,7 @@ impl Bitboard {
         }
     }
 
+    /// Adds `piece` on the `field` with the specified `color`, also updates occupancy and incremental values.
     pub fn add_piece(&mut self, color: u8, piece: u8, field: u8) {
         self.pieces[color as usize][piece as usize] |= 1u64 << field;
         self.occupancy[color as usize] |= 1u64 << field;
@@ -537,6 +584,7 @@ impl Bitboard {
         self.pst_scores[color as usize][ENDING as usize] += pst::get_value(piece, color, ENDING, field);
     }
 
+    /// Removes `piece` on the `field` with the specified `color`, also updates occupancy and incremental values.
     pub fn remove_piece(&mut self, color: u8, piece: u8, field: u8) {
         self.pieces[color as usize][piece as usize] &= !(1u64 << field);
         self.occupancy[color as usize] &= !(1u64 << field);
@@ -547,6 +595,7 @@ impl Bitboard {
         self.pst_scores[color as usize][ENDING as usize] -= pst::get_value(piece, color, ENDING, field);
     }
 
+    /// Moves `piece` from the field specified by `from` to the field specified by `to` with the specified `color`, also updates occupancy and incremental values.
     pub fn move_piece(&mut self, color: u8, piece: u8, from: u8, to: u8) {
         self.pieces[color as usize][piece as usize] ^= (1u64 << from) | (1u64 << to);
         self.occupancy[color as usize] ^= (1u64 << from) | (1u64 << to);
@@ -560,18 +609,23 @@ impl Bitboard {
         self.pst_scores[color as usize][ENDING as usize] += pst::get_value(piece, color, ENDING, to);
     }
 
+    /// Converts the board's state into FEN.
     pub fn to_fen(&self) -> String {
         fen::board_to_fen(self)
     }
 
+    /// Recalculates board's hash entirely.
     pub fn recalculate_hash(&mut self) {
         zobrist::recalculate_hash(self);
     }
 
+    /// Recalculates board's pawn hash entirely.
     pub fn recalculate_pawn_hash(&mut self) {
         zobrist::recalculate_pawn_hash(self);
     }
 
+    /// Runs full evaluation (material, piece-square table, mobility, pawns structure and safety) of the current position, using `pawn_hashtable` to store pawn
+    /// evaluations and `statistics` to gather diagnostic data. Returns score from the white color perspective (more than 0 when advantage, less than 0 when disadvantage).
     pub fn evaluate(&self, pawn_hashtable: &mut PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
         let mut white_attack_mask = 0;
         let mut black_attack_mask = 0;
@@ -584,6 +638,8 @@ impl Bitboard {
             + mobility_score
     }
 
+    /// Runs full evaluation (material, piece-square table, mobility, pawns structure and safety) of the current position.
+    /// Returns score from the white color perspective (more than 0 when advantage, less than 0 when disadvantage).
     pub fn evaluate_without_cache(&self) -> i16 {
         let mut white_attack_mask = 0;
         let mut black_attack_mask = 0;
@@ -596,15 +652,19 @@ impl Bitboard {
             + mobility_score
     }
 
+    /// Runs lazy (fast) evaluations, considering only material and piece-square table. Returns score from the white color perspective (more than 0 when
+    /// advantage, less than 0 when disadvantage).
     pub fn evaluate_lazy(&self) -> i16 {
         material::evaluate(self) + pst::evaluate(self)
     }
 
+    /// Recalculates incremental values (material and piece-square tables) entirely.
     pub fn recalculate_incremental_values(&mut self) {
         material::recalculate_incremental_values(self);
         pst::recalculate_incremental_values(self);
     }
 
+    /// Checks if there's threefold repetition draw at the current position.
     pub fn is_threefold_repetition_draw(&self) -> bool {
         if self.hash_stack.len() < 6 || self.null_moves > 0 {
             return false;
@@ -631,6 +691,7 @@ impl Bitboard {
         false
     }
 
+    /// Checks if there's fifty move rule draw at the current position.
     pub fn is_fifty_move_rule_draw(&self) -> bool {
         if self.null_moves > 0 {
             return false;
@@ -639,6 +700,10 @@ impl Bitboard {
         self.halfmove_clock >= 100
     }
 
+    /// Checks if there's an inssuficient material draw:
+    ///  - King vs King
+    ///  - King + Knight/Bishop vs King
+    ///  - King + Bishop (same color) vs King + Bishop (same color)
     pub fn is_insufficient_material_draw(&self) -> bool {
         let white_material = self.material_scores[WHITE as usize] - unsafe { parameters::PIECE_VALUE[KING as usize] };
         let black_material = self.material_scores[BLACK as usize] - unsafe { parameters::PIECE_VALUE[KING as usize] };
@@ -679,6 +744,7 @@ impl Bitboard {
         false
     }
 
+    /// Calculates a game phase at the current position: 1.0 means opening (all pieces present, considering the default position), 0.0 is ending (no pieces at all).
     pub fn get_game_phase(&self) -> f32 {
         let total_material =
             self.material_scores[WHITE as usize] + self.material_scores[BLACK as usize] - 2 * unsafe { parameters::PIECE_VALUE[KING as usize] };
@@ -687,6 +753,7 @@ impl Bitboard {
 }
 
 impl Default for Bitboard {
+    /// Constructs a new instance of [Bitboard] with zeroed values.
     fn default() -> Self {
         Bitboard {
             pieces: [[0; 6], [0; 6]],
