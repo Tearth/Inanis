@@ -173,6 +173,7 @@ struct MagicField {
 }
 
 impl MagicField {
+    /// Constructs a new instance of [MagicField] with zeroed values.
     pub const fn new() -> MagicField {
         MagicField {
             mask: 0,
@@ -183,6 +184,7 @@ impl MagicField {
     }
 }
 
+/// Initializes move generator by applying built-in magic numbers ([ROOK_MAGIC_NUMBERS] and [BISHOP_MAGIC_NUMBERS]).
 pub fn init() {
     for index in 0..64 {
         apply_rook_magic_for_field(index);
@@ -190,38 +192,44 @@ pub fn init() {
     }
 }
 
+/// Gets a knight moves for the field specified by `field_index`, without considering an occupancy.
 pub fn get_knight_moves(field_index: usize) -> u64 {
     patterns::get_jumps(field_index)
 }
 
+/// Gets a king moves for the field specified by `field_index`, without considering an occupancy.
 pub fn get_king_moves(field_index: usize) -> u64 {
     patterns::get_box(field_index)
 }
 
-pub fn get_rook_moves(mut bitboard: u64, field_index: usize) -> u64 {
+/// Gets a rook moves for the field specified by `field_index`, considering `occupancy` (friendly + enemy).
+pub fn get_rook_moves(mut occupancy: u64, field_index: usize) -> u64 {
     unsafe {
-        bitboard &= ROOK_FIELDS[field_index].mask;
-        bitboard = bitboard.wrapping_mul(ROOK_FIELDS[field_index].magic);
-        bitboard >>= 64 - ROOK_FIELDS[field_index].shift;
+        occupancy &= ROOK_FIELDS[field_index].mask;
+        occupancy = occupancy.wrapping_mul(ROOK_FIELDS[field_index].magic);
+        occupancy >>= 64 - ROOK_FIELDS[field_index].shift;
 
-        ROOK_FIELDS[field_index].attacks[bitboard as usize]
+        ROOK_FIELDS[field_index].attacks[occupancy as usize]
     }
 }
 
-pub fn get_bishop_moves(mut bitboard: u64, field_index: usize) -> u64 {
+/// Gets a bishop moves for the field specified by `field_index`, considering `occupancy` (friendly + enemy).
+pub fn get_bishop_moves(mut occupancy: u64, field_index: usize) -> u64 {
     unsafe {
-        bitboard &= BISHOP_FIELDS[field_index].mask;
-        bitboard = bitboard.wrapping_mul(BISHOP_FIELDS[field_index].magic);
-        bitboard >>= 64 - BISHOP_FIELDS[field_index].shift;
+        occupancy &= BISHOP_FIELDS[field_index].mask;
+        occupancy = occupancy.wrapping_mul(BISHOP_FIELDS[field_index].magic);
+        occupancy >>= 64 - BISHOP_FIELDS[field_index].shift;
 
-        BISHOP_FIELDS[field_index].attacks[bitboard as usize]
+        BISHOP_FIELDS[field_index].attacks[occupancy as usize]
     }
 }
 
-pub fn get_queen_moves(bitboard: u64, field_index: usize) -> u64 {
-    get_rook_moves(bitboard, field_index) | get_bishop_moves(bitboard, field_index)
+/// Gets a queen moves for the field specified by `field_index`, considering `occupancy` (friendly + enemy).
+pub fn get_queen_moves(occupancy: u64, field_index: usize) -> u64 {
+    get_rook_moves(occupancy, field_index) | get_bishop_moves(occupancy, field_index)
 }
 
+/// Generates a rook magic number for the field specified by `field_index`.
 pub fn generate_rook_number_for_field(field_index: usize) -> u64 {
     let shift = ROOK_SHIFTS[field_index];
     let mask = get_rook_mask(field_index);
@@ -241,6 +249,7 @@ pub fn generate_rook_number_for_field(field_index: usize) -> u64 {
     generate_magic_number(shift, &permutations, &attacks)
 }
 
+/// Generates a bishop magic number for the field specified by `field_index`.
 pub fn generate_bishop_number_for_field(field_index: usize) -> u64 {
     let shift = BISHOP_SHIFTS[field_index];
     let mask = get_bishop_mask(field_index);
@@ -260,6 +269,7 @@ pub fn generate_bishop_number_for_field(field_index: usize) -> u64 {
     generate_magic_number(shift, &permutations, &attacks)
 }
 
+/// Generates a magic number for a set of `permutations` and `attacks`, using `shift` proper for the specified field.
 fn generate_magic_number(shift: u8, permutations: &[u64], attacks: &[u64]) -> u64 {
     let count = 1 << shift;
     let mut hashed_attacks = vec![0; count];
@@ -291,6 +301,7 @@ fn generate_magic_number(shift: u8, permutations: &[u64], attacks: &[u64]) -> u6
     magic_number
 }
 
+/// Applies rook magic for the field specified by `field_index`, using built-in magic number from [ROOK_MAGIC_NUMBERS].
 fn apply_rook_magic_for_field(field_index: usize) {
     let shift = ROOK_SHIFTS[field_index];
     let mask = get_rook_mask(field_index);
@@ -314,6 +325,7 @@ fn apply_rook_magic_for_field(field_index: usize) {
     apply_magic_for_field(&permutations, &attacks, field)
 }
 
+/// Applies bishop magic for the field specified by `field_index`, using built-in magic number from [BISHOP_MAGIC_NUMBERS].
 fn apply_bishop_magic_for_field(field_index: usize) {
     let shift = BISHOP_SHIFTS[field_index];
     let mask = get_bishop_mask(field_index);
@@ -337,6 +349,7 @@ fn apply_bishop_magic_for_field(field_index: usize) {
     apply_magic_for_field(&permutations, &attacks, field)
 }
 
+/// Applies a magic number for a set of `permutations`, `attacks` and `field`.
 fn apply_magic_for_field(permutations: &[u64], attacks: &[u64], field: &mut MagicField) {
     let count = 1 << field.shift;
 
@@ -354,6 +367,7 @@ fn apply_magic_for_field(permutations: &[u64], attacks: &[u64], field: &mut Magi
     }
 }
 
+/// Gets `index`-th permutation of the `mask`.  
 fn get_permutation(mut mask: u64, mut index: u64) -> u64 {
     let mut result = 0u64;
 
@@ -369,42 +383,48 @@ fn get_permutation(mut mask: u64, mut index: u64) -> u64 {
     result
 }
 
+/// Gets a rook mask for the field specified by `field_index`, without considering occupancy.
 fn get_rook_mask(field_index: usize) -> u64 {
     (patterns::get_file(field_index) & !RANK_A & !RANK_H) | (patterns::get_rank(field_index) & !FILE_A & !FILE_H)
 }
 
+/// Gets a bishop mask for the field specified by `field_index`, without considering occupancy.
 fn get_bishop_mask(field_index: usize) -> u64 {
     patterns::get_diagonals(field_index) & !EDGE
 }
 
-fn get_rook_attacks(bitboard: u64, field_index: usize) -> u64 {
+/// Gets a rook attacks for the field specified by `field_index`, considering `occupancy` (friendly + enemy).
+fn get_rook_attacks(occupancy: u64, field_index: usize) -> u64 {
     let result = 0
-        | get_attacks(bitboard, field_index, (1, 0))
-        | get_attacks(bitboard, field_index, (-1, 0))
-        | get_attacks(bitboard, field_index, (0, 1))
-        | get_attacks(bitboard, field_index, (0, -1));
+        | get_attacks(occupancy, field_index, (1, 0))
+        | get_attacks(occupancy, field_index, (-1, 0))
+        | get_attacks(occupancy, field_index, (0, 1))
+        | get_attacks(occupancy, field_index, (0, -1));
 
     result
 }
 
-fn get_bishop_attacks(bitboard: u64, field_index: usize) -> u64 {
+/// Gets a bishop attacks for the field specified by `field_index`, occupancy `occupancy` (friendly + enemy).
+fn get_bishop_attacks(occupancy: u64, field_index: usize) -> u64 {
     let result = 0
-        | get_attacks(bitboard, field_index, (1, 1))
-        | get_attacks(bitboard, field_index, (-1, 1))
-        | get_attacks(bitboard, field_index, (1, -1))
-        | get_attacks(bitboard, field_index, (-1, -1));
+        | get_attacks(occupancy, field_index, (1, 1))
+        | get_attacks(occupancy, field_index, (-1, 1))
+        | get_attacks(occupancy, field_index, (1, -1))
+        | get_attacks(occupancy, field_index, (-1, -1));
 
     result
 }
 
-fn get_attacks(bitboard: u64, field_index: usize, direction: (isize, isize)) -> u64 {
+/// Helper function to get all possible to move fields, considering `occupancy` (friendly + enemy), starting from the field
+/// specified by `field_index` and going into the `direction`.
+fn get_attacks(occupancy: u64, field_index: usize, direction: (isize, isize)) -> u64 {
     let mut result = 0u64;
     let mut current = ((field_index as isize) % 8 + direction.0, (field_index as isize) / 8 + direction.1);
 
     while current.0 >= 0 && current.0 <= 7 && current.1 >= 0 && current.1 <= 7 {
         result |= 1u64 << (current.0 + current.1 * 8);
 
-        if (bitboard & result) != 0 {
+        if (occupancy & result) != 0 {
             break;
         }
 

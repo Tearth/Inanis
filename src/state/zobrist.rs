@@ -7,6 +7,7 @@ static mut CASTLING_HASHES: [u64; 4] = [0; 4];
 static mut EN_PASSANT_HASHES: [u64; 8] = [0; 8];
 static mut ACTIVE_COLOR_HASH: u64 = 0;
 
+/// Initializes Zobrist hashes by filling arrays with random [u64] values.
 pub fn init() {
     unsafe {
         for color_hash in PIECE_HASHES.iter_mut() {
@@ -29,6 +30,7 @@ pub fn init() {
     }
 }
 
+/// Recalculates Zobrist hash for the `board`.
 pub fn recalculate_hash(board: &mut Bitboard) {
     let mut hash = 0u64;
 
@@ -69,6 +71,7 @@ pub fn recalculate_hash(board: &mut Bitboard) {
     board.hash = hash;
 }
 
+/// Recalculates pawn hash for the `board`.
 pub fn recalculate_pawn_hash(board: &mut Bitboard) {
     let mut hash = 0u64;
 
@@ -88,10 +91,12 @@ pub fn recalculate_pawn_hash(board: &mut Bitboard) {
     board.pawn_hash = hash;
 }
 
+/// Gets `piece` hash with the `color` for the field specified by `field_index`.
 pub fn get_piece_hash(color: u8, piece: u8, field_index: u8) -> u64 {
     unsafe { PIECE_HASHES[color as usize][piece as usize][field_index as usize] }
 }
 
+/// Gets castling right hash based on the `current` ones and the desired change specified by `right`.
 pub fn get_castling_right_hash(current: CastlingRights, right: CastlingRights) -> u64 {
     if !current.contains(right) {
         return 0;
@@ -100,10 +105,12 @@ pub fn get_castling_right_hash(current: CastlingRights, right: CastlingRights) -
     unsafe { CASTLING_HASHES[bit_scan(right.bits() as u64) as usize] }
 }
 
+/// Gets en passant hash for the `file`.
 pub fn get_en_passant_hash(file: u8) -> u64 {
     unsafe { EN_PASSANT_HASHES[file as usize] }
 }
 
+/// Gets active color hash.
 pub fn get_active_color_hash() -> u64 {
     unsafe { ACTIVE_COLOR_HASH }
 }

@@ -46,26 +46,39 @@ pub const EDGE: u64 = 0xff818181818181ff;
 pub const WHITE_FIELDS: u64 = 0xaa55aa55aa55aa55;
 pub const BLACK_FIELDS: u64 = 0x55aa55aa55aa55aa;
 
+/// Extracts the lowest set isolated bit.
+///
+/// More about asm instruction: <https://www.felixcloutier.com/x86/blsi>
 #[inline(always)]
 pub fn get_lsb(value: u64) -> u64 {
     value & value.wrapping_neg()
 }
 
+/// Resets the lowest set bit.
+///
+/// More about asm instruction: <https://www.felixcloutier.com/x86/blsr>
 #[inline(always)]
 pub fn pop_lsb(value: u64) -> u64 {
     value & (value - 1)
 }
 
+/// Counts the number of set bits.
+///
+/// More about asm instruction: <https://www.felixcloutier.com/x86/popcnt>
 #[inline(always)]
 pub fn bit_count(value: u64) -> u8 {
     value.count_ones() as u8
 }
 
+/// Gets an index of the first set bit by counting trailing zero bits.
+///
+/// More about asm instruction: <https://www.felixcloutier.com/x86/tzcnt>
 #[inline(always)]
 pub fn bit_scan(value: u64) -> u8 {
     value.trailing_zeros() as u8
 }
 
+/// Converts piece `symbol` (p/P, n/N, b/B, r/R, q/Q, k/K) into the corresponding [u8] value. Returns [Err] with the proper error messages when the `symbol` is unknown.
 pub fn symbol_to_piece(symbol: char) -> Result<u8, &'static str> {
     match symbol {
         'p' | 'P' => Ok(PAWN),
@@ -78,6 +91,7 @@ pub fn symbol_to_piece(symbol: char) -> Result<u8, &'static str> {
     }
 }
 
+/// Converts `piece` into the corresponding character (p/P, n/N, b/B, r/R, q/Q, k/K). Returns [Err] with the proper error message when the `piece` is unknown.
 pub fn piece_to_symbol(piece: u8) -> Result<char, &'static str> {
     match piece {
         PAWN => Ok('P'),

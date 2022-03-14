@@ -40,12 +40,15 @@ pub struct Move {
 }
 
 impl Move {
+    /// Constructs a new instance of [Move] with stored `from`, `to` and `flags`.
     pub fn new(from: u8, to: u8, flags: MoveFlags) -> Move {
         Move {
             data: ((flags.bits as u16) << 12) | ((to as u16) << 6) | (from as u16),
         }
     }
 
+    /// Converts short-notated move (e4, Rc8, Qxb6) in `text` into the [Move] instance, using the `board` as context.
+    /// Returns [Err] with the proper message if `text` couldn't be parsed correctly.
     pub fn from_short_notation(mut text: &str, board: &Bitboard) -> Result<Move, &'static str> {
         let mut moves: [Move; engine::MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
         let moves_count = board.get_all_moves(&mut moves, u64::MAX);
@@ -201,6 +204,8 @@ impl Move {
         Err("Invalid move")
     }
 
+    /// Converts long-notated move (e2e4, a1a8) in `text` into the [Move] instance, using the `board` as context.
+    /// Returns [Err] with the proper message if `text` couldn't be parsed correctly.
     pub fn from_long_notation(text: &str, board: &Bitboard) -> Result<Move, &'static str> {
         let mut chars = text.chars();
         let from_file = chars.next().ok_or("Invalid move: bad source file")? as u8;
@@ -259,6 +264,7 @@ impl Move {
         Err("Invalid move: not found")
     }
 
+    /// Converts move into the long notation (e2e4, a1a8).
     pub fn to_long_notation(self) -> String {
         let from = self.get_from();
         let to = self.get_to();
@@ -284,18 +290,22 @@ impl Move {
         result.into_iter().collect()
     }
 
+    /// Gets source field from the internal data.
     pub fn get_from(&self) -> u8 {
         (self.data & 0x3f) as u8
     }
 
+    /// Gets destination field from the internal data.
     pub fn get_to(&self) -> u8 {
         ((self.data >> 6) & 0x3f) as u8
     }
 
+    /// Gets flags from the internal data.
     pub fn get_flags(&self) -> MoveFlags {
         unsafe { MoveFlags::from_bits_unchecked((self.data >> 12) as u8) }
     }
 
+    /// Gets promotion piece based on the flags saved in the internal data.
     pub fn get_promotion_piece(&self) -> u8 {
         match self.get_flags() {
             MoveFlags::KNIGHT_PROMOTION | MoveFlags::KNIGHT_PROMOTION_CAPTURE => KNIGHT,
@@ -306,26 +316,33 @@ impl Move {
         }
     }
 
+    /// Checks if the move is quiet (single or double pushes).
     pub fn is_quiet(&self) -> bool {
         self.get_flags() == MoveFlags::QUIET || self.get_flags() == MoveFlags::DOUBLE_PUSH
     }
 
+    /// Checks if the move is capture (excluding en passant, but including promotions).
     pub fn is_capture(&self) -> bool {
         self.get_flags().contains(MoveFlags::CAPTURE)
     }
 
+    /// Checks if the move is en passant.
     pub fn is_en_passant(&self) -> bool {
         self.get_flags() == MoveFlags::EN_PASSANT
     }
 
+    /// Checks if the move is promotion (including captures).
     pub fn is_promotion(&self) -> bool {
         self.get_flags().contains(MoveFlags::FIELD_PROMOTION)
     }
 
+    /// Checks if the move is short or long castling.
     pub fn is_castling(&self) -> bool {
         self.get_flags() == MoveFlags::SHORT_CASTLING || self.get_flags() == MoveFlags::LONG_CASTLING
     }
 
+    /// Checks if the move is legal, using `board` as the context. This is apparently not a 100% accurate function, which in very rare cases leads to incorrect
+    /// results, so it should be improved in the future to increase engine's reliability.
     pub fn is_legal(&self, board: &Bitboard) -> bool {
         let from = self.get_from();
         let to = self.get_to();
@@ -440,11 +457,15 @@ impl Move {
 }
 
 impl Default for Move {
+    /// Constructs a new instance of [Move] with zeroed values.
     fn default() -> Self {
         Move::new(0, 0, MoveFlags::QUIET)
     }
 }
 
+/// Generates all possible non-captures (if `CAPTURES` is false) or all possible captures (if `CAPTURES` is true) for the `PIECE` at
+/// the position specified by `board`, stores them into `moves` list (starting from `index`) and returns index of the first free slot.
+/// Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the specified fields (useful during checks).
 pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(board: &Bitboard, moves: &mut [Move], mut index: usize, evasion_mask: u64) -> usize {
     let enemy_color = board.active_color ^ 1;
     let mut pieces = board.pieces[board.active_color as usize][PIECE as usize];
@@ -535,6 +556,8 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(board: &Bitboard,
     index
 }
 
+/// Gets `PIECE` mobility (by counting all possible moves at the position specified by `board`) with `color` and increases `dangered_king_fields` if the enemy
+/// king is near to the fields included id the mobility.
 pub fn get_piece_mobility<const PIECE: u8>(board: &Bitboard, color: u8, dangered_king_fields: &mut u32) -> i16 {
     let mut pieces = board.pieces[color as usize][PIECE as usize];
     let mut mobility = 0;
@@ -575,6 +598,9 @@ pub fn get_piece_mobility<const PIECE: u8>(board: &Bitboard, color: u8, dangered
     mobility
 }
 
+/// Generates all possible non-captures (if `CAPTURES` is false) or all possible captures (if `CAPTURES` is true) for the pawns at
+/// the position specified by `board`, stores them into `moves` list (starting from `index`) and returns index of the first free slot.
+/// Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the specified fields (useful during checks).
 pub fn scan_pawn_moves<const CAPTURES: bool>(board: &Bitboard, moves: &mut [Move], mut index: usize, evasion_mask: u64) -> usize {
     if !CAPTURES {
         index = scan_pawn_moves_single_push(board, moves, index, evasion_mask);
@@ -587,6 +613,9 @@ pub fn scan_pawn_moves<const CAPTURES: bool>(board: &Bitboard, moves: &mut [Move
     index
 }
 
+/// Generates all possible single pushes for the pawns at the position specified by `board`, stores them into `moves` list (starting from `index`)
+/// and returns index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the
+/// specified fields (useful during checks).
 fn scan_pawn_moves_single_push(board: &Bitboard, moves: &mut [Move], mut index: usize, evasion_mask: u64) -> usize {
     let pieces = board.pieces[board.active_color as usize][PAWN as usize];
     let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
@@ -623,6 +652,9 @@ fn scan_pawn_moves_single_push(board: &Bitboard, moves: &mut [Move], mut index: 
     index
 }
 
+/// Generates all possible double pushes for the pawns at the position specified by `board`, stores them into `moves` list (starting from `index`)
+/// and returns index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the
+/// specified fields (useful during checks).
 fn scan_pawn_moves_double_push(board: &Bitboard, moves: &mut [Move], mut index: usize, evasion_mask: u64) -> usize {
     let pieces = board.pieces[board.active_color as usize][PAWN as usize];
     let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
@@ -650,6 +682,9 @@ fn scan_pawn_moves_double_push(board: &Bitboard, moves: &mut [Move], mut index: 
     index
 }
 
+/// Generates all possible captures for the pawns toward the direction specified by `DIR` and at the position specified by `board`,
+/// stores them into `moves` list (starting from `index`) and returns index of the first free slot. Use `evasion_mask` with value
+/// different than `u64::MAX` to restrict generator to the specified fields (useful during checks).
 fn scan_pawn_moves_diagonal_attacks<const DIR: u8>(board: &Bitboard, moves: &mut [Move], mut index: usize, evasion_mask: u64) -> usize {
     let enemy_color = board.active_color ^ 1;
     let pieces = board.pieces[board.active_color as usize][PAWN as usize];
