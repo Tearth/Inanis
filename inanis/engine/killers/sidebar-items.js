@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["KillersTable",""]]});
+initSidebarItems({"constant":[["KILLER_SLOTS",""]],"struct":[["KillersTable",""]]});

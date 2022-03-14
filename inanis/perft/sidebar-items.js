@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["run_internal",""]],"mod":[["context",""],["divided",""],["fast",""],["normal",""]]});
+initSidebarItems({"fn":[["run_internal","Internal perft function, common for every mode."]],"mod":[["context",""],["divided",""],["fast",""],["normal",""]]});

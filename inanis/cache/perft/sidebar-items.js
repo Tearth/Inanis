@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["PerftHashTable",""],["PerftHashTableEntry",""]]});
+initSidebarItems({"constant":[["BUCKET_SLOTS",""]],"struct":[["PerftHashTable",""],["PerftHashTableBucket",""],["PerftHashTableEntry",""]]});

@@ -1,5 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src&#x2F;engine&#x2F;qsearch.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>qsearch.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../inanis/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src&#x2F;engine&#x2F;qsearch.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>qsearch.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a class="sidebar-logo" href="../../../inanis/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.png" alt="logo"></div>
+        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../inanis/index.html"><img class="rust-logo" src="../../../rust-logo.png" alt="logo"></a><nav class="sub"><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -115,6 +116,25 @@
 <span id="114">114</span>
 <span id="115">115</span>
 <span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::context::SearchContext</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::evaluation::parameters</span>;
@@ -127,6 +147,15 @@
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SCORE_PRUNING_THRESHOLD</span>: <span class="ident">i16</span> <span class="op">=</span> <span class="number">0</span>;
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FUTILITY_PRUNING_MARGIN</span>: <span class="ident">i16</span> <span class="op">=</span> <span class="number">100</span>;
 
+<span class="doccomment">/// Entry point of the quiescence search. The main idea here is to reduce the horizon effect by processing capture sequences and eventually</span>
+<span class="doccomment">/// make a quiet position suitable for final evaluation. `context`, `depth`, `ply`, `alpha` and `beta` are provided by the leaf of the regular search.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Search steps:</span>
+<span class="doccomment">///  - Test if the friendly king was not captured earlier</span>
+<span class="doccomment">///  - Calculate stand-pat score and process initial pruning/alpha update</span>
+<span class="doccomment">///  - Main loop:</span>
+<span class="doccomment">///     - Score pruning</span>
+<span class="doccomment">///     - Futility pruning (&lt;https://www.chessprogramming.org/Delta_Pruning&gt;)</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(<span class="ident">context</span>: <span class="kw-2">&amp;mut</span> <span class="ident">SearchContext</span>, <span class="ident">depth</span>: <span class="ident">i8</span>, <span class="ident">ply</span>: <span class="ident">u16</span>, <span class="kw-2">mut</span> <span class="ident">alpha</span>: <span class="ident">i16</span>, <span class="ident">beta</span>: <span class="ident">i16</span>) -&gt; <span class="ident">i16</span> {
     <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">q_nodes_count</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
     <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">max_ply</span> <span class="op">=</span> <span class="ident">cmp::max</span>(<span class="ident">ply</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">max_ply</span>);
@@ -172,10 +201,10 @@
 
         <span class="ident">found</span> <span class="op">=</span> <span class="bool-val">true</span>;
 
-        <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">make_move</span>(<span class="kw-2">&amp;</span><span class="ident">r#move</span>);
+        <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">make_move</span>(<span class="ident">r#move</span>);
 
         <span class="kw">let</span> <span class="ident">score</span> <span class="op">=</span> <span class="op">-</span><span class="ident">run</span>(<span class="ident">context</span>, <span class="ident">depth</span> <span class="op">-</span> <span class="number">1</span>, <span class="ident">ply</span> <span class="op">+</span> <span class="number">1</span>, <span class="op">-</span><span class="ident">beta</span>, <span class="op">-</span><span class="ident">alpha</span>);
-        <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">undo_move</span>(<span class="kw-2">&amp;</span><span class="ident">r#move</span>);
+        <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">undo_move</span>(<span class="ident">r#move</span>);
 
         <span class="kw">if</span> <span class="ident">score</span> <span class="op">&gt;</span> <span class="ident">alpha</span> {
             <span class="ident">alpha</span> <span class="op">=</span> <span class="ident">score</span>;
@@ -200,6 +229,11 @@
     <span class="ident">alpha</span>
 }
 
+<span class="doccomment">/// Assigns scores for `moves` by filling `move_scores` array with `moves_count` length, based on current `context`. Move ordering in</span>
+<span class="doccomment">/// quiescence search is mainly based on SEE and works as follows:</span>
+<span class="doccomment">///  - for every en passant, assign 0.</span>
+<span class="doccomment">///  - for every capture with promotion, assign value of the promoted piece.</span>
+<span class="doccomment">///  - for rest of the moves, assign SEE result.</span>
 <span class="kw">fn</span> <span class="ident">assign_move_scores</span>(<span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="ident">SearchContext</span>, <span class="ident">moves</span>: <span class="kw-2">&amp;</span>[<span class="ident">Move</span>], <span class="ident">move_scores</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">i16</span>], <span class="ident">moves_count</span>: <span class="ident">usize</span>) {
     <span class="kw">for</span> <span class="ident">move_index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">moves_count</span> {
         <span class="kw">let</span> <span class="ident">r#move</span> <span class="op">=</span> <span class="ident">moves</span>[<span class="ident">move_index</span>];
@@ -224,13 +258,18 @@
     }
 }
 
+<span class="doccomment">/// Checks if the score pruning can be applied for `move_score`. The main idea here is to omit all capture sequances, which are clearly</span>
+<span class="doccomment">/// loosing material (`move_score` is less than [SCORE_PRUNING_THRESHOLD]) and with high probability won&#39;t improve alpha.</span>
 <span class="kw">fn</span> <span class="ident">score_pruning_can_be_applied</span>(<span class="ident">move_score</span>: <span class="ident">i16</span>) -&gt; <span class="ident">bool</span> {
     <span class="ident">move_score</span> <span class="op">&lt;</span> <span class="ident">SCORE_PRUNING_THRESHOLD</span>
 }
 
+<span class="doccomment">/// Checks if the futility pruning can be applied for `move_score`. The main idea here is similar to score pruning, but instead of checking</span>
+<span class="doccomment">/// if the specified capture sequence loses some material or not, it checks if the final result added to the `stand_pat` and [FUTILITY_PRUNING_MARGIN]</span>
+<span class="doccomment">/// will be below alpha - if yes, then we can safely assume that this move is not enough good to be relevant for the search.</span>
 <span class="kw">fn</span> <span class="ident">futility_pruning_can_be_applied</span>(<span class="ident">move_score</span>: <span class="ident">i16</span>, <span class="ident">stand_pat</span>: <span class="ident">i16</span>, <span class="ident">alpha</span>: <span class="ident">i16</span>) -&gt; <span class="ident">bool</span> {
     <span class="ident">stand_pat</span> <span class="op">+</span> <span class="ident">move_score</span> <span class="op">+</span> <span class="ident">FUTILITY_PRUNING_MARGIN</span> <span class="op">&lt;</span> <span class="ident">alpha</span>
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="inanis" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="inanis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0 (9d1b2106e 2022-02-23)" ></div>
 </body></html>

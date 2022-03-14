@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["init",""],["taper_score",""]],"mod":[["material",""],["mobility",""],["parameters",""],["pawns",""],["pst",""],["safety",""]],"static":[["INITIAL_MATERIAL",""]]});
+initSidebarItems({"fn":[["init","Initializes dynamic evaluation parameters (like [INITIAL_MATERIAL])."],["taper_score","Blends `opening_score` and `ending_score` with the ratio passed in `game_phase`. The ratio is a number from 0.0 to 1.0, where:"]],"mod":[["material",""],["mobility",""],["parameters",""],["pawns",""],["pst",""],["safety",""]],"static":[["INITIAL_MATERIAL",""]]});

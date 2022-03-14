@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["run",""],["validate",""]]});
+initSidebarItems({"fn":[["calculate_error",""],["get_header",""],["get_material",""],["get_parameter",""],["get_piece_square_table",""],["load_positions",""],["load_values",""],["run",""],["save_values",""],["save_values_internal",""],["save_values_to_i16_array_internal",""],["save_values_to_i8_array_internal",""],["validate",""],["write_evaluation_parameters",""],["write_piece_square_table",""]],"struct":[["TunerContext",""],["TunerParameter",""],["TunerPosition",""]]});

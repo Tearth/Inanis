@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["run",""]]});
+initSidebarItems({"fn":[["load_positions",""],["run",""]],"struct":[["TestPosition",""]]});

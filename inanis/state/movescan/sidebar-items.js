@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["get_piece_mobility",""],["scan_pawn_moves",""],["scan_piece_moves",""]],"struct":[["Move",""],["MoveFlags",""]]});
+initSidebarItems({"fn":[["get_piece_mobility",""],["scan_pawn_moves",""],["scan_pawn_moves_diagonal_attacks",""],["scan_pawn_moves_double_push",""],["scan_pawn_moves_single_push",""],["scan_piece_moves",""]],"struct":[["Move",""],["MoveFlags",""]]});

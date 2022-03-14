@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["evaluate",""],["get_value",""],["init",""],["recalculate_incremental_values",""]],"mod":[["bishop",""],["king",""],["knight",""],["pawn",""],["queen",""],["rook",""]]});
+initSidebarItems({"fn":[["calculate_pattern",""],["evaluate",""],["get_value",""],["init",""],["recalculate_incremental_values",""]],"mod":[["bishop",""],["king",""],["knight",""],["pawn",""],["queen",""],["rook",""]],"static":[["TABLE",""]]});

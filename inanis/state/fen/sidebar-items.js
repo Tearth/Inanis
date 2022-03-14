@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["board_to_fen",""],["epd_to_board",""],["fen_to_board",""]],"struct":[["ParsedEPD",""]]});
+initSidebarItems({"fn":[["active_color_to_fen",""],["board_to_fen",""],["castling_to_fen",""],["en_passant_to_fen",""],["epd_to_board",""],["fen_to_active_color",""],["fen_to_board",""],["fen_to_castling",""],["fen_to_en_passant",""],["fen_to_fullmove_number",""],["fen_to_halfmove_clock",""],["fen_to_pieces",""],["fullmove_number_to_fen",""],["get_epd_parameter",""],["halfmove_clock_to_fen",""],["pieces_to_fen",""]],"struct":[["ParsedEPD",""]]});

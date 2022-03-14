@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["get_active_color_hash",""],["get_castling_right_hash",""],["get_en_passant_hash",""],["get_piece_hash",""],["init",""],["recalculate_hash",""],["recalculate_pawn_hash",""]]});
+initSidebarItems({"fn":[["get_active_color_hash",""],["get_castling_right_hash",""],["get_en_passant_hash",""],["get_piece_hash",""],["init",""],["recalculate_hash",""],["recalculate_pawn_hash",""]],"static":[["ACTIVE_COLOR_HASH",""],["CASTLING_HASHES",""],["EN_PASSANT_HASHES",""],["PIECE_HASHES",""]]});
