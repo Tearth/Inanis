@@ -67,6 +67,7 @@ pub struct BenchmarkResult {
     pub result_hash: u16,
 }
 
+/// Runs a benchmark by performing a fixed-depth search for the built-in list of positions.
 pub fn run() -> BenchmarkResult {
     let benchmark_positions = [
         // Opening

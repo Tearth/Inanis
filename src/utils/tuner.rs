@@ -41,6 +41,7 @@ struct TunerParameter {
 }
 
 impl TunerContext {
+    /// Constructs a new instance of [TunerContext] with stored `positions`.
     pub fn new(positions: UnsafeCell<Vec<TunerPosition>>) -> TunerContext {
         TunerContext { positions }
     }
@@ -49,12 +50,14 @@ impl TunerContext {
 unsafe impl Sync for TunerContext {}
 
 impl TunerPosition {
+    /// Constructs a new instance of [TunerPosition] with stored `board` and `result`.
     pub fn new(board: Bitboard, result: f64) -> TunerPosition {
         TunerPosition { board, result }
     }
 }
 
 impl TunerParameter {
+    /// Constructs a new instance of [TunerParameter] with stored `value`, `min`, `min_init`, `max_init` and `max`.
     pub fn new(value: i16, min: i16, min_init: i16, max_init: i16, max: i16) -> TunerParameter {
         TunerParameter {
             value,
@@ -66,6 +69,17 @@ impl TunerParameter {
     }
 }
 
+/// Runs tuner of evaluation parameters. The input file is specified by `epd_filename` file with a list of positions and their expected results, and the `output_directory`
+/// directory is used to store generated Rust sources with the optimized values. Use `lock_material` to disable tuner for piece values, and `random_values` to initialize
+/// evaluation parameters with random values. Multithreading is supported by `threads_count`.
+///
+/// The tuner is implemented using Texel's tuning method (<https://www.chessprogramming.org/Texel%27s_Tuning_Method>), with addition of cache to reduce time needed
+/// to get the best result. The loaded positions must be quiet, since the tuner doesn't run quiescence search to make sure that the position is not in the middle
+/// of capture sequence. The cache itself is a list of trends corresponding to the evaluation parameters - it's used to save the information if the value in the previous
+/// iterations was increasing or decreasing, so the tuner can try this direction first. The more times the direction was right, the bigger increasion or decreasoin will
+/// be performed as next.
+///
+/// The result (Rust sources with the calculated values) are saved every iteration, and can be put directly into the code.
 pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, random_values: bool, threads_count: usize) {
     println!("Loading EPD file...");
     let positions = match load_positions(epd_filename) {
@@ -191,6 +205,7 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
     }
 }
 
+/// Tests the correctness of [load_values] and [save_values] methods.
 pub fn validate() -> bool {
     let mut values = load_values(false, false);
     save_values(&mut values, false);
@@ -199,6 +214,8 @@ pub fn validate() -> bool {
     values.iter().zip(&values_after_save).all(|(a, b)| a.value == b.value)
 }
 
+/// Loads positions from the `epd_filename` and parses them into a list of [TestPosition]. Returns [Err] with a proper error message if the
+/// file couldn't be parsed.
 fn load_positions(epd_filename: &str) -> Result<UnsafeCell<Vec<TunerPosition>>, &'static str> {
     let mut positions = Vec::new();
     let file = match File::open(epd_filename) {
@@ -227,6 +244,7 @@ fn load_positions(epd_filename: &str) -> Result<UnsafeCell<Vec<TunerPosition>>, 
     Ok(UnsafeCell::new(positions))
 }
 
+/// Calculates an error by evaluating all loaded positions with the currently set evaluation parameters. Multithreading is supported by `threads_count`.
 fn calculate_error(context: &Arc<TunerContext>, scaling_constant: f64, threads_count: usize) -> f64 {
     unsafe {
         let mut threads = Vec::new();
@@ -261,6 +279,8 @@ fn calculate_error(context: &Arc<TunerContext>, scaling_constant: f64, threads_c
     }
 }
 
+/// Transforms the current evaluation values into a list of [TunerParameter]. Use `lock_material` if the parameters related to piece values should
+/// be skipped, and `random_values` if the parameters should have random values (useful when initializing tuner).
 fn load_values(lock_material: bool, random_values: bool) -> Vec<TunerParameter> {
     let mut parameters = Vec::new();
     unsafe {
@@ -331,6 +351,8 @@ fn load_values(lock_material: bool, random_values: bool) -> Vec<TunerParameter> 
     parameters
 }
 
+/// Transforms `values` into the evaluation parameters, which can be used during real evaluation. Use `lock_material` if the parameters
+/// related to piece values should be skipped
 fn save_values(values: &mut Vec<TunerParameter>, lock_material: bool) {
     let mut index = 0;
     unsafe {
@@ -386,21 +408,25 @@ fn save_values(values: &mut Vec<TunerParameter>, lock_material: bool) {
     evaluation::init();
 }
 
+/// Saves `index`-th evaluation parameter stored in `values` in the `destination`.
 fn save_values_internal(values: &mut Vec<TunerParameter>, destination: &mut i16, index: &mut usize) {
     *destination = values[*index].value;
     *index += 1;
 }
 
+/// Saves [i8] array starting at the `index` of `values` in the `array`.
 fn save_values_to_i8_array_internal(values: &mut Vec<TunerParameter>, array: &mut [i16], index: &mut usize) {
     array.copy_from_slice(&values[*index..(*index + array.len())].iter().map(|v| (*v).value).collect::<Vec<i16>>());
     *index += array.len();
 }
 
+/// Saves [i16] array starting at the `index` of `values` in the `array`.
 fn save_values_to_i16_array_internal(values: &mut Vec<TunerParameter>, array: &mut [i16], index: &mut usize) {
     array.copy_from_slice(&values[*index..(*index + array.len())].iter().map(|v| (*v).value).collect::<Vec<i16>>());
     *index += array.len();
 }
 
+/// Generates `parameters.rs` file with current evaluation parameters, and saves it into the `output_directory`.
 fn write_evaluation_parameters(output_directory: &str, best_error: f64) {
     let mut output = String::new();
     unsafe {
@@ -441,6 +467,7 @@ fn write_evaluation_parameters(output_directory: &str, best_error: f64) {
     write!(&mut File::create(path).unwrap(), "{}", output).unwrap();
 }
 
+/// Generates piece-square table Rust source file with current evaluation parameters, and saves it into the `output_directory`.
 fn write_piece_square_table(output_directory: &str, best_error: f64, name: &str, opening: &[i16], ending: &[i16]) {
     let mut output = String::new();
 
@@ -464,6 +491,7 @@ fn write_piece_square_table(output_directory: &str, best_error: f64, name: &str,
     write!(&mut File::create(path).unwrap(), "{}", output).unwrap();
 }
 
+/// Gets the generated Rust source file header with timestamp and `best_error`.
 fn get_header(best_error: f64) -> String {
     let mut output = String::new();
 
@@ -473,6 +501,7 @@ fn get_header(best_error: f64) -> String {
     output
 }
 
+/// Gets the Rust representation of the piece `values` array.
 fn get_material(name: &str, values: &[i16]) -> String {
     format!(
         "pub static mut {}: [i16; 6] = [{}, {}, {}, {}, {}, {}];\n",
@@ -480,10 +509,12 @@ fn get_material(name: &str, values: &[i16]) -> String {
     )
 }
 
+/// Gets the Rust representation of the parameter with the specified `name` and `value`.
 fn get_parameter(name: &str, value: i16) -> String {
     format!("pub static mut {}: i16 = {};\n", name, value)
 }
 
+/// Gets the Rust representation of the piece-square table with the specified `values`.
 fn get_piece_square_table(values: &[i16]) -> String {
     let mut output = String::new();
 

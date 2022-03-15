@@ -16,11 +16,14 @@ struct TestPosition {
 }
 
 impl TestPosition {
+    /// Constructs a new instance of [TestPosition] with stored `id`, `board` and `best_move`.
     pub fn new(id: String, board: Bitboard, best_move: Move) -> TestPosition {
         TestPosition { id, board, best_move }
     }
 }
 
+/// Runs a test by performing a fixed-`depth` search for the positions loaded from the `epd_filename` file. To classify the test
+/// as successful, there must be at least `tries_to_confirm` search iterations in a row, which returned the best move same as the expected one in the position.
 pub fn run(epd_filename: &str, depth: i8, tries_to_confirm: i8) {
     println!("Loading EPD file...");
     let positions = match load_positions(epd_filename) {
@@ -107,6 +110,8 @@ pub fn run(epd_filename: &str, depth: i8, tries_to_confirm: i8) {
     );
 }
 
+/// Loads positions from the `epd_filename` and parses them into a list of [TestPosition]. Returns [Err] with a proper error message if the
+/// file couldn't be parsed.
 fn load_positions(epd_filename: &str) -> Result<Vec<TestPosition>, &'static str> {
     let mut positions = Vec::new();
     let file = match File::open(epd_filename) {
