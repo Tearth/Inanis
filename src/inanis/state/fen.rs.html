@@ -263,6 +263,23 @@
 <span id="261">261</span>
 <span id="262">262</span>
 <span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::board::Bitboard</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::board::CastlingRights</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
@@ -275,6 +292,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">ParsedEPD</span> {
+    <span class="doccomment">/// Constructs a new instance of [ParsedEPD] with the `board` and rest of the fields zeroed.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">board</span>: <span class="ident">Bitboard</span>) -&gt; <span class="ident">ParsedEPD</span> {
         <span class="ident">ParsedEPD</span> {
             <span class="ident">board</span>,
@@ -285,11 +303,13 @@
     }
 }
 
+<span class="doccomment">/// Converts `fen` into the [Bitboard]. Returns [Err] with proper error message if `fen` couldn&#39;t be parsed correctly.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fen_to_board</span>(<span class="ident">fen</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Bitboard</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">epd_to_board</span>(<span class="ident">fen</span>)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(<span class="ident">result</span>.<span class="ident">board</span>)
 }
 
+<span class="doccomment">/// Converts `epd` into the [Bitboard]. Returns [Err] with proper error message if `epd` couldn&#39;t be parsed correctly.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">epd_to_board</span>(<span class="ident">epd</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ParsedEPD</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">tokens</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">epd</span>.<span class="ident">split</span>(<span class="string">&#39; &#39;</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span>.<span class="ident">trim</span>()).<span class="ident">collect</span>();
     <span class="kw">if</span> <span class="ident">tokens</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">4</span> {
@@ -322,6 +342,7 @@
     <span class="prelude-val">Ok</span>(<span class="ident">ParsedEPD::new</span>(<span class="ident">board</span>))
 }
 
+<span class="doccomment">/// Converts [Bitboard] into the FEN.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">board_to_fen</span>(<span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>) -&gt; <span class="ident">String</span> {
     <span class="kw">let</span> <span class="ident">pieces</span> <span class="op">=</span> <span class="ident">pieces_to_fen</span>(<span class="ident">board</span>);
     <span class="kw">let</span> <span class="ident">active_color</span> <span class="op">=</span> <span class="ident">active_color_to_fen</span>(<span class="ident">board</span>);
@@ -333,6 +354,7 @@
     <span class="macro">format!</span>(<span class="string">&quot;{} {} {} {} {} {}&quot;</span>, <span class="ident">pieces</span>, <span class="ident">active_color</span>, <span class="ident">castling</span>, <span class="ident">en_passant</span>, <span class="ident">halfmove_clock</span>, <span class="ident">fullmove_number</span>)
 }
 
+<span class="doccomment">/// Gets a value of the `name` parameters from the specified `epd`. Returns [None] if the parameter was not found.</span>
 <span class="kw">fn</span> <span class="ident">get_epd_parameter</span>(<span class="kw-2">mut</span> <span class="ident">epd</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">str</span>]) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">parameter_index</span> <span class="op">=</span> <span class="ident">name</span>.<span class="ident">iter</span>().<span class="ident">find_map</span>(<span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="ident">epd</span>.<span class="ident">find</span>(<span class="ident">p</span>));
     <span class="kw">if</span> <span class="ident">parameter_index</span> <span class="op">==</span> <span class="prelude-val">None</span> {
@@ -360,6 +382,7 @@
     <span class="prelude-val">Some</span>(<span class="ident">value</span>.<span class="ident">to_string</span>())
 }
 
+<span class="doccomment">/// Parses FEN&#39;s pieces and stores them into the `board`. Returns [Err] with the proper error message if `pieces` couldn&#39;t be parsed.</span>
 <span class="kw">fn</span> <span class="ident">fen_to_pieces</span>(<span class="ident">board</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Bitboard</span>, <span class="ident">pieces</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">current_field_index</span> <span class="op">=</span> <span class="number">63</span>;
     <span class="kw">for</span> <span class="ident">char</span> <span class="kw">in</span> <span class="ident">pieces</span>.<span class="ident">chars</span>().<span class="ident">filter</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span> <span class="op">!</span><span class="op">=</span> <span class="string">&#39;/&#39;</span>) {
@@ -377,6 +400,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
+<span class="doccomment">/// Converts pieces from the `board` into the FEN chunk.</span>
 <span class="kw">fn</span> <span class="ident">pieces_to_fen</span>(<span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>) -&gt; <span class="ident">String</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">String::new</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">fields_without_piece</span> <span class="op">=</span> <span class="number">0</span>;
@@ -414,6 +438,7 @@
     <span class="ident">result</span>
 }
 
+<span class="doccomment">/// Parses FEN&#39;s active color and stores it into the `board`. Returns [Err] with the proper error message if `active_color` couldn&#39;t be parsed.</span>
 <span class="kw">fn</span> <span class="ident">fen_to_active_color</span>(<span class="ident">board</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Bitboard</span>, <span class="ident">active_color</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">color_char</span> <span class="op">=</span> <span class="ident">active_color</span>.<span class="ident">chars</span>().<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="string">&quot;Invalid FEN: bad active color&quot;</span>)<span class="question-mark">?</span>;
     <span class="ident">board</span>.<span class="ident">active_color</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">color_char</span> <span class="op">==</span> <span class="string">&#39;w&#39;</span> { <span class="ident">WHITE</span> } <span class="kw">else</span> { <span class="ident">BLACK</span> };
@@ -421,6 +446,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
+<span class="doccomment">/// Converts active color from the `board` into the FEN chunk.</span>
 <span class="kw">fn</span> <span class="ident">active_color_to_fen</span>(<span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>) -&gt; <span class="ident">String</span> {
     <span class="kw">match</span> <span class="ident">board</span>.<span class="ident">active_color</span> {
         <span class="ident">WHITE</span> =&gt; <span class="string">&quot;w&quot;</span>.<span class="ident">to_string</span>(),
@@ -429,6 +455,7 @@
     }
 }
 
+<span class="doccomment">/// Parses FEN&#39;s castling rights and stores them into the `board`. Returns [Err] with the proper error message if `castling` couldn&#39;t be parsed.</span>
 <span class="kw">fn</span> <span class="ident">fen_to_castling</span>(<span class="ident">board</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Bitboard</span>, <span class="ident">castling</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
     <span class="kw">if</span> <span class="ident">castling</span> <span class="op">==</span> <span class="string">&quot;-&quot;</span> {
         <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
@@ -447,6 +474,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
+<span class="doccomment">/// Converts castling rights from the `board` into the FEN chunk.</span>
 <span class="kw">fn</span> <span class="ident">castling_to_fen</span>(<span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>) -&gt; <span class="ident">String</span> {
     <span class="kw">if</span> <span class="ident">board</span>.<span class="ident">castling_rights</span> <span class="op">==</span> <span class="ident">CastlingRights::NONE</span> {
         <span class="kw">return</span> <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>();
@@ -473,6 +501,7 @@
     <span class="ident">result</span>
 }
 
+<span class="doccomment">/// Parses FEN&#39;s en passant and stores it into the `board`. Returns [Err] with the proper error message if `en_passant` couldn&#39;t be parsed.</span>
 <span class="kw">fn</span> <span class="ident">fen_to_en_passant</span>(<span class="ident">board</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Bitboard</span>, <span class="ident">en_passant</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
     <span class="kw">if</span> <span class="ident">en_passant</span> <span class="op">==</span> <span class="string">&quot;-&quot;</span> {
         <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
@@ -488,6 +517,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
+<span class="doccomment">/// Converts en passant from the `board` into the FEN chunk.</span>
 <span class="kw">fn</span> <span class="ident">en_passant_to_fen</span>(<span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>) -&gt; <span class="ident">String</span> {
     <span class="kw">if</span> <span class="ident">board</span>.<span class="ident">en_passant</span> <span class="op">==</span> <span class="number">0</span> {
         <span class="kw">return</span> <span class="string">&quot;-&quot;</span>.<span class="ident">to_string</span>();
@@ -501,6 +531,7 @@
     <span class="ident">result</span>.<span class="ident">into_iter</span>().<span class="ident">collect</span>()
 }
 
+<span class="doccomment">/// Parses FEN&#39;s halfmove clock and stores it into the `board`. Returns [Err] with the proper error message if `halfmove_clock` couldn&#39;t be parsed.</span>
 <span class="kw">fn</span> <span class="ident">fen_to_halfmove_clock</span>(<span class="ident">board</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Bitboard</span>, <span class="ident">halfmove_clock</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
     <span class="ident">board</span>.<span class="ident">halfmove_clock</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">halfmove_clock</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>() {
         <span class="prelude-val">Ok</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>,
@@ -510,10 +541,12 @@
     <span class="prelude-val">Ok</span>(())
 }
 
+<span class="doccomment">/// Converts halfmove clock from the `board` into the FEN chunk.</span>
 <span class="kw">fn</span> <span class="ident">halfmove_clock_to_fen</span>(<span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>) -&gt; <span class="ident">String</span> {
     <span class="ident">board</span>.<span class="ident">halfmove_clock</span>.<span class="ident">to_string</span>()
 }
 
+<span class="doccomment">/// Parses FEN&#39;s fullmove number and stores it into the `board`. Returns [Err] with the proper error message if `fullmove_number` couldn&#39;t be parsed.</span>
 <span class="kw">fn</span> <span class="ident">fen_to_fullmove_number</span>(<span class="ident">board</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Bitboard</span>, <span class="ident">fullmove_number</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
     <span class="ident">board</span>.<span class="ident">fullmove_number</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">fullmove_number</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>() {
         <span class="prelude-val">Ok</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>,
@@ -523,6 +556,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
+<span class="doccomment">/// Converts fullmove number from the `board` into the FEN chunk.</span>
 <span class="kw">fn</span> <span class="ident">fullmove_number_to_fen</span>(<span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>) -&gt; <span class="ident">String</span> {
     <span class="ident">board</span>.<span class="ident">fullmove_number</span>.<span class="ident">to_string</span>()
 }

@@ -199,6 +199,7 @@
 <span id="197">197</span>
 <span id="198">198</span>
 <span id="199">199</span>
+<span id="200">200</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cache::pawns::PawnHashTable</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cache::search::TranspositionTable</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::engine::context::SearchContext</span>;
@@ -268,6 +269,7 @@
     <span class="kw">pub</span> <span class="ident">result_hash</span>: <span class="ident">u16</span>,
 }
 
+<span class="doccomment">/// Runs a benchmark by performing a fixed-depth search for the built-in list of positions.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>() -&gt; <span class="ident">BenchmarkResult</span> {
     <span class="kw">let</span> <span class="ident">benchmark_positions</span> <span class="op">=</span> [
         <span class="comment">// Opening</span>

@@ -461,12 +461,12 @@
 <span class="doccomment">/// Entry point of the UCI (Universal Chess Interface) and command loop.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>() {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">UciState</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Arc::new</span>(<span class="ident">Default::default</span>());
-    <span class="kw">unsafe</span> { (<span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">options</span>.<span class="ident">get</span>()).<span class="ident">insert</span>(<span class="string">&quot;Hash&quot;</span>.<span class="ident">to_string</span>(), <span class="string">&quot;1&quot;</span>.<span class="ident">to_string</span>()) };
+    <span class="kw">unsafe</span> { (<span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">options</span>.<span class="ident">get</span>()).<span class="ident">insert</span>(<span class="string">&quot;Hash&quot;</span>.<span class="ident">to_string</span>(), <span class="string">&quot;2&quot;</span>.<span class="ident">to_string</span>()) };
     <span class="kw">unsafe</span> { (<span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">options</span>.<span class="ident">get</span>()).<span class="ident">insert</span>(<span class="string">&quot;Move Overhead&quot;</span>.<span class="ident">to_string</span>(), <span class="string">&quot;10&quot;</span>.<span class="ident">to_string</span>()) };
 
     <span class="macro">println!</span>(<span class="string">&quot;id name Inanis {}&quot;</span>, <span class="ident">VERSION</span>);
     <span class="macro">println!</span>(<span class="string">&quot;id author {}&quot;</span>, <span class="ident">AUTHOR</span>);
-    <span class="macro">println!</span>(<span class="string">&quot;option name Hash type spin default 1 min 1 max 1048576&quot;</span>);
+    <span class="macro">println!</span>(<span class="string">&quot;option name Hash type spin default 2 min 2 max 1048576&quot;</span>);
     <span class="macro">println!</span>(<span class="string">&quot;option name Move Overhead type spin default 10 min 0 max 3600000&quot;</span>);
     <span class="macro">println!</span>(<span class="string">&quot;option name Clear Hash type button&quot;</span>);
     <span class="macro">println!</span>(<span class="string">&quot;uciok&quot;</span>);

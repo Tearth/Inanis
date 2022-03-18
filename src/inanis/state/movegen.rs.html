@@ -415,6 +415,26 @@
 <span id="413">413</span>
 <span id="414">414</span>
 <span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::patterns</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">arr_macro::arr</span>;
@@ -590,6 +610,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">MagicField</span> {
+    <span class="doccomment">/// Constructs a new instance of [MagicField] with zeroed values.</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">MagicField</span> {
         <span class="ident">MagicField</span> {
             <span class="ident">mask</span>: <span class="number">0</span>,
@@ -600,6 +621,7 @@
     }
 }
 
+<span class="doccomment">/// Initializes move generator by applying built-in magic numbers ([ROOK_MAGIC_NUMBERS] and [BISHOP_MAGIC_NUMBERS]).</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init</span>() {
     <span class="kw">for</span> <span class="ident">index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">64</span> {
         <span class="ident">apply_rook_magic_for_field</span>(<span class="ident">index</span>);
@@ -607,38 +629,44 @@
     }
 }
 
+<span class="doccomment">/// Gets a knight moves for the field specified by `field_index`, without considering an occupancy.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_knight_moves</span>(<span class="ident">field_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u64</span> {
     <span class="ident">patterns::get_jumps</span>(<span class="ident">field_index</span>)
 }
 
+<span class="doccomment">/// Gets a king moves for the field specified by `field_index`, without considering an occupancy.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_king_moves</span>(<span class="ident">field_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u64</span> {
     <span class="ident">patterns::get_box</span>(<span class="ident">field_index</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_rook_moves</span>(<span class="kw-2">mut</span> <span class="ident">bitboard</span>: <span class="ident">u64</span>, <span class="ident">field_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u64</span> {
+<span class="doccomment">/// Gets a rook moves for the field specified by `field_index`, considering `occupancy` (friendly + enemy).</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_rook_moves</span>(<span class="kw-2">mut</span> <span class="ident">occupancy</span>: <span class="ident">u64</span>, <span class="ident">field_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u64</span> {
     <span class="kw">unsafe</span> {
-        <span class="ident">bitboard</span> <span class="op">&amp;=</span> <span class="ident">ROOK_FIELDS</span>[<span class="ident">field_index</span>].<span class="ident">mask</span>;
-        <span class="ident">bitboard</span> <span class="op">=</span> <span class="ident">bitboard</span>.<span class="ident">wrapping_mul</span>(<span class="ident">ROOK_FIELDS</span>[<span class="ident">field_index</span>].<span class="ident">magic</span>);
-        <span class="ident">bitboard</span> <span class="op">&gt;</span><span class="op">&gt;</span><span class="op">=</span> <span class="number">64</span> <span class="op">-</span> <span class="ident">ROOK_FIELDS</span>[<span class="ident">field_index</span>].<span class="ident">shift</span>;
+        <span class="ident">occupancy</span> <span class="op">&amp;=</span> <span class="ident">ROOK_FIELDS</span>[<span class="ident">field_index</span>].<span class="ident">mask</span>;
+        <span class="ident">occupancy</span> <span class="op">=</span> <span class="ident">occupancy</span>.<span class="ident">wrapping_mul</span>(<span class="ident">ROOK_FIELDS</span>[<span class="ident">field_index</span>].<span class="ident">magic</span>);
+        <span class="ident">occupancy</span> <span class="op">&gt;</span><span class="op">&gt;</span><span class="op">=</span> <span class="number">64</span> <span class="op">-</span> <span class="ident">ROOK_FIELDS</span>[<span class="ident">field_index</span>].<span class="ident">shift</span>;
 
-        <span class="ident">ROOK_FIELDS</span>[<span class="ident">field_index</span>].<span class="ident">attacks</span>[<span class="ident">bitboard</span> <span class="kw">as</span> <span class="ident">usize</span>]
+        <span class="ident">ROOK_FIELDS</span>[<span class="ident">field_index</span>].<span class="ident">attacks</span>[<span class="ident">occupancy</span> <span class="kw">as</span> <span class="ident">usize</span>]
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_bishop_moves</span>(<span class="kw-2">mut</span> <span class="ident">bitboard</span>: <span class="ident">u64</span>, <span class="ident">field_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u64</span> {
+<span class="doccomment">/// Gets a bishop moves for the field specified by `field_index`, considering `occupancy` (friendly + enemy).</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_bishop_moves</span>(<span class="kw-2">mut</span> <span class="ident">occupancy</span>: <span class="ident">u64</span>, <span class="ident">field_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u64</span> {
     <span class="kw">unsafe</span> {
-        <span class="ident">bitboard</span> <span class="op">&amp;=</span> <span class="ident">BISHOP_FIELDS</span>[<span class="ident">field_index</span>].<span class="ident">mask</span>;
-        <span class="ident">bitboard</span> <span class="op">=</span> <span class="ident">bitboard</span>.<span class="ident">wrapping_mul</span>(<span class="ident">BISHOP_FIELDS</span>[<span class="ident">field_index</span>].<span class="ident">magic</span>);
-        <span class="ident">bitboard</span> <span class="op">&gt;</span><span class="op">&gt;</span><span class="op">=</span> <span class="number">64</span> <span class="op">-</span> <span class="ident">BISHOP_FIELDS</span>[<span class="ident">field_index</span>].<span class="ident">shift</span>;
+        <span class="ident">occupancy</span> <span class="op">&amp;=</span> <span class="ident">BISHOP_FIELDS</span>[<span class="ident">field_index</span>].<span class="ident">mask</span>;
+        <span class="ident">occupancy</span> <span class="op">=</span> <span class="ident">occupancy</span>.<span class="ident">wrapping_mul</span>(<span class="ident">BISHOP_FIELDS</span>[<span class="ident">field_index</span>].<span class="ident">magic</span>);
+        <span class="ident">occupancy</span> <span class="op">&gt;</span><span class="op">&gt;</span><span class="op">=</span> <span class="number">64</span> <span class="op">-</span> <span class="ident">BISHOP_FIELDS</span>[<span class="ident">field_index</span>].<span class="ident">shift</span>;
 
-        <span class="ident">BISHOP_FIELDS</span>[<span class="ident">field_index</span>].<span class="ident">attacks</span>[<span class="ident">bitboard</span> <span class="kw">as</span> <span class="ident">usize</span>]
+        <span class="ident">BISHOP_FIELDS</span>[<span class="ident">field_index</span>].<span class="ident">attacks</span>[<span class="ident">occupancy</span> <span class="kw">as</span> <span class="ident">usize</span>]
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_queen_moves</span>(<span class="ident">bitboard</span>: <span class="ident">u64</span>, <span class="ident">field_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u64</span> {
-    <span class="ident">get_rook_moves</span>(<span class="ident">bitboard</span>, <span class="ident">field_index</span>) <span class="op">|</span> <span class="ident">get_bishop_moves</span>(<span class="ident">bitboard</span>, <span class="ident">field_index</span>)
+<span class="doccomment">/// Gets a queen moves for the field specified by `field_index`, considering `occupancy` (friendly + enemy).</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_queen_moves</span>(<span class="ident">occupancy</span>: <span class="ident">u64</span>, <span class="ident">field_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u64</span> {
+    <span class="ident">get_rook_moves</span>(<span class="ident">occupancy</span>, <span class="ident">field_index</span>) <span class="op">|</span> <span class="ident">get_bishop_moves</span>(<span class="ident">occupancy</span>, <span class="ident">field_index</span>)
 }
 
+<span class="doccomment">/// Generates a rook magic number for the field specified by `field_index`.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">generate_rook_number_for_field</span>(<span class="ident">field_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u64</span> {
     <span class="kw">let</span> <span class="ident">shift</span> <span class="op">=</span> <span class="ident">ROOK_SHIFTS</span>[<span class="ident">field_index</span>];
     <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="ident">get_rook_mask</span>(<span class="ident">field_index</span>);
@@ -658,6 +686,7 @@
     <span class="ident">generate_magic_number</span>(<span class="ident">shift</span>, <span class="kw-2">&amp;</span><span class="ident">permutations</span>, <span class="kw-2">&amp;</span><span class="ident">attacks</span>)
 }
 
+<span class="doccomment">/// Generates a bishop magic number for the field specified by `field_index`.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">generate_bishop_number_for_field</span>(<span class="ident">field_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u64</span> {
     <span class="kw">let</span> <span class="ident">shift</span> <span class="op">=</span> <span class="ident">BISHOP_SHIFTS</span>[<span class="ident">field_index</span>];
     <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="ident">get_bishop_mask</span>(<span class="ident">field_index</span>);
@@ -677,6 +706,7 @@
     <span class="ident">generate_magic_number</span>(<span class="ident">shift</span>, <span class="kw-2">&amp;</span><span class="ident">permutations</span>, <span class="kw-2">&amp;</span><span class="ident">attacks</span>)
 }
 
+<span class="doccomment">/// Generates a magic number for a set of `permutations` and `attacks`, using `shift` proper for the specified field.</span>
 <span class="kw">fn</span> <span class="ident">generate_magic_number</span>(<span class="ident">shift</span>: <span class="ident">u8</span>, <span class="ident">permutations</span>: <span class="kw-2">&amp;</span>[<span class="ident">u64</span>], <span class="ident">attacks</span>: <span class="kw-2">&amp;</span>[<span class="ident">u64</span>]) -&gt; <span class="ident">u64</span> {
     <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">shift</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hashed_attacks</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0</span>; <span class="ident">count</span>];
@@ -708,6 +738,7 @@
     <span class="ident">magic_number</span>
 }
 
+<span class="doccomment">/// Applies rook magic for the field specified by `field_index`, using built-in magic number from [ROOK_MAGIC_NUMBERS].</span>
 <span class="kw">fn</span> <span class="ident">apply_rook_magic_for_field</span>(<span class="ident">field_index</span>: <span class="ident">usize</span>) {
     <span class="kw">let</span> <span class="ident">shift</span> <span class="op">=</span> <span class="ident">ROOK_SHIFTS</span>[<span class="ident">field_index</span>];
     <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="ident">get_rook_mask</span>(<span class="ident">field_index</span>);
@@ -731,6 +762,7 @@
     <span class="ident">apply_magic_for_field</span>(<span class="kw-2">&amp;</span><span class="ident">permutations</span>, <span class="kw-2">&amp;</span><span class="ident">attacks</span>, <span class="ident">field</span>)
 }
 
+<span class="doccomment">/// Applies bishop magic for the field specified by `field_index`, using built-in magic number from [BISHOP_MAGIC_NUMBERS].</span>
 <span class="kw">fn</span> <span class="ident">apply_bishop_magic_for_field</span>(<span class="ident">field_index</span>: <span class="ident">usize</span>) {
     <span class="kw">let</span> <span class="ident">shift</span> <span class="op">=</span> <span class="ident">BISHOP_SHIFTS</span>[<span class="ident">field_index</span>];
     <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="ident">get_bishop_mask</span>(<span class="ident">field_index</span>);
@@ -754,6 +786,7 @@
     <span class="ident">apply_magic_for_field</span>(<span class="kw-2">&amp;</span><span class="ident">permutations</span>, <span class="kw-2">&amp;</span><span class="ident">attacks</span>, <span class="ident">field</span>)
 }
 
+<span class="doccomment">/// Applies a magic number for a set of `permutations`, `attacks` and `field`.</span>
 <span class="kw">fn</span> <span class="ident">apply_magic_for_field</span>(<span class="ident">permutations</span>: <span class="kw-2">&amp;</span>[<span class="ident">u64</span>], <span class="ident">attacks</span>: <span class="kw-2">&amp;</span>[<span class="ident">u64</span>], <span class="ident">field</span>: <span class="kw-2">&amp;mut</span> <span class="ident">MagicField</span>) {
     <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">field</span>.<span class="ident">shift</span>;
 
@@ -771,6 +804,7 @@
     }
 }
 
+<span class="doccomment">/// Gets `index`-th permutation of the `mask`.  </span>
 <span class="kw">fn</span> <span class="ident">get_permutation</span>(<span class="kw-2">mut</span> <span class="ident">mask</span>: <span class="ident">u64</span>, <span class="kw-2">mut</span> <span class="ident">index</span>: <span class="ident">u64</span>) -&gt; <span class="ident">u64</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="number">0u64</span>;
 
@@ -786,42 +820,48 @@
     <span class="ident">result</span>
 }
 
+<span class="doccomment">/// Gets a rook mask for the field specified by `field_index`, without considering occupancy.</span>
 <span class="kw">fn</span> <span class="ident">get_rook_mask</span>(<span class="ident">field_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u64</span> {
     (<span class="ident">patterns::get_file</span>(<span class="ident">field_index</span>) <span class="op">&amp;</span> <span class="op">!</span><span class="ident">RANK_A</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">RANK_H</span>) <span class="op">|</span> (<span class="ident">patterns::get_rank</span>(<span class="ident">field_index</span>) <span class="op">&amp;</span> <span class="op">!</span><span class="ident">FILE_A</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">FILE_H</span>)
 }
 
+<span class="doccomment">/// Gets a bishop mask for the field specified by `field_index`, without considering occupancy.</span>
 <span class="kw">fn</span> <span class="ident">get_bishop_mask</span>(<span class="ident">field_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u64</span> {
     <span class="ident">patterns::get_diagonals</span>(<span class="ident">field_index</span>) <span class="op">&amp;</span> <span class="op">!</span><span class="ident">EDGE</span>
 }
 
-<span class="kw">fn</span> <span class="ident">get_rook_attacks</span>(<span class="ident">bitboard</span>: <span class="ident">u64</span>, <span class="ident">field_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u64</span> {
+<span class="doccomment">/// Gets a rook attacks for the field specified by `field_index`, considering `occupancy` (friendly + enemy).</span>
+<span class="kw">fn</span> <span class="ident">get_rook_attacks</span>(<span class="ident">occupancy</span>: <span class="ident">u64</span>, <span class="ident">field_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u64</span> {
     <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="number">0</span>
-        <span class="op">|</span> <span class="ident">get_attacks</span>(<span class="ident">bitboard</span>, <span class="ident">field_index</span>, (<span class="number">1</span>, <span class="number">0</span>))
-        <span class="op">|</span> <span class="ident">get_attacks</span>(<span class="ident">bitboard</span>, <span class="ident">field_index</span>, (<span class="op">-</span><span class="number">1</span>, <span class="number">0</span>))
-        <span class="op">|</span> <span class="ident">get_attacks</span>(<span class="ident">bitboard</span>, <span class="ident">field_index</span>, (<span class="number">0</span>, <span class="number">1</span>))
-        <span class="op">|</span> <span class="ident">get_attacks</span>(<span class="ident">bitboard</span>, <span class="ident">field_index</span>, (<span class="number">0</span>, <span class="op">-</span><span class="number">1</span>));
+        <span class="op">|</span> <span class="ident">get_attacks</span>(<span class="ident">occupancy</span>, <span class="ident">field_index</span>, (<span class="number">1</span>, <span class="number">0</span>))
+        <span class="op">|</span> <span class="ident">get_attacks</span>(<span class="ident">occupancy</span>, <span class="ident">field_index</span>, (<span class="op">-</span><span class="number">1</span>, <span class="number">0</span>))
+        <span class="op">|</span> <span class="ident">get_attacks</span>(<span class="ident">occupancy</span>, <span class="ident">field_index</span>, (<span class="number">0</span>, <span class="number">1</span>))
+        <span class="op">|</span> <span class="ident">get_attacks</span>(<span class="ident">occupancy</span>, <span class="ident">field_index</span>, (<span class="number">0</span>, <span class="op">-</span><span class="number">1</span>));
 
     <span class="ident">result</span>
 }
 
-<span class="kw">fn</span> <span class="ident">get_bishop_attacks</span>(<span class="ident">bitboard</span>: <span class="ident">u64</span>, <span class="ident">field_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u64</span> {
+<span class="doccomment">/// Gets a bishop attacks for the field specified by `field_index`, occupancy `occupancy` (friendly + enemy).</span>
+<span class="kw">fn</span> <span class="ident">get_bishop_attacks</span>(<span class="ident">occupancy</span>: <span class="ident">u64</span>, <span class="ident">field_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u64</span> {
     <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="number">0</span>
-        <span class="op">|</span> <span class="ident">get_attacks</span>(<span class="ident">bitboard</span>, <span class="ident">field_index</span>, (<span class="number">1</span>, <span class="number">1</span>))
-        <span class="op">|</span> <span class="ident">get_attacks</span>(<span class="ident">bitboard</span>, <span class="ident">field_index</span>, (<span class="op">-</span><span class="number">1</span>, <span class="number">1</span>))
-        <span class="op">|</span> <span class="ident">get_attacks</span>(<span class="ident">bitboard</span>, <span class="ident">field_index</span>, (<span class="number">1</span>, <span class="op">-</span><span class="number">1</span>))
-        <span class="op">|</span> <span class="ident">get_attacks</span>(<span class="ident">bitboard</span>, <span class="ident">field_index</span>, (<span class="op">-</span><span class="number">1</span>, <span class="op">-</span><span class="number">1</span>));
+        <span class="op">|</span> <span class="ident">get_attacks</span>(<span class="ident">occupancy</span>, <span class="ident">field_index</span>, (<span class="number">1</span>, <span class="number">1</span>))
+        <span class="op">|</span> <span class="ident">get_attacks</span>(<span class="ident">occupancy</span>, <span class="ident">field_index</span>, (<span class="op">-</span><span class="number">1</span>, <span class="number">1</span>))
+        <span class="op">|</span> <span class="ident">get_attacks</span>(<span class="ident">occupancy</span>, <span class="ident">field_index</span>, (<span class="number">1</span>, <span class="op">-</span><span class="number">1</span>))
+        <span class="op">|</span> <span class="ident">get_attacks</span>(<span class="ident">occupancy</span>, <span class="ident">field_index</span>, (<span class="op">-</span><span class="number">1</span>, <span class="op">-</span><span class="number">1</span>));
 
     <span class="ident">result</span>
 }
 
-<span class="kw">fn</span> <span class="ident">get_attacks</span>(<span class="ident">bitboard</span>: <span class="ident">u64</span>, <span class="ident">field_index</span>: <span class="ident">usize</span>, <span class="ident">direction</span>: (<span class="ident">isize</span>, <span class="ident">isize</span>)) -&gt; <span class="ident">u64</span> {
+<span class="doccomment">/// Helper function to get all possible to move fields, considering `occupancy` (friendly + enemy), starting from the field</span>
+<span class="doccomment">/// specified by `field_index` and going into the `direction`.</span>
+<span class="kw">fn</span> <span class="ident">get_attacks</span>(<span class="ident">occupancy</span>: <span class="ident">u64</span>, <span class="ident">field_index</span>: <span class="ident">usize</span>, <span class="ident">direction</span>: (<span class="ident">isize</span>, <span class="ident">isize</span>)) -&gt; <span class="ident">u64</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="number">0u64</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">current</span> <span class="op">=</span> ((<span class="ident">field_index</span> <span class="kw">as</span> <span class="ident">isize</span>) <span class="op">%</span> <span class="number">8</span> <span class="op">+</span> <span class="ident">direction</span>.<span class="number">0</span>, (<span class="ident">field_index</span> <span class="kw">as</span> <span class="ident">isize</span>) <span class="op">/</span> <span class="number">8</span> <span class="op">+</span> <span class="ident">direction</span>.<span class="number">1</span>);
 
     <span class="kw">while</span> <span class="ident">current</span>.<span class="number">0</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">current</span>.<span class="number">0</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">7</span> <span class="op">&amp;&amp;</span> <span class="ident">current</span>.<span class="number">1</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">current</span>.<span class="number">1</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">7</span> {
         <span class="ident">result</span> <span class="op">|</span><span class="op">=</span> <span class="number">1u64</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="ident">current</span>.<span class="number">0</span> <span class="op">+</span> <span class="ident">current</span>.<span class="number">1</span> <span class="op">*</span> <span class="number">8</span>);
 
-        <span class="kw">if</span> (<span class="ident">bitboard</span> <span class="op">&amp;</span> <span class="ident">result</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">if</span> (<span class="ident">occupancy</span> <span class="op">&amp;</span> <span class="ident">result</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
             <span class="kw">break</span>;
         }
 

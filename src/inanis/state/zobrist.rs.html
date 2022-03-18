@@ -109,6 +109,13 @@
 <span id="107">107</span>
 <span id="108">108</span>
 <span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::board::Bitboard</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::board::CastlingRights</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
@@ -118,6 +125,7 @@
 <span class="kw">static</span> <span class="kw-2">mut</span> <span class="ident">EN_PASSANT_HASHES</span>: [<span class="ident">u64</span>; <span class="number">8</span>] <span class="op">=</span> [<span class="number">0</span>; <span class="number">8</span>];
 <span class="kw">static</span> <span class="kw-2">mut</span> <span class="ident">ACTIVE_COLOR_HASH</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">0</span>;
 
+<span class="doccomment">/// Initializes Zobrist hashes by filling arrays with random [u64] values.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init</span>() {
     <span class="kw">unsafe</span> {
         <span class="kw">for</span> <span class="ident">color_hash</span> <span class="kw">in</span> <span class="ident">PIECE_HASHES</span>.<span class="ident">iter_mut</span>() {
@@ -140,6 +148,7 @@
     }
 }
 
+<span class="doccomment">/// Recalculates Zobrist hash for the `board`.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">recalculate_hash</span>(<span class="ident">board</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Bitboard</span>) {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hash</span> <span class="op">=</span> <span class="number">0u64</span>;
 
@@ -180,6 +189,7 @@
     <span class="ident">board</span>.<span class="ident">hash</span> <span class="op">=</span> <span class="ident">hash</span>;
 }
 
+<span class="doccomment">/// Recalculates pawn hash for the `board`.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">recalculate_pawn_hash</span>(<span class="ident">board</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Bitboard</span>) {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hash</span> <span class="op">=</span> <span class="number">0u64</span>;
 
@@ -199,10 +209,12 @@
     <span class="ident">board</span>.<span class="ident">pawn_hash</span> <span class="op">=</span> <span class="ident">hash</span>;
 }
 
+<span class="doccomment">/// Gets `piece` hash with the `color` for the field specified by `field_index`.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_piece_hash</span>(<span class="ident">color</span>: <span class="ident">u8</span>, <span class="ident">piece</span>: <span class="ident">u8</span>, <span class="ident">field_index</span>: <span class="ident">u8</span>) -&gt; <span class="ident">u64</span> {
     <span class="kw">unsafe</span> { <span class="ident">PIECE_HASHES</span>[<span class="ident">color</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">piece</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">field_index</span> <span class="kw">as</span> <span class="ident">usize</span>] }
 }
 
+<span class="doccomment">/// Gets castling right hash based on the `current` ones and the desired change specified by `right`.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_castling_right_hash</span>(<span class="ident">current</span>: <span class="ident">CastlingRights</span>, <span class="ident">right</span>: <span class="ident">CastlingRights</span>) -&gt; <span class="ident">u64</span> {
     <span class="kw">if</span> <span class="op">!</span><span class="ident">current</span>.<span class="ident">contains</span>(<span class="ident">right</span>) {
         <span class="kw">return</span> <span class="number">0</span>;
@@ -211,10 +223,12 @@
     <span class="kw">unsafe</span> { <span class="ident">CASTLING_HASHES</span>[<span class="ident">bit_scan</span>(<span class="ident">right</span>.<span class="ident">bits</span>() <span class="kw">as</span> <span class="ident">u64</span>) <span class="kw">as</span> <span class="ident">usize</span>] }
 }
 
+<span class="doccomment">/// Gets en passant hash for the `file`.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_en_passant_hash</span>(<span class="ident">file</span>: <span class="ident">u8</span>) -&gt; <span class="ident">u64</span> {
     <span class="kw">unsafe</span> { <span class="ident">EN_PASSANT_HASHES</span>[<span class="ident">file</span> <span class="kw">as</span> <span class="ident">usize</span>] }
 }
 
+<span class="doccomment">/// Gets active color hash.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_active_color_hash</span>() -&gt; <span class="ident">u64</span> {
     <span class="kw">unsafe</span> { <span class="ident">ACTIVE_COLOR_HASH</span> }
 }
