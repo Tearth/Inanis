@@ -64,7 +64,7 @@ pub fn run() {
 
     println!("id name Inanis {}", VERSION);
     println!("id author {}", AUTHOR);
-    println!("option name Hash type spin default 1 min 2 max 1048576");
+    println!("option name Hash type spin default 2 min 2 max 1048576");
     println!("option name Move Overhead type spin default 10 min 0 max 3600000");
     println!("option name Clear Hash type button");
     println!("uciok");
