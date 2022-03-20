@@ -3,6 +3,7 @@ use crate::state::movescan::Move;
 
 const KILLER_SLOTS: usize = 3;
 
+#[derive(Clone)]
 pub struct KillersTable {
     pub table: [[Move; KILLER_SLOTS]; MAX_DEPTH as usize],
 }

@@ -1,6 +1,7 @@
 use std::mem;
 use std::u64;
 
+#[derive(Clone)]
 pub struct PawnHashTable {
     table: Vec<PawnHashTableEntry>,
     slots: usize,

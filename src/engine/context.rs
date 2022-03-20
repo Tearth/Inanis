@@ -14,6 +14,7 @@ use crate::state::board::Bitboard;
 use crate::state::movescan::Move;
 use chrono::DateTime;
 use chrono::Utc;
+use std::cell::UnsafeCell;
 use std::mem::MaybeUninit;
 
 #[derive(Default)]
@@ -35,11 +36,21 @@ pub struct SearchContext<'a> {
     pub deadline: u32,
     pub search_done: bool,
     pub uci_debug: bool,
+    pub helper_thread: bool,
     pub transposition_table: &'a mut TranspositionTable,
     pub pawn_hashtable: &'a mut PawnHashTable,
     pub killers_table: &'a mut KillersTable,
     pub history_table: &'a mut HistoryTable,
+    pub helper_contexts: Vec<HelperThreadContext<'a>>,
     pub abort_token: &'a mut AbortToken,
+}
+
+pub struct HelperThreadContext<'a> {
+    pub board: UnsafeCell<Bitboard>,
+    pub pawn_hashtable: UnsafeCell<PawnHashTable>,
+    pub killers_table: UnsafeCell<KillersTable>,
+    pub history_table: UnsafeCell<HistoryTable>,
+    pub context: SearchContext<'a>,
 }
 
 pub struct SearchResult {
@@ -121,8 +132,10 @@ impl<'a> SearchContext<'a> {
     ///  - `max_nodex_count` - total nodes count at which the search will top (might happen earlier if mate is detected), 0 if there is no constraint.
     /// This value can possibly not be strictly respected due to way of how the check is performed, so expect a bit more nodes count before stop.
     ///  - `max_move_time` - allocated amount of time for the search (in milliseconds), 0 if we want to use default time allocator.
+    ///  - `moves_to_go` - moves count, after which the time will be increased.
     ///  - `uci_debug` - enables or disables additional debug info sent to GUI by `info string` command.
     ///  - `transposition_table`, `pawn_hashtable`, `killers_table`, `history_table` - hashtables used during search.
+    ///  - `helper_contexts` - a list of pre-initialized contexts used by LazySMP.
     ///  - `abort_token` - token used to abort search from the outside of the context.
     pub fn new(
         board: &'a mut Bitboard,
@@ -133,6 +146,7 @@ impl<'a> SearchContext<'a> {
         max_move_time: u32,
         moves_to_go: u32,
         uci_debug: bool,
+        helper_thread: bool,
         transposition_table: &'a mut TranspositionTable,
         pawn_hashtable: &'a mut PawnHashTable,
         killers_table: &'a mut KillersTable,
@@ -153,10 +167,12 @@ impl<'a> SearchContext<'a> {
             deadline: 0,
             search_done: false,
             uci_debug,
+            helper_thread,
             transposition_table,
             pawn_hashtable,
             killers_table,
             history_table,
+            helper_contexts: Vec::new(),
             abort_token,
         }
     }
@@ -245,6 +261,28 @@ impl<'a> Iterator for SearchContext<'a> {
         } else {
             u32::MAX
         };
+
+        if !self.helper_contexts.is_empty() {
+            crossbeam::thread::scope(|scope| {
+                let depth = self.current_depth;
+                for helper_context in &mut self.helper_contexts {
+                    helper_context.context.deadline = self.deadline;
+                    scope.spawn(move |_| {
+                        let king_checked = helper_context.context.board.is_king_checked(helper_context.context.board.active_color);
+                        search::run::<true>(&mut helper_context.context, depth, 0, MIN_ALPHA, MIN_BETA, true, king_checked);
+                    });
+                }
+            })
+            .unwrap();
+        }
+
+        if self.abort_token.aborted {
+            if self.uci_debug {
+                println!("info string search aborted");
+            }
+
+            return None;
+        }
 
         let king_checked = self.board.is_king_checked(self.board.active_color);
         let score = search::run::<true>(self, self.current_depth, 0, MIN_ALPHA, MIN_BETA, true, king_checked);

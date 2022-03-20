@@ -1,3 +1,4 @@
+#[derive(Clone)]
 pub struct HistoryTable {
     pub table: [[u32; 64]; 64],
     pub max: u32,

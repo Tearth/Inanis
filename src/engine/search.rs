@@ -52,6 +52,8 @@ pub const MOVE_ORDERING_HISTORY_MOVE: u8 = 180;
 pub const MOVE_ORDERING_HISTORY_MOVE_OFFSET: i16 = -90;
 pub const MOVE_ORDERING_LOSING_CAPTURES_OFFSET: i16 = -100;
 
+pub const LAZY_SMP_NOISE: i16 = 10;
+
 #[derive(std::cmp::PartialEq)]
 enum MoveGeneratorStage {
     ReadyToCheckHashMove,
@@ -395,7 +397,8 @@ pub fn run<const PV: bool>(
 ///    [MOVE_ORDERING_BISHOP_PROMOTION] or [MOVE_ORDERING_KNIGHT_PROMOTION]
 ///  - for every move found in killer table, assign [MOVE_ORDERING_KILLER_MOVE]
 ///  - for every castling, assign [MOVE_ORDERING_CASTLING]
-///  - for every quiet move which wasn't categoried in other categories, assign score from history table + [MOVE_ORDERING_HISTORY_MOVE_OFFSET]
+///  - for every quiet move which wasn't categoried in other categories, assign score from history table + [MOVE_ORDERING_HISTORY_MOVE_OFFSET] + random noise
+///    defined by [LAZY_SMP_NOISE] if Lazy SMP is enabled
 ///  - for every negative capture, assign SEE score + [MOVE_ORDERING_LOSING_CAPTURES_OFFSET]
 fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut [i16], start_index: usize, moves_count: usize, tt_move: Move, ply: u16) {
     for move_index in start_index..moves_count {
@@ -412,8 +415,13 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
                 continue;
             }
 
-            move_scores[move_index] = context.history_table.get(r#move.get_from(), r#move.get_to(), MOVE_ORDERING_HISTORY_MOVE) as i16;
-            move_scores[move_index] += MOVE_ORDERING_HISTORY_MOVE_OFFSET;
+            let mut value = context.history_table.get(r#move.get_from(), r#move.get_to(), MOVE_ORDERING_HISTORY_MOVE) as i16;
+            if context.helper_thread && value + LAZY_SMP_NOISE < MOVE_ORDERING_HISTORY_MOVE as i16 {
+                value += fastrand::i16(0..=LAZY_SMP_NOISE);
+            }
+
+            value += MOVE_ORDERING_HISTORY_MOVE_OFFSET;
+            move_scores[move_index] = value;
 
             continue;
         } else if r#move.is_capture() {

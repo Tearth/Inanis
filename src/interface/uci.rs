@@ -3,6 +3,7 @@ use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
 use crate::engine;
 use crate::engine::context::AbortToken;
+use crate::engine::context::HelperThreadContext;
 use crate::engine::context::SearchContext;
 use crate::engine::history::HistoryTable;
 use crate::engine::killers::KillersTable;
@@ -61,11 +62,13 @@ pub fn run() {
     let mut state: Arc<UciState> = Arc::new(Default::default());
     unsafe { (*state.options.get()).insert("Hash".to_string(), "2".to_string()) };
     unsafe { (*state.options.get()).insert("Move Overhead".to_string(), "10".to_string()) };
+    unsafe { (*state.options.get()).insert("Threads".to_string(), "1".to_string()) };
 
     println!("id name Inanis {}", VERSION);
     println!("id author {}", AUTHOR);
     println!("option name Hash type spin default 2 min 2 max 1048576");
     println!("option name Move Overhead type spin default 10 min 0 max 3600000");
+    println!("option name Threads type spin default 1 min 1 max 1024");
     println!("option name Clear Hash type button");
     println!("uciok");
 
@@ -200,7 +203,7 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
         (*state).busy_flag.store(true, Ordering::Relaxed);
 
         *state.search_thread.get() = Some(thread::spawn(move || {
-            let context = SearchContext::new(
+            let mut context = SearchContext::new(
                 &mut *state_arc.board.get(),
                 time,
                 inc_time,
@@ -209,6 +212,7 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
                 max_move_time,
                 moves_to_go,
                 state_arc.debug_mode.load(Ordering::Relaxed),
+                false,
                 &mut *state_arc.transposition_table.get(),
                 &mut *state_arc.pawn_hashtable.get(),
                 &mut *state_arc.killers_table.get(),
@@ -216,8 +220,46 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
                 &mut *state_arc.abort_token.get(),
             );
 
-            let mut best_move = Default::default();
+            let threads = (*state_arc.options.get())["Threads"].parse::<usize>().unwrap();
+            if threads > 1 {
+                for _ in 0..threads {
+                    let helper_context = SearchContext::new(
+                        &mut *state_arc.board.get(),
+                        time,
+                        inc_time,
+                        forced_depth,
+                        max_nodes_count,
+                        max_move_time,
+                        moves_to_go,
+                        state_arc.debug_mode.load(Ordering::Relaxed),
+                        true,
+                        &mut *state_arc.transposition_table.get(),
+                        &mut *state_arc.pawn_hashtable.get(),
+                        &mut *state_arc.killers_table.get(),
+                        &mut *state_arc.history_table.get(),
+                        &mut *state_arc.abort_token.get(),
+                    );
 
+                    let data = HelperThreadContext {
+                        board: UnsafeCell::new(context.board.clone()),
+                        pawn_hashtable: UnsafeCell::new(context.pawn_hashtable.clone()),
+                        killers_table: UnsafeCell::new(context.killers_table.clone()),
+                        history_table: UnsafeCell::new(context.history_table.clone()),
+                        context: helper_context,
+                    };
+
+                    context.helper_contexts.push(data);
+                }
+
+                for i in 0..threads {
+                    context.helper_contexts[i].context.board = &mut *context.helper_contexts[i].board.get();
+                    context.helper_contexts[i].context.pawn_hashtable = &mut *context.helper_contexts[i].pawn_hashtable.get();
+                    context.helper_contexts[i].context.killers_table = &mut *context.helper_contexts[i].killers_table.get();
+                    context.helper_contexts[i].context.history_table = &mut *context.helper_contexts[i].history_table.get();
+                }
+            }
+
+            let mut best_move = Default::default();
             for depth_result in context {
                 let pv_line: Vec<String> = depth_result.pv_line.iter().map(|v| v.to_long_notation()).collect();
                 let formatted_score = if engine::is_score_near_checkmate(depth_result.score) {
