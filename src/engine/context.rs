@@ -15,7 +15,9 @@ use crate::state::movescan::Move;
 use chrono::DateTime;
 use chrono::Utc;
 use std::cell::UnsafeCell;
+use std::cmp;
 use std::mem::MaybeUninit;
+use std::ops;
 
 #[derive(Default)]
 pub struct AbortToken {
@@ -265,12 +267,20 @@ impl<'a> Iterator for SearchContext<'a> {
         if !self.helper_contexts.is_empty() {
             crossbeam::thread::scope(|scope| {
                 let depth = self.current_depth;
+                let mut threads = Vec::new();
+
                 for helper_context in &mut self.helper_contexts {
                     helper_context.context.deadline = self.deadline;
-                    scope.spawn(move |_| {
+                    threads.push(scope.spawn(move |_| {
                         let king_checked = helper_context.context.board.is_king_checked(helper_context.context.board.active_color);
                         search::run::<true>(&mut helper_context.context, depth, 0, MIN_ALPHA, MIN_BETA, true, king_checked);
-                    });
+
+                        helper_context.context.statistics
+                    }));
+                }
+
+                for thread in threads {
+                    self.statistics += thread.join().unwrap();
                 }
             })
             .unwrap();
@@ -341,5 +351,69 @@ impl SearchResult {
             pv_line,
             statistics,
         }
+    }
+}
+
+impl ops::AddAssign<SearchStatistics> for SearchStatistics {
+    /// Implements `+=` operator for [SearchStatistics] by adding all corresponding fields together (except `max_ply`, where the highest value is taken).
+    fn add_assign(&mut self, rhs: SearchStatistics) {
+        self.nodes_count += rhs.nodes_count;
+        self.q_nodes_count += rhs.q_nodes_count;
+        self.leafs_count += rhs.leafs_count;
+        self.q_leafs_count += rhs.q_leafs_count;
+        self.beta_cutoffs += rhs.beta_cutoffs;
+        self.q_beta_cutoffs += rhs.q_beta_cutoffs;
+
+        self.perfect_cutoffs += rhs.perfect_cutoffs;
+        self.q_perfect_cutoffs += rhs.q_perfect_cutoffs;
+        self.non_perfect_cutoffs += rhs.non_perfect_cutoffs;
+        self.q_non_perfect_cutoffs += rhs.q_non_perfect_cutoffs;
+
+        self.pvs_full_window_searches += rhs.pvs_full_window_searches;
+        self.pvs_zero_window_searches += rhs.pvs_zero_window_searches;
+        self.pvs_rejected_searches += rhs.pvs_rejected_searches;
+
+        self.static_null_move_pruning_attempts += rhs.static_null_move_pruning_attempts;
+        self.static_null_move_pruning_accepted += rhs.static_null_move_pruning_accepted;
+        self.static_null_move_pruning_rejected += rhs.static_null_move_pruning_rejected;
+
+        self.null_move_pruning_attempts += rhs.null_move_pruning_attempts;
+        self.null_move_pruning_accepted += rhs.null_move_pruning_accepted;
+        self.null_move_pruning_rejected += rhs.null_move_pruning_rejected;
+
+        self.late_move_pruning_accepted += rhs.late_move_pruning_accepted;
+        self.late_move_pruning_rejected += rhs.late_move_pruning_rejected;
+
+        self.reduction_pruning_accepted += rhs.reduction_pruning_accepted;
+        self.reduction_pruning_rejected += rhs.reduction_pruning_rejected;
+
+        self.razoring_attempts += rhs.razoring_attempts;
+        self.razoring_accepted += rhs.razoring_accepted;
+        self.razoring_rejected += rhs.razoring_rejected;
+
+        self.q_score_pruning_accepted += rhs.q_score_pruning_accepted;
+        self.q_score_pruning_rejected += rhs.q_score_pruning_rejected;
+
+        self.q_futility_pruning_accepted += rhs.q_futility_pruning_accepted;
+        self.q_futility_pruning_rejected += rhs.q_futility_pruning_rejected;
+
+        self.tt_added += rhs.tt_added;
+        self.tt_hits += rhs.tt_hits;
+        self.tt_misses += rhs.tt_misses;
+        self.tt_collisions += rhs.tt_collisions;
+
+        self.tt_legal_hashmoves += rhs.tt_legal_hashmoves;
+        self.tt_illegal_hashmoves += rhs.tt_illegal_hashmoves;
+
+        self.pawn_hashtable_added += rhs.pawn_hashtable_added;
+        self.pawn_hashtable_hits += rhs.pawn_hashtable_hits;
+        self.pawn_hashtable_misses += rhs.pawn_hashtable_misses;
+        self.pawn_hashtable_collisions += rhs.pawn_hashtable_collisions;
+
+        self.move_generator_hash_move_stages += rhs.move_generator_hash_move_stages;
+        self.move_generator_captures_stages += rhs.move_generator_captures_stages;
+        self.move_generator_quiet_moves_stages += rhs.move_generator_quiet_moves_stages;
+
+        self.max_ply = cmp::max(self.max_ply, rhs.max_ply);
     }
 }
