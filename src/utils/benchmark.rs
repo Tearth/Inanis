@@ -116,6 +116,7 @@ pub fn run() -> BenchmarkResult {
         let mut killers_table = Default::default();
         let mut history_table = Default::default();
         let mut abort_token = Default::default();
+        let mut ponder_token = Default::default();
 
         let mut board = Bitboard::new_from_fen(fen).unwrap();
         let context = SearchContext::new(
@@ -133,6 +134,7 @@ pub fn run() -> BenchmarkResult {
             &mut killers_table,
             &mut history_table,
             &mut abort_token,
+            &mut ponder_token,
         );
 
         let result = context.last().unwrap();

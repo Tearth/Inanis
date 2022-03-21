@@ -20,8 +20,8 @@ use std::mem::MaybeUninit;
 use std::ops;
 
 #[derive(Default)]
-pub struct AbortToken {
-    pub aborted: bool,
+pub struct Token {
+    pub triggered: bool,
 }
 
 pub struct SearchContext<'a> {
@@ -44,7 +44,8 @@ pub struct SearchContext<'a> {
     pub killers_table: &'a mut KillersTable,
     pub history_table: &'a mut HistoryTable,
     pub helper_contexts: Vec<HelperThreadContext<'a>>,
-    pub abort_token: &'a mut AbortToken,
+    pub abort_token: &'a mut Token,
+    pub ponder_token: &'a mut Token,
 }
 
 pub struct HelperThreadContext<'a> {
@@ -127,18 +128,19 @@ pub struct SearchStatistics {
 
 impl<'a> SearchContext<'a> {
     /// Constructs a new instance of [SearchContext] with parameters as follows:
-    ///  - `board` - initial position of the board.
-    ///  - `time` - total time for the color in a move (in milliseconds).
-    ///  - `inc_time` - incremental time for the color in a move (in milliseconds).
-    ///  - `forced_depth` - depth at which the search will stop (might happen earlier if mate is detected), 0 if there is no constraint.
+    ///  - `board` - initial position of the board
+    ///  - `time` - total time for the color in a move (in milliseconds)
+    ///  - `inc_time` - incremental time for the color in a move (in milliseconds)
+    ///  - `forced_depth` - depth at which the search will stop (might happen earlier if mate is detected), 0 if there is no constraint
     ///  - `max_nodex_count` - total nodes count at which the search will top (might happen earlier if mate is detected), 0 if there is no constraint.
-    /// This value can possibly not be strictly respected due to way of how the check is performed, so expect a bit more nodes count before stop.
-    ///  - `max_move_time` - allocated amount of time for the search (in milliseconds), 0 if we want to use default time allocator.
-    ///  - `moves_to_go` - moves count, after which the time will be increased.
-    ///  - `uci_debug` - enables or disables additional debug info sent to GUI by `info string` command.
-    ///  - `transposition_table`, `pawn_hashtable`, `killers_table`, `history_table` - hashtables used during search.
-    ///  - `helper_contexts` - a list of pre-initialized contexts used by LazySMP.
-    ///  - `abort_token` - token used to abort search from the outside of the context.
+    /// This value can possibly not be strictly respected due to way of how the check is performed, so expect a bit more nodes count before stop
+    ///  - `max_move_time` - allocated amount of time for the search (in milliseconds), 0 if we want to use default time allocator
+    ///  - `moves_to_go` - moves count, after which the time will be increased
+    ///  - `uci_debug` - enables or disables additional debug info sent to GUI by `info string` command
+    ///  - `transposition_table`, `pawn_hashtable`, `killers_table`, `history_table` - hashtables used during search
+    ///  - `helper_contexts` - a list of pre-initialized contexts used by LazySMP
+    ///  - `abort_token` - token used to abort search from the outside of the context
+    ///  - `ponder_token` - token used to change a search mode from pondering to the regular one
     pub fn new(
         board: &'a mut Bitboard,
         time: u32,
@@ -153,7 +155,8 @@ impl<'a> SearchContext<'a> {
         pawn_hashtable: &'a mut PawnHashTable,
         killers_table: &'a mut KillersTable,
         history_table: &'a mut HistoryTable,
-        abort_token: &'a mut AbortToken,
+        abort_token: &'a mut Token,
+        ponder_token: &'a mut Token,
     ) -> SearchContext<'a> {
         SearchContext {
             board,
@@ -176,6 +179,7 @@ impl<'a> SearchContext<'a> {
             history_table,
             helper_contexts: Vec::new(),
             abort_token,
+            ponder_token,
         }
     }
 
@@ -232,112 +236,138 @@ impl<'a> Iterator for SearchContext<'a> {
     ///  - mate score has detected and was recognized as reliable
     ///  - search was aborted
     fn next(&mut self) -> Option<Self::Item> {
-        if self.forced_depth != 0 && self.current_depth == self.forced_depth + 1 {
-            return None;
-        }
-
-        if self.search_done || self.current_depth >= MAX_DEPTH {
-            return None;
-        }
-
-        let desired_time = if self.max_move_time != 0 {
-            self.max_move_time
-        } else {
-            let mut desired_time = clock::get_time_for_move(self.board.fullmove_number, self.time, self.inc_time, self.moves_to_go);
-            if desired_time > self.time {
-                desired_time = self.time;
+        loop {
+            if self.forced_depth != 0 && self.current_depth == self.forced_depth + 1 {
+                return None;
             }
 
-            desired_time
-        };
-
-        self.deadline = if self.max_move_time != 0 {
-            self.max_move_time
-        } else if self.current_depth > 1 {
-            let mut deadline = ((desired_time as f32) * DEADLINE_MULTIPLIER) as u32;
-            if deadline > self.time {
-                deadline = desired_time;
+            if self.search_done || self.current_depth >= MAX_DEPTH {
+                return None;
             }
 
-            deadline
-        } else {
-            u32::MAX
-        };
-
-        if !self.helper_contexts.is_empty() {
-            crossbeam::thread::scope(|scope| {
-                let depth = self.current_depth;
-                let mut threads = Vec::new();
-
-                for helper_context in &mut self.helper_contexts {
-                    helper_context.context.deadline = self.deadline;
-                    threads.push(scope.spawn(move |_| {
-                        let king_checked = helper_context.context.board.is_king_checked(helper_context.context.board.active_color);
-                        search::run::<true>(&mut helper_context.context, depth, 0, MIN_ALPHA, MIN_BETA, true, king_checked);
-
-                        helper_context.context.statistics
-                    }));
+            let desired_time = if self.max_move_time != 0 {
+                self.max_move_time
+            } else {
+                let mut desired_time = clock::get_time_for_move(self.board.fullmove_number, self.time, self.inc_time, self.moves_to_go);
+                if desired_time > self.time {
+                    desired_time = self.time;
                 }
 
-                for thread in threads {
-                    self.statistics += thread.join().unwrap();
+                desired_time
+            };
+
+            self.deadline = if self.max_move_time != 0 {
+                self.max_move_time
+            } else if self.current_depth > 1 {
+                let mut deadline = ((desired_time as f32) * DEADLINE_MULTIPLIER) as u32;
+                if deadline > self.time {
+                    deadline = desired_time;
                 }
-            })
-            .unwrap();
-        }
 
-        if self.abort_token.aborted {
+                deadline
+            } else {
+                u32::MAX
+            };
+
+            if !self.helper_contexts.is_empty() {
+                crossbeam::thread::scope(|scope| {
+                    let depth = self.current_depth;
+                    let mut threads = Vec::new();
+
+                    for helper_context in &mut self.helper_contexts {
+                        helper_context.context.deadline = self.deadline;
+                        threads.push(scope.spawn(move |_| {
+                            let king_checked = helper_context.context.board.is_king_checked(helper_context.context.board.active_color);
+                            search::run::<true>(&mut helper_context.context, depth, 0, MIN_ALPHA, MIN_BETA, true, king_checked);
+
+                            helper_context.context.statistics
+                        }));
+                    }
+
+                    for thread in threads {
+                        self.statistics += thread.join().unwrap();
+                    }
+                })
+                .unwrap();
+
+                if self.abort_token.triggered {
+                    if self.ponder_token.triggered {
+                        self.current_depth = 1;
+                        self.forced_depth = 0;
+                        self.search_time_start = Utc::now();
+                        self.statistics = Default::default();
+
+                        self.ponder_token.triggered = false;
+                        self.abort_token.triggered = false;
+
+                        continue;
+                    } else {
+                        if self.uci_debug {
+                            println!("info string search aborted");
+                        }
+
+                        return None;
+                    }
+                }
+            }
+
+            let king_checked = self.board.is_king_checked(self.board.active_color);
+            let score = search::run::<true>(self, self.current_depth, 0, MIN_ALPHA, MIN_BETA, true, king_checked);
+            let search_time = (Utc::now() - self.search_time_start).num_milliseconds() as u32;
+
             if self.uci_debug {
-                println!("info string search aborted");
+                let mut white_attack_mask = 0;
+                let mut black_attack_mask = 0;
+
+                let material_evaluation = material::evaluate(self.board);
+                let pst_evaluation = pst::evaluate(self.board);
+                let mobility_evaluation = mobility::evaluate(self.board, &mut white_attack_mask, &mut black_attack_mask);
+                let safety_evaluation = safety::evaluate(self.board, white_attack_mask, black_attack_mask);
+                let pawns_evaluation = pawns::evaluate_without_cache(self.board);
+
+                println!(
+                    "info string search_time={}, desired_time={}, material={}, pst={}, mobility={}, safety={}, pawns={}",
+                    search_time, desired_time, material_evaluation, pst_evaluation, mobility_evaluation, safety_evaluation, pawns_evaluation
+                );
             }
 
-            return None;
-        }
+            if self.abort_token.triggered {
+                if self.ponder_token.triggered {
+                    self.current_depth = 1;
+                    self.forced_depth = 0;
+                    self.search_time_start = Utc::now();
+                    self.statistics = Default::default();
 
-        let king_checked = self.board.is_king_checked(self.board.active_color);
-        let score = search::run::<true>(self, self.current_depth, 0, MIN_ALPHA, MIN_BETA, true, king_checked);
-        let search_time = (Utc::now() - self.search_time_start).num_milliseconds() as u32;
+                    self.ponder_token.triggered = false;
+                    self.abort_token.triggered = false;
 
-        if self.uci_debug {
-            let mut white_attack_mask = 0;
-            let mut black_attack_mask = 0;
+                    continue;
+                } else {
+                    if self.uci_debug {
+                        println!("info string search aborted");
+                    }
 
-            let material_evaluation = material::evaluate(self.board);
-            let pst_evaluation = pst::evaluate(self.board);
-            let mobility_evaluation = mobility::evaluate(self.board, &mut white_attack_mask, &mut black_attack_mask);
-            let safety_evaluation = safety::evaluate(self.board, white_attack_mask, black_attack_mask);
-            let pawns_evaluation = pawns::evaluate_without_cache(self.board);
-
-            println!(
-                "info string search_time={}, desired_time={}, material={}, pst={}, mobility={}, safety={}, pawns={}",
-                search_time, desired_time, material_evaluation, pst_evaluation, mobility_evaluation, safety_evaluation, pawns_evaluation
-            );
-        }
-
-        if self.abort_token.aborted {
-            if self.uci_debug {
-                println!("info string search aborted");
+                    return None;
+                }
             }
 
-            return None;
-        }
+            if self.forced_depth == 0 && self.max_nodes_count == 0 {
+                if search_time > desired_time / 2 {
+                    self.search_done = true;
+                }
 
-        if self.forced_depth == 0 && self.max_nodes_count == 0 {
-            if search_time > desired_time / 2 {
-                self.search_done = true;
+                if is_score_near_checkmate(score) && self.current_depth >= (CHECKMATE_SCORE - score.abs()) as i8 {
+                    self.search_done = true;
+                }
             }
 
-            if is_score_near_checkmate(score) && self.current_depth >= (CHECKMATE_SCORE - score.abs()) as i8 {
-                self.search_done = true;
-            }
+            self.current_depth += 1;
+
+            let total_search_time = (Utc::now() - self.search_time_start).num_milliseconds() as u64;
+            let pv_line = self.get_pv_line(&mut self.board.clone(), 0);
+
+            return Some(SearchResult::new(total_search_time, self.current_depth - 1, score, pv_line, self.statistics));
         }
-
-        self.current_depth += 1;
-
-        let total_search_time = (Utc::now() - self.search_time_start).num_milliseconds() as u64;
-        let pv_line = self.get_pv_line(&mut self.board.clone(), 0);
-
-        Some(SearchResult::new(total_search_time, self.current_depth - 1, score, pv_line, self.statistics))
     }
 }
 

@@ -46,6 +46,7 @@ pub fn run(epd_filename: &str, depth: i8, tries_to_confirm: i8) {
         let mut killers_table = Default::default();
         let mut history_table = Default::default();
         let mut abort_token = Default::default();
+        let mut ponder_token = Default::default();
 
         let mut board_clone = position.board.clone();
         let context = SearchContext::new(
@@ -63,6 +64,7 @@ pub fn run(epd_filename: &str, depth: i8, tries_to_confirm: i8) {
             &mut killers_table,
             &mut history_table,
             &mut abort_token,
+            &mut ponder_token,
         );
 
         let mut last_best_move = Default::default();

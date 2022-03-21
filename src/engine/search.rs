@@ -111,20 +111,20 @@ pub fn run<const PV: bool>(
     allow_null_move: bool,
     friendly_king_checked: bool,
 ) -> i16 {
-    if context.abort_token.aborted {
+    if context.abort_token.triggered {
         return INVALID_SCORE;
     }
 
     if context.forced_depth == 0 && context.max_nodes_count == 0 && context.statistics.nodes_count % 10000 == 0 {
         if (Utc::now() - context.search_time_start).num_milliseconds() > context.deadline as i64 {
-            context.abort_token.aborted = true;
+            context.abort_token.triggered = true;
             return INVALID_SCORE;
         }
     }
 
     if PV && context.max_nodes_count != 0 {
         if context.statistics.nodes_count + context.statistics.q_nodes_count >= context.max_nodes_count {
-            context.abort_token.aborted = true;
+            context.abort_token.triggered = true;
             return INVALID_SCORE;
         }
     }
@@ -363,7 +363,7 @@ pub fn run<const PV: bool>(
         }
     }
 
-    if context.abort_token.aborted {
+    if context.abort_token.triggered {
         return INVALID_SCORE;
     }
 

@@ -2,11 +2,12 @@ use crate::cache::allocator;
 use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
 use crate::engine;
-use crate::engine::context::AbortToken;
 use crate::engine::context::HelperThreadContext;
 use crate::engine::context::SearchContext;
+use crate::engine::context::Token;
 use crate::engine::history::HistoryTable;
 use crate::engine::killers::KillersTable;
+use crate::engine::*;
 use crate::state::board::Bitboard;
 use crate::state::movescan::Move;
 use crate::state::*;
@@ -33,7 +34,8 @@ struct UciState {
     killers_table: UnsafeCell<KillersTable>,
     history_table: UnsafeCell<HistoryTable>,
     search_thread: UnsafeCell<Option<JoinHandle<()>>>,
-    abort_token: UnsafeCell<AbortToken>,
+    abort_token: UnsafeCell<Token>,
+    ponder_token: UnsafeCell<Token>,
     busy_flag: AtomicBool,
     debug_mode: AtomicBool,
 }
@@ -49,6 +51,7 @@ impl Default for UciState {
             killers_table: UnsafeCell::new(Default::default()),
             search_thread: UnsafeCell::new(None),
             abort_token: UnsafeCell::new(Default::default()),
+            ponder_token: UnsafeCell::new(Default::default()),
             busy_flag: AtomicBool::new(false),
             debug_mode: AtomicBool::new(false),
         }
@@ -63,12 +66,14 @@ pub fn run() {
     unsafe { (*state.options.get()).insert("Hash".to_string(), "2".to_string()) };
     unsafe { (*state.options.get()).insert("Move Overhead".to_string(), "10".to_string()) };
     unsafe { (*state.options.get()).insert("Threads".to_string(), "1".to_string()) };
+    unsafe { (*state.options.get()).insert("Ponder".to_string(), "false".to_string()) };
 
     println!("id name Inanis {}", VERSION);
     println!("id author {}", AUTHOR);
     println!("option name Hash type spin default 2 min 2 max 1048576");
     println!("option name Move Overhead type spin default 10 min 0 max 3600000");
     println!("option name Threads type spin default 1 min 1 max 1024");
+    println!("option name Ponder type check default false");
     println!("option name Clear Hash type button");
     println!("uciok");
 
@@ -85,6 +90,7 @@ pub fn run() {
             "debug" => handle_debug(&tokens, &mut state),
             "go" => handle_go(&tokens, &mut state),
             "isready" => handle_isready(&mut state),
+            "ponderhit" => handle_ponderhit(&mut state),
             "position" => handle_position(&tokens, &mut state),
             "setoption" => handle_setoption(&tokens, &mut state),
             "ucinewgame" => handle_ucinewgame(&mut state),
@@ -114,6 +120,7 @@ fn handle_debug(parameters: &[String], state: &mut Arc<UciState>) {
 ///  - `movetime x` - fixed time allocated for the search in milliseconds
 ///  - `movestogo x` - amount of moves, after which the time will be increased
 ///  - `infinite` - tells the search to run until it reaches the maximum depth for the engine
+///  - `ponder` - tells the search to run in the ponder mode (thinking on the opponent's time)
 fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
     wait_for_busy_flag(state);
     unsafe {
@@ -180,6 +187,9 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
                 "infinite" => {
                     forced_depth = engine::MAX_DEPTH;
                 }
+                "ponder" => {
+                    forced_depth = engine::MAX_DEPTH;
+                }
                 _ => {}
             }
         }
@@ -199,10 +209,14 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
 
         let state_arc = state.clone();
 
-        (*state.abort_token.get()).aborted = false;
+        (*state.abort_token.get()).triggered = false;
+        (*state.ponder_token.get()).triggered = false;
         (*state).busy_flag.store(true, Ordering::Relaxed);
 
         *state.search_thread.get() = Some(thread::spawn(move || {
+            let threads = (*state_arc.options.get())["Threads"].parse::<usize>().unwrap();
+            let ponder = (*state_arc.options.get())["Ponder"].parse::<bool>().unwrap();
+
             let mut context = SearchContext::new(
                 &mut *state_arc.board.get(),
                 time,
@@ -218,9 +232,9 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
                 &mut *state_arc.killers_table.get(),
                 &mut *state_arc.history_table.get(),
                 &mut *state_arc.abort_token.get(),
+                &mut *state_arc.ponder_token.get(),
             );
 
-            let threads = (*state_arc.options.get())["Threads"].parse::<usize>().unwrap();
             if threads > 1 {
                 for _ in 0..threads {
                     let helper_context = SearchContext::new(
@@ -238,6 +252,7 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
                         &mut *state_arc.killers_table.get(),
                         &mut *state_arc.history_table.get(),
                         &mut *state_arc.abort_token.get(),
+                        &mut *state_arc.ponder_token.get(),
                     );
 
                     let data = HelperThreadContext {
@@ -260,6 +275,8 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
             }
 
             let mut best_move = Default::default();
+            let mut ponder_move = Default::default();
+
             for depth_result in context {
                 let pv_line: Vec<String> = depth_result.pv_line.iter().map(|v| v.to_long_notation()).collect();
                 let formatted_score = if engine::is_score_near_checkmate(depth_result.score) {
@@ -284,9 +301,38 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
                         pv_line.join(" ").as_str()
                     )
                 );
+
+                if ponder && depth_result.pv_line.len() >= 2 {
+                    let board = state_arc.board.get();
+                    let mut allow_ponder = true;
+
+                    (*board).make_move(depth_result.pv_line[0]);
+                    (*board).make_move(depth_result.pv_line[1]);
+                    if (*board).is_king_checked((*board).active_color ^ 1) {
+                        allow_ponder = false;
+                    }
+
+                    if (*board).is_threefold_repetition_draw() || (*board).is_fifty_move_rule_draw() || (*board).is_insufficient_material_draw() {
+                        allow_ponder = false;
+                    }
+                    (*board).undo_move(depth_result.pv_line[1]);
+                    (*board).undo_move(depth_result.pv_line[0]);
+
+                    if allow_ponder {
+                        ponder_move = depth_result.pv_line[1];
+                    } else {
+                        ponder_move = Default::default();
+                    }
+                } else {
+                    ponder_move = Default::default();
+                }
             }
 
-            println!("bestmove {}", best_move.to_long_notation());
+            if ponder && ponder_move != Default::default() {
+                println!("bestmove {} ponder {}", best_move.to_long_notation(), ponder_move.to_long_notation());
+            } else {
+                println!("bestmove {}", best_move.to_long_notation());
+            }
 
             (*state_arc.search_thread.get()) = None;
             (*state_arc.transposition_table.get()).age_entries();
@@ -297,10 +343,18 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
     }
 }
 
-/// Handles `isready` commadn by waiting for the busy flag, and then printing response as fast as possible.
+/// Handles `isready` command by waiting for the busy flag, and then printing response as fast as possible.
 fn handle_isready(state: &mut Arc<UciState>) {
     wait_for_busy_flag(state);
     println!("readyok");
+}
+
+/// Handles `ponderhit` command by setting abort and ponder tokens, which should switch a search mode from the ponder to the regular one.
+fn handle_ponderhit(state: &mut Arc<UciState>) {
+    unsafe {
+        (*state.ponder_token.get()).triggered = true;
+        (*state.abort_token.get()).triggered = true;
+    }
 }
 
 /// Handles `position ...` command with the following variants:
@@ -398,7 +452,7 @@ fn handle_ucinewgame(state: &mut Arc<UciState>) {
     wait_for_busy_flag(state);
 
     unsafe {
-        (*state.abort_token.get()).aborted = true;
+        (*state.abort_token.get()).triggered = true;
 
         *state.board.get() = Bitboard::new_initial_position();
         *state.abort_token.get() = Default::default();
@@ -409,7 +463,7 @@ fn handle_ucinewgame(state: &mut Arc<UciState>) {
 /// Handles `stop` command by setting abort token, which should stop ongoing search as fast as possible.
 fn handle_stop(state: &mut Arc<UciState>) {
     unsafe {
-        (*state.abort_token.get()).aborted = true;
+        (*state.abort_token.get()).triggered = true;
     }
 }
 
