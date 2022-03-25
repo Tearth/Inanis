@@ -8,7 +8,7 @@ pub mod qsearch;
 pub mod search;
 pub mod see;
 
-pub const MAX_DEPTH: i8 = 32;
+pub const MAX_DEPTH: i8 = 64;
 pub const MIN_ALPHA: i16 = -CHECKMATE_SCORE;
 pub const MIN_BETA: i16 = CHECKMATE_SCORE;
 pub const DEADLINE_MULTIPLIER: f32 = 2.0;
