@@ -24,7 +24,7 @@ pub fn is_score_near_checkmate(score: i16) -> bool {
     score.abs() >= CHECKMATE_SCORE - (MAX_DEPTH as i16) && score.abs() <= CHECKMATE_SCORE + (MAX_DEPTH as i16)
 }
 
-/// Performs selection sort on `moves` and `move_scores` arrays with length specified in `moves_count`, and starting from `start_index`.
+/// Performs a selection sort on `moves` and `move_scores` arrays with the length specified in `moves_count`, starting from `start_index`.
 /// When it completes, the move and corresponding score will be under `start_index`, and the function returns move itself.
 pub fn sort_next_move(moves: &mut [Move], move_scores: &mut [i16], start_index: usize, moves_count: usize) -> Move {
     let mut best_score = move_scores[start_index];

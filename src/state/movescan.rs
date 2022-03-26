@@ -321,7 +321,7 @@ impl Move {
         self.get_flags() == MoveFlags::QUIET || self.get_flags() == MoveFlags::DOUBLE_PUSH
     }
 
-    /// Checks if the move is capture (excluding en passant, but including promotions).
+    /// Checks if the move is a capture (excluding en passant, but including promotions).
     pub fn is_capture(&self) -> bool {
         self.get_flags().contains(MoveFlags::CAPTURE)
     }
@@ -331,12 +331,12 @@ impl Move {
         self.get_flags() == MoveFlags::EN_PASSANT
     }
 
-    /// Checks if the move is promotion (including captures).
+    /// Checks if the move is a promotion (including captures).
     pub fn is_promotion(&self) -> bool {
         self.get_flags().contains(MoveFlags::FIELD_PROMOTION)
     }
 
-    /// Checks if the move is short or long castling.
+    /// Checks if the move is a short or long castling.
     pub fn is_castling(&self) -> bool {
         self.get_flags() == MoveFlags::SHORT_CASTLING || self.get_flags() == MoveFlags::LONG_CASTLING
     }
@@ -557,7 +557,7 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(board: &Bitboard,
 }
 
 /// Gets `PIECE` mobility (by counting all possible moves at the position specified by `board`) with `color` and increases `dangered_king_fields` if the enemy
-/// king is near to the fields included id the mobility.
+/// king is near to the fields included in the mobility.
 pub fn get_piece_mobility<const PIECE: u8>(board: &Bitboard, color: u8, dangered_king_fields: &mut u32) -> i16 {
     let mut pieces = board.pieces[color as usize][PIECE as usize];
     let mut mobility = 0;

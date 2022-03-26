@@ -63,45 +63,45 @@ enum MoveGeneratorStage {
     AllGenerated,
 }
 
-/// Entry point of the regular search, with generic `PV` parameter determining if the current node is a PV (principal variation) node in PVS framework.
+/// Entry point of the regular search, with generic `PV` parameter determining if the current node is a PV (principal variation) node in the PVS framework.
 /// The implementation contains a typical alpha-beta approach, together with a bunch of reduction and prunings to optimize search. The most important
 /// parameter here, `context` contains the current state of the search, board state, statistics, and is passed by reference to all nodes. Besides obvious
 /// parameters like `depth`, `ply`, `alpha` and `beta`, there's also `allow_null_move` which prevents two null move checks in a row, and `friendly_king_checked`
 /// which is used to share friendly king check status between nodes (it's always calculated one depth earlier, as it's used as one of the LMR constraints).
 ///
 /// Search steps for PV node:
-///  - Test of initial constraints: abort flag, forced depth
-///  - Test if the enemy king is checked
-///  - Test if there's threefold repetition draw, fifty move rule draw or insufficient material draw
-///  - Switch to quiescence search if the depth is equal to zero
-///  - Read from transposition table, return score if possible or update alpha/beta (<https://www.chessprogramming.org/Transposition_Table>)
-///  - Generate evasion mask if the friendly king is checked
-///  - Main loop:
-///     - Late move reduction (<https://www.chessprogramming.org/Late_Move_Reductions>)
-///     - Reduction pruning (<https://www.chessprogramming.org/History_Leaf_Pruning>)
+///  - test of initial constraints: abort flag, forced depth
+///  - test if the enemy king is checked
+///  - test if there's threefold repetition draw, fifty move rule draw or insufficient material draw
+///  - switch to the quiescence search if the depth is equal to zero
+///  - read from the transposition table, return score if possible or update alpha/beta (<https://www.chessprogramming.org/Transposition_Table>)
+///  - generate evasion mask if the friendly king is checked
+///  - main loop:
+///     - late move reduction (<https://www.chessprogramming.org/Late_Move_Reductions>)
+///     - reduction pruning (<https://www.chessprogramming.org/History_Leaf_Pruning>)
 ///     - PVS framework (<https://www.chessprogramming.org/Principal_Variation_Search>)
-///  - Test of abort flag
-///  - Test if stalemate draw is detected
-///  - Update transposition table
+///  - test of abort flag
+///  - test if stalemate draw is detected
+///  - update transposition table
 ///
 /// Search steps for non-PV node:
-///  - Test of initial constraints: abort flag, forced depth, max nodes count
-///  - Test if the enemy king is checked
-///  - Test if there's threefold repetition draw, fifty move rule draw or insufficient material draw
-///  - Switch to quiescence search if the depth is equal to zero
-///  - Read from transposition table, return score if possible or update alpha/beta (<https://www.chessprogramming.org/Transposition_Table>)
-///  - Razoring (<https://www.chessprogramming.org/Razoring>)
-///  - Static null move pruning (<https://www.chessprogramming.org/Reverse_Futility_Pruning>)
-///  - Null move pruning (<https://www.chessprogramming.org/Null_Move_Pruning>)
-///  - Generate evasion mask if the friendly king is checked
-///  - Main loop:
-///     - Late move pruning (<https://www.chessprogramming.org/Futility_Pruning#MoveCountBasedPruning>)
-///     - Late move reduction (<https://www.chessprogramming.org/Late_Move_Reductions>)
-///     - Reduction pruning (<https://www.chessprogramming.org/History_Leaf_Pruning>)
+///  - test of initial constraints: abort flag, forced depth, max nodes count
+///  - test if the enemy king is checked
+///  - test if there's threefold repetition draw, fifty move rule draw or insufficient material draw
+///  - switch to the quiescence search if the depth is equal to zero
+///  - read from the transposition table, return score if possible or update alpha/beta (<https://www.chessprogramming.org/Transposition_Table>)
+///  - razoring (<https://www.chessprogramming.org/Razoring>)
+///  - static null move pruning (<https://www.chessprogramming.org/Reverse_Futility_Pruning>)
+///  - null move pruning (<https://www.chessprogramming.org/Null_Move_Pruning>)
+///  - generate evasion mask if the friendly king is checked
+///  - main loop:
+///     - late move pruning (<https://www.chessprogramming.org/Futility_Pruning#MoveCountBasedPruning>)
+///     - late move reduction (<https://www.chessprogramming.org/Late_Move_Reductions>)
+///     - reduction pruning (<https://www.chessprogramming.org/History_Leaf_Pruning>)
 ///     - PVS framework (<https://www.chessprogramming.org/Principal_Variation_Search>)
-///  - Test of abort flag
-///  - Test if stalemate draw is detected
-///  - Update transposition table
+///  - test of abort flag
+///  - test if stalemate draw is detected
+///  - update transposition table
 pub fn run<const PV: bool>(
     context: &mut SearchContext,
     depth: i8,
@@ -111,20 +111,20 @@ pub fn run<const PV: bool>(
     allow_null_move: bool,
     friendly_king_checked: bool,
 ) -> i16 {
-    if context.abort_token.triggered {
+    if context.abort_token.set {
         return INVALID_SCORE;
     }
 
     if context.forced_depth == 0 && context.max_nodes_count == 0 && context.statistics.nodes_count % 10000 == 0 {
         if (Utc::now() - context.search_time_start).num_milliseconds() > context.deadline as i64 {
-            context.abort_token.triggered = true;
+            context.abort_token.set = true;
             return INVALID_SCORE;
         }
     }
 
     if PV && context.max_nodes_count != 0 {
         if context.statistics.nodes_count + context.statistics.q_nodes_count >= context.max_nodes_count {
-            context.abort_token.triggered = true;
+            context.abort_token.set = true;
             return INVALID_SCORE;
         }
     }
@@ -363,7 +363,7 @@ pub fn run<const PV: bool>(
         }
     }
 
-    if context.abort_token.triggered {
+    if context.abort_token.set {
         return INVALID_SCORE;
     }
 
@@ -561,19 +561,19 @@ fn get_next_move(
 
 /// The main idea of the razoring is to detect and prune all nodes, which (based on lazy evaluation) are hopeless compared to the current alpha and
 /// the chance to improve the score is too small to spend time here. To make it more safe and not to skip positions where we're somewhere in the
-/// middle of capture sequence, there's a quiescence search performed to verify if the final score is still below alpha - margin.
+/// middle of capture sequence, there's the quiescence search performed to verify if the final score is still below alpha - margin.
 ///
 /// Conditions:
-///  - Only non-PV nodes
-///  - Depth >= [RAZORING_MIN_DEPTH]
-///  - Depth <= [RAZORING_MAX_DEPTH]
-///  - Alpha is not a mate score
-///  - Friendly king is not checked
+///  - only non-PV nodes
+///  - depth >= [RAZORING_MIN_DEPTH]
+///  - depth <= [RAZORING_MAX_DEPTH]
+///  - alpha is not a mate score
+///  - friendly king is not checked
 fn razoring_can_be_applied<const PV: bool>(depth: i8, alpha: i16, friendly_king_checked: bool) -> bool {
     !PV && depth >= RAZORING_MIN_DEPTH && depth <= RAZORING_MAX_DEPTH && !is_score_near_checkmate(alpha) && !friendly_king_checked
 }
 
-/// Gets the razoring margin, based on `depth`. The further from the horizon we are, the more margin should we take to determine if node can be pruned.
+/// Gets the razoring margin, based on `depth`. The further from the horizon we are, the more margin we should take to determine if node can be pruned.
 fn razoring_get_margin(depth: i8) -> i16 {
     RAZORING_DEPTH_MARGIN_BASE + ((depth - RAZORING_MIN_DEPTH) as i16) * RAZORING_DEPTH_MARGIN_MULTIPLIER
 }
@@ -583,11 +583,11 @@ fn razoring_get_margin(depth: i8) -> i16 {
 /// The concept is very similar to null move pruning, but without performing any search.
 ///
 /// Conditions:
-///  - Only non-PV nodes
-///  - Depth >= [STATIC_NULL_MOVE_PRUNING_MIN_DEPTH]
-///  - Depth <= [STATIC_NULL_MOVE_PRUNING_MAX_DEPTH]
-///  - Beta is not a mate score
-///  - Friendly king is not checked
+///  - only non-PV nodes
+///  - depth >= [STATIC_NULL_MOVE_PRUNING_MIN_DEPTH]
+///  - depth <= [STATIC_NULL_MOVE_PRUNING_MAX_DEPTH]
+///  - beta is not a mate score
+///  - friendly king is not checked
 fn static_null_move_pruning_can_be_applied<const PV: bool>(depth: i8, beta: i16, friendly_king_checked: bool) -> bool {
     !PV && depth >= STATIC_NULL_MOVE_PRUNING_MIN_DEPTH
         && depth <= STATIC_NULL_MOVE_PRUNING_MAX_DEPTH
@@ -606,12 +606,12 @@ fn static_null_move_pruning_get_margin(depth: i8) -> i16 {
 /// doing nothing (except zugzwang).
 ///
 /// Conditions:
-///  - Only non-PV nodes
-///  - Depth >= [NULL_MOVE_MIN_DEPTH]
-///  - Game phase is not indicating endgame
-///  - Beta score is not a mate score
-///  - Friendly king is not checked
-///  - This is not the second null move in a row
+///  - only non-PV nodes
+///  - depth >= [NULL_MOVE_MIN_DEPTH]
+///  - game phase is not indicating endgame
+///  - beta score is not a mate score
+///  - friendly king is not checked
+///  - this is not the second null move in a row
 fn null_move_pruning_can_be_applied<const PV: bool>(
     context: &mut SearchContext,
     depth: i8,
@@ -619,11 +619,11 @@ fn null_move_pruning_can_be_applied<const PV: bool>(
     allow_null_move: bool,
     friendly_king_checked: bool,
 ) -> bool {
-    !PV && allow_null_move
-        && depth >= NULL_MOVE_MIN_DEPTH
+    !PV && depth >= NULL_MOVE_MIN_DEPTH
         && context.board.get_game_phase() > NULL_MOVE_MIN_GAME_PHASE
         && !is_score_near_checkmate(beta)
         && !friendly_king_checked
+        && allow_null_move
 }
 
 /// Gets the null move pruning depth reduction, called R, based on `depth`. It returns [NULL_MOVE_SMALL_R] if `depth` is less or equal
@@ -636,16 +636,16 @@ fn null_move_pruning_get_r(depth: i8) -> i8 {
     }
 }
 
-/// The main idea of the late move pruning is to prune all nodes, which are near horizon and were scored low by the history table.
+/// The main idea of the late move pruning is to prune all nodes, which are near the horizon and were scored low by the history table.
 /// We assume here, that there's a little chance that move being near the end of the list will improve score, so there's no point of spending time here.
 ///
 /// Conditions:
-///  - Only non-PV nodes
-///  - Depth >= [LATE_MOVE_PRUNING_MIN_DEPTH]
-///  - Depth <= [LATE_MOVE_PRUNING_MAX_DEPTH]
-///  - Move index >= [LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_BASE] + some margin depending on `depth`
-///  - Move score <= [LATE_MOVE_PRUNING_MAX_SCORE]
-///  - Friendly king is not checked
+///  - only non-PV nodes
+///  - depth >= [LATE_MOVE_PRUNING_MIN_DEPTH]
+///  - depth <= [LATE_MOVE_PRUNING_MAX_DEPTH]
+///  - move index >= [LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_BASE] + some margin depending on `depth`
+///  - move score <= [LATE_MOVE_PRUNING_MAX_SCORE]
+///  - friendly king is not checked
 fn late_move_pruning_can_be_applied<const PV: bool>(depth: i8, move_index: usize, move_score: i16, friendly_king_checked: bool) -> bool {
     !PV && depth >= LATE_MOVE_PRUNING_MIN_DEPTH
         && depth <= LATE_MOVE_PRUNING_MAX_DEPTH
@@ -654,17 +654,17 @@ fn late_move_pruning_can_be_applied<const PV: bool>(depth: i8, move_index: usize
         && !friendly_king_checked
 }
 
-/// The main idea of late move reduction is to reduce search depth of all quiet moves, which aren't promising and with high chance won't improve score.
+/// The main idea of the late move reduction is to reduce search depth of all quiet moves, which aren't promising and with high chance won't improve score.
 /// This is the least risky type of pruning (used inside PVS framework which cares about re-search when the move is better than expected),
 /// so it's also applied in PV nodes.
 ///
 /// Conditions:
-///  - Depth >= [LATE_MOVE_REDUCTION_MIN_DEPTH]
-///  - Move index >= [LATE_MOVE_REDUCTION_MIN_MOVE_INDEX]
-///  - Move score <= [LATE_MOVE_REDUCTION_MAX_SCORE]
-///  - Move is quiet
-///  - Friendly king is not checked
-///  - Enemy king is not checked
+///  - depth >= [LATE_MOVE_REDUCTION_MIN_DEPTH]
+///  - move index >= [LATE_MOVE_REDUCTION_MIN_MOVE_INDEX]
+///  - move score <= [LATE_MOVE_REDUCTION_MAX_SCORE]
+///  - move is quiet
+///  - friendly king is not checked
+///  - enemy king is not checked
 fn late_move_reduction_can_be_applied(
     depth: i8,
     r#move: Move,
@@ -689,7 +689,7 @@ fn late_move_reduction_get_r(move_index: usize) -> i8 {
     )
 }
 
-/// The main idea of the reduction pruning is to prune all nodes, for which the calculated earlier reduction is so big, tha it's beyond regular
+/// The main idea of the reduction pruning is to prune all nodes, for which the calculated earlier reduction is so big, that it's beyond regular
 /// search and would fall directly into the quiescence search, or near to it.
 ///
 /// Conditions:

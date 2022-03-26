@@ -6,7 +6,6 @@ const BUCKET_SLOTS: usize = 4;
 
 pub struct PerftHashTable {
     table: UnsafeCell<Vec<PerftHashTableBucket>>,
-    slots: usize,
 }
 
 #[repr(align(64))]
@@ -25,22 +24,21 @@ impl PerftHashTable {
     /// Constructs a new instance of [PerftHashTable] by allocating `size` bytes of memory.
     pub fn new(size: usize) -> PerftHashTable {
         let bucket_size = mem::size_of::<PerftHashTableBucket>();
-        let buckets = size / bucket_size;
         let hashtable = PerftHashTable {
-            table: UnsafeCell::new(Vec::with_capacity(buckets)),
-            slots: buckets,
+            table: UnsafeCell::new(Vec::with_capacity(size / bucket_size)),
         };
 
         if size != 0 {
-            unsafe { (*hashtable.table.get()).resize(hashtable.slots, Default::default()) };
+            unsafe { (*hashtable.table.get()).resize((*hashtable.table.get()).capacity(), Default::default()) };
         }
 
         hashtable
     }
 
-    /// Adds a new entry (storing `hash`, `depth` and `leafs_count`) using `hash % self.slots` formula to calculate index of bucket.
+    /// Adds a new entry (storing `hash`, `depth` and `leafs_count`) using `hash % self.table.len()` formula to calculate an index of bucket.
     pub fn add(&self, hash: u64, depth: u8, leafs_count: u64) {
-        let mut bucket = unsafe { (*self.table.get())[(hash as usize) % self.slots] };
+        let index = (hash as usize) % unsafe { (*self.table.get()).len() };
+        let mut bucket = unsafe { (*self.table.get())[index] };
         let mut smallest_depth = (bucket.entries[0].key_and_depth & 0xf) as u8;
         let mut smallest_depth_index = 0;
 
@@ -53,12 +51,13 @@ impl PerftHashTable {
         }
 
         bucket.entries[smallest_depth_index] = PerftHashTableEntry::new(hash, depth, leafs_count);
-        unsafe { (*self.table.get())[(hash as usize) % self.slots] = bucket };
+        unsafe { (*self.table.get())[index] = bucket };
     }
 
-    /// Gets wanted entry using `hash % self.slots` formula to calculate index of bucket. Returns [None] if `hash` is incompatible with the stored key.
+    /// Gets wanted entry using `hash % self.table.len()` formula to calculate an index of bucket. Returns [None] if `hash` is incompatible with the stored key.
     pub fn get(&self, hash: u64, depth: u8) -> Option<PerftHashTableEntry> {
-        let bucket = unsafe { (*self.table.get())[(hash as usize) % self.slots] };
+        let index = (hash as usize) % unsafe { (*self.table.get()).len() };
+        let bucket = unsafe { (*self.table.get())[index] };
         for entry_index in 0..BUCKET_SLOTS {
             let entry = bucket.entries[entry_index];
             if entry.key_and_depth == ((hash & !0xf) | (depth as u64)) {
@@ -69,7 +68,7 @@ impl PerftHashTable {
         None
     }
 
-    /// Calculates approximate percentage usage of the table, based on first 10000 entries.
+    /// Calculates an approximate percentage usage of the table, based on the first 10000 entries.
     pub fn get_usage(&self) -> f32 {
         const RESOLUTION: usize = 10000;
         const BUCKETS_COUNT_TO_CHECK: usize = RESOLUTION / BUCKET_SLOTS;

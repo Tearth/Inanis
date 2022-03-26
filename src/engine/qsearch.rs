@@ -14,11 +14,11 @@ pub const FUTILITY_PRUNING_MARGIN: i16 = 100;
 /// make a quiet position suitable for final evaluation. `context`, `depth`, `ply`, `alpha` and `beta` are provided by the leaf of the regular search.
 ///
 /// Search steps:
-///  - Test if the friendly king was not captured earlier
-///  - Calculate stand-pat score and process initial pruning/alpha update
-///  - Main loop:
-///     - Score pruning
-///     - Futility pruning (<https://www.chessprogramming.org/Delta_Pruning>)
+///  - test if the friendly king was not captured earlier
+///  - calculate stand-pat score and process initial pruning/alpha update
+///  - main loop:
+///     - score pruning
+///     - futility pruning (<https://www.chessprogramming.org/Delta_Pruning>)
 pub fn run(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, beta: i16) -> i16 {
     context.statistics.q_nodes_count += 1;
     context.statistics.max_ply = cmp::max(ply, context.statistics.max_ply);
@@ -94,9 +94,9 @@ pub fn run(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, bet
 
 /// Assigns scores for `moves` by filling `move_scores` array with `moves_count` length, based on current `context`. Move ordering in
 /// quiescence search is mainly based on SEE and works as follows:
-///  - for every en passant, assign 0.
-///  - for every capture with promotion, assign value of the promoted piece.
-///  - for rest of the moves, assign SEE result.
+///  - for every en passant, assign 0
+///  - for every capture with promotion, assign value of the promoted piece
+///  - for rest of the moves, assign SEE result
 fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut [i16], moves_count: usize) {
     for move_index in 0..moves_count {
         let r#move = moves[move_index];

@@ -171,7 +171,7 @@ fn handle_benchmark() {
     let pawn_hashtable_misses_percent = percent(result.pawn_hashtable_misses, result.pawn_hashtable_hits);
     let pawn_hashtable_collisions_percent = percent(result.pawn_hashtable_collisions, result.pawn_hashtable_hits);
     cache_table.add_row(row![
-        "Pawn hash table",
+        "Pawn hashtable",
         format!("{}", result.pawn_hashtable_added),
         format!("{}", result.pawn_hashtable_hits),
         format!("{} ({:.2}%)", result.pawn_hashtable_misses, pawn_hashtable_misses_percent),
@@ -304,7 +304,7 @@ fn handle_evaluate(input: Vec<&str>) {
     let pawns_evaluation = pawns::evaluate_without_cache(&board);
 
     println!("Material: {}", material_evaluation);
-    println!("Piece-square table: {}", pst_evaluation);
+    println!("Piece-square tables: {}", pst_evaluation);
     println!("Mobility: {}", mobility_evaluation);
     println!("Safety: {}", safety_evaluation);
     println!("Pawns: {}", pawns_evaluation);
@@ -486,8 +486,9 @@ fn handle_qperft(input: Vec<&str>) {
     println!("Perft done!");
 }
 
-/// Handles `test [epd] [depth] [tries_to_confirm]` command by running a fixed-depth search of positions stored in the `epd` file. To classify the test
-/// as successful, there must be at least `tries_to_confirm` search iterations in a row, which returned the best move same as the expected one in the position.
+/// Handles `test [epd] [depth] [tries_to_confirm]` command by running a fixed-`depth` search of positions stored in the `epd` file. To classify the test
+/// as successful, the last iteration has to return the correct move, or there must be at least `tries_to_confirm` search iterations in a row which returned
+/// the best move same as the expected one in the position.
 fn handle_test(input: Vec<&str>) {
     if input.len() < 2 {
         println!("EPD filename parameter not found");
@@ -523,7 +524,7 @@ fn handle_test(input: Vec<&str>) {
     test::run(input[1], depth, tries_to_confirm);
 }
 
-/// Handles `tuner [epd] [output] [lock_material] [randomize] [threads_count]` command by running an evaluation parameters tuner. The input file is specified by `epd`
+/// Handles `tuner [epd] [output] [lock_material] [randomize] [threads_count]` command by running the evaluation parameters tuner. The input file is specified by `epd`
 /// file with a list of positions and their expected results, and the `output` directory is used to store generated Rust sources with the optimized values. Use
 /// `lock_material` to disable tuner for piece values, and `randomize` to initialize evaluation parameters with random values. Multithreading is supported by `threads_count`.
 fn handle_tuner(input: Vec<&str>) {
@@ -574,7 +575,7 @@ fn handle_tuner(input: Vec<&str>) {
     tuner::run(input[1], input[2], lock_material, random_values, threads_count);
 }
 
-/// Handles `uci` command by entering into UCI (Universal Chess Interface) mode.
+/// Handles `uci` command by entering into the UCI (Universal Chess Interface) mode.
 fn handle_uci() {
     uci::run();
 }

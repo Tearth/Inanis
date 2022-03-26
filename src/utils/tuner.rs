@@ -69,14 +69,14 @@ impl TunerParameter {
     }
 }
 
-/// Runs tuner of evaluation parameters. The input file is specified by `epd_filename` file with a list of positions and their expected results, and the `output_directory`
+/// Runs tuner of evaluation parameters. The input file is specified by `epd_filename` with a list of positions and their expected results, and the `output_directory`
 /// directory is used to store generated Rust sources with the optimized values. Use `lock_material` to disable tuner for piece values, and `random_values` to initialize
 /// evaluation parameters with random values. Multithreading is supported by `threads_count`.
 ///
 /// The tuner is implemented using Texel's tuning method (<https://www.chessprogramming.org/Texel%27s_Tuning_Method>), with addition of cache to reduce time needed
 /// to get the best result. The loaded positions must be quiet, since the tuner doesn't run quiescence search to make sure that the position is not in the middle
 /// of capture sequence. The cache itself is a list of trends corresponding to the evaluation parameters - it's used to save the information if the value in the previous
-/// iterations was increasing or decreasing, so the tuner can try this direction first. The more times the direction was right, the bigger increasion or decreasoin will
+/// iterations was increasing or decreasing, so the tuner can try this direction first. The more times the direction was right, the bigger increasion or decreasion will
 /// be performed as next.
 ///
 /// The result (Rust sources with the calculated values) are saved every iteration, and can be put directly into the code.
@@ -214,7 +214,7 @@ pub fn validate() -> bool {
     values.iter().zip(&values_after_save).all(|(a, b)| a.value == b.value)
 }
 
-/// Loads positions from the `epd_filename` and parses them into a list of [TestPosition]. Returns [Err] with a proper error message if the
+/// Loads positions from the `epd_filename` and parses them into a list of [TunerPosition]. Returns [Err] with a proper error message if the
 /// file couldn't be parsed.
 fn load_positions(epd_filename: &str) -> Result<UnsafeCell<Vec<TunerPosition>>, &'static str> {
     let mut positions = Vec::new();
@@ -352,7 +352,7 @@ fn load_values(lock_material: bool, random_values: bool) -> Vec<TunerParameter> 
 }
 
 /// Transforms `values` into the evaluation parameters, which can be used during real evaluation. Use `lock_material` if the parameters
-/// related to piece values should be skipped
+/// related to piece values should be skipped.
 fn save_values(values: &mut Vec<TunerParameter>, lock_material: bool) {
     let mut index = 0;
     unsafe {
@@ -467,7 +467,7 @@ fn write_evaluation_parameters(output_directory: &str, best_error: f64) {
     write!(&mut File::create(path).unwrap(), "{}", output).unwrap();
 }
 
-/// Generates piece-square table Rust source file with current evaluation parameters, and saves it into the `output_directory`.
+/// Generates piece-square tables (Rust source file with current evaluation parameters), and saves it into the `output_directory`.
 fn write_piece_square_table(output_directory: &str, best_error: f64, name: &str, opening: &[i16], ending: &[i16]) {
     let mut output = String::new();
 
@@ -514,7 +514,7 @@ fn get_parameter(name: &str, value: i16) -> String {
     format!("pub static mut {}: i16 = {};\n", name, value)
 }
 
-/// Gets the Rust representation of the piece-square table with the specified `values`.
+/// Gets the Rust representation of the piece-square tables with the specified `values`.
 fn get_piece_square_table(values: &[i16]) -> String {
     let mut output = String::new();
 

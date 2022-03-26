@@ -4,7 +4,6 @@ use std::u64;
 #[derive(Clone)]
 pub struct PawnHashTable {
     table: Vec<PawnHashTableEntry>,
-    slots: usize,
 }
 
 #[derive(Clone, Copy)]
@@ -17,27 +16,26 @@ impl PawnHashTable {
     /// Constructs a new instance of [PawnHashTable] by allocating `size` bytes of memory.
     pub fn new(size: usize) -> PawnHashTable {
         let bucket_size = mem::size_of::<PawnHashTableEntry>();
-        let buckets = size / bucket_size;
         let mut hashtable = PawnHashTable {
-            table: Vec::with_capacity(buckets),
-            slots: buckets,
+            table: Vec::with_capacity(size / bucket_size),
         };
 
         if size != 0 {
-            hashtable.table.resize(hashtable.slots, Default::default());
+            hashtable.table.resize(hashtable.table.capacity(), Default::default());
         }
 
         hashtable
     }
 
-    /// Adds a new entry (storing key and `score`) using `hash % self.slots` formula to calculate index.
+    /// Adds a new entry (storing the key and `score`) using `hash % self.table.len()` formula to calculate an index.
     pub fn add(&mut self, hash: u64, score: i16) {
-        self.table[(hash as usize) % self.slots] = PawnHashTableEntry::new(self.get_key(hash), score);
+        let index = (hash as usize) % self.table.len();
+        self.table[index] = PawnHashTableEntry::new(self.get_key(hash), score);
     }
 
-    /// Gets wanted entry using `hash % self.slots` formula to calculate index. Returns [None] if `hash` is incompatible with the stored key.
+    /// Gets a wanted entry using `hash % self.table.len()` formula to calculate an index. Returns [None] if `hash` is incompatible with the stored key.
     pub fn get(&self, hash: u64, collision: &mut bool) -> Option<PawnHashTableEntry> {
-        let entry = self.table[(hash as usize) % self.slots];
+        let entry = self.table[(hash as usize) % self.table.len()];
         if entry.key == self.get_key(hash) {
             return Some(entry);
         }
@@ -49,7 +47,7 @@ impl PawnHashTable {
         None
     }
 
-    /// Calculates approximate percentage usage of the table, based on first 10000 entries.
+    /// Calculates an approximate percentage usage of the table, based on the first 10000 entries.
     pub fn get_usage(&self) -> f32 {
         const RESOLUTION: usize = 10000;
         let mut filled_entries = 0;

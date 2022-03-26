@@ -202,7 +202,7 @@ pub fn get_king_moves(field_index: usize) -> u64 {
     patterns::get_box(field_index)
 }
 
-/// Gets a rook moves for the field specified by `field_index`, considering `occupancy` (friendly + enemy).
+/// Gets a rook moves for the field specified by `field_index`, considering `occupancy`.
 pub fn get_rook_moves(mut occupancy: u64, field_index: usize) -> u64 {
     unsafe {
         occupancy &= ROOK_FIELDS[field_index].mask;
@@ -213,7 +213,7 @@ pub fn get_rook_moves(mut occupancy: u64, field_index: usize) -> u64 {
     }
 }
 
-/// Gets a bishop moves for the field specified by `field_index`, considering `occupancy` (friendly + enemy).
+/// Gets a bishop moves for the field specified by `field_index`, considering `occupancy`.
 pub fn get_bishop_moves(mut occupancy: u64, field_index: usize) -> u64 {
     unsafe {
         occupancy &= BISHOP_FIELDS[field_index].mask;
@@ -224,7 +224,7 @@ pub fn get_bishop_moves(mut occupancy: u64, field_index: usize) -> u64 {
     }
 }
 
-/// Gets a queen moves for the field specified by `field_index`, considering `occupancy` (friendly + enemy).
+/// Gets a queen moves for the field specified by `field_index`, considering `occupancy`.
 pub fn get_queen_moves(occupancy: u64, field_index: usize) -> u64 {
     get_rook_moves(occupancy, field_index) | get_bishop_moves(occupancy, field_index)
 }
@@ -393,7 +393,7 @@ fn get_bishop_mask(field_index: usize) -> u64 {
     patterns::get_diagonals(field_index) & !EDGE
 }
 
-/// Gets a rook attacks for the field specified by `field_index`, considering `occupancy` (friendly + enemy).
+/// Gets a rook attacks for the field specified by `field_index`, considering `occupancy`.
 fn get_rook_attacks(occupancy: u64, field_index: usize) -> u64 {
     let result = 0
         | get_attacks(occupancy, field_index, (1, 0))
@@ -404,7 +404,7 @@ fn get_rook_attacks(occupancy: u64, field_index: usize) -> u64 {
     result
 }
 
-/// Gets a bishop attacks for the field specified by `field_index`, occupancy `occupancy` (friendly + enemy).
+/// Gets a bishop attacks for the field specified by `field_index`, occupancy `occupancy`.
 fn get_bishop_attacks(occupancy: u64, field_index: usize) -> u64 {
     let result = 0
         | get_attacks(occupancy, field_index, (1, 1))
@@ -415,7 +415,7 @@ fn get_bishop_attacks(occupancy: u64, field_index: usize) -> u64 {
     result
 }
 
-/// Helper function to get all possible to move fields, considering `occupancy` (friendly + enemy), starting from the field
+/// Helper function to get all possible to move fields, considering `occupancy`, starting from the field
 /// specified by `field_index` and going into the `direction`.
 fn get_attacks(occupancy: u64, field_index: usize, direction: (isize, isize)) -> u64 {
     let mut result = 0u64;

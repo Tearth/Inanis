@@ -100,7 +100,7 @@ impl Bitboard {
         index
     }
 
-    /// Makes a `r#move`, with the assumption that it's perfectly valid at the current position (otherwise, internal state can be irreversibly corrupted).
+    /// Makes `r#move`, with the assumption that it's perfectly valid at the current position (otherwise, internal state can be irreversibly corrupted).
     ///
     /// Steps of making a move:
     ///  - preserve halfmove clock, castling rights, en passant bitboard, board hash and pawn hash
@@ -295,7 +295,7 @@ impl Bitboard {
         self.hash ^= zobrist::get_active_color_hash();
     }
 
-    /// Undoes a `r#move`, with the assumption that it's perfectly valid at the current position (otherwise, internal state can be irreversibly corrupted).
+    /// Undoes `r#move`, with the assumption that it's perfectly valid at the current position (otherwise, internal state can be irreversibly corrupted).
     ///
     /// Steps of undoing a move:
     ///  - restore halfmove clock, castling rights, en passant bitboard, board hash and pawn hash
@@ -624,7 +624,7 @@ impl Bitboard {
         zobrist::recalculate_pawn_hash(self);
     }
 
-    /// Runs full evaluation (material, piece-square table, mobility, pawns structure and safety) of the current position, using `pawn_hashtable` to store pawn
+    /// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position, using `pawn_hashtable` to store pawn
     /// evaluations and `statistics` to gather diagnostic data. Returns score from the white color perspective (more than 0 when advantage, less than 0 when disadvantage).
     pub fn evaluate(&self, pawn_hashtable: &mut PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
         let mut white_attack_mask = 0;
@@ -638,7 +638,7 @@ impl Bitboard {
             + mobility_score
     }
 
-    /// Runs full evaluation (material, piece-square table, mobility, pawns structure and safety) of the current position.
+    /// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position.
     /// Returns score from the white color perspective (more than 0 when advantage, less than 0 when disadvantage).
     pub fn evaluate_without_cache(&self) -> i16 {
         let mut white_attack_mask = 0;
@@ -652,7 +652,7 @@ impl Bitboard {
             + mobility_score
     }
 
-    /// Runs lazy (fast) evaluations, considering only material and piece-square table. Returns score from the white color perspective (more than 0 when
+    /// Runs lazy (fast) evaluations, considering only material and piece-square tables. Returns score from the white color perspective (more than 0 when
     /// advantage, less than 0 when disadvantage).
     pub fn evaluate_lazy(&self) -> i16 {
         material::evaluate(self) + pst::evaluate(self)

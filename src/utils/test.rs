@@ -22,8 +22,9 @@ impl TestPosition {
     }
 }
 
-/// Runs a test by performing a fixed-`depth` search for the positions loaded from the `epd_filename` file. To classify the test
-/// as successful, there must be at least `tries_to_confirm` search iterations in a row, which returned the best move same as the expected one in the position.
+/// Runs a test by performing a fixed-`depth` search for the positions loaded from the `epd_filename` file. To classify the test as successful,
+/// the last iteration has to return the correct move, or there must be at least `tries_to_confirm` search iterations in a row which returned
+/// the best move same as the expected one in the position.
 pub fn run(epd_filename: &str, depth: i8, tries_to_confirm: i8) {
     println!("Loading EPD file...");
     let positions = match load_positions(epd_filename) {

@@ -8,7 +8,7 @@ pub fn evaluate(board: &Bitboard) -> i16 {
     board.material_scores[WHITE as usize] - board.material_scores[BLACK as usize]
 }
 
-/// Recalculates incremental counters in `board`. This function should be called only during board initialization, as it's too slow in regular search.
+/// Recalculates incremental counters on the `board`. This function should be called only once during board initialization, as it's too slow in regular search.
 pub fn recalculate_incremental_values(board: &mut Bitboard) {
     for color_index in 0..2 {
         let mut score = 0;

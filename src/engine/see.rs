@@ -4,7 +4,7 @@ use std::cmp;
 
 static mut TABLE: [[[i16; 256]; 256]; 6] = [[[0; 256]; 256]; 6];
 
-/// Initialized static exchange evaluation table by filling it with every possible combination of target piece, attackers and defenders.
+/// Initializes static exchange evaluation table by filling it with every possible combination of target piece, attackers and defenders.
 pub fn init() {
     for target_piece in 0..6 {
         for attackers in 0..256 {

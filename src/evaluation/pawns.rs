@@ -11,7 +11,7 @@ use std::cmp;
 ///  - doubled pawns (negative score)
 ///  - isolated pawns (negative score)
 ///  - chained pawns (positive score)
-///  - passing_pawns (positive_score)
+///  - passing pawns (positive score)
 ///  - opened files next to the king (negative score)
 ///
 /// To improve performance (using the fact that structure of pawns changes relatively rare), each evaluation is saved in the pawn hashtable,

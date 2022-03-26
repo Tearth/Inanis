@@ -11,6 +11,9 @@
     clippy::if_same_then_else
 )]
 
+//! Main page of the Inanis documentation. Feel free to explore by going into the specific module below,
+//! or by clicking "See all inanis's items" on the left to see every possible module, function or structure.
+
 use engine::see;
 use evaluation::pst;
 use state::movegen;
@@ -28,6 +31,7 @@ pub mod utils;
 #[macro_use]
 extern crate bitflags;
 
+/// Initializes all engine's components (random seed, PST, SEE, patterns, move generator, Zobrist hashing and evaluation), to make it ready to run.
 pub fn init() {
     fastrand::seed(584578);
 

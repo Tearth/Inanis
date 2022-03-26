@@ -21,7 +21,7 @@ use std::ops;
 
 #[derive(Default)]
 pub struct Token {
-    pub triggered: bool,
+    pub set: bool,
 }
 
 pub struct SearchContext<'a> {
@@ -132,11 +132,12 @@ impl<'a> SearchContext<'a> {
     ///  - `time` - total time for the color in a move (in milliseconds)
     ///  - `inc_time` - incremental time for the color in a move (in milliseconds)
     ///  - `forced_depth` - depth at which the search will stop (might happen earlier if mate is detected), 0 if there is no constraint
-    ///  - `max_nodex_count` - total nodes count at which the search will top (might happen earlier if mate is detected), 0 if there is no constraint.
+    ///  - `max_nodes_count` - total nodes count at which the search will top (might happen earlier if mate is detected), 0 if there is no constraint
     /// This value can possibly not be strictly respected due to way of how the check is performed, so expect a bit more nodes count before stop
     ///  - `max_move_time` - allocated amount of time for the search (in milliseconds), 0 if we want to use default time allocator
     ///  - `moves_to_go` - moves count, after which the time will be increased
     ///  - `uci_debug` - enables or disables additional debug info sent to GUI by `info string` command
+    ///  - `helper_thread` - enables additional features when the thread is a helper in Lazy SMP (like random noise in move ordering)
     ///  - `transposition_table`, `pawn_hashtable`, `killers_table`, `history_table` - hashtables used during search
     ///  - `helper_contexts` - a list of pre-initialized contexts used by LazySMP
     ///  - `abort_token` - token used to abort search from the outside of the context
@@ -183,7 +184,7 @@ impl<'a> SearchContext<'a> {
         }
     }
 
-    /// Retrieves PV line from the transposition table, using `board` position and current `ply`.
+    /// Retrieves PV line from the transposition table, using `board` position and the current `ply`.
     fn get_pv_line(&mut self, board: &mut Bitboard, ply: i8) -> Vec<Move> {
         if ply >= MAX_DEPTH {
             return Vec::new();
@@ -290,15 +291,15 @@ impl<'a> Iterator for SearchContext<'a> {
                 })
                 .unwrap();
 
-                if self.abort_token.triggered {
-                    if self.ponder_token.triggered {
+                if self.abort_token.set {
+                    if self.ponder_token.set {
                         self.current_depth = 1;
                         self.forced_depth = 0;
                         self.search_time_start = Utc::now();
                         self.statistics = Default::default();
 
-                        self.ponder_token.triggered = false;
-                        self.abort_token.triggered = false;
+                        self.ponder_token.set = false;
+                        self.abort_token.set = false;
 
                         continue;
                     } else {
@@ -331,15 +332,15 @@ impl<'a> Iterator for SearchContext<'a> {
                 );
             }
 
-            if self.abort_token.triggered {
-                if self.ponder_token.triggered {
+            if self.abort_token.set {
+                if self.ponder_token.set {
                     self.current_depth = 1;
                     self.forced_depth = 0;
                     self.search_time_start = Utc::now();
                     self.statistics = Default::default();
 
-                    self.ponder_token.triggered = false;
-                    self.abort_token.triggered = false;
+                    self.ponder_token.set = false;
+                    self.abort_token.set = false;
 
                     continue;
                 } else {

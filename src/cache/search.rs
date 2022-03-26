@@ -16,7 +16,6 @@ bitflags! {
 
 pub struct TranspositionTable {
     table: Vec<TranspositionTableBucket>,
-    slots: usize,
 }
 
 #[repr(align(64))]
@@ -38,30 +37,29 @@ impl TranspositionTable {
     /// Constructs a new instance of [TranspositionTable] by allocating `size` bytes of memory.
     pub fn new(size: usize) -> TranspositionTable {
         let bucket_size = mem::size_of::<TranspositionTableBucket>();
-        let buckets = size / bucket_size;
         let mut hashtable = TranspositionTable {
-            table: Vec::with_capacity(buckets),
-            slots: buckets,
+            table: Vec::with_capacity(size / bucket_size),
         };
 
         if size != 0 {
-            hashtable.table.resize(hashtable.slots, Default::default());
+            hashtable.table.resize(hashtable.table.capacity(), Default::default());
         }
 
         hashtable
     }
 
-    /// Adds a new entry (storing key, `score`, `best_move`, `depth`, `ply` and `score_type`) using `hash % self.slots` formula to calculate index of bucket.
+    /// Adds a new entry (storing the key, `score`, `best_move`, `depth`, `ply` and `score_type`) using `hash % self.table.len()` formula to calculate an index of the bucket.
     /// Replacement strategy considers a few elements to optimize memory usage and prioritizes slots to replace as follows:
     ///  - slots with the same key as the new entry
     ///  - empty slots
     ///  - slots with the smallest depth (to ensure that the table is not clogged with entries that will be rarely read)
-    ///  - slots with the smallest age counter (to ensure that old and possibly outdated entries are not preventing us from adding a new one)
+    ///  - slots with the biggest age counter (to ensure that old and possibly outdated entries are not preventing us from adding a new one)
     ///
     /// This function takes care of converting mate `score` using passed `ply`.
     pub fn add(&mut self, hash: u64, mut score: i16, best_move: Move, depth: i8, ply: u16, score_type: TranspositionTableScoreType) {
         let key = self.get_key(hash);
-        let mut bucket = self.table[(hash as usize) % self.slots];
+        let index = (hash as usize) % self.table.len();
+        let mut bucket = self.table[index];
         let mut smallest_depth = u8::MAX;
         let mut smallest_depth_index = usize::MAX;
         let mut oldest_entry_age = 0;
@@ -112,14 +110,15 @@ impl TranspositionTable {
         }
 
         bucket.entries[target_index] = TranspositionTableEntry::new(key, score, best_move, depth, score_type);
-        self.table[(hash as usize) % self.slots] = bucket;
+        self.table[index] = bucket;
     }
 
-    /// Gets wanted entry using `hash % self.slots` formula to calculate index of bucket.
-    /// Returns [None] if `hash` is incompatible with the stored key (and sets `collision` flag to true).
+    /// Gets a wanted entry using `hash % self.table.len()` formula to calculate an index of the bucket. This function takes care of converting
+    /// mate `score` using passed `ply`. Returns [None] if `hash` is incompatible with the stored key (and sets `collision` flag to true).
     pub fn get(&self, hash: u64, ply: u16, collision: &mut bool) -> Option<TranspositionTableEntry> {
         let key = self.get_key(hash);
-        let bucket = self.table[(hash as usize) % self.slots];
+        let index = (hash as usize) % self.table.len();
+        let bucket = self.table[index];
         let mut entry_with_key_present = false;
 
         for entry_index in 0..BUCKET_SLOTS {
@@ -146,14 +145,14 @@ impl TranspositionTable {
         None
     }
 
-    /// Gets entry's best move using `hash % self.slots` formula to calculate index of bucket.
+    /// Gets an entry's best move using `hash % self.table.len()` formula to calculate an index of the bucket.
     /// Returns [None] if `hash` is incompatible with the stored key.
     pub fn get_best_move(&self, hash: u64) -> Option<Move> {
         let mut collision = false;
         self.get(hash, 0, &mut collision).map(|entry| entry.best_move)
     }
 
-    /// Calculates approximate percentage usage of the table, based on first 10000 entries.
+    /// Calculates an approximate percentage usage of the table, based on the first 10000 entries.
     pub fn get_usage(&self) -> f32 {
         const RESOLUTION: usize = 10000;
         const BUCKETS_COUNT_TO_CHECK: usize = RESOLUTION / BUCKET_SLOTS;
@@ -171,7 +170,7 @@ impl TranspositionTable {
         ((filled_entries as f32) / (RESOLUTION as f32)) * 100.0
     }
 
-    /// Increments age of all entries stored in the table. If age's value is equal to 31, it gets purged to make more space for new entries.
+    /// Increments ann age of all entries stored in the table. If age's value is equal to 31, it gets purged to make more space for a new entries.
     pub fn age_entries(&mut self) {
         for bucket_index in 0..self.table.len() {
             for entry_index in 0..BUCKET_SLOTS {
@@ -216,17 +215,17 @@ impl TranspositionTableEntry {
         }
     }
 
-    /// Gets entry flag by reading `self.type_age` field and parsing it into [TranspositionTableScoreType] type.
+    /// Gets an entry flag by reading `self.type_age` field and parsing it into [TranspositionTableScoreType] type.
     pub fn get_flags(&self) -> TranspositionTableScoreType {
         TranspositionTableScoreType::from_bits(self.type_age & 7).unwrap()
     }
 
-    /// Gets entry age by reading `self.type_age` field.
+    /// Gets an entry age by reading `self.type_age` field.
     pub fn get_age(&self) -> u8 {
         self.type_age >> 3
     }
 
-    // Sets entry age to the `age` value.
+    // Sets an entry age to the `age` value.
     pub fn set_age(&mut self, age: u8) {
         self.type_age = (self.type_age & 7) | (age << 3);
     }

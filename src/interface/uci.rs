@@ -7,7 +7,6 @@ use crate::engine::context::SearchContext;
 use crate::engine::context::Token;
 use crate::engine::history::HistoryTable;
 use crate::engine::killers::KillersTable;
-use crate::engine::*;
 use crate::state::board::Bitboard;
 use crate::state::movescan::Move;
 use crate::state::*;
@@ -41,6 +40,7 @@ struct UciState {
 }
 
 impl Default for UciState {
+    /// Constructs a default instance of [UciState] with zeroed elements and hashtables with their default sizes.
     fn default() -> Self {
         UciState {
             board: UnsafeCell::new(Bitboard::new_initial_position()),
@@ -101,7 +101,7 @@ pub fn run() {
     }
 }
 
-/// Handless `debug [on/off]` command by setting the proper flag.
+/// Handles `debug [on/off]` command by setting the proper flag.
 fn handle_debug(parameters: &[String], state: &mut Arc<UciState>) {
     if parameters.len() < 2 {
         return;
@@ -209,8 +209,8 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
 
         let state_arc = state.clone();
 
-        (*state.abort_token.get()).triggered = false;
-        (*state.ponder_token.get()).triggered = false;
+        (*state.abort_token.get()).set = false;
+        (*state.ponder_token.get()).set = false;
         (*state).busy_flag.store(true, Ordering::Relaxed);
 
         *state.search_thread.get() = Some(thread::spawn(move || {
@@ -352,8 +352,8 @@ fn handle_isready(state: &mut Arc<UciState>) {
 /// Handles `ponderhit` command by setting abort and ponder tokens, which should switch a search mode from the ponder to the regular one.
 fn handle_ponderhit(state: &mut Arc<UciState>) {
     unsafe {
-        (*state.ponder_token.get()).triggered = true;
-        (*state.abort_token.get()).triggered = true;
+        (*state.ponder_token.get()).set = true;
+        (*state.abort_token.get()).set = true;
     }
 }
 
@@ -447,12 +447,12 @@ fn handle_setoption(parameters: &[String], state: &mut Arc<UciState>) {
     }
 }
 
-/// Handles `ucinewgame` command by resetting a board state, recreating abort token and clearing taables.
+/// Handles `ucinewgame` command by resetting a board state, recreating abort token and clearing tables.
 fn handle_ucinewgame(state: &mut Arc<UciState>) {
     wait_for_busy_flag(state);
 
     unsafe {
-        (*state.abort_token.get()).triggered = true;
+        (*state.abort_token.get()).set = true;
 
         *state.board.get() = Bitboard::new_initial_position();
         *state.abort_token.get() = Default::default();
@@ -463,7 +463,7 @@ fn handle_ucinewgame(state: &mut Arc<UciState>) {
 /// Handles `stop` command by setting abort token, which should stop ongoing search as fast as possible.
 fn handle_stop(state: &mut Arc<UciState>) {
     unsafe {
-        (*state.abort_token.get()).triggered = true;
+        (*state.abort_token.get()).set = true;
     }
 }
 
@@ -472,7 +472,7 @@ fn handle_quit() {
     process::exit(0);
 }
 
-/// Wait for the busy flag before continuing. If the deadline is exceeded, the engine process is terminated.
+/// Waits for the busy flag before continuing. If the deadline is exceeded, the engine process is terminated.
 fn wait_for_busy_flag(state: &mut Arc<UciState>) {
     let now = Utc::now();
     while (*state).busy_flag.fetch_and(true, Ordering::Release) {
