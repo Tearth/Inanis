@@ -31,7 +31,7 @@
     <span class="ident">board</span>.<span class="ident">material_scores</span>[<span class="ident">WHITE</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">-</span> <span class="ident">board</span>.<span class="ident">material_scores</span>[<span class="ident">BLACK</span> <span class="kw">as</span> <span class="ident">usize</span>]
 }
 
-<span class="doccomment">/// Recalculates incremental counters in `board`. This function should be called only during board initialization, as it&#39;s too slow in regular search.</span>
+<span class="doccomment">/// Recalculates incremental counters on the `board`. This function should be called only once during board initialization, as it&#39;s too slow in regular search.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">recalculate_incremental_values</span>(<span class="ident">board</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Bitboard</span>) {
     <span class="kw">for</span> <span class="ident">color_index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">2</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">score</span> <span class="op">=</span> <span class="number">0</span>;

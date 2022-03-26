@@ -200,6 +200,9 @@
 <span id="198">198</span>
 <span id="199">199</span>
 <span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cache::pawns::PawnHashTable</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cache::search::TranspositionTable</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::engine::context::SearchContext</span>;
@@ -318,6 +321,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">killers_table</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">history_table</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">abort_token</span> <span class="op">=</span> <span class="ident">Default::default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ponder_token</span> <span class="op">=</span> <span class="ident">Default::default</span>();
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">board</span> <span class="op">=</span> <span class="ident">Bitboard::new_from_fen</span>(<span class="ident">fen</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">context</span> <span class="op">=</span> <span class="ident">SearchContext::new</span>(
@@ -329,11 +333,13 @@
             <span class="number">0</span>,
             <span class="number">0</span>,
             <span class="bool-val">false</span>,
+            <span class="bool-val">false</span>,
             <span class="kw-2">&amp;mut</span> <span class="ident">transposition_table</span>,
             <span class="kw-2">&amp;mut</span> <span class="ident">pawn_hashtable</span>,
             <span class="kw-2">&amp;mut</span> <span class="ident">killers_table</span>,
             <span class="kw-2">&amp;mut</span> <span class="ident">history_table</span>,
             <span class="kw-2">&amp;mut</span> <span class="ident">abort_token</span>,
+            <span class="kw-2">&amp;mut</span> <span class="ident">ponder_token</span>,
         );
 
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">last</span>().<span class="ident">unwrap</span>();

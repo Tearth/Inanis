@@ -4,12 +4,12 @@
 make a quiet position suitable for final evaluation. <code>context</code>, <code>depth</code>, <code>ply</code>, <code>alpha</code> and <code>beta</code> are provided by the leaf of the regular search.</p>
 <p>Search steps:</p>
 <ul>
-<li>Test if the friendly king was not captured earlier</li>
-<li>Calculate stand-pat score and process initial pruning/alpha update</li>
-<li>Main loop:
+<li>test if the friendly king was not captured earlier</li>
+<li>calculate stand-pat score and process initial pruning/alpha update</li>
+<li>main loop:
 <ul>
-<li>Score pruning</li>
-<li>Futility pruning (<a href="https://www.chessprogramming.org/Delta_Pruning">https://www.chessprogramming.org/Delta_Pruning</a>)</li>
+<li>score pruning</li>
+<li>futility pruning (<a href="https://www.chessprogramming.org/Delta_Pruning">https://www.chessprogramming.org/Delta_Pruning</a>)</li>
 </ul>
 </li>
 </ul>

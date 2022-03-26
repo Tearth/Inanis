@@ -93,7 +93,7 @@
 
 <span class="kw">static</span> <span class="kw-2">mut</span> <span class="ident">TABLE</span>: [[[<span class="ident">i16</span>; <span class="number">256</span>]; <span class="number">256</span>]; <span class="number">6</span>] <span class="op">=</span> [[[<span class="number">0</span>; <span class="number">256</span>]; <span class="number">256</span>]; <span class="number">6</span>];
 
-<span class="doccomment">/// Initialized static exchange evaluation table by filling it with every possible combination of target piece, attackers and defenders.</span>
+<span class="doccomment">/// Initializes static exchange evaluation table by filling it with every possible combination of target piece, attackers and defenders.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init</span>() {
     <span class="kw">for</span> <span class="ident">target_piece</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">6</span> {
         <span class="kw">for</span> <span class="ident">attackers</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">256</span> {

@@ -135,6 +135,10 @@
 <span id="133">133</span>
 <span id="134">134</span>
 <span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cache::pawns::PawnHashTable</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cache::search::TranspositionTable</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::engine::context::SearchContext</span>;
@@ -159,8 +163,9 @@
     }
 }
 
-<span class="doccomment">/// Runs a test by performing a fixed-`depth` search for the positions loaded from the `epd_filename` file. To classify the test</span>
-<span class="doccomment">/// as successful, there must be at least `tries_to_confirm` search iterations in a row, which returned the best move same as the expected one in the position.</span>
+<span class="doccomment">/// Runs a test by performing a fixed-`depth` search for the positions loaded from the `epd_filename` file. To classify the test as successful,</span>
+<span class="doccomment">/// the last iteration has to return the correct move, or there must be at least `tries_to_confirm` search iterations in a row which returned</span>
+<span class="doccomment">/// the best move same as the expected one in the position.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(<span class="ident">epd_filename</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">depth</span>: <span class="ident">i8</span>, <span class="ident">tries_to_confirm</span>: <span class="ident">i8</span>) {
     <span class="macro">println!</span>(<span class="string">&quot;Loading EPD file...&quot;</span>);
     <span class="kw">let</span> <span class="ident">positions</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">load_positions</span>(<span class="ident">epd_filename</span>) {
@@ -183,6 +188,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">killers_table</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">history_table</span> <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">abort_token</span> <span class="op">=</span> <span class="ident">Default::default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ponder_token</span> <span class="op">=</span> <span class="ident">Default::default</span>();
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">board_clone</span> <span class="op">=</span> <span class="ident">position</span>.<span class="ident">board</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">context</span> <span class="op">=</span> <span class="ident">SearchContext::new</span>(
@@ -194,11 +200,13 @@
             <span class="number">0</span>,
             <span class="number">0</span>,
             <span class="bool-val">false</span>,
+            <span class="bool-val">false</span>,
             <span class="kw-2">&amp;mut</span> <span class="ident">transposition_table</span>,
             <span class="kw-2">&amp;mut</span> <span class="ident">pawn_hashtable</span>,
             <span class="kw-2">&amp;mut</span> <span class="ident">killers_table</span>,
             <span class="kw-2">&amp;mut</span> <span class="ident">history_table</span>,
             <span class="kw-2">&amp;mut</span> <span class="ident">abort_token</span>,
+            <span class="kw-2">&amp;mut</span> <span class="ident">ponder_token</span>,
         );
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">last_best_move</span> <span class="op">=</span> <span class="ident">Default::default</span>();

@@ -1051,7 +1051,7 @@
         <span class="self">self</span>.<span class="ident">get_flags</span>() <span class="op">==</span> <span class="ident">MoveFlags::QUIET</span> <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">get_flags</span>() <span class="op">==</span> <span class="ident">MoveFlags::DOUBLE_PUSH</span>
     }
 
-    <span class="doccomment">/// Checks if the move is capture (excluding en passant, but including promotions).</span>
+    <span class="doccomment">/// Checks if the move is a capture (excluding en passant, but including promotions).</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_capture</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="ident">get_flags</span>().<span class="ident">contains</span>(<span class="ident">MoveFlags::CAPTURE</span>)
     }
@@ -1061,12 +1061,12 @@
         <span class="self">self</span>.<span class="ident">get_flags</span>() <span class="op">==</span> <span class="ident">MoveFlags::EN_PASSANT</span>
     }
 
-    <span class="doccomment">/// Checks if the move is promotion (including captures).</span>
+    <span class="doccomment">/// Checks if the move is a promotion (including captures).</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_promotion</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="ident">get_flags</span>().<span class="ident">contains</span>(<span class="ident">MoveFlags::FIELD_PROMOTION</span>)
     }
 
-    <span class="doccomment">/// Checks if the move is short or long castling.</span>
+    <span class="doccomment">/// Checks if the move is a short or long castling.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_castling</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="ident">get_flags</span>() <span class="op">==</span> <span class="ident">MoveFlags::SHORT_CASTLING</span> <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">get_flags</span>() <span class="op">==</span> <span class="ident">MoveFlags::LONG_CASTLING</span>
     }
@@ -1287,7 +1287,7 @@
 }
 
 <span class="doccomment">/// Gets `PIECE` mobility (by counting all possible moves at the position specified by `board`) with `color` and increases `dangered_king_fields` if the enemy</span>
-<span class="doccomment">/// king is near to the fields included id the mobility.</span>
+<span class="doccomment">/// king is near to the fields included in the mobility.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_piece_mobility</span><span class="op">&lt;</span><span class="kw">const</span> <span class="ident">PIECE</span>: <span class="ident">u8</span><span class="op">&gt;</span>(<span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>, <span class="ident">color</span>: <span class="ident">u8</span>, <span class="ident">dangered_king_fields</span>: <span class="kw-2">&amp;mut</span> <span class="ident">u32</span>) -&gt; <span class="ident">i16</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pieces</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">pieces</span>[<span class="ident">color</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">PIECE</span> <span class="kw">as</span> <span class="ident">usize</span>];
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mobility</span> <span class="op">=</span> <span class="number">0</span>;

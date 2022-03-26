@@ -882,7 +882,7 @@
         <span class="ident">index</span>
     }
 
-    <span class="doccomment">/// Makes a `r#move`, with the assumption that it&#39;s perfectly valid at the current position (otherwise, internal state can be irreversibly corrupted).</span>
+    <span class="doccomment">/// Makes `r#move`, with the assumption that it&#39;s perfectly valid at the current position (otherwise, internal state can be irreversibly corrupted).</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Steps of making a move:</span>
     <span class="doccomment">///  - preserve halfmove clock, castling rights, en passant bitboard, board hash and pawn hash</span>
@@ -1077,7 +1077,7 @@
         <span class="self">self</span>.<span class="ident">hash</span> <span class="op">^</span><span class="op">=</span> <span class="ident">zobrist::get_active_color_hash</span>();
     }
 
-    <span class="doccomment">/// Undoes a `r#move`, with the assumption that it&#39;s perfectly valid at the current position (otherwise, internal state can be irreversibly corrupted).</span>
+    <span class="doccomment">/// Undoes `r#move`, with the assumption that it&#39;s perfectly valid at the current position (otherwise, internal state can be irreversibly corrupted).</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Steps of undoing a move:</span>
     <span class="doccomment">///  - restore halfmove clock, castling rights, en passant bitboard, board hash and pawn hash</span>
@@ -1406,7 +1406,7 @@
         <span class="ident">zobrist::recalculate_pawn_hash</span>(<span class="self">self</span>);
     }
 
-    <span class="doccomment">/// Runs full evaluation (material, piece-square table, mobility, pawns structure and safety) of the current position, using `pawn_hashtable` to store pawn</span>
+    <span class="doccomment">/// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position, using `pawn_hashtable` to store pawn</span>
     <span class="doccomment">/// evaluations and `statistics` to gather diagnostic data. Returns score from the white color perspective (more than 0 when advantage, less than 0 when disadvantage).</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">evaluate</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">pawn_hashtable</span>: <span class="kw-2">&amp;mut</span> <span class="ident">PawnHashTable</span>, <span class="ident">statistics</span>: <span class="kw-2">&amp;mut</span> <span class="ident">SearchStatistics</span>) -&gt; <span class="ident">i16</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">white_attack_mask</span> <span class="op">=</span> <span class="number">0</span>;
@@ -1420,7 +1420,7 @@
             <span class="op">+</span> <span class="ident">mobility_score</span>
     }
 
-    <span class="doccomment">/// Runs full evaluation (material, piece-square table, mobility, pawns structure and safety) of the current position.</span>
+    <span class="doccomment">/// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position.</span>
     <span class="doccomment">/// Returns score from the white color perspective (more than 0 when advantage, less than 0 when disadvantage).</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">evaluate_without_cache</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">i16</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">white_attack_mask</span> <span class="op">=</span> <span class="number">0</span>;
@@ -1434,7 +1434,7 @@
             <span class="op">+</span> <span class="ident">mobility_score</span>
     }
 
-    <span class="doccomment">/// Runs lazy (fast) evaluations, considering only material and piece-square table. Returns score from the white color perspective (more than 0 when</span>
+    <span class="doccomment">/// Runs lazy (fast) evaluations, considering only material and piece-square tables. Returns score from the white color perspective (more than 0 when</span>
     <span class="doccomment">/// advantage, less than 0 when disadvantage).</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">evaluate_lazy</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">i16</span> {
         <span class="ident">material::evaluate</span>(<span class="self">self</span>) <span class="op">+</span> <span class="ident">pst::evaluate</span>(<span class="self">self</span>)

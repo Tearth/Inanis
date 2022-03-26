@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["get_allocation","Calculates optimal size for hashtables based on `total_size` megabytes of available memory. Minimal size for each of them is 1 MB."]],"struct":[["AllocationResult",""]]});
+initSidebarItems({"fn":[["get_allocation","Calculates optimal size for the hashtables based on `total_size` megabytes of available memory. Minimal size for each of them is 1 MB."]],"struct":[["AllocationResult",""]]});

@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["AbortToken",""],["SearchContext",""],["SearchResult",""],["SearchStatistics",""]]});
+initSidebarItems({"struct":[["HelperThreadContext",""],["SearchContext",""],["SearchResult",""],["SearchStatistics",""],["Token",""]]});

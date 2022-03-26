@@ -639,7 +639,7 @@
     <span class="ident">patterns::get_box</span>(<span class="ident">field_index</span>)
 }
 
-<span class="doccomment">/// Gets a rook moves for the field specified by `field_index`, considering `occupancy` (friendly + enemy).</span>
+<span class="doccomment">/// Gets a rook moves for the field specified by `field_index`, considering `occupancy`.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_rook_moves</span>(<span class="kw-2">mut</span> <span class="ident">occupancy</span>: <span class="ident">u64</span>, <span class="ident">field_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u64</span> {
     <span class="kw">unsafe</span> {
         <span class="ident">occupancy</span> <span class="op">&amp;=</span> <span class="ident">ROOK_FIELDS</span>[<span class="ident">field_index</span>].<span class="ident">mask</span>;
@@ -650,7 +650,7 @@
     }
 }
 
-<span class="doccomment">/// Gets a bishop moves for the field specified by `field_index`, considering `occupancy` (friendly + enemy).</span>
+<span class="doccomment">/// Gets a bishop moves for the field specified by `field_index`, considering `occupancy`.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_bishop_moves</span>(<span class="kw-2">mut</span> <span class="ident">occupancy</span>: <span class="ident">u64</span>, <span class="ident">field_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u64</span> {
     <span class="kw">unsafe</span> {
         <span class="ident">occupancy</span> <span class="op">&amp;=</span> <span class="ident">BISHOP_FIELDS</span>[<span class="ident">field_index</span>].<span class="ident">mask</span>;
@@ -661,7 +661,7 @@
     }
 }
 
-<span class="doccomment">/// Gets a queen moves for the field specified by `field_index`, considering `occupancy` (friendly + enemy).</span>
+<span class="doccomment">/// Gets a queen moves for the field specified by `field_index`, considering `occupancy`.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_queen_moves</span>(<span class="ident">occupancy</span>: <span class="ident">u64</span>, <span class="ident">field_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u64</span> {
     <span class="ident">get_rook_moves</span>(<span class="ident">occupancy</span>, <span class="ident">field_index</span>) <span class="op">|</span> <span class="ident">get_bishop_moves</span>(<span class="ident">occupancy</span>, <span class="ident">field_index</span>)
 }
@@ -830,7 +830,7 @@
     <span class="ident">patterns::get_diagonals</span>(<span class="ident">field_index</span>) <span class="op">&amp;</span> <span class="op">!</span><span class="ident">EDGE</span>
 }
 
-<span class="doccomment">/// Gets a rook attacks for the field specified by `field_index`, considering `occupancy` (friendly + enemy).</span>
+<span class="doccomment">/// Gets a rook attacks for the field specified by `field_index`, considering `occupancy`.</span>
 <span class="kw">fn</span> <span class="ident">get_rook_attacks</span>(<span class="ident">occupancy</span>: <span class="ident">u64</span>, <span class="ident">field_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u64</span> {
     <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="number">0</span>
         <span class="op">|</span> <span class="ident">get_attacks</span>(<span class="ident">occupancy</span>, <span class="ident">field_index</span>, (<span class="number">1</span>, <span class="number">0</span>))
@@ -841,7 +841,7 @@
     <span class="ident">result</span>
 }
 
-<span class="doccomment">/// Gets a bishop attacks for the field specified by `field_index`, occupancy `occupancy` (friendly + enemy).</span>
+<span class="doccomment">/// Gets a bishop attacks for the field specified by `field_index`, occupancy `occupancy`.</span>
 <span class="kw">fn</span> <span class="ident">get_bishop_attacks</span>(<span class="ident">occupancy</span>: <span class="ident">u64</span>, <span class="ident">field_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u64</span> {
     <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="number">0</span>
         <span class="op">|</span> <span class="ident">get_attacks</span>(<span class="ident">occupancy</span>, <span class="ident">field_index</span>, (<span class="number">1</span>, <span class="number">1</span>))
@@ -852,7 +852,7 @@
     <span class="ident">result</span>
 }
 
-<span class="doccomment">/// Helper function to get all possible to move fields, considering `occupancy` (friendly + enemy), starting from the field</span>
+<span class="doccomment">/// Helper function to get all possible to move fields, considering `occupancy`, starting from the field</span>
 <span class="doccomment">/// specified by `field_index` and going into the `direction`.</span>
 <span class="kw">fn</span> <span class="ident">get_attacks</span>(<span class="ident">occupancy</span>: <span class="ident">u64</span>, <span class="ident">field_index</span>: <span class="ident">usize</span>, <span class="ident">direction</span>: (<span class="ident">isize</span>, <span class="ident">isize</span>)) -&gt; <span class="ident">u64</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="number">0u64</span>;

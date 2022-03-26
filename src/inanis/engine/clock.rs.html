@@ -17,8 +17,8 @@
 <span id="15">15</span>
 <span id="16">16</span>
 <span id="17">17</span>
-</pre><pre class="rust"><code><span class="doccomment">/// Calculates time which should be allocated for the next move, based on `move_number`, `total_time`, `inc_time` (0 if not available)</span>
-<span class="doccomment">/// and `moves_to_go` (0 if not available). Formula and chart used when `moves_to_go` is zeroed can be found in `/misc/time.xlsx` Excel sheet,</span>
+</pre><pre class="rust"><code><span class="doccomment">/// Calculates a time which should be allocated for the next move, based on `move_number`, `total_time`, `inc_time` (0 if not available)</span>
+<span class="doccomment">/// and `moves_to_go` (0 if not available). Formula and chart used when `moves_to_go` is zeroed can be found in the `/misc/time.xlsx` Excel sheet,</span>
 <span class="doccomment">/// but in general outline it tries to allocate more time during mid-game where usually there&#39;s a lot of pieces on the board and it&#39;s crucial</span>
 <span class="doccomment">/// to find some advantage at this phase. Formula used when `moves_to_go` is greater than zero is simpler and allocates time evenly.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_time_for_move</span>(<span class="ident">move_number</span>: <span class="ident">u16</span>, <span class="ident">total_time</span>: <span class="ident">u32</span>, <span class="ident">inc_time</span>: <span class="ident">u32</span>, <span class="ident">moves_to_go</span>: <span class="ident">u32</span>) -&gt; <span class="ident">u32</span> {

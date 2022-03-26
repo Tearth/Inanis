@@ -116,7 +116,6 @@
 <span id="114">114</span>
 <span id="115">115</span>
 <span id="116">116</span>
-<span id="117">117</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::cell::UnsafeCell</span>;
 <span class="kw">use</span> <span class="ident">std::mem</span>;
 <span class="kw">use</span> <span class="ident">std::u64</span>;
@@ -125,7 +124,6 @@
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PerftHashTable</span> {
     <span class="ident">table</span>: <span class="ident">UnsafeCell</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PerftHashTableBucket</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">slots</span>: <span class="ident">usize</span>,
 }
 
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">align</span>(<span class="number">64</span>))]</span>
@@ -144,22 +142,21 @@
     <span class="doccomment">/// Constructs a new instance of [PerftHashTable] by allocating `size` bytes of memory.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">size</span>: <span class="ident">usize</span>) -&gt; <span class="ident">PerftHashTable</span> {
         <span class="kw">let</span> <span class="ident">bucket_size</span> <span class="op">=</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">PerftHashTableBucket</span><span class="op">&gt;</span>();
-        <span class="kw">let</span> <span class="ident">buckets</span> <span class="op">=</span> <span class="ident">size</span> <span class="op">/</span> <span class="ident">bucket_size</span>;
         <span class="kw">let</span> <span class="ident">hashtable</span> <span class="op">=</span> <span class="ident">PerftHashTable</span> {
-            <span class="ident">table</span>: <span class="ident">UnsafeCell::new</span>(<span class="ident">Vec::with_capacity</span>(<span class="ident">buckets</span>)),
-            <span class="ident">slots</span>: <span class="ident">buckets</span>,
+            <span class="ident">table</span>: <span class="ident">UnsafeCell::new</span>(<span class="ident">Vec::with_capacity</span>(<span class="ident">size</span> <span class="op">/</span> <span class="ident">bucket_size</span>)),
         };
 
         <span class="kw">if</span> <span class="ident">size</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="kw">unsafe</span> { (<span class="kw-2">*</span><span class="ident">hashtable</span>.<span class="ident">table</span>.<span class="ident">get</span>()).<span class="ident">resize</span>(<span class="ident">hashtable</span>.<span class="ident">slots</span>, <span class="ident">Default::default</span>()) };
+            <span class="kw">unsafe</span> { (<span class="kw-2">*</span><span class="ident">hashtable</span>.<span class="ident">table</span>.<span class="ident">get</span>()).<span class="ident">resize</span>((<span class="kw-2">*</span><span class="ident">hashtable</span>.<span class="ident">table</span>.<span class="ident">get</span>()).<span class="ident">capacity</span>(), <span class="ident">Default::default</span>()) };
         }
 
         <span class="ident">hashtable</span>
     }
 
-    <span class="doccomment">/// Adds a new entry (storing `hash`, `depth` and `leafs_count`) using `hash % self.slots` formula to calculate index of bucket.</span>
+    <span class="doccomment">/// Adds a new entry (storing `hash`, `depth` and `leafs_count`) using `hash % self.table.len()` formula to calculate an index of bucket.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">hash</span>: <span class="ident">u64</span>, <span class="ident">depth</span>: <span class="ident">u8</span>, <span class="ident">leafs_count</span>: <span class="ident">u64</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bucket</span> <span class="op">=</span> <span class="kw">unsafe</span> { (<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">table</span>.<span class="ident">get</span>())[(<span class="ident">hash</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">%</span> <span class="self">self</span>.<span class="ident">slots</span>] };
+        <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> (<span class="ident">hash</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">%</span> <span class="kw">unsafe</span> { (<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">table</span>.<span class="ident">get</span>()).<span class="ident">len</span>() };
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bucket</span> <span class="op">=</span> <span class="kw">unsafe</span> { (<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">table</span>.<span class="ident">get</span>())[<span class="ident">index</span>] };
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">smallest_depth</span> <span class="op">=</span> (<span class="ident">bucket</span>.<span class="ident">entries</span>[<span class="number">0</span>].<span class="ident">key_and_depth</span> <span class="op">&amp;</span> <span class="number">0xf</span>) <span class="kw">as</span> <span class="ident">u8</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">smallest_depth_index</span> <span class="op">=</span> <span class="number">0</span>;
 
@@ -172,12 +169,13 @@
         }
 
         <span class="ident">bucket</span>.<span class="ident">entries</span>[<span class="ident">smallest_depth_index</span>] <span class="op">=</span> <span class="ident">PerftHashTableEntry::new</span>(<span class="ident">hash</span>, <span class="ident">depth</span>, <span class="ident">leafs_count</span>);
-        <span class="kw">unsafe</span> { (<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">table</span>.<span class="ident">get</span>())[(<span class="ident">hash</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">%</span> <span class="self">self</span>.<span class="ident">slots</span>] <span class="op">=</span> <span class="ident">bucket</span> };
+        <span class="kw">unsafe</span> { (<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">table</span>.<span class="ident">get</span>())[<span class="ident">index</span>] <span class="op">=</span> <span class="ident">bucket</span> };
     }
 
-    <span class="doccomment">/// Gets wanted entry using `hash % self.slots` formula to calculate index of bucket. Returns [None] if `hash` is incompatible with the stored key.</span>
+    <span class="doccomment">/// Gets wanted entry using `hash % self.table.len()` formula to calculate an index of bucket. Returns [None] if `hash` is incompatible with the stored key.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">hash</span>: <span class="ident">u64</span>, <span class="ident">depth</span>: <span class="ident">u8</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PerftHashTableEntry</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">bucket</span> <span class="op">=</span> <span class="kw">unsafe</span> { (<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">table</span>.<span class="ident">get</span>())[(<span class="ident">hash</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">%</span> <span class="self">self</span>.<span class="ident">slots</span>] };
+        <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> (<span class="ident">hash</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">%</span> <span class="kw">unsafe</span> { (<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">table</span>.<span class="ident">get</span>()).<span class="ident">len</span>() };
+        <span class="kw">let</span> <span class="ident">bucket</span> <span class="op">=</span> <span class="kw">unsafe</span> { (<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">table</span>.<span class="ident">get</span>())[<span class="ident">index</span>] };
         <span class="kw">for</span> <span class="ident">entry_index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">BUCKET_SLOTS</span> {
             <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="ident">bucket</span>.<span class="ident">entries</span>[<span class="ident">entry_index</span>];
             <span class="kw">if</span> <span class="ident">entry</span>.<span class="ident">key_and_depth</span> <span class="op">==</span> ((<span class="ident">hash</span> <span class="op">&amp;</span> <span class="op">!</span><span class="number">0xf</span>) <span class="op">|</span> (<span class="ident">depth</span> <span class="kw">as</span> <span class="ident">u64</span>)) {
@@ -188,7 +186,7 @@
         <span class="prelude-val">None</span>
     }
 
-    <span class="doccomment">/// Calculates approximate percentage usage of the table, based on first 10000 entries.</span>
+    <span class="doccomment">/// Calculates an approximate percentage usage of the table, based on the first 10000 entries.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_usage</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">f32</span> {
         <span class="kw">const</span> <span class="ident">RESOLUTION</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">10000</span>;
         <span class="kw">const</span> <span class="ident">BUCKETS_COUNT_TO_CHECK</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">RESOLUTION</span> <span class="op">/</span> <span class="ident">BUCKET_SLOTS</span>;

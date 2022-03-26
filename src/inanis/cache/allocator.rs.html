@@ -17,7 +17,6 @@
 <span id="15">15</span>
 <span id="16">16</span>
 <span id="17">17</span>
-<span id="18">18</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::cmp</span>;
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AllocationResult</span> {
@@ -25,8 +24,7 @@
     <span class="kw">pub</span> <span class="ident">pawn_hashtable_size</span>: <span class="ident">usize</span>,
 }
 
-<span class="doccomment">/// Calculates optimal size for hashtables based on `total_size` megabytes of available memory.</span>
-<span class="doccomment">/// Minimal size for each of them is 1 MB.</span>
+<span class="doccomment">/// Calculates optimal size for the hashtables based on `total_size` megabytes of available memory. Minimal size for each of them is 1 MB.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_allocation</span>(<span class="ident">total_size</span>: <span class="ident">usize</span>) -&gt; <span class="ident">AllocationResult</span> {
     <span class="kw">let</span> <span class="ident">pawn_hashtable_size</span> <span class="op">=</span> <span class="ident">cmp::max</span>(<span class="number">1</span>, <span class="ident">total_size</span> <span class="op">/</span> <span class="number">128</span>);
     <span class="kw">let</span> <span class="ident">transposition_table_size</span> <span class="op">=</span> <span class="ident">total_size</span> <span class="op">-</span> <span class="ident">pawn_hashtable_size</span>;

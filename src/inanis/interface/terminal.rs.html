@@ -616,6 +616,7 @@
 <span id="614">614</span>
 <span id="615">615</span>
 <span id="616">616</span>
+<span id="617">617</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::uci</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::evaluation::material</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::evaluation::mobility</span>;
@@ -789,7 +790,7 @@
     <span class="kw">let</span> <span class="ident">pawn_hashtable_misses_percent</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">pawn_hashtable_misses</span>, <span class="ident">result</span>.<span class="ident">pawn_hashtable_hits</span>);
     <span class="kw">let</span> <span class="ident">pawn_hashtable_collisions_percent</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">pawn_hashtable_collisions</span>, <span class="ident">result</span>.<span class="ident">pawn_hashtable_hits</span>);
     <span class="ident">cache_table</span>.<span class="ident">add_row</span>(<span class="macro">row!</span>[
-        <span class="string">&quot;Pawn hash table&quot;</span>,
+        <span class="string">&quot;Pawn hashtable&quot;</span>,
         <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">result</span>.<span class="ident">pawn_hashtable_added</span>),
         <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">result</span>.<span class="ident">pawn_hashtable_hits</span>),
         <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, <span class="ident">result</span>.<span class="ident">pawn_hashtable_misses</span>, <span class="ident">pawn_hashtable_misses_percent</span>),
@@ -922,7 +923,7 @@
     <span class="kw">let</span> <span class="ident">pawns_evaluation</span> <span class="op">=</span> <span class="ident">pawns::evaluate_without_cache</span>(<span class="kw-2">&amp;</span><span class="ident">board</span>);
 
     <span class="macro">println!</span>(<span class="string">&quot;Material: {}&quot;</span>, <span class="ident">material_evaluation</span>);
-    <span class="macro">println!</span>(<span class="string">&quot;Piece-square table: {}&quot;</span>, <span class="ident">pst_evaluation</span>);
+    <span class="macro">println!</span>(<span class="string">&quot;Piece-square tables: {}&quot;</span>, <span class="ident">pst_evaluation</span>);
     <span class="macro">println!</span>(<span class="string">&quot;Mobility: {}&quot;</span>, <span class="ident">mobility_evaluation</span>);
     <span class="macro">println!</span>(<span class="string">&quot;Safety: {}&quot;</span>, <span class="ident">safety_evaluation</span>);
     <span class="macro">println!</span>(<span class="string">&quot;Pawns: {}&quot;</span>, <span class="ident">pawns_evaluation</span>);
@@ -1104,8 +1105,9 @@
     <span class="macro">println!</span>(<span class="string">&quot;Perft done!&quot;</span>);
 }
 
-<span class="doccomment">/// Handles `test [epd] [depth] [tries_to_confirm]` command by running a fixed-depth search of positions stored in the `epd` file. To classify the test</span>
-<span class="doccomment">/// as successful, there must be at least `tries_to_confirm` search iterations in a row, which returned the best move same as the expected one in the position.</span>
+<span class="doccomment">/// Handles `test [epd] [depth] [tries_to_confirm]` command by running a fixed-`depth` search of positions stored in the `epd` file. To classify the test</span>
+<span class="doccomment">/// as successful, the last iteration has to return the correct move, or there must be at least `tries_to_confirm` search iterations in a row which returned</span>
+<span class="doccomment">/// the best move same as the expected one in the position.</span>
 <span class="kw">fn</span> <span class="ident">handle_test</span>(<span class="ident">input</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>) {
     <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">2</span> {
         <span class="macro">println!</span>(<span class="string">&quot;EPD filename parameter not found&quot;</span>);
@@ -1141,7 +1143,7 @@
     <span class="ident">test::run</span>(<span class="ident">input</span>[<span class="number">1</span>], <span class="ident">depth</span>, <span class="ident">tries_to_confirm</span>);
 }
 
-<span class="doccomment">/// Handles `tuner [epd] [output] [lock_material] [randomize] [threads_count]` command by running an evaluation parameters tuner. The input file is specified by `epd`</span>
+<span class="doccomment">/// Handles `tuner [epd] [output] [lock_material] [randomize] [threads_count]` command by running the evaluation parameters tuner. The input file is specified by `epd`</span>
 <span class="doccomment">/// file with a list of positions and their expected results, and the `output` directory is used to store generated Rust sources with the optimized values. Use</span>
 <span class="doccomment">/// `lock_material` to disable tuner for piece values, and `randomize` to initialize evaluation parameters with random values. Multithreading is supported by `threads_count`.</span>
 <span class="kw">fn</span> <span class="ident">handle_tuner</span>(<span class="ident">input</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>) {
@@ -1192,7 +1194,7 @@
     <span class="ident">tuner::run</span>(<span class="ident">input</span>[<span class="number">1</span>], <span class="ident">input</span>[<span class="number">2</span>], <span class="ident">lock_material</span>, <span class="ident">random_values</span>, <span class="ident">threads_count</span>);
 }
 
-<span class="doccomment">/// Handles `uci` command by entering into UCI (Universal Chess Interface) mode.</span>
+<span class="doccomment">/// Handles `uci` command by entering into the UCI (Universal Chess Interface) mode.</span>
 <span class="kw">fn</span> <span class="ident">handle_uci</span>() {
     <span class="ident">uci::run</span>();
 }
