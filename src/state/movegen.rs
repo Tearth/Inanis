@@ -174,8 +174,8 @@ struct MagicField {
 
 impl MagicField {
     /// Constructs a new instance of [MagicField] with zeroed values.
-    pub const fn new() -> MagicField {
-        MagicField {
+    pub const fn new() -> Self {
+        Self {
             mask: 0,
             shift: 0,
             magic: 0,
@@ -359,7 +359,6 @@ fn apply_magic_for_field(permutations: &[u64], attacks: &[u64], field: &mut Magi
     for index in 0..count {
         let permutation = permutations[index as usize];
         let permutation_attacks = attacks[index as usize];
-
         let hash = permutation.wrapping_mul(field.magic) >> (64 - field.shift);
 
         debug_assert!(field.attacks[hash as usize] == 0);

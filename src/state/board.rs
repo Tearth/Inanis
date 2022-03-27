@@ -54,19 +54,19 @@ pub struct Bitboard {
 
 impl Bitboard {
     /// Constructs a new instance of [Bitboard] with initial position.
-    pub fn new_initial_position() -> Bitboard {
+    pub fn new_initial_position() -> Self {
         Bitboard::new_from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap()
     }
 
     /// Constructs a new instance of [Bitboard] with position specified by `fen`.
     /// Returns [Err] with proper error message if `fen` couldn't be parsed correctly.
-    pub fn new_from_fen(fen: &str) -> Result<Bitboard, &'static str> {
+    pub fn new_from_fen(fen: &str) -> Result<Self, &'static str> {
         fen::fen_to_board(fen)
     }
 
     /// Constructs a new instance of [Bitboard] with position specified by list of `moves`.
     /// Returns [Err] with proper error message is `moves` couldn't be parsed correctly.
-    pub fn new_from_moves(moves: &[&str]) -> Result<Bitboard, &'static str> {
+    pub fn new_from_moves(moves: &[&str]) -> Result<Self, &'static str> {
         let mut board = Bitboard::new_initial_position();
         for premade_move in moves {
             let parsed_move = Move::from_long_notation(premade_move, &board)?;
@@ -746,9 +746,10 @@ impl Bitboard {
 
     /// Calculates a game phase at the current position: 1.0 means opening (all pieces present, considering the default position), 0.0 is ending (no pieces at all).
     pub fn get_game_phase(&self) -> f32 {
-        let total_material =
-            self.material_scores[WHITE as usize] + self.material_scores[BLACK as usize] - 2 * unsafe { parameters::PIECE_VALUE[KING as usize] };
-        (total_material as f32) / (unsafe { evaluation::INITIAL_MATERIAL } as f32)
+        let total_material = self.material_scores[WHITE as usize] + self.material_scores[BLACK as usize];
+        let total_material_without_kings = total_material - 2 * unsafe { parameters::PIECE_VALUE[KING as usize] };
+
+        (total_material_without_kings as f32) / (unsafe { evaluation::INITIAL_MATERIAL } as f32)
     }
 }
 

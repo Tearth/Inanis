@@ -42,8 +42,8 @@ struct TunerParameter {
 
 impl TunerContext {
     /// Constructs a new instance of [TunerContext] with stored `positions`.
-    pub fn new(positions: UnsafeCell<Vec<TunerPosition>>) -> TunerContext {
-        TunerContext { positions }
+    pub fn new(positions: UnsafeCell<Vec<TunerPosition>>) -> Self {
+        Self { positions }
     }
 }
 
@@ -51,15 +51,15 @@ unsafe impl Sync for TunerContext {}
 
 impl TunerPosition {
     /// Constructs a new instance of [TunerPosition] with stored `board` and `result`.
-    pub fn new(board: Bitboard, result: f64) -> TunerPosition {
-        TunerPosition { board, result }
+    pub fn new(board: Bitboard, result: f64) -> Self {
+        Self { board, result }
     }
 }
 
 impl TunerParameter {
     /// Constructs a new instance of [TunerParameter] with stored `value`, `min`, `min_init`, `max_init` and `max`.
-    pub fn new(value: i16, min: i16, min_init: i16, max_init: i16, max: i16) -> TunerParameter {
-        TunerParameter {
+    pub fn new(value: i16, min: i16, min_init: i16, max_init: i16, max: i16) -> Self {
+        Self {
             value,
             min,
             min_init,

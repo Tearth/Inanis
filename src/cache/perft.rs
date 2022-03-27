@@ -22,9 +22,9 @@ pub struct PerftHashTableEntry {
 
 impl PerftHashTable {
     /// Constructs a new instance of [PerftHashTable] by allocating `size` bytes of memory.
-    pub fn new(size: usize) -> PerftHashTable {
+    pub fn new(size: usize) -> Self {
         let bucket_size = mem::size_of::<PerftHashTableBucket>();
-        let hashtable = PerftHashTable {
+        let hashtable = Self {
             table: UnsafeCell::new(Vec::with_capacity(size / bucket_size)),
         };
 
@@ -100,8 +100,8 @@ impl Default for PerftHashTableBucket {
 
 impl PerftHashTableEntry {
     /// Constructs a new instance of [PerftHashTableEntry] with stored `key`, `depth` and `leafs_count`.
-    pub fn new(key: u64, depth: u8, leafs_count: u64) -> PerftHashTableEntry {
-        PerftHashTableEntry {
+    pub fn new(key: u64, depth: u8, leafs_count: u64) -> Self {
+        Self {
             key_and_depth: (key & !0xf) | (depth as u64),
             leafs_count,
         }

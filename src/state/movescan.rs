@@ -41,8 +41,8 @@ pub struct Move {
 
 impl Move {
     /// Constructs a new instance of [Move] with stored `from`, `to` and `flags`.
-    pub fn new(from: u8, to: u8, flags: MoveFlags) -> Move {
-        Move {
+    pub fn new(from: u8, to: u8, flags: MoveFlags) -> Self {
+        Self {
             data: ((flags.bits as u16) << 12) | ((to as u16) << 6) | (from as u16),
         }
     }
@@ -483,8 +483,8 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(board: &Bitboard,
             QUEEN => movegen::get_queen_moves(occupancy, from_field_index as usize),
             KING => movegen::get_king_moves(from_field_index as usize),
             _ => panic!("Invalid value: PIECE={}", PIECE),
-        } & !board.occupancy[board.active_color as usize]
-            & evasion_mask;
+        };
+        piece_moves &= !board.occupancy[board.active_color as usize] & evasion_mask;
 
         if CAPTURES {
             piece_moves &= board.occupancy[enemy_color as usize];
@@ -628,8 +628,8 @@ fn scan_pawn_moves_single_push(board: &Bitboard, moves: &mut [Move], mut index: 
         _ => {
             panic!("Invalid value: board.active_color={}", board.active_color);
         }
-    } & !occupancy
-        & evasion_mask;
+    };
+    target_fields &= !occupancy & evasion_mask;
 
     while target_fields != 0 {
         let to_field = get_lsb(target_fields);
@@ -666,8 +666,8 @@ fn scan_pawn_moves_double_push(board: &Bitboard, moves: &mut [Move], mut index: 
         _ => {
             panic!("Invalid value: board.active_color={}", board.active_color);
         }
-    } & !occupancy
-        & evasion_mask;
+    };
+    target_fields &= !occupancy & evasion_mask;
 
     while target_fields != 0 {
         let to_field = get_lsb(target_fields);
@@ -700,8 +700,8 @@ fn scan_pawn_moves_diagonal_attacks<const DIR: u8>(board: &Bitboard, moves: &mut
         _ => {
             panic!("Invalid value: board.active_color={}", board.active_color);
         }
-    } & (board.occupancy[enemy_color as usize] | board.en_passant)
-        & evasion_mask;
+    };
+    target_fields &= (board.occupancy[enemy_color as usize] | board.en_passant) & evasion_mask;
 
     while target_fields != 0 {
         let to_field = get_lsb(target_fields);

@@ -17,8 +17,8 @@ struct TestPosition {
 
 impl TestPosition {
     /// Constructs a new instance of [TestPosition] with stored `id`, `board` and `best_move`.
-    pub fn new(id: String, board: Bitboard, best_move: Move) -> TestPosition {
-        TestPosition { id, board, best_move }
+    pub fn new(id: String, board: Bitboard, best_move: Move) -> Self {
+        Self { id, board, best_move }
     }
 }
 

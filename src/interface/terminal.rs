@@ -26,7 +26,7 @@ const HASH: &str = env!("HASH");
 
 /// Entry point of the terminal interface and command loop.
 pub fn run() {
-    println!("Inanis v{} ({}), created by {}", VERSION, DATE, AUTHOR);
+    println!("Inanis {} ({}), created by {}", VERSION, DATE, AUTHOR);
     println!("Executable hash: {}", HASH);
     println!("Homepage: {}", REPOSITORY);
     println!();
@@ -313,7 +313,7 @@ fn handle_evaluate(input: Vec<&str>) {
     let board_evaluation = board.evaluate_without_cache();
 
     if sum != board_evaluation {
-        println!("--- Integration check failed--- ");
+        println!(" --- Integration check failed --- ");
     } else {
         println!(" --- Total: {} --- ", sum);
     }

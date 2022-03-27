@@ -35,9 +35,9 @@ pub struct TranspositionTableEntry {
 
 impl TranspositionTable {
     /// Constructs a new instance of [TranspositionTable] by allocating `size` bytes of memory.
-    pub fn new(size: usize) -> TranspositionTable {
+    pub fn new(size: usize) -> Self {
         let bucket_size = mem::size_of::<TranspositionTableBucket>();
-        let mut hashtable = TranspositionTable {
+        let mut hashtable = Self {
             table: Vec::with_capacity(size / bucket_size),
         };
 
@@ -204,9 +204,9 @@ impl Default for TranspositionTableBucket {
 
 impl TranspositionTableEntry {
     /// Constructs a new instance of [TranspositionTableEntry] with stored `key`, `score`, `best_move`, `depth` and `r#type`.
-    pub fn new(key: u16, score: i16, best_move: Move, depth: i8, r#type: TranspositionTableScoreType) -> TranspositionTableEntry {
+    pub fn new(key: u16, score: i16, best_move: Move, depth: i8, r#type: TranspositionTableScoreType) -> Self {
         let type_age = r#type.bits;
-        TranspositionTableEntry {
+        Self {
             key,
             score,
             best_move,

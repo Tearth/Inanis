@@ -65,7 +65,6 @@ pub fn run(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, bet
         found = true;
 
         context.board.make_move(r#move);
-
         let score = -run(context, depth - 1, ply + 1, -beta, -alpha);
         context.board.undo_move(r#move);
 

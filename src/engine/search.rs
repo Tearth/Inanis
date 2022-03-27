@@ -463,7 +463,7 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
     }
 }
 
-/// Gets the next move to analyze. This function acts as pseudo-iterator and takes care about managing move generator stages, which is basically
+/// Gets a next move to analyze. This function acts as pseudo-iterator and takes care about managing move generator stages, which is basically
 /// a state machine (<https://en.wikipedia.org/wiki/Finite-state_machine>) with following rules:
 ///  - [MoveGeneratorStage::ReadyToCheckHashMove] - default state, returns transposition table move if possible
 ///  - [MoveGeneratorStage::ReadyToGenerateCaptures] - generates all captures in the position

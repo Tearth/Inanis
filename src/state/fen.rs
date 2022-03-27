@@ -11,8 +11,8 @@ pub struct ParsedEPD {
 
 impl ParsedEPD {
     /// Constructs a new instance of [ParsedEPD] with the `board` and rest of the fields zeroed.
-    pub fn new(board: Bitboard) -> ParsedEPD {
-        ParsedEPD {
+    pub fn new(board: Bitboard) -> Self {
+        Self {
             board,
             id: None,
             best_move: None,

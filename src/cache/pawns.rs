@@ -14,9 +14,9 @@ pub struct PawnHashTableEntry {
 
 impl PawnHashTable {
     /// Constructs a new instance of [PawnHashTable] by allocating `size` bytes of memory.
-    pub fn new(size: usize) -> PawnHashTable {
+    pub fn new(size: usize) -> Self {
         let bucket_size = mem::size_of::<PawnHashTableEntry>();
-        let mut hashtable = PawnHashTable {
+        let mut hashtable = Self {
             table: Vec::with_capacity(size / bucket_size),
         };
 
@@ -69,8 +69,8 @@ impl PawnHashTable {
 
 impl PawnHashTableEntry {
     /// Constructs a new instance of [PawnHashTableEntry] with stored `key` and `score`.
-    pub fn new(key: u16, score: i16) -> PawnHashTableEntry {
-        PawnHashTableEntry { key, score }
+    pub fn new(key: u16, score: i16) -> Self {
+        Self { key, score }
     }
 }
 

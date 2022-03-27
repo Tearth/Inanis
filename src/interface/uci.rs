@@ -302,6 +302,7 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
                     )
                 );
 
+                // Check if the ponder move is legal
                 if ponder && depth_result.pv_line.len() >= 2 {
                     let board = state_arc.board.get();
                     let mut allow_ponder = true;

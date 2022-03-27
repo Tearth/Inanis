@@ -158,8 +158,8 @@ impl<'a> SearchContext<'a> {
         history_table: &'a mut HistoryTable,
         abort_token: &'a mut Token,
         ponder_token: &'a mut Token,
-    ) -> SearchContext<'a> {
-        SearchContext {
+    ) -> Self {
+        Self {
             board,
             statistics: Default::default(),
             time,
@@ -237,6 +237,7 @@ impl<'a> Iterator for SearchContext<'a> {
     ///  - mate score has detected and was recognized as reliable
     ///  - search was aborted
     fn next(&mut self) -> Option<Self::Item> {
+        // This loop works here as goto, which allows restarting search when switching from pondering mode to regular search within the same iteration
         loop {
             if self.forced_depth != 0 && self.current_depth == self.forced_depth + 1 {
                 return None;
@@ -374,8 +375,8 @@ impl<'a> Iterator for SearchContext<'a> {
 
 impl SearchResult {
     /// Constructs a new instance of [SearchResult] with stored `time`, `depth`, `score`, `pv_line` and `statistics`.
-    pub fn new(time: u64, depth: i8, score: i16, pv_line: Vec<Move>, statistics: SearchStatistics) -> SearchResult {
-        SearchResult {
+    pub fn new(time: u64, depth: i8, score: i16, pv_line: Vec<Move>, statistics: SearchStatistics) -> Self {
+        Self {
             time,
             depth,
             score,
