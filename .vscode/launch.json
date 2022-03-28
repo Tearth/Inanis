@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(Windows) Launch",
+            "name": "Windows Launch",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/target/x86_64-pc-windows-msvc/debug/inanis.exe",
