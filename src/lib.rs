@@ -11,8 +11,10 @@
     clippy::if_same_then_else
 )]
 
-//! Main page of the Inanis documentation. Feel free to explore by going into the specific module below,
-//! or by clicking "See all inanis's items" on the left to see every possible module, function or structure.
+//! Main page of the Inanis documentation. Feel free to explore it by going into the specific module below,
+//! or by clicking "See all inanis's items" on the left to see every possible item.
+//!
+//! Homepage: https://github.com/Tearth/Inanis
 
 use engine::see;
 use evaluation::pst;

@@ -1,17 +1,18 @@
 # Inanis
 UCI chess engine written in Rust, proud successor of [Proxima b](https://github.com/Tearth/Proxima-b), [Proxima b 2.0](https://github.com/Tearth/Proxima-b-2.0) and [Cosette](https://github.com/Tearth/Cosette). The project is written after hours, ~~with the goal to reach 2600 Elo (or at least to be stronger than the last version of [Cosette](https://github.com/Tearth/Cosette) which was about 2500 Elo)~~ with the goal to reach 3000 Elo.
 
-**Current estimated strength**: 2750 Elo (22.03.2022) - it will be updated after the release and CCRL tests.
+**Current strength**: 2750 Elo (22.03.2022)
 
 ## Releases
-At the current stage, it's too early to make any official releases, thus you have to compile the binary yourself using Rust toolkit. After this, use your favorite GUI client compatible with UCI protocol (the engine still doesn't support some commands, but should be playable in typical games). With the first release, Inanis will be also available on CCRL and other engine lists.
-
 | Version                                                                | Release date | Elo    | Main changes |
 |------------------------------------------------------------------------|--------------|--------|--------------|
 | *soon*                                                                 | *soon*       | *soon* | *soon*       |
 
+## Rating lists
+*soon*
+
 ## How to play online
-Inanis has an official lichess account, where you can try to challenge the engine: https://lichess.org/@/InanisBot. Please note that ranks there are very understated and not comparable to CCRL ones.
+Inanis has an official lichess account, where you can try to challenge the engine: https://lichess.org/@/InanisBot. Please note that ratings there are very understated and not comparable to CCRL ones.
 
 ## UCI options
  - `Hash` - a total size (in megabytes) for transposition table and pawn hashtable
