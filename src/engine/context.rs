@@ -291,26 +291,6 @@ impl<'a> Iterator for SearchContext<'a> {
                     }
                 })
                 .unwrap();
-
-                if self.abort_token.set {
-                    if self.ponder_token.set {
-                        self.current_depth = 1;
-                        self.forced_depth = 0;
-                        self.search_time_start = Utc::now();
-                        self.statistics = Default::default();
-
-                        self.ponder_token.set = false;
-                        self.abort_token.set = false;
-
-                        continue;
-                    } else {
-                        if self.uci_debug {
-                            println!("info string search aborted");
-                        }
-
-                        return None;
-                    }
-                }
             }
 
             let king_checked = self.board.is_king_checked(self.board.active_color);
@@ -339,6 +319,13 @@ impl<'a> Iterator for SearchContext<'a> {
                     self.forced_depth = 0;
                     self.search_time_start = Utc::now();
                     self.statistics = Default::default();
+
+                    for helper_context in &mut self.helper_contexts {
+                        helper_context.context.current_depth = 1;
+                        helper_context.context.forced_depth = 0;
+                        helper_context.context.search_time_start = Utc::now();
+                        helper_context.context.statistics = Default::default();
+                    }
 
                     self.ponder_token.set = false;
                     self.abort_token.set = false;
