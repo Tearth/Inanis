@@ -134,7 +134,6 @@
 <span id="132">132</span>
 <span id="133">133</span>
 <span id="134">134</span>
-<span id="135">135</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::context::SearchContext</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::evaluation::parameters</span>;
@@ -202,7 +201,6 @@
         <span class="ident">found</span> <span class="op">=</span> <span class="bool-val">true</span>;
 
         <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">make_move</span>(<span class="ident">r#move</span>);
-
         <span class="kw">let</span> <span class="ident">score</span> <span class="op">=</span> <span class="op">-</span><span class="ident">run</span>(<span class="ident">context</span>, <span class="ident">depth</span> <span class="op">-</span> <span class="number">1</span>, <span class="ident">ply</span> <span class="op">+</span> <span class="number">1</span>, <span class="op">-</span><span class="ident">beta</span>, <span class="op">-</span><span class="ident">alpha</span>);
         <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">undo_move</span>(<span class="ident">r#move</span>);
 

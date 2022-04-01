@@ -158,8 +158,8 @@
 
 <span class="kw">impl</span> <span class="ident">TestPosition</span> {
     <span class="doccomment">/// Constructs a new instance of [TestPosition] with stored `id`, `board` and `best_move`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">id</span>: <span class="ident">String</span>, <span class="ident">board</span>: <span class="ident">Bitboard</span>, <span class="ident">best_move</span>: <span class="ident">Move</span>) -&gt; <span class="ident">TestPosition</span> {
-        <span class="ident">TestPosition</span> { <span class="ident">id</span>, <span class="ident">board</span>, <span class="ident">best_move</span> }
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">id</span>: <span class="ident">String</span>, <span class="ident">board</span>: <span class="ident">Bitboard</span>, <span class="ident">best_move</span>: <span class="ident">Move</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">Self</span> { <span class="ident">id</span>, <span class="ident">board</span>, <span class="ident">best_move</span> }
     }
 }
 

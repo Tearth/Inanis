@@ -276,9 +276,9 @@
 
 <span class="kw">impl</span> <span class="ident">TranspositionTable</span> {
     <span class="doccomment">/// Constructs a new instance of [TranspositionTable] by allocating `size` bytes of memory.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">size</span>: <span class="ident">usize</span>) -&gt; <span class="ident">TranspositionTable</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">size</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">bucket_size</span> <span class="op">=</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">TranspositionTableBucket</span><span class="op">&gt;</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hashtable</span> <span class="op">=</span> <span class="ident">TranspositionTable</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hashtable</span> <span class="op">=</span> <span class="self">Self</span> {
             <span class="ident">table</span>: <span class="ident">Vec::with_capacity</span>(<span class="ident">size</span> <span class="op">/</span> <span class="ident">bucket_size</span>),
         };
 
@@ -445,9 +445,9 @@
 
 <span class="kw">impl</span> <span class="ident">TranspositionTableEntry</span> {
     <span class="doccomment">/// Constructs a new instance of [TranspositionTableEntry] with stored `key`, `score`, `best_move`, `depth` and `r#type`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">key</span>: <span class="ident">u16</span>, <span class="ident">score</span>: <span class="ident">i16</span>, <span class="ident">best_move</span>: <span class="ident">Move</span>, <span class="ident">depth</span>: <span class="ident">i8</span>, <span class="ident">r#type</span>: <span class="ident">TranspositionTableScoreType</span>) -&gt; <span class="ident">TranspositionTableEntry</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">key</span>: <span class="ident">u16</span>, <span class="ident">score</span>: <span class="ident">i16</span>, <span class="ident">best_move</span>: <span class="ident">Move</span>, <span class="ident">depth</span>: <span class="ident">i8</span>, <span class="ident">r#type</span>: <span class="ident">TranspositionTableScoreType</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">type_age</span> <span class="op">=</span> <span class="ident">r#type</span>.<span class="ident">bits</span>;
-        <span class="ident">TranspositionTableEntry</span> {
+        <span class="self">Self</span> {
             <span class="ident">key</span>,
             <span class="ident">score</span>,
             <span class="ident">best_move</span>,

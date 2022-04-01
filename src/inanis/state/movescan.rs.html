@@ -771,8 +771,8 @@
 
 <span class="kw">impl</span> <span class="ident">Move</span> {
     <span class="doccomment">/// Constructs a new instance of [Move] with stored `from`, `to` and `flags`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">from</span>: <span class="ident">u8</span>, <span class="ident">to</span>: <span class="ident">u8</span>, <span class="ident">flags</span>: <span class="ident">MoveFlags</span>) -&gt; <span class="ident">Move</span> {
-        <span class="ident">Move</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">from</span>: <span class="ident">u8</span>, <span class="ident">to</span>: <span class="ident">u8</span>, <span class="ident">flags</span>: <span class="ident">MoveFlags</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">Self</span> {
             <span class="ident">data</span>: ((<span class="ident">flags</span>.<span class="ident">bits</span> <span class="kw">as</span> <span class="ident">u16</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">12</span>) <span class="op">|</span> ((<span class="ident">to</span> <span class="kw">as</span> <span class="ident">u16</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">6</span>) <span class="op">|</span> (<span class="ident">from</span> <span class="kw">as</span> <span class="ident">u16</span>),
         }
     }
@@ -1213,8 +1213,8 @@
             <span class="ident">QUEEN</span> =&gt; <span class="ident">movegen::get_queen_moves</span>(<span class="ident">occupancy</span>, <span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>),
             <span class="ident">KING</span> =&gt; <span class="ident">movegen::get_king_moves</span>(<span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>),
             <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: PIECE={}&quot;</span>, <span class="ident">PIECE</span>),
-        } <span class="op">&amp;</span> <span class="op">!</span><span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">board</span>.<span class="ident">active_color</span> <span class="kw">as</span> <span class="ident">usize</span>]
-            <span class="op">&amp;</span> <span class="ident">evasion_mask</span>;
+        };
+        <span class="ident">piece_moves</span> <span class="op">&amp;=</span> <span class="op">!</span><span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">board</span>.<span class="ident">active_color</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">&amp;</span> <span class="ident">evasion_mask</span>;
 
         <span class="kw">if</span> <span class="ident">CAPTURES</span> {
             <span class="ident">piece_moves</span> <span class="op">&amp;=</span> <span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">enemy_color</span> <span class="kw">as</span> <span class="ident">usize</span>];
@@ -1358,8 +1358,8 @@
         <span class="kw">_</span> =&gt; {
             <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: board.active_color={}&quot;</span>, <span class="ident">board</span>.<span class="ident">active_color</span>);
         }
-    } <span class="op">&amp;</span> <span class="op">!</span><span class="ident">occupancy</span>
-        <span class="op">&amp;</span> <span class="ident">evasion_mask</span>;
+    };
+    <span class="ident">target_fields</span> <span class="op">&amp;=</span> <span class="op">!</span><span class="ident">occupancy</span> <span class="op">&amp;</span> <span class="ident">evasion_mask</span>;
 
     <span class="kw">while</span> <span class="ident">target_fields</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
         <span class="kw">let</span> <span class="ident">to_field</span> <span class="op">=</span> <span class="ident">get_lsb</span>(<span class="ident">target_fields</span>);
@@ -1396,8 +1396,8 @@
         <span class="kw">_</span> =&gt; {
             <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: board.active_color={}&quot;</span>, <span class="ident">board</span>.<span class="ident">active_color</span>);
         }
-    } <span class="op">&amp;</span> <span class="op">!</span><span class="ident">occupancy</span>
-        <span class="op">&amp;</span> <span class="ident">evasion_mask</span>;
+    };
+    <span class="ident">target_fields</span> <span class="op">&amp;=</span> <span class="op">!</span><span class="ident">occupancy</span> <span class="op">&amp;</span> <span class="ident">evasion_mask</span>;
 
     <span class="kw">while</span> <span class="ident">target_fields</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
         <span class="kw">let</span> <span class="ident">to_field</span> <span class="op">=</span> <span class="ident">get_lsb</span>(<span class="ident">target_fields</span>);
@@ -1430,8 +1430,8 @@
         <span class="kw">_</span> =&gt; {
             <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: board.active_color={}&quot;</span>, <span class="ident">board</span>.<span class="ident">active_color</span>);
         }
-    } <span class="op">&amp;</span> (<span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">enemy_color</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">|</span> <span class="ident">board</span>.<span class="ident">en_passant</span>)
-        <span class="op">&amp;</span> <span class="ident">evasion_mask</span>;
+    };
+    <span class="ident">target_fields</span> <span class="op">&amp;=</span> (<span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">enemy_color</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">|</span> <span class="ident">board</span>.<span class="ident">en_passant</span>) <span class="op">&amp;</span> <span class="ident">evasion_mask</span>;
 
     <span class="kw">while</span> <span class="ident">target_fields</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
         <span class="kw">let</span> <span class="ident">to_field</span> <span class="op">=</span> <span class="ident">get_lsb</span>(<span class="ident">target_fields</span>);

@@ -98,9 +98,9 @@
 
 <span class="kw">impl</span> <span class="ident">PawnHashTable</span> {
     <span class="doccomment">/// Constructs a new instance of [PawnHashTable] by allocating `size` bytes of memory.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">size</span>: <span class="ident">usize</span>) -&gt; <span class="ident">PawnHashTable</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">size</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">bucket_size</span> <span class="op">=</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">PawnHashTableEntry</span><span class="op">&gt;</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hashtable</span> <span class="op">=</span> <span class="ident">PawnHashTable</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hashtable</span> <span class="op">=</span> <span class="self">Self</span> {
             <span class="ident">table</span>: <span class="ident">Vec::with_capacity</span>(<span class="ident">size</span> <span class="op">/</span> <span class="ident">bucket_size</span>),
         };
 
@@ -153,8 +153,8 @@
 
 <span class="kw">impl</span> <span class="ident">PawnHashTableEntry</span> {
     <span class="doccomment">/// Constructs a new instance of [PawnHashTableEntry] with stored `key` and `score`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">key</span>: <span class="ident">u16</span>, <span class="ident">score</span>: <span class="ident">i16</span>) -&gt; <span class="ident">PawnHashTableEntry</span> {
-        <span class="ident">PawnHashTableEntry</span> { <span class="ident">key</span>, <span class="ident">score</span> }
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">key</span>: <span class="ident">u16</span>, <span class="ident">score</span>: <span class="ident">i16</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">Self</span> { <span class="ident">key</span>, <span class="ident">score</span> }
     }
 }
 

@@ -780,6 +780,7 @@
 <span id="778">778</span>
 <span id="779">779</span>
 <span id="780">780</span>
+<span id="781">781</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::fen</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::movegen</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::movescan</span>;
@@ -836,19 +837,19 @@
 
 <span class="kw">impl</span> <span class="ident">Bitboard</span> {
     <span class="doccomment">/// Constructs a new instance of [Bitboard] with initial position.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_initial_position</span>() -&gt; <span class="ident">Bitboard</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_initial_position</span>() -&gt; <span class="self">Self</span> {
         <span class="ident">Bitboard::new_from_fen</span>(<span class="string">&quot;rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1&quot;</span>).<span class="ident">unwrap</span>()
     }
 
     <span class="doccomment">/// Constructs a new instance of [Bitboard] with position specified by `fen`.</span>
     <span class="doccomment">/// Returns [Err] with proper error message if `fen` couldn&#39;t be parsed correctly.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_from_fen</span>(<span class="ident">fen</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Bitboard</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_from_fen</span>(<span class="ident">fen</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
         <span class="ident">fen::fen_to_board</span>(<span class="ident">fen</span>)
     }
 
     <span class="doccomment">/// Constructs a new instance of [Bitboard] with position specified by list of `moves`.</span>
     <span class="doccomment">/// Returns [Err] with proper error message is `moves` couldn&#39;t be parsed correctly.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_from_moves</span>(<span class="ident">moves</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">str</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Bitboard</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_from_moves</span>(<span class="ident">moves</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">str</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">board</span> <span class="op">=</span> <span class="ident">Bitboard::new_initial_position</span>();
         <span class="kw">for</span> <span class="ident">premade_move</span> <span class="kw">in</span> <span class="ident">moves</span> {
             <span class="kw">let</span> <span class="ident">parsed_move</span> <span class="op">=</span> <span class="ident">Move::from_long_notation</span>(<span class="ident">premade_move</span>, <span class="kw-2">&amp;</span><span class="ident">board</span>)<span class="question-mark">?</span>;
@@ -1528,9 +1529,10 @@
 
     <span class="doccomment">/// Calculates a game phase at the current position: 1.0 means opening (all pieces present, considering the default position), 0.0 is ending (no pieces at all).</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_game_phase</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">f32</span> {
-        <span class="kw">let</span> <span class="ident">total_material</span> <span class="op">=</span>
-            <span class="self">self</span>.<span class="ident">material_scores</span>[<span class="ident">WHITE</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">+</span> <span class="self">self</span>.<span class="ident">material_scores</span>[<span class="ident">BLACK</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">-</span> <span class="number">2</span> <span class="op">*</span> <span class="kw">unsafe</span> { <span class="ident">parameters::PIECE_VALUE</span>[<span class="ident">KING</span> <span class="kw">as</span> <span class="ident">usize</span>] };
-        (<span class="ident">total_material</span> <span class="kw">as</span> <span class="ident">f32</span>) <span class="op">/</span> (<span class="kw">unsafe</span> { <span class="ident">evaluation::INITIAL_MATERIAL</span> } <span class="kw">as</span> <span class="ident">f32</span>)
+        <span class="kw">let</span> <span class="ident">total_material</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">material_scores</span>[<span class="ident">WHITE</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">+</span> <span class="self">self</span>.<span class="ident">material_scores</span>[<span class="ident">BLACK</span> <span class="kw">as</span> <span class="ident">usize</span>];
+        <span class="kw">let</span> <span class="ident">total_material_without_kings</span> <span class="op">=</span> <span class="ident">total_material</span> <span class="op">-</span> <span class="number">2</span> <span class="op">*</span> <span class="kw">unsafe</span> { <span class="ident">parameters::PIECE_VALUE</span>[<span class="ident">KING</span> <span class="kw">as</span> <span class="ident">usize</span>] };
+
+        (<span class="ident">total_material_without_kings</span> <span class="kw">as</span> <span class="ident">f32</span>) <span class="op">/</span> (<span class="kw">unsafe</span> { <span class="ident">evaluation::INITIAL_MATERIAL</span> } <span class="kw">as</span> <span class="ident">f32</span>)
     }
 }
 

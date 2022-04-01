@@ -577,8 +577,8 @@
 
 <span class="kw">impl</span> <span class="ident">TunerContext</span> {
     <span class="doccomment">/// Constructs a new instance of [TunerContext] with stored `positions`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">positions</span>: <span class="ident">UnsafeCell</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TunerPosition</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="ident">TunerContext</span> {
-        <span class="ident">TunerContext</span> { <span class="ident">positions</span> }
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">positions</span>: <span class="ident">UnsafeCell</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TunerPosition</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">Self</span> { <span class="ident">positions</span> }
     }
 }
 
@@ -586,15 +586,15 @@
 
 <span class="kw">impl</span> <span class="ident">TunerPosition</span> {
     <span class="doccomment">/// Constructs a new instance of [TunerPosition] with stored `board` and `result`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">board</span>: <span class="ident">Bitboard</span>, <span class="ident">result</span>: <span class="ident">f64</span>) -&gt; <span class="ident">TunerPosition</span> {
-        <span class="ident">TunerPosition</span> { <span class="ident">board</span>, <span class="ident">result</span> }
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">board</span>: <span class="ident">Bitboard</span>, <span class="ident">result</span>: <span class="ident">f64</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">Self</span> { <span class="ident">board</span>, <span class="ident">result</span> }
     }
 }
 
 <span class="kw">impl</span> <span class="ident">TunerParameter</span> {
     <span class="doccomment">/// Constructs a new instance of [TunerParameter] with stored `value`, `min`, `min_init`, `max_init` and `max`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">value</span>: <span class="ident">i16</span>, <span class="ident">min</span>: <span class="ident">i16</span>, <span class="ident">min_init</span>: <span class="ident">i16</span>, <span class="ident">max_init</span>: <span class="ident">i16</span>, <span class="ident">max</span>: <span class="ident">i16</span>) -&gt; <span class="ident">TunerParameter</span> {
-        <span class="ident">TunerParameter</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">value</span>: <span class="ident">i16</span>, <span class="ident">min</span>: <span class="ident">i16</span>, <span class="ident">min_init</span>: <span class="ident">i16</span>, <span class="ident">max_init</span>: <span class="ident">i16</span>, <span class="ident">max</span>: <span class="ident">i16</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">Self</span> {
             <span class="ident">value</span>,
             <span class="ident">min</span>,
             <span class="ident">min_init</span>,

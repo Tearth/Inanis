@@ -645,7 +645,7 @@
 
 <span class="doccomment">/// Entry point of the terminal interface and command loop.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>() {
-    <span class="macro">println!</span>(<span class="string">&quot;Inanis v{} ({}), created by {}&quot;</span>, <span class="ident">VERSION</span>, <span class="ident">DATE</span>, <span class="ident">AUTHOR</span>);
+    <span class="macro">println!</span>(<span class="string">&quot;Inanis {} ({}), created by {}&quot;</span>, <span class="ident">VERSION</span>, <span class="ident">DATE</span>, <span class="ident">AUTHOR</span>);
     <span class="macro">println!</span>(<span class="string">&quot;Executable hash: {}&quot;</span>, <span class="ident">HASH</span>);
     <span class="macro">println!</span>(<span class="string">&quot;Homepage: {}&quot;</span>, <span class="ident">REPOSITORY</span>);
     <span class="macro">println!</span>();
@@ -932,7 +932,7 @@
     <span class="kw">let</span> <span class="ident">board_evaluation</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">evaluate_without_cache</span>();
 
     <span class="kw">if</span> <span class="ident">sum</span> <span class="op">!</span><span class="op">=</span> <span class="ident">board_evaluation</span> {
-        <span class="macro">println!</span>(<span class="string">&quot;--- Integration check failed--- &quot;</span>);
+        <span class="macro">println!</span>(<span class="string">&quot; --- Integration check failed --- &quot;</span>);
     } <span class="kw">else</span> {
         <span class="macro">println!</span>(<span class="string">&quot; --- Total: {} --- &quot;</span>, <span class="ident">sum</span>);
     }

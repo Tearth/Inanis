@@ -293,8 +293,8 @@
 
 <span class="kw">impl</span> <span class="ident">ParsedEPD</span> {
     <span class="doccomment">/// Constructs a new instance of [ParsedEPD] with the `board` and rest of the fields zeroed.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">board</span>: <span class="ident">Bitboard</span>) -&gt; <span class="ident">ParsedEPD</span> {
-        <span class="ident">ParsedEPD</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">board</span>: <span class="ident">Bitboard</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">Self</span> {
             <span class="ident">board</span>,
             <span class="ident">id</span>: <span class="prelude-val">None</span>,
             <span class="ident">best_move</span>: <span class="prelude-val">None</span>,

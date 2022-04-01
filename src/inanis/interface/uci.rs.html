@@ -496,6 +496,7 @@
 <span id="494">494</span>
 <span id="495">495</span>
 <span id="496">496</span>
+<span id="497">497</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cache::allocator</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cache::pawns::PawnHashTable</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cache::search::TranspositionTable</span>;
@@ -800,6 +801,7 @@
                     )
                 );
 
+                <span class="comment">// Check if the ponder move is legal</span>
                 <span class="kw">if</span> <span class="ident">ponder</span> <span class="op">&amp;&amp;</span> <span class="ident">depth_result</span>.<span class="ident">pv_line</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="number">2</span> {
                     <span class="kw">let</span> <span class="ident">board</span> <span class="op">=</span> <span class="ident">state_arc</span>.<span class="ident">board</span>.<span class="ident">get</span>();
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">allow_ponder</span> <span class="op">=</span> <span class="bool-val">true</span>;

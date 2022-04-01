@@ -438,18 +438,6 @@
 <span id="436">436</span>
 <span id="437">437</span>
 <span id="438">438</span>
-<span id="439">439</span>
-<span id="440">440</span>
-<span id="441">441</span>
-<span id="442">442</span>
-<span id="443">443</span>
-<span id="444">444</span>
-<span id="445">445</span>
-<span id="446">446</span>
-<span id="447">447</span>
-<span id="448">448</span>
-<span id="449">449</span>
-<span id="450">450</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::history::HistoryTable</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::killers::KillersTable</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
@@ -610,8 +598,8 @@
         <span class="ident">history_table</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">HistoryTable</span>,
         <span class="ident">abort_token</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">Token</span>,
         <span class="ident">ponder_token</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">Token</span>,
-    ) -&gt; <span class="ident">SearchContext</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-        <span class="ident">SearchContext</span> {
+    ) -&gt; <span class="self">Self</span> {
+        <span class="self">Self</span> {
             <span class="ident">board</span>,
             <span class="ident">statistics</span>: <span class="ident">Default::default</span>(),
             <span class="ident">time</span>,
@@ -689,6 +677,7 @@
     <span class="doccomment">///  - mate score has detected and was recognized as reliable</span>
     <span class="doccomment">///  - search was aborted</span>
     <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span> {
+        <span class="comment">// This loop works here as goto, which allows restarting search when switching from pondering mode to regular search within the same iteration</span>
         <span class="kw">loop</span> {
             <span class="kw">if</span> <span class="self">self</span>.<span class="ident">forced_depth</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">current_depth</span> <span class="op">==</span> <span class="self">self</span>.<span class="ident">forced_depth</span> <span class="op">+</span> <span class="number">1</span> {
                 <span class="kw">return</span> <span class="prelude-val">None</span>;
@@ -742,26 +731,6 @@
                     }
                 })
                 .<span class="ident">unwrap</span>();
-
-                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">abort_token</span>.<span class="ident">set</span> {
-                    <span class="kw">if</span> <span class="self">self</span>.<span class="ident">ponder_token</span>.<span class="ident">set</span> {
-                        <span class="self">self</span>.<span class="ident">current_depth</span> <span class="op">=</span> <span class="number">1</span>;
-                        <span class="self">self</span>.<span class="ident">forced_depth</span> <span class="op">=</span> <span class="number">0</span>;
-                        <span class="self">self</span>.<span class="ident">search_time_start</span> <span class="op">=</span> <span class="ident">Utc::now</span>();
-                        <span class="self">self</span>.<span class="ident">statistics</span> <span class="op">=</span> <span class="ident">Default::default</span>();
-
-                        <span class="self">self</span>.<span class="ident">ponder_token</span>.<span class="ident">set</span> <span class="op">=</span> <span class="bool-val">false</span>;
-                        <span class="self">self</span>.<span class="ident">abort_token</span>.<span class="ident">set</span> <span class="op">=</span> <span class="bool-val">false</span>;
-
-                        <span class="kw">continue</span>;
-                    } <span class="kw">else</span> {
-                        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">uci_debug</span> {
-                            <span class="macro">println!</span>(<span class="string">&quot;info string search aborted&quot;</span>);
-                        }
-
-                        <span class="kw">return</span> <span class="prelude-val">None</span>;
-                    }
-                }
             }
 
             <span class="kw">let</span> <span class="ident">king_checked</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">board</span>.<span class="ident">is_king_checked</span>(<span class="self">self</span>.<span class="ident">board</span>.<span class="ident">active_color</span>);
@@ -790,6 +759,13 @@
                     <span class="self">self</span>.<span class="ident">forced_depth</span> <span class="op">=</span> <span class="number">0</span>;
                     <span class="self">self</span>.<span class="ident">search_time_start</span> <span class="op">=</span> <span class="ident">Utc::now</span>();
                     <span class="self">self</span>.<span class="ident">statistics</span> <span class="op">=</span> <span class="ident">Default::default</span>();
+
+                    <span class="kw">for</span> <span class="ident">helper_context</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">helper_contexts</span> {
+                        <span class="ident">helper_context</span>.<span class="ident">context</span>.<span class="ident">current_depth</span> <span class="op">=</span> <span class="number">1</span>;
+                        <span class="ident">helper_context</span>.<span class="ident">context</span>.<span class="ident">forced_depth</span> <span class="op">=</span> <span class="number">0</span>;
+                        <span class="ident">helper_context</span>.<span class="ident">context</span>.<span class="ident">search_time_start</span> <span class="op">=</span> <span class="ident">Utc::now</span>();
+                        <span class="ident">helper_context</span>.<span class="ident">context</span>.<span class="ident">statistics</span> <span class="op">=</span> <span class="ident">Default::default</span>();
+                    }
 
                     <span class="self">self</span>.<span class="ident">ponder_token</span>.<span class="ident">set</span> <span class="op">=</span> <span class="bool-val">false</span>;
                     <span class="self">self</span>.<span class="ident">abort_token</span>.<span class="ident">set</span> <span class="op">=</span> <span class="bool-val">false</span>;
@@ -826,8 +802,8 @@
 
 <span class="kw">impl</span> <span class="ident">SearchResult</span> {
     <span class="doccomment">/// Constructs a new instance of [SearchResult] with stored `time`, `depth`, `score`, `pv_line` and `statistics`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">time</span>: <span class="ident">u64</span>, <span class="ident">depth</span>: <span class="ident">i8</span>, <span class="ident">score</span>: <span class="ident">i16</span>, <span class="ident">pv_line</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Move</span><span class="op">&gt;</span>, <span class="ident">statistics</span>: <span class="ident">SearchStatistics</span>) -&gt; <span class="ident">SearchResult</span> {
-        <span class="ident">SearchResult</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">time</span>: <span class="ident">u64</span>, <span class="ident">depth</span>: <span class="ident">i8</span>, <span class="ident">score</span>: <span class="ident">i16</span>, <span class="ident">pv_line</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Move</span><span class="op">&gt;</span>, <span class="ident">statistics</span>: <span class="ident">SearchStatistics</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">Self</span> {
             <span class="ident">time</span>,
             <span class="ident">depth</span>,
             <span class="ident">score</span>,
