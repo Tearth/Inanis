@@ -1,0 +1,1 @@
+Because Inanis is my pet project, I don't currently accept pull requests - this may or may not change in the future, depending on the way the project will go. However, feel free to make issues or suggestions, they are greatly appreciated. 
