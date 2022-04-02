@@ -64,7 +64,7 @@ Example test suite file:
 
 Examples of running the tests:
 
- - `test ./input/STS1.epd 16 5` - run fixed-depth (16 in this case) search for all positions stored in the `STS1.epd` file. If the best position is correct and repeats five times in a row, or the result of the last iteration was correct, stop the test and mark it as success
+ - `test ./input/STS1.epd 16 5` - run fixed-depth (16 in this case) search for all positions stored in the `STS1.epd` file. If the best position is correct and repeats five times in a row, or the result of the last iteration was correct, stop the test and mark it as a success
 
 ## Dependencies
  - [arr_macro](https://github.com/JoshMcguigan/arr_macro) - macro for easier array initialization
