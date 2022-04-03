@@ -47,6 +47,23 @@ impl Move {
         }
     }
 
+    /// Constructs a new instance of [Move] with random values, not restristed by chess rules
+    pub fn new_random() -> Self {
+        let from = fastrand::u8(0..64);
+        let to = fastrand::u8(0..64);
+        let mut flags = MoveFlags::UNDEFINED1;
+
+        loop {
+            if flags == MoveFlags::UNDEFINED1 || flags == MoveFlags::UNDEFINED2 {
+                flags = MoveFlags::from_bits(fastrand::u8(0..16)).unwrap();
+            } else {
+                break;
+            }
+        }
+
+        Move::new(from, to, flags)
+    }
+
     /// Converts short-notated move (e4, Rc8, Qxb6) in `text` into the [Move] instance, using the `board` as context.
     /// Returns [Err] with the proper message if `text` couldn't be parsed correctly.
     pub fn from_short_notation(mut text: &str, board: &Bitboard) -> Result<Move, &'static str> {
