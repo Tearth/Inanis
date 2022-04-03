@@ -223,6 +223,13 @@ impl<'a> SearchContext<'a> {
             }
         }
 
+        // Remove repetitions from PV line
+        if pv_line.len() > 8 {
+            if pv_line[0] == pv_line[4] && pv_line[4] == pv_line[8] {
+                pv_line = pv_line[0..1].to_vec();
+            }
+        }
+
         pv_line
     }
 }
