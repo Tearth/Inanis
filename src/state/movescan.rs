@@ -338,6 +338,11 @@ impl Move {
         self.get_flags() == MoveFlags::QUIET || self.get_flags() == MoveFlags::DOUBLE_PUSH
     }
 
+    /// Check if the move is a double push.
+    pub fn is_double_push(&self) -> bool {
+        self.get_flags() == MoveFlags::DOUBLE_PUSH
+    }
+
     /// Checks if the move is a capture (excluding en passant, but including promotions).
     pub fn is_capture(&self) -> bool {
         self.get_flags().contains(MoveFlags::CAPTURE)
@@ -358,11 +363,12 @@ impl Move {
         self.get_flags() == MoveFlags::SHORT_CASTLING || self.get_flags() == MoveFlags::LONG_CASTLING
     }
 
-    /// Checks if the move is legal, using `board` as the context. This is apparently not a 100% accurate function, which in very rare cases leads to incorrect
-    /// results, so it should be improved in the future to increase engine's reliability.
+    /// Checks if the move is legal, using `board` as the context.
     pub fn is_legal(&self, board: &Bitboard) -> bool {
         let from = self.get_from();
+        let from_field = 1u64 << from;
         let to = self.get_to();
+        let to_field = 1u64 << to;
         let piece = board.get_piece(from);
         let piece_color = board.get_piece_color(from);
 
@@ -370,14 +376,28 @@ impl Move {
             return false;
         }
 
+        if (self.is_double_push() || self.is_en_passant() || self.is_promotion()) && piece != PAWN {
+            return false;
+        }
+
+        if self.is_castling() && piece != KING {
+            return false;
+        }
+
         let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
         let moves = match piece {
             PAWN => match self.get_flags() {
-                MoveFlags::DOUBLE_PUSH => match board.active_color {
-                    WHITE => 1u64.checked_shl(from.wrapping_add(16) as u32).unwrap_or(0),
-                    BLACK => 1u64.checked_shl(from.wrapping_sub(16) as u32).unwrap_or(0),
-                    _ => panic!("Invalid value: board.active_color={}", board.active_color),
-                },
+                MoveFlags::DOUBLE_PUSH => {
+                    if (board.active_color == WHITE && (from_field & 65280) == 0) || (board.active_color == BLACK && (from_field & 71776119061217280) == 0) {
+                        return false;
+                    }
+
+                    match board.active_color {
+                        WHITE => 1u64.checked_shl(from.wrapping_add(16) as u32).unwrap_or(0),
+                        BLACK => 1u64.checked_shl(from.wrapping_sub(16) as u32).unwrap_or(0),
+                        _ => panic!("Invalid value: board.active_color={}", board.active_color),
+                    }
+                }
                 MoveFlags::EN_PASSANT => board.en_passant,
                 _ => {
                     (match board.active_color {
@@ -399,15 +419,23 @@ impl Move {
             BISHOP => movegen::get_bishop_moves(occupancy, from as usize),
             ROOK => movegen::get_rook_moves(occupancy, from as usize),
             QUEEN => movegen::get_queen_moves(occupancy, from as usize),
-            KING => match self.get_flags() {
-                MoveFlags::SHORT_CASTLING => 1u64 << (from - 2),
-                MoveFlags::LONG_CASTLING => 1u64 << (from + 2),
-                _ => movegen::get_king_moves(from as usize),
-            },
+            KING => {
+                if self.is_castling() {
+                    if (board.active_color == WHITE && from != 3) || (board.active_color == BLACK && from != 59) {
+                        return false;
+                    }
+                }
+
+                match self.get_flags() {
+                    MoveFlags::SHORT_CASTLING => 1u64 << (from - 2),
+                    MoveFlags::LONG_CASTLING => 1u64 << (from + 2),
+                    _ => movegen::get_king_moves(from as usize),
+                }
+            }
             _ => panic!("Invalid value: piece={}", piece),
         };
 
-        if (moves & (1u64 << to)) == 0 {
+        if (moves & to_field) == 0 {
             return false;
         }
 
@@ -415,7 +443,7 @@ impl Move {
         let target_piece_color = board.get_piece_color(to);
 
         if self.is_quiet() {
-            if self.get_flags() == MoveFlags::DOUBLE_PUSH {
+            if self.is_double_push() {
                 let middle_field_index = (cmp::max(from, to) + cmp::min(from, to)) / 2;
                 if board.get_piece(middle_field_index) != u8::MAX {
                     return false;
@@ -445,6 +473,10 @@ impl Move {
             if piece == KING && target_piece == u8::MAX {
                 let mut rook_field = 0;
                 let mut rook_target_field = 0;
+
+                if (board.active_color == WHITE && from != 3) || (board.active_color == BLACK && from != 59) {
+                    return false;
+                }
 
                 match self.get_flags() {
                     MoveFlags::SHORT_CASTLING => {
