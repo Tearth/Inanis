@@ -47,7 +47,7 @@ impl Move {
         }
     }
 
-    /// Constructs a new instance of [Move] with random values, not restristed by chess rules
+    /// Constructs a new instance of [Move] with random values, not restristed by chess rules.
     pub fn new_random() -> Self {
         let from = fastrand::u8(0..64);
         let to = fastrand::u8(0..64);
@@ -338,7 +338,7 @@ impl Move {
         self.get_flags() == MoveFlags::QUIET || self.get_flags() == MoveFlags::DOUBLE_PUSH
     }
 
-    /// Check if the move is a double push.
+    /// Checks if the move is a double push.
     pub fn is_double_push(&self) -> bool {
         self.get_flags() == MoveFlags::DOUBLE_PUSH
     }
