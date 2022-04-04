@@ -14,7 +14,12 @@ use chrono::Utc;
 use std::cell::UnsafeCell;
 use std::cmp;
 use std::collections::HashMap;
+use std::fs;
+use std::fs::File;
 use std::io;
+use std::io::Write;
+use std::panic;
+use std::path::Path;
 use std::process;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
@@ -67,6 +72,7 @@ pub fn run() {
     unsafe { (*state.options.get()).insert("Move Overhead".to_string(), "10".to_string()) };
     unsafe { (*state.options.get()).insert("Threads".to_string(), "1".to_string()) };
     unsafe { (*state.options.get()).insert("Ponder".to_string(), "false".to_string()) };
+    unsafe { (*state.options.get()).insert("Crash Files".to_string(), "false".to_string()) };
 
     println!("id name Inanis {}", VERSION);
     println!("id author {}", AUTHOR);
@@ -74,6 +80,7 @@ pub fn run() {
     println!("option name Move Overhead type spin default 10 min 0 max 3600000");
     println!("option name Threads type spin default 1 min 1 max 1024");
     println!("option name Ponder type check default false");
+    println!("option name Crash Files type check default false");
     println!("option name Clear Hash type button");
     println!("uciok");
 
@@ -434,7 +441,7 @@ fn handle_setoption(parameters: &[String], state: &mut Arc<UciState>) {
     let value = value_tokens.join(" ");
 
     if !name.is_empty() && !value.is_empty() {
-        unsafe { (*state.options.get()).insert(name.to_owned(), value) };
+        unsafe { (*state.options.get()).insert(name.to_owned(), value.to_owned()) };
     }
 
     match name.as_str() {
@@ -444,6 +451,10 @@ fn handle_setoption(parameters: &[String], state: &mut Arc<UciState>) {
         "Clear Hash" => {
             recreate_state_tables(state);
         }
+        "Crash Files" => match value.parse::<bool>().unwrap() {
+            true => enable_crash_files(),
+            false => disable_crash_files(),
+        },
         _ => {}
     }
 }
@@ -494,4 +505,23 @@ fn recreate_state_tables(state: &mut Arc<UciState>) {
         *state.killers_table.get() = Default::default();
         *state.history_table.get() = Default::default();
     }
+}
+
+/// Enables saving of crash files by setting a custom panic hook.
+fn enable_crash_files() {
+    panic::set_hook(Box::new(|panic| {
+        let path = Path::new("crash");
+        fs::create_dir_all(path).unwrap();
+
+        let path = Path::new("crash").join(format!("{}.txt", Utc::now().timestamp_millis()));
+        write!(&mut File::create(path.clone()).unwrap(), "{}", panic).unwrap();
+
+        let absolute_path = fs::canonicalize(path).unwrap();
+        println!("Crash file saved as {}", absolute_path.into_os_string().into_string().unwrap());
+    }));
+}
+
+/// Disables saving of crash files by reverting a panic hook to the default one.
+fn disable_crash_files() {
+    let _ = panic::take_hook();
 }
