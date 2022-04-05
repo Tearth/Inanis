@@ -6,9 +6,10 @@ UCI chess engine written in Rust, proud successor of [Proxima b](https://github.
 **Documentation**: https://tearth.github.io/Inanis
 
 ## Releases
-| Version                                                                | Release date | Elo    | Description  |
-|------------------------------------------------------------------------|--------------|--------|--------------|
-| [1.0.0](https://github.com/Tearth/Inanis/releases/tag/v1.0.0)          | 02-04-2022   | 2750   | Initial release       |
+| Version                                                       | Release date | Elo    | Description  |
+|---------------------------------------------------------------|--------------|--------|--------------|
+| [1.0.1](https://github.com/Tearth/Inanis/releases/tag/v1.0.1) | 05-04-2022   | 2750   | A bunch of fixes for reported issues, stability improvement |
+| [1.0.0](https://github.com/Tearth/Inanis/releases/tag/v1.0.0) | 02-04-2022   | 2750   | Initial release |
 
 Each release contains a set of binaries for various platforms: Linux (x86, x86-64 ARM, AArch64) and Windows (x86, x86-64). Both Linux x86-64 and Windows x86-64 were also compiled with two additional instruction set variants: POPCNT and POPCNT + BMI1 + BMI2 - to get the best performance, please try to run the `benchmark` command using different engine's variants and choose the one which didn't return an error and has the most advanced instructions.
 
@@ -19,10 +20,11 @@ Each release contains a set of binaries for various platforms: Linux (x86, x86-6
 Inanis has an official lichess account, where you can try to challenge the engine: https://lichess.org/@/InanisBot. Please note that ratings there are very understated and not comparable to CCRL ones. Accepts standard chess with a bullet, blitz, rapid, and classic time control (up to 3 games at a time).
 
 ## UCI options
- - `Hash` - a total size (in megabytes) for transposition table and pawn hashtable
- - `Move Overhead` - amount of time (in milliseconds) that should be reserved during a search for some unexpected delays (like the slowness of GUI or network lags)
- - `Threads` - number of threads to use during search (should be less than a number of processor cores to get the best performance)
- - `Ponder` - allows the engine to think during the opponent's time
+ - `Hash` *(default: 2 MB)* - a total size (in megabytes) for transposition table and pawn hashtable
+ - `Move Overhead` *(default: 10 ms)* - amount of time (in milliseconds) that should be reserved during a search for some unexpected delays (like the slowness of GUI or network lags)
+ - `Threads` *(default: 1 thread)* - number of threads to use during search (should be less than a number of processor cores to get the best performance)
+ - `Ponder` *(default: false)* - allows the engine to think during the opponent's time
+ - `Crash Files` *(default: false)* - when enabled, saves crash messages in the ./crash directory
 
 ## Algorithms
  - **board representation**: bitboards (a hybrid of make/undo scheme and storing data on stacks)
