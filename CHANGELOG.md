@@ -3,7 +3,7 @@
  - Fixed move legality check which in rare cases was leading to engine crashes
  - Fixed PV lines being too long due to endless repetitions
 
-**No changes in Elo strength** 
+**No change in Elo strength** 
 
 # Version 1.0.0 (02-04-2022)
  - Initial release
