@@ -497,6 +497,36 @@
 <span id="495">495</span>
 <span id="496">496</span>
 <span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cache::allocator</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cache::pawns::PawnHashTable</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cache::search::TranspositionTable</span>;
@@ -513,7 +543,12 @@
 <span class="kw">use</span> <span class="ident">std::cell::UnsafeCell</span>;
 <span class="kw">use</span> <span class="ident">std::cmp</span>;
 <span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
+<span class="kw">use</span> <span class="ident">std::fs</span>;
+<span class="kw">use</span> <span class="ident">std::fs::File</span>;
 <span class="kw">use</span> <span class="ident">std::io</span>;
+<span class="kw">use</span> <span class="ident">std::io::Write</span>;
+<span class="kw">use</span> <span class="ident">std::panic</span>;
+<span class="kw">use</span> <span class="ident">std::path::Path</span>;
 <span class="kw">use</span> <span class="ident">std::process</span>;
 <span class="kw">use</span> <span class="ident">std::sync::atomic::AtomicBool</span>;
 <span class="kw">use</span> <span class="ident">std::sync::atomic::Ordering</span>;
@@ -566,6 +601,7 @@
     <span class="kw">unsafe</span> { (<span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">options</span>.<span class="ident">get</span>()).<span class="ident">insert</span>(<span class="string">&quot;Move Overhead&quot;</span>.<span class="ident">to_string</span>(), <span class="string">&quot;10&quot;</span>.<span class="ident">to_string</span>()) };
     <span class="kw">unsafe</span> { (<span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">options</span>.<span class="ident">get</span>()).<span class="ident">insert</span>(<span class="string">&quot;Threads&quot;</span>.<span class="ident">to_string</span>(), <span class="string">&quot;1&quot;</span>.<span class="ident">to_string</span>()) };
     <span class="kw">unsafe</span> { (<span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">options</span>.<span class="ident">get</span>()).<span class="ident">insert</span>(<span class="string">&quot;Ponder&quot;</span>.<span class="ident">to_string</span>(), <span class="string">&quot;false&quot;</span>.<span class="ident">to_string</span>()) };
+    <span class="kw">unsafe</span> { (<span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">options</span>.<span class="ident">get</span>()).<span class="ident">insert</span>(<span class="string">&quot;Crash Files&quot;</span>.<span class="ident">to_string</span>(), <span class="string">&quot;false&quot;</span>.<span class="ident">to_string</span>()) };
 
     <span class="macro">println!</span>(<span class="string">&quot;id name Inanis {}&quot;</span>, <span class="ident">VERSION</span>);
     <span class="macro">println!</span>(<span class="string">&quot;id author {}&quot;</span>, <span class="ident">AUTHOR</span>);
@@ -573,6 +609,7 @@
     <span class="macro">println!</span>(<span class="string">&quot;option name Move Overhead type spin default 10 min 0 max 3600000&quot;</span>);
     <span class="macro">println!</span>(<span class="string">&quot;option name Threads type spin default 1 min 1 max 1024&quot;</span>);
     <span class="macro">println!</span>(<span class="string">&quot;option name Ponder type check default false&quot;</span>);
+    <span class="macro">println!</span>(<span class="string">&quot;option name Crash Files type check default false&quot;</span>);
     <span class="macro">println!</span>(<span class="string">&quot;option name Clear Hash type button&quot;</span>);
     <span class="macro">println!</span>(<span class="string">&quot;uciok&quot;</span>);
 
@@ -933,7 +970,7 @@
     <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">value_tokens</span>.<span class="ident">join</span>(<span class="string">&quot; &quot;</span>);
 
     <span class="kw">if</span> <span class="op">!</span><span class="ident">name</span>.<span class="ident">is_empty</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">value</span>.<span class="ident">is_empty</span>() {
-        <span class="kw">unsafe</span> { (<span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">options</span>.<span class="ident">get</span>()).<span class="ident">insert</span>(<span class="ident">name</span>.<span class="ident">to_owned</span>(), <span class="ident">value</span>) };
+        <span class="kw">unsafe</span> { (<span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">options</span>.<span class="ident">get</span>()).<span class="ident">insert</span>(<span class="ident">name</span>.<span class="ident">to_owned</span>(), <span class="ident">value</span>.<span class="ident">to_owned</span>()) };
     }
 
     <span class="kw">match</span> <span class="ident">name</span>.<span class="ident">as_str</span>() {
@@ -943,6 +980,10 @@
         <span class="string">&quot;Clear Hash&quot;</span> =&gt; {
             <span class="ident">recreate_state_tables</span>(<span class="ident">state</span>);
         }
+        <span class="string">&quot;Crash Files&quot;</span> =&gt; <span class="kw">match</span> <span class="ident">value</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>().<span class="ident">unwrap</span>() {
+            <span class="bool-val">true</span> =&gt; <span class="ident">enable_crash_files</span>(),
+            <span class="bool-val">false</span> =&gt; <span class="ident">disable_crash_files</span>(),
+        },
         <span class="kw">_</span> =&gt; {}
     }
 }
@@ -993,6 +1034,25 @@
         <span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">killers_table</span>.<span class="ident">get</span>() <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">history_table</span>.<span class="ident">get</span>() <span class="op">=</span> <span class="ident">Default::default</span>();
     }
+}
+
+<span class="doccomment">/// Enables saving of crash files by setting a custom panic hook.</span>
+<span class="kw">fn</span> <span class="ident">enable_crash_files</span>() {
+    <span class="ident">panic::set_hook</span>(<span class="ident">Box::new</span>(<span class="op">|</span><span class="ident">panic</span><span class="op">|</span> {
+        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::new</span>(<span class="string">&quot;crash&quot;</span>);
+        <span class="ident">fs::create_dir_all</span>(<span class="ident">path</span>).<span class="ident">unwrap</span>();
+
+        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::new</span>(<span class="string">&quot;crash&quot;</span>).<span class="ident">join</span>(<span class="macro">format!</span>(<span class="string">&quot;{}.txt&quot;</span>, <span class="ident">Utc::now</span>().<span class="ident">timestamp_millis</span>()));
+        <span class="macro">write!</span>(<span class="kw-2">&amp;mut</span> <span class="ident">File::create</span>(<span class="ident">path</span>.<span class="ident">clone</span>()).<span class="ident">unwrap</span>(), <span class="string">&quot;{}&quot;</span>, <span class="ident">panic</span>).<span class="ident">unwrap</span>();
+
+        <span class="kw">let</span> <span class="ident">absolute_path</span> <span class="op">=</span> <span class="ident">fs::canonicalize</span>(<span class="ident">path</span>).<span class="ident">unwrap</span>();
+        <span class="macro">println!</span>(<span class="string">&quot;Crash file saved as {}&quot;</span>, <span class="ident">absolute_path</span>.<span class="ident">into_os_string</span>().<span class="ident">into_string</span>().<span class="ident">unwrap</span>());
+    }));
+}
+
+<span class="doccomment">/// Disables saving of crash files by reverting a panic hook to the default one.</span>
+<span class="kw">fn</span> <span class="ident">disable_crash_files</span>() {
+    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">panic::take_hook</span>();
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="inanis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0 (9d1b2106e 2022-02-23)" ></div>
