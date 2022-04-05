@@ -47,7 +47,7 @@ impl Move {
         }
     }
 
-    /// Constructs a new instance of [Move] with random values, not restristed by chess rules.
+    /// Constructs a new instance of [Move] with random values, not restricted by chess rules.
     pub fn new_random() -> Self {
         let from = fastrand::u8(0..64);
         let to = fastrand::u8(0..64);
