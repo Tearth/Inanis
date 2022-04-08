@@ -41,7 +41,7 @@ pub fn run(epd_filename: &str, depth: i8, tries_to_confirm: i8) {
     let mut recognition_depths_sum = 0;
     let start_time = Utc::now();
 
-    for position in &positions {
+    for (index, position) in positions.iter().enumerate() {
         let mut transposition_table = TranspositionTable::new(64 * 1024 * 1024);
         let mut pawn_hashtable = PawnHashTable::new(1 * 1024 * 1024);
         let mut killers_table = Default::default();
@@ -89,12 +89,14 @@ pub fn run(epd_filename: &str, depth: i8, tries_to_confirm: i8) {
         }
 
         if last_best_move == position.best_move {
-            println!("Test {} PASSED (depth: {})", position.id, recognition_depth);
+            println!("{}/{}. Test {} PASSED (depth: {})", index + 1, positions.len(), position.id, recognition_depth);
             recognition_depths_sum += recognition_depth as u32;
             passed_tests += 1;
         } else {
             println!(
-                "Test {} FAILED (expected {}, got {})",
+                "{}/{}. Test {} FAILED (expected {}, got {})",
+                index + 1,
+                positions.len(),
                 position.id,
                 position.best_move.to_long_notation(),
                 last_best_move.to_long_notation()
@@ -125,8 +127,11 @@ fn load_positions(epd_filename: &str) -> Result<Vec<TestPosition>, &'static str>
 
     for line in BufReader::new(file).lines() {
         let position = line.unwrap();
-        let parsed_epd = fen::epd_to_board(position.as_str())?;
+        if position.is_empty() {
+            continue;
+        }
 
+        let parsed_epd = fen::epd_to_board(position.as_str())?;
         if parsed_epd.id == None {
             return Err("Not enough data");
         }
