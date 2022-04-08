@@ -1,15 +1,15 @@
 # Inanis
-UCI chess engine written in Rust, proud successor of [Proxima b](https://github.com/Tearth/Proxima-b), [Proxima b 2.0](https://github.com/Tearth/Proxima-b-2.0) and [Cosette](https://github.com/Tearth/Cosette). The project is written after hours, ~~with the goal to reach 2600 Elo (or at least to be stronger than the last version of [Cosette](https://github.com/Tearth/Cosette) which was about 2500 Elo)~~ with the goal to reach 3000 Elo. Perfect as a sparring partner for other chess engines, since it was heavily tested using very fast games (5+0.1). Supports pondering and multithreading.
+UCI chess engine written in Rust, the successor of [Proxima b](https://github.com/Tearth/Proxima-b), [Proxima b 2.0](https://github.com/Tearth/Proxima-b-2.0) and [Cosette](https://github.com/Tearth/Cosette). The project is written after hours, ~~with the goal to reach 2600 Elo (or at least to be stronger than the last version of [Cosette](https://github.com/Tearth/Cosette) which was about 2500 Elo)~~ with the goal to reach 3000 Elo. Perfect as a sparring partner for other chess engines, since it was heavily tested using very fast games (like 5+0.1). Supports pondering and multithreading.
 
 **Current strength**: 2750 Elo (02-04-2022)
 
 **Documentation**: https://tearth.github.io/Inanis
 
 ## Releases
-| Version                                                       | Release date | Elo    | Description  |
-|---------------------------------------------------------------|--------------|--------|--------------|
-| [1.0.1](https://github.com/Tearth/Inanis/releases/tag/v1.0.1) | 05-04-2022   | 2750   | A bunch of fixes for reported issues, stability improvement |
-| [1.0.0](https://github.com/Tearth/Inanis/releases/tag/v1.0.0) | 02-04-2022   | 2750   | Initial release |
+| Version                                                       | Release date | Elo  | Description  |
+|---------------------------------------------------------------|--------------|------|--------------|
+| [1.0.1](https://github.com/Tearth/Inanis/releases/tag/v1.0.1) | 05-04-2022   | 2750 | A bunch of fixes for reported issues, stability improvement |
+| [1.0.0](https://github.com/Tearth/Inanis/releases/tag/v1.0.0) | 02-04-2022   | 2750 | Initial release |
 
 Each release contains a set of binaries for various platforms: Linux (x86, x86-64 ARM, AArch64) and Windows (x86, x86-64). Both Linux x86-64 and Windows x86-64 were also compiled with two additional instruction set variants: POPCNT and POPCNT + BMI1 + BMI2 - to get the best performance, please try to run the `benchmark` command using different engine's variants and choose the one which didn't return an error and has the most advanced instructions.
 
@@ -17,7 +17,7 @@ Each release contains a set of binaries for various platforms: Linux (x86, x86-6
 *soon*
 
 ## How to play online
-Inanis has an official lichess account, where you can try to challenge the engine: https://lichess.org/@/InanisBot. Please note that ratings there are very understated and not comparable to CCRL ones. Accepts standard chess with a bullet, blitz, rapid, and classic time control (up to 3 games at a time).
+Inanis has an official lichess account, where you can try to challenge the engine: https://lichess.org/@/InanisBot. Please note that ratings there are very understated and not comparable to CCRL ones. Accepts standard chess with a bullet, blitz, rapid and classic time control (up to 3 games at a time).
 
 ## UCI options
  - `Hash` *(default: 2 MB)* - a total size (in megabytes) for transposition table and pawn hashtable
