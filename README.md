@@ -66,7 +66,7 @@ Example test suite file:
 
 Examples of running the tests:
 
- - `test ./input/STS1.epd 16 5` - run fixed-depth (16 in this case) search for all positions stored in the `STS1.epd` file. If the best position is correct and repeats five times in a row, or the result of the last iteration was correct, stop the test and mark it as a success
+ - `test ./input/STS1.epd 16 5 4` - run fixed-depth (16 in this case) search for all positions stored in the `STS1.epd` file, using 4 threads. If the best position is correct and repeats five times in a row, or the result of the last iteration was correct, stop the test and mark it as a success
 
 ## Dependencies
  - [arr_macro](https://github.com/JoshMcguigan/arr_macro) - macro for easier array initialization
@@ -87,7 +87,7 @@ Because Inanis is my pet project, I don't currently accept pull requests - this 
  benchmark - run test for a set of positions
  evaluate [fen] - show score for the position
  magic - generate magic numbers
- test [epd] [depth] [tries_to_confirm] - run test of positions
+ test [epd] [depth] [tries_to_confirm] [threads_count] - run test of positions
  tuner [epd] [output] [lock_material] [randomize] [threads_count] - run tuning
  uci - run Universal Chess Interface
  quit - close the application

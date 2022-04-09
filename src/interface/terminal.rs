@@ -65,7 +65,7 @@ fn handle_help() {
     println!(" benchmark - run test for a set of positions");
     println!(" evaluate [fen] - show score for the position");
     println!(" magic - generate magic numbers");
-    println!(" test [epd] [depth] [tries_to_confirm] - run test of positions");
+    println!(" test [epd] [depth] [tries_to_confirm] [threads_count] - run test of positions");
     println!(" tuner [epd] [output] [lock_material] [randomize] [threads_count] - run tuning");
     println!(" uci - run Universal Chess Interface");
     println!(" quit - close the application");
@@ -486,9 +486,9 @@ fn handle_qperft(input: Vec<&str>) {
     println!("Perft done!");
 }
 
-/// Handles `test [epd] [depth] [tries_to_confirm]` command by running a fixed-`depth` search of positions stored in the `epd` file. To classify the test
+/// Handles `test [epd] [depth] [tries_to_confirm] [threads_count]` command by running a fixed-`depth` search of positions stored in the `epd` file. To classify the test
 /// as successful, the last iteration has to return the correct move, or there must be at least `tries_to_confirm` search iterations in a row which returned
-/// the best move same as the expected one in the position.
+/// the best move same as the expected one in the position. Multithreading is supported by `threads_count`.
 fn handle_test(input: Vec<&str>) {
     if input.len() < 2 {
         println!("EPD filename parameter not found");
@@ -502,6 +502,11 @@ fn handle_test(input: Vec<&str>) {
 
     if input.len() < 4 {
         println!("Tries to confirm parameter not found");
+        return;
+    }
+
+    if input.len() < 5 {
+        println!("Threads count not found");
         return;
     }
 
@@ -521,7 +526,15 @@ fn handle_test(input: Vec<&str>) {
         }
     };
 
-    test::run(input[1], depth, tries_to_confirm);
+    let threads_count = match input[4].parse() {
+        Ok(value) => value,
+        Err(_) => {
+            println!("Invalid threads count");
+            return;
+        }
+    };
+
+    test::run(input[1], depth, tries_to_confirm, threads_count);
 }
 
 /// Handles `tuner [epd] [output] [lock_material] [randomize] [threads_count]` command by running the evaluation parameters tuner. The input file is specified by `epd`
