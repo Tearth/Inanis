@@ -65,7 +65,7 @@ fn handle_help() {
     println!(" benchmark - run test for a set of positions");
     println!(" evaluate [fen] - show score for the position");
     println!(" magic - generate magic numbers");
-    println!(" test [epd] [depth] [threads_count] - run test of positions");
+    println!(" test [epd] [depth] [transposition_table_size] [threads_count] - run test of positions");
     println!(" tuner [epd] [output] [lock_material] [randomize] [threads_count] - run tuning");
     println!(" uci - run Universal Chess Interface");
     println!(" quit - close the application");
@@ -486,8 +486,8 @@ fn handle_qperft(input: Vec<&str>) {
     println!("Perft done!");
 }
 
-/// Handles `test [epd] [depth] [threads_count]` command by running a fixed-`depth` search of positions stored in the `epd` file. To classify the test
-/// as successful, the last iteration has to return the correct move.
+/// Handles `test [epd] [depth] [transposition_table_size] [threads_count]` command by running a fixed-`depth` search of positions stored in the `epd` file,
+/// using hashtable with size specified in `transposition_table_size`. To classify the test as successful, the last iteration has to return the correct best move.
 fn handle_test(input: Vec<&str>) {
     if input.len() < 2 {
         println!("EPD filename parameter not found");
@@ -500,6 +500,11 @@ fn handle_test(input: Vec<&str>) {
     }
 
     if input.len() < 4 {
+        println!("Transposition table size not found");
+        return;
+    }
+
+    if input.len() < 5 {
         println!("Threads count not found");
         return;
     }
@@ -512,7 +517,20 @@ fn handle_test(input: Vec<&str>) {
         }
     };
 
-    let threads_count = match input[3].parse() {
+    let transposition_table_size: usize = match input[3].parse() {
+        Ok(value) => value,
+        Err(_) => {
+            println!("Invalid transposition table size parameter");
+            return;
+        }
+    };
+
+    if transposition_table_size == 0 {
+        println!("Transposition table size must be greater than zero");
+        return;
+    }
+
+    let threads_count = match input[4].parse() {
         Ok(value) => value,
         Err(_) => {
             println!("Invalid threads count");
@@ -520,7 +538,7 @@ fn handle_test(input: Vec<&str>) {
         }
     };
 
-    test::run(input[1], depth, threads_count);
+    test::run(input[1], depth, transposition_table_size * 1024 * 1024, threads_count);
 }
 
 /// Handles `tuner [epd] [output] [lock_material] [randomize] [threads_count]` command by running the evaluation parameters tuner. The input file is specified by `epd`

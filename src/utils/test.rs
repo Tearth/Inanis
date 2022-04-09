@@ -40,9 +40,9 @@ impl TestPosition {
     }
 }
 
-/// Runs a test by performing a fixed-`depth` search for the positions loaded from the `epd_filename` file. To classify the test as successful,
-/// the last iteration has to return the correct move.
-pub fn run(epd_filename: &str, depth: i8, threads_count: usize) {
+/// Runs a test by performing a fixed-`depth` search for the positions loaded from the `epd_filename` file, using hashtable with
+/// size specified in `transposition_table_size`. To classify the test as successful, the last iteration has to return the correct best move.
+pub fn run(epd_filename: &str, depth: i8, transposition_table_size: usize, threads_count: usize) {
     println!("Loading EPD file...");
     let positions = match load_positions(epd_filename) {
         Ok(value) => value,
@@ -54,11 +54,11 @@ pub fn run(epd_filename: &str, depth: i8, threads_count: usize) {
     println!("Loaded {} positions, starting test", unsafe { (*positions.get()).len() });
 
     let context = Arc::new(TestContext::new(positions));
-    run_internal(&context, depth, threads_count);
+    run_internal(&context, depth, transposition_table_size, threads_count);
 }
 
 /// Internal test function, called by [run].
-fn run_internal(context: &Arc<TestContext>, depth: i8, threads_count: usize) {
+fn run_internal(context: &Arc<TestContext>, depth: i8, transposition_table_size: usize, threads_count: usize) {
     unsafe {
         let index = Arc::new(AtomicU32::new(0));
         let passed_tests = Arc::new(AtomicU32::new(0));
@@ -86,7 +86,7 @@ fn run_internal(context: &Arc<TestContext>, depth: i8, threads_count: usize) {
                 }
 
                 for position in &mut (*context_arc.positions.get())[from..to] {
-                    let mut transposition_table = TranspositionTable::new(64 * 1024 * 1024);
+                    let mut transposition_table = TranspositionTable::new(transposition_table_size);
                     let mut pawn_hashtable = PawnHashTable::new(1 * 1024 * 1024);
                     let mut killers_table = Default::default();
                     let mut history_table = Default::default();
