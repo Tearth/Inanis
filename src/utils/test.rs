@@ -41,9 +41,8 @@ impl TestPosition {
 }
 
 /// Runs a test by performing a fixed-`depth` search for the positions loaded from the `epd_filename` file. To classify the test as successful,
-/// the last iteration has to return the correct move, or there must be at least `tries_to_confirm` search iterations in a row which returned
-/// the best move same as the expected one in the position.
-pub fn run(epd_filename: &str, depth: i8, tries_to_confirm: i8, threads_count: usize) {
+/// the last iteration has to return the correct move.
+pub fn run(epd_filename: &str, depth: i8, threads_count: usize) {
     println!("Loading EPD file...");
     let positions = match load_positions(epd_filename) {
         Ok(value) => value,
@@ -55,11 +54,11 @@ pub fn run(epd_filename: &str, depth: i8, tries_to_confirm: i8, threads_count: u
     println!("Loaded {} positions, starting test", unsafe { (*positions.get()).len() });
 
     let context = Arc::new(TestContext::new(positions));
-    run_internal(&context, depth, tries_to_confirm, threads_count);
+    run_internal(&context, depth, threads_count);
 }
 
 /// Internal test function, called by [run].
-fn run_internal(context: &Arc<TestContext>, depth: i8, tries_to_confirm: i8, threads_count: usize) {
+fn run_internal(context: &Arc<TestContext>, depth: i8, threads_count: usize) {
     unsafe {
         let index = Arc::new(AtomicU32::new(0));
         let passed_tests = Arc::new(AtomicU32::new(0));
@@ -116,6 +115,7 @@ fn run_internal(context: &Arc<TestContext>, depth: i8, tries_to_confirm: i8, thr
                     let mut last_best_move = Default::default();
                     let mut best_moves_count = 0;
                     let mut recognition_depth = 0;
+
                     for result in context {
                         last_best_move = result.pv_line[0];
                         if last_best_move == position.best_move {
@@ -126,10 +126,6 @@ fn run_internal(context: &Arc<TestContext>, depth: i8, tries_to_confirm: i8, thr
                             best_moves_count += 1;
                         } else {
                             best_moves_count = 0;
-                        }
-
-                        if best_moves_count >= tries_to_confirm {
-                            break;
                         }
                     }
 

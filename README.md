@@ -87,7 +87,7 @@ Because Inanis is my pet project, I don't currently accept pull requests - this 
  benchmark - run test for a set of positions
  evaluate [fen] - show score for the position
  magic - generate magic numbers
- test [epd] [depth] [tries_to_confirm] [threads_count] - run test of positions
+ test [epd] [depth] [threads_count] - run test of positions
  tuner [epd] [output] [lock_material] [randomize] [threads_count] - run tuning
  uci - run Universal Chess Interface
  quit - close the application
