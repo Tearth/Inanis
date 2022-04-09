@@ -255,7 +255,12 @@ fn calculate_error(context: &Arc<TunerContext>, scaling_constant: f64, threads_c
             threads.push(thread::spawn(move || {
                 let mut sum_of_errors = 0.0;
                 let from = thread_index * (positions_count / threads_count);
-                let to = (thread_index + 1) * (positions_count / threads_count);
+                let mut to = (thread_index + 1) * (positions_count / threads_count);
+
+                // Add rest of the positions which didn't fit in the last thread
+                if to + (positions_count % threads_count) == positions_count {
+                    to = positions_count;
+                }
 
                 for position in &mut (*context_arc.positions.get())[from..to] {
                     position.board.recalculate_incremental_values();
