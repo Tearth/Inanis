@@ -560,6 +560,11 @@ fn handle_tuner(input: Vec<&str>) {
         println!("Random values parameter not found");
         return;
     }
+    
+    if input.len() < 6 {
+        println!("Threads count not found");
+        return;
+    }
 
     let lock_material = match input[3].parse() {
         Ok(value) => value,
