@@ -298,9 +298,26 @@ fn load_values(lock_material: bool, random_values: bool) -> Vec<TunerParameter> 
             parameters.push(TunerParameter::new(PIECE_VALUE[KING as usize], 10000, 10000, 10000, 10000));
         }
 
-        parameters.push(TunerParameter::new(MOBILITY_OPENING, 0, 2, 6, 10));
-        parameters.push(TunerParameter::new(MOBILITY_ENDING, 0, 2, 6, 10));
-        parameters.push(TunerParameter::new(MOBILITY_CENTER_MULTIPLIER, -10, 2, 6, 10));
+        parameters.push(TunerParameter::new(PIECE_MOBILITY_OPENING[PAWN as usize], 0, 2, 6, 10));
+        parameters.push(TunerParameter::new(PIECE_MOBILITY_OPENING[KNIGHT as usize], 0, 2, 6, 10));
+        parameters.push(TunerParameter::new(PIECE_MOBILITY_OPENING[BISHOP as usize], 0, 2, 6, 10));
+        parameters.push(TunerParameter::new(PIECE_MOBILITY_OPENING[ROOK as usize], 0, 2, 6, 10));
+        parameters.push(TunerParameter::new(PIECE_MOBILITY_OPENING[QUEEN as usize], 0, 2, 6, 10));
+        parameters.push(TunerParameter::new(PIECE_MOBILITY_OPENING[KING as usize], 0, 2, 6, 10));
+
+        parameters.push(TunerParameter::new(PIECE_MOBILITY_ENDING[PAWN as usize], 0, 2, 6, 10));
+        parameters.push(TunerParameter::new(PIECE_MOBILITY_ENDING[KNIGHT as usize], 0, 2, 6, 10));
+        parameters.push(TunerParameter::new(PIECE_MOBILITY_ENDING[BISHOP as usize], 0, 2, 6, 10));
+        parameters.push(TunerParameter::new(PIECE_MOBILITY_ENDING[ROOK as usize], 0, 2, 6, 10));
+        parameters.push(TunerParameter::new(PIECE_MOBILITY_ENDING[QUEEN as usize], 0, 2, 6, 10));
+        parameters.push(TunerParameter::new(PIECE_MOBILITY_ENDING[KING as usize], 0, 2, 6, 10));
+
+        parameters.push(TunerParameter::new(PIECE_MOBILITY_CENTER_MULTIPLIER[PAWN as usize], 0, 2, 6, 10));
+        parameters.push(TunerParameter::new(PIECE_MOBILITY_CENTER_MULTIPLIER[KNIGHT as usize], 0, 2, 6, 10));
+        parameters.push(TunerParameter::new(PIECE_MOBILITY_CENTER_MULTIPLIER[BISHOP as usize], 0, 2, 6, 10));
+        parameters.push(TunerParameter::new(PIECE_MOBILITY_CENTER_MULTIPLIER[ROOK as usize], 0, 2, 6, 10));
+        parameters.push(TunerParameter::new(PIECE_MOBILITY_CENTER_MULTIPLIER[QUEEN as usize], 0, 2, 6, 10));
+        parameters.push(TunerParameter::new(PIECE_MOBILITY_CENTER_MULTIPLIER[KING as usize], 0, 2, 6, 10));
 
         parameters.push(TunerParameter::new(DOUBLED_PAWN_OPENING, -999, -40, -10, 999));
         parameters.push(TunerParameter::new(DOUBLED_PAWN_ENDING, -999, -40, -10, 999));
@@ -365,9 +382,9 @@ fn save_values(values: &mut Vec<TunerParameter>, lock_material: bool) {
             save_values_to_i16_array_internal(values, &mut PIECE_VALUE, &mut index);
         }
 
-        save_values_internal(values, &mut MOBILITY_OPENING, &mut index);
-        save_values_internal(values, &mut MOBILITY_ENDING, &mut index);
-        save_values_internal(values, &mut MOBILITY_CENTER_MULTIPLIER, &mut index);
+        save_values_to_i16_array_internal(values, &mut PIECE_MOBILITY_OPENING, &mut index);
+        save_values_to_i16_array_internal(values, &mut PIECE_MOBILITY_ENDING, &mut index);
+        save_values_to_i16_array_internal(values, &mut PIECE_MOBILITY_CENTER_MULTIPLIER, &mut index);
 
         save_values_internal(values, &mut DOUBLED_PAWN_OPENING, &mut index);
         save_values_internal(values, &mut DOUBLED_PAWN_ENDING, &mut index);
@@ -437,11 +454,11 @@ fn write_evaluation_parameters(output_directory: &str, best_error: f64) {
     unsafe {
         output.push_str(get_header(best_error).as_str());
         output.push_str("\n");
-        output.push_str(get_material(name_of!(PIECE_VALUE), &PIECE_VALUE).as_str());
+        output.push_str(get_array(name_of!(PIECE_VALUE), &PIECE_VALUE).as_str());
         output.push_str("\n");
-        output.push_str(get_parameter(name_of!(MOBILITY_OPENING), MOBILITY_OPENING).as_str());
-        output.push_str(get_parameter(name_of!(MOBILITY_ENDING), MOBILITY_ENDING).as_str());
-        output.push_str(get_parameter(name_of!(MOBILITY_CENTER_MULTIPLIER), MOBILITY_CENTER_MULTIPLIER).as_str());
+        output.push_str(get_array(name_of!(PIECE_MOBILITY_OPENING), &PIECE_MOBILITY_OPENING).as_str());
+        output.push_str(get_array(name_of!(PIECE_MOBILITY_ENDING), &PIECE_MOBILITY_ENDING).as_str());
+        output.push_str(get_array(name_of!(PIECE_MOBILITY_CENTER_MULTIPLIER), &PIECE_MOBILITY_CENTER_MULTIPLIER).as_str());
         output.push_str("\n");
         output.push_str(get_parameter(name_of!(DOUBLED_PAWN_OPENING), DOUBLED_PAWN_OPENING).as_str());
         output.push_str(get_parameter(name_of!(DOUBLED_PAWN_ENDING), DOUBLED_PAWN_ENDING).as_str());
@@ -507,7 +524,7 @@ fn get_header(best_error: f64) -> String {
 }
 
 /// Gets the Rust representation of the piece `values` array.
-fn get_material(name: &str, values: &[i16]) -> String {
+fn get_array(name: &str, values: &[i16]) -> String {
     format!(
         "pub static mut {}: [i16; 6] = [{}, {}, {}, {}, {}, {}];\n",
         name, values[0], values[1], values[2], values[3], values[4], values[5]

@@ -18,8 +18,21 @@ fn evaluate_color(board: &Bitboard, color: u8, dangered_king_fields: &mut u32) -
     let queen_mobility = movescan::get_piece_mobility::<QUEEN>(board, color, dangered_king_fields);
 
     let game_phase = board.get_game_phase();
-    let opening_score = (knight_mobility + bishop_mobility + rook_mobility + queen_mobility) * unsafe { parameters::MOBILITY_OPENING };
-    let ending_score = (knight_mobility + bishop_mobility + rook_mobility + queen_mobility) * unsafe { parameters::MOBILITY_ENDING };
+
+    let knight_mobility_opening_score = knight_mobility * unsafe { parameters::PIECE_MOBILITY_OPENING[KNIGHT as usize] };
+    let knight_mobility_ending_score = knight_mobility * unsafe { parameters::PIECE_MOBILITY_ENDING[KNIGHT as usize] };
+
+    let bishop_mobility_opening_score = bishop_mobility * unsafe { parameters::PIECE_MOBILITY_OPENING[BISHOP as usize] };
+    let bishop_mobility_ending_score = bishop_mobility * unsafe { parameters::PIECE_MOBILITY_ENDING[BISHOP as usize] };
+
+    let rook_mobility_opening_score = rook_mobility * unsafe { parameters::PIECE_MOBILITY_OPENING[ROOK as usize] };
+    let rook_mobility_ending_score = rook_mobility * unsafe { parameters::PIECE_MOBILITY_ENDING[ROOK as usize] };
+
+    let queen_mobility_opening_score = queen_mobility * unsafe { parameters::PIECE_MOBILITY_OPENING[QUEEN as usize] };
+    let queen_mobility_ending_score = queen_mobility * unsafe { parameters::PIECE_MOBILITY_ENDING[QUEEN as usize] };
+
+    let opening_score = knight_mobility_opening_score + bishop_mobility_opening_score + rook_mobility_opening_score + queen_mobility_opening_score;
+    let ending_score = knight_mobility_ending_score + bishop_mobility_ending_score + rook_mobility_ending_score + queen_mobility_ending_score;
 
     taper_score(game_phase, opening_score, ending_score)
 }
