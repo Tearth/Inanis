@@ -513,7 +513,7 @@ fn write_piece_square_table(output_directory: &str, best_error: f64, name: &str,
     write!(&mut File::create(path).unwrap(), "{}", output).unwrap();
 }
 
-/// Gets the generated Rust source file header with timestamp and `best_error`.
+/// Gets a generated Rust source file header with timestamp and `best_error`.
 fn get_header(best_error: f64) -> String {
     let mut output = String::new();
 
@@ -523,7 +523,7 @@ fn get_header(best_error: f64) -> String {
     output
 }
 
-/// Gets the Rust representation of the piece `values` array.
+/// Gets a Rust representation of the piece `values` array.
 fn get_array(name: &str, values: &[i16]) -> String {
     format!(
         "pub static mut {}: [i16; 6] = [{}, {}, {}, {}, {}, {}];\n",
@@ -531,18 +531,18 @@ fn get_array(name: &str, values: &[i16]) -> String {
     )
 }
 
-/// Gets the Rust representation of the parameter with the specified `name` and `value`.
+/// Gets a Rust representation of the parameter with the specified `name` and `value`.
 fn get_parameter(name: &str, value: i16) -> String {
     format!("pub static mut {}: i16 = {};\n", name, value)
 }
 
-/// Gets the Rust representation of the piece-square tables with the specified `values`.
+/// Gets a Rust representation of the piece-square tables with the specified `values`.
 fn get_piece_square_table(values: &[i16]) -> String {
     let mut output = String::new();
 
     output.push_str("        ");
     for index in 0..64 {
-        output.push_str(format!("{:3}, ", values[index]).as_str());
+        output.push_str(format!("{:4}, ", values[index]).as_str());
         if index % 8 == 7 {
             output.push_str("\n");
             if index != 63 {
