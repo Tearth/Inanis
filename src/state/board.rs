@@ -664,8 +664,8 @@ impl Bitboard {
         pst::recalculate_incremental_values(self);
     }
 
-    /// Checks if there's threefold repetition draw at the current position.
-    pub fn is_threefold_repetition_draw(&self) -> bool {
+    /// Checks if there's repetition draw with the specified `threshold` (should be 3 in the most cases) at the current position.
+    pub fn is_repetition_draw(&self, threshold: i32) -> bool {
         if self.hash_stack.len() < 6 || self.null_moves > 0 {
             return false;
         }
@@ -682,7 +682,7 @@ impl Bitboard {
             if self.hash_stack[hash_index] == self.hash {
                 repetitions_count += 1;
 
-                if repetitions_count >= 3 {
+                if repetitions_count >= threshold {
                     return true;
                 }
             }

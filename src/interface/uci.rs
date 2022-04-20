@@ -320,7 +320,7 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
                         allow_ponder = false;
                     }
 
-                    if (*board).is_threefold_repetition_draw() || (*board).is_fifty_move_rule_draw() || (*board).is_insufficient_material_draw() {
+                    if (*board).is_repetition_draw(3) || (*board).is_fifty_move_rule_draw() || (*board).is_insufficient_material_draw() {
                         allow_ponder = false;
                     }
                     (*board).undo_move(depth_result.pv_line[1]);

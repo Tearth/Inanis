@@ -140,7 +140,7 @@ pub fn run<const PV: bool>(
         return CHECKMATE_SCORE - (ply as i16);
     }
 
-    if context.board.is_threefold_repetition_draw() || context.board.is_fifty_move_rule_draw() || context.board.is_insufficient_material_draw() {
+    if context.board.is_repetition_draw(3) || context.board.is_fifty_move_rule_draw() || context.board.is_insufficient_material_draw() {
         context.statistics.leafs_count += 1;
         return DRAW_SCORE;
     }
@@ -183,8 +183,10 @@ pub fn run<const PV: bool>(
                     }
                     _ => {
                         if !PV || entry.get_age() == 0 {
-                            context.statistics.leafs_count += 1;
-                            return entry.score;
+                            if context.board.halfmove_clock + ply < 99 && !context.board.is_repetition_draw(2) {
+                                context.statistics.leafs_count += 1;
+                                return entry.score;
+                            }
                         }
                     }
                 }
