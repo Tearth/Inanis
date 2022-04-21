@@ -27,7 +27,7 @@ fn date() -> String {
 }
 
 fn compiler() -> String {
-    let output = Command::new("cargo").arg("--version").current_dir(env!("CARGO_MANIFEST_DIR")).output();
+    let output = Command::new("rustc").arg("--version").current_dir(env!("CARGO_MANIFEST_DIR")).output();
 
     match output {
         Ok(v) => String::from_utf8_lossy(&v.stdout).to_string(),
