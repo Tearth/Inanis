@@ -375,7 +375,7 @@ fn load_values(lock_material: bool, random_values: bool) -> Vec<TunerParameter> 
 
 /// Transforms `values` into the evaluation parameters, which can be used during real evaluation. Use `lock_material` if the parameters
 /// related to piece values should be skipped.
-fn save_values(values: &mut Vec<TunerParameter>, lock_material: bool) {
+fn save_values(values: &mut [TunerParameter], lock_material: bool) {
     let mut index = 0;
     unsafe {
         if !lock_material {
@@ -431,19 +431,19 @@ fn save_values(values: &mut Vec<TunerParameter>, lock_material: bool) {
 }
 
 /// Saves `index`-th evaluation parameter stored in `values` in the `destination`.
-fn save_values_internal(values: &mut Vec<TunerParameter>, destination: &mut i16, index: &mut usize) {
+fn save_values_internal(values: &mut [TunerParameter], destination: &mut i16, index: &mut usize) {
     *destination = values[*index].value;
     *index += 1;
 }
 
 /// Saves [i8] array starting at the `index` of `values` in the `array`.
-fn save_values_to_i8_array_internal(values: &mut Vec<TunerParameter>, array: &mut [i16], index: &mut usize) {
+fn save_values_to_i8_array_internal(values: &mut [TunerParameter], array: &mut [i16], index: &mut usize) {
     array.copy_from_slice(&values[*index..(*index + array.len())].iter().map(|v| (*v).value).collect::<Vec<i16>>());
     *index += array.len();
 }
 
 /// Saves [i16] array starting at the `index` of `values` in the `array`.
-fn save_values_to_i16_array_internal(values: &mut Vec<TunerParameter>, array: &mut [i16], index: &mut usize) {
+fn save_values_to_i16_array_internal(values: &mut [TunerParameter], array: &mut [i16], index: &mut usize) {
     array.copy_from_slice(&values[*index..(*index + array.len())].iter().map(|v| (*v).value).collect::<Vec<i16>>());
     *index += array.len();
 }
