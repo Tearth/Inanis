@@ -23,11 +23,13 @@ const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
 const REPOSITORY: &str = env!("CARGO_PKG_REPOSITORY");
 const DATE: &str = env!("DATE");
 const HASH: &str = env!("HASH");
+const COMPILER: &str = env!("COMPILER");
 
 /// Entry point of the terminal interface and command loop.
 pub fn run() {
     println!("Inanis {} ({}), created by {}", VERSION, DATE, AUTHOR);
     println!("Executable hash: {}", HASH);
+    println!("Compiler: {}", COMPILER);
     println!("Homepage: {}", REPOSITORY);
     println!();
     println!("Type \"help\" to get a list of available commands");
