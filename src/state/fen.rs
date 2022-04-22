@@ -44,17 +44,19 @@ pub fn epd_to_board(epd: &str) -> Result<ParsedEPD, &'static str> {
     board.recalculate_pawn_hash();
     board.recalculate_incremental_values();
 
-    let halfmove_clock_result = fen_to_halfmove_clock(&mut board, tokens[4]);
-    let fullmove_number_result = fen_to_fullmove_number(&mut board, tokens[5]);
+    if tokens.len() > 4 {
+        let halfmove_clock_result = fen_to_halfmove_clock(&mut board, tokens[4]);
+        let fullmove_number_result = fen_to_fullmove_number(&mut board, tokens[5]);
 
-    // We are in EPD mode if halfmove clock and fullmove number are not present
-    if halfmove_clock_result.is_err() && fullmove_number_result.is_err() {
-        let mut parsed_epd = ParsedEPD::new(board);
-        parsed_epd.id = get_epd_parameter(epd, &["id"]);
-        parsed_epd.best_move = get_epd_parameter(epd, &["bm"]);
-        parsed_epd.comment = get_epd_parameter(epd, &["c0", "c9"]);
+        // We are in EPD mode if halfmove clock and fullmove number are not present
+        if halfmove_clock_result.is_err() && fullmove_number_result.is_err() {
+            let mut parsed_epd = ParsedEPD::new(board);
+            parsed_epd.id = get_epd_parameter(epd, &["id"]);
+            parsed_epd.best_move = get_epd_parameter(epd, &["bm"]);
+            parsed_epd.comment = get_epd_parameter(epd, &["c0", "c9"]);
 
-        return Ok(parsed_epd);
+            return Ok(parsed_epd);
+        }
     }
 
     Ok(ParsedEPD::new(board))
