@@ -183,7 +183,7 @@ pub fn run<const PV: bool>(
                     }
                     _ => {
                         if !PV || entry.get_age() == 0 {
-                            if context.board.halfmove_clock + ply < 99 && !context.board.is_repetition_draw(2) {
+                            if !context.board.is_repetition_draw(2) {
                                 context.statistics.leafs_count += 1;
                                 return entry.score;
                             }
