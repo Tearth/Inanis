@@ -9,6 +9,7 @@ use std::cell::UnsafeCell;
 use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
+use std::sync::atomic::AtomicBool;
 use std::sync::atomic::AtomicU32;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
@@ -90,8 +91,8 @@ fn run_internal(context: &Arc<TestContext>, depth: i8, transposition_table_size:
                     let mut pawn_hashtable = PawnHashTable::new(1 * 1024 * 1024);
                     let mut killers_table = Default::default();
                     let mut history_table = Default::default();
-                    let mut abort_token = Default::default();
-                    let mut ponder_token = Default::default();
+                    let abort_token = Arc::new(AtomicBool::new(false));
+                    let ponder_token = Arc::new(AtomicBool::new(false));
 
                     let mut board_clone = position.board.clone();
                     let context = SearchContext::new(
@@ -108,8 +109,8 @@ fn run_internal(context: &Arc<TestContext>, depth: i8, transposition_table_size:
                         &mut pawn_hashtable,
                         &mut killers_table,
                         &mut history_table,
-                        &mut abort_token,
-                        &mut ponder_token,
+                        abort_token.clone(),
+                        ponder_token.clone(),
                     );
 
                     let mut last_best_move = Default::default();

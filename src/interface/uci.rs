@@ -4,7 +4,6 @@ use crate::cache::search::TranspositionTable;
 use crate::engine;
 use crate::engine::context::HelperThreadContext;
 use crate::engine::context::SearchContext;
-use crate::engine::context::Token;
 use crate::engine::history::HistoryTable;
 use crate::engine::killers::KillersTable;
 use crate::state::board::Bitboard;
@@ -38,8 +37,8 @@ struct UciState {
     killers_table: UnsafeCell<KillersTable>,
     history_table: UnsafeCell<HistoryTable>,
     search_thread: UnsafeCell<Option<JoinHandle<()>>>,
-    abort_token: UnsafeCell<Token>,
-    ponder_token: UnsafeCell<Token>,
+    abort_token: Arc<AtomicBool>,
+    ponder_token: Arc<AtomicBool>,
     busy_flag: AtomicBool,
     debug_mode: AtomicBool,
 }
@@ -55,8 +54,8 @@ impl Default for UciState {
             history_table: UnsafeCell::new(Default::default()),
             killers_table: UnsafeCell::new(Default::default()),
             search_thread: UnsafeCell::new(None),
-            abort_token: UnsafeCell::new(Default::default()),
-            ponder_token: UnsafeCell::new(Default::default()),
+            abort_token: Arc::new(AtomicBool::new(false)),
+            ponder_token: Arc::new(AtomicBool::new(false)),
             busy_flag: AtomicBool::new(false),
             debug_mode: AtomicBool::new(false),
         }
@@ -216,9 +215,9 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
 
         let state_arc = state.clone();
 
-        (*state.abort_token.get()).set = false;
-        (*state.ponder_token.get()).set = false;
-        (*state).busy_flag.store(true, Ordering::Relaxed);
+        state.abort_token.store(false, Ordering::Relaxed);
+        state.ponder_token.store(false, Ordering::Relaxed);
+        state.busy_flag.store(true, Ordering::Relaxed);
 
         *state.search_thread.get() = Some(thread::spawn(move || {
             let threads = (*state_arc.options.get())["Threads"].parse::<usize>().unwrap();
@@ -238,8 +237,8 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
                 &mut *state_arc.pawn_hashtable.get(),
                 &mut *state_arc.killers_table.get(),
                 &mut *state_arc.history_table.get(),
-                &mut *state_arc.abort_token.get(),
-                &mut *state_arc.ponder_token.get(),
+                state_arc.abort_token.clone(),
+                state_arc.ponder_token.clone(),
             );
 
             if threads > 1 {
@@ -258,8 +257,8 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
                         &mut *state_arc.pawn_hashtable.get(),
                         &mut *state_arc.killers_table.get(),
                         &mut *state_arc.history_table.get(),
-                        &mut *state_arc.abort_token.get(),
-                        &mut *state_arc.ponder_token.get(),
+                        state_arc.abort_token.clone(),
+                        state_arc.ponder_token.clone(),
                     );
 
                     let data = HelperThreadContext {
@@ -359,10 +358,8 @@ fn handle_isready(state: &mut Arc<UciState>) {
 
 /// Handles `ponderhit` command by setting abort and ponder tokens, which should switch a search mode from the ponder to the regular one.
 fn handle_ponderhit(state: &mut Arc<UciState>) {
-    unsafe {
-        (*state.ponder_token.get()).set = true;
-        (*state.abort_token.get()).set = true;
-    }
+    state.ponder_token.store(true, Ordering::Relaxed);
+    state.abort_token.store(true, Ordering::Relaxed);
 }
 
 /// Handles `position ...` command with the following variants:
@@ -464,19 +461,18 @@ fn handle_ucinewgame(state: &mut Arc<UciState>) {
     wait_for_busy_flag(state);
 
     unsafe {
-        (*state.abort_token.get()).set = true;
+        state.abort_token.store(true, Ordering::Relaxed);
 
         *state.board.get() = Bitboard::new_initial_position();
-        *state.abort_token.get() = Default::default();
+        // TODO
+        // *state.abort_token.get() = Default::default();
         recreate_state_tables(state);
     }
 }
 
 /// Handles `stop` command by setting abort token, which should stop ongoing search as fast as possible.
 fn handle_stop(state: &mut Arc<UciState>) {
-    unsafe {
-        (*state.abort_token.get()).set = true;
-    }
+    state.abort_token.store(true, Ordering::Relaxed);
 }
 
 /// Handles `quit` command by terminating engine process.
@@ -500,6 +496,7 @@ fn recreate_state_tables(state: &mut Arc<UciState>) {
         let total_size = (*state.options.get())["Hash"].parse::<usize>().unwrap();
         let allocation_result = allocator::get_allocation(total_size);
 
+        // TODO
         // state.transposition_table = Arc::new(TranspositionTable::new(allocation_result.transposition_table_size * 1024 * 1024));
         *state.pawn_hashtable.get() = PawnHashTable::new(allocation_result.pawn_hashtable_size * 1024 * 1024);
         *state.killers_table.get() = Default::default();

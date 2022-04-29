@@ -1,3 +1,4 @@
+use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
 use crate::cache::pawns::PawnHashTable;
@@ -117,8 +118,8 @@ pub fn run() -> BenchmarkResult {
         let mut pawn_hashtable = PawnHashTable::new(1 * 1024 * 1024);
         let mut killers_table = Default::default();
         let mut history_table = Default::default();
-        let mut abort_token = Default::default();
-        let mut ponder_token = Default::default();
+        let abort_token = Arc::new(AtomicBool::new(false));
+        let ponder_token = Arc::new(AtomicBool::new(false));
 
         let mut board = Bitboard::new_from_fen(fen).unwrap();
         let context = SearchContext::new(
@@ -135,8 +136,8 @@ pub fn run() -> BenchmarkResult {
             &mut pawn_hashtable,
             &mut killers_table,
             &mut history_table,
-            &mut abort_token,
-            &mut ponder_token,
+            abort_token.clone(),
+            ponder_token.clone(),
         );
 
         let result = context.last().unwrap();

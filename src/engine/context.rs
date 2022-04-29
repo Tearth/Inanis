@@ -18,12 +18,9 @@ use std::cell::UnsafeCell;
 use std::cmp;
 use std::mem::MaybeUninit;
 use std::ops;
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering;
 use std::sync::Arc;
-
-#[derive(Default)]
-pub struct Token {
-    pub set: bool,
-}
 
 pub struct SearchContext<'a> {
     pub board: &'a mut Bitboard,
@@ -45,8 +42,8 @@ pub struct SearchContext<'a> {
     pub killers_table: &'a mut KillersTable,
     pub history_table: &'a mut HistoryTable,
     pub helper_contexts: Vec<HelperThreadContext<'a>>,
-    pub abort_token: &'a mut Token,
-    pub ponder_token: &'a mut Token,
+    pub abort_token: Arc<AtomicBool>,
+    pub ponder_token: Arc<AtomicBool>,
 }
 
 pub struct HelperThreadContext<'a> {
@@ -157,8 +154,8 @@ impl<'a> SearchContext<'a> {
         pawn_hashtable: &'a mut PawnHashTable,
         killers_table: &'a mut KillersTable,
         history_table: &'a mut HistoryTable,
-        abort_token: &'a mut Token,
-        ponder_token: &'a mut Token,
+        abort_token: Arc<AtomicBool>,
+        ponder_token: Arc<AtomicBool>,
     ) -> Self {
         Self {
             board,
@@ -321,8 +318,8 @@ impl<'a> Iterator for SearchContext<'a> {
                 );
             }
 
-            if self.abort_token.set {
-                if self.ponder_token.set {
+            if self.abort_token.load(Ordering::Relaxed) {
+                if self.ponder_token.load(Ordering::Relaxed) {
                     self.current_depth = 1;
                     self.forced_depth = 0;
                     self.search_time_start = Utc::now();
@@ -335,8 +332,8 @@ impl<'a> Iterator for SearchContext<'a> {
                         helper_context.context.statistics = Default::default();
                     }
 
-                    self.ponder_token.set = false;
-                    self.abort_token.set = false;
+                    self.ponder_token.store(false, Ordering::Relaxed);
+                    self.abort_token.store(false, Ordering::Relaxed);
 
                     continue;
                 } else {
