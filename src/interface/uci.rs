@@ -460,10 +460,9 @@ fn handle_ucinewgame(state: Arc<Mutex<UciState>>) {
     wait_for_busy_flag(state.clone());
 
     state.lock().unwrap().abort_token.store(true, Ordering::Relaxed);
-
     state.lock().unwrap().board = Bitboard::new_initial_position();
-    // TODO
-    // *state.abort_token.get() = Default::default();
+    state.lock().unwrap().abort_token = Default::default();
+
     recreate_state_tables(state);
 }
 
