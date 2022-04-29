@@ -1,6 +1,8 @@
 use crate::engine;
 use crate::state::movescan::Move;
 use std::mem;
+use std::sync::atomic::AtomicU64;
+use std::sync::atomic::Ordering;
 use std::u64;
 
 const BUCKET_SLOTS: usize = 8;
@@ -19,18 +21,21 @@ pub struct TranspositionTable {
 }
 
 #[repr(align(64))]
-#[derive(Clone, Copy)]
 struct TranspositionTableBucket {
     pub entries: [TranspositionTableEntry; BUCKET_SLOTS],
 }
 
-#[derive(Clone, Copy)]
 pub struct TranspositionTableEntry {
+    pub key_data: AtomicU64,
+}
+
+pub struct TranspositionTableResult {
     pub key: u16,
     pub score: i16,
     pub best_move: Move,
     pub depth: i8,
-    pub type_age: u8,
+    pub r#type: TranspositionTableScoreType,
+    pub age: u8,
 }
 
 impl TranspositionTable {
@@ -42,7 +47,9 @@ impl TranspositionTable {
         };
 
         if size != 0 {
-            hashtable.table.resize(hashtable.table.capacity(), Default::default());
+            for _ in 0..hashtable.table.capacity() {
+                hashtable.table.push(Default::default());
+            }
         }
 
         hashtable
@@ -56,23 +63,26 @@ impl TranspositionTable {
     ///  - slots with the biggest age counter (to ensure that old and possibly outdated entries are not preventing us from adding a new one)
     ///
     /// This function takes care of converting mate `score` using passed `ply`.
-    pub fn add(&mut self, hash: u64, mut score: i16, best_move: Move, depth: i8, ply: u16, score_type: TranspositionTableScoreType) {
+    pub fn add(&self, hash: u64, mut score: i16, best_move: Move, depth: i8, ply: u16, score_type: TranspositionTableScoreType) {
         let key = self.get_key(hash);
         let index = (hash as usize) % self.table.len();
-        let mut bucket = self.table[index];
-        let mut smallest_depth = u8::MAX;
+        let bucket = &self.table[index];
+        let mut smallest_depth = i8::MAX;
         let mut smallest_depth_index = usize::MAX;
         let mut oldest_entry_age = 0;
         let mut oldest_entry_index = usize::MAX;
 
         for entry_index in 0..BUCKET_SLOTS {
-            if bucket.entries[entry_index].key == key {
+            let entry = &bucket.entries[entry_index];
+            let entry_data = entry.get_data();
+
+            if entry_data.key == key {
                 smallest_depth_index = entry_index;
                 oldest_entry_index = entry_index;
                 break;
             }
 
-            if bucket.entries[entry_index].depth == 0 {
+            if entry_data.depth == 0 {
                 smallest_depth = 0;
                 smallest_depth_index = entry_index;
                 oldest_entry_age = u8::MAX;
@@ -80,16 +90,14 @@ impl TranspositionTable {
                 continue;
             }
 
-            let entry_age = bucket.entries[entry_index].get_age();
-            if entry_age > oldest_entry_age {
-                oldest_entry_age = entry_age;
+            if entry_data.age > oldest_entry_age {
+                oldest_entry_age = entry_data.age;
                 oldest_entry_index = entry_index;
                 continue;
             }
 
-            let entry_depth = bucket.entries[entry_index].depth as u8;
-            if entry_depth < smallest_depth {
-                smallest_depth = entry_depth;
+            if entry_data.depth < smallest_depth {
+                smallest_depth = entry_data.depth;
                 smallest_depth_index = entry_index;
                 continue;
             }
@@ -109,31 +117,40 @@ impl TranspositionTable {
             }
         }
 
-        bucket.entries[target_index] = TranspositionTableEntry::new(key, score, best_move, depth, score_type);
-        self.table[index] = bucket;
+        bucket.entries[target_index].set_data(key, score, best_move, depth, score_type, 0);
     }
 
     /// Gets a wanted entry using `hash % self.table.len()` formula to calculate an index of the bucket. This function takes care of converting
     /// mate `score` using passed `ply`. Returns [None] if `hash` is incompatible with the stored key (and sets `collision` flag to true).
-    pub fn get(&self, hash: u64, ply: u16, collision: &mut bool) -> Option<TranspositionTableEntry> {
+    pub fn get(&self, hash: u64, ply: u16, collision: &mut bool) -> Option<TranspositionTableResult> {
         let key = self.get_key(hash);
         let index = (hash as usize) % self.table.len();
-        let bucket = self.table[index];
+        let bucket = &self.table[index];
         let mut entry_with_key_present = false;
 
         for entry_index in 0..BUCKET_SLOTS {
-            let mut entry = bucket.entries[entry_index];
-            if entry.key == key {
-                if engine::is_score_near_checkmate(entry.score) {
-                    if entry.score > 0 {
-                        entry.score -= ply as i16;
+            let entry = &bucket.entries[entry_index];
+            let entry_data = entry.get_data();
+            let mut entry_score = entry_data.score;
+
+            if entry_data.key == key {
+                if engine::is_score_near_checkmate(entry_score) {
+                    if entry_score > 0 {
+                        entry_score -= ply as i16;
                     } else {
-                        entry.score += ply as i16;
+                        entry_score += ply as i16;
                     }
                 }
 
-                return Some(entry);
-            } else if entry.key != 0 {
+                return Some(TranspositionTableResult {
+                    key: entry_data.key,
+                    score: entry_score,
+                    best_move: entry_data.best_move,
+                    depth: entry_data.depth,
+                    r#type: entry_data.r#type,
+                    age: entry_data.age,
+                });
+            } else if entry_data.key != 0 {
                 entry_with_key_present = true;
             }
         }
@@ -160,8 +177,11 @@ impl TranspositionTable {
 
         for bucket_index in 0..BUCKETS_COUNT_TO_CHECK {
             for entry_index in 0..BUCKET_SLOTS {
-                let entry = self.table[bucket_index].entries[entry_index];
-                if entry.key != 0 {
+                let entry = &self.table[bucket_index].entries[entry_index];
+                let entry_key_data = entry.key_data.load(Ordering::Relaxed);
+                let entry_key = (entry_key_data >> 48) as u16;
+
+                if entry_key != 0 {
                     filled_entries += 1;
                 }
             }
@@ -171,16 +191,24 @@ impl TranspositionTable {
     }
 
     /// Increments ann age of all entries stored in the table. If age's value is equal to 31, it gets purged to make more space for a new entries.
-    pub fn age_entries(&mut self) {
+    pub fn age_entries(&self) {
         for bucket_index in 0..self.table.len() {
             for entry_index in 0..BUCKET_SLOTS {
-                let mut entry = self.table[bucket_index].entries[entry_index];
-                if entry.depth > 0 {
-                    if entry.get_age() == 31 {
-                        self.table[bucket_index].entries[entry_index] = Default::default();
+                let entry = &self.table[bucket_index].entries[entry_index];
+                let entry_data = entry.get_data();
+
+                if entry_data.depth > 0 {
+                    if entry_data.age == 31 {
+                        entry.set_data(0, 0, Default::default(), 0, TranspositionTableScoreType::INVALID, 0);
                     } else {
-                        entry.set_age(entry.get_age() + 1);
-                        self.table[bucket_index].entries[entry_index] = entry;
+                        entry.set_data(
+                            entry_data.key,
+                            entry_data.score,
+                            entry_data.best_move,
+                            entry_data.depth,
+                            entry_data.r#type,
+                            entry_data.age + 1,
+                        );
                     }
                 }
             }
@@ -196,38 +224,42 @@ impl TranspositionTable {
 impl Default for TranspositionTableBucket {
     /// Constructs a default instance of [TranspositionTableBucket] with zeroed elements.
     fn default() -> Self {
-        TranspositionTableBucket {
-            entries: [Default::default(); BUCKET_SLOTS],
-        }
+        TranspositionTableBucket { entries: Default::default() }
     }
 }
 
 impl TranspositionTableEntry {
     /// Constructs a new instance of [TranspositionTableEntry] with stored `key`, `score`, `best_move`, `depth` and `r#type`.
     pub fn new(key: u16, score: i16, best_move: Move, depth: i8, r#type: TranspositionTableScoreType) -> Self {
-        let type_age = r#type.bits;
-        Self {
-            key,
-            score,
-            best_move,
-            depth,
-            type_age,
+        let entry = Self { key_data: AtomicU64::new(0) };
+
+        entry.set_data(key, score, best_move, depth, r#type, 0);
+        entry
+    }
+
+    /// Converts `key`, `score`, `best_move`, `depth`, `r#type` and `age` into an atomic word, and stores it.
+    pub fn set_data(&self, key: u16, score: i16, best_move: Move, depth: i8, r#type: TranspositionTableScoreType, age: u8) {
+        let key_data = (key as u64)
+            | (((score as u16) as u64) << 16)
+            | ((best_move.data as u64) << 32)
+            | (((depth as u8) as u64) << 48)
+            | ((r#type.bits as u64) << 56)
+            | ((age as u64) << 59);
+
+        self.key_data.store(key_data, Ordering::Relaxed);
+    }
+
+    /// Loads and parses atomic value into a `TranspositionTableResult` struct.
+    pub fn get_data(&self) -> TranspositionTableResult {
+        let key_data = self.key_data.load(Ordering::Relaxed);
+        TranspositionTableResult {
+            key: key_data as u16,
+            score: (key_data >> 16) as i16,
+            best_move: Move::new_from_raw((key_data >> 32) as u16),
+            depth: (key_data >> 48) as i8,
+            r#type: TranspositionTableScoreType::from_bits(((key_data >> 56) & 0x7) as u8).unwrap(),
+            age: (key_data >> 59) as u8,
         }
-    }
-
-    /// Gets an entry flag by reading `self.type_age` field and parsing it into [TranspositionTableScoreType] type.
-    pub fn get_flags(&self) -> TranspositionTableScoreType {
-        TranspositionTableScoreType::from_bits(self.type_age & 7).unwrap()
-    }
-
-    /// Gets an entry age by reading `self.type_age` field.
-    pub fn get_age(&self) -> u8 {
-        self.type_age >> 3
-    }
-
-    // Sets an entry age to the `age` value.
-    pub fn set_age(&mut self, age: u8) {
-        self.type_age = (self.type_age & 7) | (age << 3);
     }
 }
 

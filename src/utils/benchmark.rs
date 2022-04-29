@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
 use crate::engine::context::SearchContext;
@@ -111,7 +113,7 @@ pub fn run() -> BenchmarkResult {
     for (current_position_index, fen) in benchmark_positions.into_iter().enumerate() {
         println!("{}/{}. {}", current_position_index + 1, benchmark_positions.len(), fen);
 
-        let mut transposition_table = TranspositionTable::new(64 * 1024 * 1024);
+        let transposition_table = Arc::new(TranspositionTable::new(64 * 1024 * 1024));
         let mut pawn_hashtable = PawnHashTable::new(1 * 1024 * 1024);
         let mut killers_table = Default::default();
         let mut history_table = Default::default();
@@ -129,7 +131,7 @@ pub fn run() -> BenchmarkResult {
             0,
             false,
             false,
-            &mut transposition_table,
+            transposition_table.clone(),
             &mut pawn_hashtable,
             &mut killers_table,
             &mut history_table,

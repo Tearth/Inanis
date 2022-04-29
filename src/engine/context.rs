@@ -18,6 +18,7 @@ use std::cell::UnsafeCell;
 use std::cmp;
 use std::mem::MaybeUninit;
 use std::ops;
+use std::sync::Arc;
 
 #[derive(Default)]
 pub struct Token {
@@ -39,7 +40,7 @@ pub struct SearchContext<'a> {
     pub search_done: bool,
     pub uci_debug: bool,
     pub helper_thread: bool,
-    pub transposition_table: &'a mut TranspositionTable,
+    pub transposition_table: Arc<TranspositionTable>,
     pub pawn_hashtable: &'a mut PawnHashTable,
     pub killers_table: &'a mut KillersTable,
     pub history_table: &'a mut HistoryTable,
@@ -152,7 +153,7 @@ impl<'a> SearchContext<'a> {
         moves_to_go: u32,
         uci_debug: bool,
         helper_thread: bool,
-        transposition_table: &'a mut TranspositionTable,
+        transposition_table: Arc<TranspositionTable>,
         pawn_hashtable: &'a mut PawnHashTable,
         killers_table: &'a mut KillersTable,
         history_table: &'a mut HistoryTable,
@@ -194,7 +195,7 @@ impl<'a> SearchContext<'a> {
         let mut collision = false;
         match self.transposition_table.get(board.hash, 0, &mut collision) {
             Some(entry) => {
-                if entry.get_flags() != TranspositionTableScoreType::EXACT_SCORE {
+                if entry.r#type != TranspositionTableScoreType::EXACT_SCORE {
                     return Vec::new();
                 }
 

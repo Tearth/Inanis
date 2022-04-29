@@ -170,7 +170,7 @@ pub fn run<const PV: bool>(
 
             if ply > 0 && entry.depth >= depth as i8 {
                 tt_entry_found = true;
-                match entry.get_flags() {
+                match entry.r#type {
                     TranspositionTableScoreType::ALPHA_SCORE => {
                         if entry.score < beta {
                             beta = entry.score;
@@ -182,7 +182,7 @@ pub fn run<const PV: bool>(
                         }
                     }
                     _ => {
-                        if !PV || entry.get_age() == 0 {
+                        if !PV || entry.age == 0 {
                             if !context.board.is_repetition_draw(2) {
                                 context.statistics.leafs_count += 1;
                                 return entry.score;

@@ -33,7 +33,7 @@ const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
 struct UciState {
     board: UnsafeCell<Bitboard>,
     options: UnsafeCell<HashMap<String, String>>,
-    transposition_table: UnsafeCell<TranspositionTable>,
+    transposition_table: Arc<TranspositionTable>,
     pawn_hashtable: UnsafeCell<PawnHashTable>,
     killers_table: UnsafeCell<KillersTable>,
     history_table: UnsafeCell<HistoryTable>,
@@ -50,7 +50,7 @@ impl Default for UciState {
         UciState {
             board: UnsafeCell::new(Bitboard::new_initial_position()),
             options: UnsafeCell::new(HashMap::new()),
-            transposition_table: UnsafeCell::new(TranspositionTable::new(1 * 1024 * 1024)),
+            transposition_table: Arc::new(TranspositionTable::new(1 * 1024 * 1024)),
             pawn_hashtable: UnsafeCell::new(PawnHashTable::new(1 * 1024 * 1024)),
             history_table: UnsafeCell::new(Default::default()),
             killers_table: UnsafeCell::new(Default::default()),
@@ -234,7 +234,7 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
                 moves_to_go,
                 state_arc.debug_mode.load(Ordering::Relaxed),
                 false,
-                &mut *state_arc.transposition_table.get(),
+                state_arc.transposition_table.clone(),
                 &mut *state_arc.pawn_hashtable.get(),
                 &mut *state_arc.killers_table.get(),
                 &mut *state_arc.history_table.get(),
@@ -254,7 +254,7 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
                         moves_to_go,
                         state_arc.debug_mode.load(Ordering::Relaxed),
                         true,
-                        &mut *state_arc.transposition_table.get(),
+                        state_arc.transposition_table.clone(),
                         &mut *state_arc.pawn_hashtable.get(),
                         &mut *state_arc.killers_table.get(),
                         &mut *state_arc.history_table.get(),
@@ -343,7 +343,7 @@ fn handle_go(parameters: &[String], state: &mut Arc<UciState>) {
             }
 
             (*state_arc.search_thread.get()) = None;
-            (*state_arc.transposition_table.get()).age_entries();
+            state_arc.transposition_table.age_entries();
             (*state_arc.killers_table.get()).age_moves();
             (*state_arc.history_table.get()).age_values();
             (*state_arc).busy_flag.store(false, Ordering::Relaxed);
@@ -500,7 +500,7 @@ fn recreate_state_tables(state: &mut Arc<UciState>) {
         let total_size = (*state.options.get())["Hash"].parse::<usize>().unwrap();
         let allocation_result = allocator::get_allocation(total_size);
 
-        *state.transposition_table.get() = TranspositionTable::new(allocation_result.transposition_table_size * 1024 * 1024);
+        // state.transposition_table = Arc::new(TranspositionTable::new(allocation_result.transposition_table_size * 1024 * 1024));
         *state.pawn_hashtable.get() = PawnHashTable::new(allocation_result.pawn_hashtable_size * 1024 * 1024);
         *state.killers_table.get() = Default::default();
         *state.history_table.get() = Default::default();
