@@ -35,7 +35,7 @@ struct UciState {
     options: HashMap<String, String>,
     transposition_table: Arc<TranspositionTable>,
     pawn_hashtable: Arc<PawnHashTable>,
-    killers_table: UnsafeCell<KillersTable>,
+    killers_table: Arc<KillersTable>,
     history_table: UnsafeCell<HistoryTable>,
     search_thread: Option<JoinHandle<()>>,
     abort_token: Arc<AtomicBool>,
@@ -52,8 +52,8 @@ impl Default for UciState {
             options: HashMap::new(),
             transposition_table: Arc::new(TranspositionTable::new(1 * 1024 * 1024)),
             pawn_hashtable: Arc::new(PawnHashTable::new(1 * 1024 * 1024)),
+            killers_table: Arc::new(Default::default()),
             history_table: UnsafeCell::new(Default::default()),
-            killers_table: UnsafeCell::new(Default::default()),
             search_thread: None,
             abort_token: Arc::new(AtomicBool::new(false)),
             ponder_token: Arc::new(AtomicBool::new(false)),
@@ -239,7 +239,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
                 false,
                 l.transposition_table.clone(),
                 l.pawn_hashtable.clone(),
-                &mut *l.killers_table.get(),
+                l.killers_table.clone(),
                 &mut *l.history_table.get(),
                 l.abort_token.clone(),
                 l.ponder_token.clone(),
@@ -261,7 +261,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
                         true,
                         l.transposition_table.clone(),
                         l.pawn_hashtable.clone(),
-                        &mut *l.killers_table.get(),
+                        l.killers_table.clone(),
                         &mut *l.history_table.get(),
                         l.abort_token.clone(),
                         l.ponder_token.clone(),
@@ -271,7 +271,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
                     let data = HelperThreadContext {
                         board: UnsafeCell::new(context.board.clone()),
                         pawn_hashtable: Arc::new((*context.pawn_hashtable).clone()),
-                        killers_table: UnsafeCell::new(context.killers_table.clone()),
+                        killers_table: Arc::new((*context.killers_table).clone()),
                         history_table: UnsafeCell::new(context.history_table.clone()),
                         context: helper_context,
                     };
@@ -281,7 +281,6 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
 
                 for i in 0..threads {
                     context.helper_contexts[i].context.board = &mut *context.helper_contexts[i].board.get();
-                    context.helper_contexts[i].context.killers_table = &mut *context.helper_contexts[i].killers_table.get();
                     context.helper_contexts[i].context.history_table = &mut *context.helper_contexts[i].history_table.get();
                 }
             }
@@ -349,7 +348,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
 
             state_arc.lock().unwrap().search_thread = None;
             state_arc.lock().unwrap().transposition_table.age_entries();
-            (*state_arc.lock().unwrap().killers_table.get()).age_moves();
+            state_arc.lock().unwrap().killers_table.age_moves();
             (*state_arc.lock().unwrap().history_table.get()).age_values();
             (*state_arc).lock().unwrap().busy_flag.store(false, Ordering::Relaxed);
         }));
@@ -506,7 +505,7 @@ fn recreate_state_tables(state: Arc<Mutex<UciState>>) {
 
         state.lock().unwrap().transposition_table = Arc::new(TranspositionTable::new(allocation_result.transposition_table_size * 1024 * 1024));
         state.lock().unwrap().pawn_hashtable = Arc::new(PawnHashTable::new(allocation_result.pawn_hashtable_size * 1024 * 1024));
-        *state.lock().unwrap().killers_table.get() = Default::default();
+        state.lock().unwrap().killers_table = Default::default();
         *state.lock().unwrap().history_table.get() = Default::default();
     }
 }

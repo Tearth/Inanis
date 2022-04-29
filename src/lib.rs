@@ -8,7 +8,8 @@
     clippy::collapsible_if,
     clippy::single_char_add_str,
     clippy::too_many_arguments,
-    clippy::if_same_then_else
+    clippy::if_same_then_else,
+    clippy::declare_interior_mutable_const
 )]
 
 //! The main page of the Inanis documentation. Feel free to explore it by going into the specific module below,

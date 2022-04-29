@@ -89,7 +89,7 @@ impl PawnHashTableEntry {
         entry
     }
 
-    /// Converts `key`, `score`, `best_move`, `depth`, `r#type` and `age` into an atomic word, and stores it.
+    /// Converts `key` and `score` into an atomic word, and stores it.
     pub fn set_data(&self, key: u16, score: i16) {
         let key_data = (key as u32) | (((score as u16) as u32) << 16);
         self.key_data.store(key_data, Ordering::Relaxed);

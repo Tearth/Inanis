@@ -4,6 +4,7 @@ use std::sync::Arc;
 use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
 use crate::engine::context::SearchContext;
+use crate::engine::killers::KillersTable;
 use crate::state::board::Bitboard;
 use chrono::Utc;
 
@@ -115,8 +116,8 @@ pub fn run() -> BenchmarkResult {
         println!("{}/{}. {}", current_position_index + 1, benchmark_positions.len(), fen);
 
         let transposition_table = Arc::new(TranspositionTable::new(64 * 1024 * 1024));
-        let mut pawn_hashtable = Arc::new(PawnHashTable::new(1 * 1024 * 1024));
-        let mut killers_table = Default::default();
+        let pawn_hashtable = Arc::new(PawnHashTable::new(1 * 1024 * 1024));
+        let killers_table = Arc::new(KillersTable::default());
         let mut history_table = Default::default();
         let abort_token = Arc::new(AtomicBool::new(false));
         let ponder_token = Arc::new(AtomicBool::new(false));
@@ -134,7 +135,7 @@ pub fn run() -> BenchmarkResult {
             false,
             transposition_table.clone(),
             pawn_hashtable.clone(),
-            &mut killers_table,
+            killers_table.clone(),
             &mut history_table,
             abort_token.clone(),
             ponder_token.clone(),

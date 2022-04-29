@@ -1,6 +1,7 @@
 use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
 use crate::engine::context::SearchContext;
+use crate::engine::killers::KillersTable;
 use crate::state::board::Bitboard;
 use crate::state::fen;
 use crate::state::movescan::Move;
@@ -88,8 +89,8 @@ fn run_internal(context: &Arc<TestContext>, depth: i8, transposition_table_size:
 
                 for position in &mut (*context_arc.positions.get())[from..to] {
                     let transposition_table = Arc::new(TranspositionTable::new(transposition_table_size));
-                    let mut pawn_hashtable = Arc::new(PawnHashTable::new(1 * 1024 * 1024));
-                    let mut killers_table = Default::default();
+                    let pawn_hashtable = Arc::new(PawnHashTable::new(1 * 1024 * 1024));
+                    let killers_table = Arc::new(KillersTable::default());
                     let mut history_table = Default::default();
                     let abort_token = Arc::new(AtomicBool::new(false));
                     let ponder_token = Arc::new(AtomicBool::new(false));
@@ -107,7 +108,7 @@ fn run_internal(context: &Arc<TestContext>, depth: i8, transposition_table_size:
                         false,
                         transposition_table.clone(),
                         pawn_hashtable.clone(),
-                        &mut killers_table,
+                        killers_table.clone(),
                         &mut history_table,
                         abort_token.clone(),
                         ponder_token.clone(),
