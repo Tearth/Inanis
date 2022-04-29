@@ -38,7 +38,7 @@ pub struct SearchContext<'a> {
     pub uci_debug: bool,
     pub helper_thread: bool,
     pub transposition_table: Arc<TranspositionTable>,
-    pub pawn_hashtable: &'a mut PawnHashTable,
+    pub pawn_hashtable: Arc<PawnHashTable>,
     pub killers_table: &'a mut KillersTable,
     pub history_table: &'a mut HistoryTable,
     pub helper_contexts: Vec<HelperThreadContext<'a>>,
@@ -48,7 +48,7 @@ pub struct SearchContext<'a> {
 
 pub struct HelperThreadContext<'a> {
     pub board: UnsafeCell<Bitboard>,
-    pub pawn_hashtable: UnsafeCell<PawnHashTable>,
+    pub pawn_hashtable: Arc<PawnHashTable>,
     pub killers_table: UnsafeCell<KillersTable>,
     pub history_table: UnsafeCell<HistoryTable>,
     pub context: SearchContext<'a>,
@@ -151,7 +151,7 @@ impl<'a> SearchContext<'a> {
         uci_debug: bool,
         helper_thread: bool,
         transposition_table: Arc<TranspositionTable>,
-        pawn_hashtable: &'a mut PawnHashTable,
+        pawn_hashtable: Arc<PawnHashTable>,
         killers_table: &'a mut KillersTable,
         history_table: &'a mut HistoryTable,
         abort_token: Arc<AtomicBool>,

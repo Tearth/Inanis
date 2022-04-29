@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use super::fen;
 use super::movegen;
 use super::movescan;
@@ -626,7 +628,7 @@ impl Bitboard {
 
     /// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position, using `pawn_hashtable` to store pawn
     /// evaluations and `statistics` to gather diagnostic data. Returns score from the white color perspective (more than 0 when advantage, less than 0 when disadvantage).
-    pub fn evaluate(&self, pawn_hashtable: &mut PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
+    pub fn evaluate(&self, pawn_hashtable: Arc<PawnHashTable>, statistics: &mut SearchStatistics) -> i16 {
         let mut white_attack_mask = 0;
         let mut black_attack_mask = 0;
         let mobility_score = mobility::evaluate(self, &mut white_attack_mask, &mut black_attack_mask);

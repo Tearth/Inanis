@@ -34,10 +34,10 @@ struct UciState {
     board: UnsafeCell<Bitboard>,
     options: HashMap<String, String>,
     transposition_table: Arc<TranspositionTable>,
-    pawn_hashtable: UnsafeCell<PawnHashTable>,
+    pawn_hashtable: Arc<PawnHashTable>,
     killers_table: UnsafeCell<KillersTable>,
     history_table: UnsafeCell<HistoryTable>,
-    search_thread: UnsafeCell<Option<JoinHandle<()>>>,
+    search_thread: Option<JoinHandle<()>>,
     abort_token: Arc<AtomicBool>,
     ponder_token: Arc<AtomicBool>,
     busy_flag: AtomicBool,
@@ -51,10 +51,10 @@ impl Default for UciState {
             board: UnsafeCell::new(Bitboard::new_initial_position()),
             options: HashMap::new(),
             transposition_table: Arc::new(TranspositionTable::new(1 * 1024 * 1024)),
-            pawn_hashtable: UnsafeCell::new(PawnHashTable::new(1 * 1024 * 1024)),
+            pawn_hashtable: Arc::new(PawnHashTable::new(1 * 1024 * 1024)),
             history_table: UnsafeCell::new(Default::default()),
             killers_table: UnsafeCell::new(Default::default()),
-            search_thread: UnsafeCell::new(None),
+            search_thread: None,
             abort_token: Arc::new(AtomicBool::new(false)),
             ponder_token: Arc::new(AtomicBool::new(false)),
             busy_flag: AtomicBool::new(false),
@@ -238,7 +238,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
                 l.debug_mode.load(Ordering::Relaxed),
                 false,
                 l.transposition_table.clone(),
-                &mut *l.pawn_hashtable.get(),
+                l.pawn_hashtable.clone(),
                 &mut *l.killers_table.get(),
                 &mut *l.history_table.get(),
                 l.abort_token.clone(),
@@ -248,27 +248,29 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
 
             if threads > 1 {
                 for _ in 0..threads {
+                    let l = state_arc.lock().unwrap();
                     let helper_context = SearchContext::new(
-                        &mut *state_arc.lock().unwrap().board.get(),
+                        &mut *l.board.get(),
                         time,
                         inc_time,
                         forced_depth,
                         max_nodes_count,
                         max_move_time,
                         moves_to_go,
-                        state_arc.lock().unwrap().debug_mode.load(Ordering::Relaxed),
+                        l.debug_mode.load(Ordering::Relaxed),
                         true,
-                        state_arc.lock().unwrap().transposition_table.clone(),
-                        &mut *state_arc.lock().unwrap().pawn_hashtable.get(),
-                        &mut *state_arc.lock().unwrap().killers_table.get(),
-                        &mut *state_arc.lock().unwrap().history_table.get(),
-                        state_arc.lock().unwrap().abort_token.clone(),
-                        state_arc.lock().unwrap().ponder_token.clone(),
+                        l.transposition_table.clone(),
+                        l.pawn_hashtable.clone(),
+                        &mut *l.killers_table.get(),
+                        &mut *l.history_table.get(),
+                        l.abort_token.clone(),
+                        l.ponder_token.clone(),
                     );
+                    drop(l);
 
                     let data = HelperThreadContext {
                         board: UnsafeCell::new(context.board.clone()),
-                        pawn_hashtable: UnsafeCell::new(context.pawn_hashtable.clone()),
+                        pawn_hashtable: Arc::new((*context.pawn_hashtable).clone()),
                         killers_table: UnsafeCell::new(context.killers_table.clone()),
                         history_table: UnsafeCell::new(context.history_table.clone()),
                         context: helper_context,
@@ -279,7 +281,6 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
 
                 for i in 0..threads {
                     context.helper_contexts[i].context.board = &mut *context.helper_contexts[i].board.get();
-                    context.helper_contexts[i].context.pawn_hashtable = &mut *context.helper_contexts[i].pawn_hashtable.get();
                     context.helper_contexts[i].context.killers_table = &mut *context.helper_contexts[i].killers_table.get();
                     context.helper_contexts[i].context.history_table = &mut *context.helper_contexts[i].history_table.get();
                 }
@@ -346,14 +347,14 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
                 println!("bestmove {}", best_move.to_long_notation());
             }
 
-            (*state_arc.lock().unwrap().search_thread.get()) = None;
+            state_arc.lock().unwrap().search_thread = None;
             state_arc.lock().unwrap().transposition_table.age_entries();
             (*state_arc.lock().unwrap().killers_table.get()).age_moves();
             (*state_arc.lock().unwrap().history_table.get()).age_values();
             (*state_arc).lock().unwrap().busy_flag.store(false, Ordering::Relaxed);
         }));
 
-        *state.lock().unwrap().search_thread.get() = search_thread;
+        state.lock().unwrap().search_thread = search_thread;
     }
 }
 
@@ -503,9 +504,8 @@ fn recreate_state_tables(state: Arc<Mutex<UciState>>) {
         let total_size = state.lock().unwrap().options["Hash"].parse::<usize>().unwrap();
         let allocation_result = allocator::get_allocation(total_size);
 
-        // TODO
-        // state.transposition_table = Arc::new(TranspositionTable::new(allocation_result.transposition_table_size * 1024 * 1024));
-        *state.lock().unwrap().pawn_hashtable.get() = PawnHashTable::new(allocation_result.pawn_hashtable_size * 1024 * 1024);
+        state.lock().unwrap().transposition_table = Arc::new(TranspositionTable::new(allocation_result.transposition_table_size * 1024 * 1024));
+        state.lock().unwrap().pawn_hashtable = Arc::new(PawnHashTable::new(allocation_result.pawn_hashtable_size * 1024 * 1024));
         *state.lock().unwrap().killers_table.get() = Default::default();
         *state.lock().unwrap().history_table.get() = Default::default();
     }

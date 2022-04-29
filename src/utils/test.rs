@@ -88,7 +88,7 @@ fn run_internal(context: &Arc<TestContext>, depth: i8, transposition_table_size:
 
                 for position in &mut (*context_arc.positions.get())[from..to] {
                     let transposition_table = Arc::new(TranspositionTable::new(transposition_table_size));
-                    let mut pawn_hashtable = PawnHashTable::new(1 * 1024 * 1024);
+                    let mut pawn_hashtable = Arc::new(PawnHashTable::new(1 * 1024 * 1024));
                     let mut killers_table = Default::default();
                     let mut history_table = Default::default();
                     let abort_token = Arc::new(AtomicBool::new(false));
@@ -106,7 +106,7 @@ fn run_internal(context: &Arc<TestContext>, depth: i8, transposition_table_size:
                         false,
                         false,
                         transposition_table.clone(),
-                        &mut pawn_hashtable,
+                        pawn_hashtable.clone(),
                         &mut killers_table,
                         &mut history_table,
                         abort_token.clone(),

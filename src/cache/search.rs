@@ -249,7 +249,7 @@ impl TranspositionTableEntry {
         self.key_data.store(key_data, Ordering::Relaxed);
     }
 
-    /// Loads and parses atomic value into a `TranspositionTableResult` struct.
+    /// Loads and parses atomic value into a [TranspositionTableResult] struct.
     pub fn get_data(&self) -> TranspositionTableResult {
         let key_data = self.key_data.load(Ordering::Relaxed);
         TranspositionTableResult {

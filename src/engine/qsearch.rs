@@ -28,7 +28,7 @@ pub fn run(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, bet
         return -CHECKMATE_SCORE + (ply as i16);
     }
 
-    let stand_pat = -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate(context.pawn_hashtable, &mut context.statistics);
+    let stand_pat = -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate(context.pawn_hashtable.clone(), &mut context.statistics);
     if stand_pat >= beta {
         context.statistics.q_leafs_count += 1;
         context.statistics.q_beta_cutoffs += 1;
