@@ -40,7 +40,7 @@ pub struct SearchContext<'a> {
     pub transposition_table: Arc<TranspositionTable>,
     pub pawn_hashtable: Arc<PawnHashTable>,
     pub killers_table: Arc<KillersTable>,
-    pub history_table: &'a mut HistoryTable,
+    pub history_table: Arc<HistoryTable>,
     pub helper_contexts: Vec<HelperThreadContext<'a>>,
     pub abort_token: Arc<AtomicBool>,
     pub ponder_token: Arc<AtomicBool>,
@@ -50,7 +50,7 @@ pub struct HelperThreadContext<'a> {
     pub board: UnsafeCell<Bitboard>,
     pub pawn_hashtable: Arc<PawnHashTable>,
     pub killers_table: Arc<KillersTable>,
-    pub history_table: UnsafeCell<HistoryTable>,
+    pub history_table: Arc<HistoryTable>,
     pub context: SearchContext<'a>,
 }
 
@@ -153,7 +153,7 @@ impl<'a> SearchContext<'a> {
         transposition_table: Arc<TranspositionTable>,
         pawn_hashtable: Arc<PawnHashTable>,
         killers_table: Arc<KillersTable>,
-        history_table: &'a mut HistoryTable,
+        history_table: Arc<HistoryTable>,
         abort_token: Arc<AtomicBool>,
         ponder_token: Arc<AtomicBool>,
     ) -> Self {

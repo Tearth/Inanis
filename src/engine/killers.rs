@@ -80,10 +80,9 @@ impl Default for KillersTable {
 impl KillersTableEntry {
     /// Constructs a new instance of [KillersTableEntry] with stored `key` and `score`.
     pub fn new(r#move: Move) -> Self {
-        let entry = Self { data: AtomicU16::new(0) };
-
-        entry.set_data(r#move);
-        entry
+        Self {
+            data: AtomicU16::new(r#move.data),
+        }
     }
 
     pub const fn new_const() -> Self {

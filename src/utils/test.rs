@@ -1,6 +1,7 @@
 use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
 use crate::engine::context::SearchContext;
+use crate::engine::history::HistoryTable;
 use crate::engine::killers::KillersTable;
 use crate::state::board::Bitboard;
 use crate::state::fen;
@@ -91,7 +92,7 @@ fn run_internal(context: &Arc<TestContext>, depth: i8, transposition_table_size:
                     let transposition_table = Arc::new(TranspositionTable::new(transposition_table_size));
                     let pawn_hashtable = Arc::new(PawnHashTable::new(1 * 1024 * 1024));
                     let killers_table = Arc::new(KillersTable::default());
-                    let mut history_table = Default::default();
+                    let history_table = Arc::new(HistoryTable::default());
                     let abort_token = Arc::new(AtomicBool::new(false));
                     let ponder_token = Arc::new(AtomicBool::new(false));
 
@@ -109,7 +110,7 @@ fn run_internal(context: &Arc<TestContext>, depth: i8, transposition_table_size:
                         transposition_table.clone(),
                         pawn_hashtable.clone(),
                         killers_table.clone(),
-                        &mut history_table,
+                        history_table.clone(),
                         abort_token.clone(),
                         ponder_token.clone(),
                     );
