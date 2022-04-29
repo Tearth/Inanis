@@ -14,7 +14,6 @@ use crate::state::board::Bitboard;
 use crate::state::movescan::Move;
 use chrono::DateTime;
 use chrono::Utc;
-use std::cell::UnsafeCell;
 use std::cmp;
 use std::mem::MaybeUninit;
 use std::ops;
@@ -22,8 +21,8 @@ use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 
-pub struct SearchContext<'a> {
-    pub board: &'a mut Bitboard,
+pub struct SearchContext {
+    pub board: Bitboard,
     pub statistics: SearchStatistics,
     pub time: u32,
     pub inc_time: u32,
@@ -41,17 +40,17 @@ pub struct SearchContext<'a> {
     pub pawn_hashtable: Arc<PawnHashTable>,
     pub killers_table: Arc<KillersTable>,
     pub history_table: Arc<HistoryTable>,
-    pub helper_contexts: Vec<HelperThreadContext<'a>>,
+    pub helper_contexts: Vec<HelperThreadContext>,
     pub abort_token: Arc<AtomicBool>,
     pub ponder_token: Arc<AtomicBool>,
 }
 
-pub struct HelperThreadContext<'a> {
-    pub board: UnsafeCell<Bitboard>,
+pub struct HelperThreadContext {
+    pub board: Bitboard,
     pub pawn_hashtable: Arc<PawnHashTable>,
     pub killers_table: Arc<KillersTable>,
     pub history_table: Arc<HistoryTable>,
-    pub context: SearchContext<'a>,
+    pub context: SearchContext,
 }
 
 pub struct SearchResult {
@@ -124,7 +123,7 @@ pub struct SearchStatistics {
     pub max_ply: u16,
 }
 
-impl<'a> SearchContext<'a> {
+impl SearchContext {
     /// Constructs a new instance of [SearchContext] with parameters as follows:
     ///  - `board` - initial position of the board
     ///  - `time` - total time for the color in a move (in milliseconds)
@@ -141,7 +140,7 @@ impl<'a> SearchContext<'a> {
     ///  - `abort_token` - token used to abort search from the outside of the context
     ///  - `ponder_token` - token used to change a search mode from pondering to the regular one
     pub fn new(
-        board: &'a mut Bitboard,
+        board: Bitboard,
         time: u32,
         inc_time: u32,
         forced_depth: i8,
@@ -232,7 +231,7 @@ impl<'a> SearchContext<'a> {
     }
 }
 
-impl<'a> Iterator for SearchContext<'a> {
+impl Iterator for SearchContext {
     type Item = SearchResult;
 
     /// Performs a next iteration of the search, using data stored withing the context. Returns [None] if any of the following conditions is true:
@@ -306,11 +305,11 @@ impl<'a> Iterator for SearchContext<'a> {
                 let mut white_attack_mask = 0;
                 let mut black_attack_mask = 0;
 
-                let material_evaluation = material::evaluate(self.board);
-                let pst_evaluation = pst::evaluate(self.board);
-                let mobility_evaluation = mobility::evaluate(self.board, &mut white_attack_mask, &mut black_attack_mask);
-                let safety_evaluation = safety::evaluate(self.board, white_attack_mask, black_attack_mask);
-                let pawns_evaluation = pawns::evaluate_without_cache(self.board);
+                let material_evaluation = material::evaluate(&self.board);
+                let pst_evaluation = pst::evaluate(&self.board);
+                let mobility_evaluation = mobility::evaluate(&self.board, &mut white_attack_mask, &mut black_attack_mask);
+                let safety_evaluation = safety::evaluate(&self.board, white_attack_mask, black_attack_mask);
+                let pawns_evaluation = pawns::evaluate_without_cache(&self.board);
 
                 println!(
                     "info string search_time={}, desired_time={}, material={}, pst={}, mobility={}, safety={}, pawns={}",

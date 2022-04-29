@@ -10,7 +10,6 @@ use crate::state::board::Bitboard;
 use crate::state::movescan::Move;
 use crate::state::*;
 use chrono::Utc;
-use std::cell::UnsafeCell;
 use std::cmp;
 use std::collections::HashMap;
 use std::fs;
@@ -31,7 +30,7 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
 
 struct UciState {
-    board: UnsafeCell<Bitboard>,
+    board: Bitboard,
     options: HashMap<String, String>,
     transposition_table: Arc<TranspositionTable>,
     pawn_hashtable: Arc<PawnHashTable>,
@@ -48,7 +47,7 @@ impl Default for UciState {
     /// Constructs a default instance of [UciState] with zeroed elements and hashtables with their default sizes.
     fn default() -> Self {
         UciState {
-            board: UnsafeCell::new(Bitboard::new_initial_position()),
+            board: Bitboard::new_initial_position(),
             options: HashMap::new(),
             transposition_table: Arc::new(TranspositionTable::new(1 * 1024 * 1024)),
             pawn_hashtable: Arc::new(PawnHashTable::new(1 * 1024 * 1024)),
@@ -132,228 +131,223 @@ fn handle_debug(parameters: &[String], state: Arc<Mutex<UciState>>) {
 ///  - `ponder` - tells the search to run in the ponder mode (thinking on the opponent's time)
 fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
     wait_for_busy_flag(state.clone());
-    unsafe {
-        let mut white_time = u32::MAX;
-        let mut black_time = u32::MAX;
-        let mut white_inc_time = 0;
-        let mut black_inc_time = 0;
-        let mut forced_depth = 0;
-        let mut max_nodes_count = 0;
-        let mut max_move_time = 0;
-        let mut moves_to_go = 0;
 
-        let mut iter = parameters[1..].iter().peekable();
-        while let Some(token) = iter.next() {
-            match token.as_str() {
-                "wtime" => {
-                    white_time = match iter.peek() {
-                        Some(value) => value.parse().unwrap_or(white_time),
-                        None => white_time,
-                    }
+    let mut white_time = u32::MAX;
+    let mut black_time = u32::MAX;
+    let mut white_inc_time = 0;
+    let mut black_inc_time = 0;
+    let mut forced_depth = 0;
+    let mut max_nodes_count = 0;
+    let mut max_move_time = 0;
+    let mut moves_to_go = 0;
+
+    let mut iter = parameters[1..].iter().peekable();
+    while let Some(token) = iter.next() {
+        match token.as_str() {
+            "wtime" => {
+                white_time = match iter.peek() {
+                    Some(value) => value.parse().unwrap_or(white_time),
+                    None => white_time,
                 }
-                "btime" => {
-                    black_time = match iter.peek() {
-                        Some(value) => value.parse().unwrap_or(black_time),
-                        None => black_time,
-                    }
+            }
+            "btime" => {
+                black_time = match iter.peek() {
+                    Some(value) => value.parse().unwrap_or(black_time),
+                    None => black_time,
                 }
-                "winc" => {
-                    white_inc_time = match iter.peek() {
-                        Some(value) => value.parse().unwrap_or(white_inc_time),
-                        None => white_inc_time,
-                    }
+            }
+            "winc" => {
+                white_inc_time = match iter.peek() {
+                    Some(value) => value.parse().unwrap_or(white_inc_time),
+                    None => white_inc_time,
                 }
-                "binc" => {
-                    black_inc_time = match iter.peek() {
-                        Some(value) => value.parse().unwrap_or(black_inc_time),
-                        None => black_inc_time,
-                    }
+            }
+            "binc" => {
+                black_inc_time = match iter.peek() {
+                    Some(value) => value.parse().unwrap_or(black_inc_time),
+                    None => black_inc_time,
                 }
-                "depth" => {
-                    forced_depth = match iter.peek() {
-                        Some(value) => value.parse().unwrap_or(forced_depth),
-                        None => forced_depth,
-                    }
+            }
+            "depth" => {
+                forced_depth = match iter.peek() {
+                    Some(value) => value.parse().unwrap_or(forced_depth),
+                    None => forced_depth,
                 }
-                "nodes" => {
-                    max_nodes_count = match iter.peek() {
-                        Some(value) => value.parse().unwrap_or(max_nodes_count),
-                        None => max_nodes_count,
-                    }
+            }
+            "nodes" => {
+                max_nodes_count = match iter.peek() {
+                    Some(value) => value.parse().unwrap_or(max_nodes_count),
+                    None => max_nodes_count,
                 }
-                "movetime" => {
-                    max_move_time = match iter.peek() {
-                        Some(value) => value.parse().unwrap_or(max_move_time),
-                        None => max_move_time,
-                    }
+            }
+            "movetime" => {
+                max_move_time = match iter.peek() {
+                    Some(value) => value.parse().unwrap_or(max_move_time),
+                    None => max_move_time,
                 }
-                "movestogo" => {
-                    moves_to_go = match iter.peek() {
-                        Some(value) => value.parse().unwrap_or(moves_to_go),
-                        None => moves_to_go,
-                    }
+            }
+            "movestogo" => {
+                moves_to_go = match iter.peek() {
+                    Some(value) => value.parse().unwrap_or(moves_to_go),
+                    None => moves_to_go,
                 }
-                "infinite" => {
-                    forced_depth = engine::MAX_DEPTH;
-                }
-                "ponder" => {
-                    forced_depth = engine::MAX_DEPTH;
-                }
-                _ => {}
+            }
+            "infinite" => {
+                forced_depth = engine::MAX_DEPTH;
+            }
+            "ponder" => {
+                forced_depth = engine::MAX_DEPTH;
+            }
+            _ => {}
+        }
+    }
+
+    let mut time = match state.lock().unwrap().board.active_color {
+        WHITE => white_time,
+        BLACK => black_time,
+        _ => panic!("Invalid value: state.board.active_color={}", state.lock().unwrap().board.active_color),
+    };
+    time -= cmp::min(time, state.lock().unwrap().options["Move Overhead"].parse::<u32>().unwrap());
+
+    let inc_time = match state.lock().unwrap().board.active_color {
+        WHITE => white_inc_time,
+        BLACK => black_inc_time,
+        _ => panic!("Invalid value: state.board.active_color={}", state.lock().unwrap().board.active_color),
+    };
+
+    let state_arc = state.clone();
+
+    state.lock().unwrap().abort_token.store(false, Ordering::Relaxed);
+    state.lock().unwrap().ponder_token.store(false, Ordering::Relaxed);
+    state.lock().unwrap().busy_flag.store(true, Ordering::Relaxed);
+
+    let search_thread = Some(thread::spawn(move || {
+        let threads = state_arc.lock().unwrap().options["Threads"].parse::<usize>().unwrap();
+        let ponder = state_arc.lock().unwrap().options["Ponder"].parse::<bool>().unwrap();
+
+        let l = state_arc.lock().unwrap();
+        let mut context = SearchContext::new(
+            l.board.clone(),
+            time,
+            inc_time,
+            forced_depth,
+            max_nodes_count,
+            max_move_time,
+            moves_to_go,
+            l.debug_mode.load(Ordering::Relaxed),
+            false,
+            l.transposition_table.clone(),
+            l.pawn_hashtable.clone(),
+            l.killers_table.clone(),
+            l.history_table.clone(),
+            l.abort_token.clone(),
+            l.ponder_token.clone(),
+        );
+        drop(l);
+
+        if threads > 1 {
+            for _ in 0..threads {
+                let l = state_arc.lock().unwrap();
+                let helper_context = SearchContext::new(
+                    l.board.clone(),
+                    time,
+                    inc_time,
+                    forced_depth,
+                    max_nodes_count,
+                    max_move_time,
+                    moves_to_go,
+                    l.debug_mode.load(Ordering::Relaxed),
+                    true,
+                    l.transposition_table.clone(),
+                    l.pawn_hashtable.clone(),
+                    l.killers_table.clone(),
+                    l.history_table.clone(),
+                    l.abort_token.clone(),
+                    l.ponder_token.clone(),
+                );
+                drop(l);
+
+                let data = HelperThreadContext {
+                    board: context.board.clone(),
+                    pawn_hashtable: Arc::new((*context.pawn_hashtable).clone()),
+                    killers_table: Arc::new((*context.killers_table).clone()),
+                    history_table: Arc::new((*context.history_table).clone()),
+                    context: helper_context,
+                };
+
+                context.helper_contexts.push(data);
             }
         }
 
-        let mut time = match (*state.lock().unwrap().board.get()).active_color {
-            WHITE => white_time,
-            BLACK => black_time,
-            _ => panic!("Invalid value: state.board.active_color={}", (*state.lock().unwrap().board.get()).active_color),
-        };
-        time -= cmp::min(time, state.lock().unwrap().options["Move Overhead"].parse::<u32>().unwrap());
+        let mut best_move = Default::default();
+        let mut ponder_move = Default::default();
 
-        let inc_time = match (*state.lock().unwrap().board.get()).active_color {
-            WHITE => white_inc_time,
-            BLACK => black_inc_time,
-            _ => panic!("Invalid value: state.board.active_color={}", (*state.lock().unwrap().board.get()).active_color),
-        };
+        for depth_result in context {
+            let pv_line: Vec<String> = depth_result.pv_line.iter().map(|v| v.to_long_notation()).collect();
+            let formatted_score = if engine::is_score_near_checkmate(depth_result.score) {
+                let mut moves_to_mate = (depth_result.score.abs() - engine::CHECKMATE_SCORE).abs() / 2;
+                moves_to_mate *= depth_result.score.signum();
 
-        let state_arc = state.clone();
+                format!("score mate {}", moves_to_mate).to_string()
+            } else {
+                format!("score cp {}", depth_result.score).to_string()
+            };
 
-        state.lock().unwrap().abort_token.store(false, Ordering::Relaxed);
-        state.lock().unwrap().ponder_token.store(false, Ordering::Relaxed);
-        state.lock().unwrap().busy_flag.store(true, Ordering::Relaxed);
-
-        let search_thread = Some(thread::spawn(move || {
-            let threads = state_arc.lock().unwrap().options["Threads"].parse::<usize>().unwrap();
-            let ponder = state_arc.lock().unwrap().options["Ponder"].parse::<bool>().unwrap();
-
-            let l = state_arc.lock().unwrap();
-            let mut context = SearchContext::new(
-                &mut *l.board.get(),
-                time,
-                inc_time,
-                forced_depth,
-                max_nodes_count,
-                max_move_time,
-                moves_to_go,
-                l.debug_mode.load(Ordering::Relaxed),
-                false,
-                l.transposition_table.clone(),
-                l.pawn_hashtable.clone(),
-                l.killers_table.clone(),
-                l.history_table.clone(),
-                l.abort_token.clone(),
-                l.ponder_token.clone(),
+            best_move = depth_result.pv_line[0];
+            println!(
+                "{}",
+                &format!(
+                    "info time {} {} depth {} seldepth {} nodes {} pv {}",
+                    depth_result.time,
+                    formatted_score,
+                    depth_result.depth,
+                    depth_result.statistics.max_ply,
+                    depth_result.statistics.nodes_count + depth_result.statistics.q_nodes_count,
+                    pv_line.join(" ").as_str()
+                )
             );
-            drop(l);
 
-            if threads > 1 {
-                for _ in 0..threads {
-                    let l = state_arc.lock().unwrap();
-                    let helper_context = SearchContext::new(
-                        &mut *l.board.get(),
-                        time,
-                        inc_time,
-                        forced_depth,
-                        max_nodes_count,
-                        max_move_time,
-                        moves_to_go,
-                        l.debug_mode.load(Ordering::Relaxed),
-                        true,
-                        l.transposition_table.clone(),
-                        l.pawn_hashtable.clone(),
-                        l.killers_table.clone(),
-                        l.history_table.clone(),
-                        l.abort_token.clone(),
-                        l.ponder_token.clone(),
-                    );
-                    drop(l);
+            // Check if the ponder move is legal
+            if ponder && depth_result.pv_line.len() >= 2 {
+                let mut board = state_arc.lock().unwrap().board.clone();
+                let mut allow_ponder = true;
 
-                    let data = HelperThreadContext {
-                        board: UnsafeCell::new(context.board.clone()),
-                        pawn_hashtable: Arc::new((*context.pawn_hashtable).clone()),
-                        killers_table: Arc::new((*context.killers_table).clone()),
-                        history_table: Arc::new((*context.history_table).clone()),
-                        context: helper_context,
-                    };
-
-                    context.helper_contexts.push(data);
+                board.make_move(depth_result.pv_line[0]);
+                board.make_move(depth_result.pv_line[1]);
+                if board.is_king_checked(board.active_color ^ 1) {
+                    allow_ponder = false;
                 }
 
-                for i in 0..threads {
-                    context.helper_contexts[i].context.board = &mut *context.helper_contexts[i].board.get();
+                if board.is_repetition_draw(3) || board.is_fifty_move_rule_draw() || board.is_insufficient_material_draw() {
+                    allow_ponder = false;
                 }
-            }
+                board.undo_move(depth_result.pv_line[1]);
+                board.undo_move(depth_result.pv_line[0]);
 
-            let mut best_move = Default::default();
-            let mut ponder_move = Default::default();
-
-            for depth_result in context {
-                let pv_line: Vec<String> = depth_result.pv_line.iter().map(|v| v.to_long_notation()).collect();
-                let formatted_score = if engine::is_score_near_checkmate(depth_result.score) {
-                    let mut moves_to_mate = (depth_result.score.abs() - engine::CHECKMATE_SCORE).abs() / 2;
-                    moves_to_mate *= depth_result.score.signum();
-
-                    format!("score mate {}", moves_to_mate).to_string()
-                } else {
-                    format!("score cp {}", depth_result.score).to_string()
-                };
-
-                best_move = depth_result.pv_line[0];
-                println!(
-                    "{}",
-                    &format!(
-                        "info time {} {} depth {} seldepth {} nodes {} pv {}",
-                        depth_result.time,
-                        formatted_score,
-                        depth_result.depth,
-                        depth_result.statistics.max_ply,
-                        depth_result.statistics.nodes_count + depth_result.statistics.q_nodes_count,
-                        pv_line.join(" ").as_str()
-                    )
-                );
-
-                // Check if the ponder move is legal
-                if ponder && depth_result.pv_line.len() >= 2 {
-                    let board = state_arc.lock().unwrap().board.get();
-                    let mut allow_ponder = true;
-
-                    (*board).make_move(depth_result.pv_line[0]);
-                    (*board).make_move(depth_result.pv_line[1]);
-                    if (*board).is_king_checked((*board).active_color ^ 1) {
-                        allow_ponder = false;
-                    }
-
-                    if (*board).is_repetition_draw(3) || (*board).is_fifty_move_rule_draw() || (*board).is_insufficient_material_draw() {
-                        allow_ponder = false;
-                    }
-                    (*board).undo_move(depth_result.pv_line[1]);
-                    (*board).undo_move(depth_result.pv_line[0]);
-
-                    if allow_ponder {
-                        ponder_move = depth_result.pv_line[1];
-                    } else {
-                        ponder_move = Default::default();
-                    }
+                if allow_ponder {
+                    ponder_move = depth_result.pv_line[1];
                 } else {
                     ponder_move = Default::default();
                 }
-            }
-
-            if ponder && ponder_move != Default::default() {
-                println!("bestmove {} ponder {}", best_move.to_long_notation(), ponder_move.to_long_notation());
             } else {
-                println!("bestmove {}", best_move.to_long_notation());
+                ponder_move = Default::default();
             }
+        }
 
-            state_arc.lock().unwrap().search_thread = None;
-            state_arc.lock().unwrap().transposition_table.age_entries();
-            state_arc.lock().unwrap().killers_table.age_moves();
-            state_arc.lock().unwrap().history_table.age_values();
-            (*state_arc).lock().unwrap().busy_flag.store(false, Ordering::Relaxed);
-        }));
+        if ponder && ponder_move != Default::default() {
+            println!("bestmove {} ponder {}", best_move.to_long_notation(), ponder_move.to_long_notation());
+        } else {
+            println!("bestmove {}", best_move.to_long_notation());
+        }
 
-        state.lock().unwrap().search_thread = search_thread;
-    }
+        state_arc.lock().unwrap().search_thread = None;
+        state_arc.lock().unwrap().transposition_table.age_entries();
+        state_arc.lock().unwrap().killers_table.age_moves();
+        state_arc.lock().unwrap().history_table.age_values();
+        (*state_arc).lock().unwrap().busy_flag.store(false, Ordering::Relaxed);
+    }));
+
+    state.lock().unwrap().search_thread = search_thread;
 }
 
 /// Handles `isready` command by waiting for the busy flag, and then printing response as fast as possible.
@@ -380,32 +374,31 @@ fn handle_position(parameters: &[String], state: Arc<Mutex<UciState>>) {
         return;
     }
 
-    unsafe {
-        *state.lock().unwrap().board.get() = match parameters[1].as_str() {
-            "fen" => {
-                let fen = parameters[2..].join(" ");
-                match Bitboard::new_from_fen(fen.as_str()) {
-                    Ok(board) => board,
-                    Err(message) => {
-                        println!("info string Error: {}", message);
-                        return;
-                    }
+    state.lock().unwrap().board = match parameters[1].as_str() {
+        "fen" => {
+            let fen = parameters[2..].join(" ");
+            match Bitboard::new_from_fen(fen.as_str()) {
+                Ok(board) => board,
+                Err(message) => {
+                    println!("info string Error: {}", message);
+                    return;
                 }
             }
-            _ => Bitboard::new_initial_position(),
-        };
-    }
+        }
+        _ => Bitboard::new_initial_position(),
+    };
 
     if let Some(index) = parameters.iter().position(|s| s == "moves") {
         for premade_move in &parameters[index + 1..] {
-            let parsed_move = match Move::from_long_notation(premade_move, unsafe { &mut *state.lock().unwrap().board.get() }) {
+            let parsed_move = match Move::from_long_notation(premade_move, &state.lock().unwrap().board) {
                 Ok(r#move) => r#move,
                 Err(message) => {
                     println!("info string Error: {}", message);
                     return;
                 }
             };
-            unsafe { (*state.lock().unwrap().board.get()).make_move(parsed_move) };
+
+            state.lock().unwrap().board.make_move(parsed_move);
         }
     };
 }
@@ -466,14 +459,12 @@ fn handle_setoption(parameters: &[String], state: Arc<Mutex<UciState>>) {
 fn handle_ucinewgame(state: Arc<Mutex<UciState>>) {
     wait_for_busy_flag(state.clone());
 
-    unsafe {
-        state.lock().unwrap().abort_token.store(true, Ordering::Relaxed);
+    state.lock().unwrap().abort_token.store(true, Ordering::Relaxed);
 
-        *state.lock().unwrap().board.get() = Bitboard::new_initial_position();
-        // TODO
-        // *state.abort_token.get() = Default::default();
-        recreate_state_tables(state);
-    }
+    state.lock().unwrap().board = Bitboard::new_initial_position();
+    // TODO
+    // *state.abort_token.get() = Default::default();
+    recreate_state_tables(state);
 }
 
 /// Handles `stop` command by setting abort token, which should stop ongoing search as fast as possible.
@@ -498,15 +489,13 @@ fn wait_for_busy_flag(state: Arc<Mutex<UciState>>) {
 
 /// Recreates transposition table, pawn hashtable, killers table and history table.
 fn recreate_state_tables(state: Arc<Mutex<UciState>>) {
-    unsafe {
-        let total_size = state.lock().unwrap().options["Hash"].parse::<usize>().unwrap();
-        let allocation_result = allocator::get_allocation(total_size);
+    let total_size = state.lock().unwrap().options["Hash"].parse::<usize>().unwrap();
+    let allocation_result = allocator::get_allocation(total_size);
 
-        state.lock().unwrap().transposition_table = Arc::new(TranspositionTable::new(allocation_result.transposition_table_size * 1024 * 1024));
-        state.lock().unwrap().pawn_hashtable = Arc::new(PawnHashTable::new(allocation_result.pawn_hashtable_size * 1024 * 1024));
-        state.lock().unwrap().killers_table = Default::default();
-        state.lock().unwrap().history_table = Default::default();
-    }
+    state.lock().unwrap().transposition_table = Arc::new(TranspositionTable::new(allocation_result.transposition_table_size * 1024 * 1024));
+    state.lock().unwrap().pawn_hashtable = Arc::new(PawnHashTable::new(allocation_result.pawn_hashtable_size * 1024 * 1024));
+    state.lock().unwrap().killers_table = Default::default();
+    state.lock().unwrap().history_table = Default::default();
 }
 
 /// Enables saving of crash files by setting a custom panic hook.

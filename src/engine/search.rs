@@ -161,7 +161,7 @@ pub fn run<const PV: bool>(
             context.statistics.tt_hits += 1;
 
             if entry.best_move != Default::default() {
-                if entry.best_move.is_legal(context.board) {
+                if entry.best_move.is_legal(&context.board) {
                     hash_move = entry.best_move;
                     context.statistics.tt_legal_hashmoves += 1;
                 } else {
