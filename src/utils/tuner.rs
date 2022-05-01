@@ -12,7 +12,6 @@ use crate::state::board::Bitboard;
 use crate::state::fen;
 use crate::state::*;
 use chrono::Utc;
-use nameof::name_of;
 use std::fs;
 use std::fs::File;
 use std::io::BufRead;

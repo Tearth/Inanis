@@ -74,7 +74,6 @@ Examples of running the tests:
  - [chrono](https://github.com/chronotope/chrono) - feature-complete superset of the time library
  - [bitflags](https://github.com/bitflags/bitflags) - macro to generate structures which behave like a set of bitflags
  - [prettytable-rs](https://github.com/phsym/prettytable-rs) - a formatted and aligned table printer library
- - [nameof](https://github.com/SilentByte/nameof) - macro which takes a binding, type, const, or function as an argument and returns its unqualified string representation
  - [crossbeam](https://github.com/crossbeam-rs/crossbeam) - a set of tools for concurrent programming
  - [criterion](https://github.com/bheisler/criterion.rs) - benchmark framework
 
