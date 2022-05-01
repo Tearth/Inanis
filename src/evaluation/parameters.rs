@@ -9,9 +9,9 @@ impl Default for EvaluationParameters {
         let mut evaluation_parameters = Self {
             piece_value: [100, 419, 442, 648, 1325, 10000],
 
-            piece_mobility_opening: [5, 8, 5, 6, 2, 6],
-            piece_mobility_ending: [3, 0, 0, 5, 6, 3],
-            piece_mobility_center_multiplier: [6, 1, 3, 1, 1, 6],
+            mobility_opening: [5, 8, 5, 6, 2, 6],
+            mobility_ending: [3, 0, 0, 5, 6, 3],
+            mobility_center_multiplier: [6, 1, 3, 1, 1, 6],
 
             doubled_pawn_opening: 5,
             doubled_pawn_ending: -12,

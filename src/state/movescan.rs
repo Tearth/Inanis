@@ -642,7 +642,7 @@ pub fn get_piece_mobility<const PIECE: u8>(board: &Bitboard, color: u8, dangered
             _ => panic!("Invalid value: PIECE={}", PIECE),
         } & !board.occupancy[color as usize];
 
-        let center_mobility = unsafe { board.evaluation_parameters.piece_mobility_center_multiplier[PIECE as usize] } * bit_count(piece_moves & CENTER) as i16;
+        let center_mobility = unsafe { board.evaluation_parameters.mobility_center_multiplier[PIECE as usize] } * bit_count(piece_moves & CENTER) as i16;
         let outside_mobility = bit_count(piece_moves & OUTSIDE) as i16;
 
         mobility += center_mobility + outside_mobility;

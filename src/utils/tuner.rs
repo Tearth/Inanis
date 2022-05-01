@@ -7,6 +7,7 @@ use crate::evaluation::pst::knight;
 use crate::evaluation::pst::pawn;
 use crate::evaluation::pst::queen;
 use crate::evaluation::pst::rook;
+use crate::evaluation::EvaluationParameters;
 use crate::state::board::Bitboard;
 use crate::state::fen;
 use crate::state::*;
@@ -18,9 +19,11 @@ use std::io::BufRead;
 use std::io::BufReader;
 use std::io::Write;
 use std::path::Path;
+use std::sync::Arc;
 
 struct TunerContext {
     positions: Vec<TunerPosition>,
+    parameters: EvaluationParameters,
 }
 
 struct TunerPosition {
@@ -40,7 +43,10 @@ struct TunerParameter {
 impl TunerContext {
     /// Constructs a new instance of [TunerContext] with stored `positions`.
     pub fn new(positions: Vec<TunerPosition>) -> Self {
-        Self { positions }
+        Self {
+            positions,
+            parameters: Default::default(),
+        }
     }
 }
 
@@ -92,8 +98,8 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
     let mut tendence = Vec::new();
     tendence.resize(context.positions.len(), 1i8);
 
-    let mut best_values = load_values(lock_material, random_values);
-    save_values(&mut best_values, lock_material);
+    let mut best_values = load_values(&context, lock_material, random_values);
+    save_values(&mut context, &mut best_values, lock_material);
 
     let mut best_error = calculate_error(&mut context, 1.13, threads_count);
     let mut improved = true;
@@ -127,7 +133,7 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
                 values[value_index].value += step;
                 values[value_index].value = values[value_index].value.clamp(min, max);
 
-                save_values(&mut values, lock_material);
+                save_values(&mut context, &mut values, lock_material);
                 calculate_error(&mut context, 1.13, threads_count)
             };
 
@@ -151,7 +157,7 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
                     values[value_index].value -= step.signum();
                     values[value_index].value = values[value_index].value.clamp(min, max);
 
-                    save_values(&mut values, lock_material);
+                    save_values(&mut context, &mut values, lock_material);
                     calculate_error(&mut context, 1.13, threads_count)
                 };
 
@@ -179,17 +185,17 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
                 tendence[value_index] = step.signum() as i8;
             }
         }
-        /*
+
         unsafe {
-            write_evaluation_parameters(output_directory, best_error);
-            write_piece_square_table(output_directory, best_error, "pawn", &pawn::PATTERN[0], &pawn::PATTERN[1]);
-            write_piece_square_table(output_directory, best_error, "knight", &knight::PATTERN[0], &knight::PATTERN[1]);
-            write_piece_square_table(output_directory, best_error, "bishop", &bishop::PATTERN[0], &bishop::PATTERN[1]);
-            write_piece_square_table(output_directory, best_error, "rook", &rook::PATTERN[0], &rook::PATTERN[1]);
-            write_piece_square_table(output_directory, best_error, "queen", &queen::PATTERN[0], &queen::PATTERN[1]);
-            write_piece_square_table(output_directory, best_error, "king", &king::PATTERN[0], &king::PATTERN[1]);
+            write_evaluation_parameters(&mut context, output_directory, best_error);
+            write_piece_square_table(output_directory, best_error, "pawn", &context.parameters.pst_patterns[PAWN as usize]);
+            write_piece_square_table(output_directory, best_error, "knight", &context.parameters.pst_patterns[KNIGHT as usize]);
+            write_piece_square_table(output_directory, best_error, "bishop", &context.parameters.pst_patterns[BISHOP as usize]);
+            write_piece_square_table(output_directory, best_error, "rook", &context.parameters.pst_patterns[ROOK as usize]);
+            write_piece_square_table(output_directory, best_error, "queen", &context.parameters.pst_patterns[QUEEN as usize]);
+            write_piece_square_table(output_directory, best_error, "king", &context.parameters.pst_patterns[KING as usize]);
         }
-        */
+
         println!(
             "Iteration {} done in {} seconds, {} changes made, error reduced from {:.6} to {:.6} ({:.6})",
             iterations_count,
@@ -204,10 +210,11 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
 
 /// Tests the correctness of [load_values] and [save_values] methods.
 pub fn validate() -> bool {
-    let mut values = load_values(false, false);
-    save_values(&mut values, false);
+    let mut context = TunerContext::new(Vec::new());
+    let mut values = load_values(&context, false, false);
+    save_values(&mut context, &mut values, false);
 
-    let values_after_save = load_values(false, false);
+    let values_after_save = load_values(&context, false, false);
     values.iter().zip(&values_after_save).all(|(a, b)| a.value == b.value)
 }
 
@@ -220,9 +227,10 @@ fn load_positions(epd_filename: &str) -> Result<Vec<TunerPosition>, &'static str
         Err(_) => return Err("Can't open EPD file"),
     };
 
+    let evaluation_parameters = Arc::new(EvaluationParameters::default());
     for line in BufReader::new(file).lines() {
         let position = line.unwrap();
-        let parsed_epd = fen::epd_to_board(position.as_str())?;
+        let mut parsed_epd = fen::epd_to_board(position.as_str())?;
 
         if parsed_epd.comment == None {
             return Err("Invalid game result");
@@ -235,6 +243,7 @@ fn load_positions(epd_filename: &str) -> Result<Vec<TunerPosition>, &'static str
             _ => return Err("Invalid game result"),
         };
 
+        parsed_epd.board.evaluation_parameters = evaluation_parameters.clone();
         positions.push(TunerPosition::new(parsed_epd.board, result));
     }
 
@@ -246,11 +255,15 @@ fn calculate_error(context: &mut TunerContext, scaling_constant: f64, threads_co
     let mut sum_of_errors = 0.0;
     let positions_count = context.positions.len();
 
+    let evaluation_parameters = Arc::new(context.parameters.clone());
     crossbeam::thread::scope(|scope| {
         let mut threads = Vec::new();
         for chunk in context.positions.chunks_mut(positions_count / threads_count) {
+            let evaluation_parameters_arc = evaluation_parameters.clone();
             threads.push(scope.spawn(move |_| {
                 for position in chunk {
+                    let evaluation_parameters_arc = evaluation_parameters_arc.clone();
+                    position.board.evaluation_parameters = evaluation_parameters_arc;
                     position.board.recalculate_incremental_values();
 
                     let evaluation = position.board.evaluate_without_cache() as f64;
@@ -273,79 +286,83 @@ fn calculate_error(context: &mut TunerContext, scaling_constant: f64, threads_co
 
 /// Transforms the current evaluation values into a list of [TunerParameter]. Use `lock_material` if the parameters related to piece values should
 /// be skipped, and `random_values` if the parameters should have random values (useful when initializing tuner).
-fn load_values(lock_material: bool, random_values: bool) -> Vec<TunerParameter> {
+fn load_values(context: &TunerContext, lock_material: bool, random_values: bool) -> Vec<TunerParameter> {
     let mut parameters = Vec::new();
-    /*
-    unsafe {
-        if !lock_material {
-            parameters.push(TunerParameter::new(PIECE_VALUE[PAWN as usize], 100, 100, 100, 100));
-            parameters.push(TunerParameter::new(PIECE_VALUE[KNIGHT as usize], 0, 300, 400, 9999));
-            parameters.push(TunerParameter::new(PIECE_VALUE[BISHOP as usize], 0, 300, 400, 9999));
-            parameters.push(TunerParameter::new(PIECE_VALUE[ROOK as usize], 0, 400, 600, 9999));
-            parameters.push(TunerParameter::new(PIECE_VALUE[QUEEN as usize], 0, 900, 1200, 9999));
-            parameters.push(TunerParameter::new(PIECE_VALUE[KING as usize], 10000, 10000, 10000, 10000));
-        }
 
-        parameters.push(TunerParameter::new(PIECE_MOBILITY_OPENING[PAWN as usize], 0, 2, 6, 10));
-        parameters.push(TunerParameter::new(PIECE_MOBILITY_OPENING[KNIGHT as usize], 0, 2, 6, 10));
-        parameters.push(TunerParameter::new(PIECE_MOBILITY_OPENING[BISHOP as usize], 0, 2, 6, 10));
-        parameters.push(TunerParameter::new(PIECE_MOBILITY_OPENING[ROOK as usize], 0, 2, 6, 10));
-        parameters.push(TunerParameter::new(PIECE_MOBILITY_OPENING[QUEEN as usize], 0, 2, 6, 10));
-        parameters.push(TunerParameter::new(PIECE_MOBILITY_OPENING[KING as usize], 0, 2, 6, 10));
-
-        parameters.push(TunerParameter::new(PIECE_MOBILITY_ENDING[PAWN as usize], 0, 2, 6, 10));
-        parameters.push(TunerParameter::new(PIECE_MOBILITY_ENDING[KNIGHT as usize], 0, 2, 6, 10));
-        parameters.push(TunerParameter::new(PIECE_MOBILITY_ENDING[BISHOP as usize], 0, 2, 6, 10));
-        parameters.push(TunerParameter::new(PIECE_MOBILITY_ENDING[ROOK as usize], 0, 2, 6, 10));
-        parameters.push(TunerParameter::new(PIECE_MOBILITY_ENDING[QUEEN as usize], 0, 2, 6, 10));
-        parameters.push(TunerParameter::new(PIECE_MOBILITY_ENDING[KING as usize], 0, 2, 6, 10));
-
-        parameters.push(TunerParameter::new(PIECE_MOBILITY_CENTER_MULTIPLIER[PAWN as usize], 0, 2, 6, 10));
-        parameters.push(TunerParameter::new(PIECE_MOBILITY_CENTER_MULTIPLIER[KNIGHT as usize], 0, 2, 6, 10));
-        parameters.push(TunerParameter::new(PIECE_MOBILITY_CENTER_MULTIPLIER[BISHOP as usize], 0, 2, 6, 10));
-        parameters.push(TunerParameter::new(PIECE_MOBILITY_CENTER_MULTIPLIER[ROOK as usize], 0, 2, 6, 10));
-        parameters.push(TunerParameter::new(PIECE_MOBILITY_CENTER_MULTIPLIER[QUEEN as usize], 0, 2, 6, 10));
-        parameters.push(TunerParameter::new(PIECE_MOBILITY_CENTER_MULTIPLIER[KING as usize], 0, 2, 6, 10));
-
-        parameters.push(TunerParameter::new(DOUBLED_PAWN_OPENING, -999, -40, -10, 999));
-        parameters.push(TunerParameter::new(DOUBLED_PAWN_ENDING, -999, -40, -10, 999));
-
-        parameters.push(TunerParameter::new(ISOLATED_PAWN_OPENING, -999, -40, -10, 999));
-        parameters.push(TunerParameter::new(ISOLATED_PAWN_ENDING, -999, -40, -10, 999));
-
-        parameters.push(TunerParameter::new(CHAINED_PAWN_OPENING, -999, 10, 40, 999));
-        parameters.push(TunerParameter::new(CHAINED_PAWN_ENDING, -999, 10, 40, 999));
-
-        parameters.push(TunerParameter::new(PASSING_PAWN_OPENING, -999, 10, 40, 999));
-        parameters.push(TunerParameter::new(PASSING_PAWN_ENDING, -999, 10, 40, 999));
-
-        parameters.push(TunerParameter::new(PAWN_SHIELD_OPENING, -999, 10, 40, 999));
-        parameters.push(TunerParameter::new(PAWN_SHIELD_ENDING, -999, 10, 40, 999));
-
-        parameters.push(TunerParameter::new(PAWN_SHIELD_OPEN_FILE_OPENING, -999, -40, -10, 999));
-        parameters.push(TunerParameter::new(PAWN_SHIELD_OPEN_FILE_ENDING, -999, -40, -10, 999));
-
-        parameters.push(TunerParameter::new(KING_ATTACKED_FIELDS_OPENING, -999, -40, -10, 999));
-        parameters.push(TunerParameter::new(KING_ATTACKED_FIELDS_ENDING, -999, -40, -10, 999));
-
-        parameters.append(&mut pawn::PATTERN[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
-        parameters.append(&mut pawn::PATTERN[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
-
-        parameters.append(&mut knight::PATTERN[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
-        parameters.append(&mut knight::PATTERN[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
-
-        parameters.append(&mut bishop::PATTERN[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
-        parameters.append(&mut bishop::PATTERN[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
-
-        parameters.append(&mut rook::PATTERN[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
-        parameters.append(&mut rook::PATTERN[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
-
-        parameters.append(&mut queen::PATTERN[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
-        parameters.append(&mut queen::PATTERN[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
-
-        parameters.append(&mut king::PATTERN[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
-        parameters.append(&mut king::PATTERN[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
+    if !lock_material {
+        parameters.push(TunerParameter::new(context.parameters.piece_value[PAWN as usize], 100, 100, 100, 100));
+        parameters.push(TunerParameter::new(context.parameters.piece_value[KNIGHT as usize], 0, 300, 400, 9999));
+        parameters.push(TunerParameter::new(context.parameters.piece_value[BISHOP as usize], 0, 300, 400, 9999));
+        parameters.push(TunerParameter::new(context.parameters.piece_value[ROOK as usize], 0, 400, 600, 9999));
+        parameters.push(TunerParameter::new(context.parameters.piece_value[QUEEN as usize], 0, 900, 1200, 9999));
+        parameters.push(TunerParameter::new(context.parameters.piece_value[KING as usize], 10000, 10000, 10000, 10000));
     }
+
+    parameters.push(TunerParameter::new(context.parameters.mobility_opening[PAWN as usize], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_opening[KNIGHT as usize], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_opening[BISHOP as usize], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_opening[ROOK as usize], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_opening[QUEEN as usize], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_opening[KING as usize], 0, 2, 6, 10));
+
+    parameters.push(TunerParameter::new(context.parameters.mobility_ending[PAWN as usize], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_ending[KNIGHT as usize], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_ending[BISHOP as usize], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_ending[ROOK as usize], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_ending[QUEEN as usize], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_ending[KING as usize], 0, 2, 6, 10));
+
+    parameters.push(TunerParameter::new(context.parameters.mobility_center_multiplier[PAWN as usize], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_center_multiplier[KNIGHT as usize], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_center_multiplier[BISHOP as usize], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_center_multiplier[ROOK as usize], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_center_multiplier[QUEEN as usize], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_center_multiplier[KING as usize], 0, 2, 6, 10));
+
+    parameters.push(TunerParameter::new(context.parameters.doubled_pawn_opening, -999, -40, -10, 999));
+    parameters.push(TunerParameter::new(context.parameters.doubled_pawn_ending, -999, -40, -10, 999));
+
+    parameters.push(TunerParameter::new(context.parameters.isolated_pawn_opening, -999, -40, -10, 999));
+    parameters.push(TunerParameter::new(context.parameters.isolated_pawn_ending, -999, -40, -10, 999));
+
+    parameters.push(TunerParameter::new(context.parameters.chained_pawn_opening, -999, 10, 40, 999));
+    parameters.push(TunerParameter::new(context.parameters.chained_pawn_ending, -999, 10, 40, 999));
+
+    parameters.push(TunerParameter::new(context.parameters.passing_pawn_opening, -999, 10, 40, 999));
+    parameters.push(TunerParameter::new(context.parameters.passing_pawn_ending, -999, 10, 40, 999));
+
+    parameters.push(TunerParameter::new(context.parameters.pawn_shield_opening, -999, 10, 40, 999));
+    parameters.push(TunerParameter::new(context.parameters.pawn_shield_ending, -999, 10, 40, 999));
+
+    parameters.push(TunerParameter::new(context.parameters.pawn_shield_open_file_opening, -999, -40, -10, 999));
+    parameters.push(TunerParameter::new(context.parameters.pawn_shield_open_file_ending, -999, -40, -10, 999));
+
+    parameters.push(TunerParameter::new(context.parameters.king_attacked_fields_opening, -999, -40, -10, 999));
+    parameters.push(TunerParameter::new(context.parameters.king_attacked_fields_ending, -999, -40, -10, 999));
+
+    let pawn_pst = &context.parameters.pst_patterns[PAWN as usize];
+    parameters.append(&mut pawn_pst[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
+    parameters.append(&mut pawn_pst[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
+
+    let knight_pst = &context.parameters.pst_patterns[KNIGHT as usize];
+    parameters.append(&mut knight_pst[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
+    parameters.append(&mut knight_pst[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
+
+    let bishop_pst = &context.parameters.pst_patterns[BISHOP as usize];
+    parameters.append(&mut bishop_pst[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
+    parameters.append(&mut bishop_pst[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
+
+    let rook_pst = &context.parameters.pst_patterns[ROOK as usize];
+    parameters.append(&mut rook_pst[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
+    parameters.append(&mut rook_pst[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
+
+    let queen_pst = &context.parameters.pst_patterns[QUEEN as usize];
+    parameters.append(&mut queen_pst[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
+    parameters.append(&mut queen_pst[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
+
+    let king_pst = &context.parameters.pst_patterns[KING as usize];
+    parameters.append(&mut king_pst[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
+    parameters.append(&mut king_pst[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
 
     if random_values {
         fastrand::seed(Utc::now().timestamp() as u64);
@@ -357,67 +374,69 @@ fn load_values(lock_material: bool, random_values: bool) -> Vec<TunerParameter> 
     for parameter in &mut parameters {
         (*parameter).value = (*parameter).value.clamp(parameter.min, parameter.max);
     }
-    */
+
     parameters
 }
 
 /// Transforms `values` into the evaluation parameters, which can be used during real evaluation. Use `lock_material` if the parameters
 /// related to piece values should be skipped.
-fn save_values(values: &mut [TunerParameter], lock_material: bool) {
-    /*
+fn save_values(context: &mut TunerContext, values: &mut [TunerParameter], lock_material: bool) {
     let mut index = 0;
-    unsafe {
-        if !lock_material {
-            save_values_to_i16_array_internal(values, &mut PIECE_VALUE, &mut index);
-        }
 
-        save_values_to_i16_array_internal(values, &mut PIECE_MOBILITY_OPENING, &mut index);
-        save_values_to_i16_array_internal(values, &mut PIECE_MOBILITY_ENDING, &mut index);
-        save_values_to_i16_array_internal(values, &mut PIECE_MOBILITY_CENTER_MULTIPLIER, &mut index);
-
-        save_values_internal(values, &mut DOUBLED_PAWN_OPENING, &mut index);
-        save_values_internal(values, &mut DOUBLED_PAWN_ENDING, &mut index);
-
-        save_values_internal(values, &mut ISOLATED_PAWN_OPENING, &mut index);
-        save_values_internal(values, &mut ISOLATED_PAWN_ENDING, &mut index);
-
-        save_values_internal(values, &mut CHAINED_PAWN_OPENING, &mut index);
-        save_values_internal(values, &mut CHAINED_PAWN_ENDING, &mut index);
-
-        save_values_internal(values, &mut PASSING_PAWN_OPENING, &mut index);
-        save_values_internal(values, &mut PASSING_PAWN_ENDING, &mut index);
-
-        save_values_internal(values, &mut PAWN_SHIELD_OPENING, &mut index);
-        save_values_internal(values, &mut PAWN_SHIELD_ENDING, &mut index);
-
-        save_values_internal(values, &mut PAWN_SHIELD_OPEN_FILE_OPENING, &mut index);
-        save_values_internal(values, &mut PAWN_SHIELD_OPEN_FILE_ENDING, &mut index);
-
-        save_values_internal(values, &mut KING_ATTACKED_FIELDS_OPENING, &mut index);
-        save_values_internal(values, &mut KING_ATTACKED_FIELDS_ENDING, &mut index);
-
-        save_values_to_i8_array_internal(values, &mut pawn::PATTERN[0], &mut index);
-        save_values_to_i8_array_internal(values, &mut pawn::PATTERN[1], &mut index);
-
-        save_values_to_i8_array_internal(values, &mut knight::PATTERN[0], &mut index);
-        save_values_to_i8_array_internal(values, &mut knight::PATTERN[1], &mut index);
-
-        save_values_to_i8_array_internal(values, &mut bishop::PATTERN[0], &mut index);
-        save_values_to_i8_array_internal(values, &mut bishop::PATTERN[1], &mut index);
-
-        save_values_to_i8_array_internal(values, &mut rook::PATTERN[0], &mut index);
-        save_values_to_i8_array_internal(values, &mut rook::PATTERN[1], &mut index);
-
-        save_values_to_i8_array_internal(values, &mut queen::PATTERN[0], &mut index);
-        save_values_to_i8_array_internal(values, &mut queen::PATTERN[1], &mut index);
-
-        save_values_to_i8_array_internal(values, &mut king::PATTERN[0], &mut index);
-        save_values_to_i8_array_internal(values, &mut king::PATTERN[1], &mut index);
+    if !lock_material {
+        save_values_to_i16_array_internal(values, &mut context.parameters.piece_value, &mut index);
     }
 
-    pst::init();
-    evaluation::init();
-    */
+    save_values_to_i16_array_internal(values, &mut context.parameters.mobility_opening, &mut index);
+    save_values_to_i16_array_internal(values, &mut context.parameters.mobility_ending, &mut index);
+    save_values_to_i16_array_internal(values, &mut context.parameters.mobility_center_multiplier, &mut index);
+
+    save_values_internal(values, &mut context.parameters.doubled_pawn_opening, &mut index);
+    save_values_internal(values, &mut context.parameters.doubled_pawn_ending, &mut index);
+
+    save_values_internal(values, &mut context.parameters.isolated_pawn_opening, &mut index);
+    save_values_internal(values, &mut context.parameters.isolated_pawn_ending, &mut index);
+
+    save_values_internal(values, &mut context.parameters.chained_pawn_opening, &mut index);
+    save_values_internal(values, &mut context.parameters.chained_pawn_ending, &mut index);
+
+    save_values_internal(values, &mut context.parameters.passing_pawn_opening, &mut index);
+    save_values_internal(values, &mut context.parameters.passing_pawn_ending, &mut index);
+
+    save_values_internal(values, &mut context.parameters.pawn_shield_opening, &mut index);
+    save_values_internal(values, &mut context.parameters.pawn_shield_ending, &mut index);
+
+    save_values_internal(values, &mut context.parameters.pawn_shield_open_file_opening, &mut index);
+    save_values_internal(values, &mut context.parameters.pawn_shield_open_file_ending, &mut index);
+
+    save_values_internal(values, &mut context.parameters.king_attacked_fields_opening, &mut index);
+    save_values_internal(values, &mut context.parameters.king_attacked_fields_ending, &mut index);
+
+    let pawn_pst = &mut context.parameters.pst_patterns[PAWN as usize];
+    save_values_to_i8_array_internal(values, &mut pawn_pst[0], &mut index);
+    save_values_to_i8_array_internal(values, &mut pawn_pst[1], &mut index);
+
+    let knight_pst = &mut context.parameters.pst_patterns[KNIGHT as usize];
+    save_values_to_i8_array_internal(values, &mut knight_pst[0], &mut index);
+    save_values_to_i8_array_internal(values, &mut knight_pst[1], &mut index);
+
+    let bishop_pst = &mut context.parameters.pst_patterns[BISHOP as usize];
+    save_values_to_i8_array_internal(values, &mut bishop_pst[0], &mut index);
+    save_values_to_i8_array_internal(values, &mut bishop_pst[1], &mut index);
+
+    let rook_pst = &mut context.parameters.pst_patterns[ROOK as usize];
+    save_values_to_i8_array_internal(values, &mut rook_pst[0], &mut index);
+    save_values_to_i8_array_internal(values, &mut rook_pst[1], &mut index);
+
+    let queen_pst = &mut context.parameters.pst_patterns[QUEEN as usize];
+    save_values_to_i8_array_internal(values, &mut queen_pst[0], &mut index);
+    save_values_to_i8_array_internal(values, &mut queen_pst[1], &mut index);
+
+    let king_pst = &mut context.parameters.pst_patterns[KING as usize];
+    save_values_to_i8_array_internal(values, &mut king_pst[0], &mut index);
+    save_values_to_i8_array_internal(values, &mut king_pst[1], &mut index);
+
+    context.parameters.recalculate();
 }
 
 /// Saves `index`-th evaluation parameter stored in `values` in the `destination`.
@@ -439,64 +458,79 @@ fn save_values_to_i16_array_internal(values: &mut [TunerParameter], array: &mut 
 }
 
 /// Generates `parameters.rs` file with current evaluation parameters, and saves it into the `output_directory`.
-fn write_evaluation_parameters(output_directory: &str, best_error: f64) {
-    /*
+fn write_evaluation_parameters(context: &mut TunerContext, output_directory: &str, best_error: f64) {
     let mut output = String::new();
-    unsafe {
-        output.push_str(get_header(best_error).as_str());
-        output.push_str("\n");
-        output.push_str(get_array(name_of!(PIECE_VALUE), &PIECE_VALUE).as_str());
-        output.push_str("\n");
-        output.push_str(get_array(name_of!(PIECE_MOBILITY_OPENING), &PIECE_MOBILITY_OPENING).as_str());
-        output.push_str(get_array(name_of!(PIECE_MOBILITY_ENDING), &PIECE_MOBILITY_ENDING).as_str());
-        output.push_str(get_array(name_of!(PIECE_MOBILITY_CENTER_MULTIPLIER), &PIECE_MOBILITY_CENTER_MULTIPLIER).as_str());
-        output.push_str("\n");
-        output.push_str(get_parameter(name_of!(DOUBLED_PAWN_OPENING), DOUBLED_PAWN_OPENING).as_str());
-        output.push_str(get_parameter(name_of!(DOUBLED_PAWN_ENDING), DOUBLED_PAWN_ENDING).as_str());
-        output.push_str("\n");
-        output.push_str(get_parameter(name_of!(ISOLATED_PAWN_OPENING), ISOLATED_PAWN_OPENING).as_str());
-        output.push_str(get_parameter(name_of!(ISOLATED_PAWN_ENDING), ISOLATED_PAWN_ENDING).as_str());
-        output.push_str("\n");
-        output.push_str(get_parameter(name_of!(CHAINED_PAWN_OPENING), CHAINED_PAWN_OPENING).as_str());
-        output.push_str(get_parameter(name_of!(CHAINED_PAWN_ENDING), CHAINED_PAWN_ENDING).as_str());
-        output.push_str("\n");
-        output.push_str(get_parameter(name_of!(PASSING_PAWN_OPENING), PASSING_PAWN_OPENING).as_str());
-        output.push_str(get_parameter(name_of!(PASSING_PAWN_ENDING), PASSING_PAWN_ENDING).as_str());
-        output.push_str("\n");
-        output.push_str(get_parameter(name_of!(PAWN_SHIELD_OPENING), PAWN_SHIELD_OPENING).as_str());
-        output.push_str(get_parameter(name_of!(PAWN_SHIELD_ENDING), PAWN_SHIELD_ENDING).as_str());
-        output.push_str("\n");
-        output.push_str(get_parameter(name_of!(PAWN_SHIELD_OPEN_FILE_OPENING), PAWN_SHIELD_OPEN_FILE_OPENING).as_str());
-        output.push_str(get_parameter(name_of!(PAWN_SHIELD_OPEN_FILE_ENDING), PAWN_SHIELD_OPEN_FILE_ENDING).as_str());
-        output.push_str("\n");
-        output.push_str(get_parameter(name_of!(KING_ATTACKED_FIELDS_OPENING), KING_ATTACKED_FIELDS_OPENING).as_str());
-        output.push_str(get_parameter(name_of!(KING_ATTACKED_FIELDS_ENDING), KING_ATTACKED_FIELDS_ENDING).as_str());
-    }
+
+    output.push_str(get_header(best_error).as_str());
+    output.push_str("\n");
+    output.push_str("use super::*;\n");
+    output.push_str("\n");
+    output.push_str("impl Default for EvaluationParameters {\n");
+    output.push_str("    fn default() -> Self {\n");
+    output.push_str("        let mut evaluation_parameters = Self {\n");
+    output.push_str(get_array("piece_value", &context.parameters.piece_value).as_str());
+    output.push_str("\n");
+    output.push_str(get_array("mobility_opening", &context.parameters.mobility_opening).as_str());
+    output.push_str(get_array("mobility_ending", &context.parameters.mobility_ending).as_str());
+    output.push_str(get_array("mobility_center_multiplier", &context.parameters.mobility_center_multiplier).as_str());
+    output.push_str("\n");
+    output.push_str(get_parameter("doubled_pawn_opening", context.parameters.doubled_pawn_opening).as_str());
+    output.push_str(get_parameter("doubled_pawn_ending", context.parameters.doubled_pawn_ending).as_str());
+    output.push_str("\n");
+    output.push_str(get_parameter("isolated_pawn_opening", context.parameters.isolated_pawn_opening).as_str());
+    output.push_str(get_parameter("isolated_pawn_ending", context.parameters.isolated_pawn_ending).as_str());
+    output.push_str("\n");
+    output.push_str(get_parameter("chained_pawn_opening", context.parameters.chained_pawn_opening).as_str());
+    output.push_str(get_parameter("chained_pawn_ending", context.parameters.chained_pawn_ending).as_str());
+    output.push_str("\n");
+    output.push_str(get_parameter("passing_pawn_opening", context.parameters.passing_pawn_opening).as_str());
+    output.push_str(get_parameter("passing_pawn_ending", context.parameters.passing_pawn_ending).as_str());
+    output.push_str("\n");
+    output.push_str(get_parameter("pawn_shield_opening", context.parameters.pawn_shield_opening).as_str());
+    output.push_str(get_parameter("pawn_shield_ending", context.parameters.pawn_shield_ending).as_str());
+    output.push_str("\n");
+    output.push_str(get_parameter("pawn_shield_open_file_opening", context.parameters.pawn_shield_open_file_opening).as_str());
+    output.push_str(get_parameter("pawn_shield_open_file_ending", context.parameters.pawn_shield_open_file_ending).as_str());
+    output.push_str("\n");
+    output.push_str(get_parameter("king_attacked_fields_opening", context.parameters.king_attacked_fields_opening).as_str());
+    output.push_str(get_parameter("king_attacked_fields_ending", context.parameters.king_attacked_fields_ending).as_str());
+    output.push_str("        };\n");
+    output.push_str("\n");
+    output.push_str("        evaluation_parameters.set_default_pst_patterns();\n");
+    output.push_str("        evaluation_parameters.recalculate();\n");
+    output.push_str("        evaluation_parameters\n");
+    output.push_str("    }\n");
+    output.push_str("}\n");
 
     let path = Path::new(output_directory);
     fs::create_dir_all(path).unwrap();
 
     let path = path.join("parameters.rs");
     write!(&mut File::create(path).unwrap(), "{}", output).unwrap();
-    */
 }
 
 /// Generates piece-square tables (Rust source file with current evaluation parameters), and saves it into the `output_directory`.
-fn write_piece_square_table(output_directory: &str, best_error: f64, name: &str, opening: &[i16], ending: &[i16]) {
+fn write_piece_square_table(output_directory: &str, best_error: f64, name: &str, patterns: &[[i16; 64]; 2]) {
     let mut output = String::new();
+    let function_signature = format!("    pub fn get_{}_pst_pattern(&self) -> [[i16; 64]; 2] {{\n", name);
 
     output.push_str(get_header(best_error).as_str());
     output.push_str("\n");
-    output.push_str("#[rustfmt::skip]\n");
-    output.push_str("pub static mut PATTERN: [[i16; 64]; 2] =\n");
-    output.push_str("[\n");
-    output.push_str("    [\n");
-    output.push_str(get_piece_square_table(opening).as_str());
-    output.push_str("    ],\n");
-    output.push_str("    [\n");
-    output.push_str(get_piece_square_table(ending).as_str());
-    output.push_str("    ],\n");
-    output.push_str("];\n");
+    output.push_str("use super::*;\n");
+    output.push_str("\n");
+    output.push_str("impl EvaluationParameters {\n");
+    output.push_str("    #[rustfmt::skip]\n");
+    output.push_str(&function_signature);
+    output.push_str("        [\n");
+    output.push_str("            [\n");
+    output.push_str(get_piece_square_table(&patterns[0]).as_str());
+    output.push_str("            ],\n");
+    output.push_str("            [\n");
+    output.push_str(get_piece_square_table(&patterns[1]).as_str());
+    output.push_str("            ],\n");
+    output.push_str("        ]\n");
+    output.push_str("    }\n");
+    output.push_str("}\n");
 
     let path = Path::new(output_directory).join("pst");
     fs::create_dir_all(path).unwrap();
@@ -518,27 +552,27 @@ fn get_header(best_error: f64) -> String {
 /// Gets a Rust representation of the piece `values` array.
 fn get_array(name: &str, values: &[i16]) -> String {
     format!(
-        "pub static mut {}: [i16; 6] = [{}, {}, {}, {}, {}, {}];\n",
+        "            {}: [{}, {}, {}, {}, {}, {}],\n",
         name, values[0], values[1], values[2], values[3], values[4], values[5]
     )
 }
 
 /// Gets a Rust representation of the parameter with the specified `name` and `value`.
 fn get_parameter(name: &str, value: i16) -> String {
-    format!("pub static mut {}: i16 = {};\n", name, value)
+    format!("            {}: {},\n", name, value)
 }
 
 /// Gets a Rust representation of the piece-square tables with the specified `values`.
 fn get_piece_square_table(values: &[i16]) -> String {
     let mut output = String::new();
 
-    output.push_str("        ");
+    output.push_str("                ");
     for index in 0..64 {
         output.push_str(format!("{:4}, ", values[index]).as_str());
         if index % 8 == 7 {
             output.push_str("\n");
             if index != 63 {
-                output.push_str("        ");
+                output.push_str("                ");
             }
         }
     }

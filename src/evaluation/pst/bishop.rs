@@ -2,7 +2,7 @@
 // Generated at 2022-04-11 09:30:33 UTC (e = 0.064058) //
 // --------------------------------------------------- //
 
-use crate::evaluation::EvaluationParameters;
+use super::*;
 
 impl EvaluationParameters {
     #[rustfmt::skip]

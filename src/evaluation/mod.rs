@@ -7,12 +7,13 @@ pub mod pawns;
 pub mod pst;
 pub mod safety;
 
+#[derive(Clone)]
 pub struct EvaluationParameters {
     pub piece_value: [i16; 6],
 
-    pub piece_mobility_opening: [i16; 6],
-    pub piece_mobility_ending: [i16; 6],
-    pub piece_mobility_center_multiplier: [i16; 6],
+    pub mobility_opening: [i16; 6],
+    pub mobility_ending: [i16; 6],
+    pub mobility_center_multiplier: [i16; 6],
 
     pub doubled_pawn_opening: i16,
     pub doubled_pawn_ending: i16,
