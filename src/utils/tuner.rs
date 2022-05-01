@@ -179,7 +179,7 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
                 tendence[value_index] = step.signum() as i8;
             }
         }
-
+        /*
         unsafe {
             write_evaluation_parameters(output_directory, best_error);
             write_piece_square_table(output_directory, best_error, "pawn", &pawn::PATTERN[0], &pawn::PATTERN[1]);
@@ -189,7 +189,7 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
             write_piece_square_table(output_directory, best_error, "queen", &queen::PATTERN[0], &queen::PATTERN[1]);
             write_piece_square_table(output_directory, best_error, "king", &king::PATTERN[0], &king::PATTERN[1]);
         }
-
+        */
         println!(
             "Iteration {} done in {} seconds, {} changes made, error reduced from {:.6} to {:.6} ({:.6})",
             iterations_count,
@@ -275,6 +275,7 @@ fn calculate_error(context: &mut TunerContext, scaling_constant: f64, threads_co
 /// be skipped, and `random_values` if the parameters should have random values (useful when initializing tuner).
 fn load_values(lock_material: bool, random_values: bool) -> Vec<TunerParameter> {
     let mut parameters = Vec::new();
+    /*
     unsafe {
         if !lock_material {
             parameters.push(TunerParameter::new(PIECE_VALUE[PAWN as usize], 100, 100, 100, 100));
@@ -356,13 +357,14 @@ fn load_values(lock_material: bool, random_values: bool) -> Vec<TunerParameter> 
     for parameter in &mut parameters {
         (*parameter).value = (*parameter).value.clamp(parameter.min, parameter.max);
     }
-
+    */
     parameters
 }
 
 /// Transforms `values` into the evaluation parameters, which can be used during real evaluation. Use `lock_material` if the parameters
 /// related to piece values should be skipped.
 fn save_values(values: &mut [TunerParameter], lock_material: bool) {
+    /*
     let mut index = 0;
     unsafe {
         if !lock_material {
@@ -415,6 +417,7 @@ fn save_values(values: &mut [TunerParameter], lock_material: bool) {
 
     pst::init();
     evaluation::init();
+    */
 }
 
 /// Saves `index`-th evaluation parameter stored in `values` in the `destination`.
@@ -437,6 +440,7 @@ fn save_values_to_i16_array_internal(values: &mut [TunerParameter], array: &mut 
 
 /// Generates `parameters.rs` file with current evaluation parameters, and saves it into the `output_directory`.
 fn write_evaluation_parameters(output_directory: &str, best_error: f64) {
+    /*
     let mut output = String::new();
     unsafe {
         output.push_str(get_header(best_error).as_str());
@@ -474,6 +478,7 @@ fn write_evaluation_parameters(output_directory: &str, best_error: f64) {
 
     let path = path.join("parameters.rs");
     write!(&mut File::create(path).unwrap(), "{}", output).unwrap();
+    */
 }
 
 /// Generates piece-square tables (Rust source file with current evaluation parameters), and saves it into the `output_directory`.

@@ -1,6 +1,7 @@
 use super::*;
 use crate::state::board::Bitboard;
 
+#[rustfmt::skip]
 pub mod bishop;
 pub mod king;
 pub mod knight;
@@ -8,33 +9,12 @@ pub mod pawn;
 pub mod queen;
 pub mod rook;
 
-static mut TABLE: [[[[i16; 64]; 2]; 2]; 6] = [[[[0; 64]; 2]; 2]; 6];
-
-pub fn init() {
-    unsafe {
-        for color in [WHITE, BLACK] {
-            for phase in [OPENING, ENDING] {
-                TABLE[PAWN as usize][color as usize][phase as usize] = calculate_pattern(color, &pawn::PATTERN[phase as usize]);
-                TABLE[KNIGHT as usize][color as usize][phase as usize] = calculate_pattern(color, &knight::PATTERN[phase as usize]);
-                TABLE[BISHOP as usize][color as usize][phase as usize] = calculate_pattern(color, &bishop::PATTERN[phase as usize]);
-                TABLE[ROOK as usize][color as usize][phase as usize] = calculate_pattern(color, &rook::PATTERN[phase as usize]);
-                TABLE[QUEEN as usize][color as usize][phase as usize] = calculate_pattern(color, &queen::PATTERN[phase as usize]);
-                TABLE[KING as usize][color as usize][phase as usize] = calculate_pattern(color, &king::PATTERN[phase as usize]);
-            }
-        }
-    }
-}
-
 pub fn evaluate(board: &Bitboard) -> i16 {
     let game_phase = board.get_game_phase();
     let opening_score = board.pst_scores[WHITE as usize][OPENING as usize] - board.pst_scores[BLACK as usize][OPENING as usize];
     let ending_score = board.pst_scores[WHITE as usize][ENDING as usize] - board.pst_scores[BLACK as usize][ENDING as usize];
 
     taper_score(game_phase, opening_score, ending_score)
-}
-
-pub fn get_value(piece: u8, color: u8, phase: u8, field: u8) -> i16 {
-    unsafe { TABLE[piece as usize][color as usize][phase as usize][field as usize] as i16 }
 }
 
 pub fn recalculate_incremental_values(board: &mut Bitboard) {
@@ -48,33 +28,12 @@ pub fn recalculate_incremental_values(board: &mut Bitboard) {
                     let field_index = bit_scan(field);
                     pieces = pop_lsb(pieces);
 
-                    score += unsafe { TABLE[piece_index as usize][color_index as usize][phase as usize][field_index as usize] as i16 };
+                    score +=
+                        unsafe { board.evaluation_parameters.pst[piece_index as usize][color_index as usize][phase as usize][field_index as usize] as i16 };
                 }
             }
 
             board.pst_scores[color_index][phase as usize] = score;
         }
     }
-}
-
-fn calculate_pattern(color: u8, pattern: &[i16; 64]) -> [i16; 64] {
-    let mut array = [0; 64];
-
-    match color {
-        WHITE => {
-            for field_index in 0..64 {
-                array[field_index] = pattern[63 - field_index];
-            }
-        }
-        BLACK => {
-            for file in 0..8 {
-                for rank in 0..8 {
-                    array[file + rank * 8] = pattern[(7 - file) + rank * 8];
-                }
-            }
-        }
-        _ => panic!("Invalid value: color={}", color),
-    }
-
-    array
 }

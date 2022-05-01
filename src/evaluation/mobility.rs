@@ -19,17 +19,17 @@ fn evaluate_color(board: &Bitboard, color: u8, dangered_king_fields: &mut u32) -
 
     let game_phase = board.get_game_phase();
 
-    let knight_mobility_opening_score = knight_mobility * unsafe { parameters::PIECE_MOBILITY_OPENING[KNIGHT as usize] };
-    let knight_mobility_ending_score = knight_mobility * unsafe { parameters::PIECE_MOBILITY_ENDING[KNIGHT as usize] };
+    let knight_mobility_opening_score = knight_mobility * unsafe { board.evaluation_parameters.piece_mobility_opening[KNIGHT as usize] };
+    let knight_mobility_ending_score = knight_mobility * unsafe { board.evaluation_parameters.piece_mobility_ending[KNIGHT as usize] };
 
-    let bishop_mobility_opening_score = bishop_mobility * unsafe { parameters::PIECE_MOBILITY_OPENING[BISHOP as usize] };
-    let bishop_mobility_ending_score = bishop_mobility * unsafe { parameters::PIECE_MOBILITY_ENDING[BISHOP as usize] };
+    let bishop_mobility_opening_score = bishop_mobility * unsafe { board.evaluation_parameters.piece_mobility_opening[BISHOP as usize] };
+    let bishop_mobility_ending_score = bishop_mobility * unsafe { board.evaluation_parameters.piece_mobility_ending[BISHOP as usize] };
 
-    let rook_mobility_opening_score = rook_mobility * unsafe { parameters::PIECE_MOBILITY_OPENING[ROOK as usize] };
-    let rook_mobility_ending_score = rook_mobility * unsafe { parameters::PIECE_MOBILITY_ENDING[ROOK as usize] };
+    let rook_mobility_opening_score = rook_mobility * unsafe { board.evaluation_parameters.piece_mobility_opening[ROOK as usize] };
+    let rook_mobility_ending_score = rook_mobility * unsafe { board.evaluation_parameters.piece_mobility_ending[ROOK as usize] };
 
-    let queen_mobility_opening_score = queen_mobility * unsafe { parameters::PIECE_MOBILITY_OPENING[QUEEN as usize] };
-    let queen_mobility_ending_score = queen_mobility * unsafe { parameters::PIECE_MOBILITY_ENDING[QUEEN as usize] };
+    let queen_mobility_opening_score = queen_mobility * unsafe { board.evaluation_parameters.piece_mobility_opening[QUEEN as usize] };
+    let queen_mobility_ending_score = queen_mobility * unsafe { board.evaluation_parameters.piece_mobility_ending[QUEEN as usize] };
 
     let opening_score = knight_mobility_opening_score + bishop_mobility_opening_score + rook_mobility_opening_score + queen_mobility_opening_score;
     let ending_score = knight_mobility_ending_score + bishop_mobility_ending_score + rook_mobility_ending_score + queen_mobility_ending_score;

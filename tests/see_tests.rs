@@ -2,6 +2,7 @@
 
 #[cfg(test)]
 mod see_tests {
+    /*
     use inanis::engine::see;
     use inanis::evaluation::parameters;
     use inanis::state::board::Bitboard;
@@ -67,4 +68,5 @@ mod see_tests {
         see_xray_05: "7q/8/5b2/8/8/2B5/3P4/8 b - - 0 1", "f6c3", B - B + P,
         see_xray_06: "4r3/8/4q3/8/4P3/5P2/8/8 b - - 0 1", "e6e4", P - Q + P,
     }
+    */
 }

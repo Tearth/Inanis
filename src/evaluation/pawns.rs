@@ -94,19 +94,19 @@ fn evaluate_color(board: &Bitboard, color: u8) -> i16 {
 
     let game_phase = board.get_game_phase();
     let opening_score = 0
-        + (doubled_pawns as i16) * unsafe { parameters::DOUBLED_PAWN_OPENING }
-        + (isolated_pawns as i16) * unsafe { parameters::ISOLATED_PAWN_OPENING }
-        + (chained_pawns as i16) * unsafe { parameters::CHAINED_PAWN_OPENING }
-        + (passing_pawns as i16) * unsafe { parameters::PASSING_PAWN_OPENING }
-        + (pawn_shield as i16) * unsafe { parameters::PAWN_SHIELD_OPENING }
-        + (opened_files as i16) * unsafe { parameters::PAWN_SHIELD_OPEN_FILE_OPENING };
+        + (doubled_pawns as i16) * unsafe { board.evaluation_parameters.doubled_pawn_opening }
+        + (isolated_pawns as i16) * unsafe { board.evaluation_parameters.isolated_pawn_opening }
+        + (chained_pawns as i16) * unsafe { board.evaluation_parameters.chained_pawn_opening }
+        + (passing_pawns as i16) * unsafe { board.evaluation_parameters.passing_pawn_opening }
+        + (pawn_shield as i16) * unsafe { board.evaluation_parameters.pawn_shield_opening }
+        + (opened_files as i16) * unsafe { board.evaluation_parameters.pawn_shield_open_file_opening };
     let ending_score = 0
-        + (doubled_pawns as i16) * unsafe { parameters::DOUBLED_PAWN_ENDING }
-        + (isolated_pawns as i16) * unsafe { parameters::ISOLATED_PAWN_ENDING }
-        + (chained_pawns as i16) * unsafe { parameters::CHAINED_PAWN_ENDING }
-        + (passing_pawns as i16) * unsafe { parameters::PASSING_PAWN_ENDING }
-        + (pawn_shield as i16) * unsafe { parameters::PAWN_SHIELD_ENDING }
-        + (opened_files as i16) * unsafe { parameters::PAWN_SHIELD_OPEN_FILE_ENDING };
+        + (doubled_pawns as i16) * unsafe { board.evaluation_parameters.doubled_pawn_ending }
+        + (isolated_pawns as i16) * unsafe { board.evaluation_parameters.isolated_pawn_ending }
+        + (chained_pawns as i16) * unsafe { board.evaluation_parameters.chained_pawn_ending }
+        + (passing_pawns as i16) * unsafe { board.evaluation_parameters.passing_pawn_ending }
+        + (pawn_shield as i16) * unsafe { board.evaluation_parameters.pawn_shield_ending }
+        + (opened_files as i16) * unsafe { board.evaluation_parameters.pawn_shield_open_file_ending };
 
     taper_score(game_phase, opening_score, ending_score)
 }

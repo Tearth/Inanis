@@ -106,7 +106,7 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
         }
 
         if r#move.is_promotion() {
-            move_scores[move_index] = unsafe { parameters::PIECE_VALUE[r#move.get_promotion_piece() as usize] };
+            move_scores[move_index] = unsafe { context.board.evaluation_parameters.piece_value[r#move.get_promotion_piece() as usize] };
             continue;
         }
 
@@ -116,7 +116,13 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
         let attackers = context.board.get_attacking_pieces(context.board.active_color ^ 1, field);
         let defenders = context.board.get_attacking_pieces(context.board.active_color, field);
 
-        move_scores[move_index] = see::get(attacking_piece, captured_piece, attackers, defenders);
+        move_scores[move_index] = see::get(
+            attacking_piece,
+            captured_piece,
+            attackers,
+            defenders,
+            context.board.evaluation_parameters.clone(),
+        );
     }
 }
 

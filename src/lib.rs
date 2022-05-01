@@ -17,6 +17,8 @@
 //!
 //! Homepage: <https://github.com/Tearth/Inanis>
 
+use std::sync::Arc;
+
 use engine::see;
 use evaluation::pst;
 use state::movegen;
@@ -38,10 +40,8 @@ extern crate bitflags;
 pub fn init() {
     fastrand::seed(584578);
 
-    pst::init();
-    see::init();
+    see::init(Arc::new(Default::default()));
     patterns::init();
     movegen::init();
     zobrist::init();
-    evaluation::init();
 }

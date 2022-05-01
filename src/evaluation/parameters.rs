@@ -2,29 +2,44 @@
 // Generated at 2022-04-11 09:30:33 UTC (e = 0.064058) //
 // --------------------------------------------------- //
 
-pub static mut PIECE_VALUE: [i16; 6] = [100, 419, 442, 648, 1325, 10000];
+use super::*;
 
-pub static mut PIECE_MOBILITY_OPENING: [i16; 6] = [5, 8, 5, 6, 2, 6];
-pub static mut PIECE_MOBILITY_ENDING: [i16; 6] = [3, 0, 0, 5, 6, 3];
-pub static mut PIECE_MOBILITY_CENTER_MULTIPLIER: [i16; 6] = [6, 1, 3, 1, 1, 6];
+impl Default for EvaluationParameters {
+    fn default() -> Self {
+        let mut evaluation_parameters = Self {
+            piece_value: [100, 419, 442, 648, 1325, 10000],
 
-pub static mut DOUBLED_PAWN_OPENING: i16 = 5;
-pub static mut DOUBLED_PAWN_ENDING: i16 = -12;
+            piece_mobility_opening: [5, 8, 5, 6, 2, 6],
+            piece_mobility_ending: [3, 0, 0, 5, 6, 3],
+            piece_mobility_center_multiplier: [6, 1, 3, 1, 1, 6],
 
-pub static mut ISOLATED_PAWN_OPENING: i16 = -31;
-pub static mut ISOLATED_PAWN_ENDING: i16 = 1;
+            doubled_pawn_opening: 5,
+            doubled_pawn_ending: -12,
 
-pub static mut CHAINED_PAWN_OPENING: i16 = 5;
-pub static mut CHAINED_PAWN_ENDING: i16 = 11;
+            isolated_pawn_opening: -31,
+            isolated_pawn_ending: 1,
 
-pub static mut PASSING_PAWN_OPENING: i16 = -1;
-pub static mut PASSING_PAWN_ENDING: i16 = 57;
+            chained_pawn_opening: 5,
+            chained_pawn_ending: 11,
 
-pub static mut PAWN_SHIELD_OPENING: i16 = 12;
-pub static mut PAWN_SHIELD_ENDING: i16 = 5;
+            passing_pawn_opening: -1,
+            passing_pawn_ending: 57,
 
-pub static mut PAWN_SHIELD_OPEN_FILE_OPENING: i16 = -27;
-pub static mut PAWN_SHIELD_OPEN_FILE_ENDING: i16 = 2;
+            pawn_shield_opening: 12,
+            pawn_shield_ending: 5,
 
-pub static mut KING_ATTACKED_FIELDS_OPENING: i16 = -19;
-pub static mut KING_ATTACKED_FIELDS_ENDING: i16 = 6;
+            pawn_shield_open_file_opening: -27,
+            pawn_shield_open_file_ending: 2,
+
+            king_attacked_fields_opening: -19,
+            king_attacked_fields_ending: 6,
+
+            pst: [[[[0; 64]; 2]; 2]; 6],
+            pst_patterns: [[[0; 64]; 2]; 6],
+        };
+
+        evaluation_parameters.set_default_pst_patterns();
+        evaluation_parameters.recalculate();
+        evaluation_parameters
+    }
+}
