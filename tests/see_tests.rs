@@ -2,21 +2,21 @@
 
 #[cfg(test)]
 mod see_tests {
-    /*
     use inanis::engine::see;
-    use inanis::evaluation::parameters;
+    use inanis::evaluation::{parameters, EvaluationParameters};
     use inanis::state::board::Bitboard;
     use inanis::state::movescan::Move;
     use inanis::state::*;
     use std::mem::MaybeUninit;
-    use std::sync::Once;
+    use std::sync::{Arc, Once};
 
     static INIT: Once = Once::new();
-    static P: i16 = unsafe { parameters::PIECE_VALUE[PAWN as usize] };
-    static N: i16 = unsafe { parameters::PIECE_VALUE[BISHOP as usize] };
-    static B: i16 = unsafe { parameters::PIECE_VALUE[BISHOP as usize] };
-    static R: i16 = unsafe { parameters::PIECE_VALUE[ROOK as usize] };
-    static Q: i16 = unsafe { parameters::PIECE_VALUE[QUEEN as usize] };
+    static P: i16 = 100;
+    static N: i16 = 442;
+    static B: i16 = 442;
+    static R: i16 = 648;
+    static Q: i16 = 1325;
+    static K: i16 = 10000;
 
     macro_rules! see_tests {
         ($($name:ident: $fen:expr, $move:expr, $expected_result:expr, )*) => {
@@ -31,6 +31,10 @@ mod see_tests {
                     let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
                     let moves_count = board.get_all_moves(&mut moves, u64::MAX);
 
+                    let mut evaluation_parameters = EvaluationParameters::default();
+                    evaluation_parameters.piece_value = [P, N, B, R, Q, K];
+
+                    let evaluation_parameters_arc = Arc::new(evaluation_parameters);
                     for move_index in 0..moves_count {
                         let r#move = moves[move_index];
                         if r#move.to_long_notation() == $move {
@@ -39,7 +43,7 @@ mod see_tests {
                             let attackers = board.get_attacking_pieces(board.active_color ^ 1, r#move.get_to());
                             let defenders = board.get_attacking_pieces(board.active_color, r#move.get_to());
 
-                            assert_eq!($expected_result, see::get(attacking_piece, target_piece, attackers, defenders));
+                            assert_eq!($expected_result, see::get(attacking_piece, target_piece, attackers, defenders, evaluation_parameters_arc.clone()));
                             return;
                         }
                     }
@@ -68,5 +72,4 @@ mod see_tests {
         see_xray_05: "7q/8/5b2/8/8/2B5/3P4/8 b - - 0 1", "f6c3", B - B + P,
         see_xray_06: "4r3/8/4q3/8/4P3/5P2/8/8 b - - 0 1", "e6e4", P - Q + P,
     }
-    */
 }
