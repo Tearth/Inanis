@@ -6,6 +6,7 @@ use super::movescan;
 use super::movescan::Move;
 use super::movescan::MoveFlags;
 use super::zobrist;
+use super::zobrist::ZobristContainer;
 use super::*;
 use crate::cache::pawns::PawnHashTable;
 use crate::engine::context::SearchStatistics;
@@ -52,6 +53,7 @@ pub struct Bitboard {
     pub material_scores: [i16; 2],
     pub pst_scores: [[i16; 2]; 2],
     pub evaluation_parameters: Arc<EvaluationParameters>,
+    pub zobrist: Arc<ZobristContainer>,
 }
 
 impl Bitboard {
@@ -129,50 +131,50 @@ impl Bitboard {
         self.pawn_hash_stack.push(self.pawn_hash);
 
         if self.en_passant != 0 {
-            self.hash ^= zobrist::get_en_passant_hash((bit_scan(self.en_passant) % 8) as u8);
+            self.hash ^= self.zobrist.get_en_passant_hash((bit_scan(self.en_passant) % 8) as u8);
             self.en_passant = 0;
         }
 
         match flags {
             MoveFlags::QUIET => {
                 self.move_piece(color, piece, from, to);
-                self.hash ^= zobrist::get_piece_hash(color, piece, from);
-                self.hash ^= zobrist::get_piece_hash(color, piece, to);
+                self.hash ^= self.zobrist.get_piece_hash(color, piece, from);
+                self.hash ^= self.zobrist.get_piece_hash(color, piece, to);
 
                 if piece == PAWN {
-                    self.pawn_hash ^= zobrist::get_piece_hash(color, piece, from);
-                    self.pawn_hash ^= zobrist::get_piece_hash(color, piece, to);
+                    self.pawn_hash ^= self.zobrist.get_piece_hash(color, piece, from);
+                    self.pawn_hash ^= self.zobrist.get_piece_hash(color, piece, to);
                 }
             }
             MoveFlags::DOUBLE_PUSH => {
                 self.move_piece(color, piece, from, to);
-                self.hash ^= zobrist::get_piece_hash(color, piece, from);
-                self.hash ^= zobrist::get_piece_hash(color, piece, to);
+                self.hash ^= self.zobrist.get_piece_hash(color, piece, from);
+                self.hash ^= self.zobrist.get_piece_hash(color, piece, to);
 
-                self.pawn_hash ^= zobrist::get_piece_hash(color, piece, from);
-                self.pawn_hash ^= zobrist::get_piece_hash(color, piece, to);
+                self.pawn_hash ^= self.zobrist.get_piece_hash(color, piece, from);
+                self.pawn_hash ^= self.zobrist.get_piece_hash(color, piece, to);
 
                 self.en_passant = 1u64 << ((to as i8) + 8 * ((color as i8) * 2 - 1));
-                self.hash ^= zobrist::get_en_passant_hash((bit_scan(self.en_passant) % 8) as u8);
+                self.hash ^= self.zobrist.get_en_passant_hash((bit_scan(self.en_passant) % 8) as u8);
             }
             MoveFlags::CAPTURE => {
                 let captured_piece = self.get_piece(to);
                 self.captured_pieces_stack.push(captured_piece);
 
                 self.remove_piece(enemy_color, captured_piece, to);
-                self.hash ^= zobrist::get_piece_hash(enemy_color, captured_piece, to);
+                self.hash ^= self.zobrist.get_piece_hash(enemy_color, captured_piece, to);
 
                 if captured_piece == PAWN {
-                    self.pawn_hash ^= zobrist::get_piece_hash(enemy_color, captured_piece, to);
+                    self.pawn_hash ^= self.zobrist.get_piece_hash(enemy_color, captured_piece, to);
                 }
 
                 self.move_piece(color, piece, from, to);
-                self.hash ^= zobrist::get_piece_hash(color, piece, from);
-                self.hash ^= zobrist::get_piece_hash(color, piece, to);
+                self.hash ^= self.zobrist.get_piece_hash(color, piece, from);
+                self.hash ^= self.zobrist.get_piece_hash(color, piece, to);
 
                 if piece == PAWN {
-                    self.pawn_hash ^= zobrist::get_piece_hash(color, piece, from);
-                    self.pawn_hash ^= zobrist::get_piece_hash(color, piece, to);
+                    self.pawn_hash ^= self.zobrist.get_piece_hash(color, piece, from);
+                    self.pawn_hash ^= self.zobrist.get_piece_hash(color, piece, to);
                 }
             }
             MoveFlags::SHORT_CASTLING => {
@@ -180,44 +182,44 @@ impl Bitboard {
                 let king_to = 1 + 56 * (color as u8);
 
                 self.move_piece(color, KING, king_from, king_to);
-                self.hash ^= zobrist::get_piece_hash(color, KING, king_from);
-                self.hash ^= zobrist::get_piece_hash(color, KING, king_to);
+                self.hash ^= self.zobrist.get_piece_hash(color, KING, king_from);
+                self.hash ^= self.zobrist.get_piece_hash(color, KING, king_to);
 
                 let rook_from = 0 + 56 * (color as u8);
                 let rook_to = 2 + 56 * (color as u8);
 
                 self.move_piece(color, ROOK, rook_from, rook_to);
-                self.hash ^= zobrist::get_piece_hash(color, ROOK, rook_from);
-                self.hash ^= zobrist::get_piece_hash(color, ROOK, rook_to);
+                self.hash ^= self.zobrist.get_piece_hash(color, ROOK, rook_from);
+                self.hash ^= self.zobrist.get_piece_hash(color, ROOK, rook_to);
             }
             MoveFlags::LONG_CASTLING => {
                 let king_from = 3 + 56 * (color as u8);
                 let king_to = 5 + 56 * (color as u8);
 
                 self.move_piece(color, KING, 3 + 56 * (color as u8), 5 + 56 * (color as u8));
-                self.hash ^= zobrist::get_piece_hash(color, KING, king_from);
-                self.hash ^= zobrist::get_piece_hash(color, KING, king_to);
+                self.hash ^= self.zobrist.get_piece_hash(color, KING, king_from);
+                self.hash ^= self.zobrist.get_piece_hash(color, KING, king_to);
 
                 let rook_from = 7 + 56 * (color as u8);
                 let rook_to = 4 + 56 * (color as u8);
 
                 self.move_piece(color, ROOK, 7 + 56 * (color as u8), 4 + 56 * (color as u8));
-                self.hash ^= zobrist::get_piece_hash(color, ROOK, rook_from);
-                self.hash ^= zobrist::get_piece_hash(color, ROOK, rook_to);
+                self.hash ^= self.zobrist.get_piece_hash(color, ROOK, rook_from);
+                self.hash ^= self.zobrist.get_piece_hash(color, ROOK, rook_to);
             }
             MoveFlags::EN_PASSANT => {
                 self.move_piece(color, piece, from, to);
-                self.hash ^= zobrist::get_piece_hash(color, piece, from);
-                self.hash ^= zobrist::get_piece_hash(color, piece, to);
+                self.hash ^= self.zobrist.get_piece_hash(color, piece, from);
+                self.hash ^= self.zobrist.get_piece_hash(color, piece, to);
 
-                self.pawn_hash ^= zobrist::get_piece_hash(color, piece, from);
-                self.pawn_hash ^= zobrist::get_piece_hash(color, piece, to);
+                self.pawn_hash ^= self.zobrist.get_piece_hash(color, piece, from);
+                self.pawn_hash ^= self.zobrist.get_piece_hash(color, piece, to);
 
                 let enemy_pawn_field_index = ((to as i8) + 8 * ((color as i8) * 2 - 1)) as u8;
 
                 self.remove_piece(enemy_color, PAWN, enemy_pawn_field_index);
-                self.hash ^= zobrist::get_piece_hash(enemy_color, piece, enemy_pawn_field_index);
-                self.pawn_hash ^= zobrist::get_piece_hash(enemy_color, piece, enemy_pawn_field_index);
+                self.hash ^= self.zobrist.get_piece_hash(enemy_color, piece, enemy_pawn_field_index);
+                self.pawn_hash ^= self.zobrist.get_piece_hash(enemy_color, piece, enemy_pawn_field_index);
             }
             _ => {
                 let promotion_piece = r#move.get_promotion_piece();
@@ -226,56 +228,56 @@ impl Bitboard {
                     self.captured_pieces_stack.push(captured_piece);
 
                     self.remove_piece(enemy_color, captured_piece, to);
-                    self.hash ^= zobrist::get_piece_hash(enemy_color, captured_piece, to);
+                    self.hash ^= self.zobrist.get_piece_hash(enemy_color, captured_piece, to);
                 }
 
                 self.remove_piece(color, PAWN, from);
-                self.hash ^= zobrist::get_piece_hash(color, PAWN, from);
-                self.pawn_hash ^= zobrist::get_piece_hash(color, PAWN, from);
+                self.hash ^= self.zobrist.get_piece_hash(color, PAWN, from);
+                self.pawn_hash ^= self.zobrist.get_piece_hash(color, PAWN, from);
 
                 self.add_piece(color, promotion_piece, to);
-                self.hash ^= zobrist::get_piece_hash(color, promotion_piece, to);
+                self.hash ^= self.zobrist.get_piece_hash(color, promotion_piece, to);
             }
         }
 
         if piece == KING {
             self.castling_rights &= match color {
                 WHITE => {
-                    self.hash ^= zobrist::get_castling_right_hash(self.castling_rights, CastlingRights::WHITE_SHORT_CASTLING);
-                    self.hash ^= zobrist::get_castling_right_hash(self.castling_rights, CastlingRights::WHITE_LONG_CASTLING);
+                    self.hash ^= self.zobrist.get_castling_right_hash(self.castling_rights, CastlingRights::WHITE_SHORT_CASTLING);
+                    self.hash ^= self.zobrist.get_castling_right_hash(self.castling_rights, CastlingRights::WHITE_LONG_CASTLING);
 
                     !CastlingRights::WHITE_CASTLING
                 }
                 BLACK => {
-                    self.hash ^= zobrist::get_castling_right_hash(self.castling_rights, CastlingRights::BLACK_SHORT_CASTLING);
-                    self.hash ^= zobrist::get_castling_right_hash(self.castling_rights, CastlingRights::BLACK_LONG_CASTLING);
+                    self.hash ^= self.zobrist.get_castling_right_hash(self.castling_rights, CastlingRights::BLACK_SHORT_CASTLING);
+                    self.hash ^= self.zobrist.get_castling_right_hash(self.castling_rights, CastlingRights::BLACK_LONG_CASTLING);
 
                     !CastlingRights::BLACK_CASTLING
                 }
                 _ => panic!("Invalid value: color={}", color),
             };
 
-            self.pawn_hash ^= zobrist::get_piece_hash(color, KING, from);
-            self.pawn_hash ^= zobrist::get_piece_hash(color, KING, to);
+            self.pawn_hash ^= self.zobrist.get_piece_hash(color, KING, from);
+            self.pawn_hash ^= self.zobrist.get_piece_hash(color, KING, to);
         }
 
         if piece == ROOK {
             match color {
                 WHITE => {
                     if from == 0 {
-                        self.hash ^= zobrist::get_castling_right_hash(self.castling_rights, CastlingRights::WHITE_SHORT_CASTLING);
+                        self.hash ^= self.zobrist.get_castling_right_hash(self.castling_rights, CastlingRights::WHITE_SHORT_CASTLING);
                         self.castling_rights &= !CastlingRights::WHITE_SHORT_CASTLING;
                     } else if from == 7 {
-                        self.hash ^= zobrist::get_castling_right_hash(self.castling_rights, CastlingRights::WHITE_LONG_CASTLING);
+                        self.hash ^= self.zobrist.get_castling_right_hash(self.castling_rights, CastlingRights::WHITE_LONG_CASTLING);
                         self.castling_rights &= !CastlingRights::WHITE_LONG_CASTLING;
                     }
                 }
                 BLACK => {
                     if from == 56 {
-                        self.hash ^= zobrist::get_castling_right_hash(self.castling_rights, CastlingRights::BLACK_SHORT_CASTLING);
+                        self.hash ^= self.zobrist.get_castling_right_hash(self.castling_rights, CastlingRights::BLACK_SHORT_CASTLING);
                         self.castling_rights &= !CastlingRights::BLACK_SHORT_CASTLING;
                     } else if from == 63 {
-                        self.hash ^= zobrist::get_castling_right_hash(self.castling_rights, CastlingRights::BLACK_LONG_CASTLING);
+                        self.hash ^= self.zobrist.get_castling_right_hash(self.castling_rights, CastlingRights::BLACK_LONG_CASTLING);
                         self.castling_rights &= !CastlingRights::BLACK_LONG_CASTLING;
                     }
                 }
@@ -294,7 +296,7 @@ impl Bitboard {
         }
 
         self.active_color = enemy_color;
-        self.hash ^= zobrist::get_active_color_hash();
+        self.hash ^= self.zobrist.get_active_color_hash();
     }
 
     /// Undoes `r#move`, with the assumption that it's perfectly valid at the current position (otherwise, internal state can be irreversibly corrupted).
@@ -382,7 +384,7 @@ impl Bitboard {
         self.pawn_hash_stack.push(self.pawn_hash);
 
         if self.en_passant != 0 {
-            self.hash ^= zobrist::get_en_passant_hash((bit_scan(self.en_passant) % 8) as u8);
+            self.hash ^= self.zobrist.get_en_passant_hash((bit_scan(self.en_passant) % 8) as u8);
             self.en_passant = 0;
         }
 
@@ -392,7 +394,7 @@ impl Bitboard {
 
         self.null_moves += 1;
         self.active_color = enemy_color;
-        self.hash ^= zobrist::get_active_color_hash();
+        self.hash ^= self.zobrist.get_active_color_hash();
     }
 
     /// Undoes a null move, which is basically a switch of the active color with restoring of the internal state.
@@ -618,12 +620,63 @@ impl Bitboard {
 
     /// Recalculates board's hash entirely.
     pub fn recalculate_hash(&mut self) {
-        zobrist::recalculate_hash(self);
+        let mut hash = 0u64;
+
+        for color in 0..2 {
+            for piece_index in 0..6 {
+                let mut pieces = self.pieces[color as usize][piece_index as usize];
+                while pieces != 0 {
+                    let field = get_lsb(pieces);
+                    let field_index = bit_scan(field);
+                    pieces = pop_lsb(pieces);
+
+                    hash ^= self.zobrist.get_piece_hash(color, piece_index, field_index);
+                }
+            }
+        }
+
+        if self.castling_rights.contains(CastlingRights::WHITE_SHORT_CASTLING) {
+            hash ^= self.zobrist.get_castling_right_hash(self.castling_rights, CastlingRights::WHITE_SHORT_CASTLING);
+        }
+        if self.castling_rights.contains(CastlingRights::WHITE_LONG_CASTLING) {
+            hash ^= self.zobrist.get_castling_right_hash(self.castling_rights, CastlingRights::WHITE_LONG_CASTLING);
+        }
+        if self.castling_rights.contains(CastlingRights::BLACK_SHORT_CASTLING) {
+            hash ^= self.zobrist.get_castling_right_hash(self.castling_rights, CastlingRights::BLACK_SHORT_CASTLING);
+        }
+        if self.castling_rights.contains(CastlingRights::BLACK_LONG_CASTLING) {
+            hash ^= self.zobrist.get_castling_right_hash(self.castling_rights, CastlingRights::BLACK_LONG_CASTLING);
+        }
+
+        if self.en_passant != 0 {
+            hash ^= self.zobrist.get_en_passant_hash((bit_scan(self.en_passant) % 8) as u8);
+        }
+
+        if self.active_color == BLACK {
+            hash ^= self.zobrist.get_active_color_hash();
+        }
+
+        self.hash = hash;
     }
 
     /// Recalculates board's pawn hash entirely.
     pub fn recalculate_pawn_hash(&mut self) {
-        zobrist::recalculate_pawn_hash(self);
+        let mut hash = 0u64;
+
+        for color in 0..2 {
+            for piece in [PAWN, KING] {
+                let mut pieces = self.pieces[color as usize][piece as usize];
+                while pieces != 0 {
+                    let field = get_lsb(pieces);
+                    let field_index = bit_scan(field);
+                    pieces = pop_lsb(pieces);
+
+                    hash ^= self.zobrist.get_piece_hash(color, piece, field_index);
+                }
+            }
+        }
+
+        self.pawn_hash = hash;
     }
 
     /// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position, using `pawn_hashtable` to store pawn
@@ -779,6 +832,7 @@ impl Default for Bitboard {
             material_scores: [0; 2],
             pst_scores: [[0, 2]; 2],
             evaluation_parameters: Arc::new(Default::default()),
+            zobrist: Arc::new(Default::default()),
         }
     }
 }

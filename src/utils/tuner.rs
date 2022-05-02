@@ -1,6 +1,7 @@
 use crate::evaluation::EvaluationParameters;
 use crate::state::board::Bitboard;
 use crate::state::fen;
+use crate::state::zobrist::ZobristContainer;
 use crate::state::*;
 use chrono::Utc;
 use std::fs;
@@ -216,6 +217,8 @@ fn load_positions(epd_filename: &str) -> Result<Vec<TunerPosition>, &'static str
     };
 
     let evaluation_parameters = Arc::new(EvaluationParameters::default());
+    let zobrist_container = Arc::new(ZobristContainer::default());
+
     for line in BufReader::new(file).lines() {
         let position = line.unwrap();
         let mut parsed_epd = fen::epd_to_board(position.as_str())?;
@@ -232,6 +235,7 @@ fn load_positions(epd_filename: &str) -> Result<Vec<TunerPosition>, &'static str
         };
 
         parsed_epd.board.evaluation_parameters = evaluation_parameters.clone();
+        parsed_epd.board.zobrist = zobrist_container.clone();
         positions.push(TunerPosition::new(parsed_epd.board, result));
     }
 

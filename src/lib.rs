@@ -40,5 +40,4 @@ pub fn init() {
     see::init(&Default::default());
     patterns::init();
     movegen::init();
-    zobrist::init();
 }
