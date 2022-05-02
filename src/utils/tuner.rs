@@ -1,12 +1,3 @@
-use crate::evaluation;
-use crate::evaluation::parameters::*;
-use crate::evaluation::pst;
-use crate::evaluation::pst::bishop;
-use crate::evaluation::pst::king;
-use crate::evaluation::pst::knight;
-use crate::evaluation::pst::pawn;
-use crate::evaluation::pst::queen;
-use crate::evaluation::pst::rook;
 use crate::evaluation::EvaluationParameters;
 use crate::state::board::Bitboard;
 use crate::state::fen;
@@ -185,15 +176,13 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
             }
         }
 
-        unsafe {
-            write_evaluation_parameters(&mut context, output_directory, best_error);
-            write_piece_square_table(output_directory, best_error, "pawn", &context.parameters.pst_patterns[PAWN as usize]);
-            write_piece_square_table(output_directory, best_error, "knight", &context.parameters.pst_patterns[KNIGHT as usize]);
-            write_piece_square_table(output_directory, best_error, "bishop", &context.parameters.pst_patterns[BISHOP as usize]);
-            write_piece_square_table(output_directory, best_error, "rook", &context.parameters.pst_patterns[ROOK as usize]);
-            write_piece_square_table(output_directory, best_error, "queen", &context.parameters.pst_patterns[QUEEN as usize]);
-            write_piece_square_table(output_directory, best_error, "king", &context.parameters.pst_patterns[KING as usize]);
-        }
+        write_evaluation_parameters(&mut context, output_directory, best_error);
+        write_piece_square_table(output_directory, best_error, "pawn", &context.parameters.pst_patterns[PAWN as usize]);
+        write_piece_square_table(output_directory, best_error, "knight", &context.parameters.pst_patterns[KNIGHT as usize]);
+        write_piece_square_table(output_directory, best_error, "bishop", &context.parameters.pst_patterns[BISHOP as usize]);
+        write_piece_square_table(output_directory, best_error, "rook", &context.parameters.pst_patterns[ROOK as usize]);
+        write_piece_square_table(output_directory, best_error, "queen", &context.parameters.pst_patterns[QUEEN as usize]);
+        write_piece_square_table(output_directory, best_error, "king", &context.parameters.pst_patterns[KING as usize]);
 
         println!(
             "Iteration {} done in {} seconds, {} changes made, error reduced from {:.6} to {:.6} ({:.6})",

@@ -1,5 +1,6 @@
 use std::mem;
-use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::atomic::AtomicU32;
+use std::sync::atomic::Ordering;
 use std::u64;
 
 #[derive(Clone)]

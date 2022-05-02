@@ -1,11 +1,9 @@
-use super::parameters;
 use super::*;
 use crate::cache::pawns::PawnHashTable;
 use crate::engine::context::SearchStatistics;
 use crate::state::board::Bitboard;
 use crate::state::patterns;
 use std::cmp;
-use std::sync::Arc;
 
 /// Evaluates structure of pawns on the `board` and returns score from the white color perspective (more than 0 when advantage,
 /// less than 0 when disadvantage). This evaluator considers:
@@ -17,7 +15,7 @@ use std::sync::Arc;
 ///
 /// To improve performance (using the fact that structure of pawns changes relatively rare), each evaluation is saved in the pawn hashtable,
 /// and used again if possible.
-pub fn evaluate(board: &Bitboard, pawn_hashtable: Arc<PawnHashTable>, statistics: &mut SearchStatistics) -> i16 {
+pub fn evaluate(board: &Bitboard, pawn_hashtable: &PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
     let mut collision = false;
     match pawn_hashtable.get(board.pawn_hash, &mut collision) {
         Some(entry) => {
@@ -94,19 +92,19 @@ fn evaluate_color(board: &Bitboard, color: u8) -> i16 {
 
     let game_phase = board.get_game_phase();
     let opening_score = 0
-        + (doubled_pawns as i16) * unsafe { board.evaluation_parameters.doubled_pawn_opening }
-        + (isolated_pawns as i16) * unsafe { board.evaluation_parameters.isolated_pawn_opening }
-        + (chained_pawns as i16) * unsafe { board.evaluation_parameters.chained_pawn_opening }
-        + (passing_pawns as i16) * unsafe { board.evaluation_parameters.passing_pawn_opening }
-        + (pawn_shield as i16) * unsafe { board.evaluation_parameters.pawn_shield_opening }
-        + (opened_files as i16) * unsafe { board.evaluation_parameters.pawn_shield_open_file_opening };
+        + (doubled_pawns as i16) * board.evaluation_parameters.doubled_pawn_opening
+        + (isolated_pawns as i16) * board.evaluation_parameters.isolated_pawn_opening
+        + (chained_pawns as i16) * board.evaluation_parameters.chained_pawn_opening
+        + (passing_pawns as i16) * board.evaluation_parameters.passing_pawn_opening
+        + (pawn_shield as i16) * board.evaluation_parameters.pawn_shield_opening
+        + (opened_files as i16) * board.evaluation_parameters.pawn_shield_open_file_opening;
     let ending_score = 0
-        + (doubled_pawns as i16) * unsafe { board.evaluation_parameters.doubled_pawn_ending }
-        + (isolated_pawns as i16) * unsafe { board.evaluation_parameters.isolated_pawn_ending }
-        + (chained_pawns as i16) * unsafe { board.evaluation_parameters.chained_pawn_ending }
-        + (passing_pawns as i16) * unsafe { board.evaluation_parameters.passing_pawn_ending }
-        + (pawn_shield as i16) * unsafe { board.evaluation_parameters.pawn_shield_ending }
-        + (opened_files as i16) * unsafe { board.evaluation_parameters.pawn_shield_open_file_ending };
+        + (doubled_pawns as i16) * board.evaluation_parameters.doubled_pawn_ending
+        + (isolated_pawns as i16) * board.evaluation_parameters.isolated_pawn_ending
+        + (chained_pawns as i16) * board.evaluation_parameters.chained_pawn_ending
+        + (passing_pawns as i16) * board.evaluation_parameters.passing_pawn_ending
+        + (pawn_shield as i16) * board.evaluation_parameters.pawn_shield_ending
+        + (opened_files as i16) * board.evaluation_parameters.pawn_shield_open_file_ending;
 
     taper_score(game_phase, opening_score, ending_score)
 }

@@ -1,7 +1,7 @@
-use std::sync::atomic::{AtomicU16, Ordering};
-
 use super::*;
 use crate::state::movescan::Move;
+use std::sync::atomic::AtomicU16;
+use std::sync::atomic::Ordering;
 
 const KILLER_SLOTS: usize = 3;
 

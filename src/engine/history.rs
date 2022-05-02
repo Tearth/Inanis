@@ -1,4 +1,5 @@
-use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::atomic::AtomicU32;
+use std::sync::atomic::Ordering;
 
 pub struct HistoryTable {
     pub table: [[HistoryTableEntry; 64]; 64],

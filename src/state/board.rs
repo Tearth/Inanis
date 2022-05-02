@@ -9,10 +9,8 @@ use super::zobrist;
 use super::*;
 use crate::cache::pawns::PawnHashTable;
 use crate::engine::context::SearchStatistics;
-use crate::evaluation;
 use crate::evaluation::material;
 use crate::evaluation::mobility;
-use crate::evaluation::parameters;
 use crate::evaluation::pawns;
 use crate::evaluation::pst;
 use crate::evaluation::safety;
@@ -582,7 +580,7 @@ impl Bitboard {
         self.pieces[color as usize][piece as usize] |= 1u64 << field;
         self.occupancy[color as usize] |= 1u64 << field;
         self.piece_table[field as usize] = piece;
-        self.material_scores[color as usize] += unsafe { self.evaluation_parameters.piece_value[piece as usize] };
+        self.material_scores[color as usize] += self.evaluation_parameters.piece_value[piece as usize];
 
         self.pst_scores[color as usize][OPENING as usize] += self.evaluation_parameters.get_pst_value(piece, color, OPENING, field);
         self.pst_scores[color as usize][ENDING as usize] += self.evaluation_parameters.get_pst_value(piece, color, ENDING, field);
@@ -593,7 +591,7 @@ impl Bitboard {
         self.pieces[color as usize][piece as usize] &= !(1u64 << field);
         self.occupancy[color as usize] &= !(1u64 << field);
         self.piece_table[field as usize] = u8::MAX;
-        self.material_scores[color as usize] -= unsafe { self.evaluation_parameters.piece_value[piece as usize] };
+        self.material_scores[color as usize] -= self.evaluation_parameters.piece_value[piece as usize];
 
         self.pst_scores[color as usize][OPENING as usize] -= self.evaluation_parameters.get_pst_value(piece, color, OPENING, field);
         self.pst_scores[color as usize][ENDING as usize] -= self.evaluation_parameters.get_pst_value(piece, color, ENDING, field);
@@ -630,7 +628,7 @@ impl Bitboard {
 
     /// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position, using `pawn_hashtable` to store pawn
     /// evaluations and `statistics` to gather diagnostic data. Returns score from the white color perspective (more than 0 when advantage, less than 0 when disadvantage).
-    pub fn evaluate(&self, pawn_hashtable: Arc<PawnHashTable>, statistics: &mut SearchStatistics) -> i16 {
+    pub fn evaluate(&self, pawn_hashtable: &PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
         let mut white_attack_mask = 0;
         let mut black_attack_mask = 0;
         let mobility_score = mobility::evaluate(self, &mut white_attack_mask, &mut black_attack_mask);
@@ -709,9 +707,9 @@ impl Bitboard {
     ///  - King + Knight/Bishop vs King
     ///  - King + Bishop (same color) vs King + Bishop (same color)
     pub fn is_insufficient_material_draw(&self) -> bool {
-        let white_material = self.material_scores[WHITE as usize] - unsafe { self.evaluation_parameters.piece_value[KING as usize] };
-        let black_material = self.material_scores[BLACK as usize] - unsafe { self.evaluation_parameters.piece_value[KING as usize] };
-        let bishop_value = unsafe { self.evaluation_parameters.piece_value[BISHOP as usize] };
+        let white_material = self.material_scores[WHITE as usize] - self.evaluation_parameters.piece_value[KING as usize];
+        let black_material = self.material_scores[BLACK as usize] - self.evaluation_parameters.piece_value[KING as usize];
+        let bishop_value = self.evaluation_parameters.piece_value[BISHOP as usize];
         let pawns_count = bit_count(self.pieces[WHITE as usize][PAWN as usize]) + bit_count(self.pieces[BLACK as usize][PAWN as usize]);
 
         if white_material <= bishop_value && black_material <= bishop_value && pawns_count == 0 {
@@ -751,9 +749,9 @@ impl Bitboard {
     /// Calculates a game phase at the current position: 1.0 means opening (all pieces present, considering the default position), 0.0 is ending (no pieces at all).
     pub fn get_game_phase(&self) -> f32 {
         let total_material = self.material_scores[WHITE as usize] + self.material_scores[BLACK as usize];
-        let total_material_without_kings = total_material - 2 * unsafe { self.evaluation_parameters.piece_value[KING as usize] };
+        let total_material_without_kings = total_material - 2 * self.evaluation_parameters.piece_value[KING as usize];
 
-        (total_material_without_kings as f32) / (unsafe { self.evaluation_parameters.get_initial_material() } as f32)
+        (total_material_without_kings as f32) / (self.evaluation_parameters.get_initial_material() as f32)
     }
 }
 

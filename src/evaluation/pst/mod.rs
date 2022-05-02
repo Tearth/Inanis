@@ -28,8 +28,7 @@ pub fn recalculate_incremental_values(board: &mut Bitboard) {
                     let field_index = bit_scan(field);
                     pieces = pop_lsb(pieces);
 
-                    score +=
-                        unsafe { board.evaluation_parameters.pst[piece_index as usize][color_index as usize][phase as usize][field_index as usize] as i16 };
+                    score += board.evaluation_parameters.pst[piece_index as usize][color_index as usize][phase as usize][field_index as usize] as i16;
                 }
             }
 

@@ -84,7 +84,7 @@ impl EvaluationParameters {
     }
 
     pub fn get_pst_value(&self, piece: u8, color: u8, phase: u8, field: u8) -> i16 {
-        unsafe { self.pst[piece as usize][color as usize][phase as usize][field as usize] as i16 }
+        self.pst[piece as usize][color as usize][phase as usize][field as usize] as i16
     }
 
     pub fn get_initial_material(&self) -> i16 {

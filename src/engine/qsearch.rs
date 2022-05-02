@@ -1,6 +1,5 @@
 use super::context::SearchContext;
 use super::*;
-use crate::evaluation::parameters;
 use crate::state::movescan::Move;
 use crate::state::movescan::MoveFlags;
 use crate::state::*;
@@ -28,7 +27,7 @@ pub fn run(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, bet
         return -CHECKMATE_SCORE + (ply as i16);
     }
 
-    let stand_pat = -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate(context.pawn_hashtable.clone(), &mut context.statistics);
+    let stand_pat = -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate(&context.pawn_hashtable, &mut context.statistics);
     if stand_pat >= beta {
         context.statistics.q_leafs_count += 1;
         context.statistics.q_beta_cutoffs += 1;
@@ -106,7 +105,7 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
         }
 
         if r#move.is_promotion() {
-            move_scores[move_index] = unsafe { context.board.evaluation_parameters.piece_value[r#move.get_promotion_piece() as usize] };
+            move_scores[move_index] = context.board.evaluation_parameters.piece_value[r#move.get_promotion_piece() as usize];
             continue;
         }
 
@@ -116,13 +115,7 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
         let attackers = context.board.get_attacking_pieces(context.board.active_color ^ 1, field);
         let defenders = context.board.get_attacking_pieces(context.board.active_color, field);
 
-        move_scores[move_index] = see::get(
-            attacking_piece,
-            captured_piece,
-            attackers,
-            defenders,
-            context.board.evaluation_parameters.clone(),
-        );
+        move_scores[move_index] = see::get(attacking_piece, captured_piece, attackers, defenders, &context.board.evaluation_parameters);
     }
 }
 

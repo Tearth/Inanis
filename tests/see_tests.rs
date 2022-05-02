@@ -3,12 +3,12 @@
 #[cfg(test)]
 mod see_tests {
     use inanis::engine::see;
-    use inanis::evaluation::{parameters, EvaluationParameters};
+    use inanis::evaluation::EvaluationParameters;
     use inanis::state::board::Bitboard;
     use inanis::state::movescan::Move;
-    use inanis::state::*;
     use std::mem::MaybeUninit;
-    use std::sync::{Arc, Once};
+    use std::sync::Arc;
+    use std::sync::Once;
 
     static INIT: Once = Once::new();
     static P: i16 = 100;
@@ -43,7 +43,7 @@ mod see_tests {
                             let attackers = board.get_attacking_pieces(board.active_color ^ 1, r#move.get_to());
                             let defenders = board.get_attacking_pieces(board.active_color, r#move.get_to());
 
-                            assert_eq!($expected_result, see::get(attacking_piece, target_piece, attackers, defenders, evaluation_parameters_arc.clone()));
+                            assert_eq!($expected_result, see::get(attacking_piece, target_piece, attackers, defenders, &evaluation_parameters_arc));
                             return;
                         }
                     }

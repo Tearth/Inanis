@@ -1,4 +1,3 @@
-use super::parameters;
 use crate::state::board::Bitboard;
 use crate::state::*;
 
@@ -13,7 +12,7 @@ pub fn recalculate_incremental_values(board: &mut Bitboard) {
     for color_index in 0..2 {
         let mut score = 0;
         for piece_index in 0..6 {
-            score += (bit_count(board.pieces[color_index][piece_index]) as i16) * unsafe { board.evaluation_parameters.piece_value[piece_index] };
+            score += (bit_count(board.pieces[color_index][piece_index]) as i16) * board.evaluation_parameters.piece_value[piece_index];
         }
 
         board.material_scores[color_index] = score;
