@@ -1,4 +1,3 @@
-use super::board::Bitboard;
 use super::board::CastlingRights;
 use super::*;
 
@@ -12,7 +11,7 @@ pub struct ZobristContainer {
 impl ZobristContainer {
     /// Gets `piece` hash with the `color` for the field specified by `field_index`.
     pub fn get_piece_hash(&self, color: u8, piece: u8, field_index: u8) -> u64 {
-        unsafe { self.piece_hashes[color as usize][piece as usize][field_index as usize] }
+        self.piece_hashes[color as usize][piece as usize][field_index as usize]
     }
 
     /// Gets castling right hash based on the `current` ones and the desired change specified by `right`.
@@ -21,17 +20,17 @@ impl ZobristContainer {
             return 0;
         }
 
-        unsafe { self.castling_hashes[bit_scan(right.bits() as u64) as usize] }
+        self.castling_hashes[bit_scan(right.bits() as u64) as usize]
     }
 
     /// Gets en passant hash for the `file`.
     pub fn get_en_passant_hash(&self, file: u8) -> u64 {
-        unsafe { self.en_passant_hashes[file as usize] }
+        self.en_passant_hashes[file as usize]
     }
 
     /// Gets active color hash.
     pub fn get_active_color_hash(&self) -> u64 {
-        unsafe { self.active_color_hash }
+        self.active_color_hash
     }
 }
 
@@ -49,17 +48,17 @@ impl Default for ZobristContainer {
         for color in [WHITE, BLACK] {
             for piece in [PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING] {
                 for field_index in 0..64 {
-                    result.piece_hashes[color as usize][piece as usize][field_index] = fastrand::u64(0..u64::MAX);
+                    result.piece_hashes[color as usize][piece as usize][field_index] = fastrand::u64(1..u64::MAX);
                 }
             }
         }
 
         for castling_index in 0..4 {
-            result.castling_hashes[castling_index as usize] = fastrand::u64(0..u64::MAX);
+            result.castling_hashes[castling_index as usize] = fastrand::u64(1..u64::MAX);
         }
 
         for en_passant_index in 0..8 {
-            result.en_passant_hashes[en_passant_index as usize] = fastrand::u64(0..u64::MAX);
+            result.en_passant_hashes[en_passant_index as usize] = fastrand::u64(1..u64::MAX);
         }
 
         result.active_color_hash = fastrand::u64(1..u64::MAX);

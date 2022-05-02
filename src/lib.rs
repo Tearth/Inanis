@@ -19,8 +19,6 @@
 
 use engine::see;
 use state::movegen;
-use state::patterns;
-use state::zobrist;
 
 pub mod cache;
 pub mod engine;
@@ -38,6 +36,5 @@ pub fn init() {
     fastrand::seed(584578);
 
     see::init(&Default::default());
-    patterns::init();
     movegen::init();
 }

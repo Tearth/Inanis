@@ -2,7 +2,6 @@ use super::*;
 use crate::cache::pawns::PawnHashTable;
 use crate::engine::context::SearchStatistics;
 use crate::state::board::Bitboard;
-use crate::state::patterns;
 use std::cmp;
 
 /// Evaluates structure of pawns on the `board` and returns score from the white color perspective (more than 0 when advantage,
@@ -52,13 +51,13 @@ fn evaluate_color(board: &Bitboard, color: u8) -> i16 {
     let mut opened_files = 0;
 
     for file in 0..8 {
-        let pawns_on_file_count = bit_count(patterns::get_file(file) & board.pieces[color as usize][PAWN as usize]);
+        let pawns_on_file_count = bit_count(board.patterns.get_file(file) & board.pieces[color as usize][PAWN as usize]);
         if pawns_on_file_count > 1 {
             doubled_pawns += pawns_on_file_count;
         }
 
         if pawns_on_file_count > 0 {
-            let pawns_on_rail_count = bit_count(patterns::get_rail(file) & board.pieces[color as usize][PAWN as usize]);
+            let pawns_on_rail_count = bit_count(board.patterns.get_rail(file) & board.pieces[color as usize][PAWN as usize]);
             if pawns_on_rail_count == 0 {
                 isolated_pawns += 1;
             }
@@ -71,9 +70,10 @@ fn evaluate_color(board: &Bitboard, color: u8) -> i16 {
         let field_index = bit_scan(field);
         pawns = pop_lsb(pawns);
 
-        chained_pawns += bit_count(patterns::get_star(field_index as usize) & board.pieces[color as usize][PAWN as usize]);
+        chained_pawns += bit_count(board.patterns.get_star(field_index as usize) & board.pieces[color as usize][PAWN as usize]);
 
-        let enemy_pawns_ahead_count = bit_count(patterns::get_front(color as usize, field_index as usize) & board.pieces[(color ^ 1) as usize][PAWN as usize]);
+        let enemy_pawns_ahead_count =
+            bit_count(board.patterns.get_front(color as usize, field_index as usize) & board.pieces[(color ^ 1) as usize][PAWN as usize]);
         if enemy_pawns_ahead_count == 0 {
             passing_pawns += 1;
         }
@@ -82,10 +82,10 @@ fn evaluate_color(board: &Bitboard, color: u8) -> i16 {
     let king = board.pieces[color as usize][KING as usize];
     let king_field = bit_scan(king);
     let king_field_file = (king_field % 8) as i8;
-    let pawn_shield = bit_count(patterns::get_box(king_field as usize) & board.pieces[color as usize][PAWN as usize]);
+    let pawn_shield = bit_count(board.patterns.get_box(king_field as usize) & board.pieces[color as usize][PAWN as usize]);
 
     for file in cmp::max(0, king_field_file - 1)..=(cmp::min(7, king_field_file + 1)) {
-        if (patterns::get_file(file as usize) & board.pieces[color as usize][PAWN as usize]) == 0 {
+        if (board.patterns.get_file(file as usize) & board.pieces[color as usize][PAWN as usize]) == 0 {
             opened_files += 1;
         }
     }

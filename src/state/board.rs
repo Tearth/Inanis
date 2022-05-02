@@ -5,7 +5,7 @@ use super::movegen;
 use super::movescan;
 use super::movescan::Move;
 use super::movescan::MoveFlags;
-use super::zobrist;
+use super::patterns::PatternsContainer;
 use super::zobrist::ZobristContainer;
 use super::*;
 use crate::cache::pawns::PawnHashTable;
@@ -54,6 +54,7 @@ pub struct Bitboard {
     pub pst_scores: [[i16; 2]; 2],
     pub evaluation_parameters: Arc<EvaluationParameters>,
     pub zobrist: Arc<ZobristContainer>,
+    pub patterns: Arc<PatternsContainer>,
 }
 
 impl Bitboard {
@@ -438,13 +439,13 @@ impl Bitboard {
             return true;
         }
 
-        let knight_attacks = movegen::get_knight_moves(field_index as usize);
+        let knight_attacks = movegen::get_knight_moves(field_index as usize, &self.patterns);
         let enemy_knights = self.pieces[enemy_color as usize][KNIGHT as usize];
         if (knight_attacks & enemy_knights) != 0 {
             return true;
         }
 
-        let king_attacks = movegen::get_king_moves(field_index as usize);
+        let king_attacks = movegen::get_king_moves(field_index as usize, &self.patterns);
         let enemy_kings = self.pieces[enemy_color as usize][KING as usize];
         if (king_attacks & enemy_kings) != 0 {
             return true;
@@ -491,7 +492,7 @@ impl Bitboard {
         let rooks_queens = self.pieces[enemy_color as usize][ROOK as usize] | self.pieces[enemy_color as usize][QUEEN as usize];
         let bishops_queens = self.pieces[enemy_color as usize][BISHOP as usize] | self.pieces[enemy_color as usize][QUEEN as usize];
 
-        let king_attacks = movegen::get_king_moves(field_index as usize);
+        let king_attacks = movegen::get_king_moves(field_index as usize, &self.patterns);
         if (king_attacks & self.pieces[enemy_color as usize][KING as usize]) != 0 {
             result |= 1 << 7;
         }
@@ -512,7 +513,7 @@ impl Bitboard {
 
         let mut attacking_knights_bishops_count = 0;
 
-        let knight_attacks = movegen::get_knight_moves(field_index as usize);
+        let knight_attacks = movegen::get_knight_moves(field_index as usize, &self.patterns);
         let enemy_knights = self.pieces[enemy_color as usize][KNIGHT as usize];
         let attacking_knights = knight_attacks & enemy_knights;
         if (knight_attacks & enemy_knights) != 0 {
@@ -833,6 +834,7 @@ impl Default for Bitboard {
             pst_scores: [[0, 2]; 2],
             evaluation_parameters: Arc::new(Default::default()),
             zobrist: Arc::new(Default::default()),
+            patterns: Arc::new(Default::default()),
         }
     }
 }

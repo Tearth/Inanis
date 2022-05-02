@@ -1,4 +1,6 @@
-use super::patterns;
+use std::sync::Arc;
+
+use super::patterns::PatternsContainer;
 use super::*;
 use arr_macro::arr;
 
@@ -193,13 +195,13 @@ pub fn init() {
 }
 
 /// Gets a knight moves for the field specified by `field_index`, without considering an occupancy.
-pub fn get_knight_moves(field_index: usize) -> u64 {
-    patterns::get_jumps(field_index)
+pub fn get_knight_moves(field_index: usize, patterns: &PatternsContainer) -> u64 {
+    patterns.get_jumps(field_index)
 }
 
 /// Gets a king moves for the field specified by `field_index`, without considering an occupancy.
-pub fn get_king_moves(field_index: usize) -> u64 {
-    patterns::get_box(field_index)
+pub fn get_king_moves(field_index: usize, patterns: &PatternsContainer) -> u64 {
+    patterns.get_box(field_index)
 }
 
 /// Gets a rook moves for the field specified by `field_index`, considering `occupancy`.
@@ -231,8 +233,10 @@ pub fn get_queen_moves(occupancy: u64, field_index: usize) -> u64 {
 
 /// Generates a rook magic number for the field specified by `field_index`.
 pub fn generate_rook_number_for_field(field_index: usize) -> u64 {
+    let patterns = Arc::new(PatternsContainer::default());
+
     let shift = ROOK_SHIFTS[field_index];
-    let mask = get_rook_mask(field_index);
+    let mask = get_rook_mask(field_index, &patterns);
     let count = 1 << shift;
 
     let mut permutations = Vec::with_capacity(count as usize);
@@ -251,8 +255,10 @@ pub fn generate_rook_number_for_field(field_index: usize) -> u64 {
 
 /// Generates a bishop magic number for the field specified by `field_index`.
 pub fn generate_bishop_number_for_field(field_index: usize) -> u64 {
+    let patterns = Arc::new(PatternsContainer::default());
+
     let shift = BISHOP_SHIFTS[field_index];
-    let mask = get_bishop_mask(field_index);
+    let mask = get_bishop_mask(field_index, &patterns);
     let count = 1 << shift;
 
     let mut permutations = Vec::with_capacity(count as usize);
@@ -303,8 +309,10 @@ fn generate_magic_number(shift: u8, permutations: &[u64], attacks: &[u64]) -> u6
 
 /// Applies rook magic for the field specified by `field_index`, using built-in magic number from [ROOK_MAGIC_NUMBERS].
 fn apply_rook_magic_for_field(field_index: usize) {
+    let patterns = Arc::new(PatternsContainer::default());
+
     let shift = ROOK_SHIFTS[field_index];
-    let mask = get_rook_mask(field_index);
+    let mask = get_rook_mask(field_index, &patterns);
     let count = 1 << shift;
 
     let mut permutations = Vec::with_capacity(count as usize);
@@ -327,8 +335,10 @@ fn apply_rook_magic_for_field(field_index: usize) {
 
 /// Applies bishop magic for the field specified by `field_index`, using built-in magic number from [BISHOP_MAGIC_NUMBERS].
 fn apply_bishop_magic_for_field(field_index: usize) {
+    let patterns = Arc::new(PatternsContainer::default());
+
     let shift = BISHOP_SHIFTS[field_index];
-    let mask = get_bishop_mask(field_index);
+    let mask = get_bishop_mask(field_index, &patterns);
     let count = 1 << shift;
 
     let mut permutations = Vec::with_capacity(count as usize);
@@ -383,13 +393,13 @@ fn get_permutation(mut mask: u64, mut index: u64) -> u64 {
 }
 
 /// Gets a rook mask for the field specified by `field_index`, without considering occupancy.
-fn get_rook_mask(field_index: usize) -> u64 {
-    (patterns::get_file(field_index) & !RANK_A & !RANK_H) | (patterns::get_rank(field_index) & !FILE_A & !FILE_H)
+fn get_rook_mask(field_index: usize, patterns: &PatternsContainer) -> u64 {
+    (patterns.get_file(field_index) & !RANK_A & !RANK_H) | (patterns.get_rank(field_index) & !FILE_A & !FILE_H)
 }
 
 /// Gets a bishop mask for the field specified by `field_index`, without considering occupancy.
-fn get_bishop_mask(field_index: usize) -> u64 {
-    patterns::get_diagonals(field_index) & !EDGE
+fn get_bishop_mask(field_index: usize, patterns: &PatternsContainer) -> u64 {
+    patterns.get_diagonals(field_index) & !EDGE
 }
 
 /// Gets a rook attacks for the field specified by `field_index`, considering `occupancy`.
