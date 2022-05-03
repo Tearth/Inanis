@@ -442,7 +442,10 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
             let captured_piece = context.board.get_piece(r#move.get_to());
             let attackers = context.board.get_attacking_pieces(context.board.active_color ^ 1, field);
             let defenders = context.board.get_attacking_pieces(context.board.active_color, field);
-            let see = see::get(attacking_piece, captured_piece, attackers, defenders, &context.board.evaluation_parameters);
+            let see = context
+                .board
+                .see
+                .get(attacking_piece, captured_piece, attackers, defenders, &context.board.evaluation_parameters);
 
             move_scores[move_index] = if see >= 0 {
                 see + MOVE_ORDERING_WINNING_CAPTURES_OFFSET

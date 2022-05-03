@@ -3,9 +3,12 @@ use crate::cache::search::TranspositionTable;
 use crate::engine::context::SearchContext;
 use crate::engine::history::HistoryTable;
 use crate::engine::killers::KillersTable;
+use crate::engine::see::SEEContainer;
+use crate::evaluation::EvaluationParameters;
 use crate::state::board::Bitboard;
 use crate::state::fen;
 use crate::state::movescan::Move;
+use crate::state::zobrist::ZobristContainer;
 use chrono::Utc;
 use std::fs::File;
 use std::io::BufRead;
@@ -166,18 +169,26 @@ fn load_positions(epd_filename: &str) -> Result<Vec<TestPosition>, &'static str>
         Err(_) => return Err("Can't open EPD file"),
     };
 
+    let evaluation_parameters = Arc::new(EvaluationParameters::default());
+    let zobrist_container = Arc::new(ZobristContainer::default());
+    let see_container = Arc::new(SEEContainer::default());
+
     for line in BufReader::new(file).lines() {
         let position = line.unwrap();
         if position.is_empty() {
             continue;
         }
 
-        let parsed_epd = fen::epd_to_board(position.as_str())?;
+        let mut parsed_epd = fen::epd_to_board(position.as_str())?;
         if parsed_epd.id == None {
             return Err("Not enough data");
         }
 
         let parsed_best_move = Move::from_short_notation(&parsed_epd.best_move.unwrap(), &parsed_epd.board)?;
+
+        parsed_epd.board.evaluation_parameters = evaluation_parameters.clone();
+        parsed_epd.board.zobrist = zobrist_container.clone();
+        parsed_epd.board.see = see_container.clone();
         positions.push(TestPosition::new(parsed_epd.id.unwrap(), parsed_epd.board, parsed_best_move));
     }
 

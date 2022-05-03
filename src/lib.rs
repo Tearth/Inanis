@@ -17,7 +17,6 @@
 //!
 //! Homepage: <https://github.com/Tearth/Inanis>
 
-use engine::see;
 use state::movegen;
 
 pub mod cache;
@@ -34,7 +33,5 @@ extern crate bitflags;
 /// Initializes all engine's components (random seed, PST, SEE, patterns, move generator, Zobrist hashing and evaluation), to make it ready to run.
 pub fn init() {
     fastrand::seed(584578);
-
-    see::init(&Default::default());
     movegen::init();
 }

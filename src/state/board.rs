@@ -10,6 +10,7 @@ use super::zobrist::ZobristContainer;
 use super::*;
 use crate::cache::pawns::PawnHashTable;
 use crate::engine::context::SearchStatistics;
+use crate::engine::see::SEEContainer;
 use crate::evaluation::material;
 use crate::evaluation::mobility;
 use crate::evaluation::pawns;
@@ -55,6 +56,7 @@ pub struct Bitboard {
     pub evaluation_parameters: Arc<EvaluationParameters>,
     pub zobrist: Arc<ZobristContainer>,
     pub patterns: Arc<PatternsContainer>,
+    pub see: Arc<SEEContainer>,
 }
 
 impl Bitboard {
@@ -835,6 +837,7 @@ impl Default for Bitboard {
             evaluation_parameters: Arc::new(Default::default()),
             zobrist: Arc::new(Default::default()),
             patterns: Arc::new(Default::default()),
+            see: Arc::new(Default::default()),
         }
     }
 }

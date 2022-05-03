@@ -2,27 +2,37 @@ use crate::evaluation::EvaluationParameters;
 use crate::state::*;
 use std::cmp;
 
-static mut TABLE: [[[i16; 256]; 256]; 6] = [[[0; 256]; 256]; 6];
+pub struct SEEContainer {
+    pub table: Box<[[[i16; 256]; 256]; 6]>,
+}
 
-/// Initializes static exchange evaluation table by filling it with every possible combination of target piece, attackers and defenders.
-pub fn init(evaluation_parameters: &EvaluationParameters) {
-    for target_piece in 0..6 {
-        for attackers in 0..256 {
-            for defenders in 0..256 {
-                unsafe { TABLE[target_piece][attackers][defenders] = evaluate(target_piece as u8, attackers as u8, defenders as u8, evaluation_parameters) };
-            }
-        }
+impl SEEContainer {
+    /// Gets a result of the static exchange evaluation, based on `attacking_piece`, `target_piece`, `attackers` and `defenders`.
+    pub fn get(&self, attacking_piece: u8, target_piece: u8, attackers: u8, defenders: u8, evaluation_parameters: &EvaluationParameters) -> i16 {
+        let attacking_piece_index = get_see_piece_index(attacking_piece);
+        let target_piece_index = get_see_piece_index(target_piece);
+        let updated_attackers = attackers & !(1 << attacking_piece_index);
+
+        let see_result = self.table[attacking_piece as usize][defenders as usize][updated_attackers as usize];
+        get_piece_value(target_piece_index, evaluation_parameters) - see_result
     }
 }
 
-/// Gets a result of the static exchange evaluation, based on `attacking_piece`, `target_piece`, `attackers` and `defenders`.
-pub fn get(attacking_piece: u8, target_piece: u8, attackers: u8, defenders: u8, evaluation_parameters: &EvaluationParameters) -> i16 {
-    let attacking_piece_index = get_see_piece_index(attacking_piece);
-    let target_piece_index = get_see_piece_index(target_piece);
-    let updated_attackers = attackers & !(1 << attacking_piece_index);
+impl Default for SEEContainer {
+    fn default() -> Self {
+        let evaluation_parameters = Default::default();
+        let mut table = Box::new([[[0; 256]; 256]; 6]);
 
-    let see_result = unsafe { TABLE[attacking_piece as usize][defenders as usize][updated_attackers as usize] };
-    get_piece_value(target_piece_index, evaluation_parameters) - see_result
+        for target_piece in 0..6 {
+            for attackers in 0..256 {
+                for defenders in 0..256 {
+                    table[target_piece][attackers][defenders] = evaluate(target_piece as u8, attackers as u8, defenders as u8, &evaluation_parameters);
+                }
+            }
+        }
+
+        Self { table }
+    }
 }
 
 /// Evaluates a static exchange evaluation result, based on `target_piece`, `attackers`, `defenders`.

@@ -2,6 +2,7 @@
 
 #[cfg(test)]
 mod see_tests {
+    use crate::see_tests::see::SEEContainer;
     use inanis::engine::see;
     use inanis::evaluation::EvaluationParameters;
     use inanis::state::board::Bitboard;
@@ -31,6 +32,7 @@ mod see_tests {
                     let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
                     let moves_count = board.get_all_moves(&mut moves, u64::MAX);
 
+                    let see = SEEContainer::default();
                     let mut evaluation_parameters = EvaluationParameters::default();
                     evaluation_parameters.piece_value = [P, N, B, R, Q, K];
 
@@ -43,7 +45,7 @@ mod see_tests {
                             let attackers = board.get_attacking_pieces(board.active_color ^ 1, r#move.get_to());
                             let defenders = board.get_attacking_pieces(board.active_color, r#move.get_to());
 
-                            assert_eq!($expected_result, see::get(attacking_piece, target_piece, attackers, defenders, &evaluation_parameters_arc));
+                            assert_eq!($expected_result, see.get(attacking_piece, target_piece, attackers, defenders, &evaluation_parameters_arc));
                             return;
                         }
                     }
