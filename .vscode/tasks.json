@@ -2,6 +2,17 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "cargo clean",
+            "type": "shell",
+            "command": "cargo clean",
+            "args": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
             "label": "cargo build",
             "type": "shell",
             "command": "cargo rustc --bin inanis --target=x86_64-pc-windows-msvc -- -C target-feature=+bmi,+bmi2,+popcnt",
