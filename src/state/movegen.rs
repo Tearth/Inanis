@@ -164,10 +164,273 @@ static BISHOP_MAGIC_NUMBERS: [u64; 64] = [
     9377059641948700736,
 ];
 
-static mut ROOK_FIELDS: [MagicField; 64] = arr!(MagicField::new(); 64);
-static mut BISHOP_FIELDS: [MagicField; 64] = arr!(MagicField::new(); 64);
+pub struct MagicContainer {
+    pub rook_fields: [MagicField; 64],
+    pub bishop_fields: [MagicField; 64],
+}
 
-struct MagicField {
+impl MagicContainer {
+    /// Gets a rook moves for the field specified by `field_index`, considering `occupancy`.
+    pub fn get_rook_moves(&self, mut occupancy: u64, field_index: usize) -> u64 {
+        occupancy &= self.rook_fields[field_index].mask;
+        occupancy = occupancy.wrapping_mul(self.rook_fields[field_index].magic);
+        occupancy >>= 64 - self.rook_fields[field_index].shift;
+
+        self.rook_fields[field_index].attacks[occupancy as usize]
+    }
+
+    /// Gets a bishop moves for the field specified by `field_index`, considering `occupancy`.
+    pub fn get_bishop_moves(&self, mut occupancy: u64, field_index: usize) -> u64 {
+        occupancy &= self.bishop_fields[field_index].mask;
+        occupancy = occupancy.wrapping_mul(self.bishop_fields[field_index].magic);
+        occupancy >>= 64 - self.bishop_fields[field_index].shift;
+
+        self.bishop_fields[field_index].attacks[occupancy as usize]
+    }
+
+    /// Gets a queen moves for the field specified by `field_index`, considering `occupancy`.
+    pub fn get_queen_moves(&self, occupancy: u64, field_index: usize) -> u64 {
+        self.get_rook_moves(occupancy, field_index) | self.get_bishop_moves(occupancy, field_index)
+    }
+
+    /// Gets a knight moves for the field specified by `field_index`, without considering an occupancy.
+    pub fn get_knight_moves(&self, field_index: usize, patterns: &PatternsContainer) -> u64 {
+        patterns.get_jumps(field_index)
+    }
+
+    /// Gets a king moves for the field specified by `field_index`, without considering an occupancy.
+    pub fn get_king_moves(&self, field_index: usize, patterns: &PatternsContainer) -> u64 {
+        patterns.get_box(field_index)
+    }
+
+    /// Generates a rook magic number for the field specified by `field_index`.
+    pub fn generate_rook_number_for_field(&self, field_index: usize) -> u64 {
+        let patterns = Arc::new(PatternsContainer::default());
+
+        let shift = ROOK_SHIFTS[field_index];
+        let mask = self.get_rook_mask(field_index, &patterns);
+        let count = 1 << shift;
+
+        let mut permutations = Vec::with_capacity(count as usize);
+        let mut attacks = Vec::with_capacity(count as usize);
+
+        for index in 0..count {
+            let permutation = self.get_permutation(mask, index as u64);
+            let permutation_attacks = self.get_rook_attacks(permutation, field_index);
+
+            permutations.push(permutation);
+            attacks.push(permutation_attacks);
+        }
+
+        self.generate_magic_number(shift, &permutations, &attacks)
+    }
+
+    /// Generates a bishop magic number for the field specified by `field_index`.
+    pub fn generate_bishop_number_for_field(&self, field_index: usize) -> u64 {
+        let patterns = Arc::new(PatternsContainer::default());
+
+        let shift = BISHOP_SHIFTS[field_index];
+        let mask = self.get_bishop_mask(field_index, &patterns);
+        let count = 1 << shift;
+
+        let mut permutations = Vec::with_capacity(count as usize);
+        let mut attacks = Vec::with_capacity(count as usize);
+
+        for index in 0..count {
+            let permutation = self.get_permutation(mask, index as u64);
+            let permutation_attacks = self.get_bishop_attacks(permutation, field_index);
+
+            permutations.push(permutation);
+            attacks.push(permutation_attacks);
+        }
+
+        self.generate_magic_number(shift, &permutations, &attacks)
+    }
+
+    /// Generates a magic number for a set of `permutations` and `attacks`, using `shift` proper for the specified field.
+    fn generate_magic_number(&self, shift: u8, permutations: &[u64], attacks: &[u64]) -> u64 {
+        let count = 1 << shift;
+        let mut hashed_attacks = vec![0; count];
+        let mut magic_number: u64;
+
+        loop {
+            magic_number = fastrand::u64(1..u64::MAX) & fastrand::u64(1..u64::MAX) & fastrand::u64(1..u64::MAX);
+
+            for index in 0..count {
+                let hash = (permutations[index as usize].wrapping_mul(magic_number) >> (64 - shift)) as usize;
+
+                if hashed_attacks[hash] == 0 || hashed_attacks[hash] == attacks[index] {
+                    hashed_attacks[hash] = attacks[index];
+                } else {
+                    magic_number = 0;
+                    break;
+                }
+            }
+
+            if magic_number != 0 {
+                break;
+            }
+
+            for index in &mut hashed_attacks {
+                *index = 0;
+            }
+        }
+
+        magic_number
+    }
+
+    /// Applies rook magic for the field specified by `field_index`, using built-in magic number from [ROOK_MAGIC_NUMBERS].
+    fn apply_rook_magic_for_field(&mut self, field_index: usize) {
+        let patterns = Arc::new(PatternsContainer::default());
+
+        let shift = ROOK_SHIFTS[field_index];
+        let mask = self.get_rook_mask(field_index, &patterns);
+        let count = 1 << shift;
+
+        let mut permutations = Vec::with_capacity(count as usize);
+        let mut attacks = Vec::with_capacity(count as usize);
+
+        for index in 0..count {
+            let permutation = self.get_permutation(mask, index as u64);
+
+            permutations.push(permutation);
+            attacks.push(self.get_rook_attacks(permutation, field_index));
+        }
+
+        let magic = ROOK_MAGIC_NUMBERS[field_index];
+        self.rook_fields[field_index].shift = shift;
+        self.rook_fields[field_index].mask = mask;
+        self.rook_fields[field_index].magic = magic;
+        self.rook_fields[field_index].attacks = self.apply_magic_for_field(&permutations, &attacks, magic, shift);
+    }
+
+    /// Applies bishop magic for the field specified by `field_index`, using built-in magic number from [BISHOP_MAGIC_NUMBERS].
+    fn apply_bishop_magic_for_field(&mut self, field_index: usize) {
+        let patterns = Arc::new(PatternsContainer::default());
+
+        let shift = BISHOP_SHIFTS[field_index];
+        let mask = self.get_bishop_mask(field_index, &patterns);
+        let count = 1 << shift;
+
+        let mut permutations = Vec::with_capacity(count as usize);
+        let mut attacks = Vec::with_capacity(count as usize);
+
+        for index in 0..count {
+            let permutation = self.get_permutation(mask, index as u64);
+
+            permutations.push(permutation);
+            attacks.push(self.get_bishop_attacks(permutation, field_index));
+        }
+
+        let magic = BISHOP_MAGIC_NUMBERS[field_index];
+        self.bishop_fields[field_index].shift = shift;
+        self.bishop_fields[field_index].mask = mask;
+        self.bishop_fields[field_index].magic = magic;
+        self.bishop_fields[field_index].attacks = self.apply_magic_for_field(&permutations, &attacks, magic, shift);
+    }
+
+    /// Applies a magic number for a set of `permutations`, `attacks` and `field`.
+    fn apply_magic_for_field(&self, permutations: &[u64], attacks: &[u64], magic: u64, shift: u8) -> Vec<u64> {
+        let count = 1 << shift;
+        let mut result = vec![0; count as usize];
+
+        for index in 0..count {
+            let permutation = permutations[index as usize];
+            let permutation_attacks = attacks[index as usize];
+            let hash = permutation.wrapping_mul(magic) >> (64 - shift);
+
+            debug_assert!(result[hash as usize] == 0);
+            result[hash as usize] = permutation_attacks;
+        }
+
+        result
+    }
+
+    /// Gets `index`-th permutation of the `mask`.  
+    fn get_permutation(&self, mut mask: u64, mut index: u64) -> u64 {
+        let mut result = 0u64;
+
+        while mask != 0 {
+            let lsb = get_lsb(mask);
+            let lsb_index = bit_scan(lsb);
+            mask = pop_lsb(mask);
+
+            result |= (index & 1) << lsb_index;
+            index >>= 1;
+        }
+
+        result
+    }
+
+    /// Gets a rook mask for the field specified by `field_index`, without considering occupancy.
+    fn get_rook_mask(&self, field_index: usize, patterns: &PatternsContainer) -> u64 {
+        (patterns.get_file(field_index) & !RANK_A & !RANK_H) | (patterns.get_rank(field_index) & !FILE_A & !FILE_H)
+    }
+
+    /// Gets a bishop mask for the field specified by `field_index`, without considering occupancy.
+    fn get_bishop_mask(&self, field_index: usize, patterns: &PatternsContainer) -> u64 {
+        patterns.get_diagonals(field_index) & !EDGE
+    }
+
+    /// Gets a rook attacks for the field specified by `field_index`, considering `occupancy`.
+    fn get_rook_attacks(&self, occupancy: u64, field_index: usize) -> u64 {
+        let result = 0
+            | self.get_attacks(occupancy, field_index, (1, 0))
+            | self.get_attacks(occupancy, field_index, (-1, 0))
+            | self.get_attacks(occupancy, field_index, (0, 1))
+            | self.get_attacks(occupancy, field_index, (0, -1));
+
+        result
+    }
+
+    /// Gets a bishop attacks for the field specified by `field_index`, occupancy `occupancy`.
+    fn get_bishop_attacks(&self, occupancy: u64, field_index: usize) -> u64 {
+        let result = 0
+            | self.get_attacks(occupancy, field_index, (1, 1))
+            | self.get_attacks(occupancy, field_index, (-1, 1))
+            | self.get_attacks(occupancy, field_index, (1, -1))
+            | self.get_attacks(occupancy, field_index, (-1, -1));
+
+        result
+    }
+
+    /// Helper function to get all possible to move fields, considering `occupancy`, starting from the field
+    /// specified by `field_index` and going into the `direction`.
+    fn get_attacks(&self, occupancy: u64, field_index: usize, direction: (isize, isize)) -> u64 {
+        let mut result = 0u64;
+        let mut current = ((field_index as isize) % 8 + direction.0, (field_index as isize) / 8 + direction.1);
+
+        while current.0 >= 0 && current.0 <= 7 && current.1 >= 0 && current.1 <= 7 {
+            result |= 1u64 << (current.0 + current.1 * 8);
+
+            if (occupancy & result) != 0 {
+                break;
+            }
+
+            current = (current.0 + direction.0, current.1 + direction.1);
+        }
+
+        result
+    }
+}
+
+impl Default for MagicContainer {
+    fn default() -> Self {
+        let mut result = Self {
+            rook_fields: arr!(MagicField::new(); 64),
+            bishop_fields: arr!(MagicField::new(); 64),
+        };
+
+        for index in 0..64 {
+            result.apply_rook_magic_for_field(index);
+            result.apply_bishop_magic_for_field(index);
+        }
+
+        result
+    }
+}
+
+pub struct MagicField {
     pub mask: u64,
     pub shift: u8,
     pub magic: u64,
@@ -184,261 +447,4 @@ impl MagicField {
             attacks: Vec::new(),
         }
     }
-}
-
-/// Initializes move generator by applying built-in magic numbers ([ROOK_MAGIC_NUMBERS] and [BISHOP_MAGIC_NUMBERS]).
-pub fn init() {
-    for index in 0..64 {
-        apply_rook_magic_for_field(index);
-        apply_bishop_magic_for_field(index);
-    }
-}
-
-/// Gets a knight moves for the field specified by `field_index`, without considering an occupancy.
-pub fn get_knight_moves(field_index: usize, patterns: &PatternsContainer) -> u64 {
-    patterns.get_jumps(field_index)
-}
-
-/// Gets a king moves for the field specified by `field_index`, without considering an occupancy.
-pub fn get_king_moves(field_index: usize, patterns: &PatternsContainer) -> u64 {
-    patterns.get_box(field_index)
-}
-
-/// Gets a rook moves for the field specified by `field_index`, considering `occupancy`.
-pub fn get_rook_moves(mut occupancy: u64, field_index: usize) -> u64 {
-    unsafe {
-        occupancy &= ROOK_FIELDS[field_index].mask;
-        occupancy = occupancy.wrapping_mul(ROOK_FIELDS[field_index].magic);
-        occupancy >>= 64 - ROOK_FIELDS[field_index].shift;
-
-        ROOK_FIELDS[field_index].attacks[occupancy as usize]
-    }
-}
-
-/// Gets a bishop moves for the field specified by `field_index`, considering `occupancy`.
-pub fn get_bishop_moves(mut occupancy: u64, field_index: usize) -> u64 {
-    unsafe {
-        occupancy &= BISHOP_FIELDS[field_index].mask;
-        occupancy = occupancy.wrapping_mul(BISHOP_FIELDS[field_index].magic);
-        occupancy >>= 64 - BISHOP_FIELDS[field_index].shift;
-
-        BISHOP_FIELDS[field_index].attacks[occupancy as usize]
-    }
-}
-
-/// Gets a queen moves for the field specified by `field_index`, considering `occupancy`.
-pub fn get_queen_moves(occupancy: u64, field_index: usize) -> u64 {
-    get_rook_moves(occupancy, field_index) | get_bishop_moves(occupancy, field_index)
-}
-
-/// Generates a rook magic number for the field specified by `field_index`.
-pub fn generate_rook_number_for_field(field_index: usize) -> u64 {
-    let patterns = Arc::new(PatternsContainer::default());
-
-    let shift = ROOK_SHIFTS[field_index];
-    let mask = get_rook_mask(field_index, &patterns);
-    let count = 1 << shift;
-
-    let mut permutations = Vec::with_capacity(count as usize);
-    let mut attacks = Vec::with_capacity(count as usize);
-
-    for index in 0..count {
-        let permutation = get_permutation(mask, index as u64);
-        let permutation_attacks = get_rook_attacks(permutation, field_index);
-
-        permutations.push(permutation);
-        attacks.push(permutation_attacks);
-    }
-
-    generate_magic_number(shift, &permutations, &attacks)
-}
-
-/// Generates a bishop magic number for the field specified by `field_index`.
-pub fn generate_bishop_number_for_field(field_index: usize) -> u64 {
-    let patterns = Arc::new(PatternsContainer::default());
-
-    let shift = BISHOP_SHIFTS[field_index];
-    let mask = get_bishop_mask(field_index, &patterns);
-    let count = 1 << shift;
-
-    let mut permutations = Vec::with_capacity(count as usize);
-    let mut attacks = Vec::with_capacity(count as usize);
-
-    for index in 0..count {
-        let permutation = get_permutation(mask, index as u64);
-        let permutation_attacks = get_bishop_attacks(permutation, field_index);
-
-        permutations.push(permutation);
-        attacks.push(permutation_attacks);
-    }
-
-    generate_magic_number(shift, &permutations, &attacks)
-}
-
-/// Generates a magic number for a set of `permutations` and `attacks`, using `shift` proper for the specified field.
-fn generate_magic_number(shift: u8, permutations: &[u64], attacks: &[u64]) -> u64 {
-    let count = 1 << shift;
-    let mut hashed_attacks = vec![0; count];
-    let mut magic_number: u64;
-
-    loop {
-        magic_number = fastrand::u64(1..u64::MAX) & fastrand::u64(1..u64::MAX) & fastrand::u64(1..u64::MAX);
-
-        for index in 0..count {
-            let hash = (permutations[index as usize].wrapping_mul(magic_number) >> (64 - shift)) as usize;
-
-            if hashed_attacks[hash] == 0 || hashed_attacks[hash] == attacks[index] {
-                hashed_attacks[hash] = attacks[index];
-            } else {
-                magic_number = 0;
-                break;
-            }
-        }
-
-        if magic_number != 0 {
-            break;
-        }
-
-        for index in &mut hashed_attacks {
-            *index = 0;
-        }
-    }
-
-    magic_number
-}
-
-/// Applies rook magic for the field specified by `field_index`, using built-in magic number from [ROOK_MAGIC_NUMBERS].
-fn apply_rook_magic_for_field(field_index: usize) {
-    let patterns = Arc::new(PatternsContainer::default());
-
-    let shift = ROOK_SHIFTS[field_index];
-    let mask = get_rook_mask(field_index, &patterns);
-    let count = 1 << shift;
-
-    let mut permutations = Vec::with_capacity(count as usize);
-    let mut attacks = Vec::with_capacity(count as usize);
-
-    for index in 0..count {
-        let permutation = get_permutation(mask, index as u64);
-
-        permutations.push(permutation);
-        attacks.push(get_rook_attacks(permutation, field_index));
-    }
-
-    let mut field = unsafe { &mut ROOK_FIELDS[field_index] };
-    field.shift = shift;
-    field.mask = mask;
-    field.magic = ROOK_MAGIC_NUMBERS[field_index];
-
-    apply_magic_for_field(&permutations, &attacks, field)
-}
-
-/// Applies bishop magic for the field specified by `field_index`, using built-in magic number from [BISHOP_MAGIC_NUMBERS].
-fn apply_bishop_magic_for_field(field_index: usize) {
-    let patterns = Arc::new(PatternsContainer::default());
-
-    let shift = BISHOP_SHIFTS[field_index];
-    let mask = get_bishop_mask(field_index, &patterns);
-    let count = 1 << shift;
-
-    let mut permutations = Vec::with_capacity(count as usize);
-    let mut attacks = Vec::with_capacity(count as usize);
-
-    for index in 0..count {
-        let permutation = get_permutation(mask, index as u64);
-
-        permutations.push(permutation);
-        attacks.push(get_bishop_attacks(permutation, field_index));
-    }
-
-    let mut field = unsafe { &mut BISHOP_FIELDS[field_index] };
-    field.shift = shift;
-    field.mask = mask;
-    field.magic = BISHOP_MAGIC_NUMBERS[field_index];
-
-    apply_magic_for_field(&permutations, &attacks, field)
-}
-
-/// Applies a magic number for a set of `permutations`, `attacks` and `field`.
-fn apply_magic_for_field(permutations: &[u64], attacks: &[u64], field: &mut MagicField) {
-    let count = 1 << field.shift;
-
-    field.attacks = Vec::with_capacity(count as usize);
-    field.attacks.resize(count as usize, 0);
-
-    for index in 0..count {
-        let permutation = permutations[index as usize];
-        let permutation_attacks = attacks[index as usize];
-        let hash = permutation.wrapping_mul(field.magic) >> (64 - field.shift);
-
-        debug_assert!(field.attacks[hash as usize] == 0);
-        field.attacks[hash as usize] = permutation_attacks;
-    }
-}
-
-/// Gets `index`-th permutation of the `mask`.  
-fn get_permutation(mut mask: u64, mut index: u64) -> u64 {
-    let mut result = 0u64;
-
-    while mask != 0 {
-        let lsb = get_lsb(mask);
-        let lsb_index = bit_scan(lsb);
-        mask = pop_lsb(mask);
-
-        result |= (index & 1) << lsb_index;
-        index >>= 1;
-    }
-
-    result
-}
-
-/// Gets a rook mask for the field specified by `field_index`, without considering occupancy.
-fn get_rook_mask(field_index: usize, patterns: &PatternsContainer) -> u64 {
-    (patterns.get_file(field_index) & !RANK_A & !RANK_H) | (patterns.get_rank(field_index) & !FILE_A & !FILE_H)
-}
-
-/// Gets a bishop mask for the field specified by `field_index`, without considering occupancy.
-fn get_bishop_mask(field_index: usize, patterns: &PatternsContainer) -> u64 {
-    patterns.get_diagonals(field_index) & !EDGE
-}
-
-/// Gets a rook attacks for the field specified by `field_index`, considering `occupancy`.
-fn get_rook_attacks(occupancy: u64, field_index: usize) -> u64 {
-    let result = 0
-        | get_attacks(occupancy, field_index, (1, 0))
-        | get_attacks(occupancy, field_index, (-1, 0))
-        | get_attacks(occupancy, field_index, (0, 1))
-        | get_attacks(occupancy, field_index, (0, -1));
-
-    result
-}
-
-/// Gets a bishop attacks for the field specified by `field_index`, occupancy `occupancy`.
-fn get_bishop_attacks(occupancy: u64, field_index: usize) -> u64 {
-    let result = 0
-        | get_attacks(occupancy, field_index, (1, 1))
-        | get_attacks(occupancy, field_index, (-1, 1))
-        | get_attacks(occupancy, field_index, (1, -1))
-        | get_attacks(occupancy, field_index, (-1, -1));
-
-    result
-}
-
-/// Helper function to get all possible to move fields, considering `occupancy`, starting from the field
-/// specified by `field_index` and going into the `direction`.
-fn get_attacks(occupancy: u64, field_index: usize, direction: (isize, isize)) -> u64 {
-    let mut result = 0u64;
-    let mut current = ((field_index as isize) % 8 + direction.0, (field_index as isize) / 8 + direction.1);
-
-    while current.0 >= 0 && current.0 <= 7 && current.1 >= 0 && current.1 <= 7 {
-        result |= 1u64 << (current.0 + current.1 * 8);
-
-        if (occupancy & result) != 0 {
-            break;
-        }
-
-        current = (current.0 + direction.0, current.1 + direction.1);
-    }
-
-    result
 }

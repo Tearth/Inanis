@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use super::fen;
-use super::movegen;
+use super::movegen::MagicContainer;
 use super::movescan;
 use super::movescan::Move;
 use super::movescan::MoveFlags;
@@ -57,6 +57,7 @@ pub struct Bitboard {
     pub zobrist: Arc<ZobristContainer>,
     pub patterns: Arc<PatternsContainer>,
     pub see: Arc<SEEContainer>,
+    pub magic: Arc<MagicContainer>,
 }
 
 impl Bitboard {
@@ -429,25 +430,25 @@ impl Bitboard {
         let enemy_color = color ^ 1;
         let occupancy = self.occupancy[WHITE as usize] | self.occupancy[BLACK as usize];
 
-        let rook_queen_attacks = movegen::get_rook_moves(occupancy, field_index as usize);
+        let rook_queen_attacks = self.magic.get_rook_moves(occupancy, field_index as usize);
         let enemy_rooks_queens = self.pieces[enemy_color as usize][ROOK as usize] | self.pieces[enemy_color as usize][QUEEN as usize];
         if (rook_queen_attacks & enemy_rooks_queens) != 0 {
             return true;
         }
 
-        let bishop_queen_attacks = movegen::get_bishop_moves(occupancy, field_index as usize);
+        let bishop_queen_attacks = self.magic.get_bishop_moves(occupancy, field_index as usize);
         let enemy_bishops_queens = self.pieces[enemy_color as usize][BISHOP as usize] | self.pieces[enemy_color as usize][QUEEN as usize];
         if (bishop_queen_attacks & enemy_bishops_queens) != 0 {
             return true;
         }
 
-        let knight_attacks = movegen::get_knight_moves(field_index as usize, &self.patterns);
+        let knight_attacks = self.magic.get_knight_moves(field_index as usize, &self.patterns);
         let enemy_knights = self.pieces[enemy_color as usize][KNIGHT as usize];
         if (knight_attacks & enemy_knights) != 0 {
             return true;
         }
 
-        let king_attacks = movegen::get_king_moves(field_index as usize, &self.patterns);
+        let king_attacks = self.magic.get_king_moves(field_index as usize, &self.patterns);
         let enemy_kings = self.pieces[enemy_color as usize][KING as usize];
         if (king_attacks & enemy_kings) != 0 {
             return true;
@@ -494,17 +495,17 @@ impl Bitboard {
         let rooks_queens = self.pieces[enemy_color as usize][ROOK as usize] | self.pieces[enemy_color as usize][QUEEN as usize];
         let bishops_queens = self.pieces[enemy_color as usize][BISHOP as usize] | self.pieces[enemy_color as usize][QUEEN as usize];
 
-        let king_attacks = movegen::get_king_moves(field_index as usize, &self.patterns);
+        let king_attacks = self.magic.get_king_moves(field_index as usize, &self.patterns);
         if (king_attacks & self.pieces[enemy_color as usize][KING as usize]) != 0 {
             result |= 1 << 7;
         }
 
-        let queen_attacks = movegen::get_queen_moves(occupancy & !bishops_rooks, field_index as usize);
+        let queen_attacks = self.magic.get_queen_moves(occupancy & !bishops_rooks, field_index as usize);
         if (queen_attacks & self.pieces[enemy_color as usize][QUEEN as usize]) != 0 {
             result |= 1 << 6;
         }
 
-        let rook_attacks = movegen::get_rook_moves(occupancy & !rooks_queens, field_index as usize);
+        let rook_attacks = self.magic.get_rook_moves(occupancy & !rooks_queens, field_index as usize);
         let attacking_rooks = rook_attacks & self.pieces[enemy_color as usize][ROOK as usize];
         if attacking_rooks != 0 {
             result |= match bit_count(attacking_rooks) {
@@ -515,14 +516,14 @@ impl Bitboard {
 
         let mut attacking_knights_bishops_count = 0;
 
-        let knight_attacks = movegen::get_knight_moves(field_index as usize, &self.patterns);
+        let knight_attacks = self.magic.get_knight_moves(field_index as usize, &self.patterns);
         let enemy_knights = self.pieces[enemy_color as usize][KNIGHT as usize];
         let attacking_knights = knight_attacks & enemy_knights;
         if (knight_attacks & enemy_knights) != 0 {
             attacking_knights_bishops_count += bit_count(attacking_knights);
         }
 
-        let bishop_attacks = movegen::get_bishop_moves(occupancy & !bishops_queens, field_index as usize);
+        let bishop_attacks = self.magic.get_bishop_moves(occupancy & !bishops_queens, field_index as usize);
         let enemy_bishops = self.pieces[enemy_color as usize][BISHOP as usize];
         let attacking_bishops = bishop_attacks & enemy_bishops;
         if (bishop_attacks & enemy_bishops) != 0 {
@@ -838,6 +839,7 @@ impl Default for Bitboard {
             zobrist: Arc::new(Default::default()),
             patterns: Arc::new(Default::default()),
             see: Arc::new(Default::default()),
+            magic: Arc::new(Default::default()),
         }
     }
 }

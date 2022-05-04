@@ -6,7 +6,7 @@ use crate::evaluation::pst;
 use crate::evaluation::safety;
 use crate::perft;
 use crate::state::board::Bitboard;
-use crate::state::movegen;
+use crate::state::movegen::MagicContainer;
 use crate::utils::benchmark;
 use crate::utils::test;
 use crate::utils::tuner;
@@ -324,17 +324,18 @@ fn handle_evaluate(input: Vec<&str>) {
 /// Handles `magic` command by printing a fresh set of magic numbers.
 fn handle_magic() {
     let now = Utc::now();
+    let magic = MagicContainer::default();
     println!("Generating magic numbers for rook...");
 
     for index in 0..64 {
-        println!("{},", movegen::generate_rook_number_for_field(index));
+        println!("{},", magic.generate_rook_number_for_field(index));
     }
 
     println!();
     println!("Generating magic numbers for bishop...");
 
     for index in 0..64 {
-        println!("{},", movegen::generate_bishop_number_for_field(index));
+        println!("{},", magic.generate_bishop_number_for_field(index));
     }
 
     let diff = (Utc::now() - now).num_milliseconds();

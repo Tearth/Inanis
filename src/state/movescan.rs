@@ -1,6 +1,5 @@
 use super::board::Bitboard;
 use super::board::CastlingRights;
-use super::movegen;
 use super::*;
 use crate::engine;
 use std::cmp;
@@ -418,10 +417,10 @@ impl Move {
                     }) & board.patterns.get_box(from as usize)
                 }
             },
-            KNIGHT => movegen::get_knight_moves(from as usize, &board.patterns),
-            BISHOP => movegen::get_bishop_moves(occupancy, from as usize),
-            ROOK => movegen::get_rook_moves(occupancy, from as usize),
-            QUEEN => movegen::get_queen_moves(occupancy, from as usize),
+            KNIGHT => board.magic.get_knight_moves(from as usize, &board.patterns),
+            BISHOP => board.magic.get_bishop_moves(occupancy, from as usize),
+            ROOK => board.magic.get_rook_moves(occupancy, from as usize),
+            QUEEN => board.magic.get_queen_moves(occupancy, from as usize),
             KING => {
                 if self.is_castling() {
                     if (board.active_color == WHITE && from != 3) || (board.active_color == BLACK && from != 59) {
@@ -432,7 +431,7 @@ impl Move {
                 match self.get_flags() {
                     MoveFlags::SHORT_CASTLING => 1u64 << (from - 2),
                     MoveFlags::LONG_CASTLING => 1u64 << (from + 2),
-                    _ => movegen::get_king_moves(from as usize, &board.patterns),
+                    _ => board.magic.get_king_moves(from as usize, &board.patterns),
                 }
             }
             _ => panic!("Invalid value: piece={}", piece),
@@ -529,11 +528,11 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(board: &Bitboard,
 
         let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
         let mut piece_moves = match PIECE {
-            KNIGHT => movegen::get_knight_moves(from_field_index as usize, &board.patterns),
-            BISHOP => movegen::get_bishop_moves(occupancy, from_field_index as usize),
-            ROOK => movegen::get_rook_moves(occupancy, from_field_index as usize),
-            QUEEN => movegen::get_queen_moves(occupancy, from_field_index as usize),
-            KING => movegen::get_king_moves(from_field_index as usize, &board.patterns),
+            KNIGHT => board.magic.get_knight_moves(from_field_index as usize, &board.patterns),
+            BISHOP => board.magic.get_bishop_moves(occupancy, from_field_index as usize),
+            ROOK => board.magic.get_rook_moves(occupancy, from_field_index as usize),
+            QUEEN => board.magic.get_queen_moves(occupancy, from_field_index as usize),
+            KING => board.magic.get_king_moves(from_field_index as usize, &board.patterns),
             _ => panic!("Invalid value: PIECE={}", PIECE),
         };
         piece_moves &= !board.occupancy[board.active_color as usize] & evasion_mask;
@@ -632,11 +631,11 @@ pub fn get_piece_mobility<const PIECE: u8>(board: &Bitboard, color: u8, dangered
         };
 
         let piece_moves = match PIECE {
-            KNIGHT => movegen::get_knight_moves(from_field_index as usize, &board.patterns),
-            BISHOP => movegen::get_bishop_moves(occupancy, from_field_index as usize),
-            ROOK => movegen::get_rook_moves(occupancy, from_field_index as usize),
-            QUEEN => movegen::get_queen_moves(occupancy, from_field_index as usize),
-            KING => movegen::get_king_moves(from_field_index as usize, &board.patterns),
+            KNIGHT => board.magic.get_knight_moves(from_field_index as usize, &board.patterns),
+            BISHOP => board.magic.get_bishop_moves(occupancy, from_field_index as usize),
+            ROOK => board.magic.get_rook_moves(occupancy, from_field_index as usize),
+            QUEEN => board.magic.get_queen_moves(occupancy, from_field_index as usize),
+            KING => board.magic.get_king_moves(from_field_index as usize, &board.patterns),
             _ => panic!("Invalid value: PIECE={}", PIECE),
         } & !board.occupancy[color as usize];
 
