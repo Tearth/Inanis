@@ -29,7 +29,7 @@ mod see_tests {
                     });
 
                     let board = Bitboard::new_from_fen($fen).unwrap();
-                    let mut moves: [Move; 218] = unsafe { MaybeUninit::uninit().assume_init() };
+                    let mut moves: [MaybeUninit<Move>; 218] = [MaybeUninit::uninit(); 218];
                     let moves_count = board.get_all_moves(&mut moves, u64::MAX);
 
                     let see = SEEContainer::default();
@@ -38,7 +38,7 @@ mod see_tests {
 
                     let evaluation_parameters_arc = Arc::new(evaluation_parameters);
                     for move_index in 0..moves_count {
-                        let r#move = moves[move_index];
+                        let r#move = unsafe { moves[move_index].assume_init() };
                         if r#move.to_long_notation() == $move {
                             let attacking_piece = board.get_piece(r#move.get_from());
                             let target_piece = board.get_piece(r#move.get_to());

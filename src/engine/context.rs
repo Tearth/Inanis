@@ -195,12 +195,13 @@ impl SearchContext {
                     return Vec::new();
                 }
 
-                let mut moves: [Move; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
+                let mut moves: [MaybeUninit<Move>; MAX_MOVES_COUNT] = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
                 let moves_count = board.get_all_moves(&mut moves, u64::MAX);
                 let mut found = false;
 
                 for r#move in &moves[0..moves_count] {
-                    if *r#move == entry.best_move {
+                    let r#move = unsafe { r#move.assume_init() };
+                    if r#move == entry.best_move {
                         found = true;
                         break;
                     }

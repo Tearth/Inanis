@@ -271,8 +271,8 @@ pub fn run<const PV: bool>(
 
     let mut best_score = -CHECKMATE_SCORE;
     let mut best_move = Default::default();
-    let mut moves: [Move; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
-    let mut move_scores: [i16; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
+    let mut moves: [MaybeUninit<Move>; MAX_MOVES_COUNT] = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
+    let mut move_scores: [MaybeUninit<i16>; MAX_MOVES_COUNT] = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
     let mut move_generator_stage = MoveGeneratorStage::ReadyToCheckHashMove;
 
     let mut move_index = 0;
@@ -289,7 +289,8 @@ pub fn run<const PV: bool>(
         evasion_mask,
         ply,
     ) {
-        if late_move_pruning_can_be_applied::<PV>(depth, move_index, move_scores[move_index], friendly_king_checked) {
+        let score = unsafe { move_scores[move_index].assume_init() };
+        if late_move_pruning_can_be_applied::<PV>(depth, move_index, score, friendly_king_checked) {
             context.statistics.late_move_pruning_accepted += 1;
             break;
         } else {
@@ -299,7 +300,7 @@ pub fn run<const PV: bool>(
         context.board.make_move(r#move);
 
         let king_checked = context.board.is_king_checked(context.board.active_color);
-        let r = if late_move_reduction_can_be_applied(depth, r#move, move_index, move_scores[move_index], friendly_king_checked, king_checked) {
+        let r = if late_move_reduction_can_be_applied(depth, r#move, move_index, score, friendly_king_checked, king_checked) {
             late_move_reduction_get_r::<PV>(move_index)
         } else {
             0
@@ -406,18 +407,26 @@ pub fn run<const PV: bool>(
 ///  - for every quiet move which wasn't categoried in other categories, assign score from history table + [MOVE_ORDERING_HISTORY_MOVE_OFFSET] + random noise
 ///    defined by [LAZY_SMP_NOISE] if Lazy SMP is enabled
 ///  - for every negative capture, assign SEE score + [MOVE_ORDERING_LOSING_CAPTURES_OFFSET]
-fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut [i16], start_index: usize, moves_count: usize, tt_move: Move, ply: u16) {
+fn assign_move_scores(
+    context: &SearchContext,
+    moves: &[MaybeUninit<Move>],
+    move_scores: &mut [MaybeUninit<i16>],
+    start_index: usize,
+    moves_count: usize,
+    tt_move: Move,
+    ply: u16,
+) {
     for move_index in start_index..moves_count {
-        let r#move = moves[move_index];
+        let r#move = unsafe { moves[move_index].assume_init() };
 
         if r#move == tt_move {
-            move_scores[move_index] = MOVE_ORDERING_HASH_MOVE;
+            move_scores[move_index].write(MOVE_ORDERING_HASH_MOVE);
             continue;
         }
 
         if r#move.is_quiet() {
             if context.killers_table.exists(ply, r#move) {
-                move_scores[move_index] = MOVE_ORDERING_KILLER_MOVE;
+                move_scores[move_index].write(MOVE_ORDERING_KILLER_MOVE);
                 continue;
             }
 
@@ -427,12 +436,12 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
             }
 
             value += MOVE_ORDERING_HISTORY_MOVE_OFFSET;
-            move_scores[move_index] = value;
+            move_scores[move_index].write(value);
 
             continue;
         } else if r#move.is_capture() {
             if r#move.is_en_passant() {
-                move_scores[move_index] = MOVE_ORDERING_WINNING_CAPTURES_OFFSET;
+                move_scores[move_index].write(MOVE_ORDERING_WINNING_CAPTURES_OFFSET);
                 continue;
             }
 
@@ -446,29 +455,29 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
                 .see
                 .get(attacking_piece, captured_piece, attackers, defenders, &context.board.evaluation_parameters);
 
-            move_scores[move_index] = if see >= 0 {
+            move_scores[move_index].write(if see >= 0 {
                 see + MOVE_ORDERING_WINNING_CAPTURES_OFFSET
             } else {
                 see + MOVE_ORDERING_LOSING_CAPTURES_OFFSET
-            };
+            });
 
             continue;
         } else if r#move.is_promotion() {
-            move_scores[move_index] = match r#move.get_promotion_piece() {
+            move_scores[move_index].write(match r#move.get_promotion_piece() {
                 QUEEN => MOVE_ORDERING_QUEEN_PROMOTION,
                 ROOK => MOVE_ORDERING_ROOK_PROMOTION,
                 BISHOP => MOVE_ORDERING_BISHOP_PROMOTION,
                 KNIGHT => MOVE_ORDERING_KNIGHT_PROMOTION,
                 _ => panic!("Invalid promotion piece"),
-            };
+            });
 
             continue;
         } else if r#move.is_castling() {
-            move_scores[move_index] = MOVE_ORDERING_CASTLING;
+            move_scores[move_index].write(MOVE_ORDERING_CASTLING);
             continue;
         }
 
-        move_scores[move_index] = 0;
+        move_scores[move_index].write(0);
     }
 }
 
@@ -485,8 +494,8 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
 fn get_next_move(
     context: &mut SearchContext,
     stage: &mut MoveGeneratorStage,
-    moves: &mut [Move],
-    move_scores: &mut [i16],
+    moves: &mut [MaybeUninit<Move>],
+    move_scores: &mut [MaybeUninit<i16>],
     move_index: &mut usize,
     moves_count: &mut usize,
     hash_move: Move,
@@ -503,8 +512,8 @@ fn get_next_move(
                 *stage = MoveGeneratorStage::ReadyToGenerateCaptures;
 
                 if hash_move != Default::default() {
-                    moves[0] = hash_move;
-                    move_scores[0] = MOVE_ORDERING_HASH_MOVE;
+                    moves[0].write(hash_move);
+                    move_scores[0].write(MOVE_ORDERING_HASH_MOVE);
                     context.statistics.move_generator_hash_move_stages += 1;
 
                     *moves_count = 1;
@@ -535,7 +544,7 @@ fn get_next_move(
                     continue;
                 }
 
-                if move_scores[*move_index] < MOVE_ORDERING_WINNING_CAPTURES_OFFSET {
+                if unsafe { move_scores[*move_index].assume_init() } < MOVE_ORDERING_WINNING_CAPTURES_OFFSET {
                     *stage = MoveGeneratorStage::ReadyToGenerateQuietMoves;
                     continue;
                 }

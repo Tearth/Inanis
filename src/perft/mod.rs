@@ -43,22 +43,23 @@ pub fn run_internal(context: &mut PerftContext, depth: i32) -> u64 {
         }
     }
 
-    let mut moves: [Move; engine::MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
+    let mut moves: [MaybeUninit<Move>; engine::MAX_MOVES_COUNT] = [MaybeUninit::uninit(); engine::MAX_MOVES_COUNT];
     let moves_count = context.board.get_all_moves(&mut moves, u64::MAX);
 
     let mut count = 0;
     for r#move in &moves[0..moves_count] {
+        let r#move = unsafe { r#move.assume_init() };
         if context.check_integrity && !r#move.is_legal(context.board) {
             panic!("Integrity check failed: move detected as illegal");
         }
 
-        context.board.make_move(*r#move);
+        context.board.make_move(r#move);
 
         if !context.board.is_king_checked(context.board.active_color ^ 1) {
             count += run_internal(context, depth - 1);
         }
 
-        context.board.undo_move(*r#move);
+        context.board.undo_move(r#move);
     }
 
     if context.fast {

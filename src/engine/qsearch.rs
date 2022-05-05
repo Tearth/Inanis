@@ -38,8 +38,8 @@ pub fn run(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, bet
         alpha = stand_pat;
     }
 
-    let mut moves: [Move; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
-    let mut move_scores: [i16; MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
+    let mut moves: [MaybeUninit<Move>; MAX_MOVES_COUNT] = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
+    let mut move_scores: [MaybeUninit<i16>; MAX_MOVES_COUNT] = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
     let moves_count = context.board.get_moves::<true>(&mut moves, 0, u64::MAX);
 
     assign_move_scores(context, &moves, &mut move_scores, moves_count);
@@ -47,14 +47,16 @@ pub fn run(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, bet
     let mut found = false;
     for move_index in 0..moves_count {
         let r#move = sort_next_move(&mut moves, &mut move_scores, move_index, moves_count);
-        if score_pruning_can_be_applied(move_scores[move_index]) {
+        let score = unsafe { move_scores[move_index].assume_init() };
+
+        if score_pruning_can_be_applied(score) {
             context.statistics.q_score_pruning_accepted += 1;
             break;
         } else {
             context.statistics.q_score_pruning_rejected += 1;
         }
 
-        if futility_pruning_can_be_applied(move_scores[move_index], stand_pat, alpha) {
+        if futility_pruning_can_be_applied(score, stand_pat, alpha) {
             context.statistics.q_futility_pruning_accepted += 1;
             break;
         } else {
@@ -95,17 +97,17 @@ pub fn run(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, bet
 ///  - for every en passant, assign 0
 ///  - for every capture with promotion, assign value of the promoted piece
 ///  - for rest of the moves, assign SEE result
-fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut [i16], moves_count: usize) {
+fn assign_move_scores(context: &SearchContext, moves: &[MaybeUninit<Move>], move_scores: &mut [MaybeUninit<i16>], moves_count: usize) {
     for move_index in 0..moves_count {
-        let r#move = moves[move_index];
+        let r#move = unsafe { moves[move_index].assume_init() };
 
         if r#move.get_flags() == MoveFlags::EN_PASSANT {
-            move_scores[move_index] = 0;
+            move_scores[move_index].write(0);
             continue;
         }
 
         if r#move.is_promotion() {
-            move_scores[move_index] = context.board.evaluation_parameters.piece_value[r#move.get_promotion_piece() as usize];
+            move_scores[move_index].write(context.board.evaluation_parameters.piece_value[r#move.get_promotion_piece() as usize]);
             continue;
         }
 
@@ -115,10 +117,12 @@ fn assign_move_scores(context: &SearchContext, moves: &[Move], move_scores: &mut
         let attackers = context.board.get_attacking_pieces(context.board.active_color ^ 1, field);
         let defenders = context.board.get_attacking_pieces(context.board.active_color, field);
 
-        move_scores[move_index] = context
-            .board
-            .see
-            .get(attacking_piece, captured_piece, attackers, defenders, &context.board.evaluation_parameters);
+        move_scores[move_index].write(
+            context
+                .board
+                .see
+                .get(attacking_piece, captured_piece, attackers, defenders, &context.board.evaluation_parameters),
+        );
     }
 }
 

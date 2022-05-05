@@ -69,8 +69,8 @@ impl Move {
     /// Converts short-notated move (e4, Rc8, Qxb6) in `text` into the [Move] instance, using the `board` as context.
     /// Returns [Err] with the proper message if `text` couldn't be parsed correctly.
     pub fn from_short_notation(mut text: &str, board: &Bitboard) -> Result<Move, &'static str> {
-        let mut moves: [Move; engine::MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
-        let moves_count = board.get_all_moves(&mut moves, u64::MAX);
+        let moves: [MaybeUninit<Move>; engine::MAX_MOVES_COUNT] = [MaybeUninit::uninit(); engine::MAX_MOVES_COUNT];
+        let moves_count = 0;
 
         let mut desired_to: Option<u8> = None;
         let mut desired_file: Option<u8> = None;
@@ -207,7 +207,7 @@ impl Move {
         }
 
         for move_index in 0..moves_count {
-            let r#move = moves[move_index];
+            let r#move = unsafe { moves[move_index].assume_init() };
             if (desired_to.is_none() || desired_to.unwrap() == r#move.get_to())
                 && (desired_file.is_none() || (r#move.get_from() % 8) == desired_file.unwrap())
                 && (desired_rank.is_none() || (r#move.get_from() / 8) == desired_rank.unwrap())
@@ -268,14 +268,15 @@ impl Move {
             None => MoveFlags::QUIET,
         };
 
-        let mut moves: [Move; engine::MAX_MOVES_COUNT] = unsafe { MaybeUninit::uninit().assume_init() };
+        let mut moves: [MaybeUninit<Move>; engine::MAX_MOVES_COUNT] = [MaybeUninit::uninit(); engine::MAX_MOVES_COUNT];
         let moves_count = board.get_all_moves(&mut moves, u64::MAX);
 
         for r#move in &moves[0..moves_count] {
+            let r#move = unsafe { r#move.assume_init() };
             if r#move.get_from() == from && r#move.get_to() == to {
                 let flags = r#move.get_flags();
                 if promotion_flags == MoveFlags::QUIET || (flags & promotion_flags).bits == flags.bits {
-                    return Ok(*r#move);
+                    return Ok(r#move);
                 }
             }
         }
@@ -517,7 +518,12 @@ impl Default for Move {
 /// Generates all possible non-captures (if `CAPTURES` is false) or all possible captures (if `CAPTURES` is true) for the `PIECE` at
 /// the position specified by `board`, stores them into `moves` list (starting from `index`) and returns index of the first free slot.
 /// Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the specified fields (useful during checks).
-pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(board: &Bitboard, moves: &mut [Move], mut index: usize, evasion_mask: u64) -> usize {
+pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(
+    board: &Bitboard,
+    moves: &mut [MaybeUninit<Move>],
+    mut index: usize,
+    evasion_mask: u64,
+) -> usize {
     let enemy_color = board.active_color ^ 1;
     let mut pieces = board.pieces[board.active_color as usize][PIECE as usize];
 
@@ -551,7 +557,7 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(board: &Bitboard,
             let capture = (to_field & board.occupancy[enemy_color as usize]) != 0;
             let flags = if CAPTURES || capture { MoveFlags::CAPTURE } else { MoveFlags::QUIET };
 
-            moves[index] = Move::new(from_field_index, to_field_index, flags);
+            moves[index].write(Move::new(from_field_index, to_field_index, flags));
             index += 1;
         }
 
@@ -563,7 +569,7 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(board: &Bitboard,
 
                     if king_side_castling_rights && king_side_rook_present && (occupancy & 0x6) == 0 {
                         if !board.are_fields_attacked(board.active_color, &[3, 2, 1]) {
-                            moves[index] = Move::new(3, 1, MoveFlags::SHORT_CASTLING);
+                            moves[index].write(Move::new(3, 1, MoveFlags::SHORT_CASTLING));
                             index += 1;
                         }
                     }
@@ -573,7 +579,7 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(board: &Bitboard,
 
                     if queen_side_castling_rights && queen_side_rook_present && (occupancy & 0x70) == 0 {
                         if !board.are_fields_attacked(board.active_color, &[3, 4, 5]) {
-                            moves[index] = Move::new(3, 5, MoveFlags::LONG_CASTLING);
+                            moves[index].write(Move::new(3, 5, MoveFlags::LONG_CASTLING));
                             index += 1;
                         }
                     }
@@ -584,7 +590,7 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(board: &Bitboard,
 
                     if king_side_castling_rights && king_side_rook_present && (occupancy & 0x600000000000000) == 0 {
                         if !board.are_fields_attacked(board.active_color, &[59, 58, 57]) {
-                            moves[index] = Move::new(59, 57, MoveFlags::SHORT_CASTLING);
+                            moves[index].write(Move::new(59, 57, MoveFlags::SHORT_CASTLING));
                             index += 1;
                         }
                     }
@@ -594,7 +600,7 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(board: &Bitboard,
 
                     if queen_side_castling_rights && queen_side_rook_present && (occupancy & 0x7000000000000000) == 0 {
                         if !board.are_fields_attacked(board.active_color, &[59, 60, 61]) {
-                            moves[index] = Move::new(59, 61, MoveFlags::LONG_CASTLING);
+                            moves[index].write(Move::new(59, 61, MoveFlags::LONG_CASTLING));
                             index += 1;
                         }
                     }
@@ -652,7 +658,7 @@ pub fn get_piece_mobility<const PIECE: u8>(board: &Bitboard, color: u8, dangered
 /// Generates all possible non-captures (if `CAPTURES` is false) or all possible captures (if `CAPTURES` is true) for the pawns at
 /// the position specified by `board`, stores them into `moves` list (starting from `index`) and returns index of the first free slot.
 /// Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the specified fields (useful during checks).
-pub fn scan_pawn_moves<const CAPTURES: bool>(board: &Bitboard, moves: &mut [Move], mut index: usize, evasion_mask: u64) -> usize {
+pub fn scan_pawn_moves<const CAPTURES: bool>(board: &Bitboard, moves: &mut [MaybeUninit<Move>], mut index: usize, evasion_mask: u64) -> usize {
     if !CAPTURES {
         index = scan_pawn_moves_single_push(board, moves, index, evasion_mask);
         index = scan_pawn_moves_double_push(board, moves, index, evasion_mask);
@@ -667,7 +673,7 @@ pub fn scan_pawn_moves<const CAPTURES: bool>(board: &Bitboard, moves: &mut [Move
 /// Generates all possible single pushes for the pawns at the position specified by `board`, stores them into `moves` list (starting from `index`)
 /// and returns index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the
 /// specified fields (useful during checks).
-fn scan_pawn_moves_single_push(board: &Bitboard, moves: &mut [Move], mut index: usize, evasion_mask: u64) -> usize {
+fn scan_pawn_moves_single_push(board: &Bitboard, moves: &mut [MaybeUninit<Move>], mut index: usize, evasion_mask: u64) -> usize {
     let pieces = board.pieces[board.active_color as usize][PAWN as usize];
     let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
 
@@ -689,13 +695,13 @@ fn scan_pawn_moves_single_push(board: &Bitboard, moves: &mut [Move], mut index: 
         target_fields = pop_lsb(target_fields);
 
         if (to_field & promotion_line) != 0 {
-            moves[index + 0] = Move::new(from_field_index, to_field_index, MoveFlags::QUEEN_PROMOTION);
-            moves[index + 1] = Move::new(from_field_index, to_field_index, MoveFlags::ROOK_PROMOTION);
-            moves[index + 2] = Move::new(from_field_index, to_field_index, MoveFlags::BISHOP_PROMOTION);
-            moves[index + 3] = Move::new(from_field_index, to_field_index, MoveFlags::KNIGHT_PROMOTION);
+            moves[index + 0].write(Move::new(from_field_index, to_field_index, MoveFlags::QUEEN_PROMOTION));
+            moves[index + 1].write(Move::new(from_field_index, to_field_index, MoveFlags::ROOK_PROMOTION));
+            moves[index + 2].write(Move::new(from_field_index, to_field_index, MoveFlags::BISHOP_PROMOTION));
+            moves[index + 3].write(Move::new(from_field_index, to_field_index, MoveFlags::KNIGHT_PROMOTION));
             index += 4;
         } else {
-            moves[index] = Move::new(from_field_index, to_field_index, MoveFlags::QUIET);
+            moves[index].write(Move::new(from_field_index, to_field_index, MoveFlags::QUIET));
             index += 1;
         }
     }
@@ -706,7 +712,7 @@ fn scan_pawn_moves_single_push(board: &Bitboard, moves: &mut [Move], mut index: 
 /// Generates all possible double pushes for the pawns at the position specified by `board`, stores them into `moves` list (starting from `index`)
 /// and returns index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the
 /// specified fields (useful during checks).
-fn scan_pawn_moves_double_push(board: &Bitboard, moves: &mut [Move], mut index: usize, evasion_mask: u64) -> usize {
+fn scan_pawn_moves_double_push(board: &Bitboard, moves: &mut [MaybeUninit<Move>], mut index: usize, evasion_mask: u64) -> usize {
     let pieces = board.pieces[board.active_color as usize][PAWN as usize];
     let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
 
@@ -726,7 +732,7 @@ fn scan_pawn_moves_double_push(board: &Bitboard, moves: &mut [Move], mut index: 
         let from_field_index = ((to_field_index as i8) - shift) as u8;
         target_fields = pop_lsb(target_fields);
 
-        moves[index] = Move::new(from_field_index, to_field_index, MoveFlags::DOUBLE_PUSH);
+        moves[index].write(Move::new(from_field_index, to_field_index, MoveFlags::DOUBLE_PUSH));
         index += 1;
     }
 
@@ -736,7 +742,7 @@ fn scan_pawn_moves_double_push(board: &Bitboard, moves: &mut [Move], mut index: 
 /// Generates all possible captures for the pawns toward the direction specified by `DIR` and at the position specified by `board`,
 /// stores them into `moves` list (starting from `index`) and returns index of the first free slot. Use `evasion_mask` with value
 /// different than `u64::MAX` to restrict generator to the specified fields (useful during checks).
-fn scan_pawn_moves_diagonal_attacks<const DIR: u8>(board: &Bitboard, moves: &mut [Move], mut index: usize, evasion_mask: u64) -> usize {
+fn scan_pawn_moves_diagonal_attacks<const DIR: u8>(board: &Bitboard, moves: &mut [MaybeUninit<Move>], mut index: usize, evasion_mask: u64) -> usize {
     let enemy_color = board.active_color ^ 1;
     let pieces = board.pieces[board.active_color as usize][PAWN as usize];
 
@@ -761,16 +767,16 @@ fn scan_pawn_moves_diagonal_attacks<const DIR: u8>(board: &Bitboard, moves: &mut
         target_fields = pop_lsb(target_fields);
 
         if (to_field & promotion_line) != 0 {
-            moves[index + 0] = Move::new(from_field_index, to_field_index, MoveFlags::QUEEN_PROMOTION_CAPTURE);
-            moves[index + 1] = Move::new(from_field_index, to_field_index, MoveFlags::ROOK_PROMOTION_CAPTURE);
-            moves[index + 2] = Move::new(from_field_index, to_field_index, MoveFlags::BISHOP_PROMOTION_CAPTURE);
-            moves[index + 3] = Move::new(from_field_index, to_field_index, MoveFlags::KNIGHT_PROMOTION_CAPTURE);
+            moves[index + 0].write(Move::new(from_field_index, to_field_index, MoveFlags::QUEEN_PROMOTION_CAPTURE));
+            moves[index + 1].write(Move::new(from_field_index, to_field_index, MoveFlags::ROOK_PROMOTION_CAPTURE));
+            moves[index + 2].write(Move::new(from_field_index, to_field_index, MoveFlags::BISHOP_PROMOTION_CAPTURE));
+            moves[index + 3].write(Move::new(from_field_index, to_field_index, MoveFlags::KNIGHT_PROMOTION_CAPTURE));
             index += 4;
         } else {
             let en_passant = (to_field & board.en_passant) != 0;
             let flags = if en_passant { MoveFlags::EN_PASSANT } else { MoveFlags::CAPTURE };
 
-            moves[index] = Move::new(from_field_index, to_field_index, flags);
+            moves[index].write(Move::new(from_field_index, to_field_index, flags));
             index += 1;
         }
     }
