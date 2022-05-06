@@ -32,11 +32,11 @@ impl ParsedEPD {
 /// Converts `fen` into the [Bitboard]. Returns [Err] with proper error message if `fen` couldn't be parsed correctly.
 pub fn fen_to_board(
     fen: &str,
-    evaluation_parameters: Arc<EvaluationParameters>,
-    zobrist_container: Arc<ZobristContainer>,
-    patterns_container: Arc<PatternsContainer>,
-    see_container: Arc<SEEContainer>,
-    magic_container: Arc<MagicContainer>,
+    evaluation_parameters: Option<Arc<EvaluationParameters>>,
+    zobrist_container: Option<Arc<ZobristContainer>>,
+    patterns_container: Option<Arc<PatternsContainer>>,
+    see_container: Option<Arc<SEEContainer>>,
+    magic_container: Option<Arc<MagicContainer>>,
 ) -> Result<Bitboard, &'static str> {
     let result = epd_to_board(
         fen,
@@ -52,11 +52,11 @@ pub fn fen_to_board(
 /// Converts `epd` into the [Bitboard]. Returns [Err] with proper error message if `epd` couldn't be parsed correctly.
 pub fn epd_to_board(
     epd: &str,
-    evaluation_parameters: Arc<EvaluationParameters>,
-    zobrist_container: Arc<ZobristContainer>,
-    patterns_container: Arc<PatternsContainer>,
-    see_container: Arc<SEEContainer>,
-    magic_container: Arc<MagicContainer>,
+    evaluation_parameters: Option<Arc<EvaluationParameters>>,
+    zobrist_container: Option<Arc<ZobristContainer>>,
+    patterns_container: Option<Arc<PatternsContainer>>,
+    see_container: Option<Arc<SEEContainer>>,
+    magic_container: Option<Arc<MagicContainer>>,
 ) -> Result<ParsedEPD, &'static str> {
     let tokens: Vec<&str> = epd.split(' ').map(|v| v.trim()).collect();
     if tokens.len() < 4 {

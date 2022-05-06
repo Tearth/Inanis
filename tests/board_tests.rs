@@ -2,7 +2,6 @@
 mod board_tests {
     use inanis::state::board::Bitboard;
     use inanis::state::*;
-    use std::sync::Arc;
     use std::sync::Once;
 
     static INIT: Once = Once::new();
@@ -16,12 +15,7 @@ mod board_tests {
                         inanis::init();
                     });
 
-                    let board = Bitboard::new_from_fen($fen,
-                        Arc::new(Default::default()),
-                        Arc::new(Default::default()),
-                        Arc::new(Default::default()),
-                        Arc::new(Default::default()),
-                        Arc::new(Default::default())).unwrap();
+                    let board = Bitboard::new_from_fen($fen, None, None, None, None, None).unwrap();
 
                     for color in 0..2 {
                         let mut result = 0u64;
@@ -62,12 +56,7 @@ mod board_tests {
                         inanis::init();
                     });
 
-                    let board = Bitboard::new_from_fen($fen,
-                        Arc::new(Default::default()),
-                        Arc::new(Default::default()),
-                        Arc::new(Default::default()),
-                        Arc::new(Default::default()),
-                        Arc::new(Default::default())).unwrap();
+                    let board = Bitboard::new_from_fen($fen, None, None, None, None, None).unwrap();
                     assert_eq!($expected_result, board.get_attacking_pieces($color, $field_index));
                 }
             )*

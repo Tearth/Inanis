@@ -1,19 +1,13 @@
 #[cfg(test)]
 mod fen_tests {
     use inanis::state::board::Bitboard;
-    use std::sync::Arc;
 
     macro_rules! fen_tests {
         ($($name:ident: $original_fen:expr,)*) => {
             $(
                 #[test]
                 fn $name() {
-                    assert_eq!($original_fen, Bitboard::new_from_fen($original_fen,
-                        Arc::new(Default::default()),
-                        Arc::new(Default::default()),
-                        Arc::new(Default::default()),
-                        Arc::new(Default::default()),
-                        Arc::new(Default::default())).unwrap().to_fen());
+                    assert_eq!($original_fen, Bitboard::new_from_fen($original_fen, None, None, None, None, None).unwrap().to_fen());
                 }
             )*
         }

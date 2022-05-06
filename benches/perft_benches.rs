@@ -11,7 +11,7 @@ fn criterion_benchmark(criterion: &mut Criterion) {
         bencher.iter(|| {
             perft::normal::run(
                 criterion::black_box(4),
-                criterion::black_box(&mut Bitboard::new_initial_position()),
+                criterion::black_box(&mut Bitboard::new_initial_position(None, None, None, None, None)),
                 criterion::black_box(false),
             )
         })

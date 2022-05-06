@@ -227,13 +227,13 @@ fn load_positions(epd_filename: &str) -> Result<Vec<TunerPosition>, &'static str
 
     for line in BufReader::new(file).lines() {
         let position = line.unwrap();
-        let mut parsed_epd = fen::epd_to_board(
+        let parsed_epd = fen::epd_to_board(
             position.as_str(),
-            evaluation_parameters.clone(),
-            zobrist_container.clone(),
-            patterns_container.clone(),
-            see_container.clone(),
-            magic_container.clone(),
+            Some(evaluation_parameters.clone()),
+            Some(zobrist_container.clone()),
+            Some(patterns_container.clone()),
+            Some(see_container.clone()),
+            Some(magic_container.clone()),
         )?;
 
         if parsed_epd.comment == None {

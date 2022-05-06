@@ -63,11 +63,11 @@ pub struct Bitboard {
 
 impl Bitboard {
     pub fn new(
-        evaluation_parameters: Arc<EvaluationParameters>,
-        zobrist_container: Arc<ZobristContainer>,
-        patterns_container: Arc<PatternsContainer>,
-        see_container: Arc<SEEContainer>,
-        magic_container: Arc<MagicContainer>,
+        evaluation_parameters: Option<Arc<EvaluationParameters>>,
+        zobrist_container: Option<Arc<ZobristContainer>>,
+        patterns_container: Option<Arc<PatternsContainer>>,
+        see_container: Option<Arc<SEEContainer>>,
+        magic_container: Option<Arc<MagicContainer>>,
     ) -> Self {
         Bitboard {
             pieces: [[0; 6], [0; 6]],
@@ -89,21 +89,21 @@ impl Bitboard {
             pawn_hash_stack: Vec::with_capacity(32),
             material_scores: [0; 2],
             pst_scores: [[0, 2]; 2],
-            evaluation_parameters,
-            zobrist: zobrist_container,
-            patterns: patterns_container,
-            see: see_container,
-            magic: magic_container,
+            evaluation_parameters: evaluation_parameters.unwrap_or_else(|| Arc::new(Default::default())),
+            zobrist: zobrist_container.unwrap_or_else(|| Arc::new(Default::default())),
+            patterns: patterns_container.unwrap_or_else(|| Arc::new(Default::default())),
+            see: see_container.unwrap_or_else(|| Arc::new(Default::default())),
+            magic: magic_container.unwrap_or_else(|| Arc::new(Default::default())),
         }
     }
 
     /// Constructs a new instance of [Bitboard] with initial position.
     pub fn new_initial_position(
-        evaluation_parameters: Arc<EvaluationParameters>,
-        zobrist_container: Arc<ZobristContainer>,
-        patterns_container: Arc<PatternsContainer>,
-        see_container: Arc<SEEContainer>,
-        magic_container: Arc<MagicContainer>,
+        evaluation_parameters: Option<Arc<EvaluationParameters>>,
+        zobrist_container: Option<Arc<ZobristContainer>>,
+        patterns_container: Option<Arc<PatternsContainer>>,
+        see_container: Option<Arc<SEEContainer>>,
+        magic_container: Option<Arc<MagicContainer>>,
     ) -> Self {
         Bitboard::new_from_fen(
             "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -120,11 +120,11 @@ impl Bitboard {
     /// Returns [Err] with proper error message if `fen` couldn't be parsed correctly.
     pub fn new_from_fen(
         fen: &str,
-        evaluation_parameters: Arc<EvaluationParameters>,
-        zobrist_container: Arc<ZobristContainer>,
-        patterns_container: Arc<PatternsContainer>,
-        see_container: Arc<SEEContainer>,
-        magic_container: Arc<MagicContainer>,
+        evaluation_parameters: Option<Arc<EvaluationParameters>>,
+        zobrist_container: Option<Arc<ZobristContainer>>,
+        patterns_container: Option<Arc<PatternsContainer>>,
+        see_container: Option<Arc<SEEContainer>>,
+        magic_container: Option<Arc<MagicContainer>>,
     ) -> Result<Self, &'static str> {
         fen::fen_to_board(
             fen,
@@ -140,11 +140,11 @@ impl Bitboard {
     /// Returns [Err] with proper error message is `moves` couldn't be parsed correctly.
     pub fn new_from_moves(
         moves: &[&str],
-        evaluation_parameters: Arc<EvaluationParameters>,
-        zobrist_container: Arc<ZobristContainer>,
-        patterns_container: Arc<PatternsContainer>,
-        see_container: Arc<SEEContainer>,
-        magic_container: Arc<MagicContainer>,
+        evaluation_parameters: Option<Arc<EvaluationParameters>>,
+        zobrist_container: Option<Arc<ZobristContainer>>,
+        patterns_container: Option<Arc<PatternsContainer>>,
+        see_container: Option<Arc<SEEContainer>>,
+        magic_container: Option<Arc<MagicContainer>>,
     ) -> Result<Self, &'static str> {
         let mut board = Bitboard::new_initial_position(evaluation_parameters, zobrist_container, patterns_container, see_container, magic_container);
         for premade_move in moves {

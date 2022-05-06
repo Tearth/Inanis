@@ -28,12 +28,7 @@ mod see_tests {
                         inanis::init();
                     });
 
-                    let board = Bitboard::new_from_fen($fen,
-                        Arc::new(Default::default()),
-                        Arc::new(Default::default()),
-                        Arc::new(Default::default()),
-                        Arc::new(Default::default()),
-                        Arc::new(Default::default())).unwrap();
+                    let board = Bitboard::new_from_fen($fen, None, None, None, None, None).unwrap();
                     let mut moves: [MaybeUninit<Move>; 218] = [MaybeUninit::uninit(); 218];
                     let moves_count = board.get_all_moves(&mut moves, u64::MAX);
 
