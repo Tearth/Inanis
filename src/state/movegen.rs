@@ -374,24 +374,22 @@ impl MagicContainer {
 
     /// Gets a rook attacks for the field specified by `field_index`, considering `occupancy`.
     fn get_rook_attacks(&self, occupancy: u64, field_index: usize) -> u64 {
-        let result = 0
-            | self.get_attacks(occupancy, field_index, (1, 0))
-            | self.get_attacks(occupancy, field_index, (-1, 0))
-            | self.get_attacks(occupancy, field_index, (0, 1))
-            | self.get_attacks(occupancy, field_index, (0, -1));
+        let left = self.get_attacks(occupancy, field_index, (-1, 0));
+        let right = self.get_attacks(occupancy, field_index, (1, 0));
+        let top = self.get_attacks(occupancy, field_index, (0, 1));
+        let down = self.get_attacks(occupancy, field_index, (0, -1));
 
-        result
+        left | right | top | down
     }
 
     /// Gets a bishop attacks for the field specified by `field_index`, occupancy `occupancy`.
     fn get_bishop_attacks(&self, occupancy: u64, field_index: usize) -> u64 {
-        let result = 0
-            | self.get_attacks(occupancy, field_index, (1, 1))
-            | self.get_attacks(occupancy, field_index, (-1, 1))
-            | self.get_attacks(occupancy, field_index, (1, -1))
-            | self.get_attacks(occupancy, field_index, (-1, -1));
+        let top_right = self.get_attacks(occupancy, field_index, (1, 1));
+        let top_left = self.get_attacks(occupancy, field_index, (1, -1));
+        let down_right = self.get_attacks(occupancy, field_index, (-1, 1));
+        let down_left = self.get_attacks(occupancy, field_index, (-1, -1));
 
-        result
+        top_right | top_left | down_right | down_left
     }
 
     /// Helper function to get all possible to move fields, considering `occupancy`, starting from the field

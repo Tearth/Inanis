@@ -2,11 +2,7 @@
     unused_assignments,
     clippy::needless_range_loop,
     clippy::identity_op,
-    clippy::let_and_return,
-    clippy::uninit_assumed_init,
-    clippy::nonminimal_bool,
     clippy::collapsible_if,
-    clippy::single_char_add_str,
     clippy::too_many_arguments,
     clippy::if_same_then_else,
     clippy::declare_interior_mutable_const

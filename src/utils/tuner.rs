@@ -465,40 +465,40 @@ fn write_evaluation_parameters(context: &mut TunerContext, output_directory: &st
     let mut output = String::new();
 
     output.push_str(get_header(best_error).as_str());
-    output.push_str("\n");
+    output.push('\n');
     output.push_str("use super::*;\n");
-    output.push_str("\n");
+    output.push('\n');
     output.push_str("impl Default for EvaluationParameters {\n");
     output.push_str("    fn default() -> Self {\n");
     output.push_str("        let mut evaluation_parameters = Self {\n");
     output.push_str(get_array("piece_value", &context.parameters.piece_value).as_str());
-    output.push_str("\n");
+    output.push('\n');
     output.push_str(get_array("mobility_opening", &context.parameters.mobility_opening).as_str());
     output.push_str(get_array("mobility_ending", &context.parameters.mobility_ending).as_str());
     output.push_str(get_array("mobility_center_multiplier", &context.parameters.mobility_center_multiplier).as_str());
-    output.push_str("\n");
+    output.push('\n');
     output.push_str(get_parameter("doubled_pawn_opening", context.parameters.doubled_pawn_opening).as_str());
     output.push_str(get_parameter("doubled_pawn_ending", context.parameters.doubled_pawn_ending).as_str());
-    output.push_str("\n");
+    output.push('\n');
     output.push_str(get_parameter("isolated_pawn_opening", context.parameters.isolated_pawn_opening).as_str());
     output.push_str(get_parameter("isolated_pawn_ending", context.parameters.isolated_pawn_ending).as_str());
-    output.push_str("\n");
+    output.push('\n');
     output.push_str(get_parameter("chained_pawn_opening", context.parameters.chained_pawn_opening).as_str());
     output.push_str(get_parameter("chained_pawn_ending", context.parameters.chained_pawn_ending).as_str());
-    output.push_str("\n");
+    output.push('\n');
     output.push_str(get_parameter("passing_pawn_opening", context.parameters.passing_pawn_opening).as_str());
     output.push_str(get_parameter("passing_pawn_ending", context.parameters.passing_pawn_ending).as_str());
-    output.push_str("\n");
+    output.push('\n');
     output.push_str(get_parameter("pawn_shield_opening", context.parameters.pawn_shield_opening).as_str());
     output.push_str(get_parameter("pawn_shield_ending", context.parameters.pawn_shield_ending).as_str());
-    output.push_str("\n");
+    output.push('\n');
     output.push_str(get_parameter("pawn_shield_open_file_opening", context.parameters.pawn_shield_open_file_opening).as_str());
     output.push_str(get_parameter("pawn_shield_open_file_ending", context.parameters.pawn_shield_open_file_ending).as_str());
-    output.push_str("\n");
+    output.push('\n');
     output.push_str(get_parameter("king_attacked_fields_opening", context.parameters.king_attacked_fields_opening).as_str());
     output.push_str(get_parameter("king_attacked_fields_ending", context.parameters.king_attacked_fields_ending).as_str());
     output.push_str("        };\n");
-    output.push_str("\n");
+    output.push('\n');
     output.push_str("        evaluation_parameters.set_default_pst_patterns();\n");
     output.push_str("        evaluation_parameters.recalculate();\n");
     output.push_str("        evaluation_parameters\n");
@@ -518,9 +518,9 @@ fn write_piece_square_table(output_directory: &str, best_error: f64, name: &str,
     let function_signature = format!("    pub fn get_{}_pst_pattern(&self) -> [[i16; 64]; 2] {{\n", name);
 
     output.push_str(get_header(best_error).as_str());
-    output.push_str("\n");
+    output.push('\n');
     output.push_str("use super::*;\n");
-    output.push_str("\n");
+    output.push('\n');
     output.push_str("impl EvaluationParameters {\n");
     output.push_str("    #[rustfmt::skip]\n");
     output.push_str(&function_signature);
@@ -573,7 +573,7 @@ fn get_piece_square_table(values: &[i16]) -> String {
     for index in 0..64 {
         output.push_str(format!("{:4}, ", values[index]).as_str());
         if index % 8 == 7 {
-            output.push_str("\n");
+            output.push('\n');
             if index != 63 {
                 output.push_str("                ");
             }
