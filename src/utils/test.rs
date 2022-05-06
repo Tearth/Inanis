@@ -9,6 +9,7 @@ use crate::state::board::Bitboard;
 use crate::state::fen;
 use crate::state::movegen::MagicContainer;
 use crate::state::movescan::Move;
+use crate::state::patterns::PatternsContainer;
 use crate::state::zobrist::ZobristContainer;
 use chrono::Utc;
 use std::fs::File;
@@ -172,6 +173,7 @@ fn load_positions(epd_filename: &str) -> Result<Vec<TestPosition>, &'static str>
 
     let evaluation_parameters = Arc::new(EvaluationParameters::default());
     let zobrist_container = Arc::new(ZobristContainer::default());
+    let patterns_container = Arc::new(PatternsContainer::default());
     let see_container = Arc::new(SEEContainer::default());
     let magic_container = Arc::new(MagicContainer::default());
 
@@ -181,17 +183,19 @@ fn load_positions(epd_filename: &str) -> Result<Vec<TestPosition>, &'static str>
             continue;
         }
 
-        let mut parsed_epd = fen::epd_to_board(position.as_str())?;
+        let mut parsed_epd = fen::epd_to_board(
+            position.as_str(),
+            evaluation_parameters.clone(),
+            zobrist_container.clone(),
+            patterns_container.clone(),
+            see_container.clone(),
+            magic_container.clone(),
+        )?;
         if parsed_epd.id == None {
             return Err("Not enough data");
         }
 
         let parsed_best_move = Move::from_short_notation(&parsed_epd.best_move.unwrap(), &parsed_epd.board)?;
-
-        parsed_epd.board.evaluation_parameters = evaluation_parameters.clone();
-        parsed_epd.board.zobrist = zobrist_container.clone();
-        parsed_epd.board.see = see_container.clone();
-        parsed_epd.board.magic = magic_container.clone();
         positions.push(TestPosition::new(parsed_epd.id.unwrap(), parsed_epd.board, parsed_best_move));
     }
 

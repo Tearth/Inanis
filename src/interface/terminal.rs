@@ -1,12 +1,16 @@
 use super::uci;
+use crate::engine::see::SEEContainer;
 use crate::evaluation::material;
 use crate::evaluation::mobility;
 use crate::evaluation::pawns;
 use crate::evaluation::pst;
 use crate::evaluation::safety;
+use crate::evaluation::EvaluationParameters;
 use crate::perft;
 use crate::state::board::Bitboard;
 use crate::state::movegen::MagicContainer;
+use crate::state::patterns::PatternsContainer;
+use crate::state::zobrist::ZobristContainer;
 use crate::utils::benchmark;
 use crate::utils::test;
 use crate::utils::tuner;
@@ -17,6 +21,7 @@ use prettytable::row;
 use prettytable::Table;
 use std::io;
 use std::process;
+use std::sync::Arc;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
@@ -288,7 +293,14 @@ fn handle_evaluate(input: Vec<&str>) {
     }
 
     let fen = input[1..].join(" ");
-    let board = match Bitboard::new_from_fen(fen.as_str()) {
+    let board = match Bitboard::new_from_fen(
+        fen.as_str(),
+        Arc::new(Default::default()),
+        Arc::new(Default::default()),
+        Arc::new(Default::default()),
+        Arc::new(Default::default()),
+        Arc::new(Default::default()),
+    ) {
         Ok(board) => board,
         Err(message) => {
             println!("{}", message);
@@ -623,15 +635,35 @@ fn handle_unknown_command() {
 /// Creates a new board based on the input with FEN or moves list - returns [Err] if internal parser failed.
 fn prepare_board(parameters: &[&str]) -> Result<Bitboard, &'static str> {
     if parameters.is_empty() {
-        return Ok(Bitboard::new_initial_position());
+        return Ok(Bitboard::new_initial_position(
+            Arc::new(Default::default()),
+            Arc::new(Default::default()),
+            Arc::new(Default::default()),
+            Arc::new(Default::default()),
+            Arc::new(Default::default()),
+        ));
     }
 
     match parameters[0] {
         "fen" => {
             let fen = parameters[1..].join(" ");
-            Bitboard::new_from_fen(fen.as_str())
+            Bitboard::new_from_fen(
+                fen.as_str(),
+                Arc::new(Default::default()),
+                Arc::new(Default::default()),
+                Arc::new(Default::default()),
+                Arc::new(Default::default()),
+                Arc::new(Default::default()),
+            )
         }
-        "moves" => Bitboard::new_from_moves(&parameters[1..]),
+        "moves" => Bitboard::new_from_moves(
+            &parameters[1..],
+            Arc::new(Default::default()),
+            Arc::new(Default::default()),
+            Arc::new(Default::default()),
+            Arc::new(Default::default()),
+            Arc::new(Default::default()),
+        ),
         _ => Err("Invalid parameters"),
     }
 }

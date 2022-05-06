@@ -2,6 +2,7 @@
 mod integrity_tests {
     use inanis::perft;
     use inanis::state::board::Bitboard;
+    use std::sync::Arc;
     use std::sync::Once;
 
     static INIT: Once = Once::new();
@@ -15,7 +16,12 @@ mod integrity_tests {
                         inanis::init();
                     });
 
-                    perft::normal::run($depth, &mut Bitboard::new_from_fen($fen).unwrap(), true);
+                    perft::normal::run($depth, &mut Bitboard::new_from_fen($fen,
+                        Arc::new(Default::default()),
+                        Arc::new(Default::default()),
+                        Arc::new(Default::default()),
+                        Arc::new(Default::default()),
+                        Arc::new(Default::default())).unwrap(), true);
                 }
             )*
         }

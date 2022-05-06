@@ -1,5 +1,13 @@
+use std::sync::Arc;
+
+use crate::engine::see::SEEContainer;
+use crate::evaluation::EvaluationParameters;
+
 use super::board::Bitboard;
 use super::board::CastlingRights;
+use super::movegen::MagicContainer;
+use super::patterns::PatternsContainer;
+use super::zobrist::ZobristContainer;
 use super::*;
 
 pub struct ParsedEPD {
@@ -22,19 +30,40 @@ impl ParsedEPD {
 }
 
 /// Converts `fen` into the [Bitboard]. Returns [Err] with proper error message if `fen` couldn't be parsed correctly.
-pub fn fen_to_board(fen: &str) -> Result<Bitboard, &'static str> {
-    let result = epd_to_board(fen)?;
+pub fn fen_to_board(
+    fen: &str,
+    evaluation_parameters: Arc<EvaluationParameters>,
+    zobrist_container: Arc<ZobristContainer>,
+    patterns_container: Arc<PatternsContainer>,
+    see_container: Arc<SEEContainer>,
+    magic_container: Arc<MagicContainer>,
+) -> Result<Bitboard, &'static str> {
+    let result = epd_to_board(
+        fen,
+        evaluation_parameters,
+        zobrist_container,
+        patterns_container,
+        see_container,
+        magic_container,
+    )?;
     Ok(result.board)
 }
 
 /// Converts `epd` into the [Bitboard]. Returns [Err] with proper error message if `epd` couldn't be parsed correctly.
-pub fn epd_to_board(epd: &str) -> Result<ParsedEPD, &'static str> {
+pub fn epd_to_board(
+    epd: &str,
+    evaluation_parameters: Arc<EvaluationParameters>,
+    zobrist_container: Arc<ZobristContainer>,
+    patterns_container: Arc<PatternsContainer>,
+    see_container: Arc<SEEContainer>,
+    magic_container: Arc<MagicContainer>,
+) -> Result<ParsedEPD, &'static str> {
     let tokens: Vec<&str> = epd.split(' ').map(|v| v.trim()).collect();
     if tokens.len() < 4 {
         return Err("Invalid FEN: input too short");
     }
 
-    let mut board = Default::default();
+    let mut board = Bitboard::new(evaluation_parameters, zobrist_container, patterns_container, see_container, magic_container);
     fen_to_pieces(&mut board, tokens[0])?;
     fen_to_active_color(&mut board, tokens[1])?;
     fen_to_castling(&mut board, tokens[2])?;

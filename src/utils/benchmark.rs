@@ -123,7 +123,15 @@ pub fn run() -> BenchmarkResult {
         let abort_token = Arc::new(AtomicBool::new(false));
         let ponder_token = Arc::new(AtomicBool::new(false));
 
-        let board = Bitboard::new_from_fen(fen).unwrap();
+        let board = Bitboard::new_from_fen(
+            fen,
+            Arc::new(Default::default()),
+            Arc::new(Default::default()),
+            Arc::new(Default::default()),
+            Arc::new(Default::default()),
+            Arc::new(Default::default()),
+        )
+        .unwrap();
         let context = SearchContext::new(
             board,
             0,

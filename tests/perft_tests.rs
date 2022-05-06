@@ -2,6 +2,7 @@
 mod perft_tests {
     use inanis::perft;
     use inanis::state::board::Bitboard;
+    use std::sync::Arc;
     use std::sync::Once;
 
     static INIT: Once = Once::new();
@@ -15,7 +16,12 @@ mod perft_tests {
                         inanis::init();
                     });
 
-                    assert_eq!($expected_leafs_count, perft::normal::run($depth, &mut Bitboard::new_from_fen($fen).unwrap(), false));
+                    assert_eq!($expected_leafs_count, perft::normal::run($depth, &mut Bitboard::new_from_fen($fen,
+                        Arc::new(Default::default()),
+                        Arc::new(Default::default()),
+                        Arc::new(Default::default()),
+                        Arc::new(Default::default()),
+                        Arc::new(Default::default())).unwrap(), false));
                 }
             )*
         }
