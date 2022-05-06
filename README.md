@@ -69,7 +69,6 @@ Examples of running the tests:
  - `test ./input/STS1.epd 16 64 4` - run fixed-depth (16 in this case) search for all positions stored in the `STS1.epd` file, using 64 MB transposition table and 4 threads. To classify the test as successful, the last iteration has to return the correct best move.
 
 ## Dependencies
- - [arr_macro](https://github.com/JoshMcguigan/arr_macro) - macro for easier array initialization
  - [fastrand](https://github.com/smol-rs/fastrand) - a simple and fast random number generator
  - [chrono](https://github.com/chronotope/chrono) - feature-complete superset of the time library
  - [bitflags](https://github.com/bitflags/bitflags) - macro to generate structures which behave like a set of bitflags

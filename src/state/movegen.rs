@@ -2,7 +2,6 @@ use std::sync::Arc;
 
 use super::patterns::PatternsContainer;
 use super::*;
-use arr_macro::arr;
 
 #[rustfmt::skip]
 static ROOK_SHIFTS: [u8; 64] =
@@ -414,9 +413,11 @@ impl MagicContainer {
 
 impl Default for MagicContainer {
     fn default() -> Self {
+        const INIT: MagicField = MagicField::new();
+
         let mut result = Self {
-            rook_fields: arr!(MagicField::new(); 64),
-            bishop_fields: arr!(MagicField::new(); 64),
+            rook_fields: [INIT; 64],
+            bishop_fields: [INIT; 64],
         };
 
         for index in 0..64 {
