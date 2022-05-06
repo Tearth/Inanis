@@ -2,19 +2,12 @@
 mod board_tests {
     use inanis::state::board::Bitboard;
     use inanis::state::*;
-    use std::sync::Once;
-
-    static INIT: Once = Once::new();
 
     macro_rules! is_field_attacked_tests {
         ($($name:ident: $fen:expr, $white_mask:expr, $black_mask:expr,)*) => {
             $(
                 #[test]
                 fn $name() {
-                    INIT.call_once(|| {
-                        inanis::init();
-                    });
-
                     let board = Bitboard::new_from_fen($fen, None, None, None, None, None).unwrap();
 
                     for color in 0..2 {
@@ -52,10 +45,6 @@ mod board_tests {
             $(
                 #[test]
                 fn $name() {
-                    INIT.call_once(|| {
-                        inanis::init();
-                    });
-
                     let board = Bitboard::new_from_fen($fen, None, None, None, None, None).unwrap();
                     assert_eq!($expected_result, board.get_attacking_pieces($color, $field_index));
                 }

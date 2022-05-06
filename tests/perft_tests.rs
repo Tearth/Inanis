@@ -2,19 +2,12 @@
 mod perft_tests {
     use inanis::perft;
     use inanis::state::board::Bitboard;
-    use std::sync::Once;
-
-    static INIT: Once = Once::new();
 
     macro_rules! perft_tests {
         ($($name:ident: $depth:expr, $fen:expr, $expected_leafs_count:expr,)*) => {
             $(
                 #[test]
                 fn $name() {
-                    INIT.call_once(|| {
-                        inanis::init();
-                    });
-
                     assert_eq!($expected_leafs_count, perft::normal::run($depth, &mut Bitboard::new_from_fen($fen, None, None, None, None, None).unwrap(), false));
                 }
             )*

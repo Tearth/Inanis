@@ -2,19 +2,12 @@
 mod integrity_tests {
     use inanis::perft;
     use inanis::state::board::Bitboard;
-    use std::sync::Once;
-
-    static INIT: Once = Once::new();
 
     macro_rules! integrity_tests {
         ($($name:ident: $depth:expr, $fen:expr,)*) => {
             $(
                 #[test]
                 fn $name() {
-                    INIT.call_once(|| {
-                        inanis::init();
-                    });
-
                     perft::normal::run($depth, &mut Bitboard::new_from_fen($fen, None, None, None, None, None).unwrap(), true);
                 }
             )*

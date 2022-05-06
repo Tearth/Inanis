@@ -5,8 +5,6 @@ use inanis::perft;
 use inanis::state::board::Bitboard;
 
 fn criterion_benchmark(criterion: &mut Criterion) {
-    inanis::init();
-
     criterion.bench_function("perft", |bencher| {
         bencher.iter(|| {
             perft::normal::run(

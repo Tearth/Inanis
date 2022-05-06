@@ -9,9 +9,7 @@ mod see_tests {
     use inanis::state::movescan::Move;
     use std::mem::MaybeUninit;
     use std::sync::Arc;
-    use std::sync::Once;
 
-    static INIT: Once = Once::new();
     static P: i16 = 100;
     static N: i16 = 442;
     static B: i16 = 442;
@@ -24,10 +22,6 @@ mod see_tests {
             $(
                 #[test]
                 fn $name() {
-                    INIT.call_once(|| {
-                        inanis::init();
-                    });
-
                     let board = Bitboard::new_from_fen($fen, None, None, None, None, None).unwrap();
                     let mut moves: [MaybeUninit<Move>; 218] = [MaybeUninit::uninit(); 218];
                     let moves_count = board.get_all_moves(&mut moves, u64::MAX);
