@@ -1,4 +1,8 @@
 {
     "editor.formatOnSave": true,
-    "rust-analyzer.checkOnSave.command": "clippy"
+    "rust-analyzer.checkOnSave.command": "clippy",
+    "workbench.colorCustomizations": {
+        "editorInlayHint.foreground": "#cccccc",
+        "editorInlayHint.background": "#272727"
+    }
 }
