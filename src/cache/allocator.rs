@@ -7,7 +7,7 @@ pub struct AllocationResult {
 
 /// Calculates optimal size for the hashtables based on `total_size` megabytes of available memory. Minimal size for each of them is 1 MB.
 pub fn get_allocation(total_size: usize) -> AllocationResult {
-    let pawn_hashtable_size = cmp::max(1, total_size / 128);
+    let pawn_hashtable_size = cmp::max(1, 1 + total_size / 64);
     let transposition_table_size = total_size - pawn_hashtable_size;
 
     AllocationResult {
