@@ -21,6 +21,7 @@ pub struct TranspositionTable {
 }
 
 #[repr(align(64))]
+#[derive(Clone)]
 struct TranspositionTableBucket {
     pub entries: [TranspositionTableEntry; BUCKET_SLOTS],
 }
@@ -47,9 +48,7 @@ impl TranspositionTable {
         };
 
         if size != 0 {
-            for _ in 0..hashtable.table.capacity() {
-                hashtable.table.push(Default::default());
-            }
+            hashtable.table.resize(hashtable.table.capacity(), Default::default());
         }
 
         hashtable
@@ -67,13 +66,13 @@ impl TranspositionTable {
         let key = self.get_key(hash);
         let index = (hash as usize) % self.table.len();
         let bucket = &self.table[index];
+
         let mut smallest_depth = i8::MAX;
         let mut smallest_depth_index = usize::MAX;
         let mut oldest_entry_age = 0;
         let mut oldest_entry_index = usize::MAX;
 
-        for entry_index in 0..BUCKET_SLOTS {
-            let entry = &bucket.entries[entry_index];
+        for (entry_index, entry) in bucket.entries.iter().enumerate() {
             let entry_data = entry.get_data();
 
             if entry_data.key == key {
@@ -128,8 +127,7 @@ impl TranspositionTable {
         let bucket = &self.table[index];
         let mut entry_with_key_present = false;
 
-        for entry_index in 0..BUCKET_SLOTS {
-            let entry = &bucket.entries[entry_index];
+        for entry in &bucket.entries {
             let entry_data = entry.get_data();
             let mut entry_score = entry_data.score;
 
@@ -175,9 +173,8 @@ impl TranspositionTable {
         const BUCKETS_COUNT_TO_CHECK: usize = RESOLUTION / BUCKET_SLOTS;
         let mut filled_entries = 0;
 
-        for bucket_index in 0..BUCKETS_COUNT_TO_CHECK {
-            for entry_index in 0..BUCKET_SLOTS {
-                let entry = &self.table[bucket_index].entries[entry_index];
+        for bucket in self.table.iter().take(BUCKETS_COUNT_TO_CHECK) {
+            for entry in &bucket.entries {
                 let entry_key_data = entry.key_data.load(Ordering::Relaxed);
                 let entry_key = (entry_key_data >> 48) as u16;
 
@@ -192,9 +189,8 @@ impl TranspositionTable {
 
     /// Increments ann age of all entries stored in the table. If age's value is equal to 31, it gets purged to make more space for a new entries.
     pub fn age_entries(&self) {
-        for bucket_index in 0..self.table.len() {
-            for entry_index in 0..BUCKET_SLOTS {
-                let entry = &self.table[bucket_index].entries[entry_index];
+        for bucket in &self.table {
+            for entry in &bucket.entries {
                 let entry_data = entry.get_data();
 
                 if entry_data.depth > 0 {
@@ -239,7 +235,8 @@ impl TranspositionTableEntry {
 
     /// Converts `key`, `score`, `best_move`, `depth`, `r#type` and `age` into an atomic word, and stores it.
     pub fn set_data(&self, key: u16, score: i16, best_move: Move, depth: i8, r#type: TranspositionTableScoreType, age: u8) {
-        let key_data = (key as u64)
+        let key_data = 0
+            | (key as u64)
             | (((score as u16) as u64) << 16)
             | ((best_move.data as u64) << 32)
             | (((depth as u8) as u64) << 48)
@@ -267,5 +264,14 @@ impl Default for TranspositionTableEntry {
     /// Constructs a default instance of [TranspositionTableEntry] with zeroed elements.
     fn default() -> Self {
         TranspositionTableEntry::new(0, 0, Default::default(), 0, TranspositionTableScoreType::INVALID)
+    }
+}
+
+impl Clone for TranspositionTableEntry {
+    /// Clones [TranspositionTableEntry] by creating a new atomics (with original values).
+    fn clone(&self) -> Self {
+        Self {
+            key_data: AtomicU64::new(self.key_data.load(Ordering::Relaxed)),
+        }
     }
 }

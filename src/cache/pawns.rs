@@ -26,9 +26,7 @@ impl PawnHashTable {
         };
 
         if size != 0 {
-            for _ in 0..hashtable.table.capacity() {
-                hashtable.table.push(Default::default());
-            }
+            hashtable.table.resize(hashtable.table.capacity(), Default::default());
         }
 
         hashtable
@@ -43,6 +41,7 @@ impl PawnHashTable {
     }
 
     /// Gets a wanted entry using `hash % self.table.len()` formula to calculate an index. Returns [None] if `hash` is incompatible with the stored key.
+    /// Sets `collision` flag if some entry was found, but the key was invalid.
     pub fn get(&self, hash: u64, collision: &mut bool) -> Option<PawnHashTableResult> {
         let entry = &self.table[(hash as usize) % self.table.len()];
         let entry_data = entry.get_data();
@@ -63,8 +62,7 @@ impl PawnHashTable {
         const RESOLUTION: usize = 10000;
         let mut filled_entries = 0;
 
-        for entry_index in 0..RESOLUTION {
-            let entry = &self.table[entry_index];
+        for entry in self.table.iter().take(RESOLUTION) {
             let entry_data = entry.get_data();
 
             if entry_data.key != 0 {
@@ -114,6 +112,7 @@ impl Default for PawnHashTableEntry {
 }
 
 impl Clone for PawnHashTableEntry {
+    /// Clones [PawnHashTableEntry] by creating a new atomics (with original values).
     fn clone(&self) -> Self {
         Self {
             key_data: AtomicU32::new(self.key_data.load(Ordering::Relaxed)),

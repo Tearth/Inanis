@@ -10,6 +10,7 @@ pub struct PerftHashTable {
 }
 
 #[repr(align(64))]
+#[derive(Clone)]
 pub struct PerftHashTableBucket {
     pub entries: [PerftHashTableEntry; BUCKET_SLOTS],
 }
@@ -32,9 +33,7 @@ impl PerftHashTable {
         };
 
         if size != 0 {
-            for _ in 0..hashtable.table.capacity() {
-                hashtable.table.push(Default::default());
-            }
+            hashtable.table.resize(hashtable.table.capacity(), Default::default());
         }
 
         hashtable
@@ -44,15 +43,13 @@ impl PerftHashTable {
     pub fn add(&self, hash: u64, depth: u8, leafs_count: u64) {
         let index = (hash as usize) % self.table.len();
         let bucket = &self.table[index];
-        let first_entry_key = bucket.entries[0].key.load(Ordering::Relaxed);
-        let first_entry_data = bucket.entries[0].data.load(Ordering::Relaxed);
 
-        let mut smallest_depth = (first_entry_key ^ first_entry_data) as u8 & 0xf;
+        let mut smallest_depth = u8::MAX;
         let mut smallest_depth_index = 0;
 
-        for entry_index in 1..BUCKET_SLOTS {
-            let entry_key = bucket.entries[entry_index].key.load(Ordering::Relaxed);
-            let entry_data = bucket.entries[entry_index].data.load(Ordering::Relaxed);
+        for (entry_index, entry) in bucket.entries.iter().enumerate() {
+            let entry_key = entry.key.load(Ordering::Relaxed);
+            let entry_data = entry.data.load(Ordering::Relaxed);
             let entry_depth = (entry_key ^ entry_data) as u8 & 0xf;
 
             if entry_depth < smallest_depth {
@@ -68,13 +65,13 @@ impl PerftHashTable {
         bucket.entries[smallest_depth_index].data.store(data, Ordering::Relaxed);
     }
 
-    /// Gets wanted entry using `hash % self.table.len()` formula to calculate an index of bucket. Returns [None] if `hash` is incompatible with the stored key.
+    /// Gets a wanted entry from the specified `depth` using `hash % self.table.len()` formula to calculate an index of bucket.
+    /// Returns [None] if `hash` is incompatible with the stored key.
     pub fn get(&self, hash: u64, depth: u8) -> Option<PerftHashTableResult> {
         let index = (hash as usize) % self.table.len();
         let bucket = &self.table[index];
 
-        for entry_index in 0..BUCKET_SLOTS {
-            let entry = &bucket.entries[entry_index];
+        for entry in &bucket.entries {
             let entry_key = entry.key.load(Ordering::Relaxed);
             let entry_data = entry.data.load(Ordering::Relaxed);
             let key = (hash & !0xf) | (depth as u64);
@@ -93,9 +90,8 @@ impl PerftHashTable {
         const BUCKETS_COUNT_TO_CHECK: usize = RESOLUTION / BUCKET_SLOTS;
         let mut filled_entries = 0;
 
-        for bucket_index in 0..BUCKETS_COUNT_TO_CHECK {
-            for entry_index in 0..BUCKET_SLOTS {
-                let entry = &self.table[bucket_index].entries[entry_index];
+        for bucket in self.table.iter().take(BUCKETS_COUNT_TO_CHECK) {
+            for entry in &bucket.entries {
                 if entry.key.load(Ordering::Relaxed) != 0 && entry.data.load(Ordering::Relaxed) != 0 {
                     filled_entries += 1;
                 }
@@ -127,5 +123,15 @@ impl PerftHashTableResult {
     /// Constructs a new instance of [PerftHashTableResult] with `leafs_count`.
     pub fn new(leafs_count: u64) -> Self {
         Self { leafs_count }
+    }
+}
+
+impl Clone for PerftHashTableEntry {
+    /// Clones [PerftHashTableEntry] by creating a new atomics (with original values).
+    fn clone(&self) -> Self {
+        Self {
+            key: AtomicU64::new(self.key.load(Ordering::Relaxed)),
+            data: AtomicU64::new(self.data.load(Ordering::Relaxed)),
+        }
     }
 }
