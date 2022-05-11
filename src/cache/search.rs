@@ -192,7 +192,6 @@ impl TranspositionTable {
         for bucket in &self.table {
             for entry in &bucket.entries {
                 let entry_data = entry.get_data();
-
                 if entry_data.depth > 0 {
                     if entry_data.age == 31 {
                         entry.set_data(0, 0, Default::default(), 0, TranspositionTableScoreType::INVALID, 0);
@@ -225,14 +224,6 @@ impl Default for TranspositionTableBucket {
 }
 
 impl TranspositionTableEntry {
-    /// Constructs a new instance of [TranspositionTableEntry] with stored `key`, `score`, `best_move`, `depth` and `r#type`.
-    pub fn new(key: u16, score: i16, best_move: Move, depth: i8, r#type: TranspositionTableScoreType) -> Self {
-        let entry = Self { key_data: AtomicU64::new(0) };
-
-        entry.set_data(key, score, best_move, depth, r#type, 0);
-        entry
-    }
-
     /// Converts `key`, `score`, `best_move`, `depth`, `r#type` and `age` into an atomic word, and stores it.
     pub fn set_data(&self, key: u16, score: i16, best_move: Move, depth: i8, r#type: TranspositionTableScoreType, age: u8) {
         let key_data = 0
@@ -263,7 +254,7 @@ impl TranspositionTableEntry {
 impl Default for TranspositionTableEntry {
     /// Constructs a default instance of [TranspositionTableEntry] with zeroed elements.
     fn default() -> Self {
-        TranspositionTableEntry::new(0, 0, Default::default(), 0, TranspositionTableScoreType::INVALID)
+        TranspositionTableEntry { key_data: AtomicU64::new(0) }
     }
 }
 

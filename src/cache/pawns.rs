@@ -64,7 +64,6 @@ impl PawnHashTable {
 
         for entry in self.table.iter().take(RESOLUTION) {
             let entry_data = entry.get_data();
-
             if entry_data.key != 0 {
                 filled_entries += 1;
             }
@@ -80,14 +79,6 @@ impl PawnHashTable {
 }
 
 impl PawnHashTableEntry {
-    /// Constructs a new instance of [PawnHashTableEntry] with stored `key` and `score`.
-    pub fn new(key: u16, score: i16) -> Self {
-        let entry = Self { key_data: AtomicU32::new(0) };
-
-        entry.set_data(key, score);
-        entry
-    }
-
     /// Converts `key` and `score` into an atomic word, and stores it.
     pub fn set_data(&self, key: u16, score: i16) {
         let key_data = (key as u32) | (((score as u16) as u32) << 16);
@@ -107,7 +98,7 @@ impl PawnHashTableEntry {
 impl Default for PawnHashTableEntry {
     /// Constructs a default instance of [PawnHashTableEntry] with zeroed elements.
     fn default() -> Self {
-        PawnHashTableEntry::new(0, 0)
+        PawnHashTableEntry { key_data: AtomicU32::new(0) }
     }
 }
 
