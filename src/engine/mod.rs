@@ -1,6 +1,5 @@
-use std::mem::MaybeUninit;
-
 use crate::state::movescan::Move;
+use std::mem::MaybeUninit;
 
 pub mod clock;
 pub mod context;

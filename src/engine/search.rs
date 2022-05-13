@@ -262,8 +262,10 @@ pub fn run<const PV: bool>(
             let king_field_index = bit_scan(context.board.pieces[context.board.active_color as usize][KING as usize]);
             let occupancy = context.board.occupancy[WHITE as usize] | context.board.occupancy[BLACK as usize];
 
-            context.board.magic.get_queen_moves(occupancy, king_field_index as usize)
-                | context.board.magic.get_knight_moves(king_field_index as usize, &context.board.patterns)
+            let queen_moves = context.board.magic.get_queen_moves(occupancy, king_field_index as usize);
+            let knight_moves = context.board.magic.get_knight_moves(king_field_index as usize, &context.board.patterns);
+
+            queen_moves | knight_moves
         }
     } else {
         u64::MAX
@@ -278,7 +280,7 @@ pub fn run<const PV: bool>(
     let mut move_index = 0;
     let mut moves_count = 0;
 
-    while let Some(r#move) = get_next_move(
+    while let Some((r#move, score)) = get_next_move(
         context,
         &mut move_generator_stage,
         &mut moves,
@@ -289,7 +291,6 @@ pub fn run<const PV: bool>(
         evasion_mask,
         ply,
     ) {
-        let score = unsafe { move_scores[move_index].assume_init() };
         if late_move_pruning_can_be_applied::<PV>(depth, move_index, score, friendly_king_checked) {
             context.statistics.late_move_pruning_accepted += 1;
             break;
@@ -477,7 +478,7 @@ fn assign_move_scores(
             continue;
         }
 
-        move_scores[move_index].write(0);
+        panic!("Sorting rule missing");
     }
 }
 
@@ -501,7 +502,7 @@ fn get_next_move(
     hash_move: Move,
     evasion_mask: u64,
     ply: u16,
-) -> Option<Move> {
+) -> Option<(Move, i16)> {
     if *stage == MoveGeneratorStage::Captures || *stage == MoveGeneratorStage::AllGenerated {
         *move_index += 1;
     }
@@ -515,9 +516,9 @@ fn get_next_move(
                     moves[0].write(hash_move);
                     move_scores[0].write(MOVE_ORDERING_HASH_MOVE);
                     context.statistics.move_generator_hash_move_stages += 1;
-
                     *moves_count = 1;
-                    return Some(hash_move);
+
+                    return Some((hash_move, MOVE_ORDERING_HASH_MOVE));
                 }
             }
             MoveGeneratorStage::ReadyToGenerateCaptures => {
@@ -544,12 +545,13 @@ fn get_next_move(
                     continue;
                 }
 
-                if unsafe { move_scores[*move_index].assume_init() } < MOVE_ORDERING_WINNING_CAPTURES_OFFSET {
+                let score = unsafe { move_scores[*move_index].assume_init() };
+                if score < MOVE_ORDERING_WINNING_CAPTURES_OFFSET {
                     *stage = MoveGeneratorStage::ReadyToGenerateQuietMoves;
                     continue;
                 }
 
-                return Some(r#move);
+                return Some((r#move, score));
             }
             MoveGeneratorStage::ReadyToGenerateQuietMoves => {
                 let original_moves_count = *moves_count;
@@ -566,12 +568,14 @@ fn get_next_move(
                 }
 
                 let r#move = sort_next_move(moves, move_scores, *move_index, *moves_count);
+                let score = unsafe { move_scores[*move_index].assume_init() };
+
                 if r#move == hash_move {
                     *move_index += 1;
                     continue;
                 }
 
-                return Some(r#move);
+                return Some((r#move, score));
             }
         }
     }

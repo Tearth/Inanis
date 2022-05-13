@@ -34,10 +34,8 @@ impl KillersTable {
 
     /// Checks if killer `r#move` exists at the level specified by `ply`.
     pub fn exists(&self, ply: u16, r#move: Move) -> bool {
-        for slot_index in 0..KILLER_SLOTS {
-            let entry = &self.table[ply as usize][slot_index];
+        for entry in &self.table[ply as usize] {
             let entry_data = entry.get_data();
-
             if entry_data.r#move == r#move {
                 return true;
             }
@@ -58,8 +56,8 @@ impl KillersTable {
         }
 
         for ply in MAX_DEPTH - 2..MAX_DEPTH {
-            for slot_index in 0..KILLER_SLOTS {
-                self.table[ply as usize][slot_index].set_data(Default::default());
+            for entry in &self.table[ply as usize] {
+                entry.set_data(Default::default());
             }
         }
     }
@@ -71,20 +69,14 @@ impl Default for KillersTable {
         const INIT_1: KillersTableEntry = KillersTableEntry::new_const();
         const INIT_2: [KillersTableEntry; KILLER_SLOTS] = [INIT_1; KILLER_SLOTS];
 
-        KillersTable {
+        Self {
             table: [INIT_2; MAX_DEPTH as usize],
         }
     }
 }
 
 impl KillersTableEntry {
-    /// Constructs a new instance of [KillersTableEntry] with stored `key` and `score`.
-    pub fn new(r#move: Move) -> Self {
-        Self {
-            data: AtomicU16::new(r#move.data),
-        }
-    }
-
+    /// Constructs a new instance of [KillersTableEntry] with zeroed values.
     pub const fn new_const() -> Self {
         Self { data: AtomicU16::new(0) }
     }
@@ -104,12 +96,14 @@ impl KillersTableEntry {
 }
 
 impl Default for KillersTableEntry {
+    /// Constructs a default instance of [KillersTableEntry] with zeroed elements.
     fn default() -> Self {
         Self { data: AtomicU16::new(0) }
     }
 }
 
 impl Clone for KillersTableEntry {
+    /// Clones [KillersTableEntry] by creating a new atomics (with original values).
     fn clone(&self) -> Self {
         Self {
             data: AtomicU16::new(self.data.load(Ordering::Relaxed)),

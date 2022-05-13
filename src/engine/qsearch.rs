@@ -117,12 +117,11 @@ fn assign_move_scores(context: &SearchContext, moves: &[MaybeUninit<Move>], move
         let attackers = context.board.get_attacking_pieces(context.board.active_color ^ 1, field);
         let defenders = context.board.get_attacking_pieces(context.board.active_color, field);
 
-        move_scores[move_index].write(
-            context
-                .board
-                .see
-                .get(attacking_piece, captured_piece, attackers, defenders, &context.board.evaluation_parameters),
-        );
+        let see = context
+            .board
+            .see
+            .get(attacking_piece, captured_piece, attackers, defenders, &context.board.evaluation_parameters);
+        move_scores[move_index].write(see);
     }
 }
 

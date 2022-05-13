@@ -219,7 +219,7 @@ impl TranspositionTable {
 impl Default for TranspositionTableBucket {
     /// Constructs a default instance of [TranspositionTableBucket] with zeroed elements.
     fn default() -> Self {
-        TranspositionTableBucket { entries: Default::default() }
+        Self { entries: Default::default() }
     }
 }
 

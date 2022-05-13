@@ -199,7 +199,7 @@ impl SearchContext {
                 let moves_count = board.get_all_moves(&mut moves, u64::MAX);
                 let mut found = false;
 
-                for r#move in &moves[0..moves_count] {
+                for r#move in moves.iter().take(moves_count) {
                     let r#move = unsafe { r#move.assume_init() };
                     if r#move == entry.best_move {
                         found = true;

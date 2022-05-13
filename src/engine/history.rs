@@ -48,8 +48,8 @@ impl HistoryTable {
             }
         }
 
-        self.max
-            .store((self.max.load(Ordering::Relaxed) as f32).sqrt().ceil() as u32, Ordering::Relaxed);
+        let updated_max = (self.max.load(Ordering::Relaxed) as f32).sqrt().ceil() as u32;
+        self.max.store(updated_max, Ordering::Relaxed);
     }
 }
 
@@ -67,6 +67,7 @@ impl Default for HistoryTable {
 }
 
 impl Clone for HistoryTable {
+    /// Clones [HistoryTable] by creating a new atomics (with original values).
     fn clone(&self) -> Self {
         Self {
             table: self.table.clone(),
@@ -76,11 +77,7 @@ impl Clone for HistoryTable {
 }
 
 impl HistoryTableEntry {
-    /// Constructs a new instance of [KillersTableEntry] with stored `key` and `score`.
-    pub fn new(value: u32) -> Self {
-        Self { data: AtomicU32::new(value) }
-    }
-
+    /// Constructs a new instance of [HistoryTableEntry] with zeroed values.
     pub const fn new_const() -> Self {
         Self { data: AtomicU32::new(0) }
     }
@@ -98,12 +95,14 @@ impl HistoryTableEntry {
 }
 
 impl Default for HistoryTableEntry {
+    /// Constructs a default instance of [HistoryTableEntry] with zeroed elements.
     fn default() -> Self {
         Self { data: AtomicU32::new(0) }
     }
 }
 
 impl Clone for HistoryTableEntry {
+    /// Clones [HistoryTableEntry] by creating a new atomics (with original values).
     fn clone(&self) -> Self {
         Self {
             data: AtomicU32::new(self.data.load(Ordering::Relaxed)),
