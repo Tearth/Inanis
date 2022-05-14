@@ -1,5 +1,5 @@
 // --------------------------------------------------- //
-// Generated at 2022-04-11 09:30:33 UTC (e = 0.064058) //
+// Generated at 2022-05-13 18:52:01 UTC (e = 0.064056) //
 // --------------------------------------------------- //
 
 use super::*;
@@ -7,7 +7,8 @@ use super::*;
 impl Default for EvaluationParameters {
     fn default() -> Self {
         let mut evaluation_parameters = Self {
-            piece_value: [100, 419, 442, 648, 1325, 10000],
+            piece_value: [100, 420, 444, 650, 1326, 10000],
+            initial_material: 10308,
 
             mobility_opening: [5, 8, 5, 6, 2, 6],
             mobility_ending: [3, 0, 0, 5, 6, 3],
@@ -34,7 +35,7 @@ impl Default for EvaluationParameters {
             king_attacked_fields_opening: -19,
             king_attacked_fields_ending: 6,
 
-            pst: [[[[0; 64]; 2]; 2]; 6],
+            pst: [[[[0; 64]; 2]; 6]; 2],
             pst_patterns: [[[0; 64]; 2]; 6],
         };
 

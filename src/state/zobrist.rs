@@ -45,8 +45,8 @@ impl Default for ZobristContainer {
 
         fastrand::seed(584578);
 
-        for color in [WHITE, BLACK] {
-            for piece in [PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING] {
+        for color in 0..2 {
+            for piece in 0..6 {
                 for field_index in 0..64 {
                     result.piece_hashes[color as usize][piece as usize][field_index] = fastrand::u64(1..u64::MAX);
                 }

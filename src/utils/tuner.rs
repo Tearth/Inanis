@@ -472,6 +472,7 @@ fn write_evaluation_parameters(context: &mut TunerContext, output_directory: &st
     output.push_str("    fn default() -> Self {\n");
     output.push_str("        let mut evaluation_parameters = Self {\n");
     output.push_str(get_array("piece_value", &context.parameters.piece_value).as_str());
+    output.push_str(get_parameter("initial_material", context.parameters.initial_material).as_str());
     output.push('\n');
     output.push_str(get_array("mobility_opening", &context.parameters.mobility_opening).as_str());
     output.push_str(get_array("mobility_ending", &context.parameters.mobility_ending).as_str());
@@ -497,6 +498,9 @@ fn write_evaluation_parameters(context: &mut TunerContext, output_directory: &st
     output.push('\n');
     output.push_str(get_parameter("king_attacked_fields_opening", context.parameters.king_attacked_fields_opening).as_str());
     output.push_str(get_parameter("king_attacked_fields_ending", context.parameters.king_attacked_fields_ending).as_str());
+    output.push('\n');
+    output.push_str("            pst: [[[[0; 64]; 2]; 6]; 2],\n");
+    output.push_str("            pst_patterns: [[[0; 64]; 2]; 6],\n");
     output.push_str("        };\n");
     output.push('\n');
     output.push_str("        evaluation_parameters.set_default_pst_patterns();\n");
@@ -571,12 +575,14 @@ fn get_piece_square_table(values: &[i16]) -> String {
 
     output.push_str("                ");
     for index in 0..64 {
-        output.push_str(format!("{:4}, ", values[index]).as_str());
+        output.push_str(format!("{:4}", values[index]).as_str());
         if index % 8 == 7 {
-            output.push('\n');
+            output.push_str(",\n");
             if index != 63 {
                 output.push_str("                ");
             }
+        } else {
+            output.push_str(", ");
         }
     }
 

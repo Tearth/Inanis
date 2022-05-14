@@ -659,8 +659,8 @@ impl Bitboard {
         self.piece_table[field as usize] = piece;
         self.material_scores[color as usize] += self.evaluation_parameters.piece_value[piece as usize];
 
-        self.pst_scores[color as usize][OPENING as usize] += self.evaluation_parameters.get_pst_value(piece, color, OPENING, field);
-        self.pst_scores[color as usize][ENDING as usize] += self.evaluation_parameters.get_pst_value(piece, color, ENDING, field);
+        self.pst_scores[color as usize][OPENING as usize] += self.evaluation_parameters.get_pst_value(color, piece, OPENING, field);
+        self.pst_scores[color as usize][ENDING as usize] += self.evaluation_parameters.get_pst_value(color, piece, ENDING, field);
     }
 
     /// Removes `piece` on the `field` with the specified `color`, also updates occupancy and incremental values.
@@ -670,8 +670,8 @@ impl Bitboard {
         self.piece_table[field as usize] = u8::MAX;
         self.material_scores[color as usize] -= self.evaluation_parameters.piece_value[piece as usize];
 
-        self.pst_scores[color as usize][OPENING as usize] -= self.evaluation_parameters.get_pst_value(piece, color, OPENING, field);
-        self.pst_scores[color as usize][ENDING as usize] -= self.evaluation_parameters.get_pst_value(piece, color, ENDING, field);
+        self.pst_scores[color as usize][OPENING as usize] -= self.evaluation_parameters.get_pst_value(color, piece, OPENING, field);
+        self.pst_scores[color as usize][ENDING as usize] -= self.evaluation_parameters.get_pst_value(color, piece, ENDING, field);
     }
 
     /// Moves `piece` from the field specified by `from` to the field specified by `to` with the specified `color`, also updates occupancy and incremental values.
@@ -682,10 +682,10 @@ impl Bitboard {
         self.piece_table[to as usize] = self.piece_table[from as usize];
         self.piece_table[from as usize] = u8::MAX;
 
-        self.pst_scores[color as usize][OPENING as usize] -= self.evaluation_parameters.get_pst_value(piece, color, OPENING, from);
-        self.pst_scores[color as usize][ENDING as usize] -= self.evaluation_parameters.get_pst_value(piece, color, ENDING, from);
-        self.pst_scores[color as usize][OPENING as usize] += self.evaluation_parameters.get_pst_value(piece, color, OPENING, to);
-        self.pst_scores[color as usize][ENDING as usize] += self.evaluation_parameters.get_pst_value(piece, color, ENDING, to);
+        self.pst_scores[color as usize][OPENING as usize] -= self.evaluation_parameters.get_pst_value(color, piece, OPENING, from);
+        self.pst_scores[color as usize][ENDING as usize] -= self.evaluation_parameters.get_pst_value(color, piece, ENDING, from);
+        self.pst_scores[color as usize][OPENING as usize] += self.evaluation_parameters.get_pst_value(color, piece, OPENING, to);
+        self.pst_scores[color as usize][ENDING as usize] += self.evaluation_parameters.get_pst_value(color, piece, ENDING, to);
     }
 
     /// Converts the board's state into FEN.
@@ -879,6 +879,6 @@ impl Bitboard {
         let total_material = self.material_scores[WHITE as usize] + self.material_scores[BLACK as usize];
         let total_material_without_kings = total_material - 2 * self.evaluation_parameters.piece_value[KING as usize];
 
-        (total_material_without_kings as f32) / (self.evaluation_parameters.get_initial_material() as f32)
+        (total_material_without_kings as f32) / (self.evaluation_parameters.initial_material as f32)
     }
 }

@@ -10,6 +10,7 @@ pub mod safety;
 #[derive(Clone)]
 pub struct EvaluationParameters {
     pub piece_value: [i16; 6],
+    pub initial_material: i16,
 
     pub mobility_opening: [i16; 6],
     pub mobility_ending: [i16; 6],
@@ -36,11 +37,12 @@ pub struct EvaluationParameters {
     pub king_attacked_fields_opening: i16,
     pub king_attacked_fields_ending: i16,
 
-    pub pst: [[[[i16; 64]; 2]; 2]; 6],
+    pub pst: [[[[i16; 64]; 2]; 6]; 2],
     pub pst_patterns: [[[i16; 64]; 2]; 6],
 }
 
 impl EvaluationParameters {
+    /// Initializes PST patterns with used by default during search.
     fn set_default_pst_patterns(&mut self) {
         self.pst_patterns[PAWN as usize] = self.get_pawn_pst_pattern();
         self.pst_patterns[KNIGHT as usize] = self.get_knight_pst_pattern();
@@ -50,18 +52,26 @@ impl EvaluationParameters {
         self.pst_patterns[KING as usize] = self.get_king_pst_pattern();
     }
 
+    /// Recalculates initial material and PST tables.
     pub fn recalculate(&mut self) {
-        for piece in [PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING] {
-            for color in [WHITE, BLACK] {
-                for phase in [OPENING, ENDING] {
-                    self.pst[piece as usize][color as usize][phase as usize] =
-                        self.calculate_pst_pattern(color, &self.pst_patterns[piece as usize][phase as usize]);
+        self.initial_material = 0
+            + 16 * self.piece_value[PAWN as usize]
+            + 4 * self.piece_value[KNIGHT as usize]
+            + 4 * self.piece_value[BISHOP as usize]
+            + 4 * self.piece_value[ROOK as usize]
+            + 2 * self.piece_value[QUEEN as usize];
+
+        for color in 0..2 {
+            for piece in 0..6 {
+                for phase in 0..2 {
+                    self.pst[color as usize][piece as usize][phase as usize] = self.calculate_pst(color, &self.pst_patterns[piece as usize][phase as usize]);
                 }
             }
         }
     }
 
-    fn calculate_pst_pattern(&self, color: u8, pattern: &[i16; 64]) -> [i16; 64] {
+    /// Calculates PST table for the specified `color` and `pattern`.
+    fn calculate_pst(&self, color: u8, pattern: &[i16; 64]) -> [i16; 64] {
         let mut array = [0; 64];
 
         match color {
@@ -83,16 +93,9 @@ impl EvaluationParameters {
         array
     }
 
-    pub fn get_pst_value(&self, piece: u8, color: u8, phase: u8, field: u8) -> i16 {
-        self.pst[piece as usize][color as usize][phase as usize][field as usize] as i16
-    }
-
-    pub fn get_initial_material(&self) -> i16 {
-        16 * self.piece_value[PAWN as usize]
-            + 4 * self.piece_value[KNIGHT as usize]
-            + 4 * self.piece_value[BISHOP as usize]
-            + 4 * self.piece_value[ROOK as usize]
-            + 2 * self.piece_value[QUEEN as usize]
+    /// Gets a PST value for the specified `color`, `piece`, `phase` and `field`.
+    pub fn get_pst_value(&self, color: u8, piece: u8, phase: u8, field: u8) -> i16 {
+        self.pst[color as usize][piece as usize][phase as usize][field as usize] as i16
     }
 }
 
