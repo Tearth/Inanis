@@ -174,7 +174,7 @@ fn load_positions(epd_filename: &str) -> Result<Vec<TestPosition>, &'static str>
     let evaluation_parameters = Arc::new(EvaluationParameters::default());
     let zobrist_container = Arc::new(ZobristContainer::default());
     let patterns_container = Arc::new(PatternsContainer::default());
-    let see_container = Arc::new(SEEContainer::default());
+    let see_container = Arc::new(SEEContainer::new(Some(evaluation_parameters.clone())));
     let magic_container = Arc::new(MagicContainer::default());
 
     for line in BufReader::new(file).lines() {

@@ -1,6 +1,3 @@
-use std::sync::atomic::AtomicBool;
-use std::sync::Arc;
-
 use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
 use crate::engine::context::SearchContext;
@@ -8,6 +5,8 @@ use crate::engine::history::HistoryTable;
 use crate::engine::killers::KillersTable;
 use crate::state::board::Bitboard;
 use chrono::Utc;
+use std::sync::atomic::AtomicBool;
+use std::sync::Arc;
 
 #[derive(Default)]
 pub struct BenchmarkResult {

@@ -11,10 +11,10 @@ mod see_tests {
     use std::sync::Arc;
 
     static P: i16 = 100;
-    static N: i16 = 442;
-    static B: i16 = 442;
-    static R: i16 = 648;
-    static Q: i16 = 1325;
+    static N: i16 = 320;
+    static B: i16 = 320;
+    static R: i16 = 500;
+    static Q: i16 = 1100;
     static K: i16 = 10000;
 
     macro_rules! see_tests {
@@ -22,15 +22,16 @@ mod see_tests {
             $(
                 #[test]
                 fn $name() {
-                    let board = Bitboard::new_from_fen($fen, None, None, None, None, None).unwrap();
-                    let mut moves: [MaybeUninit<Move>; 218] = [MaybeUninit::uninit(); 218];
-                    let moves_count = board.get_all_moves(&mut moves, u64::MAX);
-
-                    let see = SEEContainer::default();
                     let mut evaluation_parameters = EvaluationParameters::default();
                     evaluation_parameters.piece_value = [P, N, B, R, Q, K];
 
-                    let evaluation_parameters_arc = Arc::new(evaluation_parameters);
+                    let evaluation_parameters = Arc::new(evaluation_parameters);
+                    let board = Bitboard::new_from_fen($fen, Some(evaluation_parameters.clone()), None, None, None, None).unwrap();
+
+                    let mut moves: [MaybeUninit<Move>; 218] = [MaybeUninit::uninit(); 218];
+                    let moves_count = board.get_all_moves(&mut moves, u64::MAX);
+
+                    let see = SEEContainer::new(Some(evaluation_parameters.clone()));
                     for move_index in 0..moves_count {
                         let r#move = unsafe { moves[move_index].assume_init() };
                         if r#move.to_long_notation() == $move {
@@ -39,7 +40,7 @@ mod see_tests {
                             let attackers = board.get_attacking_pieces(board.active_color ^ 1, r#move.get_to());
                             let defenders = board.get_attacking_pieces(board.active_color, r#move.get_to());
 
-                            assert_eq!($expected_result, see.get(attacking_piece, target_piece, attackers, defenders, &evaluation_parameters_arc));
+                            assert_eq!($expected_result, see.get(attacking_piece, target_piece, attackers, defenders, &evaluation_parameters.clone()));
                             return;
                         }
                     }

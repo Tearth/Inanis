@@ -1,12 +1,33 @@
 use crate::evaluation::EvaluationParameters;
 use crate::state::*;
 use std::cmp;
+use std::sync::Arc;
 
 pub struct SEEContainer {
     pub table: Box<[[[i16; 256]; 256]; 6]>,
 }
 
 impl SEEContainer {
+    /// Constructs a default instance of [SEEContainer] with zeroed elements.
+    pub fn new(evaluation_parameters: Option<Arc<EvaluationParameters>>) -> Self {
+        let evaluation_parameters = evaluation_parameters.unwrap_or_else(|| Arc::new(Default::default()));
+
+        let mut result = Self {
+            table: Box::new([[[0; 256]; 256]; 6]),
+        };
+
+        for target_piece in 0..6 {
+            for attackers in 0..256 {
+                for defenders in 0..256 {
+                    let see = result.evaluate(target_piece as u8, attackers as u8, defenders as u8, &evaluation_parameters);
+                    result.table[target_piece][attackers][defenders] = see;
+                }
+            }
+        }
+
+        result
+    }
+
     /// Gets a result of the static exchange evaluation, based on `attacking_piece`, `target_piece`, `attackers` and `defenders`.
     pub fn get(&self, attacking_piece: u8, target_piece: u8, attackers: u8, defenders: u8, evaluation_parameters: &EvaluationParameters) -> i16 {
         let attacking_piece_index = self.get_see_piece_index(attacking_piece);
@@ -74,26 +95,5 @@ impl SEEContainer {
             7 => evaluation_parameters.piece_value[KING as usize] as i16,           // King
             _ => panic!("Invalid value: piece_index={}", piece_index),
         }
-    }
-}
-
-impl Default for SEEContainer {
-    /// Constructs a default instance of [SEEContainer] with zeroed elements.
-    fn default() -> Self {
-        let evaluation_parameters = Default::default();
-        let mut result = Self {
-            table: Box::new([[[0; 256]; 256]; 6]),
-        };
-
-        for target_piece in 0..6 {
-            for attackers in 0..256 {
-                for defenders in 0..256 {
-                    let see = result.evaluate(target_piece as u8, attackers as u8, defenders as u8, &evaluation_parameters);
-                    result.table[target_piece][attackers][defenders] = see;
-                }
-            }
-        }
-
-        result
     }
 }

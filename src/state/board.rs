@@ -69,6 +69,12 @@ impl Bitboard {
         see_container: Option<Arc<SEEContainer>>,
         magic_container: Option<Arc<MagicContainer>>,
     ) -> Self {
+        let evaluation_parameters = evaluation_parameters.unwrap_or_else(|| Arc::new(Default::default()));
+        let zobrist_container = zobrist_container.unwrap_or_else(|| Arc::new(Default::default()));
+        let patterns_container = patterns_container.unwrap_or_else(|| Arc::new(Default::default()));
+        let see_container = see_container.unwrap_or_else(|| Arc::new(SEEContainer::new(Some(evaluation_parameters.clone()))));
+        let magic_container = magic_container.unwrap_or_else(|| Arc::new(Default::default()));
+
         Bitboard {
             pieces: [[0; 6], [0; 6]],
             occupancy: [0; 2],
@@ -89,11 +95,11 @@ impl Bitboard {
             pawn_hash_stack: Vec::new(),
             material_scores: [0; 2],
             pst_scores: [[0, 2]; 2],
-            evaluation_parameters: evaluation_parameters.unwrap_or_else(|| Arc::new(Default::default())),
-            zobrist: zobrist_container.unwrap_or_else(|| Arc::new(Default::default())),
-            patterns: patterns_container.unwrap_or_else(|| Arc::new(Default::default())),
-            see: see_container.unwrap_or_else(|| Arc::new(Default::default())),
-            magic: magic_container.unwrap_or_else(|| Arc::new(Default::default())),
+            evaluation_parameters,
+            zobrist: zobrist_container,
+            patterns: patterns_container,
+            see: see_container,
+            magic: magic_container,
         }
     }
 
