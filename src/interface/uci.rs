@@ -225,25 +225,25 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
         let threads = state_arc.lock().unwrap().options["Threads"].parse::<usize>().unwrap();
         let ponder = state_arc.lock().unwrap().options["Ponder"].parse::<bool>().unwrap();
 
-        let l = state_arc.lock().unwrap();
+        let state_lock = state_arc.lock().unwrap();
         let mut context = SearchContext::new(
-            l.board.clone(),
+            state_lock.board.clone(),
             time,
             inc_time,
             forced_depth,
             max_nodes_count,
             max_move_time,
             moves_to_go,
-            l.debug_mode.load(Ordering::Relaxed),
+            state_lock.debug_mode.load(Ordering::Relaxed),
             false,
-            l.transposition_table.clone(),
-            l.pawn_hashtable.clone(),
-            l.killers_table.clone(),
-            l.history_table.clone(),
-            l.abort_token.clone(),
-            l.ponder_token.clone(),
+            state_lock.transposition_table.clone(),
+            state_lock.pawn_hashtable.clone(),
+            state_lock.killers_table.clone(),
+            state_lock.history_table.clone(),
+            state_lock.abort_token.clone(),
+            state_lock.ponder_token.clone(),
         );
-        drop(l);
+        drop(state_lock);
 
         if threads > 1 {
             for _ in 0..threads {
@@ -314,6 +314,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
 
                 board.make_move(depth_result.pv_line[0]);
                 board.make_move(depth_result.pv_line[1]);
+
                 if board.is_king_checked(board.active_color ^ 1) {
                     allow_ponder = false;
                 }
@@ -321,6 +322,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
                 if board.is_repetition_draw(3) || board.is_fifty_move_rule_draw() || board.is_insufficient_material_draw() {
                     allow_ponder = false;
                 }
+
                 board.undo_move(depth_result.pv_line[1]);
                 board.undo_move(depth_result.pv_line[0]);
 
@@ -344,7 +346,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
         state_arc.lock().unwrap().transposition_table.age_entries();
         state_arc.lock().unwrap().killers_table.age_moves();
         state_arc.lock().unwrap().history_table.age_values();
-        (*state_arc).lock().unwrap().busy_flag.store(false, Ordering::Relaxed);
+        state_arc.lock().unwrap().busy_flag.store(false, Ordering::Relaxed);
     }));
 
     state.lock().unwrap().search_thread = search_thread;

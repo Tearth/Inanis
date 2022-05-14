@@ -100,24 +100,25 @@ fn handle_benchmark() {
 
     let t_nodes_count = result.nodes_count + result.q_nodes_count;
     let t_leafs_count = result.leafs_count + result.q_leafs_count;
-    let mnps = ((result.nodes_count as f32) / 1000000.0) / result.time;
-    let q_mnps = ((result.q_nodes_count as f32) / 1000000.0) / result.time;
+
+    let nodes_count_percent = percent(result.nodes_count, t_nodes_count);
+    let q_nodes_count_percent = percent(result.q_nodes_count, t_nodes_count);
     let t_mnps = (((result.nodes_count + result.q_nodes_count) as f32) / 1000000.0) / result.time;
     search_table.add_row(row![
         "Nodes count",
-        format!("{} ({:.2} MN/s)", result.nodes_count, mnps),
-        format!("{} ({:.2} MN/s)", result.q_nodes_count, q_mnps),
+        format!("{} ({:.2}%)", result.nodes_count, nodes_count_percent),
+        format!("{} ({:.2}%)", result.q_nodes_count, q_nodes_count_percent),
         format!("{} ({:.2} MN/s)", t_nodes_count, t_mnps)
     ]);
 
-    let mlps = ((result.leafs_count as f32) / 1000000.0) / result.time;
-    let q_mlps = ((result.q_leafs_count as f32) / 1000000.0) / result.time;
-    let t_mlps = (((result.leafs_count + result.q_leafs_count) as f32) / 1000000.0) / result.time;
+    let leafs_count_percent = percent(result.leafs_count, t_leafs_count);
+    let q_leafs_count_percent = percent(result.q_leafs_count, t_leafs_count);
+    let t_leafs_count_percent = percent(result.leafs_count + result.q_leafs_count, t_nodes_count);
     search_table.add_row(row![
         "Leafs count",
-        format!("{} ({:.2} MN/s)", result.leafs_count, mlps),
-        format!("{} ({:.2} MN/s)", result.q_leafs_count, q_mlps),
-        format!("{} ({:.2} MN/s)", t_leafs_count, t_mlps)
+        format!("{} ({:.2}%)", result.leafs_count, leafs_count_percent),
+        format!("{} ({:.2}%)", result.q_leafs_count, q_leafs_count_percent),
+        format!("{} ({:.2}%)", t_leafs_count, t_leafs_count_percent)
     ]);
 
     let beta_cutoffs_percent = percent(result.beta_cutoffs, result.nodes_count);
