@@ -239,6 +239,7 @@ impl PatternsContainer {
 }
 
 impl Default for PatternsContainer {
+    /// Constructs a default instance of [PatternsContainer] with initialized patterns.
     fn default() -> Self {
         let mut result = Self {
             file_patterns: [0; 64],

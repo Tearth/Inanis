@@ -35,6 +35,7 @@ impl ZobristContainer {
 }
 
 impl Default for ZobristContainer {
+    /// Constructs a default instance of [ZobristContainer] with initialized hashes.
     fn default() -> Self {
         let mut result = Self {
             piece_hashes: [[[0; 64]; 6]; 2],

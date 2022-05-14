@@ -329,14 +329,14 @@ fn handle_magic() {
     println!("Generating magic numbers for rook...");
 
     for index in 0..64 {
-        println!("{},", magic.generate_rook_number_for_field(index));
+        println!("{},", magic.generate_rook_magic_number(index));
     }
 
     println!();
     println!("Generating magic numbers for bishop...");
 
     for index in 0..64 {
-        println!("{},", magic.generate_bishop_number_for_field(index));
+        println!("{},", magic.generate_bishop_magic_number(index));
     }
 
     let diff = (Utc::now() - now).num_milliseconds();

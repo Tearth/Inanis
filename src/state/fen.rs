@@ -1,14 +1,12 @@
-use std::sync::Arc;
-
-use crate::engine::see::SEEContainer;
-use crate::evaluation::EvaluationParameters;
-
 use super::board::Bitboard;
 use super::board::CastlingRights;
 use super::movegen::MagicContainer;
 use super::patterns::PatternsContainer;
 use super::zobrist::ZobristContainer;
 use super::*;
+use crate::engine::see::SEEContainer;
+use crate::evaluation::EvaluationParameters;
+use std::sync::Arc;
 
 pub struct ParsedEPD {
     pub board: Bitboard,
@@ -29,7 +27,8 @@ impl ParsedEPD {
     }
 }
 
-/// Converts `fen` into the [Bitboard]. Returns [Err] with proper error message if `fen` couldn't be parsed correctly.
+/// Converts `fen` into the [Bitboard], using provided containers. If the parameter is [None], then the new container is created.
+/// Returns [Err] with proper error message if `fen` couldn't be parsed correctly.
 pub fn fen_to_board(
     fen: &str,
     evaluation_parameters: Option<Arc<EvaluationParameters>>,
@@ -49,7 +48,8 @@ pub fn fen_to_board(
     Ok(result.board)
 }
 
-/// Converts `epd` into the [Bitboard]. Returns [Err] with proper error message if `epd` couldn't be parsed correctly.
+/// Converts `epd` into the [Bitboard], using provided containers. If the parameter is [None], then the new container is created.
+/// Returns [Err] with proper error message if `epd` couldn't be parsed correctly.
 pub fn epd_to_board(
     epd: &str,
     evaluation_parameters: Option<Arc<EvaluationParameters>>,

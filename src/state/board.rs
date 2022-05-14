@@ -1,6 +1,3 @@
-use std::mem::MaybeUninit;
-use std::sync::Arc;
-
 use super::fen;
 use super::movegen::MagicContainer;
 use super::movescan;
@@ -18,6 +15,8 @@ use crate::evaluation::pawns;
 use crate::evaluation::pst;
 use crate::evaluation::safety;
 use crate::evaluation::EvaluationParameters;
+use std::mem::MaybeUninit;
+use std::sync::Arc;
 
 bitflags! {
     pub struct CastlingRights: u8 {
@@ -62,6 +61,7 @@ pub struct Bitboard {
 }
 
 impl Bitboard {
+    /// Constructs a new instance of [Bitboard], using provided containers. If the parameter is [None], then the new container is created.
     pub fn new(
         evaluation_parameters: Option<Arc<EvaluationParameters>>,
         zobrist_container: Option<Arc<ZobristContainer>>,
@@ -81,12 +81,12 @@ impl Bitboard {
             hash: 0,
             pawn_hash: 0,
             null_moves: 0,
-            halfmove_clocks_stack: Vec::with_capacity(32),
-            captured_pieces_stack: Vec::with_capacity(32),
-            castling_rights_stack: Vec::with_capacity(32),
-            en_passant_stack: Vec::with_capacity(32),
-            hash_stack: Vec::with_capacity(32),
-            pawn_hash_stack: Vec::with_capacity(32),
+            halfmove_clocks_stack: Vec::new(),
+            captured_pieces_stack: Vec::new(),
+            castling_rights_stack: Vec::new(),
+            en_passant_stack: Vec::new(),
+            hash_stack: Vec::new(),
+            pawn_hash_stack: Vec::new(),
             material_scores: [0; 2],
             pst_scores: [[0, 2]; 2],
             evaluation_parameters: evaluation_parameters.unwrap_or_else(|| Arc::new(Default::default())),
@@ -97,7 +97,7 @@ impl Bitboard {
         }
     }
 
-    /// Constructs a new instance of [Bitboard] with initial position.
+    /// Constructs a new instance of [Bitboard] with initial position, using provided containers. If the parameter is [None], then the new container is created.
     pub fn new_initial_position(
         evaluation_parameters: Option<Arc<EvaluationParameters>>,
         zobrist_container: Option<Arc<ZobristContainer>>,
@@ -116,8 +116,8 @@ impl Bitboard {
         .unwrap()
     }
 
-    /// Constructs a new instance of [Bitboard] with position specified by `fen`.
-    /// Returns [Err] with proper error message if `fen` couldn't be parsed correctly.
+    /// Constructs a new instance of [Bitboard] with position specified by `fen`, using provided containers. If the parameter is [None],
+    /// then the new container is created. Returns [Err] with proper error message if `fen` couldn't be parsed correctly.
     pub fn new_from_fen(
         fen: &str,
         evaluation_parameters: Option<Arc<EvaluationParameters>>,
@@ -136,8 +136,8 @@ impl Bitboard {
         )
     }
 
-    /// Constructs a new instance of [Bitboard] with position specified by list of `moves`.
-    /// Returns [Err] with proper error message is `moves` couldn't be parsed correctly.
+    /// Constructs a new instance of [Bitboard] with position specified by list of `moves`, using provided containers. If the parameter is [None],
+    /// then the new container is created. Returns [Err] with proper error message is `moves` couldn't be parsed correctly.
     pub fn new_from_moves(
         moves: &[&str],
         evaluation_parameters: Option<Arc<EvaluationParameters>>,

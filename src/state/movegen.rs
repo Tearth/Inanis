@@ -1,7 +1,6 @@
-use std::sync::Arc;
-
 use super::patterns::PatternsContainer;
 use super::*;
+use std::sync::Arc;
 
 #[rustfmt::skip]
 static ROOK_SHIFTS: [u8; 64] =
@@ -203,7 +202,7 @@ impl MagicContainer {
     }
 
     /// Generates a rook magic number for the field specified by `field_index`.
-    pub fn generate_rook_number_for_field(&self, field_index: usize) -> u64 {
+    pub fn generate_rook_magic_number(&self, field_index: usize) -> u64 {
         let patterns = Arc::new(PatternsContainer::default());
 
         let shift = ROOK_SHIFTS[field_index];
@@ -225,7 +224,7 @@ impl MagicContainer {
     }
 
     /// Generates a bishop magic number for the field specified by `field_index`.
-    pub fn generate_bishop_number_for_field(&self, field_index: usize) -> u64 {
+    pub fn generate_bishop_magic_number(&self, field_index: usize) -> u64 {
         let patterns = Arc::new(PatternsContainer::default());
 
         let shift = BISHOP_SHIFTS[field_index];
@@ -279,7 +278,7 @@ impl MagicContainer {
     }
 
     /// Applies rook magic for the field specified by `field_index`, using built-in magic number from [ROOK_MAGIC_NUMBERS].
-    fn apply_rook_magic_for_field(&mut self, field_index: usize) {
+    fn apply_rook_magic(&mut self, field_index: usize) {
         let patterns = Arc::new(PatternsContainer::default());
 
         let shift = ROOK_SHIFTS[field_index];
@@ -304,7 +303,7 @@ impl MagicContainer {
     }
 
     /// Applies bishop magic for the field specified by `field_index`, using built-in magic number from [BISHOP_MAGIC_NUMBERS].
-    fn apply_bishop_magic_for_field(&mut self, field_index: usize) {
+    fn apply_bishop_magic(&mut self, field_index: usize) {
         let patterns = Arc::new(PatternsContainer::default());
 
         let shift = BISHOP_SHIFTS[field_index];
@@ -412,6 +411,7 @@ impl MagicContainer {
 }
 
 impl Default for MagicContainer {
+    /// Constructs a new instance of [MagicContainer] with default values.
     fn default() -> Self {
         const INIT: MagicField = MagicField::new();
 
@@ -421,8 +421,8 @@ impl Default for MagicContainer {
         };
 
         for index in 0..64 {
-            result.apply_rook_magic_for_field(index);
-            result.apply_bishop_magic_for_field(index);
+            result.apply_rook_magic(index);
+            result.apply_bishop_magic(index);
         }
 
         result
