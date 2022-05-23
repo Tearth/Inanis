@@ -115,7 +115,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: rustc
-          args: --release --bin inanis --target=x86_64-pc-windows-gnu -- -C target-feature=+popcnt,+bmi,+bmi2
+          args: --release --bin inanis --target=x86_64-pc-windows-gnu -- -C target-feature=+popcnt,+bmi1,+bmi2
       - uses: thebongy/version-check@v1
         with:
           file: Cargo.toml
@@ -236,7 +236,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: rustc
-          args: --release --bin inanis --target=x86_64-unknown-linux-musl -- -C target-feature=+popcnt,+bmi,+bmi2
+          args: --release --bin inanis --target=x86_64-unknown-linux-musl -- -C target-feature=+popcnt,+bmi1,+bmi2
       - uses: thebongy/version-check@v1
         with:
           file: Cargo.toml
