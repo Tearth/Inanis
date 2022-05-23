@@ -26,8 +26,8 @@ pub const NULL_MOVE_BIG_R: i8 = 3;
 
 pub const LATE_MOVE_PRUNING_MIN_DEPTH: i8 = 1;
 pub const LATE_MOVE_PRUNING_MAX_DEPTH: i8 = 3;
-pub const LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_BASE: usize = 5;
-pub const LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_MULTIPLIER: usize = 10;
+pub const LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_BASE: usize = 2;
+pub const LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_MULTIPLIER: usize = 4;
 pub const LATE_MOVE_PRUNING_MAX_SCORE: i16 = 0;
 
 pub const LATE_MOVE_REDUCTION_MIN_DEPTH: i8 = 2;
@@ -40,8 +40,6 @@ pub const LATE_MOVE_REDUCTION_PV_MIN_MOVE_INDEX: usize = 2;
 pub const LATE_MOVE_REDUCTION_PV_REDUCTION_BASE: usize = 1;
 pub const LATE_MOVE_REDUCTION_PV_REDUCTION_STEP: usize = 8;
 pub const LATE_MOVE_REDUCTION_PV_MAX_REDUCTION: i8 = 2;
-
-pub const REDUCTION_PRUNING_DEPTH_THRESHOLD: i8 = 0;
 
 pub const MOVE_ORDERING_HASH_MOVE: i16 = 10000;
 pub const MOVE_ORDERING_WINNING_CAPTURES_OFFSET: i16 = 100;
@@ -81,7 +79,6 @@ enum MoveGeneratorStage {
 ///  - generate evasion mask if the friendly king is checked
 ///  - main loop:
 ///     - late move reduction (<https://www.chessprogramming.org/Late_Move_Reductions>)
-///     - reduction pruning (<https://www.chessprogramming.org/History_Leaf_Pruning>)
 ///     - PVS framework (<https://www.chessprogramming.org/Principal_Variation_Search>)
 ///  - test of abort flag
 ///  - test if stalemate draw is detected
@@ -100,7 +97,6 @@ enum MoveGeneratorStage {
 ///  - main loop:
 ///     - late move pruning (<https://www.chessprogramming.org/Futility_Pruning#MoveCountBasedPruning>)
 ///     - late move reduction (<https://www.chessprogramming.org/Late_Move_Reductions>)
-///     - reduction pruning (<https://www.chessprogramming.org/History_Leaf_Pruning>)
 ///     - PVS framework (<https://www.chessprogramming.org/Principal_Variation_Search>)
 ///  - test of abort flag
 ///  - test if stalemate draw is detected
@@ -306,15 +302,6 @@ pub fn run<const PV: bool>(
         } else {
             0
         };
-
-        if reduction_pruning_can_be_applied::<PV>(depth, r) {
-            context.board.undo_move(r#move);
-            context.statistics.reduction_pruning_accepted += 1;
-
-            continue;
-        } else {
-            context.statistics.reduction_pruning_rejected += 1;
-        }
 
         let score = if PV {
             if move_index == 0 {
@@ -716,14 +703,4 @@ fn late_move_reduction_get_r<const PV: bool>(move_index: usize) -> i8 {
             (LATE_MOVE_REDUCTION_REDUCTION_BASE + (move_index - LATE_MOVE_REDUCTION_MIN_MOVE_INDEX) / LATE_MOVE_REDUCTION_REDUCTION_STEP) as i8,
         )
     }
-}
-
-/// The main idea of the reduction pruning is to prune all nodes, for which the calculated earlier reduction is so big, that it's beyond regular
-/// search and would fall directly into the quiescence search, or near to it.
-///
-/// Conditions:
-///  - Only non-PV nodes
-///  - Depth after reduction falls directly into quiescence search or is near to it
-fn reduction_pruning_can_be_applied<const PV: bool>(depth: i8, reduction: i8) -> bool {
-    !PV && depth - reduction <= REDUCTION_PRUNING_DEPTH_THRESHOLD
 }

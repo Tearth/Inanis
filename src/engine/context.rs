@@ -90,9 +90,6 @@ pub struct SearchStatistics {
     pub late_move_pruning_accepted: u64,
     pub late_move_pruning_rejected: u64,
 
-    pub reduction_pruning_accepted: u64,
-    pub reduction_pruning_rejected: u64,
-
     pub razoring_attempts: u64,
     pub razoring_accepted: u64,
     pub razoring_rejected: u64,
@@ -407,9 +404,6 @@ impl ops::AddAssign<SearchStatistics> for SearchStatistics {
 
         self.late_move_pruning_accepted += rhs.late_move_pruning_accepted;
         self.late_move_pruning_rejected += rhs.late_move_pruning_rejected;
-
-        self.reduction_pruning_accepted += rhs.reduction_pruning_accepted;
-        self.reduction_pruning_rejected += rhs.reduction_pruning_rejected;
 
         self.razoring_attempts += rhs.razoring_attempts;
         self.razoring_accepted += rhs.razoring_accepted;

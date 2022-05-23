@@ -30,7 +30,7 @@ Inanis has an official lichess account, where you can try to challenge the engin
  - **board representation**: bitboards (a hybrid of make/undo scheme and storing data on stacks)
  - **move generator**: staged (hash move, captures, quiet moves), magic bitboards, precalculated arrays for knight and king
  - **move ordering**: hash move, good captures (SEE with support for x-ray attacks), killer/history table (with random noise if Lazy SMP is enabled), bad captures
- - **search**: negamax, alpha-beta pruning, quiescence search, null-move pruning, static null move pruning, razoring, extension pruning, late move reduction, late move pruning, lazy SMP
+ - **search**: negamax, alpha-beta pruning, quiescence search, null-move pruning, static null move pruning, razoring, late move reduction, late move pruning, lazy SMP
  - **cache**: transposition table, pawn hashtable
  - **evaluation**: material, piece-square tables, pawn structure, mobility, king safety
 
