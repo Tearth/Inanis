@@ -36,6 +36,7 @@ pub struct SearchContext {
     pub search_done: bool,
     pub uci_debug: bool,
     pub helper_thread: bool,
+    pub moves_to_search: Vec<Move>,
     pub transposition_table: Arc<TranspositionTable>,
     pub pawn_hashtable: Arc<PawnHashTable>,
     pub killers_table: Arc<KillersTable>,
@@ -132,6 +133,7 @@ impl SearchContext {
     ///  - `moves_to_go` - moves count, after which the time will be increased
     ///  - `uci_debug` - enables or disables additional debug info sent to GUI by `info string` command
     ///  - `helper_thread` - enables additional features when the thread is a helper in Lazy SMP (like random noise in move ordering)
+    ///  - `moves_to_search` - a list of moves to which the root node will be restricted
     ///  - `transposition_table`, `pawn_hashtable`, `killers_table`, `history_table` - hashtables used during search
     ///  - `helper_contexts` - a list of pre-initialized contexts used by LazySMP
     ///  - `abort_token` - token used to abort search from the outside of the context
@@ -146,6 +148,7 @@ impl SearchContext {
         moves_to_go: u32,
         uci_debug: bool,
         helper_thread: bool,
+        moves_to_search: Vec<Move>,
         transposition_table: Arc<TranspositionTable>,
         pawn_hashtable: Arc<PawnHashTable>,
         killers_table: Arc<KillersTable>,
@@ -168,6 +171,7 @@ impl SearchContext {
             search_done: false,
             uci_debug,
             helper_thread,
+            moves_to_search,
             transposition_table,
             pawn_hashtable,
             killers_table,
@@ -282,7 +286,7 @@ impl Iterator for SearchContext {
                         helper_context.context.deadline = self.deadline;
                         threads.push(scope.spawn(move |_| {
                             let king_checked = helper_context.context.board.is_king_checked(helper_context.context.board.active_color);
-                            search::run::<true>(&mut helper_context.context, depth, 0, MIN_ALPHA, MIN_BETA, true, king_checked);
+                            search::run::<true, true>(&mut helper_context.context, depth, 0, MIN_ALPHA, MIN_BETA, true, king_checked);
 
                             helper_context.context.statistics
                         }));
@@ -296,7 +300,7 @@ impl Iterator for SearchContext {
             }
 
             let king_checked = self.board.is_king_checked(self.board.active_color);
-            let score = search::run::<true>(self, self.current_depth, 0, MIN_ALPHA, MIN_BETA, true, king_checked);
+            let score = search::run::<true, true>(self, self.current_depth, 0, MIN_ALPHA, MIN_BETA, true, king_checked);
             let search_time = (Utc::now() - self.search_time_start).num_milliseconds() as u32;
 
             if self.uci_debug {

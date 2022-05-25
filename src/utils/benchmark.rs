@@ -130,6 +130,7 @@ pub fn run() -> BenchmarkResult {
             0,
             false,
             false,
+            Vec::new(),
             transposition_table.clone(),
             pawn_hashtable.clone(),
             killers_table.clone(),

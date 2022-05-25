@@ -98,6 +98,7 @@ fn run_internal(context: &mut TestContext, depth: i8, transposition_table_size: 
                         0,
                         false,
                         false,
+                        Vec::new(),
                         transposition_table.clone(),
                         pawn_hashtable.clone(),
                         killers_table.clone(),

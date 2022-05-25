@@ -140,6 +140,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
     let mut max_nodes_count = 0;
     let mut max_move_time = 0;
     let mut moves_to_go = 0;
+    let mut moves_to_search = Vec::new();
 
     let mut iter = parameters[1..].iter().peekable();
     while let Some(token) = iter.next() {
@@ -195,6 +196,38 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
             "infinite" => {
                 forced_depth = engine::MAX_DEPTH;
             }
+            "searchmoves" => {
+                let keywords = [
+                    "wtime",
+                    "btime",
+                    "winc",
+                    "binc",
+                    "depth",
+                    "nodes",
+                    "movetime",
+                    "movestogo",
+                    "infinite",
+                    "searchmoves",
+                    "ponder",
+                ];
+
+                while let Some(value) = iter.peek() {
+                    if keywords.contains(&value.as_str()) {
+                        break;
+                    }
+
+                    let parsed_move = match Move::from_long_notation(value, &state.lock().unwrap().board) {
+                        Ok(r#move) => r#move,
+                        Err(message) => {
+                            println!("info string Error: {}", message);
+                            return;
+                        }
+                    };
+
+                    moves_to_search.push(parsed_move);
+                    iter.next();
+                }
+            }
             "ponder" => {
                 forced_depth = engine::MAX_DEPTH;
             }
@@ -236,6 +269,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
             moves_to_go,
             state_lock.debug_mode.load(Ordering::Relaxed),
             false,
+            moves_to_search.clone(),
             state_lock.transposition_table.clone(),
             state_lock.pawn_hashtable.clone(),
             state_lock.killers_table.clone(),
@@ -258,6 +292,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
                     moves_to_go,
                     l.debug_mode.load(Ordering::Relaxed),
                     true,
+                    moves_to_search.clone(),
                     l.transposition_table.clone(),
                     l.pawn_hashtable.clone(),
                     l.killers_table.clone(),

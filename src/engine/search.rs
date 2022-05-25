@@ -64,11 +64,12 @@ enum MoveGeneratorStage {
     AllGenerated,
 }
 
-/// Entry point of the regular search, with generic `PV` parameter determining if the current node is a PV (principal variation) node in the PVS framework.
-/// The implementation contains a typical alpha-beta approach, together with a bunch of reduction and prunings to optimize search. The most important
-/// parameter here, `context` contains the current state of the search, board state, statistics, and is passed by reference to all nodes. Besides obvious
-/// parameters like `depth`, `ply`, `alpha` and `beta`, there's also `allow_null_move` which prevents two null move checks in a row, and `friendly_king_checked`
-/// which is used to share friendly king check status between nodes (it's always calculated one depth earlier, as it's used as one of the LMR constraints).
+/// Entry point of the regular search, with generic `ROOT` parameter indicating if this is the root node where the moves filterigh might happen, and `PV` parameter
+/// determining if the current node is a PV (principal variation) node in the PVS framework. The implementation contains a typical alpha-beta approach, together with
+/// a bunch of reduction and prunings to optimize search. The most important parameter here, `context` contains the current state of the search, board state,
+/// statistics, and is passed by reference to all nodes. Besides obvious parameters like `depth`, `ply`, `alpha` and `beta`, there's also `allow_null_move`
+/// which prevents two null move checks in a row, and `friendly_king_checked` which is used to share friendly king check status between nodes (it's always
+/// calculated one depth earlier, as it's used as one of the LMR constraints).
 ///
 /// Search steps for PV node:
 ///  - test of initial constraints: abort flag, forced depth
@@ -78,6 +79,7 @@ enum MoveGeneratorStage {
 ///  - read from the transposition table, return score if possible or update alpha/beta (<https://www.chessprogramming.org/Transposition_Table>)
 ///  - generate evasion mask if the friendly king is checked
 ///  - main loop:
+///     - filter moves (if `ROOT` is set)
 ///     - late move reduction (<https://www.chessprogramming.org/Late_Move_Reductions>)
 ///     - PVS framework (<https://www.chessprogramming.org/Principal_Variation_Search>)
 ///  - test of abort flag
@@ -95,13 +97,14 @@ enum MoveGeneratorStage {
 ///  - null move pruning (<https://www.chessprogramming.org/Null_Move_Pruning>)
 ///  - generate evasion mask if the friendly king is checked
 ///  - main loop:
+///     - filter moves (if `ROOT` is set)
 ///     - late move pruning (<https://www.chessprogramming.org/Futility_Pruning#MoveCountBasedPruning>)
 ///     - late move reduction (<https://www.chessprogramming.org/Late_Move_Reductions>)
 ///     - PVS framework (<https://www.chessprogramming.org/Principal_Variation_Search>)
 ///  - test of abort flag
 ///  - test if stalemate draw is detected
 ///  - update transposition table
-pub fn run<const PV: bool>(
+pub fn run<const ROOT: bool, const PV: bool>(
     context: &mut SearchContext,
     depth: i8,
     ply: u16,
@@ -163,7 +166,7 @@ pub fn run<const PV: bool>(
                 }
             }
 
-            if ply > 0 && entry.depth >= depth as i8 {
+            if !ROOT && entry.depth >= depth as i8 {
                 tt_entry_found = true;
                 match entry.r#type {
                     TranspositionTableScoreType::ALPHA_SCORE => {
@@ -239,7 +242,7 @@ pub fn run<const PV: bool>(
 
         context.board.make_null_move();
         let king_checked = context.board.is_king_checked(context.board.active_color);
-        let score = -run::<false>(context, depth - r - 1, ply + 1, -beta, -beta + 1, false, king_checked);
+        let score = -run::<false, false>(context, depth - r - 1, ply + 1, -beta, -beta + 1, false, king_checked);
         context.board.undo_null_move();
 
         if score >= beta {
@@ -287,6 +290,10 @@ pub fn run<const PV: bool>(
         evasion_mask,
         ply,
     ) {
+        if ROOT && !context.moves_to_search.is_empty() && !context.moves_to_search.contains(&r#move) {
+            continue;
+        }
+
         if late_move_pruning_can_be_applied::<PV>(depth, move_index, score, friendly_king_checked) {
             context.statistics.late_move_pruning_accepted += 1;
             break;
@@ -306,25 +313,25 @@ pub fn run<const PV: bool>(
         let score = if PV {
             if move_index == 0 {
                 context.statistics.pvs_full_window_searches += 1;
-                -run::<true>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked)
+                -run::<false, true>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked)
             } else {
-                let zero_window_score = -run::<false>(context, depth - r - 1, ply + 1, -alpha - 1, -alpha, true, king_checked);
+                let zero_window_score = -run::<false, false>(context, depth - r - 1, ply + 1, -alpha - 1, -alpha, true, king_checked);
                 context.statistics.pvs_zero_window_searches += 1;
 
                 if zero_window_score > alpha {
                     context.statistics.pvs_rejected_searches += 1;
-                    -run::<true>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked)
+                    -run::<false, true>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked)
                 } else {
                     zero_window_score
                 }
             }
         } else {
-            let zero_window_score = -run::<false>(context, depth - r - 1, ply + 1, -beta, -alpha, true, king_checked);
+            let zero_window_score = -run::<false, false>(context, depth - r - 1, ply + 1, -beta, -alpha, true, king_checked);
             context.statistics.pvs_zero_window_searches += 1;
 
             if zero_window_score > alpha && r > 0 {
                 context.statistics.pvs_rejected_searches += 1;
-                -run::<false>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked)
+                -run::<false, false>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked)
             } else {
                 zero_window_score
             }
