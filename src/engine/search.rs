@@ -138,7 +138,7 @@ pub fn run<const ROOT: bool, const PV: bool>(
         return CHECKMATE_SCORE - (ply as i16);
     }
 
-    if context.board.is_repetition_draw(3) || context.board.is_fifty_move_rule_draw() || context.board.is_insufficient_material_draw() {
+    if context.board.is_repetition_draw(if ROOT { 3 } else { 2 }) || context.board.is_fifty_move_rule_draw() || context.board.is_insufficient_material_draw() {
         context.statistics.leafs_count += 1;
         return DRAW_SCORE;
     }
