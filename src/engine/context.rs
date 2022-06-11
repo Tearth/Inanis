@@ -182,6 +182,42 @@ impl SearchContext {
         }
     }
 
+    /// Checks if there's an instant move possible and returns it as [Some], otherwise [None].
+    fn get_instant_move(&mut self) -> Option<Move> {
+        if !self.board.is_king_checked(self.board.active_color) {
+            return None;
+        }
+
+        let mut moves: [MaybeUninit<Move>; MAX_MOVES_COUNT] = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
+        let moves_count = self.board.get_all_moves(&mut moves, u64::MAX);
+
+        let mut evading_moves_count = 0;
+        let mut evading_move = Default::default();
+
+        for r#move in &moves[0..moves_count] {
+            let r#move = unsafe { r#move.assume_init() };
+            self.board.make_move(r#move);
+
+            if !self.board.is_king_checked(self.board.active_color ^ 1) {
+                evading_moves_count += 1;
+                evading_move = r#move;
+
+                if evading_moves_count > 1 {
+                    self.board.undo_move(r#move);
+                    return None;
+                }
+            }
+
+            self.board.undo_move(r#move);
+        }
+
+        if evading_moves_count == 1 {
+            return Some(evading_move);
+        }
+
+        None
+    }
+
     /// Retrieves PV line from the transposition table, using `board` position and the current `ply`.
     fn get_pv_line(&mut self, board: &mut Bitboard, ply: i8) -> Vec<Move> {
         if ply >= MAX_DEPTH {
@@ -239,6 +275,7 @@ impl Iterator for SearchContext {
     /// Performs a next iteration of the search, using data stored withing the context. Returns [None] if any of the following conditions is true:
     ///  - `self.forced_depth` is not 0 and the current depth is about to exceed this value
     ///  - the current depth is about to exceed [MAX_DEPTH] value
+    ///  - instant move is possible
     ///  - time allocated for the current search has expired
     ///  - mate score has detected and was recognized as reliable
     ///  - search was aborted
@@ -251,6 +288,13 @@ impl Iterator for SearchContext {
 
             if self.search_done || self.current_depth >= MAX_DEPTH {
                 return None;
+            }
+
+            if self.current_depth == 1 {
+                if let Some(r#move) = self.get_instant_move() {
+                    self.search_done = true;
+                    return Some(SearchResult::new(0, self.current_depth, 0, vec![r#move], self.statistics));
+                }
             }
 
             let desired_time = if self.max_move_time != 0 {
