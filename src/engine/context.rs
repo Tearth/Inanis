@@ -33,6 +33,8 @@ pub struct SearchContext {
     pub moves_to_go: u32,
     pub search_time_start: DateTime<Utc>,
     pub deadline: u32,
+    pub multipv: bool,
+    pub multipv_lines: Vec<SearchResultLine>,
     pub search_done: bool,
     pub uci_debug: bool,
     pub helper_thread: bool,
@@ -57,9 +59,14 @@ pub struct HelperThreadContext {
 pub struct SearchResult {
     pub time: u64,
     pub depth: i8,
+    pub lines: Vec<SearchResultLine>,
+    pub statistics: SearchStatistics,
+}
+
+#[derive(Clone)]
+pub struct SearchResultLine {
     pub score: i16,
     pub pv_line: Vec<Move>,
-    pub statistics: SearchStatistics,
 }
 
 #[derive(Default, Copy, Clone)]
@@ -131,6 +138,7 @@ impl SearchContext {
     /// This value can possibly not be strictly respected due to way of how the check is performed, so expect a bit more nodes count before stop
     ///  - `max_move_time` - allocated amount of time for the search (in milliseconds), 0 if we want to use default time allocator
     ///  - `moves_to_go` - moves count, after which the time will be increased
+    ///  - `multipv` - enables or disables analyzing multiple PV lines (might slow down search)
     ///  - `uci_debug` - enables or disables additional debug info sent to GUI by `info string` command
     ///  - `helper_thread` - enables additional features when the thread is a helper in Lazy SMP (like random noise in move ordering)
     ///  - `moves_to_search` - a list of moves to which the root node will be restricted
@@ -146,6 +154,7 @@ impl SearchContext {
         max_nodes_count: u64,
         max_move_time: u32,
         moves_to_go: u32,
+        multipv: bool,
         uci_debug: bool,
         helper_thread: bool,
         moves_to_search: Vec<Move>,
@@ -168,6 +177,8 @@ impl SearchContext {
             moves_to_go,
             search_time_start: Utc::now(),
             deadline: 0,
+            multipv,
+            multipv_lines: Vec::new(),
             search_done: false,
             uci_debug,
             helper_thread,
@@ -182,44 +193,8 @@ impl SearchContext {
         }
     }
 
-    /// Checks if there's an instant move possible and returns it as [Some], otherwise [None].
-    fn get_instant_move(&mut self) -> Option<Move> {
-        if !self.board.is_king_checked(self.board.active_color) {
-            return None;
-        }
-
-        let mut moves: [MaybeUninit<Move>; MAX_MOVES_COUNT] = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
-        let moves_count = self.board.get_all_moves(&mut moves, u64::MAX);
-
-        let mut evading_moves_count = 0;
-        let mut evading_move = Default::default();
-
-        for r#move in &moves[0..moves_count] {
-            let r#move = unsafe { r#move.assume_init() };
-            self.board.make_move(r#move);
-
-            if !self.board.is_king_checked(self.board.active_color ^ 1) {
-                evading_moves_count += 1;
-                evading_move = r#move;
-
-                if evading_moves_count > 1 {
-                    self.board.undo_move(r#move);
-                    return None;
-                }
-            }
-
-            self.board.undo_move(r#move);
-        }
-
-        if evading_moves_count == 1 {
-            return Some(evading_move);
-        }
-
-        None
-    }
-
     /// Retrieves PV line from the transposition table, using `board` position and the current `ply`.
-    fn get_pv_line(&mut self, board: &mut Bitboard, ply: i8) -> Vec<Move> {
+    pub fn get_pv_line(&self, board: &mut Bitboard, ply: i8) -> Vec<Move> {
         if ply >= MAX_DEPTH {
             return Vec::new();
         }
@@ -267,6 +242,42 @@ impl SearchContext {
 
         pv_line
     }
+
+    /// Checks if there's an instant move possible and returns it as [Some], otherwise [None].
+    fn get_instant_move(&mut self) -> Option<Move> {
+        if !self.board.is_king_checked(self.board.active_color) {
+            return None;
+        }
+
+        let mut moves: [MaybeUninit<Move>; MAX_MOVES_COUNT] = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
+        let moves_count = self.board.get_all_moves(&mut moves, u64::MAX);
+
+        let mut evading_moves_count = 0;
+        let mut evading_move = Default::default();
+
+        for r#move in &moves[0..moves_count] {
+            let r#move = unsafe { r#move.assume_init() };
+            self.board.make_move(r#move);
+
+            if !self.board.is_king_checked(self.board.active_color ^ 1) {
+                evading_moves_count += 1;
+                evading_move = r#move;
+
+                if evading_moves_count > 1 {
+                    self.board.undo_move(r#move);
+                    return None;
+                }
+            }
+
+            self.board.undo_move(r#move);
+        }
+
+        if evading_moves_count == 1 {
+            return Some(evading_move);
+        }
+
+        None
+    }
 }
 
 impl Iterator for SearchContext {
@@ -293,7 +304,12 @@ impl Iterator for SearchContext {
             if self.current_depth == 1 {
                 if let Some(r#move) = self.get_instant_move() {
                     self.search_done = true;
-                    return Some(SearchResult::new(0, self.current_depth, 0, vec![r#move], self.statistics));
+                    return Some(SearchResult::new(
+                        0,
+                        self.current_depth,
+                        vec![SearchResultLine::new(0, vec![r#move])],
+                        self.statistics,
+                    ));
                 }
             }
 
@@ -329,9 +345,7 @@ impl Iterator for SearchContext {
                     for helper_context in &mut self.helper_contexts {
                         helper_context.context.deadline = self.deadline;
                         threads.push(scope.spawn(move |_| {
-                            let king_checked = helper_context.context.board.is_king_checked(helper_context.context.board.active_color);
-                            search::run::<true, true>(&mut helper_context.context, depth, 0, MIN_ALPHA, MIN_BETA, true, king_checked);
-
+                            search::run(&mut helper_context.context, depth);
                             helper_context.context.statistics
                         }));
                     }
@@ -343,8 +357,9 @@ impl Iterator for SearchContext {
                 .unwrap();
             }
 
-            let king_checked = self.board.is_king_checked(self.board.active_color);
-            let score = search::run::<true, true>(self, self.current_depth, 0, MIN_ALPHA, MIN_BETA, true, king_checked);
+            self.multipv_lines.clear();
+
+            search::run(self, self.current_depth);
             let search_time = (Utc::now() - self.search_time_start).num_milliseconds() as u32;
 
             if self.uci_debug {
@@ -395,7 +410,7 @@ impl Iterator for SearchContext {
                     self.search_done = true;
                 }
 
-                if is_score_near_checkmate(score) && self.current_depth >= (CHECKMATE_SCORE - score.abs()) as i8 {
+                if is_score_near_checkmate(self.multipv_lines[0].score) && self.current_depth >= (CHECKMATE_SCORE - self.multipv_lines[0].score.abs()) as i8 {
                     self.search_done = true;
                 }
             }
@@ -403,23 +418,34 @@ impl Iterator for SearchContext {
             self.current_depth += 1;
 
             let total_search_time = (Utc::now() - self.search_time_start).num_milliseconds() as u64;
-            let pv_line = self.get_pv_line(&mut self.board.clone(), 0);
+            if !self.multipv {
+                self.multipv_lines
+                    .push(SearchResultLine::new(self.multipv_lines[0].score, self.get_pv_line(&mut self.board.clone(), 0)));
+            }
 
-            return Some(SearchResult::new(total_search_time, self.current_depth - 1, score, pv_line, self.statistics));
+            let mut multipv_result = self.multipv_lines.clone();
+            multipv_result.sort_by(|a, b| a.score.cmp(&b.score).reverse());
+
+            return Some(SearchResult::new(total_search_time, self.current_depth - 1, multipv_result, self.statistics));
         }
     }
 }
 
 impl SearchResult {
-    /// Constructs a new instance of [SearchResult] with stored `time`, `depth`, `score`, `pv_line` and `statistics`.
-    pub fn new(time: u64, depth: i8, score: i16, pv_line: Vec<Move>, statistics: SearchStatistics) -> Self {
+    /// Constructs a new instance of [SearchResult] with stored `time`, `depth`, `lines` and `statistics`.
+    pub fn new(time: u64, depth: i8, lines: Vec<SearchResultLine>, statistics: SearchStatistics) -> Self {
         Self {
             time,
             depth,
-            score,
-            pv_line,
+            lines,
             statistics,
         }
+    }
+}
+
+impl SearchResultLine {
+    pub fn new(score: i16, pv_line: Vec<Move>) -> Self {
+        Self { score, pv_line }
     }
 }
 

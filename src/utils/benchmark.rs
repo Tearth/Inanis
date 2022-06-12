@@ -130,6 +130,7 @@ pub fn run() -> BenchmarkResult {
             0,
             false,
             false,
+            false,
             Vec::new(),
             transposition_table.clone(),
             pawn_hashtable.clone(),
@@ -194,7 +195,7 @@ pub fn run() -> BenchmarkResult {
         benchmark_result.move_generator_captures_stages += result.statistics.move_generator_captures_stages;
         benchmark_result.move_generator_quiet_moves_stages += result.statistics.move_generator_quiet_moves_stages;
 
-        benchmark_result.result_hash ^= result.pv_line[0].data;
+        benchmark_result.result_hash ^= result.lines[0].pv_line[0].data;
     }
 
     benchmark_result.time = ((Utc::now() - benchmark_time_start).num_milliseconds() as f32) / 1000.0;

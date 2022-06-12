@@ -98,6 +98,7 @@ fn run_internal(context: &mut TestContext, depth: i8, transposition_table_size: 
                         0,
                         false,
                         false,
+                        false,
                         Vec::new(),
                         transposition_table.clone(),
                         pawn_hashtable.clone(),
@@ -112,7 +113,7 @@ fn run_internal(context: &mut TestContext, depth: i8, transposition_table_size: 
                     let mut recognition_depth = 0;
 
                     for result in context {
-                        last_best_move = result.pv_line[0];
+                        last_best_move = result.lines[0].pv_line[0];
                         if last_best_move == position.best_move {
                             if best_moves_count == 0 {
                                 recognition_depth = result.depth;

@@ -67,6 +67,7 @@ pub fn run() {
     let state: Arc<Mutex<UciState>> = Arc::new(Mutex::new(Default::default()));
     state.lock().unwrap().options.insert("Hash".to_string(), "2".to_string());
     state.lock().unwrap().options.insert("Move Overhead".to_string(), "10".to_string());
+    state.lock().unwrap().options.insert("MultiPV".to_string(), "1".to_string());
     state.lock().unwrap().options.insert("Threads".to_string(), "1".to_string());
     state.lock().unwrap().options.insert("Ponder".to_string(), "false".to_string());
     state.lock().unwrap().options.insert("Crash Files".to_string(), "false".to_string());
@@ -75,6 +76,7 @@ pub fn run() {
     println!("id author {}", AUTHOR);
     println!("option name Hash type spin default 2 min 2 max 1048576");
     println!("option name Move Overhead type spin default 10 min 0 max 3600000");
+    println!("option name MultiPV type spin default 1 min 1 max 256");
     println!("option name Threads type spin default 1 min 1 max 1024");
     println!("option name Ponder type check default false");
     println!("option name Crash Files type check default false");
@@ -255,6 +257,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
     state.lock().unwrap().busy_flag.store(true, Ordering::Relaxed);
 
     let search_thread = Some(thread::spawn(move || {
+        let multipv = state_arc.lock().unwrap().options["MultiPV"].parse::<u32>().unwrap();
         let threads = state_arc.lock().unwrap().options["Threads"].parse::<usize>().unwrap();
         let ponder = state_arc.lock().unwrap().options["Ponder"].parse::<bool>().unwrap();
 
@@ -267,6 +270,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
             max_nodes_count,
             max_move_time,
             moves_to_go,
+            multipv > 1,
             state_lock.debug_mode.load(Ordering::Relaxed),
             false,
             moves_to_search.clone(),
@@ -290,6 +294,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
                     max_nodes_count,
                     max_move_time,
                     moves_to_go,
+                    false,
                     l.debug_mode.load(Ordering::Relaxed),
                     true,
                     moves_to_search.clone(),
@@ -318,37 +323,41 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
         let mut ponder_move = Default::default();
 
         for depth_result in context {
-            let pv_line: Vec<String> = depth_result.pv_line.iter().map(|v| v.to_long_notation()).collect();
-            let formatted_score = if engine::is_score_near_checkmate(depth_result.score) {
-                let mut moves_to_mate = (depth_result.score.abs() - engine::CHECKMATE_SCORE).abs() / 2;
-                moves_to_mate *= depth_result.score.signum();
+            for (multipv_index, multipv_entry) in depth_result.lines.iter().take(multipv as usize).enumerate() {
+                let pv_line: Vec<String> = multipv_entry.pv_line.iter().map(|v| v.to_long_notation()).collect();
+                let formatted_score = if engine::is_score_near_checkmate(multipv_entry.score) {
+                    let mut moves_to_mate = (multipv_entry.score.abs() - engine::CHECKMATE_SCORE).abs() / 2;
+                    moves_to_mate *= multipv_entry.score.signum();
 
-                format!("score mate {}", moves_to_mate).to_string()
-            } else {
-                format!("score cp {}", depth_result.score).to_string()
-            };
+                    format!("score mate {}", moves_to_mate).to_string()
+                } else {
+                    format!("score cp {}", multipv_entry.score).to_string()
+                };
 
-            best_move = depth_result.pv_line[0];
-            println!(
-                "{}",
-                &format!(
-                    "info time {} {} depth {} seldepth {} nodes {} pv {}",
-                    depth_result.time,
-                    formatted_score,
-                    depth_result.depth,
-                    depth_result.statistics.max_ply,
-                    depth_result.statistics.nodes_count + depth_result.statistics.q_nodes_count,
-                    pv_line.join(" ").as_str()
-                )
-            );
+                println!(
+                    "{}",
+                    &format!(
+                        "info time {} {} multipv {} depth {} seldepth {} nodes {} pv {}",
+                        depth_result.time,
+                        formatted_score,
+                        multipv_index + 1,
+                        depth_result.depth,
+                        depth_result.statistics.max_ply,
+                        depth_result.statistics.nodes_count + depth_result.statistics.q_nodes_count,
+                        pv_line.join(" ").as_str()
+                    )
+                );
+            }
+
+            best_move = depth_result.lines[0].pv_line[0];
 
             // Check if the ponder move is legal
-            if ponder && depth_result.pv_line.len() >= 2 {
+            if ponder && depth_result.lines[0].pv_line.len() >= 2 {
                 let mut board = state_arc.lock().unwrap().board.clone();
                 let mut allow_ponder = true;
 
-                board.make_move(depth_result.pv_line[0]);
-                board.make_move(depth_result.pv_line[1]);
+                board.make_move(depth_result.lines[0].pv_line[0]);
+                board.make_move(depth_result.lines[0].pv_line[1]);
 
                 if board.is_king_checked(board.active_color ^ 1) {
                     allow_ponder = false;
@@ -358,11 +367,11 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
                     allow_ponder = false;
                 }
 
-                board.undo_move(depth_result.pv_line[1]);
-                board.undo_move(depth_result.pv_line[0]);
+                board.undo_move(depth_result.lines[0].pv_line[1]);
+                board.undo_move(depth_result.lines[0].pv_line[0]);
 
                 if allow_ponder {
-                    ponder_move = depth_result.pv_line[1];
+                    ponder_move = depth_result.lines[0].pv_line[1];
                 } else {
                     ponder_move = Default::default();
                 }

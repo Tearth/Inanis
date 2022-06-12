@@ -1,4 +1,5 @@
 use super::context::SearchContext;
+use super::context::SearchResultLine;
 use super::qsearch;
 use super::*;
 use crate::cache::search::TranspositionTableScoreType;
@@ -64,6 +65,11 @@ enum MoveGeneratorStage {
     AllGenerated,
 }
 
+pub fn run(context: &mut SearchContext, depth: i8) {
+    let king_checked = context.board.is_king_checked(context.board.active_color);
+    run_internal::<true, true>(context, depth, 0, MIN_ALPHA, MIN_BETA, true, king_checked);
+}
+
 /// Entry point of the regular search, with generic `ROOT` parameter indicating if this is the root node where the moves filterigh might happen, and `PV` parameter
 /// determining if the current node is a PV (principal variation) node in the PVS framework. The implementation contains a typical alpha-beta approach, together with
 /// a bunch of reduction and prunings to optimize search. The most important parameter here, `context` contains the current state of the search, board state,
@@ -104,7 +110,7 @@ enum MoveGeneratorStage {
 ///  - test of abort flag
 ///  - test if stalemate draw is detected
 ///  - update transposition table
-pub fn run<const ROOT: bool, const PV: bool>(
+fn run_internal<const ROOT: bool, const PV: bool>(
     context: &mut SearchContext,
     depth: i8,
     ply: u16,
@@ -242,7 +248,7 @@ pub fn run<const ROOT: bool, const PV: bool>(
 
         context.board.make_null_move();
         let king_checked = context.board.is_king_checked(context.board.active_color);
-        let score = -run::<false, false>(context, depth - r - 1, ply + 1, -beta, -beta + 1, false, king_checked);
+        let score = -run_internal::<false, false>(context, depth - r - 1, ply + 1, -beta, -beta + 1, false, king_checked);
         context.board.undo_null_move();
 
         if score >= beta {
@@ -313,25 +319,25 @@ pub fn run<const ROOT: bool, const PV: bool>(
         let score = if PV {
             if move_index == 0 {
                 context.statistics.pvs_full_window_searches += 1;
-                -run::<false, true>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked)
+                -run_internal::<false, true>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked)
             } else {
-                let zero_window_score = -run::<false, false>(context, depth - r - 1, ply + 1, -alpha - 1, -alpha, true, king_checked);
+                let zero_window_score = -run_internal::<false, false>(context, depth - r - 1, ply + 1, -alpha - 1, -alpha, true, king_checked);
                 context.statistics.pvs_zero_window_searches += 1;
 
                 if zero_window_score > alpha {
                     context.statistics.pvs_rejected_searches += 1;
-                    -run::<false, true>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked)
+                    -run_internal::<false, true>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked)
                 } else {
                     zero_window_score
                 }
             }
         } else {
-            let zero_window_score = -run::<false, false>(context, depth - r - 1, ply + 1, -beta, -alpha, true, king_checked);
+            let zero_window_score = -run_internal::<false, false>(context, depth - r - 1, ply + 1, -beta, -alpha, true, king_checked);
             context.statistics.pvs_zero_window_searches += 1;
 
             if zero_window_score > alpha && r > 0 {
                 context.statistics.pvs_rejected_searches += 1;
-                -run::<false, false>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked)
+                -run_internal::<false, false>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked)
             } else {
                 zero_window_score
             }
@@ -363,6 +369,19 @@ pub fn run<const ROOT: bool, const PV: bool>(
                 break;
             }
         }
+
+        if ROOT && context.multipv {
+            let mut board = context.board.clone();
+            board.make_move(best_move);
+
+            let mut pv_line = context.get_pv_line(&mut board, 0);
+            pv_line.insert(0, best_move);
+
+            context.multipv_lines.push(SearchResultLine::new(best_score, pv_line));
+
+            alpha = original_alpha;
+            best_score = -CHECKMATE_SCORE;
+        }
     }
 
     if context.abort_token.load(Ordering::Relaxed) {
@@ -386,6 +405,11 @@ pub fn run<const ROOT: bool, const PV: bool>(
             .transposition_table
             .add(context.board.hash, alpha, best_move, depth as i8, ply, score_type);
         context.statistics.tt_added += 1;
+    }
+
+    if ROOT && !context.multipv {
+        let pv_line = context.get_pv_line(&mut context.board.clone(), 0);
+        context.multipv_lines.push(SearchResultLine::new(best_score, pv_line));
     }
 
     best_score

@@ -22,6 +22,7 @@ Inanis has an official lichess account, where you can try to challenge the engin
 ## UCI options
  - `Hash` *(default: 2 MB)* - a total size (in megabytes) for transposition table and pawn hashtable
  - `Move Overhead` *(default: 10 ms)* - amount of time (in milliseconds) that should be reserved during a search for some unexpected delays (like the slowness of GUI or network lags)
+ - `MultiPV` *(default: 1 PV line)* - number of PV lines which should be displayed during search
  - `Threads` *(default: 1 thread)* - number of threads to use during search (should be less than a number of processor cores to get the best performance)
  - `Ponder` *(default: false)* - allows the engine to think during the opponent's time
  - `Crash Files` *(default: false)* - when enabled, saves crash messages in the ./crash directory
