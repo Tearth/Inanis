@@ -21,5 +21,8 @@ Cargo.lock
 # Crash files
 /crash/
 
+# Tablebases
+/syzygy/
+
 # VSCodeCounter output
 /.VSCodeCounter/

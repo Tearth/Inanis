@@ -18,6 +18,7 @@ pub const MAX_MOVES_COUNT: usize = 218;
 pub const INVALID_SCORE: i16 = 0;
 pub const DRAW_SCORE: i16 = 0;
 pub const CHECKMATE_SCORE: i16 = 31900;
+pub const TBMATE_SCORE: i16 = 10000;
 
 /// Checks if `score` is within mate range (from -[CHECKMATE_SCORE] to -[CHECKMATE_SCORE] + [MAX_DEPTH] and
 /// from [CHECKMATE_SCORE] - [MAX_DEPTH] to [CHECKMATE_SCORE]).

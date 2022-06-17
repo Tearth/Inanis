@@ -69,6 +69,8 @@ pub fn run() {
     state.lock().unwrap().options.insert("Move Overhead".to_string(), "10".to_string());
     state.lock().unwrap().options.insert("MultiPV".to_string(), "1".to_string());
     state.lock().unwrap().options.insert("Threads".to_string(), "1".to_string());
+    state.lock().unwrap().options.insert("SyzygyPath".to_string(), "<empty>".to_string());
+    state.lock().unwrap().options.insert("SyzygyProbeLimit".to_string(), "8".to_string());
     state.lock().unwrap().options.insert("Ponder".to_string(), "false".to_string());
     state.lock().unwrap().options.insert("Crash Files".to_string(), "false".to_string());
 
@@ -78,6 +80,8 @@ pub fn run() {
     println!("option name Move Overhead type spin default 10 min 0 max 3600000");
     println!("option name MultiPV type spin default 1 min 1 max 256");
     println!("option name Threads type spin default 1 min 1 max 1024");
+    println!("option name SyzygyPath type string default <empty>");
+    println!("option name SyzygyProbeLimit type spin default 8 min 1 max 8");
     println!("option name Ponder type check default false");
     println!("option name Crash Files type check default false");
     println!("option name Clear Hash type button");
@@ -260,6 +264,9 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
         let multipv = state_arc.lock().unwrap().options["MultiPV"].parse::<u32>().unwrap();
         let threads = state_arc.lock().unwrap().options["Threads"].parse::<usize>().unwrap();
         let ponder = state_arc.lock().unwrap().options["Ponder"].parse::<bool>().unwrap();
+        let syzygy_path = state_arc.lock().unwrap().options["SyzygyPath"].clone();
+        let syzygy_path = if syzygy_path != "<empty>" { Some(syzygy_path) } else { None };
+        let syzygy_probe_limit = state_arc.lock().unwrap().options["SyzygyProbeLimit"].parse::<u32>().unwrap();
 
         let state_lock = state_arc.lock().unwrap();
         let mut context = SearchContext::new(
@@ -274,6 +281,8 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
             state_lock.debug_mode.load(Ordering::Relaxed),
             false,
             moves_to_search.clone(),
+            syzygy_path,
+            syzygy_probe_limit,
             state_lock.transposition_table.clone(),
             state_lock.pawn_hashtable.clone(),
             state_lock.killers_table.clone(),
@@ -298,6 +307,8 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
                     l.debug_mode.load(Ordering::Relaxed),
                     true,
                     moves_to_search.clone(),
+                    None,
+                    0,
                     l.transposition_table.clone(),
                     l.pawn_hashtable.clone(),
                     l.killers_table.clone(),

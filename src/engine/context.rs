@@ -14,6 +14,10 @@ use crate::state::board::Bitboard;
 use crate::state::movescan::Move;
 use chrono::DateTime;
 use chrono::Utc;
+use shakmaty::fen::Fen;
+use shakmaty::CastlingMode;
+use shakmaty::Chess;
+use shakmaty_syzygy::Tablebase;
 use std::cmp;
 use std::mem::MaybeUninit;
 use std::ops;
@@ -39,6 +43,8 @@ pub struct SearchContext {
     pub uci_debug: bool,
     pub helper_thread: bool,
     pub moves_to_search: Vec<Move>,
+    pub syzygy_path: Option<String>,
+    pub syzygy_probe_limit: u32,
     pub transposition_table: Arc<TranspositionTable>,
     pub pawn_hashtable: Arc<PawnHashTable>,
     pub killers_table: Arc<KillersTable>,
@@ -158,6 +164,8 @@ impl SearchContext {
         uci_debug: bool,
         helper_thread: bool,
         moves_to_search: Vec<Move>,
+        syzygy_path: Option<String>,
+        syzygy_probe_limit: u32,
         transposition_table: Arc<TranspositionTable>,
         pawn_hashtable: Arc<PawnHashTable>,
         killers_table: Arc<KillersTable>,
@@ -183,6 +191,8 @@ impl SearchContext {
             uci_debug,
             helper_thread,
             moves_to_search,
+            syzygy_path,
+            syzygy_probe_limit,
             transposition_table,
             pawn_hashtable,
             killers_table,
@@ -278,6 +288,84 @@ impl SearchContext {
 
         None
     }
+
+    /// Checks if there's a Syzygy tablebase move and returns it as [Some], otherwise [None].
+    fn get_syzygy_move(&mut self) -> Option<(Move, i16)> {
+        let mut tablebase = Tablebase::new();
+        let mut board = self.board.clone();
+
+        let syzygy_path = self.syzygy_path.as_ref().unwrap();
+        if tablebase.add_directory(syzygy_path).is_err() {
+            return None;
+        }
+
+        if board.get_pieces_count() as usize > cmp::min(self.syzygy_probe_limit as usize, tablebase.max_pieces()) {
+            return None;
+        }
+
+        let mut moves: [MaybeUninit<Move>; MAX_MOVES_COUNT] = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
+        let moves_count = board.get_all_moves(&mut moves, u64::MAX);
+        let mut result = Vec::new();
+
+        for r#move in &moves[0..moves_count] {
+            let r#move = unsafe { r#move.assume_init() };
+            board.make_move(r#move);
+
+            if board.is_king_checked(board.active_color ^ 1) {
+                board.undo_move(r#move);
+                continue;
+            }
+
+            if board.is_repetition_draw(3) || board.is_fifty_move_rule_draw() || board.is_insufficient_material_draw() {
+                board.undo_move(r#move);
+                continue;
+            }
+
+            let shakmaty_fen = match board.to_fen().parse::<Fen>() {
+                Ok(value) => value,
+                Err(_) => return None,
+            };
+
+            let shakmaty_position = match shakmaty_fen.into_position::<Chess>(CastlingMode::Standard) {
+                Ok(value) => value,
+                Err(_) => return None,
+            };
+
+            let wdl = match tablebase.probe_wdl_after_zeroing(&shakmaty_position) {
+                Ok(value) => value,
+                Err(_) => return None,
+            };
+
+            let dtz = if board.halfmove_clock == 0 {
+                0
+            } else {
+                match tablebase.probe_dtz(&shakmaty_position) {
+                    Ok(value) => value.ignore_rounding().0,
+                    Err(_) => {
+                        board.undo_move(r#move);
+                        continue;
+                    }
+                }
+            };
+
+            result.push((r#move, -wdl.signum(), -dtz));
+            board.undo_move(r#move);
+        }
+
+        if let Some(entry) = result.iter().filter(|v| v.1 == 1).min_by_key(|v| v.2) {
+            return Some((entry.0, TBMATE_SCORE));
+        }
+
+        if let Some(entry) = result.iter().filter(|v| v.1 == 0).min_by_key(|v| v.2) {
+            return Some((entry.0, 0));
+        }
+
+        if let Some(entry) = result.iter().filter(|v| v.1 == -1).min_by_key(|v| v.2) {
+            return Some((entry.0, -TBMATE_SCORE));
+        }
+
+        None
+    }
 }
 
 impl Iterator for SearchContext {
@@ -310,6 +398,18 @@ impl Iterator for SearchContext {
                         vec![SearchResultLine::new(0, vec![r#move])],
                         self.statistics,
                     ));
+                }
+
+                if self.syzygy_path.is_some() {
+                    if let Some((r#move, score)) = self.get_syzygy_move() {
+                        self.search_done = true;
+                        return Some(SearchResult::new(
+                            0,
+                            self.current_depth,
+                            vec![SearchResultLine::new(score, vec![r#move])],
+                            self.statistics,
+                        ));
+                    }
                 }
             }
 

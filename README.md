@@ -24,6 +24,8 @@ Inanis has an official lichess account, where you can try to challenge the engin
  - `Move Overhead` *(default: 10 ms)* - amount of time (in milliseconds) that should be reserved during a search for some unexpected delays (like the slowness of GUI or network lags)
  - `MultiPV` *(default: 1 PV line)* - number of PV lines which should be displayed during search
  - `Threads` *(default: 1 thread)* - number of threads to use during search (should be less than a number of processor cores to get the best performance)
+ - `SyzygyPath` *(default: &lt;empty&gt;)* - location of the optional Syzygy tablebases
+ - `SyzygyProbeLimit` *(default: 8 pieces)* - maximal number of pieces for which the tablebase probe should be executed
  - `Ponder` *(default: false)* - allows the engine to think during the opponent's time
  - `Crash Files` *(default: false)* - when enabled, saves crash messages in the ./crash directory
 
@@ -75,6 +77,7 @@ Examples of running the tests:
  - [bitflags](https://github.com/bitflags/bitflags) - macro to generate structures which behave like a set of bitflags
  - [prettytable-rs](https://github.com/phsym/prettytable-rs) - a formatted and aligned table printer library
  - [crossbeam](https://github.com/crossbeam-rs/crossbeam) - a set of tools for concurrent programming
+ - [shakmaty-syzygy](https://github.com/niklasf/shakmaty-syzygy) (with [shakmaty](https://github.com/niklasf/shakmaty) as dependency) - support for Syzygy tablebases
  - [criterion](https://github.com/bheisler/criterion.rs) - benchmark framework
 
 ## Contributing

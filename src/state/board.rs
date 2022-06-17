@@ -887,4 +887,8 @@ impl Bitboard {
 
         (total_material_without_kings as f32) / (self.evaluation_parameters.initial_material as f32)
     }
+
+    pub fn get_pieces_count(&self) -> u8 {
+        bit_count(self.occupancy[WHITE as usize] | self.occupancy[BLACK as usize])
+    }
 }
