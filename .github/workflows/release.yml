@@ -7,37 +7,6 @@ env:
   OUTPUT_NAME: inanis
 
 jobs:
-  release_windows_32bit_x86:
-    name: Windows 32-bit x86
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@master
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          target: i686-pc-windows-gnu
-          override: true
-      - run: sudo apt-get update && sudo apt-get install gcc-mingw-w64-i686 -y
-      - uses: actions-rs/cargo@v1
-        with:
-          command: rustc
-          args: --release --bin inanis --target=i686-pc-windows-gnu
-      - uses: thebongy/version-check@v1
-        with:
-          file: Cargo.toml
-          tagFormat: ${version}
-        id: version_check
-      - run: mv target/i686-pc-windows-gnu/release/${{env.CRATE_NAME}}.exe ${{env.CRATE_NAME}}.exe
-      - run: mv misc/${{env.CRATE_NAME}}.bmp ${{env.CRATE_NAME}}.bmp
-      - run: strip --strip-all ${{env.CRATE_NAME}}.exe
-      - run: zip ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_windows_32bit_x86.zip ${{env.CRATE_NAME}}.exe ${{env.OUTPUT_NAME}}.bmp LICENSE.md
-      - uses: JasonEtco/upload-to-release@master
-        with:
-          args: ${{env.OUTPUT_NAME}}_${{steps.version_check.outputs.releaseVersion}}_windows_32bit_x86.zip application/octet-stream
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-
   release_windows_64bit_x86-64:
     name: Windows 64-bit x86-64
     runs-on: ubuntu-latest
