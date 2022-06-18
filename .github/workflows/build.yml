@@ -1,4 +1,8 @@
-on: [push]
+on:
+  push:
+    branches:
+      - '**'
+
 jobs:
   build_and_check:
     name: Build and check

@@ -1,7 +1,8 @@
 on:
   release:
-    types: [created]
-    
+    types:
+      - created
+
 env:
   CRATE_NAME: inanis
   OUTPUT_NAME: inanis
