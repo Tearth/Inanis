@@ -29,5 +29,17 @@ lto = true
 debug = false
 
 [[bench]]
-name = "perft_benches"
+name = "evaluation_benchmark"
+harness = false
+
+[[bench]]
+name = "fen_benchmark"
+harness = false
+
+[[bench]]
+name = "perft_benchmark"
+harness = false
+
+[[bench]]
+name = "see_benchmark"
 harness = false
