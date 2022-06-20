@@ -19,11 +19,12 @@ pub const STATIC_NULL_MOVE_PRUNING_MAX_DEPTH: i8 = 8;
 pub const STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_BASE: i16 = 150;
 pub const STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_MULTIPLIER: i16 = 150;
 
-pub const NULL_MOVE_MIN_DEPTH: i8 = 2;
-pub const NULL_MOVE_R_CHANGE_DEPTH: i8 = 5;
-pub const NULL_MOVE_MIN_GAME_PHASE: f32 = 0.15;
-pub const NULL_MOVE_SMALL_R: i8 = 2;
-pub const NULL_MOVE_BIG_R: i8 = 3;
+pub const NULL_MOVE_PRUNING_MIN_DEPTH: i8 = 2;
+pub const NULL_MOVE_PRUNING_R_CHANGE_DEPTH: i8 = 5;
+pub const NULL_MOVE_PRUNING_MIN_GAME_PHASE: f32 = 0.15;
+pub const NULL_MOVE_PRUNING_MARGIN: i16 = 50;
+pub const NULL_MOVE_PRUNING_SMALL_R: i8 = 2;
+pub const NULL_MOVE_PRUNING_BIG_R: i8 = 3;
 
 pub const LATE_MOVE_PRUNING_MIN_DEPTH: i8 = 1;
 pub const LATE_MOVE_PRUNING_MAX_DEPTH: i8 = 4;
@@ -116,7 +117,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
     ply: u16,
     mut alpha: i16,
     mut beta: i16,
-    allow_null_move: bool,
+    mut allow_null_move: bool,
     friendly_king_checked: bool,
 ) -> i16 {
     if context.abort_token.load(Ordering::Relaxed) {
@@ -172,33 +173,44 @@ fn run_internal<const ROOT: bool, const PV: bool>(
                 }
             }
 
-            if !ROOT && entry.depth >= depth as i8 {
-                tt_entry_found = true;
-                match entry.r#type {
-                    TranspositionTableScoreType::ALPHA_SCORE => {
-                        if entry.score < beta {
-                            beta = entry.score;
+            if !ROOT {
+                if entry.depth >= depth as i8 {
+                    tt_entry_found = true;
+                    match entry.r#type {
+                        TranspositionTableScoreType::ALPHA_SCORE => {
+                            if entry.score < beta {
+                                beta = entry.score;
+                            }
                         }
-                    }
-                    TranspositionTableScoreType::BETA_SCORE => {
-                        if entry.score > alpha {
-                            alpha = entry.score;
+                        TranspositionTableScoreType::BETA_SCORE => {
+                            if entry.score > alpha {
+                                alpha = entry.score;
+                            }
                         }
-                    }
-                    _ => {
-                        if !PV || entry.age == 0 {
-                            if !context.board.is_repetition_draw(2) {
-                                context.statistics.leafs_count += 1;
-                                return entry.score;
+                        _ => {
+                            if !PV || entry.age == 0 {
+                                if !context.board.is_repetition_draw(2) {
+                                    context.statistics.leafs_count += 1;
+                                    return entry.score;
+                                }
                             }
                         }
                     }
-                }
 
-                if alpha >= beta {
-                    context.statistics.leafs_count += 1;
-                    context.statistics.beta_cutoffs += 1;
-                    return entry.score;
+                    if alpha >= beta {
+                        context.statistics.leafs_count += 1;
+                        context.statistics.beta_cutoffs += 1;
+                        return entry.score;
+                    }
+                } else {
+                    match entry.r#type {
+                        TranspositionTableScoreType::ALPHA_SCORE | TranspositionTableScoreType::EXACT_SCORE => {
+                            if entry.score < beta {
+                                allow_null_move = false;
+                            }
+                        }
+                        _ => {}
+                    }
                 }
             }
         }
@@ -243,20 +255,25 @@ fn run_internal<const ROOT: bool, const PV: bool>(
     }
 
     if null_move_pruning_can_be_applied::<PV>(context, depth, beta, allow_null_move, friendly_king_checked) {
-        let r = null_move_pruning_get_r(depth);
+        let margin = NULL_MOVE_PRUNING_MARGIN;
+        let lazy_evaluation = -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate_lazy();
+
         context.statistics.null_move_pruning_attempts += 1;
+        if lazy_evaluation + margin >= beta {
+            let r = null_move_pruning_get_r(depth);
 
-        context.board.make_null_move();
-        let king_checked = context.board.is_king_checked(context.board.active_color);
-        let score = -run_internal::<false, false>(context, depth - r - 1, ply + 1, -beta, -beta + 1, false, king_checked);
-        context.board.undo_null_move();
+            context.board.make_null_move();
+            let king_checked = context.board.is_king_checked(context.board.active_color);
+            let score = -run_internal::<false, false>(context, depth - r - 1, ply + 1, -beta, -beta + 1, false, king_checked);
+            context.board.undo_null_move();
 
-        if score >= beta {
-            context.statistics.leafs_count += 1;
-            context.statistics.null_move_pruning_accepted += 1;
-            return score;
-        } else {
-            context.statistics.null_move_pruning_rejected += 1;
+            if score >= beta {
+                context.statistics.leafs_count += 1;
+                context.statistics.null_move_pruning_accepted += 1;
+                return score;
+            } else {
+                context.statistics.null_move_pruning_rejected += 1;
+            }
         }
     }
 
@@ -659,8 +676,8 @@ fn null_move_pruning_can_be_applied<const PV: bool>(
     allow_null_move: bool,
     friendly_king_checked: bool,
 ) -> bool {
-    !PV && depth >= NULL_MOVE_MIN_DEPTH
-        && context.board.get_game_phase() > NULL_MOVE_MIN_GAME_PHASE
+    !PV && depth >= NULL_MOVE_PRUNING_MIN_DEPTH
+        && context.board.get_game_phase() > NULL_MOVE_PRUNING_MIN_GAME_PHASE
         && !is_score_near_checkmate(beta)
         && !friendly_king_checked
         && allow_null_move
@@ -669,10 +686,10 @@ fn null_move_pruning_can_be_applied<const PV: bool>(
 /// Gets the null move pruning depth reduction, called R, based on `depth`. It returns [NULL_MOVE_SMALL_R] if `depth` is less or equal
 /// to [NULL_MOVE_R_CHANGE_DEPTH], otherwise [NULL_MOVE_BIG_R].
 fn null_move_pruning_get_r(depth: i8) -> i8 {
-    if depth <= NULL_MOVE_R_CHANGE_DEPTH {
-        NULL_MOVE_SMALL_R
+    if depth <= NULL_MOVE_PRUNING_R_CHANGE_DEPTH {
+        NULL_MOVE_PRUNING_SMALL_R
     } else {
-        NULL_MOVE_BIG_R
+        NULL_MOVE_PRUNING_BIG_R
     }
 }
 
