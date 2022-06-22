@@ -277,22 +277,6 @@ fn run_internal<const ROOT: bool, const PV: bool>(
         }
     }
 
-    let evasion_mask = if friendly_king_checked {
-        if context.board.pieces[context.board.active_color as usize][KING as usize] == 0 {
-            u64::MAX
-        } else {
-            let king_field_index = bit_scan(context.board.pieces[context.board.active_color as usize][KING as usize]);
-            let occupancy = context.board.occupancy[WHITE as usize] | context.board.occupancy[BLACK as usize];
-
-            let queen_moves = context.board.magic.get_queen_moves(occupancy, king_field_index as usize);
-            let knight_moves = context.board.magic.get_knight_moves(king_field_index as usize, &context.board.patterns);
-
-            queen_moves | knight_moves
-        }
-    } else {
-        u64::MAX
-    };
-
     let mut best_score = -CHECKMATE_SCORE;
     let mut best_move = Default::default();
     let mut moves: [MaybeUninit<Move>; MAX_MOVES_COUNT] = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
@@ -301,6 +285,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
 
     let mut move_index = 0;
     let mut moves_count = 0;
+    let mut evasion_mask = 0;
 
     while let Some((r#move, score)) = get_next_move(
         context,
@@ -310,8 +295,9 @@ fn run_internal<const ROOT: bool, const PV: bool>(
         &mut move_index,
         &mut moves_count,
         hash_move,
-        evasion_mask,
+        &mut evasion_mask,
         ply,
+        friendly_king_checked,
     ) {
         if ROOT && !context.moves_to_search.is_empty() && !context.moves_to_search.contains(&r#move) {
             continue;
@@ -535,8 +521,9 @@ fn get_next_move(
     move_index: &mut usize,
     moves_count: &mut usize,
     hash_move: Move,
-    evasion_mask: u64,
+    evasion_mask: &mut u64,
     ply: u16,
+    friendly_king_checked: bool,
 ) -> Option<(Move, i16)> {
     if *stage == MoveGeneratorStage::Captures || *stage == MoveGeneratorStage::AllGenerated {
         *move_index += 1;
@@ -557,7 +544,23 @@ fn get_next_move(
                 }
             }
             MoveGeneratorStage::ReadyToGenerateCaptures => {
-                *moves_count = context.board.get_moves::<true>(moves, 0, evasion_mask);
+                *evasion_mask = if friendly_king_checked {
+                    if context.board.pieces[context.board.active_color as usize][KING as usize] == 0 {
+                        u64::MAX
+                    } else {
+                        let king_field_index = bit_scan(context.board.pieces[context.board.active_color as usize][KING as usize]);
+                        let occupancy = context.board.occupancy[WHITE as usize] | context.board.occupancy[BLACK as usize];
+
+                        let queen_moves = context.board.magic.get_queen_moves(occupancy, king_field_index as usize);
+                        let knight_moves = context.board.magic.get_knight_moves(king_field_index as usize, &context.board.patterns);
+
+                        queen_moves | knight_moves
+                    }
+                } else {
+                    u64::MAX
+                };
+
+                *moves_count = context.board.get_moves::<true>(moves, 0, *evasion_mask);
                 context.statistics.move_generator_captures_stages += 1;
 
                 if *moves_count == 0 {
@@ -590,7 +593,7 @@ fn get_next_move(
             }
             MoveGeneratorStage::ReadyToGenerateQuietMoves => {
                 let original_moves_count = *moves_count;
-                *moves_count = context.board.get_moves::<false>(moves, *moves_count, evasion_mask);
+                *moves_count = context.board.get_moves::<false>(moves, *moves_count, *evasion_mask);
                 context.statistics.move_generator_quiet_moves_stages += 1;
 
                 assign_move_scores(context, moves, move_scores, original_moves_count, *moves_count, hash_move, ply);
