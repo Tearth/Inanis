@@ -223,12 +223,17 @@ fn run_internal<const ROOT: bool, const PV: bool>(
         }
     };
 
+    let mut lazy_evaluation = None;
+
     if razoring_can_be_applied::<PV>(depth, alpha, friendly_king_checked) {
         let margin = razoring_get_margin(depth);
-        let lazy_evaluation = -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate_lazy();
+        let lazy_evaluation_value = match lazy_evaluation {
+            Some(value) => value,
+            None => -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate_lazy(),
+        };
 
         context.statistics.razoring_attempts += 1;
-        if lazy_evaluation + margin <= alpha {
+        if lazy_evaluation_value + margin <= alpha {
             let score = qsearch::run(context, depth, ply, alpha, beta);
             if score <= alpha {
                 context.statistics.leafs_count += 1;
@@ -238,28 +243,38 @@ fn run_internal<const ROOT: bool, const PV: bool>(
                 context.statistics.razoring_rejected += 1;
             }
         }
+
+        lazy_evaluation = Some(lazy_evaluation_value);
     }
 
     if static_null_move_pruning_can_be_applied::<PV>(depth, beta, friendly_king_checked) {
         let margin = static_null_move_pruning_get_margin(depth);
-        let lazy_evaluation = -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate_lazy();
+        let lazy_evaluation_value = match lazy_evaluation {
+            Some(value) => value,
+            None => -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate_lazy(),
+        };
 
         context.statistics.static_null_move_pruning_attempts += 1;
-        if lazy_evaluation - margin >= beta {
+        if lazy_evaluation_value - margin >= beta {
             context.statistics.leafs_count += 1;
             context.statistics.static_null_move_pruning_accepted += 1;
-            return lazy_evaluation - margin;
+            return lazy_evaluation_value - margin;
         } else {
             context.statistics.static_null_move_pruning_rejected += 1;
         }
+
+        lazy_evaluation = Some(lazy_evaluation_value);
     }
 
     if null_move_pruning_can_be_applied::<PV>(context, depth, beta, allow_null_move, friendly_king_checked) {
         let margin = NULL_MOVE_PRUNING_MARGIN;
-        let lazy_evaluation = -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate_lazy();
+        let lazy_evaluation_value = match lazy_evaluation {
+            Some(value) => value,
+            None => -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate_lazy(),
+        };
 
         context.statistics.null_move_pruning_attempts += 1;
-        if lazy_evaluation + margin >= beta {
+        if lazy_evaluation_value + margin >= beta {
             let r = null_move_pruning_get_r(depth);
 
             context.board.make_null_move();
@@ -275,6 +290,8 @@ fn run_internal<const ROOT: bool, const PV: bool>(
                 context.statistics.null_move_pruning_rejected += 1;
             }
         }
+
+        lazy_evaluation = Some(lazy_evaluation_value);
     }
 
     let mut best_score = -CHECKMATE_SCORE;
