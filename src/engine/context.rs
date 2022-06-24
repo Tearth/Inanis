@@ -316,11 +316,6 @@ impl SearchContext {
                 continue;
             }
 
-            if board.is_repetition_draw(3) || board.is_fifty_move_rule_draw() || board.is_insufficient_material_draw() {
-                board.undo_move(r#move);
-                continue;
-            }
-
             let shakmaty_fen = match board.to_fen().parse::<Fen>() {
                 Ok(value) => value,
                 Err(_) => return None,
