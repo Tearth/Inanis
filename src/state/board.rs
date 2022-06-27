@@ -45,12 +45,8 @@ pub struct Bitboard {
     pub hash: u64,
     pub pawn_hash: u64,
     pub null_moves: u8,
-    pub halfmove_clocks_stack: Vec<u16>,
-    pub captured_pieces_stack: Vec<u8>,
-    pub castling_rights_stack: Vec<CastlingRights>,
-    pub en_passant_stack: Vec<u64>,
-    pub hash_stack: Vec<u64>,
-    pub pawn_hash_stack: Vec<u64>,
+    pub captured_piece: u8,
+    pub state_stack: Vec<BitboardState>,
     pub material_scores: [i16; 2],
     pub pst_scores: [[i16; 2]; 2],
     pub evaluation_parameters: Arc<EvaluationParameters>,
@@ -58,6 +54,16 @@ pub struct Bitboard {
     pub patterns: Arc<PatternsContainer>,
     pub see: Arc<SEEContainer>,
     pub magic: Arc<MagicContainer>,
+}
+
+#[derive(Clone)]
+pub struct BitboardState {
+    pub halfmove_clock: u16,
+    pub castling_rights: CastlingRights,
+    pub en_passant: u64,
+    pub hash: u64,
+    pub pawn_hash: u64,
+    pub captured_piece: u8,
 }
 
 impl Bitboard {
@@ -87,12 +93,8 @@ impl Bitboard {
             hash: 0,
             pawn_hash: 0,
             null_moves: 0,
-            halfmove_clocks_stack: Vec::new(),
-            captured_pieces_stack: Vec::new(),
-            castling_rights_stack: Vec::new(),
-            en_passant_stack: Vec::new(),
-            hash_stack: Vec::new(),
-            pawn_hash_stack: Vec::new(),
+            captured_piece: 0,
+            state_stack: Vec::new(),
             material_scores: [0; 2],
             pst_scores: [[0, 2]; 2],
             evaluation_parameters,
@@ -197,19 +199,14 @@ impl Bitboard {
     ///  - increase halfmove clock if needed
     ///  - switch active color
     pub fn make_move(&mut self, r#move: Move) {
+        self.push_state();
+
         let color = self.active_color;
         let enemy_color = self.active_color ^ 1;
-
         let from = r#move.get_from();
         let to = r#move.get_to();
         let flags = r#move.get_flags();
         let piece = self.get_piece(from);
-
-        self.halfmove_clocks_stack.push(self.halfmove_clock);
-        self.castling_rights_stack.push(self.castling_rights);
-        self.en_passant_stack.push(self.en_passant);
-        self.hash_stack.push(self.hash);
-        self.pawn_hash_stack.push(self.pawn_hash);
 
         if self.en_passant != 0 {
             self.hash ^= self.zobrist.get_en_passant_hash((bit_scan(self.en_passant) % 8) as u8);
@@ -239,14 +236,12 @@ impl Bitboard {
                 self.hash ^= self.zobrist.get_en_passant_hash((bit_scan(self.en_passant) % 8) as u8);
             }
             MoveFlags::CAPTURE => {
-                let captured_piece = self.get_piece(to);
-                self.captured_pieces_stack.push(captured_piece);
+                self.captured_piece = self.get_piece(to);
+                self.remove_piece(enemy_color, self.captured_piece, to);
+                self.hash ^= self.zobrist.get_piece_hash(enemy_color, self.captured_piece, to);
 
-                self.remove_piece(enemy_color, captured_piece, to);
-                self.hash ^= self.zobrist.get_piece_hash(enemy_color, captured_piece, to);
-
-                if captured_piece == PAWN {
-                    self.pawn_hash ^= self.zobrist.get_piece_hash(enemy_color, captured_piece, to);
+                if self.captured_piece == PAWN {
+                    self.pawn_hash ^= self.zobrist.get_piece_hash(enemy_color, self.captured_piece, to);
                 }
 
                 self.move_piece(color, piece, from, to);
@@ -277,14 +272,14 @@ impl Bitboard {
                 let king_from = 3 + 56 * (color as u8);
                 let king_to = 5 + 56 * (color as u8);
 
-                self.move_piece(color, KING, 3 + 56 * (color as u8), 5 + 56 * (color as u8));
+                self.move_piece(color, KING, king_from, king_to);
                 self.hash ^= self.zobrist.get_piece_hash(color, KING, king_from);
                 self.hash ^= self.zobrist.get_piece_hash(color, KING, king_to);
 
                 let rook_from = 7 + 56 * (color as u8);
                 let rook_to = 4 + 56 * (color as u8);
 
-                self.move_piece(color, ROOK, 7 + 56 * (color as u8), 4 + 56 * (color as u8));
+                self.move_piece(color, ROOK, rook_from, rook_to);
                 self.hash ^= self.zobrist.get_piece_hash(color, ROOK, rook_from);
                 self.hash ^= self.zobrist.get_piece_hash(color, ROOK, rook_to);
             }
@@ -305,11 +300,9 @@ impl Bitboard {
             _ => {
                 let promotion_piece = r#move.get_promotion_piece();
                 if flags.contains(MoveFlags::CAPTURE) {
-                    let captured_piece = self.get_piece(to);
-                    self.captured_pieces_stack.push(captured_piece);
-
-                    self.remove_piece(enemy_color, captured_piece, to);
-                    self.hash ^= self.zobrist.get_piece_hash(enemy_color, captured_piece, to);
+                    self.captured_piece = self.get_piece(to);
+                    self.remove_piece(enemy_color, self.captured_piece, to);
+                    self.hash ^= self.zobrist.get_piece_hash(enemy_color, self.captured_piece, to);
                 }
 
                 self.remove_piece(color, PAWN, from);
@@ -376,8 +369,8 @@ impl Bitboard {
             self.halfmove_clock += 1;
         }
 
-        self.active_color = enemy_color;
         self.hash ^= self.zobrist.get_active_color_hash();
+        self.active_color = enemy_color;
     }
 
     /// Undoes `r#move`, with the assumption that it's perfectly valid at the current position (otherwise, internal state can be irreversibly corrupted).
@@ -391,17 +384,10 @@ impl Bitboard {
     pub fn undo_move(&mut self, r#move: Move) {
         let color = self.active_color ^ 1;
         let enemy_color = self.active_color;
-
         let from = r#move.get_from();
         let to = r#move.get_to();
         let flags = r#move.get_flags();
         let piece = self.get_piece(to);
-
-        self.halfmove_clock = self.halfmove_clocks_stack.pop().unwrap();
-        self.castling_rights = self.castling_rights_stack.pop().unwrap();
-        self.en_passant = self.en_passant_stack.pop().unwrap();
-        self.hash = self.hash_stack.pop().unwrap();
-        self.pawn_hash = self.pawn_hash_stack.pop().unwrap();
 
         match flags {
             MoveFlags::QUIET => {
@@ -411,10 +397,8 @@ impl Bitboard {
                 self.move_piece(color, piece, to, from);
             }
             MoveFlags::CAPTURE => {
-                let captured_piece = self.captured_pieces_stack.pop().unwrap();
-
                 self.move_piece(color, piece, to, from);
-                self.add_piece(enemy_color, captured_piece, to);
+                self.add_piece(enemy_color, self.captured_piece, to);
             }
             MoveFlags::SHORT_CASTLING => {
                 self.move_piece(color, KING, 1 + 56 * (color as u8), 3 + 56 * (color as u8));
@@ -433,8 +417,7 @@ impl Bitboard {
                 self.remove_piece(color, piece, to);
 
                 if flags.contains(MoveFlags::CAPTURE) {
-                    let captured_piece = self.captured_pieces_stack.pop().unwrap();
-                    self.add_piece(enemy_color, captured_piece, to);
+                    self.add_piece(enemy_color, self.captured_piece, to);
                 }
             }
         }
@@ -444,6 +427,7 @@ impl Bitboard {
         }
 
         self.active_color = color;
+        self.pop_state();
     }
 
     /// Makes a null move, which is basically a switch of the active color with preservation of the internal state.
@@ -455,26 +439,19 @@ impl Bitboard {
     ///  - increase null moves count
     ///  - switch active color
     pub fn make_null_move(&mut self) {
-        let color = self.active_color;
-        let enemy_color = self.active_color ^ 1;
-
-        self.halfmove_clocks_stack.push(self.halfmove_clock);
-        self.castling_rights_stack.push(self.castling_rights);
-        self.en_passant_stack.push(self.en_passant);
-        self.hash_stack.push(self.hash);
-        self.pawn_hash_stack.push(self.pawn_hash);
+        self.push_state();
 
         if self.en_passant != 0 {
             self.hash ^= self.zobrist.get_en_passant_hash((bit_scan(self.en_passant) % 8) as u8);
             self.en_passant = 0;
         }
 
-        if color == BLACK {
+        if self.active_color == BLACK {
             self.fullmove_number += 1;
         }
 
         self.null_moves += 1;
-        self.active_color = enemy_color;
+        self.active_color ^= 1;
         self.hash ^= self.zobrist.get_active_color_hash();
     }
 
@@ -486,20 +463,34 @@ impl Bitboard {
     ///  - switch active color
     ///  - decrease null moves count
     pub fn undo_null_move(&mut self) {
-        let color = self.active_color ^ 1;
-
-        self.halfmove_clock = self.halfmove_clocks_stack.pop().unwrap();
-        self.castling_rights = self.castling_rights_stack.pop().unwrap();
-        self.en_passant = self.en_passant_stack.pop().unwrap();
-        self.hash = self.hash_stack.pop().unwrap();
-        self.pawn_hash = self.pawn_hash_stack.pop().unwrap();
-
-        if color == BLACK {
+        if self.active_color == WHITE {
             self.fullmove_number -= 1;
         }
 
-        self.active_color = color;
+        self.active_color ^= 1;
         self.null_moves -= 1;
+        self.pop_state();
+    }
+
+    pub fn push_state(&mut self) {
+        self.state_stack.push(BitboardState::new(
+            self.halfmove_clock,
+            self.castling_rights,
+            self.en_passant,
+            self.hash,
+            self.pawn_hash,
+            self.captured_piece,
+        ));
+    }
+
+    pub fn pop_state(&mut self) {
+        let state = unsafe { self.state_stack.pop().unwrap_unchecked() };
+        self.halfmove_clock = state.halfmove_clock;
+        self.castling_rights = state.castling_rights;
+        self.en_passant = state.en_passant;
+        self.hash = state.hash;
+        self.pawn_hash = state.pawn_hash;
+        self.captured_piece = state.captured_piece;
     }
 
     /// Checks if the field specified by `field_index` is attacked by enemy, from the `color` perspective.
@@ -802,20 +793,20 @@ impl Bitboard {
 
     /// Checks if there's repetition draw with the specified `threshold` (should be 3 in the most cases) at the current position.
     pub fn is_repetition_draw(&self, threshold: i32) -> bool {
-        if self.hash_stack.len() < 6 || self.null_moves > 0 {
+        if self.state_stack.len() < 6 || self.null_moves > 0 {
             return false;
         }
 
         let mut repetitions_count = 1;
-        let mut from = self.hash_stack.len().wrapping_sub(self.halfmove_clock as usize);
-        let to = self.hash_stack.len() - 1;
+        let mut from = self.state_stack.len().wrapping_sub(self.halfmove_clock as usize);
+        let to = self.state_stack.len() - 1;
 
         if from > 1024 {
             from = 0;
         }
 
         for hash_index in (from..to).rev().step_by(2) {
-            if self.hash_stack[hash_index] == self.hash {
+            if self.state_stack[hash_index].hash == self.hash {
                 repetitions_count += 1;
 
                 if repetitions_count >= threshold {
@@ -890,5 +881,18 @@ impl Bitboard {
 
     pub fn get_pieces_count(&self) -> u8 {
         bit_count(self.occupancy[WHITE as usize] | self.occupancy[BLACK as usize])
+    }
+}
+
+impl BitboardState {
+    pub fn new(halfmove_clock: u16, castling_rights: CastlingRights, en_passant: u64, hash: u64, pawn_hash: u64, captured_piece: u8) -> BitboardState {
+        BitboardState {
+            halfmove_clock,
+            castling_rights,
+            en_passant,
+            hash,
+            pawn_hash,
+            captured_piece,
+        }
     }
 }
