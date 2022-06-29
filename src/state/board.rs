@@ -209,7 +209,7 @@ impl Bitboard {
         let piece = self.get_piece(from);
 
         if self.en_passant != 0 {
-            self.hash ^= self.zobrist.get_en_passant_hash((bit_scan(self.en_passant) % 8) as u8);
+            self.hash ^= self.zobrist.get_en_passant_hash((bit_scan(self.en_passant) & 7) as u8);
             self.en_passant = 0;
         }
 
@@ -233,7 +233,7 @@ impl Bitboard {
                 self.pawn_hash ^= self.zobrist.get_piece_hash(color, piece, to);
 
                 self.en_passant = 1u64 << ((to as i8) + 8 * ((color as i8) * 2 - 1));
-                self.hash ^= self.zobrist.get_en_passant_hash((bit_scan(self.en_passant) % 8) as u8);
+                self.hash ^= self.zobrist.get_en_passant_hash((bit_scan(self.en_passant) & 7) as u8);
             }
             MoveFlags::CAPTURE => {
                 self.captured_piece = self.get_piece(to);
@@ -442,7 +442,7 @@ impl Bitboard {
         self.push_state();
 
         if self.en_passant != 0 {
-            self.hash ^= self.zobrist.get_en_passant_hash((bit_scan(self.en_passant) % 8) as u8);
+            self.hash ^= self.zobrist.get_en_passant_hash((bit_scan(self.en_passant) & 7) as u8);
             self.en_passant = 0;
         }
 
@@ -721,7 +721,7 @@ impl Bitboard {
         }
 
         if self.en_passant != 0 {
-            hash ^= self.zobrist.get_en_passant_hash((bit_scan(self.en_passant) % 8) as u8);
+            hash ^= self.zobrist.get_en_passant_hash((bit_scan(self.en_passant) & 7) as u8);
         }
 
         if self.active_color == BLACK {

@@ -124,7 +124,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
         return INVALID_SCORE;
     }
 
-    if context.forced_depth == 0 && context.max_nodes_count == 0 && context.statistics.nodes_count % 10000 == 0 {
+    if context.forced_depth == 0 && context.max_nodes_count == 0 && (context.statistics.nodes_count & 0xffff) == 0 {
         if (Utc::now() - context.search_time_start).num_milliseconds() > context.deadline as i64 {
             context.abort_token.store(true, Ordering::Relaxed);
             return INVALID_SCORE;

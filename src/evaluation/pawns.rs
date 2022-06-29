@@ -81,7 +81,7 @@ fn evaluate_color(board: &Bitboard, color: u8) -> i16 {
 
     let king = board.pieces[color as usize][KING as usize];
     let king_field = bit_scan(king);
-    let king_field_file = (king_field % 8) as i8;
+    let king_field_file = (king_field & 7) as i8;
     let pawn_shield = bit_count(board.patterns.get_box(king_field as usize) & board.pieces[color as usize][PAWN as usize]);
 
     for file in cmp::max(0, king_field_file - 1)..=(cmp::min(7, king_field_file + 1)) {
