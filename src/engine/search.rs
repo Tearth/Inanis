@@ -344,7 +344,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
                 let zero_window_score = -run_internal::<false, false>(context, depth - r - 1, ply + 1, -alpha - 1, -alpha, true, king_checked);
                 context.statistics.pvs_zero_window_searches += 1;
 
-                if zero_window_score > alpha {
+                if zero_window_score > alpha && (alpha != beta - 1 || r > 0) {
                     context.statistics.pvs_rejected_searches += 1;
                     -run_internal::<false, true>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked)
                 } else {
