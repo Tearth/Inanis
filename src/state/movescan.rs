@@ -156,7 +156,7 @@ impl Move {
                             desired_capture = Some(true);
                         }
                     // N3e4
-                    } else if capture_or_file_rank.is_digit(10) {
+                    } else if capture_or_file_rank.is_ascii_digit() {
                         let piece_type = symbol_to_piece(piece_or_file)?;
                         let rank_from = (capture_or_file_rank as u8) - b'1';
 
@@ -185,7 +185,7 @@ impl Move {
                     let piece_type = symbol_to_piece(piece)?;
 
                     // R2xc2
-                    if file_rank.is_digit(10) {
+                    if file_rank.is_ascii_digit() {
                         let rank_from = (file_rank as u8) - b'1';
 
                         desired_to = Some(to);

@@ -135,7 +135,7 @@ fn get_epd_parameter(mut epd: &str, name: &[&str]) -> Option<String> {
 fn fen_to_pieces(board: &mut Bitboard, pieces: &str) -> Result<(), &'static str> {
     let mut current_field_index = 63;
     for char in pieces.chars().filter(|&x| x != '/') {
-        if char.is_digit(10) {
+        if char.is_ascii_digit() {
             current_field_index -= char.to_digit(10).ok_or("Invalid FEN: bad piece")? as i32;
         } else {
             let color = if char.is_uppercase() { WHITE } else { BLACK };
