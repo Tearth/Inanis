@@ -4,6 +4,7 @@ use super::qsearch;
 use super::*;
 use crate::cache::search::TranspositionTableScoreType;
 use crate::state::*;
+use crate::utils::conditional_expression;
 use chrono::Utc;
 use std::cmp;
 use std::mem::MaybeUninit;
@@ -66,9 +67,9 @@ enum MoveGeneratorStage {
     AllGenerated,
 }
 
-pub fn run(context: &mut SearchContext, depth: i8) {
+pub fn run<const DIAG: bool>(context: &mut SearchContext, depth: i8) {
     let king_checked = context.board.is_king_checked(context.board.active_color);
-    run_internal::<true, true>(context, depth, 0, MIN_ALPHA, MIN_BETA, true, king_checked);
+    run_internal::<true, true, DIAG>(context, depth, 0, MIN_ALPHA, MIN_BETA, true, king_checked);
 }
 
 /// Entry point of the regular search, with generic `ROOT` parameter indicating if this is the root node where the moves filterigh might happen, and `PV` parameter
@@ -111,7 +112,7 @@ pub fn run(context: &mut SearchContext, depth: i8) {
 ///  - test of abort flag
 ///  - test if stalemate draw is detected
 ///  - update transposition table
-fn run_internal<const ROOT: bool, const PV: bool>(
+fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
     context: &mut SearchContext,
     depth: i8,
     ply: u16,
@@ -124,7 +125,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
         return INVALID_SCORE;
     }
 
-    if context.forced_depth == 0 && context.max_nodes_count == 0 && (context.statistics.nodes_count & 0xffff) == 0 {
+    if context.forced_depth == 0 && context.max_nodes_count == 0 && (context.statistics.nodes_count & 8191) == 0 {
         if (Utc::now() - context.search_time_start).num_milliseconds() > context.deadline as i64 {
             context.abort_token.store(true, Ordering::Relaxed);
             return INVALID_SCORE;
@@ -141,18 +142,18 @@ fn run_internal<const ROOT: bool, const PV: bool>(
     context.statistics.nodes_count += 1;
 
     if context.board.is_king_checked(context.board.active_color ^ 1) {
-        context.statistics.leafs_count += 1;
+        conditional_expression!(DIAG, context.statistics.leafs_count += 1);
         return CHECKMATE_SCORE - (ply as i16);
     }
 
     if context.board.is_repetition_draw(if ROOT { 3 } else { 2 }) || context.board.is_fifty_move_rule_draw() || context.board.is_insufficient_material_draw() {
-        context.statistics.leafs_count += 1;
+        conditional_expression!(DIAG, context.statistics.leafs_count += 1);
         return DRAW_SCORE;
     }
 
     if depth <= 0 {
-        context.statistics.leafs_count += 1;
-        return qsearch::run(context, depth, ply, alpha, beta);
+        conditional_expression!(DIAG, context.statistics.leafs_count += 1);
+        return qsearch::run::<DIAG>(context, depth, ply, alpha, beta);
     }
 
     let original_alpha = alpha;
@@ -162,14 +163,14 @@ fn run_internal<const ROOT: bool, const PV: bool>(
 
     match context.transposition_table.get(context.board.hash, ply, &mut collision) {
         Some(entry) => {
-            context.statistics.tt_hits += 1;
+            conditional_expression!(DIAG, context.statistics.tt_hits += 1);
 
             if entry.best_move != Default::default() {
                 if entry.best_move.is_legal(&context.board) {
                     hash_move = entry.best_move;
-                    context.statistics.tt_legal_hashmoves += 1;
+                    conditional_expression!(DIAG, context.statistics.tt_legal_hashmoves += 1);
                 } else {
-                    context.statistics.tt_illegal_hashmoves += 1;
+                    conditional_expression!(DIAG, context.statistics.tt_illegal_hashmoves += 1);
                 }
             }
 
@@ -190,7 +191,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
                         _ => {
                             if !PV || entry.age == 0 {
                                 if !context.board.is_repetition_draw(2) {
-                                    context.statistics.leafs_count += 1;
+                                    conditional_expression!(DIAG, context.statistics.leafs_count += 1);
                                     return entry.score;
                                 }
                             }
@@ -198,8 +199,8 @@ fn run_internal<const ROOT: bool, const PV: bool>(
                     }
 
                     if alpha >= beta {
-                        context.statistics.leafs_count += 1;
-                        context.statistics.beta_cutoffs += 1;
+                        conditional_expression!(DIAG, context.statistics.leafs_count += 1);
+                        conditional_expression!(DIAG, context.statistics.beta_cutoffs += 1);
                         return entry.score;
                     }
                 } else {
@@ -216,10 +217,10 @@ fn run_internal<const ROOT: bool, const PV: bool>(
         }
         None => {
             if collision {
-                context.statistics.tt_collisions += 1;
+                conditional_expression!(DIAG, context.statistics.tt_collisions += 1);
             }
 
-            context.statistics.tt_misses += 1;
+            conditional_expression!(DIAG, context.statistics.tt_misses += 1);
         }
     };
 
@@ -232,15 +233,15 @@ fn run_internal<const ROOT: bool, const PV: bool>(
             None => -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate_lazy(),
         };
 
-        context.statistics.razoring_attempts += 1;
+        conditional_expression!(DIAG, context.statistics.razoring_attempts += 1);
         if lazy_evaluation_value + margin <= alpha {
-            let score = qsearch::run(context, depth, ply, alpha, beta);
+            let score = qsearch::run::<DIAG>(context, depth, ply, alpha, beta);
             if score <= alpha {
-                context.statistics.leafs_count += 1;
-                context.statistics.razoring_accepted += 1;
+                conditional_expression!(DIAG, context.statistics.leafs_count += 1);
+                conditional_expression!(DIAG, context.statistics.razoring_accepted += 1);
                 return score;
             } else {
-                context.statistics.razoring_rejected += 1;
+                conditional_expression!(DIAG, context.statistics.razoring_rejected += 1);
             }
         }
 
@@ -254,13 +255,13 @@ fn run_internal<const ROOT: bool, const PV: bool>(
             None => -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate_lazy(),
         };
 
-        context.statistics.static_null_move_pruning_attempts += 1;
+        conditional_expression!(DIAG, context.statistics.static_null_move_pruning_attempts += 1);
         if lazy_evaluation_value - margin >= beta {
-            context.statistics.leafs_count += 1;
-            context.statistics.static_null_move_pruning_accepted += 1;
+            conditional_expression!(DIAG, context.statistics.leafs_count += 1);
+            conditional_expression!(DIAG, context.statistics.static_null_move_pruning_accepted += 1);
             return lazy_evaluation_value - margin;
         } else {
-            context.statistics.static_null_move_pruning_rejected += 1;
+            conditional_expression!(DIAG, context.statistics.static_null_move_pruning_rejected += 1);
         }
 
         lazy_evaluation = Some(lazy_evaluation_value);
@@ -273,21 +274,21 @@ fn run_internal<const ROOT: bool, const PV: bool>(
             None => -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate_lazy(),
         };
 
-        context.statistics.null_move_pruning_attempts += 1;
+        conditional_expression!(DIAG, context.statistics.null_move_pruning_attempts += 1);
         if lazy_evaluation_value + margin >= beta {
             let r = null_move_pruning_get_r(depth);
 
             context.board.make_null_move();
             let king_checked = context.board.is_king_checked(context.board.active_color);
-            let score = -run_internal::<false, false>(context, depth - r - 1, ply + 1, -beta, -beta + 1, false, king_checked);
+            let score = -run_internal::<false, false, DIAG>(context, depth - r - 1, ply + 1, -beta, -beta + 1, false, king_checked);
             context.board.undo_null_move();
 
             if score >= beta {
-                context.statistics.leafs_count += 1;
-                context.statistics.null_move_pruning_accepted += 1;
+                conditional_expression!(DIAG, context.statistics.leafs_count += 1);
+                conditional_expression!(DIAG, context.statistics.null_move_pruning_accepted += 1);
                 return score;
             } else {
-                context.statistics.null_move_pruning_rejected += 1;
+                conditional_expression!(DIAG, context.statistics.null_move_pruning_rejected += 1);
             }
         }
 
@@ -304,7 +305,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
     let mut moves_count = 0;
     let mut evasion_mask = 0;
 
-    while let Some((r#move, score)) = get_next_move(
+    while let Some((r#move, score)) = get_next_move::<DIAG>(
         context,
         &mut move_generator_stage,
         &mut moves,
@@ -321,10 +322,10 @@ fn run_internal<const ROOT: bool, const PV: bool>(
         }
 
         if late_move_pruning_can_be_applied::<PV>(depth, move_index, score, friendly_king_checked) {
-            context.statistics.late_move_pruning_accepted += 1;
+            conditional_expression!(DIAG, context.statistics.late_move_pruning_accepted += 1);
             break;
         } else {
-            context.statistics.late_move_pruning_rejected += 1;
+            conditional_expression!(DIAG, context.statistics.late_move_pruning_rejected += 1);
         }
 
         context.board.make_move(r#move);
@@ -338,26 +339,26 @@ fn run_internal<const ROOT: bool, const PV: bool>(
 
         let score = if PV {
             if move_index == 0 {
-                context.statistics.pvs_full_window_searches += 1;
-                -run_internal::<false, true>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked)
+                conditional_expression!(DIAG, context.statistics.pvs_full_window_searches += 1);
+                -run_internal::<false, true, DIAG>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked)
             } else {
-                let zero_window_score = -run_internal::<false, false>(context, depth - r - 1, ply + 1, -alpha - 1, -alpha, true, king_checked);
-                context.statistics.pvs_zero_window_searches += 1;
+                let zero_window_score = -run_internal::<false, false, DIAG>(context, depth - r - 1, ply + 1, -alpha - 1, -alpha, true, king_checked);
+                conditional_expression!(DIAG, context.statistics.pvs_zero_window_searches += 1);
 
                 if zero_window_score > alpha && (alpha != beta - 1 || r > 0) {
-                    context.statistics.pvs_rejected_searches += 1;
-                    -run_internal::<false, true>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked)
+                    conditional_expression!(DIAG, context.statistics.pvs_rejected_searches += 1);
+                    -run_internal::<false, true, DIAG>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked)
                 } else {
                     zero_window_score
                 }
             }
         } else {
-            let zero_window_score = -run_internal::<false, false>(context, depth - r - 1, ply + 1, -beta, -alpha, true, king_checked);
-            context.statistics.pvs_zero_window_searches += 1;
+            let zero_window_score = -run_internal::<false, false, DIAG>(context, depth - r - 1, ply + 1, -beta, -alpha, true, king_checked);
+            conditional_expression!(DIAG, context.statistics.pvs_zero_window_searches += 1);
 
             if zero_window_score > alpha && r > 0 {
-                context.statistics.pvs_rejected_searches += 1;
-                -run_internal::<false, false>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked)
+                conditional_expression!(DIAG, context.statistics.pvs_rejected_searches += 1);
+                -run_internal::<false, false, DIAG>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked)
             } else {
                 zero_window_score
             }
@@ -379,11 +380,11 @@ fn run_internal<const ROOT: bool, const PV: bool>(
                     context.history_table.add(r#move.get_from(), r#move.get_to(), depth as u8);
                 }
 
-                context.statistics.beta_cutoffs += 1;
+                conditional_expression!(DIAG, context.statistics.beta_cutoffs += 1);
                 if move_index == 0 {
-                    context.statistics.perfect_cutoffs += 1;
+                    conditional_expression!(DIAG, context.statistics.perfect_cutoffs += 1);
                 } else {
-                    context.statistics.non_perfect_cutoffs += 1;
+                    conditional_expression!(DIAG, context.statistics.non_perfect_cutoffs += 1);
                 }
 
                 break;
@@ -424,7 +425,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
         context
             .transposition_table
             .add(context.board.hash, alpha, best_move, depth as i8, ply, score_type);
-        context.statistics.tt_added += 1;
+        conditional_expression!(DIAG, context.statistics.tt_added += 1);
     }
 
     if ROOT && !context.multipv {
@@ -530,7 +531,7 @@ fn assign_move_scores(
 ///
 /// Both [MoveGeneratorStage::ReadyToGenerateCaptures] and [MoveGeneratorStage::ReadyToGenerateQuietMoves] are generating moves and assigning scores
 /// for move ordering purposes. If the last stage is set and there are no more moves, [None] is returned.
-fn get_next_move(
+fn get_next_move<const DIAG: bool>(
     context: &mut SearchContext,
     stage: &mut MoveGeneratorStage,
     moves: &mut [MaybeUninit<Move>],
@@ -554,7 +555,7 @@ fn get_next_move(
                 if hash_move != Default::default() {
                     moves[0].write(hash_move);
                     move_scores[0].write(MOVE_ORDERING_HASH_MOVE);
-                    context.statistics.move_generator_hash_move_stages += 1;
+                    conditional_expression!(DIAG, context.statistics.move_generator_hash_move_stages += 1);
                     *moves_count = 1;
 
                     return Some((hash_move, MOVE_ORDERING_HASH_MOVE));
@@ -578,7 +579,7 @@ fn get_next_move(
                 };
 
                 *moves_count = context.board.get_moves::<true>(moves, 0, *evasion_mask);
-                context.statistics.move_generator_captures_stages += 1;
+                conditional_expression!(DIAG, context.statistics.move_generator_captures_stages += 1);
 
                 if *moves_count == 0 {
                     *stage = MoveGeneratorStage::ReadyToGenerateQuietMoves;
@@ -611,7 +612,7 @@ fn get_next_move(
             MoveGeneratorStage::ReadyToGenerateQuietMoves => {
                 let original_moves_count = *moves_count;
                 *moves_count = context.board.get_moves::<false>(moves, *moves_count, *evasion_mask);
-                context.statistics.move_generator_quiet_moves_stages += 1;
+                conditional_expression!(DIAG, context.statistics.move_generator_quiet_moves_stages += 1);
 
                 assign_move_scores(context, moves, move_scores, original_moves_count, *moves_count, hash_move, ply);
 

@@ -3,6 +3,7 @@ use super::*;
 use crate::state::movescan::Move;
 use crate::state::movescan::MoveFlags;
 use crate::state::*;
+use crate::utils::conditional_expression;
 use std::cmp;
 use std::mem::MaybeUninit;
 
@@ -18,19 +19,19 @@ pub const FUTILITY_PRUNING_MARGIN: i16 = 100;
 ///  - main loop:
 ///     - score pruning
 ///     - futility pruning (<https://www.chessprogramming.org/Delta_Pruning>)
-pub fn run(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, beta: i16) -> i16 {
+pub fn run<const DIAG: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, beta: i16) -> i16 {
     context.statistics.q_nodes_count += 1;
     context.statistics.max_ply = cmp::max(ply, context.statistics.max_ply);
 
     if context.board.pieces[context.board.active_color as usize][KING as usize] == 0 {
-        context.statistics.q_leafs_count += 1;
+        conditional_expression!(DIAG, context.statistics.q_leafs_count += 1);
         return -CHECKMATE_SCORE + (ply as i16);
     }
 
-    let stand_pat = -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate(&context.pawn_hashtable, &mut context.statistics);
+    let stand_pat = -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate::<DIAG>(&context.pawn_hashtable, &mut context.statistics);
     if stand_pat >= beta {
-        context.statistics.q_leafs_count += 1;
-        context.statistics.q_beta_cutoffs += 1;
+        conditional_expression!(DIAG, context.statistics.q_leafs_count += 1);
+        conditional_expression!(DIAG, context.statistics.q_beta_cutoffs += 1);
         return beta;
     }
 
@@ -50,34 +51,34 @@ pub fn run(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, bet
         let score = unsafe { move_scores[move_index].assume_init() };
 
         if score_pruning_can_be_applied(score) {
-            context.statistics.q_score_pruning_accepted += 1;
+            conditional_expression!(DIAG, context.statistics.q_score_pruning_accepted += 1);
             break;
         } else {
-            context.statistics.q_score_pruning_rejected += 1;
+            conditional_expression!(DIAG, context.statistics.q_score_pruning_rejected += 1);
         }
 
         if futility_pruning_can_be_applied(score, stand_pat, alpha) {
-            context.statistics.q_futility_pruning_accepted += 1;
+            conditional_expression!(DIAG, context.statistics.q_futility_pruning_accepted += 1);
             break;
         } else {
-            context.statistics.q_futility_pruning_rejected += 1;
+            conditional_expression!(DIAG, context.statistics.q_futility_pruning_rejected += 1);
         }
 
         found = true;
 
         context.board.make_move(r#move);
-        let score = -run(context, depth - 1, ply + 1, -beta, -alpha);
+        let score = -run::<DIAG>(context, depth - 1, ply + 1, -beta, -alpha);
         context.board.undo_move(r#move);
 
         if score > alpha {
             alpha = score;
 
             if alpha >= beta {
-                context.statistics.q_beta_cutoffs += 1;
+                conditional_expression!(DIAG, context.statistics.q_beta_cutoffs += 1);
                 if move_index == 0 {
-                    context.statistics.q_perfect_cutoffs += 1;
+                    conditional_expression!(DIAG, context.statistics.q_perfect_cutoffs += 1);
                 } else {
-                    context.statistics.q_non_perfect_cutoffs += 1;
+                    conditional_expression!(DIAG, context.statistics.q_non_perfect_cutoffs += 1);
                 }
 
                 break;
@@ -86,7 +87,7 @@ pub fn run(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, bet
     }
 
     if !found {
-        context.statistics.q_leafs_count += 1;
+        conditional_expression!(DIAG, context.statistics.q_leafs_count += 1);
     }
 
     alpha

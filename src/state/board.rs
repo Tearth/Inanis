@@ -753,14 +753,14 @@ impl Bitboard {
 
     /// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position, using `pawn_hashtable` to store pawn
     /// evaluations and `statistics` to gather diagnostic data. Returns score from the white color perspective (more than 0 when advantage, less than 0 when disadvantage).
-    pub fn evaluate(&self, pawn_hashtable: &PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
+    pub fn evaluate<const DIAG: bool>(&self, pawn_hashtable: &PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
         let mut white_attack_mask = 0;
         let mut black_attack_mask = 0;
         let mobility_score = mobility::evaluate(self, &mut white_attack_mask, &mut black_attack_mask);
 
         material::evaluate(self)
             + pst::evaluate(self)
-            + pawns::evaluate(self, pawn_hashtable, statistics)
+            + pawns::evaluate::<DIAG>(self, pawn_hashtable, statistics)
             + safety::evaluate(self, white_attack_mask, black_attack_mask)
             + mobility_score
     }

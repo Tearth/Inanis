@@ -2,6 +2,7 @@ use super::*;
 use crate::cache::pawns::PawnHashTable;
 use crate::engine::context::SearchStatistics;
 use crate::state::board::Bitboard;
+use crate::utils::conditional_expression;
 use std::cmp;
 
 /// Evaluates structure of pawns on the `board` and returns score from the white color perspective (more than 0 when advantage,
@@ -14,25 +15,25 @@ use std::cmp;
 ///
 /// To improve performance (using the fact that structure of pawns changes relatively rare), each evaluation is saved in the pawn hashtable,
 /// and used again if possible.
-pub fn evaluate(board: &Bitboard, pawn_hashtable: &PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
+pub fn evaluate<const DIAG: bool>(board: &Bitboard, pawn_hashtable: &PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
     let mut collision = false;
     match pawn_hashtable.get(board.pawn_hash, &mut collision) {
         Some(entry) => {
-            statistics.pawn_hashtable_hits += 1;
+            conditional_expression!(DIAG, statistics.pawn_hashtable_hits += 1);
             return entry.score;
         }
         None => {
             if collision {
-                statistics.pawn_hashtable_collisions += 1;
+                conditional_expression!(DIAG, statistics.pawn_hashtable_collisions += 1);
             }
 
-            statistics.pawn_hashtable_misses += 1;
+            conditional_expression!(DIAG, statistics.pawn_hashtable_misses += 1);
         }
     }
 
     let score = evaluate_color(board, WHITE) - evaluate_color(board, BLACK);
     pawn_hashtable.add(board.pawn_hash, score);
-    statistics.pawn_hashtable_added += 1;
+    conditional_expression!(DIAG, statistics.pawn_hashtable_added += 1);
 
     score
 }

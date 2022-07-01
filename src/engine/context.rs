@@ -41,6 +41,7 @@ pub struct SearchContext {
     pub multipv_lines: Vec<SearchResultLine>,
     pub search_done: bool,
     pub uci_debug: bool,
+    pub diagnostic_mode: bool,
     pub helper_thread: bool,
     pub moves_to_search: Vec<Move>,
     pub syzygy_path: Option<String>,
@@ -162,6 +163,7 @@ impl SearchContext {
         moves_to_go: u32,
         multipv: bool,
         uci_debug: bool,
+        diagnostic_mode: bool,
         helper_thread: bool,
         moves_to_search: Vec<Move>,
         syzygy_path: Option<String>,
@@ -189,6 +191,7 @@ impl SearchContext {
             multipv_lines: Vec::new(),
             search_done: false,
             uci_debug,
+            diagnostic_mode,
             helper_thread,
             moves_to_search,
             syzygy_path,
@@ -440,7 +443,7 @@ impl Iterator for SearchContext {
                     for helper_context in &mut self.helper_contexts {
                         helper_context.context.deadline = self.deadline;
                         threads.push(scope.spawn(move |_| {
-                            search::run(&mut helper_context.context, depth);
+                            search::run::<false>(&mut helper_context.context, depth);
                             helper_context.context.statistics
                         }));
                     }
@@ -454,9 +457,12 @@ impl Iterator for SearchContext {
 
             self.multipv_lines.clear();
 
-            search::run(self, self.current_depth);
-            let search_time = (Utc::now() - self.search_time_start).num_milliseconds() as u32;
+            match self.diagnostic_mode {
+                true => search::run::<true>(self, self.current_depth),
+                false => search::run::<false>(self, self.current_depth),
+            };
 
+            let search_time = (Utc::now() - self.search_time_start).num_milliseconds() as u32;
             if self.uci_debug {
                 let mut white_attack_mask = 0;
                 let mut black_attack_mask = 0;

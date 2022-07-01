@@ -99,6 +99,7 @@ fn run_internal(context: &mut TestContext, depth: i8, transposition_table_size: 
                         false,
                         false,
                         false,
+                        false,
                         Vec::new(),
                         None,
                         0,
