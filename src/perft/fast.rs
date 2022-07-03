@@ -48,7 +48,7 @@ pub fn run(depth: i32, board: &mut Bitboard, hashtable_size: usize, threads_coun
                 let mut context = PerftContext::new(&mut board, &hashtable_arc, false, true);
                 count += run_internal(&mut context, depth - 1);
 
-                hashtable_usage = context.hashtable.get_usage();
+                hashtable_usage = context.hashtable.get_usage(10000);
             }
 
             (count, hashtable_usage)

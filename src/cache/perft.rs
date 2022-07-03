@@ -85,12 +85,11 @@ impl PerftHashTable {
     }
 
     /// Calculates an approximate percentage usage of the table, based on the first 10000 entries.
-    pub fn get_usage(&self) -> f32 {
-        const RESOLUTION: usize = 10000;
-        const BUCKETS_COUNT_TO_CHECK: usize = RESOLUTION / BUCKET_SLOTS;
+    pub fn get_usage(&self, resolution: usize) -> f32 {
+        let buckets_count_to_check: usize = resolution / BUCKET_SLOTS;
         let mut filled_entries = 0;
 
-        for bucket in self.table.iter().take(BUCKETS_COUNT_TO_CHECK) {
+        for bucket in self.table.iter().take(buckets_count_to_check) {
             for entry in &bucket.entries {
                 if entry.key.load(Ordering::Relaxed) != 0 && entry.data.load(Ordering::Relaxed) != 0 {
                     filled_entries += 1;
@@ -98,7 +97,7 @@ impl PerftHashTable {
             }
         }
 
-        ((filled_entries as f32) / (RESOLUTION as f32)) * 100.0
+        ((filled_entries as f32) / (resolution as f32)) * 100.0
     }
 }
 

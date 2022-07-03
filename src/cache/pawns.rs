@@ -58,18 +58,16 @@ impl PawnHashTable {
     }
 
     /// Calculates an approximate percentage usage of the table, based on the first 10000 entries.
-    pub fn get_usage(&self) -> f32 {
-        const RESOLUTION: usize = 10000;
+    pub fn get_usage(&self, resolution: usize) -> f32 {
         let mut filled_entries = 0;
-
-        for entry in self.table.iter().take(RESOLUTION) {
+        for entry in self.table.iter().take(resolution) {
             let entry_data = entry.get_data();
             if entry_data.key != 0 {
                 filled_entries += 1;
             }
         }
 
-        ((filled_entries as f32) / (RESOLUTION as f32)) * 100.0
+        ((filled_entries as f32) / (resolution as f32)) * 100.0
     }
 
     /// Calculates a key for the `hash` by taking the last 16 bits of it.

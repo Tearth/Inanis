@@ -350,13 +350,14 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
                 println!(
                     "{}",
                     &format!(
-                        "info time {} {} multipv {} depth {} seldepth {} nodes {} pv {}",
+                        "info time {} {} depth {} seldepth {} multipv {} nodes {} hashfull {} pv {}",
                         depth_result.time,
                         formatted_score,
-                        multipv_index + 1,
                         depth_result.depth,
                         depth_result.statistics.max_ply,
+                        multipv_index + 1,
                         depth_result.statistics.nodes_count + depth_result.statistics.q_nodes_count,
+                        (depth_result.transposition_table_usage * 10.0) as u32,
                         pv_line.join(" ").as_str()
                     )
                 );

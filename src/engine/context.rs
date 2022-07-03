@@ -66,6 +66,7 @@ pub struct HelperThreadContext {
 pub struct SearchResult {
     pub time: u64,
     pub depth: i8,
+    pub transposition_table_usage: f32,
     pub lines: Vec<SearchResultLine>,
     pub statistics: SearchStatistics,
 }
@@ -393,6 +394,7 @@ impl Iterator for SearchContext {
                     return Some(SearchResult::new(
                         0,
                         self.current_depth,
+                        self.transposition_table.get_usage(1000),
                         vec![SearchResultLine::new(0, vec![r#move])],
                         self.statistics,
                     ));
@@ -404,6 +406,7 @@ impl Iterator for SearchContext {
                         return Some(SearchResult::new(
                             0,
                             self.current_depth,
+                            self.transposition_table.get_usage(1000),
                             vec![SearchResultLine::new(score, vec![r#move])],
                             self.statistics,
                         ));
@@ -527,17 +530,24 @@ impl Iterator for SearchContext {
             let mut multipv_result = self.multipv_lines.clone();
             multipv_result.sort_by(|a, b| a.score.cmp(&b.score).reverse());
 
-            return Some(SearchResult::new(total_search_time, self.current_depth - 1, multipv_result, self.statistics));
+            return Some(SearchResult::new(
+                total_search_time,
+                self.current_depth - 1,
+                self.transposition_table.get_usage(1000),
+                multipv_result,
+                self.statistics,
+            ));
         }
     }
 }
 
 impl SearchResult {
     /// Constructs a new instance of [SearchResult] with stored `time`, `depth`, `lines` and `statistics`.
-    pub fn new(time: u64, depth: i8, lines: Vec<SearchResultLine>, statistics: SearchStatistics) -> Self {
+    pub fn new(time: u64, depth: i8, transposition_table_usage: f32, lines: Vec<SearchResultLine>, statistics: SearchStatistics) -> Self {
         Self {
             time,
             depth,
+            transposition_table_usage,
             lines,
             statistics,
         }

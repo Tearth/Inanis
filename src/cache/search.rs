@@ -168,12 +168,11 @@ impl TranspositionTable {
     }
 
     /// Calculates an approximate percentage usage of the table, based on the first 10000 entries.
-    pub fn get_usage(&self) -> f32 {
-        const RESOLUTION: usize = 10000;
-        const BUCKETS_COUNT_TO_CHECK: usize = RESOLUTION / BUCKET_SLOTS;
+    pub fn get_usage(&self, resolution: usize) -> f32 {
+        let buckets_count_to_check: usize = resolution / BUCKET_SLOTS;
         let mut filled_entries = 0;
 
-        for bucket in self.table.iter().take(BUCKETS_COUNT_TO_CHECK) {
+        for bucket in self.table.iter().take(buckets_count_to_check) {
             for entry in &bucket.entries {
                 let entry_key_data = entry.key_data.load(Ordering::Relaxed);
                 let entry_key = (entry_key_data >> 48) as u16;
@@ -184,7 +183,7 @@ impl TranspositionTable {
             }
         }
 
-        ((filled_entries as f32) / (RESOLUTION as f32)) * 100.0
+        ((filled_entries as f32) / (resolution as f32)) * 100.0
     }
 
     /// Increments ann age of all entries stored in the table. If age's value is equal to 31, it gets purged to make more space for a new entries.
