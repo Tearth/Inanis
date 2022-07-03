@@ -1,7 +1,7 @@
+use super::fen;
 use crate::engine::see::SEEContainer;
 use crate::evaluation::EvaluationParameters;
 use crate::state::board::Bitboard;
-use crate::state::fen;
 use crate::state::movegen::MagicContainer;
 use crate::state::patterns::PatternsContainer;
 use crate::state::zobrist::ZobristContainer;

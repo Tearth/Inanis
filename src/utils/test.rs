@@ -1,3 +1,4 @@
+use super::fen;
 use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
 use crate::engine::context::SearchContext;
@@ -6,7 +7,6 @@ use crate::engine::killers::KillersTable;
 use crate::engine::see::SEEContainer;
 use crate::evaluation::EvaluationParameters;
 use crate::state::board::Bitboard;
-use crate::state::fen;
 use crate::state::movegen::MagicContainer;
 use crate::state::movescan::Move;
 use crate::state::patterns::PatternsContainer;

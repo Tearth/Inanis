@@ -1,4 +1,3 @@
-use super::fen;
 use super::movegen::MagicContainer;
 use super::movescan;
 use super::movescan::Move;
@@ -15,6 +14,7 @@ use crate::evaluation::pawns;
 use crate::evaluation::pst;
 use crate::evaluation::safety;
 use crate::evaluation::EvaluationParameters;
+use crate::utils::fen;
 use std::mem::MaybeUninit;
 use std::sync::Arc;
 

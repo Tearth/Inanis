@@ -1,11 +1,11 @@
-use super::board::Bitboard;
-use super::board::CastlingRights;
-use super::movegen::MagicContainer;
-use super::patterns::PatternsContainer;
-use super::zobrist::ZobristContainer;
-use super::*;
 use crate::engine::see::SEEContainer;
 use crate::evaluation::EvaluationParameters;
+use crate::state::board::Bitboard;
+use crate::state::board::CastlingRights;
+use crate::state::movegen::MagicContainer;
+use crate::state::patterns::PatternsContainer;
+use crate::state::zobrist::ZobristContainer;
+use crate::state::*;
 use std::sync::Arc;
 
 pub struct ParsedEPD {
