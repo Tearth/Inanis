@@ -68,7 +68,7 @@ impl Move {
 
     /// Converts short-notated move (e4, Rc8, Qxb6) in `text` into the [Move] instance, using the `board` as context.
     /// Returns [Err] with the proper message if `text` couldn't be parsed correctly.
-    pub fn from_short_notation(mut text: &str, board: &Bitboard) -> Result<Move, &'static str> {
+    pub fn from_short_notation(mut text: &str, board: &mut Bitboard) -> Result<Move, &'static str> {
         let mut moves: [MaybeUninit<Move>; engine::MAX_MOVES_COUNT] = [MaybeUninit::uninit(); engine::MAX_MOVES_COUNT];
         let moves_count = board.get_all_moves(&mut moves, u64::MAX);
 
@@ -80,6 +80,12 @@ impl Move {
         let mut desired_capture: Option<bool> = None;
         let mut desired_promotion: Option<u8> = None;
 
+        text = text.trim_matches('#');
+        text = text.trim_matches('+');
+        text = text.trim_matches('=');
+        text = text.trim_matches('?');
+        text = text.trim_matches('!');
+
         if text.contains('=') {
             desired_promotion = match &text[text.len() - 2..] {
                 "=Q" => Some(QUEEN),
@@ -90,20 +96,15 @@ impl Move {
             }
         }
 
-        text = text.trim_matches('#');
-        text = text.trim_matches('+');
-        text = text.trim_matches('=');
-        text = text.trim_matches('?');
-        text = text.trim_matches('!');
-        text = text.trim_end_matches('Q');
-        text = text.trim_end_matches('R');
-        text = text.trim_end_matches('B');
-        text = text.trim_end_matches('N');
+        text = text.trim_end_matches("=Q");
+        text = text.trim_end_matches("=R");
+        text = text.trim_end_matches("=B");
+        text = text.trim_end_matches("=N");
 
-        if text == "0-0" {
+        if text == "0-0" || text == "O-O" {
             desired_piece = Some(KING);
             desired_flags = Some(MoveFlags::SHORT_CASTLING);
-        } else if text == "0-0-0" {
+        } else if text == "0-0-0" || text == "O-O-O" {
             desired_piece = Some(KING);
             desired_flags = Some(MoveFlags::LONG_CASTLING);
         } else {
@@ -190,7 +191,7 @@ impl Move {
 
                         desired_to = Some(to);
                         desired_rank = Some(rank_from);
-                        desired_piece = Some(PAWN);
+                        desired_piece = Some(piece_type);
                         desired_capture = Some(true);
                     // Rexc2
                     } else {
@@ -206,6 +207,7 @@ impl Move {
             }
         }
 
+        let mut valid_moves = Vec::new();
         for move_index in 0..moves_count {
             let r#move = unsafe { moves[move_index].assume_init() };
             if (desired_to.is_none() || desired_to.unwrap() == r#move.get_to())
@@ -216,11 +218,26 @@ impl Move {
                 && (desired_capture.is_none() || r#move.is_capture() == desired_capture.unwrap())
                 && (desired_promotion.is_none() || (r#move.is_promotion() && r#move.get_promotion_piece() == desired_promotion.unwrap()))
             {
-                return Ok(r#move);
+                valid_moves.push(r#move);
             }
         }
 
-        Err("Invalid move")
+        match valid_moves.len() {
+            0 => Err("Invalid move"),
+            1 => Ok(valid_moves[0]),
+            _ => {
+                for r#move in valid_moves {
+                    board.make_move(r#move);
+                    if !board.is_king_checked(board.active_color ^ 1) {
+                        board.undo_move(r#move);
+                        return Ok(r#move);
+                    }
+                    board.undo_move(r#move);
+                }
+
+                Err("Invalid move")
+            }
+        }
     }
 
     /// Converts long-notated move (e2e4, a1a8) in `text` into the [Move] instance, using the `board` as context.
