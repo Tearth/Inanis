@@ -1,5 +1,6 @@
 pub mod benchmark;
 pub mod fen;
+pub mod pgn;
 pub mod test;
 pub mod tuner;
 

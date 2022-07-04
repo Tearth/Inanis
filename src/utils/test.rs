@@ -188,7 +188,7 @@ fn load_positions(epd_filename: &str) -> Result<Vec<TestPosition>, &'static str>
             continue;
         }
 
-        let parsed_epd = fen::epd_to_board(
+        let mut parsed_epd = fen::epd_to_board(
             position.as_str(),
             Some(evaluation_parameters.clone()),
             Some(zobrist_container.clone()),
@@ -200,7 +200,7 @@ fn load_positions(epd_filename: &str) -> Result<Vec<TestPosition>, &'static str>
             return Err("Not enough data");
         }
 
-        let parsed_best_move = Move::from_short_notation(&parsed_epd.best_move.unwrap(), &parsed_epd.board)?;
+        let parsed_best_move = Move::from_short_notation(&parsed_epd.best_move.unwrap(), &mut parsed_epd.board)?;
         positions.push(TestPosition::new(parsed_epd.id.unwrap(), parsed_epd.board, parsed_best_move));
     }
 
