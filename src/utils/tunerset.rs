@@ -20,7 +20,7 @@ use std::io::Write;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
-pub fn run(pgn_filename: &str, output_file: &str, min_elo: u32, min_ply: usize, max_score: i16, max_diff: u16, density: usize) {
+pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16, max_diff: u16, density: usize) {
     println!("Loading PGN file...");
 
     let file = match File::open(pgn_filename) {
@@ -56,10 +56,6 @@ pub fn run(pgn_filename: &str, output_file: &str, min_elo: u32, min_ply: usize, 
                 return;
             }
         };
-
-        if pgn.white_elo < min_elo || pgn.black_elo < min_elo {
-            continue;
-        }
 
         let board = Bitboard::new_initial_position(
             Some(evaluation_parameters.clone()),

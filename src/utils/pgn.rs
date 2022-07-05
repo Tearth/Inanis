@@ -21,8 +21,6 @@ pub struct PGNLoader {
 
 pub struct ParsedPGN {
     pub result: String,
-    pub white_elo: u32,
-    pub black_elo: u32,
     pub moves: Vec<Move>,
 }
 
@@ -46,8 +44,6 @@ impl PGNLoader {
 
     fn parse(&self, pgn: String) -> Result<ParsedPGN, &'static str> {
         let mut result = None;
-        let mut white_elo = None;
-        let mut black_elo = None;
         let mut moves = Vec::new();
 
         for line in pgn.lines() {
@@ -81,12 +77,6 @@ impl PGNLoader {
                     "Result" => {
                         result = Some(value);
                     }
-                    "WhiteElo" => {
-                        white_elo = Some(value);
-                    }
-                    "BlackElo" => {
-                        black_elo = Some(value);
-                    }
                     _ => {}
                 };
             } else if line.starts_with('1') {
@@ -118,23 +108,7 @@ impl PGNLoader {
             None => return Err("No Result property"),
         };
 
-        let white_elo = match white_elo {
-            Some(value) => match value.parse::<u32>() {
-                Ok(value) => value,
-                Err(_) => return Err("Invalid WhiteElo property"),
-            },
-            None => return Err("No WhiteElo property"),
-        };
-
-        let black_elo = match black_elo {
-            Some(value) => match value.parse::<u32>() {
-                Ok(value) => value,
-                Err(_) => return Err("Invalid BlackElo property"),
-            },
-            None => return Err("No BlackElo property"),
-        };
-
-        Ok(ParsedPGN::new(result, white_elo, black_elo, moves))
+        Ok(ParsedPGN::new(result, moves))
     }
 }
 
@@ -172,12 +146,7 @@ impl Iterator for PGNLoader {
 }
 
 impl ParsedPGN {
-    pub fn new(result: String, white_elo: u32, black_elo: u32, moves: Vec<Move>) -> ParsedPGN {
-        ParsedPGN {
-            result,
-            white_elo,
-            black_elo,
-            moves,
-        }
+    pub fn new(result: String, moves: Vec<Move>) -> ParsedPGN {
+        ParsedPGN { result, moves }
     }
 }
