@@ -10,6 +10,7 @@ use crate::state::movegen::MagicContainer;
 use crate::utils::benchmark;
 use crate::utils::test;
 use crate::utils::tuner;
+use crate::utils::tunerset;
 use chrono::Utc;
 use prettytable::cell;
 use prettytable::format;
@@ -53,6 +54,7 @@ pub fn run() {
             "qperft" => handle_qperft(tokens),
             "test" => handle_test(tokens),
             "tuner" => handle_tuner(tokens),
+            "tunerset" => handle_tunerset(tokens),
             "uci" => handle_uci(),
             "wah" => handle_wah(),
             "quit" => handle_quit(),
@@ -69,6 +71,7 @@ fn handle_help() {
     println!(" magic - generate magic numbers");
     println!(" test [epd] [depth] [transposition_table_size] [threads_count] - run test of positions");
     println!(" tuner [epd] [output] [lock_material] [randomize] [threads_count] - run tuning");
+    println!(" tunerset [pgn] [output] [min_elo] [min_ply] [max_score] [max_diff] [density] - dataset generator");
     println!(" uci - run Universal Chess Interface");
     println!(" quit - close the application");
     println!();
@@ -589,6 +592,85 @@ fn handle_tuner(input: Vec<&str>) {
     };
 
     tuner::run(input[1], input[2], lock_material, random_values, threads_count);
+}
+
+fn handle_tunerset(input: Vec<&str>) {
+    if input.len() < 2 {
+        println!("PGN filename parameter not found");
+        return;
+    }
+
+    if input.len() < 3 {
+        println!("Output directory parameter not found");
+        return;
+    }
+
+    if input.len() < 4 {
+        println!("Minimal Elo parameter not found");
+        return;
+    }
+
+    if input.len() < 5 {
+        println!("Minimal ply parameter not found");
+        return;
+    }
+
+    if input.len() < 6 {
+        println!("Maximal score parameter not found");
+        return;
+    }
+
+    if input.len() < 7 {
+        println!("Maximal score difference parameter not found");
+        return;
+    }
+
+    if input.len() < 8 {
+        println!("Maximal density parameter not found");
+        return;
+    }
+
+    let min_elo = match input[3].parse() {
+        Ok(value) => value,
+        Err(_) => {
+            println!("Invalid minimal Elo value");
+            return;
+        }
+    };
+
+    let min_ply = match input[4].parse() {
+        Ok(value) => value,
+        Err(_) => {
+            println!("Invalid minimal ply value");
+            return;
+        }
+    };
+
+    let max_score = match input[5].parse() {
+        Ok(value) => value,
+        Err(_) => {
+            println!("Invalid maximal quiescence score value");
+            return;
+        }
+    };
+
+    let max_diff = match input[6].parse() {
+        Ok(value) => value,
+        Err(_) => {
+            println!("Invalid maximal score difference score value");
+            return;
+        }
+    };
+
+    let density = match input[7].parse() {
+        Ok(value) => value,
+        Err(_) => {
+            println!("Invalid positions per game value");
+            return;
+        }
+    };
+
+    tunerset::run(input[1], input[2], min_elo, min_ply, max_score, max_diff, density);
 }
 
 /// Handles `uci` command by entering into the UCI (Universal Chess Interface) mode.

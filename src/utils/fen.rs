@@ -103,6 +103,15 @@ pub fn board_to_fen(board: &Bitboard) -> String {
     format!("{} {} {} {} {} {}", pieces, active_color, castling, en_passant, halfmove_clock, fullmove_number)
 }
 
+pub fn board_to_epd(board: &Bitboard) -> String {
+    let pieces = pieces_to_fen(board);
+    let active_color = active_color_to_fen(board);
+    let castling = castling_to_fen(board);
+    let en_passant = en_passant_to_fen(board);
+
+    format!("{} {} {} {}", pieces, active_color, castling, en_passant)
+}
+
 /// Gets a value of the `name` parameters from the specified `epd`. Returns [None] if the parameter was not found.
 fn get_epd_parameter(mut epd: &str, name: &[&str]) -> Option<String> {
     let parameter_index = name.iter().find_map(|p| epd.find(p));

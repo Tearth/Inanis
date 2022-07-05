@@ -690,6 +690,10 @@ impl Bitboard {
         fen::board_to_fen(self)
     }
 
+    pub fn to_epd(&self) -> String {
+        fen::board_to_epd(self)
+    }
+
     /// Recalculates board's hash entirely.
     pub fn recalculate_hash(&mut self) {
         let mut hash = 0u64;

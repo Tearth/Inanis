@@ -3,6 +3,7 @@ pub mod fen;
 pub mod pgn;
 pub mod test;
 pub mod tuner;
+pub mod tunerset;
 
 macro_rules! conditional_expression {
     ($condition: expr, $expression: expr) => {
