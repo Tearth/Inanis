@@ -73,11 +73,8 @@ impl PGNLoader {
                 let name = line[name_start_index..name_end_index].to_string();
                 let value = line[value_start_index..value_end_index].to_string();
 
-                match name.as_str() {
-                    "Result" => {
-                        result = Some(value);
-                    }
-                    _ => {}
+                if name.as_str() == "Result" {
+                    result = Some(value);
                 };
             } else if line.starts_with('1') {
                 let mut board = Bitboard::new_initial_position(
