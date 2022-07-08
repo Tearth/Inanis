@@ -27,8 +27,14 @@ const HASH: &str = env!("HASH");
 const COMPILER: &str = env!("COMPILER");
 
 /// Entry point of the terminal interface and command loop.
-pub fn run() {
-    println!("Inanis {} ({}), created by {}", VERSION, DATE, AUTHOR);
+pub fn run(target_features: Vec<String>) {
+    let header = if target_features.is_empty() {
+        format!("Inanis {} ({}), created by {}", VERSION, DATE, AUTHOR)
+    } else {
+        format!("Inanis {} {} ({}), created by {}", VERSION, target_features.join(" "), DATE, AUTHOR)
+    };
+
+    println!("{}", header);
     println!("Executable hash: {}", HASH);
     println!("Compiler: {}", COMPILER);
     println!("Homepage: {}", REPOSITORY);
