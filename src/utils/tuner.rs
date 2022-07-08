@@ -299,12 +299,12 @@ fn load_values(context: &TunerContext, lock_material: bool, random_values: bool)
         parameters.push(TunerParameter::new(context.parameters.piece_value[KING as usize], 10000, 10000, 10000, 10000));
     }
 
-    parameters.push(TunerParameter::new(context.parameters.mobility_opening[PAWN as usize], 0, 2, 6, 10));
-    parameters.push(TunerParameter::new(context.parameters.mobility_opening[KNIGHT as usize], 0, 2, 6, 10));
-    parameters.push(TunerParameter::new(context.parameters.mobility_opening[BISHOP as usize], 0, 2, 6, 10));
-    parameters.push(TunerParameter::new(context.parameters.mobility_opening[ROOK as usize], 0, 2, 6, 10));
-    parameters.push(TunerParameter::new(context.parameters.mobility_opening[QUEEN as usize], 0, 2, 6, 10));
-    parameters.push(TunerParameter::new(context.parameters.mobility_opening[KING as usize], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_opening[PAWN as usize], 0, 3, 6, 8));
+    parameters.push(TunerParameter::new(context.parameters.mobility_opening[KNIGHT as usize], 0, 3, 6, 8));
+    parameters.push(TunerParameter::new(context.parameters.mobility_opening[BISHOP as usize], 0, 3, 6, 8));
+    parameters.push(TunerParameter::new(context.parameters.mobility_opening[ROOK as usize], 0, 3, 6, 8));
+    parameters.push(TunerParameter::new(context.parameters.mobility_opening[QUEEN as usize], 0, 3, 6, 8));
+    parameters.push(TunerParameter::new(context.parameters.mobility_opening[KING as usize], 0, 3, 6, 8));
 
     parameters.push(TunerParameter::new(context.parameters.mobility_ending[PAWN as usize], 0, 2, 6, 10));
     parameters.push(TunerParameter::new(context.parameters.mobility_ending[KNIGHT as usize], 0, 2, 6, 10));
