@@ -1,5 +1,5 @@
 // --------------------------------------------------- //
-// Generated at 2022-07-03 13:23:55 UTC (e = 0.070760) //
+// Generated at 2022-07-08 11:00:32 UTC (e = 0.082809) //
 // --------------------------------------------------- //
 
 use super::*;
@@ -7,33 +7,33 @@ use super::*;
 impl Default for EvaluationParameters {
     fn default() -> Self {
         let mut evaluation_parameters = Self {
-            piece_value: [100, 381, 421, 632, 1262, 10000],
-            initial_material: 9860,
+            piece_value: [100, 387, 420, 604, 1245, 10000],
+            initial_material: 9734,
 
-            mobility_opening: [2, 4, 4, 4, 0, 2],
-            mobility_ending: [6, 2, 2, 5, 5, 5],
-            mobility_center_multiplier: [4, 3, 3, 2, 3, 4],
+            mobility_opening: [3, 4, 3, 5, 1, 6],
+            mobility_ending: [3, 1, 0, 6, 3, 6],
+            mobility_center_multiplier: [3, 2, 4, 1, 3, 5],
 
-            doubled_pawn_opening: 1,
-            doubled_pawn_ending: -14,
+            doubled_pawn_opening: 0,
+            doubled_pawn_ending: -11,
 
-            isolated_pawn_opening: -22,
-            isolated_pawn_ending: -8,
+            isolated_pawn_opening: -18,
+            isolated_pawn_ending: -9,
 
             chained_pawn_opening: 5,
-            chained_pawn_ending: 6,
+            chained_pawn_ending: 7,
 
-            passing_pawn_opening: -5,
-            passing_pawn_ending: 58,
+            passing_pawn_opening: -10,
+            passing_pawn_ending: 64,
 
-            pawn_shield_opening: 10,
+            pawn_shield_opening: 7,
             pawn_shield_ending: 3,
 
-            pawn_shield_open_file_opening: -25,
+            pawn_shield_open_file_opening: -26,
             pawn_shield_open_file_ending: 6,
 
-            king_attacked_fields_opening: -25,
-            king_attacked_fields_ending: 9,
+            king_attacked_fields_opening: -22,
+            king_attacked_fields_ending: 7,
 
             pst: [[[[0; 64]; 2]; 6]; 2],
             pst_patterns: [[[0; 64]; 2]; 6],
