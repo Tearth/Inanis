@@ -6,7 +6,7 @@ use std::u64;
 const BUCKET_SLOTS: usize = 4;
 
 pub struct PerftHashTable {
-    table: Vec<PerftHashTableBucket>,
+    pub table: Vec<PerftHashTableBucket>,
 }
 
 #[repr(align(64))]
@@ -50,7 +50,7 @@ impl PerftHashTable {
         for (entry_index, entry) in bucket.entries.iter().enumerate() {
             let entry_key = entry.key.load(Ordering::Relaxed);
             let entry_data = entry.data.load(Ordering::Relaxed);
-            let entry_depth = (entry_key ^ entry_data) as u8 & 0xf;
+            let entry_depth = ((entry_key ^ entry_data) as u8) & 0xf;
 
             if entry_depth < smallest_depth {
                 smallest_depth = entry_depth;
@@ -84,7 +84,7 @@ impl PerftHashTable {
         None
     }
 
-    /// Calculates an approximate percentage usage of the table, based on the first 10000 entries.
+    /// Calculates an approximate percentage usage of the table, based on the first `resolution` entries.
     pub fn get_usage(&self, resolution: usize) -> f32 {
         let buckets_count_to_check: usize = resolution / BUCKET_SLOTS;
         let mut filled_entries = 0;

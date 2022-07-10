@@ -5,7 +5,7 @@ use std::u64;
 
 #[derive(Clone)]
 pub struct PawnHashTable {
-    table: Vec<PawnHashTableEntry>,
+    pub table: Vec<PawnHashTableEntry>,
 }
 
 pub struct PawnHashTableEntry {
@@ -57,7 +57,7 @@ impl PawnHashTable {
         None
     }
 
-    /// Calculates an approximate percentage usage of the table, based on the first 10000 entries.
+    /// Calculates an approximate percentage usage of the table, based on the first `resolution` entries.
     pub fn get_usage(&self, resolution: usize) -> f32 {
         let mut filled_entries = 0;
         for entry in self.table.iter().take(resolution) {
@@ -101,7 +101,7 @@ impl Default for PawnHashTableEntry {
 }
 
 impl Clone for PawnHashTableEntry {
-    /// Clones [PawnHashTableEntry] by creating a new atomics (with original values).
+    /// Clones [PawnHashTableEntry] by creating a new atomic (with original value).
     fn clone(&self) -> Self {
         Self {
             key_data: AtomicU32::new(self.key_data.load(Ordering::Relaxed)),

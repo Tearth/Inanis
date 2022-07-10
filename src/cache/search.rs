@@ -167,7 +167,7 @@ impl TranspositionTable {
         self.get(hash, 0, &mut collision).map(|entry| entry.best_move)
     }
 
-    /// Calculates an approximate percentage usage of the table, based on the first 10000 entries.
+    /// Calculates an approximate percentage usage of the table, based on the first `resolution` entries.
     pub fn get_usage(&self, resolution: usize) -> f32 {
         let buckets_count_to_check: usize = resolution / BUCKET_SLOTS;
         let mut filled_entries = 0;
