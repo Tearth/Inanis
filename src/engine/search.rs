@@ -424,7 +424,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
 
         context
             .transposition_table
-            .add(context.board.hash, alpha, best_move, depth as i8, ply, score_type);
+            .add(context.board.hash, alpha, best_move, depth as i8, ply, score_type, context.search_id);
         conditional_expression!(DIAG, context.statistics.tt_added += 1);
     }
 

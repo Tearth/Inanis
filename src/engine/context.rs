@@ -28,6 +28,7 @@ use std::sync::Arc;
 pub struct SearchContext {
     pub board: Bitboard,
     pub statistics: SearchStatistics,
+    pub search_id: u8,
     pub time: u32,
     pub inc_time: u32,
     pub current_depth: i8,
@@ -139,6 +140,7 @@ pub struct SearchStatistics {
 impl SearchContext {
     /// Constructs a new instance of [SearchContext] with parameters as follows:
     ///  - `board` - initial position of the board
+    ///  - `search_id` - search identificator used to recognize old transposition table entries
     ///  - `time` - total time for the color in a move (in milliseconds)
     ///  - `inc_time` - incremental time for the color in a move (in milliseconds)
     ///  - `forced_depth` - depth at which the search will stop (might happen earlier if mate is detected), 0 if there is no constraint
@@ -156,6 +158,7 @@ impl SearchContext {
     ///  - `ponder_token` - token used to change a search mode from pondering to the regular one
     pub fn new(
         board: Bitboard,
+        search_id: u8,
         time: u32,
         inc_time: u32,
         forced_depth: i8,
@@ -179,6 +182,7 @@ impl SearchContext {
         Self {
             board,
             statistics: Default::default(),
+            search_id,
             time,
             inc_time,
             current_depth: 1,

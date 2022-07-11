@@ -92,6 +92,7 @@ fn run_internal(context: &mut TestContext, depth: i8, transposition_table_size: 
                         board_clone,
                         0,
                         0,
+                        0,
                         depth,
                         0,
                         0,

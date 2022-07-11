@@ -80,6 +80,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
             0,
             0,
             0,
+            0,
             false,
             false,
             false,

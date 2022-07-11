@@ -124,6 +124,7 @@ pub fn run() -> BenchmarkResult {
             board,
             0,
             0,
+            0,
             16,
             0,
             0,

@@ -54,59 +54,51 @@ impl TranspositionTable {
         hashtable
     }
 
-    /// Adds a new entry (storing the key, `score`, `best_move`, `depth`, `ply` and `score_type`) using `hash % self.table.len()` formula to calculate an index of the bucket.
-    /// Replacement strategy considers a few elements to optimize memory usage and prioritizes slots to replace as follows:
-    ///  - slots with the same key as the new entry
+    /// Adds a new entry (storing the key, `score`, `best_move`, `depth`, `ply`, `score_type` and `age`) using `hash % self.table.len()` formula
+    /// to calculate an index of the bucket. Replacement strategy considers a few elements to optimize memory usage and prioritizes slots to replace as follows:
     ///  - empty slots
-    ///  - slots with the smallest depth (to ensure that the table is not clogged with entries that will be rarely read)
-    ///  - slots with the biggest age counter (to ensure that old and possibly outdated entries are not preventing us from adding a new one)
+    ///  - slots with the same key as the new entry
+    ///  - slots with the smallest depth (if there are some old entries, prioritire them)
     ///
     /// This function takes care of converting mate `score` using passed `ply`.
-    pub fn add(&self, hash: u64, mut score: i16, best_move: Move, depth: i8, ply: u16, score_type: TranspositionTableScoreType) {
+    pub fn add(&self, hash: u64, mut score: i16, best_move: Move, depth: i8, ply: u16, score_type: TranspositionTableScoreType, age: u8) {
         let key = self.get_key(hash);
         let index = (hash as usize) % self.table.len();
         let bucket = &self.table[index];
 
         let mut smallest_depth = i8::MAX;
-        let mut smallest_depth_index = usize::MAX;
-        let mut oldest_entry_age = 0;
-        let mut oldest_entry_index = usize::MAX;
+        let mut desired_index = usize::MAX;
+        let mut found_old_entry = false;
 
         for (entry_index, entry) in bucket.entries.iter().enumerate() {
             let entry_data = entry.get_data();
 
-            if entry_data.key == key {
-                smallest_depth_index = entry_index;
-                oldest_entry_index = entry_index;
+            if entry_data.depth == 0 || entry_data.key == key {
+                desired_index = entry_index;
                 break;
             }
 
-            if entry_data.depth == 0 {
-                smallest_depth = 0;
-                smallest_depth_index = entry_index;
-                oldest_entry_age = u8::MAX;
-                oldest_entry_index = entry_index;
+            if entry_data.age != age {
+                if found_old_entry {
+                    if entry_data.depth < smallest_depth {
+                        desired_index = entry_index;
+                        smallest_depth = entry_data.depth;
+                    }
+                } else {
+                    desired_index = entry_index;
+                    smallest_depth = entry_data.depth;
+                    found_old_entry = true;
+                }
+
                 continue;
             }
 
-            if entry_data.age > oldest_entry_age {
-                oldest_entry_age = entry_data.age;
-                oldest_entry_index = entry_index;
-                continue;
-            }
-
-            if entry_data.depth < smallest_depth {
+            if !found_old_entry && entry_data.depth < smallest_depth {
                 smallest_depth = entry_data.depth;
-                smallest_depth_index = entry_index;
+                desired_index = entry_index;
                 continue;
             }
         }
-
-        let target_index = if oldest_entry_index != usize::MAX {
-            oldest_entry_index
-        } else {
-            smallest_depth_index
-        };
 
         if engine::is_score_near_checkmate(score) {
             if score > 0 {
@@ -116,7 +108,7 @@ impl TranspositionTable {
             }
         }
 
-        bucket.entries[target_index].set_data(key, score, best_move, depth, score_type, 0);
+        bucket.entries[desired_index].set_data(key, score, best_move, depth, score_type, age);
     }
 
     /// Gets a wanted entry using `hash % self.table.len()` formula to calculate an index of the bucket. This function takes care of converting
@@ -184,29 +176,6 @@ impl TranspositionTable {
         }
 
         ((filled_entries as f32) / (resolution as f32)) * 100.0
-    }
-
-    /// Increments ann age of all entries stored in the table. If age's value is equal to 31, it gets purged to make more space for a new entries.
-    pub fn age_entries(&self) {
-        for bucket in &self.table {
-            for entry in &bucket.entries {
-                let entry_data = entry.get_data();
-                if entry_data.depth > 0 {
-                    if entry_data.age == 31 {
-                        entry.set_data(0, 0, Default::default(), 0, TranspositionTableScoreType::INVALID, 0);
-                    } else {
-                        entry.set_data(
-                            entry_data.key,
-                            entry_data.score,
-                            entry_data.best_move,
-                            entry_data.depth,
-                            entry_data.r#type,
-                            entry_data.age + 1,
-                        );
-                    }
-                }
-            }
-        }
     }
 
     /// Calculates a key for the `hash` by taking the last 16 bits of it.

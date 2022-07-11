@@ -271,6 +271,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
         let state_lock = state_arc.lock().unwrap();
         let mut context = SearchContext::new(
             state_lock.board.clone(),
+            state_lock.board.state_stack.len() as u8,
             time,
             inc_time,
             forced_depth,
@@ -298,6 +299,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
                 let l = state_arc.lock().unwrap();
                 let helper_context = SearchContext::new(
                     l.board.clone(),
+                    l.board.state_stack.len() as u8,
                     time,
                     inc_time,
                     forced_depth,
@@ -401,7 +403,6 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
         }
 
         state_arc.lock().unwrap().search_thread = None;
-        state_arc.lock().unwrap().transposition_table.age_entries();
         state_arc.lock().unwrap().killers_table.age_moves();
         state_arc.lock().unwrap().history_table.age_values();
         state_arc.lock().unwrap().busy_flag.store(false, Ordering::Relaxed);
