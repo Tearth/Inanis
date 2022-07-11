@@ -1,8 +1,8 @@
+use crate::cache::history::HistoryTable;
+use crate::cache::killers::KillersTable;
 use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
 use crate::engine::context::SearchContext;
-use crate::engine::history::HistoryTable;
-use crate::engine::killers::KillersTable;
 use crate::engine::qsearch;
 use crate::engine::see::SEEContainer;
 use crate::engine::*;

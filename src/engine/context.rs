@@ -1,6 +1,6 @@
-use super::history::HistoryTable;
-use super::killers::KillersTable;
 use super::*;
+use crate::cache::history::HistoryTable;
+use crate::cache::killers::KillersTable;
 use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
 use crate::cache::search::TranspositionTableScoreType;

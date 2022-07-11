@@ -1,4 +1,4 @@
-use super::*;
+use crate::engine::*;
 use crate::state::movescan::Move;
 use std::sync::atomic::AtomicU16;
 use std::sync::atomic::Ordering;
