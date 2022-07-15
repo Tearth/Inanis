@@ -19,8 +19,8 @@ pub struct KillersTableResult {
 }
 
 impl KillersTable {
-    /// Adds a new killer `r#move` at the level specified by `ply` value. Maximum amount of slots for each of them is specified by
-    /// [KILLER_SLOTS] constant, and newest entries have always a priority over old ones.
+    /// Adds a new killer `r#move` at the level specified by `ply` value. Maximum amount of slots for each of them is set by
+    /// [KILLER_SLOTS] constant, and newer entries have always a priority over old ones.
     pub fn add(&self, ply: u16, r#move: Move) {
         for slot_index in (1..KILLER_SLOTS).rev() {
             let entry = &self.table[ply as usize][slot_index - 1];
@@ -88,9 +88,8 @@ impl KillersTableEntry {
 
     /// Loads and parses atomic value into a [KillersTableEntry] struct.
     pub fn get_data(&self) -> KillersTableResult {
-        let data = self.data.load(Ordering::Relaxed);
         KillersTableResult {
-            r#move: Move::new_from_raw(data),
+            r#move: Move::new_from_raw(self.data.load(Ordering::Relaxed)),
         }
     }
 }
@@ -103,7 +102,7 @@ impl Default for KillersTableEntry {
 }
 
 impl Clone for KillersTableEntry {
-    /// Clones [KillersTableEntry] by creating a new atomics (with original values).
+    /// Clones [KillersTableEntry] by creating a new atomic (with the original value).
     fn clone(&self) -> Self {
         Self {
             data: AtomicU16::new(self.data.load(Ordering::Relaxed)),

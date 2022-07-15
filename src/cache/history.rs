@@ -15,41 +15,46 @@ pub struct HistoryTableResult {
 }
 
 impl HistoryTable {
-    /// Increases `[from][to]` history slot based on `depth` value.
+    /// Increases `[from][to]` history slot value based on `depth`.
     pub fn add(&self, from: u8, to: u8, depth: u8) {
         let entry = &self.table[from as usize][to as usize];
         let entry_data = entry.get_data();
-
-        let updated_value = entry_data.value + ((depth as u32) * (depth as u32));
-        entry.set_data(updated_value);
+        let updated_value = entry_data.value + (depth as u32).pow(2);
 
         if updated_value > self.max.load(Ordering::Relaxed) {
             self.max.store(updated_value, Ordering::Relaxed);
         }
+
+        entry.set_data(updated_value);
     }
 
     /// Gets `[from][to]` history slot value, relative to `max`.
     pub fn get(&self, from: u8, to: u8, max: u8) -> u8 {
         let entry = &self.table[from as usize][to as usize];
         let entry_data = entry.get_data();
-
         let max_value = self.max.load(Ordering::Relaxed);
+
+        // Integer ceiling: https://stackoverflow.com/a/2745086
         ((entry_data.value * (max as u32) + max_value - 1) / max_value) as u8
     }
 
-    /// Ages all values in the history table by performing square root operation.
+    /// Ages all values in the history table by performing a square root operation and ceiling.
     pub fn age_values(&self) {
         for x in 0..64 {
             for y in 0..64 {
                 let entry = &self.table[x][y];
                 let entry_data = entry.get_data();
 
-                self.table[x][y].set_data((entry_data.value as f32).sqrt().ceil() as u32);
+                self.table[x][y].set_data(self.age_value(entry_data.value));
             }
         }
 
-        let updated_max = (self.max.load(Ordering::Relaxed) as f32).sqrt().ceil() as u32;
-        self.max.store(updated_max, Ordering::Relaxed);
+        self.max.store(self.age_value(self.max.load(Ordering::Relaxed)), Ordering::Relaxed);
+    }
+
+    /// Ages a single value by performing a square root operation and ceiling.
+    fn age_value(&self, value: u32) -> u32 {
+        (value as f32).sqrt().ceil() as u32
     }
 }
 
@@ -67,7 +72,7 @@ impl Default for HistoryTable {
 }
 
 impl Clone for HistoryTable {
-    /// Clones [HistoryTable] by creating a new atomics (with original values).
+    /// Clones [HistoryTable] by creating a new atomics (with the original values).
     fn clone(&self) -> Self {
         Self {
             table: self.table.clone(),
@@ -82,15 +87,16 @@ impl HistoryTableEntry {
         Self { data: AtomicU32::new(0) }
     }
 
-    /// Converts `r#move` into an atomic word, and stores it.
+    /// Converts `value` into an atomic word, and stores it.
     pub fn set_data(&self, value: u32) {
         self.data.store(value, Ordering::Relaxed);
     }
 
-    /// Loads and parses atomic value into a [KillersTableEntry] struct.
+    /// Loads and parses atomic value into a [HistoryTableEntry] struct.
     pub fn get_data(&self) -> HistoryTableResult {
-        let data = self.data.load(Ordering::Relaxed);
-        HistoryTableResult { value: data }
+        HistoryTableResult {
+            value: self.data.load(Ordering::Relaxed),
+        }
     }
 }
 
@@ -102,7 +108,7 @@ impl Default for HistoryTableEntry {
 }
 
 impl Clone for HistoryTableEntry {
-    /// Clones [HistoryTableEntry] by creating a new atomics (with original values).
+    /// Clones [HistoryTableEntry] by creating a new atomic (with the original value).
     fn clone(&self) -> Self {
         Self {
             data: AtomicU32::new(self.data.load(Ordering::Relaxed)),

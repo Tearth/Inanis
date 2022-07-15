@@ -20,8 +20,8 @@ pub struct TranspositionTable {
     table: Vec<TranspositionTableBucket>,
 }
 
-#[repr(align(64))]
 #[derive(Clone)]
+#[repr(align(64))]
 struct TranspositionTableBucket {
     pub entries: [TranspositionTableEntry; BUCKET_SLOTS],
 }
@@ -56,9 +56,8 @@ impl TranspositionTable {
 
     /// Adds a new entry (storing the key, `score`, `best_move`, `depth`, `ply`, `score_type` and `age`) using `hash % self.table.len()` formula
     /// to calculate an index of the bucket. Replacement strategy considers a few elements to optimize memory usage and prioritizes slots to replace as follows:
-    ///  - empty slots
-    ///  - slots with the same key as the new entry
-    ///  - slots with the smallest depth (if there are some old entries, prioritire them)
+    ///  - empty slots or slots with the same key as the new entry
+    ///  - slots with the smallest depth (if there are some old entries, prioritize them)
     ///
     /// This function takes care of converting mate `score` using passed `ply`.
     pub fn add(&self, hash: u64, mut score: i16, best_move: Move, depth: i8, ply: u16, score_type: TranspositionTableScoreType, age: u8) {
@@ -156,7 +155,9 @@ impl TranspositionTable {
     /// Returns [None] if `hash` is incompatible with the stored key.
     pub fn get_best_move(&self, hash: u64) -> Option<Move> {
         let mut collision = false;
-        self.get(hash, 0, &mut collision).map(|entry| entry.best_move)
+        let entry = self.get(hash, 0, &mut collision);
+
+        entry.map(|entry| entry.best_move)
     }
 
     /// Calculates an approximate percentage usage of the table, based on the first `resolution` entries.
@@ -227,7 +228,7 @@ impl Default for TranspositionTableEntry {
 }
 
 impl Clone for TranspositionTableEntry {
-    /// Clones [TranspositionTableEntry] by creating a new atomics (with original values).
+    /// Clones [TranspositionTableEntry] by creating a new atomics (with the original values).
     fn clone(&self) -> Self {
         Self {
             key_data: AtomicU64::new(self.key_data.load(Ordering::Relaxed)),

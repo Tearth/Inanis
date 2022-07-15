@@ -101,7 +101,7 @@ impl Default for PawnHashTableEntry {
 }
 
 impl Clone for PawnHashTableEntry {
-    /// Clones [PawnHashTableEntry] by creating a new atomic (with original value).
+    /// Clones [PawnHashTableEntry] by creating a new atomic (with the original value).
     fn clone(&self) -> Self {
         Self {
             key_data: AtomicU32::new(self.key_data.load(Ordering::Relaxed)),

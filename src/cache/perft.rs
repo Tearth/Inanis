@@ -9,8 +9,8 @@ pub struct PerftHashTable {
     pub table: Vec<PerftHashTableBucket>,
 }
 
-#[repr(align(64))]
 #[derive(Clone)]
+#[repr(align(64))]
 pub struct PerftHashTableBucket {
     pub entries: [PerftHashTableEntry; BUCKET_SLOTS],
 }
@@ -39,7 +39,7 @@ impl PerftHashTable {
         hashtable
     }
 
-    /// Adds a new entry (storing `hash`, `depth` and `leafs_count`) using `hash % self.table.len()` formula to calculate an index of bucket.
+    /// Adds a new entry (storing `hash`, `depth` and `leafs_count`) using `hash % self.table.len()` formula to calculate an index of the bucket.
     pub fn add(&self, hash: u64, depth: u8, leafs_count: u64) {
         let index = (hash as usize) % self.table.len();
         let bucket = &self.table[index];
@@ -65,7 +65,7 @@ impl PerftHashTable {
         bucket.entries[smallest_depth_index].data.store(data, Ordering::Relaxed);
     }
 
-    /// Gets a wanted entry from the specified `depth` using `hash % self.table.len()` formula to calculate an index of bucket.
+    /// Gets a wanted entry from the specified `depth` using `hash % self.table.len()` formula to calculate an index of the bucket.
     /// Returns [None] if `hash` is incompatible with the stored key.
     pub fn get(&self, hash: u64, depth: u8) -> Option<PerftHashTableResult> {
         let index = (hash as usize) % self.table.len();
@@ -126,7 +126,7 @@ impl PerftHashTableResult {
 }
 
 impl Clone for PerftHashTableEntry {
-    /// Clones [PerftHashTableEntry] by creating a new atomics (with original values).
+    /// Clones [PerftHashTableEntry] by creating a new atomics (with the original values).
     fn clone(&self) -> Self {
         Self {
             key: AtomicU64::new(self.key.load(Ordering::Relaxed)),
