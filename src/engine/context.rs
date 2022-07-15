@@ -36,6 +36,7 @@ pub struct SearchContext {
     pub max_nodes_count: u64,
     pub max_move_time: u32,
     pub moves_to_go: u32,
+    pub moves_to_search: Vec<Move>,
     pub search_time_start: DateTime<Utc>,
     pub deadline: u32,
     pub multipv: bool,
@@ -44,7 +45,6 @@ pub struct SearchContext {
     pub uci_debug: bool,
     pub diagnostic_mode: bool,
     pub helper_thread: bool,
-    pub moves_to_search: Vec<Move>,
     pub syzygy_path: Option<String>,
     pub syzygy_probe_limit: u32,
     pub transposition_table: Arc<TranspositionTable>,
@@ -148,12 +148,13 @@ impl SearchContext {
     /// This value can possibly not be strictly respected due to way of how the check is performed, so expect a bit more nodes count before stop
     ///  - `max_move_time` - allocated amount of time for the search (in milliseconds), 0 if we want to use default time allocator
     ///  - `moves_to_go` - moves count, after which the time will be increased
+    ///  - `moves_to_search` - a list of moves to which the root node will be restricted
     ///  - `multipv` - enables or disables analyzing multiple PV lines (might slow down search)
     ///  - `uci_debug` - enables or disables additional debug info sent to GUI by `info string` command
     ///  - `helper_thread` - enables additional features when the thread is a helper in Lazy SMP (like random noise in move ordering)
-    ///  - `moves_to_search` - a list of moves to which the root node will be restricted
+    ///  - `syzygy_path` - path to the directory with Syzygy tables
+    ///  - `syzygy_probe_limit` - number of pieces for which the probing should be started
     ///  - `transposition_table`, `pawn_hashtable`, `killers_table`, `history_table` - hashtables used during search
-    ///  - `helper_contexts` - a list of pre-initialized contexts used by LazySMP
     ///  - `abort_token` - token used to abort search from the outside of the context
     ///  - `ponder_token` - token used to change a search mode from pondering to the regular one
     pub fn new(
@@ -165,11 +166,11 @@ impl SearchContext {
         max_nodes_count: u64,
         max_move_time: u32,
         moves_to_go: u32,
+        moves_to_search: Vec<Move>,
         multipv: bool,
         uci_debug: bool,
         diagnostic_mode: bool,
         helper_thread: bool,
-        moves_to_search: Vec<Move>,
         syzygy_path: Option<String>,
         syzygy_probe_limit: u32,
         transposition_table: Arc<TranspositionTable>,
@@ -190,6 +191,7 @@ impl SearchContext {
             max_nodes_count,
             max_move_time,
             moves_to_go,
+            moves_to_search,
             search_time_start: Utc::now(),
             deadline: 0,
             multipv,
@@ -198,7 +200,6 @@ impl SearchContext {
             uci_debug,
             diagnostic_mode,
             helper_thread,
-            moves_to_search,
             syzygy_path,
             syzygy_probe_limit,
             transposition_table,
@@ -251,7 +252,7 @@ impl SearchContext {
             }
         }
 
-        // Remove repetitions from PV line
+        // Remove endless repetitions from PV line
         if pv_line.len() > 8 {
             if pv_line[0] == pv_line[4] && pv_line[4] == pv_line[8] {
                 pv_line = pv_line[0..1].to_vec();
