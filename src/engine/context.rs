@@ -152,7 +152,7 @@ impl SearchContext {
     ///  - `multipv` - enables or disables analyzing multiple PV lines (might slow down search)
     ///  - `uci_debug` - enables or disables additional debug info sent to GUI by `info string` command
     ///  - `helper_thread` - enables additional features when the thread is a helper in Lazy SMP (like random noise in move ordering)
-    ///  - `syzygy_path` - path to the directory with Syzygy tables
+    ///  - `syzygy_path` - path to the directory with Syzygy tablebases
     ///  - `syzygy_probe_limit` - number of pieces for which the probing should be started
     ///  - `transposition_table`, `pawn_hashtable`, `killers_table`, `history_table` - hashtables used during search
     ///  - `abort_token` - token used to abort search from the outside of the context
@@ -220,6 +220,7 @@ impl SearchContext {
 
         let mut pv_line = Vec::new();
         let mut collision = false;
+
         match self.transposition_table.get(board.hash, 0, &mut collision) {
             Some(entry) => {
                 if entry.r#type != TranspositionTableScoreType::EXACT_SCORE {
@@ -228,17 +229,8 @@ impl SearchContext {
 
                 let mut moves: [MaybeUninit<Move>; MAX_MOVES_COUNT] = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
                 let moves_count = board.get_all_moves(&mut moves, u64::MAX);
-                let mut found = false;
 
-                for r#move in moves.iter().take(moves_count) {
-                    let r#move = unsafe { r#move.assume_init() };
-                    if r#move == entry.best_move {
-                        found = true;
-                        break;
-                    }
-                }
-
-                if found {
+                if moves.iter().take(moves_count).any(|r#move| unsafe { r#move.assume_init() } == entry.best_move) {
                     board.make_move(entry.best_move);
                     if !board.is_king_checked(board.active_color ^ 1) {
                         pv_line.push(entry.best_move);
@@ -308,7 +300,7 @@ impl SearchContext {
             return None;
         }
 
-        if board.get_pieces_count() as usize > cmp::min(self.syzygy_probe_limit as usize, tablebase.max_pieces()) {
+        if board.get_pieces_count() > cmp::min(self.syzygy_probe_limit as usize, tablebase.max_pieces()) as u8 {
             return None;
         }
 
@@ -340,6 +332,7 @@ impl SearchContext {
                 Err(_) => return None,
             };
 
+            // Instantly return 0 if the last move has reset halfmove clock, since probing DTZ would return value not in the context of the original position
             let dtz = if board.halfmove_clock == 0 {
                 0
             } else {
@@ -377,8 +370,9 @@ impl Iterator for SearchContext {
 
     /// Performs a next iteration of the search, using data stored withing the context. Returns [None] if any of the following conditions is true:
     ///  - `self.forced_depth` is not 0 and the current depth is about to exceed this value
-    ///  - the current depth is about to exceed [MAX_DEPTH] value
+    ///  - the search has been done in the previous iteration or the current depth is about to exceed [MAX_DEPTH] value
     ///  - instant move is possible
+    ///  - Syzygy tablebase move is possible
     ///  - time allocated for the current search has expired
     ///  - mate score has detected and was recognized as reliable
     ///  - search was aborted
@@ -515,7 +509,7 @@ impl Iterator for SearchContext {
             }
 
             if self.forced_depth == 0 && self.max_nodes_count == 0 {
-                if search_time > desired_time / 2 {
+                if search_time > ((desired_time as f32) * TIME_THRESHOLD_RATIO) as u32 {
                     self.search_done = true;
                 }
 
@@ -524,16 +518,16 @@ impl Iterator for SearchContext {
                 }
             }
 
-            self.current_depth += 1;
-
             let total_search_time = (Utc::now() - self.search_time_start).num_milliseconds() as u64;
             if !self.multipv {
-                self.multipv_lines
-                    .push(SearchResultLine::new(self.multipv_lines[0].score, self.get_pv_line(&mut self.board.clone(), 0)));
+                let pv_line = self.get_pv_line(&mut self.board.clone(), 0);
+                self.multipv_lines.push(SearchResultLine::new(self.multipv_lines[0].score, pv_line));
             }
 
             let mut multipv_result = self.multipv_lines.clone();
             multipv_result.sort_by(|a, b| a.score.cmp(&b.score).reverse());
+
+            self.current_depth += 1;
 
             return Some(SearchResult::new(
                 total_search_time,

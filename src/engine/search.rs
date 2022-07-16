@@ -77,7 +77,8 @@ pub fn run<const DIAG: bool>(context: &mut SearchContext, depth: i8) {
 /// a bunch of reduction and prunings to optimize search. The most important parameter here, `context` contains the current state of the search, board state,
 /// statistics, and is passed by reference to all nodes. Besides obvious parameters like `depth`, `ply`, `alpha` and `beta`, there's also `allow_null_move`
 /// which prevents two null move checks in a row, and `friendly_king_checked` which is used to share friendly king check status between nodes (it's always
-/// calculated one depth earlier, as it's used as one of the LMR constraints).
+/// calculated one depth earlier, as it's used as one of the LMR constraints). If `DIAG` is set to true, additional statistics will be gathered (with a small
+/// performance penalty).
 ///
 /// Search steps for PV node:
 ///  - test of initial constraints: abort flag, forced depth
@@ -490,10 +491,9 @@ fn assign_move_scores(
             let captured_piece = context.board.get_piece(r#move.get_to());
             let attackers = context.board.get_attacking_pieces(context.board.active_color ^ 1, field);
             let defenders = context.board.get_attacking_pieces(context.board.active_color, field);
-            let see = context
-                .board
-                .see
-                .get(attacking_piece, captured_piece, attackers, defenders, &context.board.evaluation_parameters);
+
+            let see_container = &context.board.see;
+            let see = see_container.get(attacking_piece, captured_piece, attackers, defenders, &context.board.evaluation_parameters);
 
             move_scores[move_index].write(if see >= 0 {
                 see + MOVE_ORDERING_WINNING_CAPTURES_OFFSET

@@ -12,6 +12,7 @@ pub const FUTILITY_PRUNING_MARGIN: i16 = 100;
 
 /// Entry point of the quiescence search. The main idea here is to reduce the horizon effect by processing capture sequences and eventually
 /// make a quiet position suitable for final evaluation. `context`, `depth`, `ply`, `alpha` and `beta` are provided by the leaf of the regular search.
+/// If `DIAG` is set to true, additional statistics will be gathered (with a small performance penalty).
 ///
 /// Search steps:
 ///  - test if the friendly king was not captured earlier
@@ -118,10 +119,9 @@ fn assign_move_scores(context: &SearchContext, moves: &[MaybeUninit<Move>], move
         let attackers = context.board.get_attacking_pieces(context.board.active_color ^ 1, field);
         let defenders = context.board.get_attacking_pieces(context.board.active_color, field);
 
-        let see = context
-            .board
-            .see
-            .get(attacking_piece, captured_piece, attackers, defenders, &context.board.evaluation_parameters);
+        let see_container = &context.board.see;
+        let see = see_container.get(attacking_piece, captured_piece, attackers, defenders, &context.board.evaluation_parameters);
+
         move_scores[move_index].write(see);
     }
 }

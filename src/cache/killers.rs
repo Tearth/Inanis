@@ -34,14 +34,7 @@ impl KillersTable {
 
     /// Checks if killer `r#move` exists at the level specified by `ply`.
     pub fn exists(&self, ply: u16, r#move: Move) -> bool {
-        for entry in &self.table[ply as usize] {
-            let entry_data = entry.get_data();
-            if entry_data.r#move == r#move {
-                return true;
-            }
-        }
-
-        false
+        self.table[ply as usize].iter().any(|entry| entry.get_data().r#move == r#move)
     }
 
     /// Ages killer table by shifting all ply levels by two positions up, to ensure that killer moves inside match board after two halfmoves.

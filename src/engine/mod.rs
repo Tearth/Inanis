@@ -10,6 +10,7 @@ pub mod see;
 pub const MAX_DEPTH: i8 = 64;
 pub const MIN_ALPHA: i16 = -CHECKMATE_SCORE;
 pub const MIN_BETA: i16 = CHECKMATE_SCORE;
+pub const TIME_THRESHOLD_RATIO: f32 = 0.5;
 pub const DEADLINE_MULTIPLIER: f32 = 2.0;
 pub const MAX_MOVES_COUNT: usize = 218;
 

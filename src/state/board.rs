@@ -539,13 +539,7 @@ impl Bitboard {
 
     /// Checks if any of the field specified by `field_indexes` list is attacked by enemy, from the `color` perspective.
     pub fn are_fields_attacked(&self, color: u8, field_indexes: &[u8]) -> bool {
-        for field_index in field_indexes {
-            if self.is_field_attacked(color, *field_index) {
-                return true;
-            }
-        }
-
-        false
+        field_indexes.iter().any(|field_index| self.is_field_attacked(color, *field_index))
     }
 
     /// Gets a list of enemy pieces attacking a field specified by `fields_index`, from the `color` perspective. The encoding looks as follows:

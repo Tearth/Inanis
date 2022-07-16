@@ -540,7 +540,7 @@ fn handle_quit() {
 /// Waits for the busy flag before continuing. If the deadline is exceeded, the engine process is terminated.
 fn wait_for_busy_flag(state: Arc<Mutex<UciState>>) {
     let now = Utc::now();
-    while (*state).lock().unwrap().busy_flag.fetch_and(true, Ordering::Relaxed) {
+    while (*state).lock().unwrap().busy_flag.load(Ordering::Relaxed) {
         if (Utc::now() - now).num_seconds() >= 10 {
             process::exit(-1);
         }
