@@ -148,7 +148,9 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
     let mut moves_to_go = 0;
     let mut moves_to_search = Vec::new();
 
+    let state_lock = state.lock().unwrap();
     let mut iter = parameters[1..].iter().peekable();
+
     while let Some(token) = iter.next() {
         match token.as_str() {
             "wtime" => {
@@ -222,7 +224,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
                         break;
                     }
 
-                    let parsed_move = match Move::from_long_notation(value, &state.lock().unwrap().board) {
+                    let parsed_move = match Move::from_long_notation(value, &state_lock.board) {
                         Ok(r#move) => r#move,
                         Err(message) => {
                             println!("info string Error: {}", message);
@@ -241,34 +243,35 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
         }
     }
 
-    let mut time = match state.lock().unwrap().board.active_color {
+    let mut time = match state_lock.board.active_color {
         WHITE => white_time,
         BLACK => black_time,
-        _ => panic!("Invalid value: state.board.active_color={}", state.lock().unwrap().board.active_color),
+        _ => panic!("Invalid value: state_lock.board.active_color={}", state_lock.board.active_color),
     };
-    time -= cmp::min(time, state.lock().unwrap().options["Move Overhead"].parse::<u32>().unwrap());
+    time -= cmp::min(time, state_lock.options["Move Overhead"].parse::<u32>().unwrap());
 
-    let inc_time = match state.lock().unwrap().board.active_color {
+    let inc_time = match state_lock.board.active_color {
         WHITE => white_inc_time,
         BLACK => black_inc_time,
-        _ => panic!("Invalid value: state.board.active_color={}", state.lock().unwrap().board.active_color),
+        _ => panic!("Invalid value: state_lock.board.active_color={}", state_lock.board.active_color),
     };
 
+    state_lock.abort_token.store(false, Ordering::Relaxed);
+    state_lock.ponder_token.store(false, Ordering::Relaxed);
+    state_lock.busy_flag.store(true, Ordering::Relaxed);
+    drop(state_lock);
+
     let state_arc = state.clone();
-
-    state.lock().unwrap().abort_token.store(false, Ordering::Relaxed);
-    state.lock().unwrap().ponder_token.store(false, Ordering::Relaxed);
-    state.lock().unwrap().busy_flag.store(true, Ordering::Relaxed);
-
     let search_thread = Some(thread::spawn(move || {
-        let multipv = state_arc.lock().unwrap().options["MultiPV"].parse::<u32>().unwrap();
-        let threads = state_arc.lock().unwrap().options["Threads"].parse::<usize>().unwrap();
-        let ponder = state_arc.lock().unwrap().options["Ponder"].parse::<bool>().unwrap();
-        let syzygy_path = state_arc.lock().unwrap().options["SyzygyPath"].clone();
-        let syzygy_path = if syzygy_path != "<empty>" { Some(syzygy_path) } else { None };
-        let syzygy_probe_limit = state_arc.lock().unwrap().options["SyzygyProbeLimit"].parse::<u32>().unwrap();
-
         let state_lock = state_arc.lock().unwrap();
+
+        let multipv = state_lock.options["MultiPV"].parse::<u32>().unwrap();
+        let threads = state_lock.options["Threads"].parse::<usize>().unwrap();
+        let ponder = state_lock.options["Ponder"].parse::<bool>().unwrap();
+        let syzygy_path = state_lock.options["SyzygyPath"].clone();
+        let syzygy_path = if syzygy_path != "<empty>" { Some(syzygy_path) } else { None };
+        let syzygy_probe_limit = state_lock.options["SyzygyProbeLimit"].parse::<u32>().unwrap();
+
         let mut context = SearchContext::new(
             state_lock.board.clone(),
             state_lock.board.state_stack.len() as u8,
@@ -296,10 +299,10 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
 
         if threads > 1 {
             for _ in 0..threads {
-                let l = state_arc.lock().unwrap();
+                let state_lock = state_arc.lock().unwrap();
                 let helper_context = SearchContext::new(
-                    l.board.clone(),
-                    l.board.state_stack.len() as u8,
+                    state_lock.board.clone(),
+                    state_lock.board.state_stack.len() as u8,
                     time,
                     inc_time,
                     forced_depth,
@@ -308,19 +311,19 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
                     moves_to_go,
                     moves_to_search.clone(),
                     false,
-                    l.debug_mode.load(Ordering::Relaxed),
+                    state_lock.debug_mode.load(Ordering::Relaxed),
                     false,
                     true,
                     None,
                     0,
-                    l.transposition_table.clone(),
-                    l.pawn_hashtable.clone(),
-                    l.killers_table.clone(),
-                    l.history_table.clone(),
-                    l.abort_token.clone(),
-                    l.ponder_token.clone(),
+                    state_lock.transposition_table.clone(),
+                    state_lock.pawn_hashtable.clone(),
+                    state_lock.killers_table.clone(),
+                    state_lock.history_table.clone(),
+                    state_lock.abort_token.clone(),
+                    state_lock.ponder_token.clone(),
                 );
-                drop(l);
+                drop(state_lock);
 
                 let data = HelperThreadContext {
                     board: context.board.clone(),
@@ -402,10 +405,11 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
             println!("bestmove {}", best_move.to_long_notation());
         }
 
-        state_arc.lock().unwrap().search_thread = None;
-        state_arc.lock().unwrap().killers_table.age_moves();
-        state_arc.lock().unwrap().history_table.age_values();
-        state_arc.lock().unwrap().busy_flag.store(false, Ordering::Relaxed);
+        let mut state_lock = state_arc.lock().unwrap();
+        state_lock.search_thread = None;
+        state_lock.killers_table.age_moves();
+        state_lock.history_table.age_values();
+        state_lock.busy_flag.store(false, Ordering::Relaxed);
     }));
 
     state.lock().unwrap().search_thread = search_thread;
