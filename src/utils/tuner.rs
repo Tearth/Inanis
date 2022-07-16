@@ -267,7 +267,7 @@ fn calculate_error(context: &mut TunerContext, scaling_constant: f64, threads_co
                     position.board.evaluation_parameters = evaluation_parameters_arc;
                     position.board.recalculate_incremental_values();
 
-                    let evaluation = position.board.evaluate_without_cache() as f64;
+                    let evaluation = position.board.evaluate_without_cache(WHITE) as f64;
                     let sigmoid = 1.0 / (1.0 + 10.0f64.powf(-scaling_constant * evaluation / 400.0));
                     sum_of_errors += (position.result - sigmoid).powi(2);
                 }

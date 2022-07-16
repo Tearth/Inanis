@@ -1,6 +1,7 @@
 use self::context::PerftContext;
 use crate::engine;
 use crate::state::movescan::Move;
+use crate::state::*;
 use std::mem::MaybeUninit;
 use std::u64;
 
@@ -14,7 +15,7 @@ pub fn run_internal(context: &mut PerftContext, depth: i32) -> u64 {
     if context.check_integrity {
         let original_hash = context.board.hash;
         let original_pawn_hash = context.board.pawn_hash;
-        let original_evaluation = context.board.evaluate_without_cache();
+        let original_evaluation = context.board.evaluate_without_cache(WHITE);
 
         context.board.recalculate_hash();
         context.board.recalculate_pawn_hash();
@@ -28,7 +29,7 @@ pub fn run_internal(context: &mut PerftContext, depth: i32) -> u64 {
             panic!("Integrity check failed: invalid pawn hash");
         }
 
-        if original_evaluation != context.board.evaluate_without_cache() {
+        if original_evaluation != context.board.evaluate_without_cache(WHITE) {
             panic!("Integrity check failed: invalid evaluation")
         }
     }

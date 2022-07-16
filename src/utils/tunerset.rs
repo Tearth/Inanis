@@ -126,7 +126,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
                 continue;
             }
 
-            let evaluation = -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate_without_cache();
+            let evaluation = context.board.evaluate_without_cache(context.board.active_color);
             if evaluation.abs_diff(q_score) > max_diff {
                 ignored_positions += 1;
                 continue;

@@ -7,6 +7,7 @@ use crate::evaluation::safety;
 use crate::perft;
 use crate::state::board::Bitboard;
 use crate::state::movegen::MagicContainer;
+use crate::state::*;
 use crate::utils::benchmark;
 use crate::utils::test;
 use crate::utils::tuner;
@@ -312,7 +313,7 @@ fn handle_evaluate(input: Vec<&str>) {
     println!("Pawns: {}", pawns_evaluation);
 
     let sum = material_evaluation + pst_evaluation + mobility_evaluation + safety_evaluation + pawns_evaluation;
-    let board_evaluation = board.evaluate_without_cache();
+    let board_evaluation = board.evaluate_without_cache(WHITE);
 
     if sum != board_evaluation {
         println!(" --- Integration check failed --- ");
