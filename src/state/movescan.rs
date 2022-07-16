@@ -175,33 +175,64 @@ impl Move {
                         desired_file = Some(file_from);
                     }
                 }
-                // R2xc2, Rexc2
+                // R2xc2, Rexc2, Qd3c2
                 5 => {
                     let piece = chars.next().ok_or("Invalid move: bad source file")?;
-                    let file_rank = chars.next().ok_or("Invalid move: symbol")?;
+                    let file_or_rank = chars.next().ok_or("Invalid move: symbol")?;
+                    let capture_or_rank = chars.next().ok_or("Invalid move: symbol")?;
+                    let file = chars.next().ok_or("Invalid move: bad source file")? as u8;
+                    let rank = chars.next().ok_or("Invalid move: bad source rank")? as u8;
+                    let to = (7 - (file - b'a')) + 8 * (rank - b'1');
+                    let piece_type = symbol_to_piece(piece)?;
+
+                    if capture_or_rank == 'x' {
+                        // R2xc2
+                        if file_or_rank.is_ascii_digit() {
+                            let rank_from = (file_or_rank as u8) - b'1';
+
+                            desired_to = Some(to);
+                            desired_rank = Some(rank_from);
+                            desired_piece = Some(piece_type);
+                            desired_capture = Some(true);
+                        // Rexc2
+                        } else {
+                            let file_from = 7 - ((file_or_rank as u8) - b'a');
+
+                            desired_to = Some(to);
+                            desired_file = Some(file_from);
+                            desired_piece = Some(piece_type);
+                            desired_capture = Some(true);
+                        }
+                    // Qd3c2
+                    } else {
+                        let file_from = 7 - ((file_or_rank as u8) - b'a');
+                        let rank_from = (capture_or_rank as u8) - b'1';
+
+                        desired_to = Some(to);
+                        desired_file = Some(file_from);
+                        desired_rank = Some(rank_from);
+                        desired_piece = Some(piece_type);
+                    }
+                }
+                // Qa1xd4
+                6 => {
+                    let piece = chars.next().ok_or("Invalid move: bad source file")?;
+                    let source_file = chars.next().ok_or("Invalid move: symbol")?;
+                    let source_rank = chars.next().ok_or("Invalid move: symbol")?;
                     let _ = chars.next().ok_or("Invalid move: symbol")?;
                     let file = chars.next().ok_or("Invalid move: bad source file")? as u8;
                     let rank = chars.next().ok_or("Invalid move: bad source rank")? as u8;
                     let to = (7 - (file - b'a')) + 8 * (rank - b'1');
                     let piece_type = symbol_to_piece(piece)?;
 
-                    // R2xc2
-                    if file_rank.is_ascii_digit() {
-                        let rank_from = (file_rank as u8) - b'1';
+                    let file_from = 7 - ((source_file as u8) - b'a');
+                    let rank_from = (source_rank as u8) - b'1';
 
-                        desired_to = Some(to);
-                        desired_rank = Some(rank_from);
-                        desired_piece = Some(piece_type);
-                        desired_capture = Some(true);
-                    // Rexc2
-                    } else {
-                        let file_from = 7 - ((file_rank as u8) - b'a');
-
-                        desired_to = Some(to);
-                        desired_file = Some(file_from);
-                        desired_piece = Some(piece_type);
-                        desired_capture = Some(true);
-                    }
+                    desired_to = Some(to);
+                    desired_file = Some(file_from);
+                    desired_rank = Some(rank_from);
+                    desired_piece = Some(piece_type);
+                    desired_capture = Some(true);
                 }
                 _ => return Err("Invalid move: unknown length"),
             }
