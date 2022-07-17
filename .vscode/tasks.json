@@ -7,8 +7,7 @@
             "command": "cargo clean",
             "args": [],
             "group": {
-                "kind": "build",
-                "isDefault": true
+                "kind": "build"
             },
             "problemMatcher": []
         },
@@ -18,8 +17,7 @@
             "command": "cargo rustc --bin inanis --target=x86_64-pc-windows-msvc -- -C target-feature=+bmi1,+bmi2,+popcnt",
             "args": [],
             "group": {
-                "kind": "build",
-                "isDefault": true
+                "kind": "build"
             },
             "problemMatcher": []
         },
@@ -29,8 +27,7 @@
             "command": "cargo rustc --bin inanis --release --target=x86_64-pc-windows-msvc -- -C target-feature=+bmi1,+bmi2,+popcnt -C llvm-args=-x86-asm-syntax=intel --emit asm",
             "args": [],
             "group": {
-                "kind": "build",
-                "isDefault": true
+                "kind": "build"
             },
             "problemMatcher": []
         },
@@ -40,8 +37,7 @@
             "command": "cargo rustc --bin inanis --release --target=x86_64-unknown-linux-musl -- -C target-feature=+bmi1,+bmi2,+popcnt -C linker=rust-lld -C llvm-args=-x86-asm-syntax=intel --emit asm",
             "args": [],
             "group": {
-                "kind": "build",
-                "isDefault": true
+                "kind": "build"
             },
             "problemMatcher": []
         },
@@ -51,8 +47,7 @@
             "command": "${workspaceFolder}/target/x86_64-pc-windows-msvc/release/inanis.exe",
             "args": [],
             "group": {
-                "kind": "build",
-                "isDefault": true
+                "kind": "build"
             },
             "problemMatcher": [],
             "dependsOn": [
