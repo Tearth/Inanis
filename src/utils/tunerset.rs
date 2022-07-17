@@ -28,8 +28,8 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
     let start_time = Utc::now();
     let file = match File::open(pgn_filename) {
         Ok(value) => value,
-        Err(_) => {
-            println!("Can't open PGN file");
+        Err(error) => {
+            println!("Invalid PGN file: {}", error);
             return;
         }
     };
@@ -58,8 +58,8 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
     for pgn in pgn_loader {
         let pgn = match pgn {
             Ok(value) => value,
-            Err(_) => {
-                println!("Invalid PGN");
+            Err(error) => {
+                println!("Invalid PGN file: {}", error);
                 return;
             }
         };
@@ -175,8 +175,8 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
 
     let output_file = match File::create(output_file) {
         Ok(value) => value,
-        Err(_) => {
-            println!("Can't create output file");
+        Err(error) => {
+            println!("Error while saving output: {}", error);
             return;
         }
     };

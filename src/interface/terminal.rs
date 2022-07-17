@@ -284,15 +284,15 @@ fn handle_benchmark() {
 /// Handles `evaluate [fen]` command by printing evaluation for the position specified by FEN.
 fn handle_evaluate(input: Vec<&str>) {
     if input.len() < 2 {
-        println!("FEN not found");
+        println!("FEN parameter not found");
         return;
     }
 
     let fen = input[1..].join(" ");
     let board = match Bitboard::new_from_fen(fen.as_str(), None, None, None, None, None) {
         Ok(board) => board,
-        Err(message) => {
-            println!("{}", message);
+        Err(error) => {
+            println!("Invalid FEN parameter: {}", error);
             return;
         }
     };
@@ -353,16 +353,16 @@ fn handle_perft(input: Vec<&str>) {
 
     let max_depth: i32 = match input[1].parse() {
         Ok(result) => result,
-        Err(_) => {
-            println!("Invalid depth parameter");
+        Err(error) => {
+            println!("Invalid depth parameter: {}", error);
             return;
         }
     };
 
     let mut board = match prepare_board(&input[2..]) {
         Ok(board) => board,
-        Err(message) => {
-            println!("{}", message);
+        Err(error) => {
+            println!("Invalid FEN parameter: {}", error);
             return;
         }
     };
@@ -390,16 +390,16 @@ fn handle_dperft(input: Vec<&str>) {
 
     let depth: i32 = match input[1].parse() {
         Ok(result) => result,
-        Err(_) => {
-            println!("Invalid depth parameter");
+        Err(error) => {
+            println!("Invalid depth parameter: {}", error);
             return;
         }
     };
 
     let mut board = match prepare_board(&input[2..]) {
         Ok(board) => board,
-        Err(message) => {
-            println!("{}", message);
+        Err(error) => {
+            println!("Invalid FEN parameter: {}", error);
             return;
         }
     };
@@ -428,35 +428,35 @@ fn handle_qperft(input: Vec<&str>) {
     }
 
     if input.len() < 3 {
-        println!("Hashtable size not found");
+        println!("Hashtable size parameter not found");
         return;
     }
 
     if input.len() < 4 {
-        println!("Threads count not found");
+        println!("Threads count parameter not found");
         return;
     }
 
     let max_depth: i32 = match input[1].parse() {
         Ok(result) => result,
-        Err(_) => {
-            println!("Invalid depth parameter");
+        Err(error) => {
+            println!("Invalid depth parameter: {}", error);
             return;
         }
     };
 
     let threads_count: usize = match input[2].parse() {
         Ok(result) => result,
-        Err(_) => {
-            println!("Invalid threads count parameter");
+        Err(error) => {
+            println!("Invalid threads count parameter: {}", error);
             return;
         }
     };
 
     let hashtable_size: usize = match input[3].parse() {
         Ok(result) => result,
-        Err(_) => {
-            println!("Invalid hashtable size parameter");
+        Err(error) => {
+            println!("Invalid hashtable size parameter: {}", error);
             return;
         }
     };
@@ -468,8 +468,8 @@ fn handle_qperft(input: Vec<&str>) {
 
     let mut board = match prepare_board(&input[4..]) {
         Ok(board) => board,
-        Err(message) => {
-            println!("{}", message);
+        Err(error) => {
+            println!("Invalid FEN parameter: {}", error);
             return;
         }
     };
@@ -504,27 +504,27 @@ fn handle_test(input: Vec<&str>) {
     }
 
     if input.len() < 4 {
-        println!("Transposition table size not found");
+        println!("Transposition table size parameter not found");
         return;
     }
 
     if input.len() < 5 {
-        println!("Threads count not found");
+        println!("Threads count parameter not found");
         return;
     }
 
     let depth = match input[2].parse() {
         Ok(value) => value,
-        Err(_) => {
-            println!("Invalid depth");
+        Err(error) => {
+            println!("Invalid depth parameter: {}", error);
             return;
         }
     };
 
     let transposition_table_size: usize = match input[3].parse() {
         Ok(value) => value,
-        Err(_) => {
-            println!("Invalid transposition table size parameter");
+        Err(error) => {
+            println!("Invalid transposition table size parameter: {}", error);
             return;
         }
     };
@@ -536,8 +536,8 @@ fn handle_test(input: Vec<&str>) {
 
     let threads_count = match input[4].parse() {
         Ok(value) => value,
-        Err(_) => {
-            println!("Invalid threads count");
+        Err(error) => {
+            println!("Invalid threads count parameter: {}", error);
             return;
         }
     };
@@ -570,30 +570,30 @@ fn handle_tuner(input: Vec<&str>) {
     }
 
     if input.len() < 6 {
-        println!("Threads count not found");
+        println!("Threads count parameter not found");
         return;
     }
 
     let lock_material = match input[3].parse() {
         Ok(value) => value,
-        Err(_) => {
-            println!("Invalid flag");
+        Err(error) => {
+            println!("Invalid lock material parameter: {}", error);
             return;
         }
     };
 
     let random_values = match input[4].parse() {
         Ok(value) => value,
-        Err(_) => {
-            println!("Invalid flag");
+        Err(error) => {
+            println!("Invalid random values parameter: {}", error);
             return;
         }
     };
 
     let threads_count = match input[5].parse() {
         Ok(value) => value,
-        Err(_) => {
-            println!("Invalid threads count");
+        Err(error) => {
+            println!("Invalid threads count parameter: {}", error);
             return;
         }
     };
@@ -634,32 +634,32 @@ fn handle_tunerset(input: Vec<&str>) {
 
     let min_ply = match input[3].parse() {
         Ok(value) => value,
-        Err(_) => {
-            println!("Invalid minimal ply value");
+        Err(error) => {
+            println!("Invalid minimal ply parameter: {}", error);
             return;
         }
     };
 
     let max_score = match input[4].parse() {
         Ok(value) => value,
-        Err(_) => {
-            println!("Invalid maximal quiescence score value");
+        Err(error) => {
+            println!("Invalid maximal quiescence score parameter: {}", error);
             return;
         }
     };
 
     let max_diff = match input[5].parse() {
         Ok(value) => value,
-        Err(_) => {
-            println!("Invalid maximal score difference score value");
+        Err(error) => {
+            println!("Invalid maximal score difference parameter: {}", error);
             return;
         }
     };
 
     let density = match input[6].parse() {
         Ok(value) => value,
-        Err(_) => {
-            println!("Invalid positions per game value");
+        Err(error) => {
+            println!("Invalid density parameter: {}", error);
             return;
         }
     };
@@ -688,7 +688,7 @@ fn handle_unknown_command() {
 }
 
 /// Creates a new board based on the input with FEN or moves list - returns [Err] if internal parser failed.
-fn prepare_board(parameters: &[&str]) -> Result<Bitboard, &'static str> {
+fn prepare_board(parameters: &[&str]) -> Result<Bitboard, String> {
     if parameters.is_empty() {
         return Ok(Bitboard::new_initial_position(None, None, None, None, None));
     }
@@ -699,7 +699,7 @@ fn prepare_board(parameters: &[&str]) -> Result<Bitboard, &'static str> {
             Bitboard::new_from_fen(fen.as_str(), None, None, None, None, None)
         }
         "moves" => Bitboard::new_from_moves(&parameters[1..], None, None, None, None, None),
-        _ => Err("Invalid parameters"),
+        _ => Err(format!("Invalid mode: parameter[0]={}", parameters[0])),
     }
 }
 

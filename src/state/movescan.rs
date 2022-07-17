@@ -68,7 +68,7 @@ impl Move {
 
     /// Converts short-notated move (e4, Rc8, Qxb6) in `text` into the [Move] instance, using the `board` as context.
     /// Returns [Err] with the proper message if `text` couldn't be parsed correctly.
-    pub fn from_short_notation(mut text: &str, board: &mut Bitboard) -> Result<Move, &'static str> {
+    pub fn from_short_notation(mut text: &str, board: &mut Bitboard) -> Result<Move, String> {
         let mut moves: [MaybeUninit<Move>; engine::MAX_MOVES_COUNT] = [MaybeUninit::uninit(); engine::MAX_MOVES_COUNT];
         let moves_count = board.get_all_moves(&mut moves, u64::MAX);
 
@@ -80,6 +80,7 @@ impl Move {
         let mut desired_capture: Option<bool> = None;
         let mut desired_promotion: Option<u8> = None;
 
+        let original_text = text;
         text = text.trim_matches('#');
         text = text.trim_matches('+');
         text = text.trim_matches('=');
@@ -87,12 +88,13 @@ impl Move {
         text = text.trim_matches('!');
 
         if text.contains('=') {
-            desired_promotion = match &text[text.len() - 2..] {
+            let promotion = &text[text.len() - 2..];
+            desired_promotion = match promotion {
                 "=Q" => Some(QUEEN),
                 "=R" => Some(ROOK),
                 "=B" => Some(BISHOP),
                 "=N" => Some(KNIGHT),
-                _ => return Err("Invalid promotion piece"),
+                _ => return Err(format!("Invalid promotion: fen={}, promotion={}", board.to_fen(), promotion)),
             }
         }
 
@@ -234,7 +236,7 @@ impl Move {
                     desired_piece = Some(piece_type);
                     desired_capture = Some(true);
                 }
-                _ => return Err("Invalid move: unknown length"),
+                _ => return Err(format!("Invalid move: fen={}, original_text={}", board.to_fen(), original_text)),
             }
         }
 
@@ -254,7 +256,7 @@ impl Move {
         }
 
         match valid_moves.len() {
-            0 => Err("Invalid move"),
+            0 => Err(format!("Invalid move: fen={}, original_text={}", board.to_fen(), original_text)),
             1 => Ok(valid_moves[0]),
             _ => {
                 for r#move in valid_moves {
@@ -266,14 +268,14 @@ impl Move {
                     board.undo_move(r#move);
                 }
 
-                Err("Invalid move")
+                Err(format!("Invalid move: fen={}, original_text={}", board.to_fen(), original_text))
             }
         }
     }
 
     /// Converts long-notated move (e2e4, a1a8) in `text` into the [Move] instance, using the `board` as context.
     /// Returns [Err] with the proper message if `text` couldn't be parsed correctly.
-    pub fn from_long_notation(text: &str, board: &Bitboard) -> Result<Move, &'static str> {
+    pub fn from_long_notation(text: &str, board: &Bitboard) -> Result<Move, String> {
         let mut chars = text.chars();
         let from_file = chars.next().ok_or("Invalid move: bad source file")? as u8;
         let from_rank = chars.next().ok_or("Invalid move: bad source rank")? as u8;
@@ -282,16 +284,16 @@ impl Move {
         let promotion = chars.next();
 
         if !(b'a'..=b'h').contains(&from_file) || !(b'a'..=b'h').contains(&to_file) {
-            return Err("Invalid move: bad source field");
+            return Err(format!("Invalid move, bad source field: fen={}, text={}", board.to_fen(), text));
         }
 
         if !(b'1'..=b'8').contains(&from_rank) || !(b'1'..=b'8').contains(&to_rank) {
-            return Err("Invalid move: bad destination field");
+            return Err(format!("Invalid move, bad destination field: fen={}, text={}", board.to_fen(), text));
         }
 
         if let Some(promotion_piece) = promotion {
             if !['n', 'b', 'r', 'q'].contains(&promotion_piece) {
-                return Err("Invalid move: bad promotion piece");
+                return Err(format!("Invalid move, bad promotion piece: fen={}, text={}", board.to_fen(), text));
             }
         }
 
@@ -304,7 +306,7 @@ impl Move {
                     'b' => MoveFlags::BISHOP_PROMOTION,
                     'r' => MoveFlags::ROOK_PROMOTION,
                     'q' => MoveFlags::QUEEN_PROMOTION,
-                    _ => panic!("Invalid value: promotion_piece={}", promotion_piece),
+                    _ => return Err(format!("Invalid move, bad promotion piece: fen={}, text={}", board.to_fen(), text)),
                 };
 
                 if ((from as i8) - (to as i8)).abs() != 8 {
@@ -329,7 +331,7 @@ impl Move {
             }
         }
 
-        Err("Invalid move: not found")
+        Err(format!("Invalid move: fen={}, text={}", board.to_fen(), text))
     }
 
     /// Converts move into the long notation (e2e4, a1a8).
@@ -483,7 +485,7 @@ impl Move {
                     _ => board.magic.get_king_moves(from as usize, &board.patterns),
                 }
             }
-            _ => panic!("Invalid value: piece={}", piece),
+            _ => panic!("Invalid value: fen={}, piece={}", board.to_fen(), piece),
         };
 
         if (moves & to_field) == 0 {
@@ -538,7 +540,7 @@ impl Move {
                         rook_field = from + 4;
                         rook_target_field = from + 1;
                     }
-                    _ => panic!("Invalid value: self.get_flags()={:?}", self.get_flags()),
+                    _ => panic!("Invalid value: fen={}, self.get_flags()={:?}", board.to_fen(), self.get_flags()),
                 };
 
                 if board.get_piece(rook_target_field) == u8::MAX
@@ -549,7 +551,7 @@ impl Move {
                 }
             }
         } else {
-            panic!("Can't check move legality: invalid flags")
+            panic!("Move legality check failed: fen={}, self.data={}", board.to_fen(), self.data);
         }
 
         false
@@ -587,7 +589,7 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(
             ROOK => board.magic.get_rook_moves(occupancy, from_field_index as usize),
             QUEEN => board.magic.get_queen_moves(occupancy, from_field_index as usize),
             KING => board.magic.get_king_moves(from_field_index as usize, &board.patterns),
-            _ => panic!("Invalid value: PIECE={}", PIECE),
+            _ => panic!("Invalid parameter: fen={}, PIECE={}", board.to_fen(), PIECE),
         };
         piece_moves &= !board.occupancy[board.active_color as usize] & evasion_mask;
 
@@ -690,7 +692,7 @@ pub fn get_piece_mobility<const PIECE: u8>(board: &Bitboard, color: u8, dangered
             ROOK => board.magic.get_rook_moves(occupancy, from_field_index as usize),
             QUEEN => board.magic.get_queen_moves(occupancy, from_field_index as usize),
             KING => board.magic.get_king_moves(from_field_index as usize, &board.patterns),
-            _ => panic!("Invalid value: PIECE={}", PIECE),
+            _ => panic!("Invalid parameter: fen={}, PIECE={}", board.to_fen(), PIECE),
         } & !board.occupancy[color as usize];
 
         let center_mobility = board.evaluation_parameters.mobility_center_multiplier[PIECE as usize] * bit_count(piece_moves & CENTER) as i16;

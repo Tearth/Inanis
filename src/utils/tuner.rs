@@ -79,8 +79,8 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
     println!("Loading EPD file...");
     let positions = match load_positions(epd_filename) {
         Ok(value) => value,
-        Err(message) => {
-            println!("{}", message);
+        Err(error) => {
+            println!("Invalid EPD file: {}", error);
             return;
         }
     };
@@ -210,11 +210,11 @@ pub fn validate() -> bool {
 
 /// Loads positions from the `epd_filename` and parses them into a list of [TunerPosition]. Returns [Err] with a proper error message if the
 /// file couldn't be parsed.
-fn load_positions(epd_filename: &str) -> Result<Vec<TunerPosition>, &'static str> {
+fn load_positions(epd_filename: &str) -> Result<Vec<TunerPosition>, String> {
     let mut positions = Vec::new();
     let file = match File::open(epd_filename) {
         Ok(value) => value,
-        Err(_) => return Err("Can't open EPD file"),
+        Err(error) => return Err(format!("Invalid EPD file: {}", error)),
     };
 
     let evaluation_parameters = Arc::new(EvaluationParameters::default());
@@ -235,14 +235,15 @@ fn load_positions(epd_filename: &str) -> Result<Vec<TunerPosition>, &'static str
         )?;
 
         if parsed_epd.comment == None {
-            return Err("Invalid game result");
+            return Err("Game result not found".to_string());
         }
 
-        let result = match parsed_epd.comment.unwrap().as_str() {
+        let comment = parsed_epd.comment.unwrap();
+        let result = match comment.as_str() {
             "1-0" => 1.0,
-            "0-1" => 0.0,
             "1/2-1/2" => 0.5,
-            _ => return Err("Invalid game result"),
+            "0-1" => 0.0,
+            _ => return Err(format!("Invalid game result: comment={}", comment)),
         };
 
         positions.push(TunerPosition::new(parsed_epd.board, result));

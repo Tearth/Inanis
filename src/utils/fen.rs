@@ -36,7 +36,7 @@ pub fn fen_to_board(
     patterns_container: Option<Arc<PatternsContainer>>,
     see_container: Option<Arc<SEEContainer>>,
     magic_container: Option<Arc<MagicContainer>>,
-) -> Result<Bitboard, &'static str> {
+) -> Result<Bitboard, String> {
     let result = epd_to_board(
         fen,
         evaluation_parameters,
@@ -57,10 +57,10 @@ pub fn epd_to_board(
     patterns_container: Option<Arc<PatternsContainer>>,
     see_container: Option<Arc<SEEContainer>>,
     magic_container: Option<Arc<MagicContainer>>,
-) -> Result<ParsedEPD, &'static str> {
+) -> Result<ParsedEPD, String> {
     let tokens: Vec<&str> = epd.split(' ').map(|v| v.trim()).collect();
     if tokens.len() < 4 {
-        return Err("Invalid FEN: input too short");
+        return Err(format!("Invalid FEN, input too short: epd={}", epd));
     }
 
     let mut board = Bitboard::new(evaluation_parameters, zobrist_container, patterns_container, see_container, magic_container);
@@ -141,7 +141,7 @@ fn get_epd_parameter(mut epd: &str, name: &[&str]) -> Option<String> {
 }
 
 /// Parses FEN's pieces and stores them into the `board`. Returns [Err] with the proper error message if `pieces` couldn't be parsed.
-fn fen_to_pieces(board: &mut Bitboard, pieces: &str) -> Result<(), &'static str> {
+fn fen_to_pieces(board: &mut Bitboard, pieces: &str) -> Result<(), String> {
     let mut current_field_index = 63;
     for char in pieces.chars().filter(|&x| x != '/') {
         if char.is_ascii_digit() {
@@ -197,7 +197,7 @@ fn pieces_to_fen(board: &Bitboard) -> String {
 }
 
 /// Parses FEN's active color and stores it into the `board`. Returns [Err] with the proper error message if `active_color` couldn't be parsed.
-fn fen_to_active_color(board: &mut Bitboard, active_color: &str) -> Result<(), &'static str> {
+fn fen_to_active_color(board: &mut Bitboard, active_color: &str) -> Result<(), String> {
     let color_char = active_color.chars().next().ok_or("Invalid FEN: bad active color")?;
     board.active_color = if color_char == 'w' { WHITE } else { BLACK };
 
@@ -214,7 +214,7 @@ fn active_color_to_fen(board: &Bitboard) -> String {
 }
 
 /// Parses FEN's castling rights and stores them into the `board`. Returns [Err] with the proper error message if `castling` couldn't be parsed.
-fn fen_to_castling(board: &mut Bitboard, castling: &str) -> Result<(), &'static str> {
+fn fen_to_castling(board: &mut Bitboard, castling: &str) -> Result<(), String> {
     if castling == "-" {
         return Ok(());
     }
@@ -225,7 +225,7 @@ fn fen_to_castling(board: &mut Bitboard, castling: &str) -> Result<(), &'static 
             'Q' => CastlingRights::WHITE_LONG_CASTLING,
             'k' => CastlingRights::BLACK_SHORT_CASTLING,
             'q' => CastlingRights::BLACK_LONG_CASTLING,
-            _ => return Err("Invalid FEN: bad castling rights"),
+            _ => return Err(format!("Invalid FEN, bad castling rights: castling={}", castling)),
         };
     }
 
@@ -260,7 +260,7 @@ fn castling_to_fen(board: &Bitboard) -> String {
 }
 
 /// Parses FEN's en passant and stores it into the `board`. Returns [Err] with the proper error message if `en_passant` couldn't be parsed.
-fn fen_to_en_passant(board: &mut Bitboard, en_passant: &str) -> Result<(), &'static str> {
+fn fen_to_en_passant(board: &mut Bitboard, en_passant: &str) -> Result<(), String> {
     if en_passant == "-" {
         return Ok(());
     }
@@ -290,10 +290,10 @@ fn en_passant_to_fen(board: &Bitboard) -> String {
 }
 
 /// Parses FEN's halfmove clock and stores it into the `board`. Returns [Err] with the proper error message if `halfmove_clock` couldn't be parsed.
-fn fen_to_halfmove_clock(board: &mut Bitboard, halfmove_clock: &str) -> Result<(), &'static str> {
+fn fen_to_halfmove_clock(board: &mut Bitboard, halfmove_clock: &str) -> Result<(), String> {
     board.halfmove_clock = match halfmove_clock.parse::<u16>() {
         Ok(value) => value,
-        Err(_) => return Err("Invalid FEN: bad halfmove clock"),
+        Err(error) => return Err(format!("Invalid FEN, bad halfmove clock: {}", error)),
     };
 
     Ok(())
@@ -305,10 +305,10 @@ fn halfmove_clock_to_fen(board: &Bitboard) -> String {
 }
 
 /// Parses FEN's fullmove number and stores it into the `board`. Returns [Err] with the proper error message if `fullmove_number` couldn't be parsed.
-fn fen_to_fullmove_number(board: &mut Bitboard, fullmove_number: &str) -> Result<(), &'static str> {
+fn fen_to_fullmove_number(board: &mut Bitboard, fullmove_number: &str) -> Result<(), String> {
     board.fullmove_number = match fullmove_number.parse::<u16>() {
         Ok(value) => value,
-        Err(_) => return Err("Invalid FEN: bad fullmove flock"),
+        Err(error) => return Err(format!("Invalid FEN, bad fullmove clock: {}", error)),
     };
 
     Ok(())

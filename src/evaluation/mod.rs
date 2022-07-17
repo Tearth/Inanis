@@ -87,7 +87,7 @@ impl EvaluationParameters {
                     }
                 }
             }
-            _ => panic!("Invalid value: color={}", color),
+            _ => panic!("Invalid parameter: color={}", color),
         }
 
         array

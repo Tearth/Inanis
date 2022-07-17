@@ -50,8 +50,8 @@ pub fn run(epd_filename: &str, depth: i8, transposition_table_size: usize, threa
     println!("Loading EPD file...");
     let positions = match load_positions(epd_filename) {
         Ok(value) => value,
-        Err(message) => {
-            println!("{}", message);
+        Err(error) => {
+            println!("Invalid PGN: {}", error);
             return;
         }
     };
@@ -170,11 +170,11 @@ fn run_internal(context: &mut TestContext, depth: i8, transposition_table_size: 
 
 /// Loads positions from the `epd_filename` and parses them into a list of [TestPosition]. Returns [Err] with a proper error message if the
 /// file couldn't be parsed.
-fn load_positions(epd_filename: &str) -> Result<Vec<TestPosition>, &'static str> {
+fn load_positions(epd_filename: &str) -> Result<Vec<TestPosition>, String> {
     let mut positions = Vec::new();
     let file = match File::open(epd_filename) {
         Ok(value) => value,
-        Err(_) => return Err("Can't open EPD file"),
+        Err(error) => return Err(format!("Invalid EPD file: {}", error)),
     };
 
     let evaluation_parameters = Arc::new(EvaluationParameters::default());
@@ -197,9 +197,6 @@ fn load_positions(epd_filename: &str) -> Result<Vec<TestPosition>, &'static str>
             Some(see_container.clone()),
             Some(magic_container.clone()),
         )?;
-        if parsed_epd.id == None {
-            return Err("Not enough data");
-        }
 
         let parsed_best_move = Move::from_short_notation(&parsed_epd.best_move.unwrap(), &mut parsed_epd.board)?;
         positions.push(TestPosition::new(parsed_epd.id.unwrap(), parsed_epd.board, parsed_best_move));

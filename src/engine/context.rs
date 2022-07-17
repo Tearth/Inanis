@@ -338,10 +338,7 @@ impl SearchContext {
             } else {
                 match tablebase.probe_dtz(&shakmaty_position) {
                     Ok(value) => value.ignore_rounding().0,
-                    Err(_) => {
-                        board.undo_move(r#move);
-                        continue;
-                    }
+                    Err(_) => return None,
                 }
             };
 

@@ -133,7 +133,7 @@ impl Bitboard {
         patterns_container: Option<Arc<PatternsContainer>>,
         see_container: Option<Arc<SEEContainer>>,
         magic_container: Option<Arc<MagicContainer>>,
-    ) -> Result<Self, &'static str> {
+    ) -> Result<Self, String> {
         fen::fen_to_board(
             fen,
             evaluation_parameters,
@@ -153,7 +153,7 @@ impl Bitboard {
         patterns_container: Option<Arc<PatternsContainer>>,
         see_container: Option<Arc<SEEContainer>>,
         magic_container: Option<Arc<MagicContainer>>,
-    ) -> Result<Self, &'static str> {
+    ) -> Result<Self, String> {
         let mut board = Bitboard::new_initial_position(evaluation_parameters, zobrist_container, patterns_container, see_container, magic_container);
         for premade_move in moves {
             let parsed_move = Move::from_long_notation(premade_move, &board)?;
@@ -328,7 +328,7 @@ impl Bitboard {
 
                     !CastlingRights::BLACK_CASTLING
                 }
-                _ => panic!("Invalid value: color={}", color),
+                _ => panic!("Invalid parameter: fen={}, color={}", self.to_fen(), color),
             };
 
             self.pawn_hash ^= self.zobrist.get_piece_hash(color, KING, from);
@@ -355,7 +355,7 @@ impl Bitboard {
                         self.castling_rights &= !CastlingRights::BLACK_LONG_CASTLING;
                     }
                 }
-                _ => panic!("Invalid value: color={}", color),
+                _ => panic!("Invalid parameter: fen={}, color={}", self.to_fen(), color),
             }
         }
 
@@ -527,7 +527,7 @@ impl Bitboard {
         let attacking_enemy_pawns = match color {
             WHITE => field & ((potential_enemy_pawns >> 7) | (potential_enemy_pawns >> 9)),
             BLACK => field & ((potential_enemy_pawns << 7) | (potential_enemy_pawns << 9)),
-            _ => panic!("Invalid value: color={}", color),
+            _ => panic!("Invalid parameter: fen={}, color={}", self.to_fen(), color),
         };
 
         if attacking_enemy_pawns != 0 {
@@ -605,7 +605,7 @@ impl Bitboard {
         let attacking_enemy_pawns = match color {
             WHITE => field & ((potential_enemy_pawns >> 7) | (potential_enemy_pawns >> 9)),
             BLACK => field & ((potential_enemy_pawns << 7) | (potential_enemy_pawns << 9)),
-            _ => panic!("Invalid value: color={}", color),
+            _ => panic!("Invalid parameter: fen={}, color={}", self.to_fen(), color),
         };
 
         if attacking_enemy_pawns != 0 {

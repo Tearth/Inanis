@@ -503,12 +503,13 @@ fn assign_move_scores(
 
             continue;
         } else if r#move.is_promotion() {
-            move_scores[move_index].write(match r#move.get_promotion_piece() {
+            let promotion_piece = r#move.get_promotion_piece();
+            move_scores[move_index].write(match promotion_piece {
                 QUEEN => MOVE_ORDERING_QUEEN_PROMOTION,
                 ROOK => MOVE_ORDERING_ROOK_PROMOTION,
                 BISHOP => MOVE_ORDERING_BISHOP_PROMOTION,
                 KNIGHT => MOVE_ORDERING_KNIGHT_PROMOTION,
-                _ => panic!("Invalid promotion piece"),
+                _ => panic!("Invalid value: fen={}, r#move.data={}", context.board.to_fen(), r#move.data),
             });
 
             continue;
@@ -517,7 +518,7 @@ fn assign_move_scores(
             continue;
         }
 
-        panic!("Sorting rule missing");
+        panic!("Sorting rule missing: fen={}, r#move.data={}", context.board.to_fen(), r#move.data);
     }
 }
 

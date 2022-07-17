@@ -226,8 +226,8 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
 
                     let parsed_move = match Move::from_long_notation(value, &state_lock.board) {
                         Ok(r#move) => r#move,
-                        Err(message) => {
-                            println!("info string Error: {}", message);
+                        Err(error) => {
+                            println!("info string Error: {}", error);
                             return;
                         }
                     };
@@ -444,8 +444,8 @@ fn handle_position(parameters: &[String], state: Arc<Mutex<UciState>>) {
             let fen = parameters[2..].join(" ");
             match Bitboard::new_from_fen(fen.as_str(), None, None, None, None, None) {
                 Ok(board) => board,
-                Err(message) => {
-                    println!("info string Error: {}", message);
+                Err(error) => {
+                    println!("info string Error: {}", error);
                     return;
                 }
             }
@@ -457,8 +457,8 @@ fn handle_position(parameters: &[String], state: Arc<Mutex<UciState>>) {
         for premade_move in &parameters[index + 1..] {
             let parsed_move = match Move::from_long_notation(premade_move, &state.lock().unwrap().board) {
                 Ok(r#move) => r#move,
-                Err(message) => {
-                    println!("info string Error: {}", message);
+                Err(error) => {
+                    println!("info string Error: {}", error);
                     return;
                 }
             };

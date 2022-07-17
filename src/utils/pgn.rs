@@ -42,7 +42,7 @@ impl PGNLoader {
         }
     }
 
-    fn parse(&self, pgn: String) -> Result<ParsedPGN, &'static str> {
+    fn parse(&self, pgn: String) -> Result<ParsedPGN, String> {
         let mut result = None;
         let mut moves = Vec::new();
 
@@ -52,22 +52,22 @@ impl PGNLoader {
             } else if line.starts_with('[') {
                 let name_start_index = match line.find(char::is_alphabetic) {
                     Some(value) => value,
-                    None => return Err("Invalid property"),
+                    None => return Err(format!("Invalid property: line={}", line)),
                 };
 
                 let name_end_index = match line[name_start_index..].find(' ') {
                     Some(value) => name_start_index + value,
-                    None => return Err("Invalid property"),
+                    None => return Err(format!("Invalid property: line={}", line)),
                 };
 
                 let value_start_index = match line.find('\"') {
                     Some(value) => value + 1,
-                    None => return Err("Invalid property"),
+                    None => return Err(format!("Invalid property: line={}", line)),
                 };
 
                 let value_end_index = match line[value_start_index..].find('\"') {
                     Some(value) => value_start_index + value,
-                    None => return Err("Invalid property"),
+                    None => return Err(format!("Invalid property: line={}", line)),
                 };
 
                 let name = line[name_start_index..name_end_index].to_string();
@@ -91,7 +91,7 @@ impl PGNLoader {
 
                     let r#move = match Move::from_short_notation(token, &mut board) {
                         Ok(r#move) => r#move,
-                        Err(_) => return Err("Invalid move"),
+                        Err(error) => return Err(format!("Invalid move: {}", error)),
                     };
 
                     moves.push(r#move);
@@ -102,7 +102,7 @@ impl PGNLoader {
 
         let result = match result {
             Some(value) => value,
-            None => return Err("No Result property"),
+            None => return Err("No Result property".to_string()),
         };
 
         Ok(ParsedPGN::new(result, moves))
@@ -110,7 +110,7 @@ impl PGNLoader {
 }
 
 impl Iterator for PGNLoader {
-    type Item = Result<ParsedPGN, &'static str>;
+    type Item = Result<ParsedPGN, String>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut pgn = String::new();
