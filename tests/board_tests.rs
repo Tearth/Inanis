@@ -18,12 +18,11 @@ mod board_tests {
                             }
                         }
 
-                        if color == WHITE {
-                            assert_eq!($white_mask, result);
-                        }
-                        else if color == BLACK {
-                            assert_eq!($black_mask, result);
-                        }
+                        match color {
+                            WHITE => assert_eq!($white_mask, result),
+                            BLACK => assert_eq!($black_mask, result),
+                            _ => panic!("Invalid value: color={}", color)
+                        };
                     }
                 }
             )*
