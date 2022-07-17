@@ -145,7 +145,7 @@ fn fen_to_pieces(board: &mut Bitboard, pieces: &str) -> Result<(), String> {
     let mut current_field_index = 63;
     for char in pieces.chars().filter(|&x| x != '/') {
         if char.is_ascii_digit() {
-            current_field_index -= char.to_digit(10).ok_or("Invalid FEN: bad piece")? as i32;
+            current_field_index -= char.to_digit(10).ok_or(format!("Invalid FEN, bad symbol: pieces={}", pieces))? as i32;
         } else {
             let color = if char.is_uppercase() { WHITE } else { BLACK };
             let piece = symbol_to_piece(char)?;
@@ -197,9 +197,13 @@ fn pieces_to_fen(board: &Bitboard) -> String {
 }
 
 /// Parses FEN's active color and stores it into the `board`. Returns [Err] with the proper error message if `active_color` couldn't be parsed.
-fn fen_to_active_color(board: &mut Bitboard, active_color: &str) -> Result<(), String> {
-    let color_char = active_color.chars().next().ok_or("Invalid FEN: bad active color")?;
-    board.active_color = if color_char == 'w' { WHITE } else { BLACK };
+fn fen_to_active_color(board: &mut Bitboard, color: &str) -> Result<(), String> {
+    let color_char = color.chars().next().ok_or(format!("Invalid FEN, bad color: color={}", color))?;
+    board.active_color = match color_char {
+        'w' => WHITE,
+        'b' => BLACK,
+        _ => return Err(format!("Invalid FEN, bad color: color={}", color)),
+    };
 
     Ok(())
 }
@@ -266,8 +270,8 @@ fn fen_to_en_passant(board: &mut Bitboard, en_passant: &str) -> Result<(), Strin
     }
 
     let mut chars = en_passant.chars();
-    let file = chars.next().ok_or("Invalid FEN: bad en passant file")? as u8;
-    let rank = chars.next().ok_or("Invalid FEN: bad en passant rank")? as u8;
+    let file = chars.next().ok_or(format!("Invalid FEN, bad en passant file: en_passant={}", en_passant))? as u8;
+    let rank = chars.next().ok_or(format!("Invalid FEN, bad en passant rank: en_passant={}", en_passant))? as u8;
 
     let field_index = (7 - (file - b'a')) + 8 * (rank - b'1');
     board.en_passant = 1u64 << field_index;

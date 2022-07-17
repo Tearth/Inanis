@@ -114,8 +114,8 @@ impl Move {
             match text.len() {
                 // e4
                 2 => {
-                    let file = chars.next().ok_or("Invalid move: bad source file")? as u8;
-                    let rank = chars.next().ok_or("Invalid move: bad source rank")? as u8;
+                    let file = chars.next().ok_or(format!("Invalid move, bad destination file: text={}", text))? as u8;
+                    let rank = chars.next().ok_or(format!("Invalid move, bad source rank: text={}", text))? as u8;
                     let to = (7 - (file - b'a')) + 8 * (rank - b'1');
 
                     desired_to = Some(to);
@@ -123,9 +123,10 @@ impl Move {
                 }
                 // Nd5
                 3 => {
-                    let piece = chars.next().ok_or("Invalid move: bad source file")?;
-                    let file = chars.next().ok_or("Invalid move: bad source file")? as u8;
-                    let rank = chars.next().ok_or("Invalid move: bad source rank")? as u8;
+                    let piece = chars.next().ok_or(format!("Invalid move, bad piece: text={}", text))?;
+                    let file = chars.next().ok_or(format!("Invalid move, bad destination file: text={}", text))? as u8;
+                    let rank = chars.next().ok_or(format!("Invalid move, bad destination rank: text={}", text))? as u8;
+
                     let to = (7 - (file - b'a')) + 8 * (rank - b'1');
                     let piece_type = symbol_to_piece(piece)?;
 
@@ -134,10 +135,10 @@ impl Move {
                 }
                 // exf5, Rxf5, N3e4, Nde4
                 4 => {
-                    let piece_or_file = chars.next().ok_or("Invalid move: bad source file")?;
-                    let capture_or_file_rank = chars.next().ok_or("Invalid move: symbol")?;
-                    let file = chars.next().ok_or("Invalid move: bad source file")? as u8;
-                    let rank = chars.next().ok_or("Invalid move: bad source rank")? as u8;
+                    let piece_or_file = chars.next().ok_or(format!("Invalid move, bad symbol: text={}", text))?;
+                    let capture_or_file_rank = chars.next().ok_or(format!("Invalid move, bad symbol: text={}", text))?;
+                    let file = chars.next().ok_or(format!("Invalid move, bad destination file: text={}", text))? as u8;
+                    let rank = chars.next().ok_or(format!("Invalid move, bad destination rank: text={}", text))? as u8;
                     let to = (7 - (file - b'a')) + 8 * (rank - b'1');
 
                     // exf5, Rxf5
@@ -179,11 +180,11 @@ impl Move {
                 }
                 // R2xc2, Rexc2, Qd3c2
                 5 => {
-                    let piece = chars.next().ok_or("Invalid move: bad source file")?;
-                    let file_or_rank = chars.next().ok_or("Invalid move: symbol")?;
-                    let capture_or_rank = chars.next().ok_or("Invalid move: symbol")?;
-                    let file = chars.next().ok_or("Invalid move: bad source file")? as u8;
-                    let rank = chars.next().ok_or("Invalid move: bad source rank")? as u8;
+                    let piece = chars.next().ok_or(format!("Invalid move, bad piece: text={}", text))?;
+                    let file_or_rank = chars.next().ok_or(format!("Invalid move, bad symbol: text={}", text))?;
+                    let capture_or_rank = chars.next().ok_or(format!("Invalid move, bad symbol: text={}", text))?;
+                    let file = chars.next().ok_or(format!("Invalid move, bad destination file: text={}", text))? as u8;
+                    let rank = chars.next().ok_or(format!("Invalid move, bad destination rank: text={}", text))? as u8;
                     let to = (7 - (file - b'a')) + 8 * (rank - b'1');
                     let piece_type = symbol_to_piece(piece)?;
 
@@ -218,12 +219,12 @@ impl Move {
                 }
                 // Qa1xd4
                 6 => {
-                    let piece = chars.next().ok_or("Invalid move: bad source file")?;
-                    let source_file = chars.next().ok_or("Invalid move: symbol")?;
-                    let source_rank = chars.next().ok_or("Invalid move: symbol")?;
-                    let _ = chars.next().ok_or("Invalid move: symbol")?;
-                    let file = chars.next().ok_or("Invalid move: bad source file")? as u8;
-                    let rank = chars.next().ok_or("Invalid move: bad source rank")? as u8;
+                    let piece = chars.next().ok_or(format!("Invalid move, bad piece: text={}", text))?;
+                    let source_file = chars.next().ok_or(format!("Invalid move, bad source file: text={}", text))?;
+                    let source_rank = chars.next().ok_or(format!("Invalid move, bad source rank: text={}", text))?;
+                    let _ = chars.next().ok_or(format!("Invalid move, bad symbol: text={}", text))?;
+                    let file = chars.next().ok_or(format!("Invalid move, bad destination file: text={}", text))? as u8;
+                    let rank = chars.next().ok_or(format!("Invalid move, bad destination rank: text={}", text))? as u8;
                     let to = (7 - (file - b'a')) + 8 * (rank - b'1');
                     let piece_type = symbol_to_piece(piece)?;
 
@@ -277,10 +278,10 @@ impl Move {
     /// Returns [Err] with the proper message if `text` couldn't be parsed correctly.
     pub fn from_long_notation(text: &str, board: &Bitboard) -> Result<Move, String> {
         let mut chars = text.chars();
-        let from_file = chars.next().ok_or("Invalid move: bad source file")? as u8;
-        let from_rank = chars.next().ok_or("Invalid move: bad source rank")? as u8;
-        let to_file = chars.next().ok_or("Invalid move: bad destination file")? as u8;
-        let to_rank = chars.next().ok_or("Invalid move: bad destination rank")? as u8;
+        let from_file = chars.next().ok_or(format!("Invalid move, bad source file: text={}", text))? as u8;
+        let from_rank = chars.next().ok_or(format!("Invalid move, bad source rank: text={}", text))? as u8;
+        let to_file = chars.next().ok_or(format!("Invalid move, bad destination file: text={}", text))? as u8;
+        let to_rank = chars.next().ok_or(format!("Invalid move, bad destination rank: text={}", text))? as u8;
         let promotion = chars.next();
 
         if !(b'a'..=b'h').contains(&from_file) || !(b'a'..=b'h').contains(&to_file) {
