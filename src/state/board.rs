@@ -783,10 +783,10 @@ impl Bitboard {
         -((color as i16) * 2 - 1) * evaluation
     }
 
-    /// Runs lazy (fast) evaluations, considering only material and piece-square tables. Returns score from the white color perspective (more than 0 when
+    /// Runs lazy (fast) evaluations, considering only material and piece-square tables. Returns score from the `color` perspective (more than 0 when
     /// advantage, less than 0 when disadvantage).
-    pub fn evaluate_lazy(&self) -> i16 {
-        material::evaluate(self) + pst::evaluate(self)
+    pub fn evaluate_lazy(&self, color: u8) -> i16 {
+        -((color as i16) * 2 - 1) * (material::evaluate(self) + pst::evaluate(self))
     }
 
     /// Recalculates incremental values (material and piece-square tables) entirely.

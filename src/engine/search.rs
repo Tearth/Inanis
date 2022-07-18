@@ -231,7 +231,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
         let margin = razoring_get_margin(depth);
         let lazy_evaluation_value = match lazy_evaluation {
             Some(value) => value,
-            None => -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate_lazy(),
+            None => context.board.evaluate_lazy(context.board.active_color),
         };
 
         conditional_expression!(DIAG, context.statistics.razoring_attempts += 1);
@@ -253,7 +253,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
         let margin = static_null_move_pruning_get_margin(depth);
         let lazy_evaluation_value = match lazy_evaluation {
             Some(value) => value,
-            None => -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate_lazy(),
+            None => context.board.evaluate_lazy(context.board.active_color),
         };
 
         conditional_expression!(DIAG, context.statistics.static_null_move_pruning_attempts += 1);
@@ -272,7 +272,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
         let margin = NULL_MOVE_PRUNING_MARGIN;
         let lazy_evaluation_value = match lazy_evaluation {
             Some(value) => value,
-            None => -((context.board.active_color as i16) * 2 - 1) * context.board.evaluate_lazy(),
+            None => context.board.evaluate_lazy(context.board.active_color),
         };
 
         conditional_expression!(DIAG, context.statistics.null_move_pruning_attempts += 1);
