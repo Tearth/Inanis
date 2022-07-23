@@ -1,15 +1,16 @@
 # Inanis
 UCI chess engine written in Rust, the successor of [Proxima b](https://github.com/Tearth/Proxima-b), [Proxima b 2.0](https://github.com/Tearth/Proxima-b-2.0) and [Cosette](https://github.com/Tearth/Cosette). The project is written after hours, ~~with the goal to reach 2600 Elo (or at least to be stronger than the last version of [Cosette](https://github.com/Tearth/Cosette) which was about 2500 Elo)~~ with the goal to reach 3000 Elo. Perfect as a sparring partner for other chess engines, since it was heavily tested using very fast games (like 5+0.1). Supports pondering and multithreading.
 
-**Current strength**: 2750 Elo (02-04-2022)
+**Current strength**: 2800 Elo (--.--.----)
 
 **Documentation**: https://tearth.github.io/Inanis
 
 ## Releases
 | Version                                                       | Release date | Elo  | Description  |
 |---------------------------------------------------------------|--------------|------|--------------|
-| [1.0.1](https://github.com/Tearth/Inanis/releases/tag/v1.0.1) | 05-04-2022   | 2750 | A bunch of fixes for reported issues, stability improvement |
-| [1.0.0](https://github.com/Tearth/Inanis/releases/tag/v1.0.0) | 02-04-2022   | 2750 | Initial release |
+| [1.1.0](https://github.com/Tearth/Inanis/releases/tag/v1.1.0) | --.--.----   | 2800 | Syzygy tablebases, MultiPV, adjusted evaluation and a lot of smaller improvements |
+| [1.0.1](https://github.com/Tearth/Inanis/releases/tag/v1.0.1) | 05.04.2022   | 2750 | A bunch of fixes for reported issues, stability improvement |
+| [1.0.0](https://github.com/Tearth/Inanis/releases/tag/v1.0.0) | 02.04.2022   | 2750 | Initial release |
 
 Each release contains a set of binaries for various platforms: Linux (x86, x86-64 ARM, AArch64) and Windows (x86, x86-64). Both Linux x86-64 and Windows x86-64 were also compiled with two additional instruction set variants: POPCNT and POPCNT + BMI1 + BMI2 - to get the best performance, please try to run the `benchmark` command using different engine's variants and choose the one which didn't return an error and has the most advanced instructions.
 
@@ -57,6 +58,10 @@ Examples of running the tuner:
 
  - `tuner ./input/quiet.epd ./output/ true true 4` - run tuning with 4 threads (excluding piece values) for positions stored in `quiet.epd`, starting from the values already set in the engine, and saving the result in the `output` directory
 
+Since version 1.1.0, Inanis has also a command to generate epd files with quiet positions, based on provided PGN input:
+ - `tunerset ./input/games.pgn ./output/quiet.epd 16 250 50 3` - 
+generate a new `quiet.epd` file, by parsing `games.pgn` games and taking 3 random positions from each of them, ignoring these with a ply less than 16, evaluation score bigger than 250, and the difference between evaluation score and quiescence search score bigger than 50
+
 ## Test suites 
 Testing of strategic evaluation performance can be done by using the `test` command, which performs a fixed-depth search for positions stored in the EPD file.
 
@@ -77,7 +82,7 @@ Examples of running the tests:
 ## Dependencies
  - [fastrand](https://github.com/smol-rs/fastrand) - a simple and fast random number generator
  - [chrono](https://github.com/chronotope/chrono) - feature-complete superset of the time library
- - [bitflags](https://github.com/bitflags/bitflags) - macro to generate structures which behave like a set of bitflags
+ - [bitflags](https://github.com/bitflags/bitflags) - macro to generate structures that behave like a set of bitflags
  - [prettytable-rs](https://github.com/phsym/prettytable-rs) - a formatted and aligned table printer library
  - [crossbeam](https://github.com/crossbeam-rs/crossbeam) - a set of tools for concurrent programming
  - [shakmaty-syzygy](https://github.com/niklasf/shakmaty-syzygy) (with [shakmaty](https://github.com/niklasf/shakmaty) as dependency) - support for Syzygy tablebases
@@ -94,6 +99,7 @@ Because Inanis is a pet project, pull requests are not currently accepted - this
  magic - generate magic numbers
  test [epd] [depth] [transposition_table_size] [threads_count] - run test of positions
  tuner [epd] [output] [lock_material] [randomize] [threads_count] - run tuning
+ tunerset [pgn] [output] [min_ply] [max_score] [max_diff] [density] - dataset generator
  uci - run Universal Chess Interface
  quit - close the application
 
