@@ -376,11 +376,11 @@ impl Bitboard {
     /// Undoes `r#move`, with the assumption that it's perfectly valid at the current position (otherwise, internal state can be irreversibly corrupted).
     ///
     /// Steps of undoing a move:
-    ///  - restore halfmove clock, castling rights, en passant bitboard, board hash and pawn hash
     ///  - update piece bitboards
     ///  - decrease fullmove number if needed
     ///  - restore halfmove clock if needed
     ///  - switch active color
+    ///  - restore halfmove clock, castling rights, en passant bitboard, board hash and pawn hash
     pub fn undo_move(&mut self, r#move: Move) {
         let color = self.active_color ^ 1;
         let enemy_color = self.active_color;
@@ -458,10 +458,10 @@ impl Bitboard {
     /// Undoes a null move, which is basically a switch of the active color with restoring of the internal state.
     ///
     /// Steps of undoing a null move:
-    ///  - restore halfmove clock, castling rights, en passant bitboard, board hash and pawn hash
     ///  - decrease fullmove number if needed
     ///  - switch active color
     ///  - decrease null moves count
+    ///  - restore halfmove clock, castling rights, en passant bitboard, board hash and pawn hash
     pub fn undo_null_move(&mut self) {
         if self.active_color == WHITE {
             self.fullmove_number -= 1;
@@ -472,6 +472,7 @@ impl Bitboard {
         self.pop_state();
     }
 
+    /// Preserves halfmove clock, castling rights, en passant bitboard, board hash, pawn hash and captured piece on the stack
     pub fn push_state(&mut self) {
         self.state_stack.push(BitboardState::new(
             self.halfmove_clock,
@@ -483,6 +484,7 @@ impl Bitboard {
         ));
     }
 
+    /// Restores halfmove clock, castling rights, en passant bitboard, board hash, pawn hash and captured piece from the stack
     pub fn pop_state(&mut self) {
         let state = unsafe { self.state_stack.pop().unwrap_unchecked() };
         self.halfmove_clock = state.halfmove_clock;
@@ -684,6 +686,7 @@ impl Bitboard {
         fen::board_to_fen(self)
     }
 
+    /// Converts the board`s state into EPD.
     pub fn to_epd(&self) -> String {
         fen::board_to_epd(self)
     }
@@ -883,12 +886,14 @@ impl Bitboard {
         (total_material_without_kings as f32) / (self.evaluation_parameters.initial_material as f32)
     }
 
+    /// Gets pieces count by counting set bits in occupancy.
     pub fn get_pieces_count(&self) -> u8 {
         bit_count(self.occupancy[WHITE as usize] | self.occupancy[BLACK as usize])
     }
 }
 
 impl BitboardState {
+    /// Constructs a new instance of [BitboardState] with stored `halfmove_clock`, `castling_rights`, `en_passant`, `hash`, `pawn_hash` and `captured_piece`.
     pub fn new(halfmove_clock: u16, castling_rights: CastlingRights, en_passant: u64, hash: u64, pawn_hash: u64, captured_piece: u8) -> BitboardState {
         BitboardState {
             halfmove_clock,

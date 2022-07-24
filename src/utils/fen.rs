@@ -103,6 +103,7 @@ pub fn board_to_fen(board: &Bitboard) -> String {
     format!("{} {} {} {} {} {}", pieces, active_color, castling, en_passant, halfmove_clock, fullmove_number)
 }
 
+/// Converts [Bitboard] into the EPD.
 pub fn board_to_epd(board: &Bitboard) -> String {
     let pieces = pieces_to_fen(board);
     let active_color = active_color_to_fen(board);

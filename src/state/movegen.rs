@@ -167,6 +167,13 @@ pub struct MagicContainer {
     pub bishop_fields: [MagicField; 64],
 }
 
+pub struct MagicField {
+    pub mask: u64,
+    pub shift: u8,
+    pub magic: u64,
+    pub attacks: Vec<u64>,
+}
+
 impl MagicContainer {
     /// Gets a rook moves for the field specified by `field_index`, considering `occupancy`.
     pub fn get_rook_moves(&self, mut occupancy: u64, field_index: usize) -> u64 {
@@ -427,13 +434,6 @@ impl Default for MagicContainer {
 
         result
     }
-}
-
-pub struct MagicField {
-    pub mask: u64,
-    pub shift: u8,
-    pub magic: u64,
-    pub attacks: Vec<u64>,
 }
 
 impl MagicField {

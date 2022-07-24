@@ -65,14 +65,17 @@ impl Default for UciState {
 /// Entry point of the UCI (Universal Chess Interface) and command loop.
 pub fn run() {
     let state: Arc<Mutex<UciState>> = Arc::new(Mutex::new(Default::default()));
-    state.lock().unwrap().options.insert("Hash".to_string(), "2".to_string());
-    state.lock().unwrap().options.insert("Move Overhead".to_string(), "10".to_string());
-    state.lock().unwrap().options.insert("MultiPV".to_string(), "1".to_string());
-    state.lock().unwrap().options.insert("Threads".to_string(), "1".to_string());
-    state.lock().unwrap().options.insert("SyzygyPath".to_string(), "<empty>".to_string());
-    state.lock().unwrap().options.insert("SyzygyProbeLimit".to_string(), "8".to_string());
-    state.lock().unwrap().options.insert("Ponder".to_string(), "false".to_string());
-    state.lock().unwrap().options.insert("Crash Files".to_string(), "false".to_string());
+
+    let mut state_lock = state.lock().unwrap();
+    state_lock.options.insert("Hash".to_string(), "2".to_string());
+    state_lock.options.insert("Move Overhead".to_string(), "10".to_string());
+    state_lock.options.insert("MultiPV".to_string(), "1".to_string());
+    state_lock.options.insert("Threads".to_string(), "1".to_string());
+    state_lock.options.insert("SyzygyPath".to_string(), "<empty>".to_string());
+    state_lock.options.insert("SyzygyProbeLimit".to_string(), "8".to_string());
+    state_lock.options.insert("Ponder".to_string(), "false".to_string());
+    state_lock.options.insert("Crash Files".to_string(), "false".to_string());
+    drop(state_lock);
 
     println!("id name Inanis {}", VERSION);
     println!("id author {}", AUTHOR);
@@ -134,6 +137,7 @@ fn handle_debug(parameters: &[String], state: Arc<Mutex<UciState>>) {
 ///  - `movetime x` - fixed time allocated for the search in milliseconds
 ///  - `movestogo x` - amount of moves, after which the time will be increased
 ///  - `infinite` - tells the search to run until it reaches the maximum depth for the engine
+///  - `searchmoves [moves]` - restricts search to the provided moves list
 ///  - `ponder` - tells the search to run in the ponder mode (thinking on the opponent's time)
 fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
     wait_for_busy_flag(state.clone());
@@ -423,8 +427,9 @@ fn handle_isready(state: Arc<Mutex<UciState>>) {
 
 /// Handles `ponderhit` command by setting abort and ponder tokens, which should switch a search mode from the ponder to the regular one.
 fn handle_ponderhit(state: Arc<Mutex<UciState>>) {
-    state.lock().unwrap().ponder_token.store(true, Ordering::Relaxed);
-    state.lock().unwrap().abort_token.store(true, Ordering::Relaxed);
+    let state_lock = state.lock().unwrap();
+    state_lock.ponder_token.store(true, Ordering::Relaxed);
+    state_lock.abort_token.store(true, Ordering::Relaxed);
 }
 
 /// Handles `position ...` command with the following variants:
@@ -524,11 +529,13 @@ fn handle_setoption(parameters: &[String], state: Arc<Mutex<UciState>>) {
 fn handle_ucinewgame(state: Arc<Mutex<UciState>>) {
     wait_for_busy_flag(state.clone());
 
-    state.lock().unwrap().abort_token.store(true, Ordering::Relaxed);
-    state.lock().unwrap().board = Bitboard::new_initial_position(None, None, None, None, None);
-    state.lock().unwrap().abort_token = Default::default();
+    let mut state_lock = state.lock().unwrap();
+    state_lock.abort_token.store(true, Ordering::Relaxed);
+    state_lock.board = Bitboard::new_initial_position(None, None, None, None, None);
+    state_lock.abort_token = Default::default();
+    drop(state_lock);
 
-    recreate_state_tables(state);
+    recreate_state_tables(state.clone());
 }
 
 /// Handles `stop` command by setting abort token, which should stop ongoing search as fast as possible.
@@ -553,13 +560,14 @@ fn wait_for_busy_flag(state: Arc<Mutex<UciState>>) {
 
 /// Recreates transposition table, pawn hashtable, killers table and history table.
 fn recreate_state_tables(state: Arc<Mutex<UciState>>) {
-    let total_size = state.lock().unwrap().options["Hash"].parse::<usize>().unwrap();
+    let mut state_lock = state.lock().unwrap();
+    let total_size = state_lock.options["Hash"].parse::<usize>().unwrap();
     let allocation_result = allocator::get_allocation(total_size);
 
-    state.lock().unwrap().transposition_table = Arc::new(TranspositionTable::new(allocation_result.transposition_table_size * 1024 * 1024));
-    state.lock().unwrap().pawn_hashtable = Arc::new(PawnHashTable::new(allocation_result.pawn_hashtable_size * 1024 * 1024));
-    state.lock().unwrap().killers_table = Default::default();
-    state.lock().unwrap().history_table = Default::default();
+    state_lock.transposition_table = Arc::new(TranspositionTable::new(allocation_result.transposition_table_size * 1024 * 1024));
+    state_lock.pawn_hashtable = Arc::new(PawnHashTable::new(allocation_result.pawn_hashtable_size * 1024 * 1024));
+    state_lock.killers_table = Default::default();
+    state_lock.history_table = Default::default();
 }
 
 /// Enables saving of crash files by setting a custom panic hook.

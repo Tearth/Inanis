@@ -365,7 +365,7 @@ impl SearchContext {
 impl Iterator for SearchContext {
     type Item = SearchResult;
 
-    /// Performs a next iteration of the search, using data stored withing the context. Returns [None] if any of the following conditions is true:
+    /// Performs the next iteration of the search, using data stored withing the context. Returns [None] if any of the following conditions is true:
     ///  - `self.forced_depth` is not 0 and the current depth is about to exceed this value
     ///  - the search has been done in the previous iteration or the current depth is about to exceed [MAX_DEPTH] value
     ///  - instant move is possible
@@ -551,6 +551,7 @@ impl SearchResult {
 }
 
 impl SearchResultLine {
+    /// Constructs a new instance of [SearchResultLine] with stored `score` and `pv_line`.
     pub fn new(score: i16, pv_line: Vec<Move>) -> Self {
         Self { score, pv_line }
     }

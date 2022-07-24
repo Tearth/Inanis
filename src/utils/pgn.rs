@@ -25,6 +25,7 @@ pub struct ParsedPGN {
 }
 
 impl PGNLoader {
+    /// Constructs a new instance of [PGNLoader] with the specified `file_iterator`, which will be used to read input PGN file.
     pub fn new(file_iterator: Lines<BufReader<File>>) -> PGNLoader {
         let evaluation_parameters = Arc::new(EvaluationParameters::default());
         let zobrist_container = Arc::new(ZobristContainer::default());
@@ -42,6 +43,7 @@ impl PGNLoader {
         }
     }
 
+    /// Parses a single `pgn` and returns [Some] if it has been done with success, otherwise [Err].
     fn parse(&self, pgn: String) -> Result<ParsedPGN, String> {
         let mut result = None;
         let mut moves = Vec::new();
@@ -112,6 +114,7 @@ impl PGNLoader {
 impl Iterator for PGNLoader {
     type Item = Result<ParsedPGN, String>;
 
+    /// Performs the next iteration by parsing the following PGN from the input file. If there are none left, returns [None].
     fn next(&mut self) -> Option<Self::Item> {
         let mut pgn = String::new();
 
@@ -143,6 +146,7 @@ impl Iterator for PGNLoader {
 }
 
 impl ParsedPGN {
+    /// Constructs a new instance of [ParsedPGN] with stored `result` and `moves`.
     pub fn new(result: String, moves: Vec<Move>) -> ParsedPGN {
         ParsedPGN { result, moves }
     }

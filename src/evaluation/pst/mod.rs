@@ -1,7 +1,6 @@
 use super::*;
 use crate::state::board::Bitboard;
 
-#[rustfmt::skip]
 pub mod bishop;
 pub mod king;
 pub mod knight;

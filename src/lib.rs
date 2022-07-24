@@ -9,7 +9,7 @@
 )]
 
 //! The main page of the Inanis documentation. Feel free to explore it by going into the specific module below,
-//! or by clicking "See all inanis's items" on the left to see every possible item.
+//! or by clicking "See all inanis's items" on the left panel to see every possible item.
 //!
 //! Homepage: <https://github.com/Tearth/Inanis>
 
