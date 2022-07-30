@@ -396,10 +396,12 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
             let mut board = context.board.clone();
             board.make_move(best_move);
 
-            let mut pv_line = context.get_pv_line(&mut board, 0);
-            pv_line.insert(0, best_move);
+            if !board.is_king_checked(board.active_color ^ 1) {
+                let mut pv_line = context.get_pv_line(&mut board, 0);
+                pv_line.insert(0, best_move);
 
-            context.multipv_lines.push(SearchResultLine::new(best_score, pv_line));
+                context.multipv_lines.push(SearchResultLine::new(best_score, pv_line));
+            }
 
             alpha = original_alpha;
             best_score = -CHECKMATE_SCORE;
