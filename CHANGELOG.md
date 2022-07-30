@@ -1,4 +1,4 @@
-# Version 1.1.0 (--.--.----)
+# Version 1.1.0 (30-07-2022)
  - Added support for Syzygy tablebases
  - Added support for MultiPV UCI option
  - Added support for multithreading in "test" command
@@ -11,7 +11,7 @@
  - Added information about the compiler and a list of target features at the startup
  - Added diagnostic mode in search functions to gather statistics only if necessary
  - Added hashfull in search output
- - Added simple PGN parser
+ - Added a simple PGN parser
  - Removed "tries_to_confirm" parameter from "test" command
  - Removed arr_macro crate from dependencies
  - Improved mobility evaluation, now the parameters are defined per piece instead of one value for all
