@@ -15,8 +15,9 @@ UCI chess engine written in Rust, the successor of [Proxima b](https://github.co
 Each release contains a set of binaries for various platforms: Linux (x86, x86-64, ARM, AArch64) and Windows (x86, x86-64). Both Linux x86-64 and Windows x86-64 were also compiled with two additional instruction set variants: POPCNT and POPCNT + BMI1 + BMI2 - to get the best performance, please try to run the `benchmark` command using different engine's variants and choose the one which didn't return an error and has the most advanced instructions.
 
 ## Rating lists
- - [CCRL Blitz](https://ccrl.chessdom.com/ccrl/404/cgi/compare_engines.cgi?family=Inanis&print=Rating+list&print=Results+table&print=LOS+table&print=Ponder+hit+table&print=Eval+difference+table&print=Comopp+gamenum+table&print=Overlap+table&print=Score+with+common+opponents)
- - [CCRL 40/15](https://ccrl.chessdom.com/ccrl/4040/cgi/compare_engines.cgi?family=Inanis&print=Rating+list&print=Results+table&print=LOS+table&print=Ponder+hit+table&print=Eval+difference+table&print=Comopp+gamenum+table&print=Overlap+table&print=Score+with+common+opponents)
+ - [CCRL Blitz](https://ccrl.chessdom.com/ccrl/404/index.html)
+ - [CCRL 40/15](https://ccrl.chessdom.com/ccrl/4040/index.html)
+ - [CEGT Blitz](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)
  - [JCER](https://chessengines.blogspot.com/p/rating-jcer.html)
 
 Big thanks to all testers and their effort! Please note that Elo on the lists above can slightly differ from the author's estimations due to different engine pools and the time control used for tests. 
