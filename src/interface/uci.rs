@@ -372,6 +372,11 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
                 );
             }
 
+            // Ignore result when no legal move was found, to prevent crash further
+            if depth_result.lines[0].pv_line.is_empty() {
+                continue;
+            }
+
             best_move = depth_result.lines[0].pv_line[0];
 
             // Check if the ponder move is legal
