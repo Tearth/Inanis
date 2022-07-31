@@ -67,6 +67,7 @@ enum MoveGeneratorStage {
     AllGenerated,
 }
 
+/// Wrapper for the entry point of the regular search, look at `run_internal` for more information.
 pub fn run<const DIAG: bool>(context: &mut SearchContext, depth: i8) {
     let king_checked = context.board.is_king_checked(context.board.active_color);
     run_internal::<true, true, DIAG>(context, depth, 0, MIN_ALPHA, MIN_BETA, true, king_checked);
@@ -688,7 +689,7 @@ fn static_null_move_pruning_get_margin(depth: i8) -> i16 {
 ///
 /// Conditions:
 ///  - only non-PV nodes
-///  - depth >= [NULL_MOVE_MIN_DEPTH]
+///  - depth >= [NULL_MOVE_PRUNING_MIN_DEPTH]
 ///  - game phase is not indicating endgame
 ///  - beta score is not a mate score
 ///  - friendly king is not checked
@@ -707,8 +708,8 @@ fn null_move_pruning_can_be_applied<const PV: bool>(
         && allow_null_move
 }
 
-/// Gets the null move pruning depth reduction, called R, based on `depth`. It returns [NULL_MOVE_SMALL_R] if `depth` is less or equal
-/// to [NULL_MOVE_R_CHANGE_DEPTH], otherwise [NULL_MOVE_BIG_R].
+/// Gets the null move pruning depth reduction, called R, based on `depth`. It returns [NULL_MOVE_PRUNING_SMALL_R] if `depth` is less or equal
+/// to [NULL_MOVE_PRUNING_R_CHANGE_DEPTH], otherwise [NULL_MOVE_PRUNING_BIG_R].
 fn null_move_pruning_get_r(depth: i8) -> i8 {
     if depth <= NULL_MOVE_PRUNING_R_CHANGE_DEPTH {
         NULL_MOVE_PRUNING_SMALL_R

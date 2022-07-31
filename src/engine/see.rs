@@ -49,7 +49,7 @@ impl SEEContainer {
         self.evaluate_internal(attacking_piece_index, target_piece_index, attackers, defenders, evaluation_parameters)
     }
 
-    /// Recursive function called by [evaluate] to help evaluate a static exchange evaluation result.
+    /// Recursive function called by `evaluate` to help evaluate a static exchange evaluation result.
     fn evaluate_internal(&self, attacking_piece: u8, target_piece: u8, attackers: u8, defenders: u8, evaluation_parameters: &EvaluationParameters) -> i16 {
         if attackers == 0 {
             return 0;
@@ -84,7 +84,7 @@ impl SEEContainer {
         }
     }
 
-    /// Gets a piece value based on `piece_index` saved in SEE format (look [get_see_piece_index]).
+    /// Gets a piece value based on `piece_index` saved in SEE format (look `get_see_piece_index`).
     fn get_piece_value(&self, piece_index: u8, evaluation_parameters: &EvaluationParameters) -> i16 {
         match piece_index {
             0 => evaluation_parameters.piece_value[PAWN as usize] as i16,           // Pawn
