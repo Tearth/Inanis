@@ -1,14 +1,14 @@
 # Inanis
 UCI chess engine written in Rust, the successor of [Proxima b](https://github.com/Tearth/Proxima-b), [Proxima b 2.0](https://github.com/Tearth/Proxima-b-2.0) and [Cosette](https://github.com/Tearth/Cosette). The project is written after hours, ~~with the goal to reach 2600 Elo (or at least to be stronger than the last version of [Cosette](https://github.com/Tearth/Cosette) which was about 2500 Elo)~~ with the goal to reach 3000 Elo. Perfect as a sparring partner for other chess engines, since it was heavily tested using very fast games. Supports pondering, multithreading, MultiPV and Syzygy tablebases.
 
-**Current strength**: 2800 Elo (30-07-2022)
+**Current strength**: 2800 Elo (31-07-2022)
 
 **Documentation**: https://tearth.dev/Inanis/
 
 ## Releases
 | Version                                                       | Release date | Elo  | Main changes |
 |---------------------------------------------------------------|--------------|------|--------------|
-| [1.1.0](https://github.com/Tearth/Inanis/releases/tag/v1.1.0) | 30-07-2022   | 2800 | Syzygy tablebases, MultiPV, adjusted evaluation |
+| [1.1.0](https://github.com/Tearth/Inanis/releases/tag/v1.1.0) | 31-07-2022   | 2800 | Syzygy tablebases, MultiPV, adjusted evaluation |
 | [1.0.1](https://github.com/Tearth/Inanis/releases/tag/v1.0.1) | 05-04-2022   | 2750 | A bunch of fixes for reported issues, stability improvement |
 | [1.0.0](https://github.com/Tearth/Inanis/releases/tag/v1.0.0) | 02-04-2022   | 2750 | Initial release |
 
