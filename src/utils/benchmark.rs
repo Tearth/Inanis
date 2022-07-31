@@ -132,6 +132,7 @@ pub fn run() -> BenchmarkResult {
             Vec::new(),
             false,
             false,
+            false,
             true,
             false,
             None,

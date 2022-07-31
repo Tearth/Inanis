@@ -43,6 +43,7 @@ pub struct SearchContext {
     pub multipv_lines: Vec<SearchResultLine>,
     pub search_done: bool,
     pub uci_debug: bool,
+    pub ponder_mode: bool,
     pub diagnostic_mode: bool,
     pub helper_thread: bool,
     pub syzygy_path: Option<String>,
@@ -151,6 +152,8 @@ impl SearchContext {
     ///  - `moves_to_search` - a list of moves to which the root node will be restricted
     ///  - `multipv` - enables or disables analyzing multiple PV lines (might slow down search)
     ///  - `uci_debug` - enables or disables additional debug info sent to GUI by `info string` command
+    ///  - `ponder_mode` - prevents search from being stopped after detecting a checkmate (ponder mode requirement)
+    ///  - `diagnostic_mode` - enables gathering of additional statistics, useful for benchmarks
     ///  - `helper_thread` - enables additional features when the thread is a helper in Lazy SMP (like random noise in move ordering)
     ///  - `syzygy_path` - path to the directory with Syzygy tablebases
     ///  - `syzygy_probe_limit` - number of pieces for which the probing should be started
@@ -169,6 +172,7 @@ impl SearchContext {
         moves_to_search: Vec<Move>,
         multipv: bool,
         uci_debug: bool,
+        ponder_mode: bool,
         diagnostic_mode: bool,
         helper_thread: bool,
         syzygy_path: Option<String>,
@@ -198,6 +202,7 @@ impl SearchContext {
             multipv_lines: Vec::new(),
             search_done: false,
             uci_debug,
+            ponder_mode,
             diagnostic_mode,
             helper_thread,
             syzygy_path,
@@ -378,6 +383,15 @@ impl Iterator for SearchContext {
         loop {
             if self.forced_depth != 0 && self.current_depth == self.forced_depth + 1 {
                 return None;
+            }
+
+            // If the max depth was reached, but search is in ponder mode, wait for "ponderhit" or "stop" command before executing the last iteration
+            if self.ponder_mode && self.forced_depth != 0 && self.current_depth == self.forced_depth {
+                loop {
+                    if self.abort_token.load(Ordering::Relaxed) {
+                        break;
+                    }
+                }
             }
 
             if self.search_done || self.current_depth >= MAX_DEPTH {

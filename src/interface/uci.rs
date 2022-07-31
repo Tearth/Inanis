@@ -151,6 +151,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
     let mut max_move_time = 0;
     let mut moves_to_go = 0;
     let mut moves_to_search = Vec::new();
+    let mut ponder_mode = false;
 
     let state_lock = state.lock().unwrap();
     let mut iter = parameters[1..].iter().peekable();
@@ -241,6 +242,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
                 }
             }
             "ponder" => {
+                ponder_mode = true;
                 forced_depth = engine::MAX_DEPTH;
             }
             _ => {}
@@ -288,6 +290,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
             moves_to_search.clone(),
             multipv > 1,
             state_lock.debug_mode.load(Ordering::Relaxed),
+            ponder_mode,
             false,
             false,
             syzygy_path,
@@ -316,6 +319,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
                     moves_to_search.clone(),
                     false,
                     state_lock.debug_mode.load(Ordering::Relaxed),
+                    false,
                     false,
                     true,
                     None,

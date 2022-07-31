@@ -88,6 +88,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
             false,
             false,
             false,
+            false,
             None,
             0,
             transposition_table.clone(),

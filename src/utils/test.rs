@@ -102,6 +102,7 @@ fn run_internal(context: &mut TestContext, depth: i8, transposition_table_size: 
                         false,
                         false,
                         false,
+                        false,
                         None,
                         0,
                         transposition_table.clone(),
