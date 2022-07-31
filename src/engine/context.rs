@@ -398,7 +398,7 @@ impl Iterator for SearchContext {
                 return None;
             }
 
-            if self.current_depth == 1 {
+            if self.forced_depth == 0 && self.current_depth == 1 {
                 if let Some(r#move) = self.get_instant_move() {
                     self.search_done = true;
                     return Some(SearchResult::new(
