@@ -1,104 +1,107 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src&#x2F;interface&#x2F;uci.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>uci.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a class="sidebar-logo" href="../../../inanis/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.png" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../inanis/index.html"><img class="rust-logo" src="../../../rust-logo.png" alt="logo"></a><nav class="sub"><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
-<span id="2">  2</span>
-<span id="3">  3</span>
-<span id="4">  4</span>
-<span id="5">  5</span>
-<span id="6">  6</span>
-<span id="7">  7</span>
-<span id="8">  8</span>
-<span id="9">  9</span>
-<span id="10"> 10</span>
-<span id="11"> 11</span>
-<span id="12"> 12</span>
-<span id="13"> 13</span>
-<span id="14"> 14</span>
-<span id="15"> 15</span>
-<span id="16"> 16</span>
-<span id="17"> 17</span>
-<span id="18"> 18</span>
-<span id="19"> 19</span>
-<span id="20"> 20</span>
-<span id="21"> 21</span>
-<span id="22"> 22</span>
-<span id="23"> 23</span>
-<span id="24"> 24</span>
-<span id="25"> 25</span>
-<span id="26"> 26</span>
-<span id="27"> 27</span>
-<span id="28"> 28</span>
-<span id="29"> 29</span>
-<span id="30"> 30</span>
-<span id="31"> 31</span>
-<span id="32"> 32</span>
-<span id="33"> 33</span>
-<span id="34"> 34</span>
-<span id="35"> 35</span>
-<span id="36"> 36</span>
-<span id="37"> 37</span>
-<span id="38"> 38</span>
-<span id="39"> 39</span>
-<span id="40"> 40</span>
-<span id="41"> 41</span>
-<span id="42"> 42</span>
-<span id="43"> 43</span>
-<span id="44"> 44</span>
-<span id="45"> 45</span>
-<span id="46"> 46</span>
-<span id="47"> 47</span>
-<span id="48"> 48</span>
-<span id="49"> 49</span>
-<span id="50"> 50</span>
-<span id="51"> 51</span>
-<span id="52"> 52</span>
-<span id="53"> 53</span>
-<span id="54"> 54</span>
-<span id="55"> 55</span>
-<span id="56"> 56</span>
-<span id="57"> 57</span>
-<span id="58"> 58</span>
-<span id="59"> 59</span>
-<span id="60"> 60</span>
-<span id="61"> 61</span>
-<span id="62"> 62</span>
-<span id="63"> 63</span>
-<span id="64"> 64</span>
-<span id="65"> 65</span>
-<span id="66"> 66</span>
-<span id="67"> 67</span>
-<span id="68"> 68</span>
-<span id="69"> 69</span>
-<span id="70"> 70</span>
-<span id="71"> 71</span>
-<span id="72"> 72</span>
-<span id="73"> 73</span>
-<span id="74"> 74</span>
-<span id="75"> 75</span>
-<span id="76"> 76</span>
-<span id="77"> 77</span>
-<span id="78"> 78</span>
-<span id="79"> 79</span>
-<span id="80"> 80</span>
-<span id="81"> 81</span>
-<span id="82"> 82</span>
-<span id="83"> 83</span>
-<span id="84"> 84</span>
-<span id="85"> 85</span>
-<span id="86"> 86</span>
-<span id="87"> 87</span>
-<span id="88"> 88</span>
-<span id="89"> 89</span>
-<span id="90"> 90</span>
-<span id="91"> 91</span>
-<span id="92"> 92</span>
-<span id="93"> 93</span>
-<span id="94"> 94</span>
-<span id="95"> 95</span>
-<span id="96"> 96</span>
-<span id="97"> 97</span>
-<span id="98"> 98</span>
-<span id="99"> 99</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/interface/uci.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>uci.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../inanis/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../../../inanis/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
+        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../inanis/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<span id="2">2</span>
+<span id="3">3</span>
+<span id="4">4</span>
+<span id="5">5</span>
+<span id="6">6</span>
+<span id="7">7</span>
+<span id="8">8</span>
+<span id="9">9</span>
+<span id="10">10</span>
+<span id="11">11</span>
+<span id="12">12</span>
+<span id="13">13</span>
+<span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
 <span id="100">100</span>
 <span id="101">101</span>
 <span id="102">102</span>
@@ -527,20 +530,90 @@
 <span id="525">525</span>
 <span id="526">526</span>
 <span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cache::allocator</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cache::history::HistoryTable</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cache::killers::KillersTable</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cache::pawns::PawnHashTable</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cache::search::TranspositionTable</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::engine</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::engine::context::HelperThreadContext</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::engine::context::SearchContext</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::engine::context::Token</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::engine::history::HistoryTable</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::engine::killers::KillersTable</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::state::board::Bitboard</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::state::movescan::Move</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::state</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">chrono::Utc</span>;
-<span class="kw">use</span> <span class="ident">std::cell::UnsafeCell</span>;
 <span class="kw">use</span> <span class="ident">std::cmp</span>;
 <span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
 <span class="kw">use</span> <span class="ident">std::fs</span>;
@@ -553,6 +626,7 @@
 <span class="kw">use</span> <span class="ident">std::sync::atomic::AtomicBool</span>;
 <span class="kw">use</span> <span class="ident">std::sync::atomic::Ordering</span>;
 <span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
+<span class="kw">use</span> <span class="ident">std::sync::Mutex</span>;
 <span class="kw">use</span> <span class="ident">std::thread</span>;
 <span class="kw">use</span> <span class="ident">std::thread::JoinHandle</span>;
 
@@ -560,15 +634,15 @@
 <span class="kw">const</span> <span class="ident">AUTHOR</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="macro">env!</span>(<span class="string">&quot;CARGO_PKG_AUTHORS&quot;</span>);
 
 <span class="kw">struct</span> <span class="ident">UciState</span> {
-    <span class="ident">board</span>: <span class="ident">UnsafeCell</span><span class="op">&lt;</span><span class="ident">Bitboard</span><span class="op">&gt;</span>,
-    <span class="ident">options</span>: <span class="ident">UnsafeCell</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">transposition_table</span>: <span class="ident">UnsafeCell</span><span class="op">&lt;</span><span class="ident">TranspositionTable</span><span class="op">&gt;</span>,
-    <span class="ident">pawn_hashtable</span>: <span class="ident">UnsafeCell</span><span class="op">&lt;</span><span class="ident">PawnHashTable</span><span class="op">&gt;</span>,
-    <span class="ident">killers_table</span>: <span class="ident">UnsafeCell</span><span class="op">&lt;</span><span class="ident">KillersTable</span><span class="op">&gt;</span>,
-    <span class="ident">history_table</span>: <span class="ident">UnsafeCell</span><span class="op">&lt;</span><span class="ident">HistoryTable</span><span class="op">&gt;</span>,
-    <span class="ident">search_thread</span>: <span class="ident">UnsafeCell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">JoinHandle</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">abort_token</span>: <span class="ident">UnsafeCell</span><span class="op">&lt;</span><span class="ident">Token</span><span class="op">&gt;</span>,
-    <span class="ident">ponder_token</span>: <span class="ident">UnsafeCell</span><span class="op">&lt;</span><span class="ident">Token</span><span class="op">&gt;</span>,
+    <span class="ident">board</span>: <span class="ident">Bitboard</span>,
+    <span class="ident">options</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span>,
+    <span class="ident">transposition_table</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">TranspositionTable</span><span class="op">&gt;</span>,
+    <span class="ident">pawn_hashtable</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">PawnHashTable</span><span class="op">&gt;</span>,
+    <span class="ident">killers_table</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">KillersTable</span><span class="op">&gt;</span>,
+    <span class="ident">history_table</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">HistoryTable</span><span class="op">&gt;</span>,
+    <span class="ident">search_thread</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">JoinHandle</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">abort_token</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">AtomicBool</span><span class="op">&gt;</span>,
+    <span class="ident">ponder_token</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">AtomicBool</span><span class="op">&gt;</span>,
     <span class="ident">busy_flag</span>: <span class="ident">AtomicBool</span>,
     <span class="ident">debug_mode</span>: <span class="ident">AtomicBool</span>,
 }
@@ -577,37 +651,44 @@
     <span class="doccomment">/// Constructs a default instance of [UciState] with zeroed elements and hashtables with their default sizes.</span>
     <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
         <span class="ident">UciState</span> {
-            <span class="ident">board</span>: <span class="ident">UnsafeCell::new</span>(<span class="ident">Bitboard::new_initial_position</span>()),
-            <span class="ident">options</span>: <span class="ident">UnsafeCell::new</span>(<span class="ident">HashMap::new</span>()),
-            <span class="ident">transposition_table</span>: <span class="ident">UnsafeCell::new</span>(<span class="ident">TranspositionTable::new</span>(<span class="number">1</span> <span class="op">*</span> <span class="number">1024</span> <span class="op">*</span> <span class="number">1024</span>)),
-            <span class="ident">pawn_hashtable</span>: <span class="ident">UnsafeCell::new</span>(<span class="ident">PawnHashTable::new</span>(<span class="number">1</span> <span class="op">*</span> <span class="number">1024</span> <span class="op">*</span> <span class="number">1024</span>)),
-            <span class="ident">history_table</span>: <span class="ident">UnsafeCell::new</span>(<span class="ident">Default::default</span>()),
-            <span class="ident">killers_table</span>: <span class="ident">UnsafeCell::new</span>(<span class="ident">Default::default</span>()),
-            <span class="ident">search_thread</span>: <span class="ident">UnsafeCell::new</span>(<span class="prelude-val">None</span>),
-            <span class="ident">abort_token</span>: <span class="ident">UnsafeCell::new</span>(<span class="ident">Default::default</span>()),
-            <span class="ident">ponder_token</span>: <span class="ident">UnsafeCell::new</span>(<span class="ident">Default::default</span>()),
+            <span class="ident">board</span>: <span class="ident">Bitboard::new_initial_position</span>(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
+            <span class="ident">options</span>: <span class="ident">HashMap::new</span>(),
+            <span class="ident">transposition_table</span>: <span class="ident">Arc::new</span>(<span class="ident">TranspositionTable::new</span>(<span class="number">1</span> <span class="op">*</span> <span class="number">1024</span> <span class="op">*</span> <span class="number">1024</span>)),
+            <span class="ident">pawn_hashtable</span>: <span class="ident">Arc::new</span>(<span class="ident">PawnHashTable::new</span>(<span class="number">1</span> <span class="op">*</span> <span class="number">1024</span> <span class="op">*</span> <span class="number">1024</span>)),
+            <span class="ident">killers_table</span>: <span class="ident">Arc::new</span>(<span class="ident">Default::default</span>()),
+            <span class="ident">history_table</span>: <span class="ident">Arc::new</span>(<span class="ident">Default::default</span>()),
+            <span class="ident">search_thread</span>: <span class="prelude-val">None</span>,
+            <span class="ident">abort_token</span>: <span class="ident">Arc::new</span>(<span class="ident">AtomicBool::new</span>(<span class="bool-val">false</span>)),
+            <span class="ident">ponder_token</span>: <span class="ident">Arc::new</span>(<span class="ident">AtomicBool::new</span>(<span class="bool-val">false</span>)),
             <span class="ident">busy_flag</span>: <span class="ident">AtomicBool::new</span>(<span class="bool-val">false</span>),
             <span class="ident">debug_mode</span>: <span class="ident">AtomicBool::new</span>(<span class="bool-val">false</span>),
         }
     }
 }
 
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Sync</span> <span class="kw">for</span> <span class="ident">UciState</span> {}
-
 <span class="doccomment">/// Entry point of the UCI (Universal Chess Interface) and command loop.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>() {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">UciState</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Arc::new</span>(<span class="ident">Default::default</span>());
-    <span class="kw">unsafe</span> { (<span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">options</span>.<span class="ident">get</span>()).<span class="ident">insert</span>(<span class="string">&quot;Hash&quot;</span>.<span class="ident">to_string</span>(), <span class="string">&quot;2&quot;</span>.<span class="ident">to_string</span>()) };
-    <span class="kw">unsafe</span> { (<span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">options</span>.<span class="ident">get</span>()).<span class="ident">insert</span>(<span class="string">&quot;Move Overhead&quot;</span>.<span class="ident">to_string</span>(), <span class="string">&quot;10&quot;</span>.<span class="ident">to_string</span>()) };
-    <span class="kw">unsafe</span> { (<span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">options</span>.<span class="ident">get</span>()).<span class="ident">insert</span>(<span class="string">&quot;Threads&quot;</span>.<span class="ident">to_string</span>(), <span class="string">&quot;1&quot;</span>.<span class="ident">to_string</span>()) };
-    <span class="kw">unsafe</span> { (<span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">options</span>.<span class="ident">get</span>()).<span class="ident">insert</span>(<span class="string">&quot;Ponder&quot;</span>.<span class="ident">to_string</span>(), <span class="string">&quot;false&quot;</span>.<span class="ident">to_string</span>()) };
-    <span class="kw">unsafe</span> { (<span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">options</span>.<span class="ident">get</span>()).<span class="ident">insert</span>(<span class="string">&quot;Crash Files&quot;</span>.<span class="ident">to_string</span>(), <span class="string">&quot;false&quot;</span>.<span class="ident">to_string</span>()) };
+    <span class="kw">let</span> <span class="ident">state</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">UciState</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Arc::new</span>(<span class="ident">Mutex::new</span>(<span class="ident">Default::default</span>()));
+
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state_lock</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>();
+    <span class="ident">state_lock</span>.<span class="ident">options</span>.<span class="ident">insert</span>(<span class="string">&quot;Hash&quot;</span>.<span class="ident">to_string</span>(), <span class="string">&quot;2&quot;</span>.<span class="ident">to_string</span>());
+    <span class="ident">state_lock</span>.<span class="ident">options</span>.<span class="ident">insert</span>(<span class="string">&quot;Move Overhead&quot;</span>.<span class="ident">to_string</span>(), <span class="string">&quot;10&quot;</span>.<span class="ident">to_string</span>());
+    <span class="ident">state_lock</span>.<span class="ident">options</span>.<span class="ident">insert</span>(<span class="string">&quot;MultiPV&quot;</span>.<span class="ident">to_string</span>(), <span class="string">&quot;1&quot;</span>.<span class="ident">to_string</span>());
+    <span class="ident">state_lock</span>.<span class="ident">options</span>.<span class="ident">insert</span>(<span class="string">&quot;Threads&quot;</span>.<span class="ident">to_string</span>(), <span class="string">&quot;1&quot;</span>.<span class="ident">to_string</span>());
+    <span class="ident">state_lock</span>.<span class="ident">options</span>.<span class="ident">insert</span>(<span class="string">&quot;SyzygyPath&quot;</span>.<span class="ident">to_string</span>(), <span class="string">&quot;&lt;empty&gt;&quot;</span>.<span class="ident">to_string</span>());
+    <span class="ident">state_lock</span>.<span class="ident">options</span>.<span class="ident">insert</span>(<span class="string">&quot;SyzygyProbeLimit&quot;</span>.<span class="ident">to_string</span>(), <span class="string">&quot;8&quot;</span>.<span class="ident">to_string</span>());
+    <span class="ident">state_lock</span>.<span class="ident">options</span>.<span class="ident">insert</span>(<span class="string">&quot;Ponder&quot;</span>.<span class="ident">to_string</span>(), <span class="string">&quot;false&quot;</span>.<span class="ident">to_string</span>());
+    <span class="ident">state_lock</span>.<span class="ident">options</span>.<span class="ident">insert</span>(<span class="string">&quot;Crash Files&quot;</span>.<span class="ident">to_string</span>(), <span class="string">&quot;false&quot;</span>.<span class="ident">to_string</span>());
+    <span class="ident">drop</span>(<span class="ident">state_lock</span>);
 
     <span class="macro">println!</span>(<span class="string">&quot;id name Inanis {}&quot;</span>, <span class="ident">VERSION</span>);
     <span class="macro">println!</span>(<span class="string">&quot;id author {}&quot;</span>, <span class="ident">AUTHOR</span>);
     <span class="macro">println!</span>(<span class="string">&quot;option name Hash type spin default 2 min 2 max 1048576&quot;</span>);
     <span class="macro">println!</span>(<span class="string">&quot;option name Move Overhead type spin default 10 min 0 max 3600000&quot;</span>);
+    <span class="macro">println!</span>(<span class="string">&quot;option name MultiPV type spin default 1 min 1 max 256&quot;</span>);
     <span class="macro">println!</span>(<span class="string">&quot;option name Threads type spin default 1 min 1 max 1024&quot;</span>);
+    <span class="macro">println!</span>(<span class="string">&quot;option name SyzygyPath type string default &lt;empty&gt;&quot;</span>);
+    <span class="macro">println!</span>(<span class="string">&quot;option name SyzygyProbeLimit type spin default 8 min 1 max 8&quot;</span>);
     <span class="macro">println!</span>(<span class="string">&quot;option name Ponder type check default false&quot;</span>);
     <span class="macro">println!</span>(<span class="string">&quot;option name Crash Files type check default false&quot;</span>);
     <span class="macro">println!</span>(<span class="string">&quot;option name Clear Hash type button&quot;</span>);
@@ -623,14 +704,14 @@
 
         <span class="kw">let</span> <span class="ident">tokens</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">split</span>(<span class="string">&#39; &#39;</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span>.<span class="ident">trim</span>().<span class="ident">to_string</span>()).<span class="ident">collect</span>();
         <span class="kw">match</span> <span class="ident">tokens</span>[<span class="number">0</span>].<span class="ident">to_lowercase</span>().<span class="ident">as_str</span>() {
-            <span class="string">&quot;debug&quot;</span> =&gt; <span class="ident">handle_debug</span>(<span class="kw-2">&amp;</span><span class="ident">tokens</span>, <span class="kw-2">&amp;mut</span> <span class="ident">state</span>),
-            <span class="string">&quot;go&quot;</span> =&gt; <span class="ident">handle_go</span>(<span class="kw-2">&amp;</span><span class="ident">tokens</span>, <span class="kw-2">&amp;mut</span> <span class="ident">state</span>),
-            <span class="string">&quot;isready&quot;</span> =&gt; <span class="ident">handle_isready</span>(<span class="kw-2">&amp;mut</span> <span class="ident">state</span>),
-            <span class="string">&quot;ponderhit&quot;</span> =&gt; <span class="ident">handle_ponderhit</span>(<span class="kw-2">&amp;mut</span> <span class="ident">state</span>),
-            <span class="string">&quot;position&quot;</span> =&gt; <span class="ident">handle_position</span>(<span class="kw-2">&amp;</span><span class="ident">tokens</span>, <span class="kw-2">&amp;mut</span> <span class="ident">state</span>),
-            <span class="string">&quot;setoption&quot;</span> =&gt; <span class="ident">handle_setoption</span>(<span class="kw-2">&amp;</span><span class="ident">tokens</span>, <span class="kw-2">&amp;mut</span> <span class="ident">state</span>),
-            <span class="string">&quot;ucinewgame&quot;</span> =&gt; <span class="ident">handle_ucinewgame</span>(<span class="kw-2">&amp;mut</span> <span class="ident">state</span>),
-            <span class="string">&quot;stop&quot;</span> =&gt; <span class="ident">handle_stop</span>(<span class="kw-2">&amp;mut</span> <span class="ident">state</span>),
+            <span class="string">&quot;debug&quot;</span> =&gt; <span class="ident">handle_debug</span>(<span class="kw-2">&amp;</span><span class="ident">tokens</span>, <span class="ident">state</span>.<span class="ident">clone</span>()),
+            <span class="string">&quot;go&quot;</span> =&gt; <span class="ident">handle_go</span>(<span class="kw-2">&amp;</span><span class="ident">tokens</span>, <span class="ident">state</span>.<span class="ident">clone</span>()),
+            <span class="string">&quot;isready&quot;</span> =&gt; <span class="ident">handle_isready</span>(<span class="ident">state</span>.<span class="ident">clone</span>()),
+            <span class="string">&quot;ponderhit&quot;</span> =&gt; <span class="ident">handle_ponderhit</span>(<span class="ident">state</span>.<span class="ident">clone</span>()),
+            <span class="string">&quot;position&quot;</span> =&gt; <span class="ident">handle_position</span>(<span class="kw-2">&amp;</span><span class="ident">tokens</span>, <span class="ident">state</span>.<span class="ident">clone</span>()),
+            <span class="string">&quot;setoption&quot;</span> =&gt; <span class="ident">handle_setoption</span>(<span class="kw-2">&amp;</span><span class="ident">tokens</span>, <span class="ident">state</span>.<span class="ident">clone</span>()),
+            <span class="string">&quot;ucinewgame&quot;</span> =&gt; <span class="ident">handle_ucinewgame</span>(<span class="ident">state</span>.<span class="ident">clone</span>()),
+            <span class="string">&quot;stop&quot;</span> =&gt; <span class="ident">handle_stop</span>(<span class="ident">state</span>.<span class="ident">clone</span>()),
             <span class="string">&quot;quit&quot;</span> =&gt; <span class="ident">handle_quit</span>(),
             <span class="kw">_</span> =&gt; {}
         }
@@ -638,12 +719,16 @@
 }
 
 <span class="doccomment">/// Handles `debug [on/off]` command by setting the proper flag.</span>
-<span class="kw">fn</span> <span class="ident">handle_debug</span>(<span class="ident">parameters</span>: <span class="kw-2">&amp;</span>[<span class="ident">String</span>], <span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">UciState</span><span class="op">&gt;</span>) {
+<span class="kw">fn</span> <span class="ident">handle_debug</span>(<span class="ident">parameters</span>: <span class="kw-2">&amp;</span>[<span class="ident">String</span>], <span class="ident">state</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">UciState</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
     <span class="kw">if</span> <span class="ident">parameters</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">2</span> {
         <span class="kw">return</span>;
     }
 
-    (<span class="kw-2">*</span><span class="ident">state</span>).<span class="ident">debug_mode</span>.<span class="ident">store</span>(<span class="macro">matches!</span>(<span class="ident">parameters</span>[<span class="number">1</span>].<span class="ident">as_str</span>(), <span class="string">&quot;on&quot;</span>), <span class="ident">Ordering::Relaxed</span>);
+    <span class="ident">state</span>
+        .<span class="ident">lock</span>()
+        .<span class="ident">unwrap</span>()
+        .<span class="ident">debug_mode</span>
+        .<span class="ident">store</span>(<span class="macro">matches!</span>(<span class="ident">parameters</span>[<span class="number">1</span>].<span class="ident">as_str</span>(), <span class="string">&quot;on&quot;</span>), <span class="ident">Ordering::Relaxed</span>);
 }
 
 <span class="doccomment">/// Handles `go [parameters]` command by running a new search for a position which was set using `position` command. Supported parameters:</span>
@@ -656,242 +741,308 @@
 <span class="doccomment">///  - `movetime x` - fixed time allocated for the search in milliseconds</span>
 <span class="doccomment">///  - `movestogo x` - amount of moves, after which the time will be increased</span>
 <span class="doccomment">///  - `infinite` - tells the search to run until it reaches the maximum depth for the engine</span>
+<span class="doccomment">///  - `searchmoves [moves]` - restricts search to the provided moves list</span>
 <span class="doccomment">///  - `ponder` - tells the search to run in the ponder mode (thinking on the opponent&#39;s time)</span>
-<span class="kw">fn</span> <span class="ident">handle_go</span>(<span class="ident">parameters</span>: <span class="kw-2">&amp;</span>[<span class="ident">String</span>], <span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">UciState</span><span class="op">&gt;</span>) {
-    <span class="ident">wait_for_busy_flag</span>(<span class="ident">state</span>);
-    <span class="kw">unsafe</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">white_time</span> <span class="op">=</span> <span class="ident">u32::MAX</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">black_time</span> <span class="op">=</span> <span class="ident">u32::MAX</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">white_inc_time</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">black_inc_time</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">forced_depth</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">max_nodes_count</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">max_move_time</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">moves_to_go</span> <span class="op">=</span> <span class="number">0</span>;
+<span class="kw">fn</span> <span class="ident">handle_go</span>(<span class="ident">parameters</span>: <span class="kw-2">&amp;</span>[<span class="ident">String</span>], <span class="ident">state</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">UciState</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
+    <span class="ident">wait_for_busy_flag</span>(<span class="ident">state</span>.<span class="ident">clone</span>());
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">iter</span> <span class="op">=</span> <span class="ident">parameters</span>[<span class="number">1</span>..].<span class="ident">iter</span>().<span class="ident">peekable</span>();
-        <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">token</span>) <span class="op">=</span> <span class="ident">iter</span>.<span class="ident">next</span>() {
-            <span class="kw">match</span> <span class="ident">token</span>.<span class="ident">as_str</span>() {
-                <span class="string">&quot;wtime&quot;</span> =&gt; {
-                    <span class="ident">white_time</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">iter</span>.<span class="ident">peek</span>() {
-                        <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>.<span class="ident">parse</span>().<span class="ident">unwrap_or</span>(<span class="ident">white_time</span>),
-                        <span class="prelude-val">None</span> =&gt; <span class="ident">white_time</span>,
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">white_time</span> <span class="op">=</span> <span class="ident">u32::MAX</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">black_time</span> <span class="op">=</span> <span class="ident">u32::MAX</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">white_inc_time</span> <span class="op">=</span> <span class="number">0</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">black_inc_time</span> <span class="op">=</span> <span class="number">0</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">forced_depth</span> <span class="op">=</span> <span class="number">0</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">max_nodes_count</span> <span class="op">=</span> <span class="number">0</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">max_move_time</span> <span class="op">=</span> <span class="number">0</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">moves_to_go</span> <span class="op">=</span> <span class="number">0</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">moves_to_search</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ponder_mode</span> <span class="op">=</span> <span class="bool-val">false</span>;
+
+    <span class="kw">let</span> <span class="ident">state_lock</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">iter</span> <span class="op">=</span> <span class="ident">parameters</span>[<span class="number">1</span>..].<span class="ident">iter</span>().<span class="ident">peekable</span>();
+
+    <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">token</span>) <span class="op">=</span> <span class="ident">iter</span>.<span class="ident">next</span>() {
+        <span class="kw">match</span> <span class="ident">token</span>.<span class="ident">as_str</span>() {
+            <span class="string">&quot;wtime&quot;</span> =&gt; {
+                <span class="ident">white_time</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">iter</span>.<span class="ident">peek</span>() {
+                    <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>.<span class="ident">parse</span>().<span class="ident">unwrap_or</span>(<span class="ident">white_time</span>),
+                    <span class="prelude-val">None</span> =&gt; <span class="ident">white_time</span>,
+                }
+            }
+            <span class="string">&quot;btime&quot;</span> =&gt; {
+                <span class="ident">black_time</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">iter</span>.<span class="ident">peek</span>() {
+                    <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>.<span class="ident">parse</span>().<span class="ident">unwrap_or</span>(<span class="ident">black_time</span>),
+                    <span class="prelude-val">None</span> =&gt; <span class="ident">black_time</span>,
+                }
+            }
+            <span class="string">&quot;winc&quot;</span> =&gt; {
+                <span class="ident">white_inc_time</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">iter</span>.<span class="ident">peek</span>() {
+                    <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>.<span class="ident">parse</span>().<span class="ident">unwrap_or</span>(<span class="ident">white_inc_time</span>),
+                    <span class="prelude-val">None</span> =&gt; <span class="ident">white_inc_time</span>,
+                }
+            }
+            <span class="string">&quot;binc&quot;</span> =&gt; {
+                <span class="ident">black_inc_time</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">iter</span>.<span class="ident">peek</span>() {
+                    <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>.<span class="ident">parse</span>().<span class="ident">unwrap_or</span>(<span class="ident">black_inc_time</span>),
+                    <span class="prelude-val">None</span> =&gt; <span class="ident">black_inc_time</span>,
+                }
+            }
+            <span class="string">&quot;depth&quot;</span> =&gt; {
+                <span class="ident">forced_depth</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">iter</span>.<span class="ident">peek</span>() {
+                    <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>.<span class="ident">parse</span>().<span class="ident">unwrap_or</span>(<span class="ident">forced_depth</span>),
+                    <span class="prelude-val">None</span> =&gt; <span class="ident">forced_depth</span>,
+                }
+            }
+            <span class="string">&quot;nodes&quot;</span> =&gt; {
+                <span class="ident">max_nodes_count</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">iter</span>.<span class="ident">peek</span>() {
+                    <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>.<span class="ident">parse</span>().<span class="ident">unwrap_or</span>(<span class="ident">max_nodes_count</span>),
+                    <span class="prelude-val">None</span> =&gt; <span class="ident">max_nodes_count</span>,
+                }
+            }
+            <span class="string">&quot;movetime&quot;</span> =&gt; {
+                <span class="ident">max_move_time</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">iter</span>.<span class="ident">peek</span>() {
+                    <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>.<span class="ident">parse</span>().<span class="ident">unwrap_or</span>(<span class="ident">max_move_time</span>),
+                    <span class="prelude-val">None</span> =&gt; <span class="ident">max_move_time</span>,
+                }
+            }
+            <span class="string">&quot;movestogo&quot;</span> =&gt; {
+                <span class="ident">moves_to_go</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">iter</span>.<span class="ident">peek</span>() {
+                    <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>.<span class="ident">parse</span>().<span class="ident">unwrap_or</span>(<span class="ident">moves_to_go</span>),
+                    <span class="prelude-val">None</span> =&gt; <span class="ident">moves_to_go</span>,
+                }
+            }
+            <span class="string">&quot;infinite&quot;</span> =&gt; {
+                <span class="ident">forced_depth</span> <span class="op">=</span> <span class="ident">engine::MAX_DEPTH</span>;
+            }
+            <span class="string">&quot;searchmoves&quot;</span> =&gt; {
+                <span class="kw">let</span> <span class="ident">keywords</span> <span class="op">=</span> [
+                    <span class="string">&quot;wtime&quot;</span>,
+                    <span class="string">&quot;btime&quot;</span>,
+                    <span class="string">&quot;winc&quot;</span>,
+                    <span class="string">&quot;binc&quot;</span>,
+                    <span class="string">&quot;depth&quot;</span>,
+                    <span class="string">&quot;nodes&quot;</span>,
+                    <span class="string">&quot;movetime&quot;</span>,
+                    <span class="string">&quot;movestogo&quot;</span>,
+                    <span class="string">&quot;infinite&quot;</span>,
+                    <span class="string">&quot;searchmoves&quot;</span>,
+                    <span class="string">&quot;ponder&quot;</span>,
+                ];
+
+                <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">iter</span>.<span class="ident">peek</span>() {
+                    <span class="kw">if</span> <span class="ident">keywords</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">value</span>.<span class="ident">as_str</span>()) {
+                        <span class="kw">break</span>;
                     }
+
+                    <span class="kw">let</span> <span class="ident">parsed_move</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">Move::from_long_notation</span>(<span class="ident">value</span>, <span class="kw-2">&amp;</span><span class="ident">state_lock</span>.<span class="ident">board</span>) {
+                        <span class="prelude-val">Ok</span>(<span class="ident">r#move</span>) =&gt; <span class="ident">r#move</span>,
+                        <span class="prelude-val">Err</span>(<span class="ident">error</span>) =&gt; {
+                            <span class="macro">println!</span>(<span class="string">&quot;info string Error: {}&quot;</span>, <span class="ident">error</span>);
+                            <span class="kw">return</span>;
+                        }
+                    };
+
+                    <span class="ident">moves_to_search</span>.<span class="ident">push</span>(<span class="ident">parsed_move</span>);
+                    <span class="ident">iter</span>.<span class="ident">next</span>();
                 }
-                <span class="string">&quot;btime&quot;</span> =&gt; {
-                    <span class="ident">black_time</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">iter</span>.<span class="ident">peek</span>() {
-                        <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>.<span class="ident">parse</span>().<span class="ident">unwrap_or</span>(<span class="ident">black_time</span>),
-                        <span class="prelude-val">None</span> =&gt; <span class="ident">black_time</span>,
-                    }
-                }
-                <span class="string">&quot;winc&quot;</span> =&gt; {
-                    <span class="ident">white_inc_time</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">iter</span>.<span class="ident">peek</span>() {
-                        <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>.<span class="ident">parse</span>().<span class="ident">unwrap_or</span>(<span class="ident">white_inc_time</span>),
-                        <span class="prelude-val">None</span> =&gt; <span class="ident">white_inc_time</span>,
-                    }
-                }
-                <span class="string">&quot;binc&quot;</span> =&gt; {
-                    <span class="ident">black_inc_time</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">iter</span>.<span class="ident">peek</span>() {
-                        <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>.<span class="ident">parse</span>().<span class="ident">unwrap_or</span>(<span class="ident">black_inc_time</span>),
-                        <span class="prelude-val">None</span> =&gt; <span class="ident">black_inc_time</span>,
-                    }
-                }
-                <span class="string">&quot;depth&quot;</span> =&gt; {
-                    <span class="ident">forced_depth</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">iter</span>.<span class="ident">peek</span>() {
-                        <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>.<span class="ident">parse</span>().<span class="ident">unwrap_or</span>(<span class="ident">forced_depth</span>),
-                        <span class="prelude-val">None</span> =&gt; <span class="ident">forced_depth</span>,
-                    }
-                }
-                <span class="string">&quot;nodes&quot;</span> =&gt; {
-                    <span class="ident">max_nodes_count</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">iter</span>.<span class="ident">peek</span>() {
-                        <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>.<span class="ident">parse</span>().<span class="ident">unwrap_or</span>(<span class="ident">max_nodes_count</span>),
-                        <span class="prelude-val">None</span> =&gt; <span class="ident">max_nodes_count</span>,
-                    }
-                }
-                <span class="string">&quot;movetime&quot;</span> =&gt; {
-                    <span class="ident">max_move_time</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">iter</span>.<span class="ident">peek</span>() {
-                        <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>.<span class="ident">parse</span>().<span class="ident">unwrap_or</span>(<span class="ident">max_move_time</span>),
-                        <span class="prelude-val">None</span> =&gt; <span class="ident">max_move_time</span>,
-                    }
-                }
-                <span class="string">&quot;movestogo&quot;</span> =&gt; {
-                    <span class="ident">moves_to_go</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">iter</span>.<span class="ident">peek</span>() {
-                        <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>.<span class="ident">parse</span>().<span class="ident">unwrap_or</span>(<span class="ident">moves_to_go</span>),
-                        <span class="prelude-val">None</span> =&gt; <span class="ident">moves_to_go</span>,
-                    }
-                }
-                <span class="string">&quot;infinite&quot;</span> =&gt; {
-                    <span class="ident">forced_depth</span> <span class="op">=</span> <span class="ident">engine::MAX_DEPTH</span>;
-                }
-                <span class="string">&quot;ponder&quot;</span> =&gt; {
-                    <span class="ident">forced_depth</span> <span class="op">=</span> <span class="ident">engine::MAX_DEPTH</span>;
-                }
-                <span class="kw">_</span> =&gt; {}
+            }
+            <span class="string">&quot;ponder&quot;</span> =&gt; {
+                <span class="ident">ponder_mode</span> <span class="op">=</span> <span class="bool-val">true</span>;
+                <span class="ident">forced_depth</span> <span class="op">=</span> <span class="ident">engine::MAX_DEPTH</span>;
+            }
+            <span class="kw">_</span> =&gt; {}
+        }
+    }
+
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">time</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">state_lock</span>.<span class="ident">board</span>.<span class="ident">active_color</span> {
+        <span class="ident">WHITE</span> =&gt; <span class="ident">white_time</span>,
+        <span class="ident">BLACK</span> =&gt; <span class="ident">black_time</span>,
+        <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: state_lock.board.active_color={}&quot;</span>, <span class="ident">state_lock</span>.<span class="ident">board</span>.<span class="ident">active_color</span>),
+    };
+    <span class="ident">time</span> <span class="op">-</span><span class="op">=</span> <span class="ident">cmp::min</span>(<span class="ident">time</span>, <span class="ident">state_lock</span>.<span class="ident">options</span>[<span class="string">&quot;Move Overhead&quot;</span>].<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>().<span class="ident">unwrap</span>());
+
+    <span class="kw">let</span> <span class="ident">inc_time</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">state_lock</span>.<span class="ident">board</span>.<span class="ident">active_color</span> {
+        <span class="ident">WHITE</span> =&gt; <span class="ident">white_inc_time</span>,
+        <span class="ident">BLACK</span> =&gt; <span class="ident">black_inc_time</span>,
+        <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: state_lock.board.active_color={}&quot;</span>, <span class="ident">state_lock</span>.<span class="ident">board</span>.<span class="ident">active_color</span>),
+    };
+
+    <span class="ident">state_lock</span>.<span class="ident">abort_token</span>.<span class="ident">store</span>(<span class="bool-val">false</span>, <span class="ident">Ordering::Relaxed</span>);
+    <span class="ident">state_lock</span>.<span class="ident">ponder_token</span>.<span class="ident">store</span>(<span class="bool-val">false</span>, <span class="ident">Ordering::Relaxed</span>);
+    <span class="ident">state_lock</span>.<span class="ident">busy_flag</span>.<span class="ident">store</span>(<span class="bool-val">true</span>, <span class="ident">Ordering::Relaxed</span>);
+    <span class="ident">drop</span>(<span class="ident">state_lock</span>);
+
+    <span class="kw">let</span> <span class="ident">state_arc</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">clone</span>();
+    <span class="kw">let</span> <span class="ident">search_thread</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">thread::spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
+        <span class="kw">let</span> <span class="ident">state_lock</span> <span class="op">=</span> <span class="ident">state_arc</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>();
+
+        <span class="kw">let</span> <span class="ident">multipv</span> <span class="op">=</span> <span class="ident">state_lock</span>.<span class="ident">options</span>[<span class="string">&quot;MultiPV&quot;</span>].<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>().<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">threads</span> <span class="op">=</span> <span class="ident">state_lock</span>.<span class="ident">options</span>[<span class="string">&quot;Threads&quot;</span>].<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>().<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">ponder</span> <span class="op">=</span> <span class="ident">state_lock</span>.<span class="ident">options</span>[<span class="string">&quot;Ponder&quot;</span>].<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>().<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">syzygy_path</span> <span class="op">=</span> <span class="ident">state_lock</span>.<span class="ident">options</span>[<span class="string">&quot;SyzygyPath&quot;</span>].<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="ident">syzygy_path</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">syzygy_path</span> <span class="op">!</span><span class="op">=</span> <span class="string">&quot;&lt;empty&gt;&quot;</span> { <span class="prelude-val">Some</span>(<span class="ident">syzygy_path</span>) } <span class="kw">else</span> { <span class="prelude-val">None</span> };
+        <span class="kw">let</span> <span class="ident">syzygy_probe_limit</span> <span class="op">=</span> <span class="ident">state_lock</span>.<span class="ident">options</span>[<span class="string">&quot;SyzygyProbeLimit&quot;</span>].<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>().<span class="ident">unwrap</span>();
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">context</span> <span class="op">=</span> <span class="ident">SearchContext::new</span>(
+            <span class="ident">state_lock</span>.<span class="ident">board</span>.<span class="ident">clone</span>(),
+            <span class="ident">state_lock</span>.<span class="ident">board</span>.<span class="ident">state_stack</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u8</span>,
+            <span class="ident">time</span>,
+            <span class="ident">inc_time</span>,
+            <span class="ident">forced_depth</span>,
+            <span class="ident">max_nodes_count</span>,
+            <span class="ident">max_move_time</span>,
+            <span class="ident">moves_to_go</span>,
+            <span class="ident">moves_to_search</span>.<span class="ident">clone</span>(),
+            <span class="ident">multipv</span> <span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="ident">state_lock</span>.<span class="ident">debug_mode</span>.<span class="ident">load</span>(<span class="ident">Ordering::Relaxed</span>),
+            <span class="ident">ponder_mode</span>,
+            <span class="bool-val">false</span>,
+            <span class="bool-val">false</span>,
+            <span class="ident">syzygy_path</span>,
+            <span class="ident">syzygy_probe_limit</span>,
+            <span class="ident">state_lock</span>.<span class="ident">transposition_table</span>.<span class="ident">clone</span>(),
+            <span class="ident">state_lock</span>.<span class="ident">pawn_hashtable</span>.<span class="ident">clone</span>(),
+            <span class="ident">state_lock</span>.<span class="ident">killers_table</span>.<span class="ident">clone</span>(),
+            <span class="ident">state_lock</span>.<span class="ident">history_table</span>.<span class="ident">clone</span>(),
+            <span class="ident">state_lock</span>.<span class="ident">abort_token</span>.<span class="ident">clone</span>(),
+            <span class="ident">state_lock</span>.<span class="ident">ponder_token</span>.<span class="ident">clone</span>(),
+        );
+        <span class="ident">drop</span>(<span class="ident">state_lock</span>);
+
+        <span class="kw">if</span> <span class="ident">threads</span> <span class="op">&gt;</span> <span class="number">1</span> {
+            <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">threads</span> {
+                <span class="kw">let</span> <span class="ident">state_lock</span> <span class="op">=</span> <span class="ident">state_arc</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>();
+                <span class="kw">let</span> <span class="ident">helper_context</span> <span class="op">=</span> <span class="ident">SearchContext::new</span>(
+                    <span class="ident">state_lock</span>.<span class="ident">board</span>.<span class="ident">clone</span>(),
+                    <span class="ident">state_lock</span>.<span class="ident">board</span>.<span class="ident">state_stack</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u8</span>,
+                    <span class="ident">time</span>,
+                    <span class="ident">inc_time</span>,
+                    <span class="ident">forced_depth</span>,
+                    <span class="ident">max_nodes_count</span>,
+                    <span class="ident">max_move_time</span>,
+                    <span class="ident">moves_to_go</span>,
+                    <span class="ident">moves_to_search</span>.<span class="ident">clone</span>(),
+                    <span class="bool-val">false</span>,
+                    <span class="ident">state_lock</span>.<span class="ident">debug_mode</span>.<span class="ident">load</span>(<span class="ident">Ordering::Relaxed</span>),
+                    <span class="bool-val">false</span>,
+                    <span class="bool-val">false</span>,
+                    <span class="bool-val">true</span>,
+                    <span class="prelude-val">None</span>,
+                    <span class="number">0</span>,
+                    <span class="ident">state_lock</span>.<span class="ident">transposition_table</span>.<span class="ident">clone</span>(),
+                    <span class="ident">state_lock</span>.<span class="ident">pawn_hashtable</span>.<span class="ident">clone</span>(),
+                    <span class="ident">state_lock</span>.<span class="ident">killers_table</span>.<span class="ident">clone</span>(),
+                    <span class="ident">state_lock</span>.<span class="ident">history_table</span>.<span class="ident">clone</span>(),
+                    <span class="ident">state_lock</span>.<span class="ident">abort_token</span>.<span class="ident">clone</span>(),
+                    <span class="ident">state_lock</span>.<span class="ident">ponder_token</span>.<span class="ident">clone</span>(),
+                );
+                <span class="ident">drop</span>(<span class="ident">state_lock</span>);
+
+                <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">HelperThreadContext</span> {
+                    <span class="ident">board</span>: <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">clone</span>(),
+                    <span class="ident">pawn_hashtable</span>: <span class="ident">Arc::new</span>((<span class="kw-2">*</span><span class="ident">context</span>.<span class="ident">pawn_hashtable</span>).<span class="ident">clone</span>()),
+                    <span class="ident">killers_table</span>: <span class="ident">Arc::new</span>((<span class="kw-2">*</span><span class="ident">context</span>.<span class="ident">killers_table</span>).<span class="ident">clone</span>()),
+                    <span class="ident">history_table</span>: <span class="ident">Arc::new</span>((<span class="kw-2">*</span><span class="ident">context</span>.<span class="ident">history_table</span>).<span class="ident">clone</span>()),
+                    <span class="ident">context</span>: <span class="ident">helper_context</span>,
+                };
+
+                <span class="ident">context</span>.<span class="ident">helper_contexts</span>.<span class="ident">push</span>(<span class="ident">data</span>);
             }
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">time</span> <span class="op">=</span> <span class="kw">match</span> (<span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">board</span>.<span class="ident">get</span>()).<span class="ident">active_color</span> {
-            <span class="ident">WHITE</span> =&gt; <span class="ident">white_time</span>,
-            <span class="ident">BLACK</span> =&gt; <span class="ident">black_time</span>,
-            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: state.board.active_color={}&quot;</span>, (<span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">board</span>.<span class="ident">get</span>()).<span class="ident">active_color</span>),
-        };
-        <span class="ident">time</span> <span class="op">-</span><span class="op">=</span> <span class="ident">cmp::min</span>(<span class="ident">time</span>, (<span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">options</span>.<span class="ident">get</span>())[<span class="string">&quot;Move Overhead&quot;</span>].<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>().<span class="ident">unwrap</span>());
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">best_move</span> <span class="op">=</span> <span class="ident">Default::default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ponder_move</span> <span class="op">=</span> <span class="ident">Default::default</span>();
 
-        <span class="kw">let</span> <span class="ident">inc_time</span> <span class="op">=</span> <span class="kw">match</span> (<span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">board</span>.<span class="ident">get</span>()).<span class="ident">active_color</span> {
-            <span class="ident">WHITE</span> =&gt; <span class="ident">white_inc_time</span>,
-            <span class="ident">BLACK</span> =&gt; <span class="ident">black_inc_time</span>,
-            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: state.board.active_color={}&quot;</span>, (<span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">board</span>.<span class="ident">get</span>()).<span class="ident">active_color</span>),
-        };
-
-        <span class="kw">let</span> <span class="ident">state_arc</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">clone</span>();
-
-        (<span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">abort_token</span>.<span class="ident">get</span>()).<span class="ident">set</span> <span class="op">=</span> <span class="bool-val">false</span>;
-        (<span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">ponder_token</span>.<span class="ident">get</span>()).<span class="ident">set</span> <span class="op">=</span> <span class="bool-val">false</span>;
-        (<span class="kw-2">*</span><span class="ident">state</span>).<span class="ident">busy_flag</span>.<span class="ident">store</span>(<span class="bool-val">true</span>, <span class="ident">Ordering::Relaxed</span>);
-
-        <span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">search_thread</span>.<span class="ident">get</span>() <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">thread::spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">threads</span> <span class="op">=</span> (<span class="kw-2">*</span><span class="ident">state_arc</span>.<span class="ident">options</span>.<span class="ident">get</span>())[<span class="string">&quot;Threads&quot;</span>].<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>().<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">ponder</span> <span class="op">=</span> (<span class="kw-2">*</span><span class="ident">state_arc</span>.<span class="ident">options</span>.<span class="ident">get</span>())[<span class="string">&quot;Ponder&quot;</span>].<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>().<span class="ident">unwrap</span>();
-
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">context</span> <span class="op">=</span> <span class="ident">SearchContext::new</span>(
-                <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">state_arc</span>.<span class="ident">board</span>.<span class="ident">get</span>(),
-                <span class="ident">time</span>,
-                <span class="ident">inc_time</span>,
-                <span class="ident">forced_depth</span>,
-                <span class="ident">max_nodes_count</span>,
-                <span class="ident">max_move_time</span>,
-                <span class="ident">moves_to_go</span>,
-                <span class="ident">state_arc</span>.<span class="ident">debug_mode</span>.<span class="ident">load</span>(<span class="ident">Ordering::Relaxed</span>),
-                <span class="bool-val">false</span>,
-                <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">state_arc</span>.<span class="ident">transposition_table</span>.<span class="ident">get</span>(),
-                <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">state_arc</span>.<span class="ident">pawn_hashtable</span>.<span class="ident">get</span>(),
-                <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">state_arc</span>.<span class="ident">killers_table</span>.<span class="ident">get</span>(),
-                <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">state_arc</span>.<span class="ident">history_table</span>.<span class="ident">get</span>(),
-                <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">state_arc</span>.<span class="ident">abort_token</span>.<span class="ident">get</span>(),
-                <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">state_arc</span>.<span class="ident">ponder_token</span>.<span class="ident">get</span>(),
-            );
-
-            <span class="kw">if</span> <span class="ident">threads</span> <span class="op">&gt;</span> <span class="number">1</span> {
-                <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">threads</span> {
-                    <span class="kw">let</span> <span class="ident">helper_context</span> <span class="op">=</span> <span class="ident">SearchContext::new</span>(
-                        <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">state_arc</span>.<span class="ident">board</span>.<span class="ident">get</span>(),
-                        <span class="ident">time</span>,
-                        <span class="ident">inc_time</span>,
-                        <span class="ident">forced_depth</span>,
-                        <span class="ident">max_nodes_count</span>,
-                        <span class="ident">max_move_time</span>,
-                        <span class="ident">moves_to_go</span>,
-                        <span class="ident">state_arc</span>.<span class="ident">debug_mode</span>.<span class="ident">load</span>(<span class="ident">Ordering::Relaxed</span>),
-                        <span class="bool-val">true</span>,
-                        <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">state_arc</span>.<span class="ident">transposition_table</span>.<span class="ident">get</span>(),
-                        <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">state_arc</span>.<span class="ident">pawn_hashtable</span>.<span class="ident">get</span>(),
-                        <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">state_arc</span>.<span class="ident">killers_table</span>.<span class="ident">get</span>(),
-                        <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">state_arc</span>.<span class="ident">history_table</span>.<span class="ident">get</span>(),
-                        <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">state_arc</span>.<span class="ident">abort_token</span>.<span class="ident">get</span>(),
-                        <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">state_arc</span>.<span class="ident">ponder_token</span>.<span class="ident">get</span>(),
-                    );
-
-                    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">HelperThreadContext</span> {
-                        <span class="ident">board</span>: <span class="ident">UnsafeCell::new</span>(<span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">clone</span>()),
-                        <span class="ident">pawn_hashtable</span>: <span class="ident">UnsafeCell::new</span>(<span class="ident">context</span>.<span class="ident">pawn_hashtable</span>.<span class="ident">clone</span>()),
-                        <span class="ident">killers_table</span>: <span class="ident">UnsafeCell::new</span>(<span class="ident">context</span>.<span class="ident">killers_table</span>.<span class="ident">clone</span>()),
-                        <span class="ident">history_table</span>: <span class="ident">UnsafeCell::new</span>(<span class="ident">context</span>.<span class="ident">history_table</span>.<span class="ident">clone</span>()),
-                        <span class="ident">context</span>: <span class="ident">helper_context</span>,
-                    };
-
-                    <span class="ident">context</span>.<span class="ident">helper_contexts</span>.<span class="ident">push</span>(<span class="ident">data</span>);
-                }
-
-                <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">threads</span> {
-                    <span class="ident">context</span>.<span class="ident">helper_contexts</span>[<span class="ident">i</span>].<span class="ident">context</span>.<span class="ident">board</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">context</span>.<span class="ident">helper_contexts</span>[<span class="ident">i</span>].<span class="ident">board</span>.<span class="ident">get</span>();
-                    <span class="ident">context</span>.<span class="ident">helper_contexts</span>[<span class="ident">i</span>].<span class="ident">context</span>.<span class="ident">pawn_hashtable</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">context</span>.<span class="ident">helper_contexts</span>[<span class="ident">i</span>].<span class="ident">pawn_hashtable</span>.<span class="ident">get</span>();
-                    <span class="ident">context</span>.<span class="ident">helper_contexts</span>[<span class="ident">i</span>].<span class="ident">context</span>.<span class="ident">killers_table</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">context</span>.<span class="ident">helper_contexts</span>[<span class="ident">i</span>].<span class="ident">killers_table</span>.<span class="ident">get</span>();
-                    <span class="ident">context</span>.<span class="ident">helper_contexts</span>[<span class="ident">i</span>].<span class="ident">context</span>.<span class="ident">history_table</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">context</span>.<span class="ident">helper_contexts</span>[<span class="ident">i</span>].<span class="ident">history_table</span>.<span class="ident">get</span>();
-                }
-            }
-
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">best_move</span> <span class="op">=</span> <span class="ident">Default::default</span>();
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ponder_move</span> <span class="op">=</span> <span class="ident">Default::default</span>();
-
-            <span class="kw">for</span> <span class="ident">depth_result</span> <span class="kw">in</span> <span class="ident">context</span> {
-                <span class="kw">let</span> <span class="ident">pv_line</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">depth_result</span>.<span class="ident">pv_line</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span>.<span class="ident">to_long_notation</span>()).<span class="ident">collect</span>();
-                <span class="kw">let</span> <span class="ident">formatted_score</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">engine::is_score_near_checkmate</span>(<span class="ident">depth_result</span>.<span class="ident">score</span>) {
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">moves_to_mate</span> <span class="op">=</span> (<span class="ident">depth_result</span>.<span class="ident">score</span>.<span class="ident">abs</span>() <span class="op">-</span> <span class="ident">engine::CHECKMATE_SCORE</span>).<span class="ident">abs</span>() <span class="op">/</span> <span class="number">2</span>;
-                    <span class="ident">moves_to_mate</span> <span class="kw-2">*</span><span class="op">=</span> <span class="ident">depth_result</span>.<span class="ident">score</span>.<span class="ident">signum</span>();
+        <span class="kw">for</span> <span class="ident">depth_result</span> <span class="kw">in</span> <span class="ident">context</span> {
+            <span class="kw">for</span> (<span class="ident">multipv_index</span>, <span class="ident">multipv_entry</span>) <span class="kw">in</span> <span class="ident">depth_result</span>.<span class="ident">lines</span>.<span class="ident">iter</span>().<span class="ident">take</span>(<span class="ident">multipv</span> <span class="kw">as</span> <span class="ident">usize</span>).<span class="ident">enumerate</span>() {
+                <span class="kw">let</span> <span class="ident">pv_line</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">multipv_entry</span>.<span class="ident">pv_line</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span>.<span class="ident">to_long_notation</span>()).<span class="ident">collect</span>();
+                <span class="kw">let</span> <span class="ident">formatted_score</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">engine::is_score_near_checkmate</span>(<span class="ident">multipv_entry</span>.<span class="ident">score</span>) {
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">moves_to_mate</span> <span class="op">=</span> (<span class="ident">multipv_entry</span>.<span class="ident">score</span>.<span class="ident">abs</span>() <span class="op">-</span> <span class="ident">engine::CHECKMATE_SCORE</span>).<span class="ident">abs</span>() <span class="op">/</span> <span class="number">2</span>;
+                    <span class="ident">moves_to_mate</span> <span class="kw-2">*</span><span class="op">=</span> <span class="ident">multipv_entry</span>.<span class="ident">score</span>.<span class="ident">signum</span>();
 
                     <span class="macro">format!</span>(<span class="string">&quot;score mate {}&quot;</span>, <span class="ident">moves_to_mate</span>).<span class="ident">to_string</span>()
                 } <span class="kw">else</span> {
-                    <span class="macro">format!</span>(<span class="string">&quot;score cp {}&quot;</span>, <span class="ident">depth_result</span>.<span class="ident">score</span>).<span class="ident">to_string</span>()
+                    <span class="macro">format!</span>(<span class="string">&quot;score cp {}&quot;</span>, <span class="ident">multipv_entry</span>.<span class="ident">score</span>).<span class="ident">to_string</span>()
                 };
 
-                <span class="ident">best_move</span> <span class="op">=</span> <span class="ident">depth_result</span>.<span class="ident">pv_line</span>[<span class="number">0</span>];
                 <span class="macro">println!</span>(
                     <span class="string">&quot;{}&quot;</span>,
                     <span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                        <span class="string">&quot;info time {} {} depth {} seldepth {} nodes {} pv {}&quot;</span>,
+                        <span class="string">&quot;info time {} {} depth {} seldepth {} multipv {} nodes {} hashfull {} pv {}&quot;</span>,
                         <span class="ident">depth_result</span>.<span class="ident">time</span>,
                         <span class="ident">formatted_score</span>,
                         <span class="ident">depth_result</span>.<span class="ident">depth</span>,
                         <span class="ident">depth_result</span>.<span class="ident">statistics</span>.<span class="ident">max_ply</span>,
+                        <span class="ident">multipv_index</span> <span class="op">+</span> <span class="number">1</span>,
                         <span class="ident">depth_result</span>.<span class="ident">statistics</span>.<span class="ident">nodes_count</span> <span class="op">+</span> <span class="ident">depth_result</span>.<span class="ident">statistics</span>.<span class="ident">q_nodes_count</span>,
+                        (<span class="ident">depth_result</span>.<span class="ident">transposition_table_usage</span> <span class="op">*</span> <span class="number">10.0</span>) <span class="kw">as</span> <span class="ident">u32</span>,
                         <span class="ident">pv_line</span>.<span class="ident">join</span>(<span class="string">&quot; &quot;</span>).<span class="ident">as_str</span>()
                     )
                 );
+            }
 
-                <span class="comment">// Check if the ponder move is legal</span>
-                <span class="kw">if</span> <span class="ident">ponder</span> <span class="op">&amp;&amp;</span> <span class="ident">depth_result</span>.<span class="ident">pv_line</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="number">2</span> {
-                    <span class="kw">let</span> <span class="ident">board</span> <span class="op">=</span> <span class="ident">state_arc</span>.<span class="ident">board</span>.<span class="ident">get</span>();
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">allow_ponder</span> <span class="op">=</span> <span class="bool-val">true</span>;
+            <span class="comment">// Ignore result when no legal move was found, to prevent crash further</span>
+            <span class="kw">if</span> <span class="ident">depth_result</span>.<span class="ident">lines</span>[<span class="number">0</span>].<span class="ident">pv_line</span>.<span class="ident">is_empty</span>() {
+                <span class="kw">continue</span>;
+            }
 
-                    (<span class="kw-2">*</span><span class="ident">board</span>).<span class="ident">make_move</span>(<span class="ident">depth_result</span>.<span class="ident">pv_line</span>[<span class="number">0</span>]);
-                    (<span class="kw-2">*</span><span class="ident">board</span>).<span class="ident">make_move</span>(<span class="ident">depth_result</span>.<span class="ident">pv_line</span>[<span class="number">1</span>]);
-                    <span class="kw">if</span> (<span class="kw-2">*</span><span class="ident">board</span>).<span class="ident">is_king_checked</span>((<span class="kw-2">*</span><span class="ident">board</span>).<span class="ident">active_color</span> <span class="op">^</span> <span class="number">1</span>) {
-                        <span class="ident">allow_ponder</span> <span class="op">=</span> <span class="bool-val">false</span>;
-                    }
+            <span class="ident">best_move</span> <span class="op">=</span> <span class="ident">depth_result</span>.<span class="ident">lines</span>[<span class="number">0</span>].<span class="ident">pv_line</span>[<span class="number">0</span>];
 
-                    <span class="kw">if</span> (<span class="kw-2">*</span><span class="ident">board</span>).<span class="ident">is_threefold_repetition_draw</span>() <span class="op">|</span><span class="op">|</span> (<span class="kw-2">*</span><span class="ident">board</span>).<span class="ident">is_fifty_move_rule_draw</span>() <span class="op">|</span><span class="op">|</span> (<span class="kw-2">*</span><span class="ident">board</span>).<span class="ident">is_insufficient_material_draw</span>() {
-                        <span class="ident">allow_ponder</span> <span class="op">=</span> <span class="bool-val">false</span>;
-                    }
-                    (<span class="kw-2">*</span><span class="ident">board</span>).<span class="ident">undo_move</span>(<span class="ident">depth_result</span>.<span class="ident">pv_line</span>[<span class="number">1</span>]);
-                    (<span class="kw-2">*</span><span class="ident">board</span>).<span class="ident">undo_move</span>(<span class="ident">depth_result</span>.<span class="ident">pv_line</span>[<span class="number">0</span>]);
+            <span class="comment">// Check if the ponder move is legal</span>
+            <span class="kw">if</span> <span class="ident">ponder</span> <span class="op">&amp;&amp;</span> <span class="ident">depth_result</span>.<span class="ident">lines</span>[<span class="number">0</span>].<span class="ident">pv_line</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="number">2</span> {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">board</span> <span class="op">=</span> <span class="ident">state_arc</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>().<span class="ident">board</span>.<span class="ident">clone</span>();
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">allow_ponder</span> <span class="op">=</span> <span class="bool-val">true</span>;
 
-                    <span class="kw">if</span> <span class="ident">allow_ponder</span> {
-                        <span class="ident">ponder_move</span> <span class="op">=</span> <span class="ident">depth_result</span>.<span class="ident">pv_line</span>[<span class="number">1</span>];
-                    } <span class="kw">else</span> {
-                        <span class="ident">ponder_move</span> <span class="op">=</span> <span class="ident">Default::default</span>();
-                    }
+                <span class="ident">board</span>.<span class="ident">make_move</span>(<span class="ident">depth_result</span>.<span class="ident">lines</span>[<span class="number">0</span>].<span class="ident">pv_line</span>[<span class="number">0</span>]);
+                <span class="ident">board</span>.<span class="ident">make_move</span>(<span class="ident">depth_result</span>.<span class="ident">lines</span>[<span class="number">0</span>].<span class="ident">pv_line</span>[<span class="number">1</span>]);
+
+                <span class="kw">if</span> <span class="ident">board</span>.<span class="ident">is_king_checked</span>(<span class="ident">board</span>.<span class="ident">active_color</span> <span class="op">^</span> <span class="number">1</span>) {
+                    <span class="ident">allow_ponder</span> <span class="op">=</span> <span class="bool-val">false</span>;
+                }
+
+                <span class="kw">if</span> <span class="ident">board</span>.<span class="ident">is_repetition_draw</span>(<span class="number">3</span>) <span class="op">|</span><span class="op">|</span> <span class="ident">board</span>.<span class="ident">is_fifty_move_rule_draw</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">board</span>.<span class="ident">is_insufficient_material_draw</span>() {
+                    <span class="ident">allow_ponder</span> <span class="op">=</span> <span class="bool-val">false</span>;
+                }
+
+                <span class="ident">board</span>.<span class="ident">undo_move</span>(<span class="ident">depth_result</span>.<span class="ident">lines</span>[<span class="number">0</span>].<span class="ident">pv_line</span>[<span class="number">1</span>]);
+                <span class="ident">board</span>.<span class="ident">undo_move</span>(<span class="ident">depth_result</span>.<span class="ident">lines</span>[<span class="number">0</span>].<span class="ident">pv_line</span>[<span class="number">0</span>]);
+
+                <span class="kw">if</span> <span class="ident">allow_ponder</span> {
+                    <span class="ident">ponder_move</span> <span class="op">=</span> <span class="ident">depth_result</span>.<span class="ident">lines</span>[<span class="number">0</span>].<span class="ident">pv_line</span>[<span class="number">1</span>];
                 } <span class="kw">else</span> {
                     <span class="ident">ponder_move</span> <span class="op">=</span> <span class="ident">Default::default</span>();
                 }
-            }
-
-            <span class="kw">if</span> <span class="ident">ponder</span> <span class="op">&amp;&amp;</span> <span class="ident">ponder_move</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Default::default</span>() {
-                <span class="macro">println!</span>(<span class="string">&quot;bestmove {} ponder {}&quot;</span>, <span class="ident">best_move</span>.<span class="ident">to_long_notation</span>(), <span class="ident">ponder_move</span>.<span class="ident">to_long_notation</span>());
             } <span class="kw">else</span> {
-                <span class="macro">println!</span>(<span class="string">&quot;bestmove {}&quot;</span>, <span class="ident">best_move</span>.<span class="ident">to_long_notation</span>());
+                <span class="ident">ponder_move</span> <span class="op">=</span> <span class="ident">Default::default</span>();
             }
+        }
 
-            (<span class="kw-2">*</span><span class="ident">state_arc</span>.<span class="ident">search_thread</span>.<span class="ident">get</span>()) <span class="op">=</span> <span class="prelude-val">None</span>;
-            (<span class="kw-2">*</span><span class="ident">state_arc</span>.<span class="ident">transposition_table</span>.<span class="ident">get</span>()).<span class="ident">age_entries</span>();
-            (<span class="kw-2">*</span><span class="ident">state_arc</span>.<span class="ident">killers_table</span>.<span class="ident">get</span>()).<span class="ident">age_moves</span>();
-            (<span class="kw-2">*</span><span class="ident">state_arc</span>.<span class="ident">history_table</span>.<span class="ident">get</span>()).<span class="ident">age_values</span>();
-            (<span class="kw-2">*</span><span class="ident">state_arc</span>).<span class="ident">busy_flag</span>.<span class="ident">store</span>(<span class="bool-val">false</span>, <span class="ident">Ordering::Relaxed</span>);
-        }));
-    }
+        <span class="kw">if</span> <span class="ident">ponder</span> <span class="op">&amp;&amp;</span> <span class="ident">ponder_move</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Default::default</span>() {
+            <span class="macro">println!</span>(<span class="string">&quot;bestmove {} ponder {}&quot;</span>, <span class="ident">best_move</span>.<span class="ident">to_long_notation</span>(), <span class="ident">ponder_move</span>.<span class="ident">to_long_notation</span>());
+        } <span class="kw">else</span> {
+            <span class="macro">println!</span>(<span class="string">&quot;bestmove {}&quot;</span>, <span class="ident">best_move</span>.<span class="ident">to_long_notation</span>());
+        }
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state_lock</span> <span class="op">=</span> <span class="ident">state_arc</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>();
+        <span class="ident">state_lock</span>.<span class="ident">search_thread</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+        <span class="ident">state_lock</span>.<span class="ident">killers_table</span>.<span class="ident">age_moves</span>();
+        <span class="ident">state_lock</span>.<span class="ident">history_table</span>.<span class="ident">age_values</span>();
+        <span class="ident">state_lock</span>.<span class="ident">busy_flag</span>.<span class="ident">store</span>(<span class="bool-val">false</span>, <span class="ident">Ordering::Relaxed</span>);
+    }));
+
+    <span class="ident">state</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>().<span class="ident">search_thread</span> <span class="op">=</span> <span class="ident">search_thread</span>;
 }
 
 <span class="doccomment">/// Handles `isready` command by waiting for the busy flag, and then printing response as fast as possible.</span>
-<span class="kw">fn</span> <span class="ident">handle_isready</span>(<span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">UciState</span><span class="op">&gt;</span>) {
+<span class="kw">fn</span> <span class="ident">handle_isready</span>(<span class="ident">state</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">UciState</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
     <span class="ident">wait_for_busy_flag</span>(<span class="ident">state</span>);
     <span class="macro">println!</span>(<span class="string">&quot;readyok&quot;</span>);
 }
 
 <span class="doccomment">/// Handles `ponderhit` command by setting abort and ponder tokens, which should switch a search mode from the ponder to the regular one.</span>
-<span class="kw">fn</span> <span class="ident">handle_ponderhit</span>(<span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">UciState</span><span class="op">&gt;</span>) {
-    <span class="kw">unsafe</span> {
-        (<span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">ponder_token</span>.<span class="ident">get</span>()).<span class="ident">set</span> <span class="op">=</span> <span class="bool-val">true</span>;
-        (<span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">abort_token</span>.<span class="ident">get</span>()).<span class="ident">set</span> <span class="op">=</span> <span class="bool-val">true</span>;
-    }
+<span class="kw">fn</span> <span class="ident">handle_ponderhit</span>(<span class="ident">state</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">UciState</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
+    <span class="kw">let</span> <span class="ident">state_lock</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>();
+    <span class="ident">state_lock</span>.<span class="ident">ponder_token</span>.<span class="ident">store</span>(<span class="bool-val">true</span>, <span class="ident">Ordering::Relaxed</span>);
+    <span class="ident">state_lock</span>.<span class="ident">abort_token</span>.<span class="ident">store</span>(<span class="bool-val">true</span>, <span class="ident">Ordering::Relaxed</span>);
 }
 
 <span class="doccomment">/// Handles `position ...` command with the following variants:</span>
@@ -899,47 +1050,46 @@
 <span class="doccomment">///  - `position startpos moves [list of moves]` - sets a default position and applies a list of moves</span>
 <span class="doccomment">///  - `position fen [fen]` - sets a FEN position</span>
 <span class="doccomment">///  - `position fen [fen] moves [list of moves]` - sets a FEN position and applies a list of moves</span>
-<span class="kw">fn</span> <span class="ident">handle_position</span>(<span class="ident">parameters</span>: <span class="kw-2">&amp;</span>[<span class="ident">String</span>], <span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">UciState</span><span class="op">&gt;</span>) {
-    <span class="ident">wait_for_busy_flag</span>(<span class="ident">state</span>);
+<span class="kw">fn</span> <span class="ident">handle_position</span>(<span class="ident">parameters</span>: <span class="kw-2">&amp;</span>[<span class="ident">String</span>], <span class="ident">state</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">UciState</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
+    <span class="ident">wait_for_busy_flag</span>(<span class="ident">state</span>.<span class="ident">clone</span>());
 
     <span class="kw">if</span> <span class="ident">parameters</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">2</span> {
         <span class="kw">return</span>;
     }
 
-    <span class="kw">unsafe</span> {
-        <span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">board</span>.<span class="ident">get</span>() <span class="op">=</span> <span class="kw">match</span> <span class="ident">parameters</span>[<span class="number">1</span>].<span class="ident">as_str</span>() {
-            <span class="string">&quot;fen&quot;</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">fen</span> <span class="op">=</span> <span class="ident">parameters</span>[<span class="number">2</span>..].<span class="ident">join</span>(<span class="string">&quot; &quot;</span>);
-                <span class="kw">match</span> <span class="ident">Bitboard::new_from_fen</span>(<span class="ident">fen</span>.<span class="ident">as_str</span>()) {
-                    <span class="prelude-val">Ok</span>(<span class="ident">board</span>) =&gt; <span class="ident">board</span>,
-                    <span class="prelude-val">Err</span>(<span class="ident">message</span>) =&gt; {
-                        <span class="macro">println!</span>(<span class="string">&quot;info string Error: {}&quot;</span>, <span class="ident">message</span>);
-                        <span class="kw">return</span>;
-                    }
+    <span class="ident">state</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>().<span class="ident">board</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">parameters</span>[<span class="number">1</span>].<span class="ident">as_str</span>() {
+        <span class="string">&quot;fen&quot;</span> =&gt; {
+            <span class="kw">let</span> <span class="ident">fen</span> <span class="op">=</span> <span class="ident">parameters</span>[<span class="number">2</span>..].<span class="ident">join</span>(<span class="string">&quot; &quot;</span>);
+            <span class="kw">match</span> <span class="ident">Bitboard::new_from_fen</span>(<span class="ident">fen</span>.<span class="ident">as_str</span>(), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>) {
+                <span class="prelude-val">Ok</span>(<span class="ident">board</span>) =&gt; <span class="ident">board</span>,
+                <span class="prelude-val">Err</span>(<span class="ident">error</span>) =&gt; {
+                    <span class="macro">println!</span>(<span class="string">&quot;info string Error: {}&quot;</span>, <span class="ident">error</span>);
+                    <span class="kw">return</span>;
                 }
             }
-            <span class="kw">_</span> =&gt; <span class="ident">Bitboard::new_initial_position</span>(),
-        };
-    }
+        }
+        <span class="kw">_</span> =&gt; <span class="ident">Bitboard::new_initial_position</span>(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
+    };
 
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">index</span>) <span class="op">=</span> <span class="ident">parameters</span>.<span class="ident">iter</span>().<span class="ident">position</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span> <span class="op">==</span> <span class="string">&quot;moves&quot;</span>) {
         <span class="kw">for</span> <span class="ident">premade_move</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">parameters</span>[<span class="ident">index</span> <span class="op">+</span> <span class="number">1</span>..] {
-            <span class="kw">let</span> <span class="ident">parsed_move</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">Move::from_long_notation</span>(<span class="ident">premade_move</span>, <span class="kw">unsafe</span> { <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">board</span>.<span class="ident">get</span>() }) {
+            <span class="kw">let</span> <span class="ident">parsed_move</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">Move::from_long_notation</span>(<span class="ident">premade_move</span>, <span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>().<span class="ident">board</span>) {
                 <span class="prelude-val">Ok</span>(<span class="ident">r#move</span>) =&gt; <span class="ident">r#move</span>,
-                <span class="prelude-val">Err</span>(<span class="ident">message</span>) =&gt; {
-                    <span class="macro">println!</span>(<span class="string">&quot;info string Error: {}&quot;</span>, <span class="ident">message</span>);
+                <span class="prelude-val">Err</span>(<span class="ident">error</span>) =&gt; {
+                    <span class="macro">println!</span>(<span class="string">&quot;info string Error: {}&quot;</span>, <span class="ident">error</span>);
                     <span class="kw">return</span>;
                 }
             };
-            <span class="kw">unsafe</span> { (<span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">board</span>.<span class="ident">get</span>()).<span class="ident">make_move</span>(<span class="ident">parsed_move</span>) };
+
+            <span class="ident">state</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>().<span class="ident">board</span>.<span class="ident">make_move</span>(<span class="ident">parsed_move</span>);
         }
     };
 }
 
 <span class="doccomment">/// Handles `setoption [name] value [value]` command by creating or overwriting a `name` option with the specified `value`. Recreates tables if `Hash` or</span>
 <span class="doccomment">/// `Clear Hash` options are modified.</span>
-<span class="kw">fn</span> <span class="ident">handle_setoption</span>(<span class="ident">parameters</span>: <span class="kw-2">&amp;</span>[<span class="ident">String</span>], <span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">UciState</span><span class="op">&gt;</span>) {
-    <span class="ident">wait_for_busy_flag</span>(<span class="ident">state</span>);
+<span class="kw">fn</span> <span class="ident">handle_setoption</span>(<span class="ident">parameters</span>: <span class="kw-2">&amp;</span>[<span class="ident">String</span>], <span class="ident">state</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">UciState</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
+    <span class="ident">wait_for_busy_flag</span>(<span class="ident">state</span>.<span class="ident">clone</span>());
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">reading_name</span> <span class="op">=</span> <span class="bool-val">false</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">reading_value</span> <span class="op">=</span> <span class="bool-val">false</span>;
@@ -970,7 +1120,7 @@
     <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">value_tokens</span>.<span class="ident">join</span>(<span class="string">&quot; &quot;</span>);
 
     <span class="kw">if</span> <span class="op">!</span><span class="ident">name</span>.<span class="ident">is_empty</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">value</span>.<span class="ident">is_empty</span>() {
-        <span class="kw">unsafe</span> { (<span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">options</span>.<span class="ident">get</span>()).<span class="ident">insert</span>(<span class="ident">name</span>.<span class="ident">to_owned</span>(), <span class="ident">value</span>.<span class="ident">to_owned</span>()) };
+        <span class="ident">state</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>().<span class="ident">options</span>.<span class="ident">insert</span>(<span class="ident">name</span>.<span class="ident">to_owned</span>(), <span class="ident">value</span>.<span class="ident">to_owned</span>());
     }
 
     <span class="kw">match</span> <span class="ident">name</span>.<span class="ident">as_str</span>() {
@@ -989,23 +1139,21 @@
 }
 
 <span class="doccomment">/// Handles `ucinewgame` command by resetting a board state, recreating abort token and clearing tables.</span>
-<span class="kw">fn</span> <span class="ident">handle_ucinewgame</span>(<span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">UciState</span><span class="op">&gt;</span>) {
-    <span class="ident">wait_for_busy_flag</span>(<span class="ident">state</span>);
+<span class="kw">fn</span> <span class="ident">handle_ucinewgame</span>(<span class="ident">state</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">UciState</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
+    <span class="ident">wait_for_busy_flag</span>(<span class="ident">state</span>.<span class="ident">clone</span>());
 
-    <span class="kw">unsafe</span> {
-        (<span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">abort_token</span>.<span class="ident">get</span>()).<span class="ident">set</span> <span class="op">=</span> <span class="bool-val">true</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state_lock</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>();
+    <span class="ident">state_lock</span>.<span class="ident">abort_token</span>.<span class="ident">store</span>(<span class="bool-val">true</span>, <span class="ident">Ordering::Relaxed</span>);
+    <span class="ident">state_lock</span>.<span class="ident">board</span> <span class="op">=</span> <span class="ident">Bitboard::new_initial_position</span>(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>);
+    <span class="ident">state_lock</span>.<span class="ident">abort_token</span> <span class="op">=</span> <span class="ident">Default::default</span>();
+    <span class="ident">drop</span>(<span class="ident">state_lock</span>);
 
-        <span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">board</span>.<span class="ident">get</span>() <span class="op">=</span> <span class="ident">Bitboard::new_initial_position</span>();
-        <span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">abort_token</span>.<span class="ident">get</span>() <span class="op">=</span> <span class="ident">Default::default</span>();
-        <span class="ident">recreate_state_tables</span>(<span class="ident">state</span>);
-    }
+    <span class="ident">recreate_state_tables</span>(<span class="ident">state</span>.<span class="ident">clone</span>());
 }
 
 <span class="doccomment">/// Handles `stop` command by setting abort token, which should stop ongoing search as fast as possible.</span>
-<span class="kw">fn</span> <span class="ident">handle_stop</span>(<span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">UciState</span><span class="op">&gt;</span>) {
-    <span class="kw">unsafe</span> {
-        (<span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">abort_token</span>.<span class="ident">get</span>()).<span class="ident">set</span> <span class="op">=</span> <span class="bool-val">true</span>;
-    }
+<span class="kw">fn</span> <span class="ident">handle_stop</span>(<span class="ident">state</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">UciState</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
+    <span class="ident">state</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>().<span class="ident">abort_token</span>.<span class="ident">store</span>(<span class="bool-val">true</span>, <span class="ident">Ordering::Relaxed</span>);
 }
 
 <span class="doccomment">/// Handles `quit` command by terminating engine process.</span>
@@ -1014,9 +1162,9 @@
 }
 
 <span class="doccomment">/// Waits for the busy flag before continuing. If the deadline is exceeded, the engine process is terminated.</span>
-<span class="kw">fn</span> <span class="ident">wait_for_busy_flag</span>(<span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">UciState</span><span class="op">&gt;</span>) {
+<span class="kw">fn</span> <span class="ident">wait_for_busy_flag</span>(<span class="ident">state</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">UciState</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
     <span class="kw">let</span> <span class="ident">now</span> <span class="op">=</span> <span class="ident">Utc::now</span>();
-    <span class="kw">while</span> (<span class="kw-2">*</span><span class="ident">state</span>).<span class="ident">busy_flag</span>.<span class="ident">fetch_and</span>(<span class="bool-val">true</span>, <span class="ident">Ordering::Release</span>) {
+    <span class="kw">while</span> (<span class="kw-2">*</span><span class="ident">state</span>).<span class="ident">lock</span>().<span class="ident">unwrap</span>().<span class="ident">busy_flag</span>.<span class="ident">load</span>(<span class="ident">Ordering::Relaxed</span>) {
         <span class="kw">if</span> (<span class="ident">Utc::now</span>() <span class="op">-</span> <span class="ident">now</span>).<span class="ident">num_seconds</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="number">10</span> {
             <span class="ident">process::exit</span>(<span class="op">-</span><span class="number">1</span>);
         }
@@ -1024,16 +1172,15 @@
 }
 
 <span class="doccomment">/// Recreates transposition table, pawn hashtable, killers table and history table.</span>
-<span class="kw">fn</span> <span class="ident">recreate_state_tables</span>(<span class="ident">state</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">UciState</span><span class="op">&gt;</span>) {
-    <span class="kw">unsafe</span> {
-        <span class="kw">let</span> <span class="ident">total_size</span> <span class="op">=</span> (<span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">options</span>.<span class="ident">get</span>())[<span class="string">&quot;Hash&quot;</span>].<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>().<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">allocation_result</span> <span class="op">=</span> <span class="ident">allocator::get_allocation</span>(<span class="ident">total_size</span>);
+<span class="kw">fn</span> <span class="ident">recreate_state_tables</span>(<span class="ident">state</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">UciState</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state_lock</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">total_size</span> <span class="op">=</span> <span class="ident">state_lock</span>.<span class="ident">options</span>[<span class="string">&quot;Hash&quot;</span>].<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>().<span class="ident">unwrap</span>();
+    <span class="kw">let</span> <span class="ident">allocation_result</span> <span class="op">=</span> <span class="ident">allocator::get_allocation</span>(<span class="ident">total_size</span>);
 
-        <span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">transposition_table</span>.<span class="ident">get</span>() <span class="op">=</span> <span class="ident">TranspositionTable::new</span>(<span class="ident">allocation_result</span>.<span class="ident">transposition_table_size</span> <span class="op">*</span> <span class="number">1024</span> <span class="op">*</span> <span class="number">1024</span>);
-        <span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">pawn_hashtable</span>.<span class="ident">get</span>() <span class="op">=</span> <span class="ident">PawnHashTable::new</span>(<span class="ident">allocation_result</span>.<span class="ident">pawn_hashtable_size</span> <span class="op">*</span> <span class="number">1024</span> <span class="op">*</span> <span class="number">1024</span>);
-        <span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">killers_table</span>.<span class="ident">get</span>() <span class="op">=</span> <span class="ident">Default::default</span>();
-        <span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">history_table</span>.<span class="ident">get</span>() <span class="op">=</span> <span class="ident">Default::default</span>();
-    }
+    <span class="ident">state_lock</span>.<span class="ident">transposition_table</span> <span class="op">=</span> <span class="ident">Arc::new</span>(<span class="ident">TranspositionTable::new</span>(<span class="ident">allocation_result</span>.<span class="ident">transposition_table_size</span> <span class="op">*</span> <span class="number">1024</span> <span class="op">*</span> <span class="number">1024</span>));
+    <span class="ident">state_lock</span>.<span class="ident">pawn_hashtable</span> <span class="op">=</span> <span class="ident">Arc::new</span>(<span class="ident">PawnHashTable::new</span>(<span class="ident">allocation_result</span>.<span class="ident">pawn_hashtable_size</span> <span class="op">*</span> <span class="number">1024</span> <span class="op">*</span> <span class="number">1024</span>));
+    <span class="ident">state_lock</span>.<span class="ident">killers_table</span> <span class="op">=</span> <span class="ident">Default::default</span>();
+    <span class="ident">state_lock</span>.<span class="ident">history_table</span> <span class="op">=</span> <span class="ident">Default::default</span>();
 }
 
 <span class="doccomment">/// Enables saving of crash files by setting a custom panic hook.</span>
@@ -1055,5 +1202,5 @@
     <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">panic::take_hook</span>();
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="inanis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0 (9d1b2106e 2022-02-23)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="inanis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.1 (e092d0b6b 2022-07-16)" ></div>
 </body></html>

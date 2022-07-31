@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["allocator",""],["pawns",""],["perft",""],["search",""]]});
+initSidebarItems({"mod":[["allocator",""],["history",""],["killers",""],["pawns",""],["perft",""],["search",""]]});

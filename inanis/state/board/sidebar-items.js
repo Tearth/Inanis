@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["Bitboard",""],["CastlingRights",""]]});
+initSidebarItems({"struct":[["Bitboard",""],["BitboardState",""],["CastlingRights",""]]});

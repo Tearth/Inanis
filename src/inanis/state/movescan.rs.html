@@ -1,104 +1,107 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src&#x2F;state&#x2F;movescan.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>movescan.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a class="sidebar-logo" href="../../../inanis/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.png" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../inanis/index.html"><img class="rust-logo" src="../../../rust-logo.png" alt="logo"></a><nav class="sub"><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
-<span id="2">  2</span>
-<span id="3">  3</span>
-<span id="4">  4</span>
-<span id="5">  5</span>
-<span id="6">  6</span>
-<span id="7">  7</span>
-<span id="8">  8</span>
-<span id="9">  9</span>
-<span id="10"> 10</span>
-<span id="11"> 11</span>
-<span id="12"> 12</span>
-<span id="13"> 13</span>
-<span id="14"> 14</span>
-<span id="15"> 15</span>
-<span id="16"> 16</span>
-<span id="17"> 17</span>
-<span id="18"> 18</span>
-<span id="19"> 19</span>
-<span id="20"> 20</span>
-<span id="21"> 21</span>
-<span id="22"> 22</span>
-<span id="23"> 23</span>
-<span id="24"> 24</span>
-<span id="25"> 25</span>
-<span id="26"> 26</span>
-<span id="27"> 27</span>
-<span id="28"> 28</span>
-<span id="29"> 29</span>
-<span id="30"> 30</span>
-<span id="31"> 31</span>
-<span id="32"> 32</span>
-<span id="33"> 33</span>
-<span id="34"> 34</span>
-<span id="35"> 35</span>
-<span id="36"> 36</span>
-<span id="37"> 37</span>
-<span id="38"> 38</span>
-<span id="39"> 39</span>
-<span id="40"> 40</span>
-<span id="41"> 41</span>
-<span id="42"> 42</span>
-<span id="43"> 43</span>
-<span id="44"> 44</span>
-<span id="45"> 45</span>
-<span id="46"> 46</span>
-<span id="47"> 47</span>
-<span id="48"> 48</span>
-<span id="49"> 49</span>
-<span id="50"> 50</span>
-<span id="51"> 51</span>
-<span id="52"> 52</span>
-<span id="53"> 53</span>
-<span id="54"> 54</span>
-<span id="55"> 55</span>
-<span id="56"> 56</span>
-<span id="57"> 57</span>
-<span id="58"> 58</span>
-<span id="59"> 59</span>
-<span id="60"> 60</span>
-<span id="61"> 61</span>
-<span id="62"> 62</span>
-<span id="63"> 63</span>
-<span id="64"> 64</span>
-<span id="65"> 65</span>
-<span id="66"> 66</span>
-<span id="67"> 67</span>
-<span id="68"> 68</span>
-<span id="69"> 69</span>
-<span id="70"> 70</span>
-<span id="71"> 71</span>
-<span id="72"> 72</span>
-<span id="73"> 73</span>
-<span id="74"> 74</span>
-<span id="75"> 75</span>
-<span id="76"> 76</span>
-<span id="77"> 77</span>
-<span id="78"> 78</span>
-<span id="79"> 79</span>
-<span id="80"> 80</span>
-<span id="81"> 81</span>
-<span id="82"> 82</span>
-<span id="83"> 83</span>
-<span id="84"> 84</span>
-<span id="85"> 85</span>
-<span id="86"> 86</span>
-<span id="87"> 87</span>
-<span id="88"> 88</span>
-<span id="89"> 89</span>
-<span id="90"> 90</span>
-<span id="91"> 91</span>
-<span id="92"> 92</span>
-<span id="93"> 93</span>
-<span id="94"> 94</span>
-<span id="95"> 95</span>
-<span id="96"> 96</span>
-<span id="97"> 97</span>
-<span id="98"> 98</span>
-<span id="99"> 99</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/state/movescan.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>movescan.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../inanis/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
+        </a><h2 class="location"></h2>
+    </nav>
+    <nav class="sidebar"><a class="sidebar-logo" href="../../../inanis/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
+        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../inanis/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<span id="2">2</span>
+<span id="3">3</span>
+<span id="4">4</span>
+<span id="5">5</span>
+<span id="6">6</span>
+<span id="7">7</span>
+<span id="8">8</span>
+<span id="9">9</span>
+<span id="10">10</span>
+<span id="11">11</span>
+<span id="12">12</span>
+<span id="13">13</span>
+<span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
 <span id="100">100</span>
 <span id="101">101</span>
 <span id="102">102</span>
@@ -777,13 +780,69 @@
 <span id="775">775</span>
 <span id="776">776</span>
 <span id="777">777</span>
+<span id="778">778</span>
+<span id="779">779</span>
+<span id="780">780</span>
+<span id="781">781</span>
+<span id="782">782</span>
+<span id="783">783</span>
+<span id="784">784</span>
+<span id="785">785</span>
+<span id="786">786</span>
+<span id="787">787</span>
+<span id="788">788</span>
+<span id="789">789</span>
+<span id="790">790</span>
+<span id="791">791</span>
+<span id="792">792</span>
+<span id="793">793</span>
+<span id="794">794</span>
+<span id="795">795</span>
+<span id="796">796</span>
+<span id="797">797</span>
+<span id="798">798</span>
+<span id="799">799</span>
+<span id="800">800</span>
+<span id="801">801</span>
+<span id="802">802</span>
+<span id="803">803</span>
+<span id="804">804</span>
+<span id="805">805</span>
+<span id="806">806</span>
+<span id="807">807</span>
+<span id="808">808</span>
+<span id="809">809</span>
+<span id="810">810</span>
+<span id="811">811</span>
+<span id="812">812</span>
+<span id="813">813</span>
+<span id="814">814</span>
+<span id="815">815</span>
+<span id="816">816</span>
+<span id="817">817</span>
+<span id="818">818</span>
+<span id="819">819</span>
+<span id="820">820</span>
+<span id="821">821</span>
+<span id="822">822</span>
+<span id="823">823</span>
+<span id="824">824</span>
+<span id="825">825</span>
+<span id="826">826</span>
+<span id="827">827</span>
+<span id="828">828</span>
+<span id="829">829</span>
+<span id="830">830</span>
+<span id="831">831</span>
+<span id="832">832</span>
+<span id="833">833</span>
+<span id="834">834</span>
+<span id="835">835</span>
+<span id="836">836</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::board::Bitboard</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::board::CastlingRights</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::movegen</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::patterns</span>;
 <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::engine</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::evaluation::parameters</span>;
 <span class="kw">use</span> <span class="ident">std::cmp</span>;
 <span class="kw">use</span> <span class="ident">std::mem::MaybeUninit</span>;
 
@@ -826,6 +885,11 @@
         }
     }
 
+    <span class="doccomment">/// Constructs a new instance of [Move] using raw bits, which will be directly used as a data.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_from_raw</span>(<span class="ident">data</span>: <span class="ident">u16</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">Self</span> { <span class="ident">data</span> }
+    }
+
     <span class="doccomment">/// Constructs a new instance of [Move] with random values, not restricted by chess rules.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_random</span>() -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">from</span> <span class="op">=</span> <span class="ident">fastrand::u8</span>(<span class="number">0</span>..<span class="number">64</span>);
@@ -845,8 +909,8 @@
 
     <span class="doccomment">/// Converts short-notated move (e4, Rc8, Qxb6) in `text` into the [Move] instance, using the `board` as context.</span>
     <span class="doccomment">/// Returns [Err] with the proper message if `text` couldn&#39;t be parsed correctly.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_short_notation</span>(<span class="kw-2">mut</span> <span class="ident">text</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Move</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">moves</span>: [<span class="ident">Move</span>; <span class="ident">engine::MAX_MOVES_COUNT</span>] <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">MaybeUninit::uninit</span>().<span class="ident">assume_init</span>() };
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_short_notation</span>(<span class="kw-2">mut</span> <span class="ident">text</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">board</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Bitboard</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Move</span>, <span class="ident">String</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">moves</span>: [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Move</span><span class="op">&gt;</span>; <span class="ident">engine::MAX_MOVES_COUNT</span>] <span class="op">=</span> [<span class="ident">MaybeUninit::uninit</span>(); <span class="ident">engine::MAX_MOVES_COUNT</span>];
         <span class="kw">let</span> <span class="ident">moves_count</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">get_all_moves</span>(<span class="kw-2">&amp;mut</span> <span class="ident">moves</span>, <span class="ident">u64::MAX</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">desired_to</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
@@ -857,30 +921,33 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">desired_capture</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">desired_promotion</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
 
-        <span class="kw">if</span> <span class="ident">text</span>.<span class="ident">contains</span>(<span class="string">&#39;=&#39;</span>) {
-            <span class="ident">desired_promotion</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">text</span>[<span class="ident">text</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">2</span>..] {
-                <span class="string">&quot;=Q&quot;</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">QUEEN</span>),
-                <span class="string">&quot;=R&quot;</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">ROOK</span>),
-                <span class="string">&quot;=B&quot;</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">BISHOP</span>),
-                <span class="string">&quot;=N&quot;</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">KNIGHT</span>),
-                <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="string">&quot;Invalid promotion piece&quot;</span>),
-            }
-        }
-
+        <span class="kw">let</span> <span class="ident">original_text</span> <span class="op">=</span> <span class="ident">text</span>;
         <span class="ident">text</span> <span class="op">=</span> <span class="ident">text</span>.<span class="ident">trim_matches</span>(<span class="string">&#39;#&#39;</span>);
         <span class="ident">text</span> <span class="op">=</span> <span class="ident">text</span>.<span class="ident">trim_matches</span>(<span class="string">&#39;+&#39;</span>);
         <span class="ident">text</span> <span class="op">=</span> <span class="ident">text</span>.<span class="ident">trim_matches</span>(<span class="string">&#39;=&#39;</span>);
         <span class="ident">text</span> <span class="op">=</span> <span class="ident">text</span>.<span class="ident">trim_matches</span>(<span class="string">&#39;?&#39;</span>);
         <span class="ident">text</span> <span class="op">=</span> <span class="ident">text</span>.<span class="ident">trim_matches</span>(<span class="string">&#39;!&#39;</span>);
-        <span class="ident">text</span> <span class="op">=</span> <span class="ident">text</span>.<span class="ident">trim_end_matches</span>(<span class="string">&#39;Q&#39;</span>);
-        <span class="ident">text</span> <span class="op">=</span> <span class="ident">text</span>.<span class="ident">trim_end_matches</span>(<span class="string">&#39;R&#39;</span>);
-        <span class="ident">text</span> <span class="op">=</span> <span class="ident">text</span>.<span class="ident">trim_end_matches</span>(<span class="string">&#39;B&#39;</span>);
-        <span class="ident">text</span> <span class="op">=</span> <span class="ident">text</span>.<span class="ident">trim_end_matches</span>(<span class="string">&#39;N&#39;</span>);
 
-        <span class="kw">if</span> <span class="ident">text</span> <span class="op">==</span> <span class="string">&quot;0-0&quot;</span> {
+        <span class="kw">if</span> <span class="ident">text</span>.<span class="ident">contains</span>(<span class="string">&#39;=&#39;</span>) {
+            <span class="kw">let</span> <span class="ident">promotion</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">text</span>[<span class="ident">text</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">2</span>..];
+            <span class="ident">desired_promotion</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">promotion</span> {
+                <span class="string">&quot;=Q&quot;</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">QUEEN</span>),
+                <span class="string">&quot;=R&quot;</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">ROOK</span>),
+                <span class="string">&quot;=B&quot;</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">BISHOP</span>),
+                <span class="string">&quot;=N&quot;</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">KNIGHT</span>),
+                <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid promotion: fen={}, promotion={}&quot;</span>, <span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="ident">promotion</span>)),
+            }
+        }
+
+        <span class="ident">text</span> <span class="op">=</span> <span class="ident">text</span>.<span class="ident">trim_end_matches</span>(<span class="string">&quot;=Q&quot;</span>);
+        <span class="ident">text</span> <span class="op">=</span> <span class="ident">text</span>.<span class="ident">trim_end_matches</span>(<span class="string">&quot;=R&quot;</span>);
+        <span class="ident">text</span> <span class="op">=</span> <span class="ident">text</span>.<span class="ident">trim_end_matches</span>(<span class="string">&quot;=B&quot;</span>);
+        <span class="ident">text</span> <span class="op">=</span> <span class="ident">text</span>.<span class="ident">trim_end_matches</span>(<span class="string">&quot;=N&quot;</span>);
+
+        <span class="kw">if</span> <span class="ident">text</span> <span class="op">==</span> <span class="string">&quot;0-0&quot;</span> <span class="op">|</span><span class="op">|</span> <span class="ident">text</span> <span class="op">==</span> <span class="string">&quot;O-O&quot;</span> {
             <span class="ident">desired_piece</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">KING</span>);
             <span class="ident">desired_flags</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">MoveFlags::SHORT_CASTLING</span>);
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">text</span> <span class="op">==</span> <span class="string">&quot;0-0-0&quot;</span> {
+        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">text</span> <span class="op">==</span> <span class="string">&quot;0-0-0&quot;</span> <span class="op">|</span><span class="op">|</span> <span class="ident">text</span> <span class="op">==</span> <span class="string">&quot;O-O-O&quot;</span> {
             <span class="ident">desired_piece</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">KING</span>);
             <span class="ident">desired_flags</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">MoveFlags::LONG_CASTLING</span>);
         } <span class="kw">else</span> {
@@ -888,8 +955,8 @@
             <span class="kw">match</span> <span class="ident">text</span>.<span class="ident">len</span>() {
                 <span class="comment">// e4</span>
                 <span class="number">2</span> =&gt; {
-                    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="string">&quot;Invalid move: bad source file&quot;</span>)<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
-                    <span class="kw">let</span> <span class="ident">rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="string">&quot;Invalid move: bad source rank&quot;</span>)<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
+                    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination file: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
+                    <span class="kw">let</span> <span class="ident">rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad source rank: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
                     <span class="kw">let</span> <span class="ident">to</span> <span class="op">=</span> (<span class="number">7</span> <span class="op">-</span> (<span class="ident">file</span> <span class="op">-</span> <span class="string">b&#39;a&#39;</span>)) <span class="op">+</span> <span class="number">8</span> <span class="op">*</span> (<span class="ident">rank</span> <span class="op">-</span> <span class="string">b&#39;1&#39;</span>);
 
                     <span class="ident">desired_to</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">to</span>);
@@ -897,9 +964,10 @@
                 }
                 <span class="comment">// Nd5</span>
                 <span class="number">3</span> =&gt; {
-                    <span class="kw">let</span> <span class="ident">piece</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="string">&quot;Invalid move: bad source file&quot;</span>)<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="string">&quot;Invalid move: bad source file&quot;</span>)<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
-                    <span class="kw">let</span> <span class="ident">rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="string">&quot;Invalid move: bad source rank&quot;</span>)<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
+                    <span class="kw">let</span> <span class="ident">piece</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad piece: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span>;
+                    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination file: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
+                    <span class="kw">let</span> <span class="ident">rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination rank: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
+
                     <span class="kw">let</span> <span class="ident">to</span> <span class="op">=</span> (<span class="number">7</span> <span class="op">-</span> (<span class="ident">file</span> <span class="op">-</span> <span class="string">b&#39;a&#39;</span>)) <span class="op">+</span> <span class="number">8</span> <span class="op">*</span> (<span class="ident">rank</span> <span class="op">-</span> <span class="string">b&#39;1&#39;</span>);
                     <span class="kw">let</span> <span class="ident">piece_type</span> <span class="op">=</span> <span class="ident">symbol_to_piece</span>(<span class="ident">piece</span>)<span class="question-mark">?</span>;
 
@@ -908,10 +976,10 @@
                 }
                 <span class="comment">// exf5, Rxf5, N3e4, Nde4</span>
                 <span class="number">4</span> =&gt; {
-                    <span class="kw">let</span> <span class="ident">piece_or_file</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="string">&quot;Invalid move: bad source file&quot;</span>)<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">capture_or_file_rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="string">&quot;Invalid move: symbol&quot;</span>)<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="string">&quot;Invalid move: bad source file&quot;</span>)<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
-                    <span class="kw">let</span> <span class="ident">rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="string">&quot;Invalid move: bad source rank&quot;</span>)<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
+                    <span class="kw">let</span> <span class="ident">piece_or_file</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad symbol: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span>;
+                    <span class="kw">let</span> <span class="ident">capture_or_file_rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad symbol: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span>;
+                    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination file: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
+                    <span class="kw">let</span> <span class="ident">rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination rank: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
                     <span class="kw">let</span> <span class="ident">to</span> <span class="op">=</span> (<span class="number">7</span> <span class="op">-</span> (<span class="ident">file</span> <span class="op">-</span> <span class="string">b&#39;a&#39;</span>)) <span class="op">+</span> <span class="number">8</span> <span class="op">*</span> (<span class="ident">rank</span> <span class="op">-</span> <span class="string">b&#39;1&#39;</span>);
 
                     <span class="comment">// exf5, Rxf5</span>
@@ -933,7 +1001,7 @@
                             <span class="ident">desired_capture</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="bool-val">true</span>);
                         }
                     <span class="comment">// N3e4</span>
-                    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">capture_or_file_rank</span>.<span class="ident">is_digit</span>(<span class="number">10</span>) {
+                    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">capture_or_file_rank</span>.<span class="ident">is_ascii_digit</span>() {
                         <span class="kw">let</span> <span class="ident">piece_type</span> <span class="op">=</span> <span class="ident">symbol_to_piece</span>(<span class="ident">piece_or_file</span>)<span class="question-mark">?</span>;
                         <span class="kw">let</span> <span class="ident">rank_from</span> <span class="op">=</span> (<span class="ident">capture_or_file_rank</span> <span class="kw">as</span> <span class="ident">u8</span>) <span class="op">-</span> <span class="string">b&#39;1&#39;</span>;
 
@@ -951,40 +1019,72 @@
                         <span class="ident">desired_file</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">file_from</span>);
                     }
                 }
-                <span class="comment">// R2xc2, Rexc2</span>
+                <span class="comment">// R2xc2, Rexc2, Qd3c2</span>
                 <span class="number">5</span> =&gt; {
-                    <span class="kw">let</span> <span class="ident">piece</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="string">&quot;Invalid move: bad source file&quot;</span>)<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">file_rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="string">&quot;Invalid move: symbol&quot;</span>)<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="string">&quot;Invalid move: symbol&quot;</span>)<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="string">&quot;Invalid move: bad source file&quot;</span>)<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
-                    <span class="kw">let</span> <span class="ident">rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="string">&quot;Invalid move: bad source rank&quot;</span>)<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
+                    <span class="kw">let</span> <span class="ident">piece</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad piece: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span>;
+                    <span class="kw">let</span> <span class="ident">file_or_rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad symbol: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span>;
+                    <span class="kw">let</span> <span class="ident">capture_or_rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad symbol: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span>;
+                    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination file: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
+                    <span class="kw">let</span> <span class="ident">rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination rank: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
                     <span class="kw">let</span> <span class="ident">to</span> <span class="op">=</span> (<span class="number">7</span> <span class="op">-</span> (<span class="ident">file</span> <span class="op">-</span> <span class="string">b&#39;a&#39;</span>)) <span class="op">+</span> <span class="number">8</span> <span class="op">*</span> (<span class="ident">rank</span> <span class="op">-</span> <span class="string">b&#39;1&#39;</span>);
                     <span class="kw">let</span> <span class="ident">piece_type</span> <span class="op">=</span> <span class="ident">symbol_to_piece</span>(<span class="ident">piece</span>)<span class="question-mark">?</span>;
 
-                    <span class="comment">// R2xc2</span>
-                    <span class="kw">if</span> <span class="ident">file_rank</span>.<span class="ident">is_digit</span>(<span class="number">10</span>) {
-                        <span class="kw">let</span> <span class="ident">rank_from</span> <span class="op">=</span> (<span class="ident">file_rank</span> <span class="kw">as</span> <span class="ident">u8</span>) <span class="op">-</span> <span class="string">b&#39;1&#39;</span>;
+                    <span class="kw">if</span> <span class="ident">capture_or_rank</span> <span class="op">==</span> <span class="string">&#39;x&#39;</span> {
+                        <span class="comment">// R2xc2</span>
+                        <span class="kw">if</span> <span class="ident">file_or_rank</span>.<span class="ident">is_ascii_digit</span>() {
+                            <span class="kw">let</span> <span class="ident">rank_from</span> <span class="op">=</span> (<span class="ident">file_or_rank</span> <span class="kw">as</span> <span class="ident">u8</span>) <span class="op">-</span> <span class="string">b&#39;1&#39;</span>;
 
-                        <span class="ident">desired_to</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">to</span>);
-                        <span class="ident">desired_rank</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">rank_from</span>);
-                        <span class="ident">desired_piece</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">PAWN</span>);
-                        <span class="ident">desired_capture</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="bool-val">true</span>);
-                    <span class="comment">// Rexc2</span>
+                            <span class="ident">desired_to</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">to</span>);
+                            <span class="ident">desired_rank</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">rank_from</span>);
+                            <span class="ident">desired_piece</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">piece_type</span>);
+                            <span class="ident">desired_capture</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="bool-val">true</span>);
+                        <span class="comment">// Rexc2</span>
+                        } <span class="kw">else</span> {
+                            <span class="kw">let</span> <span class="ident">file_from</span> <span class="op">=</span> <span class="number">7</span> <span class="op">-</span> ((<span class="ident">file_or_rank</span> <span class="kw">as</span> <span class="ident">u8</span>) <span class="op">-</span> <span class="string">b&#39;a&#39;</span>);
+
+                            <span class="ident">desired_to</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">to</span>);
+                            <span class="ident">desired_file</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">file_from</span>);
+                            <span class="ident">desired_piece</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">piece_type</span>);
+                            <span class="ident">desired_capture</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="bool-val">true</span>);
+                        }
+                    <span class="comment">// Qd3c2</span>
                     } <span class="kw">else</span> {
-                        <span class="kw">let</span> <span class="ident">file_from</span> <span class="op">=</span> <span class="number">7</span> <span class="op">-</span> ((<span class="ident">file_rank</span> <span class="kw">as</span> <span class="ident">u8</span>) <span class="op">-</span> <span class="string">b&#39;a&#39;</span>);
+                        <span class="kw">let</span> <span class="ident">file_from</span> <span class="op">=</span> <span class="number">7</span> <span class="op">-</span> ((<span class="ident">file_or_rank</span> <span class="kw">as</span> <span class="ident">u8</span>) <span class="op">-</span> <span class="string">b&#39;a&#39;</span>);
+                        <span class="kw">let</span> <span class="ident">rank_from</span> <span class="op">=</span> (<span class="ident">capture_or_rank</span> <span class="kw">as</span> <span class="ident">u8</span>) <span class="op">-</span> <span class="string">b&#39;1&#39;</span>;
 
                         <span class="ident">desired_to</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">to</span>);
                         <span class="ident">desired_file</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">file_from</span>);
+                        <span class="ident">desired_rank</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">rank_from</span>);
                         <span class="ident">desired_piece</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">piece_type</span>);
-                        <span class="ident">desired_capture</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="bool-val">true</span>);
                     }
                 }
-                <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="string">&quot;Invalid move: unknown length&quot;</span>),
+                <span class="comment">// Qa1xd4</span>
+                <span class="number">6</span> =&gt; {
+                    <span class="kw">let</span> <span class="ident">piece</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad piece: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span>;
+                    <span class="kw">let</span> <span class="ident">source_file</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad source file: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span>;
+                    <span class="kw">let</span> <span class="ident">source_rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad source rank: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span>;
+                    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad symbol: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span>;
+                    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination file: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
+                    <span class="kw">let</span> <span class="ident">rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination rank: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
+                    <span class="kw">let</span> <span class="ident">to</span> <span class="op">=</span> (<span class="number">7</span> <span class="op">-</span> (<span class="ident">file</span> <span class="op">-</span> <span class="string">b&#39;a&#39;</span>)) <span class="op">+</span> <span class="number">8</span> <span class="op">*</span> (<span class="ident">rank</span> <span class="op">-</span> <span class="string">b&#39;1&#39;</span>);
+                    <span class="kw">let</span> <span class="ident">piece_type</span> <span class="op">=</span> <span class="ident">symbol_to_piece</span>(<span class="ident">piece</span>)<span class="question-mark">?</span>;
+
+                    <span class="kw">let</span> <span class="ident">file_from</span> <span class="op">=</span> <span class="number">7</span> <span class="op">-</span> ((<span class="ident">source_file</span> <span class="kw">as</span> <span class="ident">u8</span>) <span class="op">-</span> <span class="string">b&#39;a&#39;</span>);
+                    <span class="kw">let</span> <span class="ident">rank_from</span> <span class="op">=</span> (<span class="ident">source_rank</span> <span class="kw">as</span> <span class="ident">u8</span>) <span class="op">-</span> <span class="string">b&#39;1&#39;</span>;
+
+                    <span class="ident">desired_to</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">to</span>);
+                    <span class="ident">desired_file</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">file_from</span>);
+                    <span class="ident">desired_rank</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">rank_from</span>);
+                    <span class="ident">desired_piece</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">piece_type</span>);
+                    <span class="ident">desired_capture</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="bool-val">true</span>);
+                }
+                <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move: fen={}, original_text={}&quot;</span>, <span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="ident">original_text</span>)),
             }
         }
 
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">valid_moves</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
         <span class="kw">for</span> <span class="ident">move_index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">moves_count</span> {
-            <span class="kw">let</span> <span class="ident">r#move</span> <span class="op">=</span> <span class="ident">moves</span>[<span class="ident">move_index</span>];
+            <span class="kw">let</span> <span class="ident">r#move</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">moves</span>[<span class="ident">move_index</span>].<span class="ident">assume_init</span>() };
             <span class="kw">if</span> (<span class="ident">desired_to</span>.<span class="ident">is_none</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">desired_to</span>.<span class="ident">unwrap</span>() <span class="op">==</span> <span class="ident">r#move</span>.<span class="ident">get_to</span>())
                 <span class="op">&amp;&amp;</span> (<span class="ident">desired_file</span>.<span class="ident">is_none</span>() <span class="op">|</span><span class="op">|</span> (<span class="ident">r#move</span>.<span class="ident">get_from</span>() <span class="op">%</span> <span class="number">8</span>) <span class="op">==</span> <span class="ident">desired_file</span>.<span class="ident">unwrap</span>())
                 <span class="op">&amp;&amp;</span> (<span class="ident">desired_rank</span>.<span class="ident">is_none</span>() <span class="op">|</span><span class="op">|</span> (<span class="ident">r#move</span>.<span class="ident">get_from</span>() <span class="op">/</span> <span class="number">8</span>) <span class="op">==</span> <span class="ident">desired_rank</span>.<span class="ident">unwrap</span>())
@@ -993,34 +1093,49 @@
                 <span class="op">&amp;&amp;</span> (<span class="ident">desired_capture</span>.<span class="ident">is_none</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">r#move</span>.<span class="ident">is_capture</span>() <span class="op">==</span> <span class="ident">desired_capture</span>.<span class="ident">unwrap</span>())
                 <span class="op">&amp;&amp;</span> (<span class="ident">desired_promotion</span>.<span class="ident">is_none</span>() <span class="op">|</span><span class="op">|</span> (<span class="ident">r#move</span>.<span class="ident">is_promotion</span>() <span class="op">&amp;&amp;</span> <span class="ident">r#move</span>.<span class="ident">get_promotion_piece</span>() <span class="op">==</span> <span class="ident">desired_promotion</span>.<span class="ident">unwrap</span>()))
             {
-                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">r#move</span>);
+                <span class="ident">valid_moves</span>.<span class="ident">push</span>(<span class="ident">r#move</span>);
             }
         }
 
-        <span class="prelude-val">Err</span>(<span class="string">&quot;Invalid move&quot;</span>)
+        <span class="kw">match</span> <span class="ident">valid_moves</span>.<span class="ident">len</span>() {
+            <span class="number">0</span> =&gt; <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move: fen={}, original_text={}&quot;</span>, <span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="ident">original_text</span>)),
+            <span class="number">1</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">valid_moves</span>[<span class="number">0</span>]),
+            <span class="kw">_</span> =&gt; {
+                <span class="kw">for</span> <span class="ident">r#move</span> <span class="kw">in</span> <span class="ident">valid_moves</span> {
+                    <span class="ident">board</span>.<span class="ident">make_move</span>(<span class="ident">r#move</span>);
+                    <span class="kw">if</span> <span class="op">!</span><span class="ident">board</span>.<span class="ident">is_king_checked</span>(<span class="ident">board</span>.<span class="ident">active_color</span> <span class="op">^</span> <span class="number">1</span>) {
+                        <span class="ident">board</span>.<span class="ident">undo_move</span>(<span class="ident">r#move</span>);
+                        <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">r#move</span>);
+                    }
+                    <span class="ident">board</span>.<span class="ident">undo_move</span>(<span class="ident">r#move</span>);
+                }
+
+                <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move: fen={}, original_text={}&quot;</span>, <span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="ident">original_text</span>))
+            }
+        }
     }
 
     <span class="doccomment">/// Converts long-notated move (e2e4, a1a8) in `text` into the [Move] instance, using the `board` as context.</span>
     <span class="doccomment">/// Returns [Err] with the proper message if `text` couldn&#39;t be parsed correctly.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_long_notation</span>(<span class="ident">text</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Move</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_long_notation</span>(<span class="ident">text</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Move</span>, <span class="ident">String</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">chars</span> <span class="op">=</span> <span class="ident">text</span>.<span class="ident">chars</span>();
-        <span class="kw">let</span> <span class="ident">from_file</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="string">&quot;Invalid move: bad source file&quot;</span>)<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
-        <span class="kw">let</span> <span class="ident">from_rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="string">&quot;Invalid move: bad source rank&quot;</span>)<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
-        <span class="kw">let</span> <span class="ident">to_file</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="string">&quot;Invalid move: bad destination file&quot;</span>)<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
-        <span class="kw">let</span> <span class="ident">to_rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="string">&quot;Invalid move: bad destination rank&quot;</span>)<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
+        <span class="kw">let</span> <span class="ident">from_file</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad source file: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
+        <span class="kw">let</span> <span class="ident">from_rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad source rank: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
+        <span class="kw">let</span> <span class="ident">to_file</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination file: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
+        <span class="kw">let</span> <span class="ident">to_rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination rank: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
         <span class="kw">let</span> <span class="ident">promotion</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>();
 
         <span class="kw">if</span> <span class="op">!</span>(<span class="string">b&#39;a&#39;</span>..<span class="op">=</span><span class="string">b&#39;h&#39;</span>).<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">from_file</span>) <span class="op">|</span><span class="op">|</span> <span class="op">!</span>(<span class="string">b&#39;a&#39;</span>..<span class="op">=</span><span class="string">b&#39;h&#39;</span>).<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">to_file</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="string">&quot;Invalid move: bad source field&quot;</span>);
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad source field: fen={}, text={}&quot;</span>, <span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="ident">text</span>));
         }
 
         <span class="kw">if</span> <span class="op">!</span>(<span class="string">b&#39;1&#39;</span>..<span class="op">=</span><span class="string">b&#39;8&#39;</span>).<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">from_rank</span>) <span class="op">|</span><span class="op">|</span> <span class="op">!</span>(<span class="string">b&#39;1&#39;</span>..<span class="op">=</span><span class="string">b&#39;8&#39;</span>).<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">to_rank</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="string">&quot;Invalid move: bad destination field&quot;</span>);
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination field: fen={}, text={}&quot;</span>, <span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="ident">text</span>));
         }
 
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">promotion_piece</span>) <span class="op">=</span> <span class="ident">promotion</span> {
             <span class="kw">if</span> <span class="op">!</span>[<span class="string">&#39;n&#39;</span>, <span class="string">&#39;b&#39;</span>, <span class="string">&#39;r&#39;</span>, <span class="string">&#39;q&#39;</span>].<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">promotion_piece</span>) {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="string">&quot;Invalid move: bad promotion piece&quot;</span>);
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad promotion piece: fen={}, text={}&quot;</span>, <span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="ident">text</span>));
             }
         }
 
@@ -1033,7 +1148,7 @@
                     <span class="string">&#39;b&#39;</span> =&gt; <span class="ident">MoveFlags::BISHOP_PROMOTION</span>,
                     <span class="string">&#39;r&#39;</span> =&gt; <span class="ident">MoveFlags::ROOK_PROMOTION</span>,
                     <span class="string">&#39;q&#39;</span> =&gt; <span class="ident">MoveFlags::QUEEN_PROMOTION</span>,
-                    <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: promotion_piece={}&quot;</span>, <span class="ident">promotion_piece</span>),
+                    <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad promotion piece: fen={}, text={}&quot;</span>, <span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="ident">text</span>)),
                 };
 
                 <span class="kw">if</span> ((<span class="ident">from</span> <span class="kw">as</span> <span class="ident">i8</span>) <span class="op">-</span> (<span class="ident">to</span> <span class="kw">as</span> <span class="ident">i8</span>)).<span class="ident">abs</span>() <span class="op">!</span><span class="op">=</span> <span class="number">8</span> {
@@ -1045,19 +1160,20 @@
             <span class="prelude-val">None</span> =&gt; <span class="ident">MoveFlags::QUIET</span>,
         };
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">moves</span>: [<span class="ident">Move</span>; <span class="ident">engine::MAX_MOVES_COUNT</span>] <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">MaybeUninit::uninit</span>().<span class="ident">assume_init</span>() };
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">moves</span>: [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Move</span><span class="op">&gt;</span>; <span class="ident">engine::MAX_MOVES_COUNT</span>] <span class="op">=</span> [<span class="ident">MaybeUninit::uninit</span>(); <span class="ident">engine::MAX_MOVES_COUNT</span>];
         <span class="kw">let</span> <span class="ident">moves_count</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">get_all_moves</span>(<span class="kw-2">&amp;mut</span> <span class="ident">moves</span>, <span class="ident">u64::MAX</span>);
 
         <span class="kw">for</span> <span class="ident">r#move</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">moves</span>[<span class="number">0</span>..<span class="ident">moves_count</span>] {
+            <span class="kw">let</span> <span class="ident">r#move</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">r#move</span>.<span class="ident">assume_init</span>() };
             <span class="kw">if</span> <span class="ident">r#move</span>.<span class="ident">get_from</span>() <span class="op">==</span> <span class="ident">from</span> <span class="op">&amp;&amp;</span> <span class="ident">r#move</span>.<span class="ident">get_to</span>() <span class="op">==</span> <span class="ident">to</span> {
                 <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">r#move</span>.<span class="ident">get_flags</span>();
                 <span class="kw">if</span> <span class="ident">promotion_flags</span> <span class="op">==</span> <span class="ident">MoveFlags::QUIET</span> <span class="op">|</span><span class="op">|</span> (<span class="ident">flags</span> <span class="op">&amp;</span> <span class="ident">promotion_flags</span>).<span class="ident">bits</span> <span class="op">==</span> <span class="ident">flags</span>.<span class="ident">bits</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="kw-2">*</span><span class="ident">r#move</span>);
+                    <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">r#move</span>);
                 }
             }
         }
 
-        <span class="prelude-val">Err</span>(<span class="string">&quot;Invalid move: not found&quot;</span>)
+        <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move: fen={}, text={}&quot;</span>, <span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="ident">text</span>))
     }
 
     <span class="doccomment">/// Converts move into the long notation (e2e4, a1a8).</span>
@@ -1191,13 +1307,13 @@
                                 <span class="op">|</span> <span class="number">1u64</span>.<span class="ident">checked_shl</span>((<span class="ident">from</span>.<span class="ident">wrapping_sub</span>(<span class="number">9</span>)) <span class="kw">as</span> <span class="ident">u32</span>).<span class="ident">unwrap_or</span>(<span class="number">0</span>)
                         }
                         <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: board.active_color={}&quot;</span>, <span class="ident">board</span>.<span class="ident">active_color</span>),
-                    }) <span class="op">&amp;</span> <span class="ident">patterns::get_box</span>(<span class="ident">from</span> <span class="kw">as</span> <span class="ident">usize</span>)
+                    }) <span class="op">&amp;</span> <span class="ident">board</span>.<span class="ident">patterns</span>.<span class="ident">get_box</span>(<span class="ident">from</span> <span class="kw">as</span> <span class="ident">usize</span>)
                 }
             },
-            <span class="ident">KNIGHT</span> =&gt; <span class="ident">movegen::get_knight_moves</span>(<span class="ident">from</span> <span class="kw">as</span> <span class="ident">usize</span>),
-            <span class="ident">BISHOP</span> =&gt; <span class="ident">movegen::get_bishop_moves</span>(<span class="ident">occupancy</span>, <span class="ident">from</span> <span class="kw">as</span> <span class="ident">usize</span>),
-            <span class="ident">ROOK</span> =&gt; <span class="ident">movegen::get_rook_moves</span>(<span class="ident">occupancy</span>, <span class="ident">from</span> <span class="kw">as</span> <span class="ident">usize</span>),
-            <span class="ident">QUEEN</span> =&gt; <span class="ident">movegen::get_queen_moves</span>(<span class="ident">occupancy</span>, <span class="ident">from</span> <span class="kw">as</span> <span class="ident">usize</span>),
+            <span class="ident">KNIGHT</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_knight_moves</span>(<span class="ident">from</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="kw-2">&amp;</span><span class="ident">board</span>.<span class="ident">patterns</span>),
+            <span class="ident">BISHOP</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_bishop_moves</span>(<span class="ident">occupancy</span>, <span class="ident">from</span> <span class="kw">as</span> <span class="ident">usize</span>),
+            <span class="ident">ROOK</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_rook_moves</span>(<span class="ident">occupancy</span>, <span class="ident">from</span> <span class="kw">as</span> <span class="ident">usize</span>),
+            <span class="ident">QUEEN</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_queen_moves</span>(<span class="ident">occupancy</span>, <span class="ident">from</span> <span class="kw">as</span> <span class="ident">usize</span>),
             <span class="ident">KING</span> =&gt; {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_castling</span>() {
                     <span class="kw">if</span> (<span class="ident">board</span>.<span class="ident">active_color</span> <span class="op">==</span> <span class="ident">WHITE</span> <span class="op">&amp;&amp;</span> <span class="ident">from</span> <span class="op">!</span><span class="op">=</span> <span class="number">3</span>) <span class="op">|</span><span class="op">|</span> (<span class="ident">board</span>.<span class="ident">active_color</span> <span class="op">==</span> <span class="ident">BLACK</span> <span class="op">&amp;&amp;</span> <span class="ident">from</span> <span class="op">!</span><span class="op">=</span> <span class="number">59</span>) {
@@ -1208,10 +1324,10 @@
                 <span class="kw">match</span> <span class="self">self</span>.<span class="ident">get_flags</span>() {
                     <span class="ident">MoveFlags::SHORT_CASTLING</span> =&gt; <span class="number">1u64</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="ident">from</span> <span class="op">-</span> <span class="number">2</span>),
                     <span class="ident">MoveFlags::LONG_CASTLING</span> =&gt; <span class="number">1u64</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="ident">from</span> <span class="op">+</span> <span class="number">2</span>),
-                    <span class="kw">_</span> =&gt; <span class="ident">movegen::get_king_moves</span>(<span class="ident">from</span> <span class="kw">as</span> <span class="ident">usize</span>),
+                    <span class="kw">_</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_king_moves</span>(<span class="ident">from</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="kw-2">&amp;</span><span class="ident">board</span>.<span class="ident">patterns</span>),
                 }
             }
-            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: piece={}&quot;</span>, <span class="ident">piece</span>),
+            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: fen={}, piece={}&quot;</span>, <span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="ident">piece</span>),
         };
 
         <span class="kw">if</span> (<span class="ident">moves</span> <span class="op">&amp;</span> <span class="ident">to_field</span>) <span class="op">==</span> <span class="number">0</span> {
@@ -1266,7 +1382,7 @@
                         <span class="ident">rook_field</span> <span class="op">=</span> <span class="ident">from</span> <span class="op">+</span> <span class="number">4</span>;
                         <span class="ident">rook_target_field</span> <span class="op">=</span> <span class="ident">from</span> <span class="op">+</span> <span class="number">1</span>;
                     }
-                    <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: self.get_flags()={:?}&quot;</span>, <span class="self">self</span>.<span class="ident">get_flags</span>()),
+                    <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: fen={}, self.get_flags()={:?}&quot;</span>, <span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="self">self</span>.<span class="ident">get_flags</span>()),
                 };
 
                 <span class="kw">if</span> <span class="ident">board</span>.<span class="ident">get_piece</span>(<span class="ident">rook_target_field</span>) <span class="op">==</span> <span class="ident">u8::MAX</span>
@@ -1277,7 +1393,7 @@
                 }
             }
         } <span class="kw">else</span> {
-            <span class="macro">panic!</span>(<span class="string">&quot;Can&#39;t check move legality: invalid flags&quot;</span>)
+            <span class="macro">panic!</span>(<span class="string">&quot;Move legality check failed: fen={}, self.data={}&quot;</span>, <span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="self">self</span>.<span class="ident">data</span>);
         }
 
         <span class="bool-val">false</span>
@@ -1294,7 +1410,12 @@
 <span class="doccomment">/// Generates all possible non-captures (if `CAPTURES` is false) or all possible captures (if `CAPTURES` is true) for the `PIECE` at</span>
 <span class="doccomment">/// the position specified by `board`, stores them into `moves` list (starting from `index`) and returns index of the first free slot.</span>
 <span class="doccomment">/// Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the specified fields (useful during checks).</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">scan_piece_moves</span><span class="op">&lt;</span><span class="kw">const</span> <span class="ident">PIECE</span>: <span class="ident">u8</span>, <span class="kw">const</span> <span class="ident">CAPTURES</span>: <span class="ident">bool</span><span class="op">&gt;</span>(<span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>, <span class="ident">moves</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">Move</span>], <span class="kw-2">mut</span> <span class="ident">index</span>: <span class="ident">usize</span>, <span class="ident">evasion_mask</span>: <span class="ident">u64</span>) -&gt; <span class="ident">usize</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">scan_piece_moves</span><span class="op">&lt;</span><span class="kw">const</span> <span class="ident">PIECE</span>: <span class="ident">u8</span>, <span class="kw">const</span> <span class="ident">CAPTURES</span>: <span class="ident">bool</span><span class="op">&gt;</span>(
+    <span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>,
+    <span class="ident">moves</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Move</span><span class="op">&gt;</span>],
+    <span class="kw-2">mut</span> <span class="ident">index</span>: <span class="ident">usize</span>,
+    <span class="ident">evasion_mask</span>: <span class="ident">u64</span>,
+) -&gt; <span class="ident">usize</span> {
     <span class="kw">let</span> <span class="ident">enemy_color</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">active_color</span> <span class="op">^</span> <span class="number">1</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pieces</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">pieces</span>[<span class="ident">board</span>.<span class="ident">active_color</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">PIECE</span> <span class="kw">as</span> <span class="ident">usize</span>];
 
@@ -1305,12 +1426,12 @@
 
         <span class="kw">let</span> <span class="ident">occupancy</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">WHITE</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">|</span> <span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">BLACK</span> <span class="kw">as</span> <span class="ident">usize</span>];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">piece_moves</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">PIECE</span> {
-            <span class="ident">KNIGHT</span> =&gt; <span class="ident">movegen::get_knight_moves</span>(<span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>),
-            <span class="ident">BISHOP</span> =&gt; <span class="ident">movegen::get_bishop_moves</span>(<span class="ident">occupancy</span>, <span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>),
-            <span class="ident">ROOK</span> =&gt; <span class="ident">movegen::get_rook_moves</span>(<span class="ident">occupancy</span>, <span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>),
-            <span class="ident">QUEEN</span> =&gt; <span class="ident">movegen::get_queen_moves</span>(<span class="ident">occupancy</span>, <span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>),
-            <span class="ident">KING</span> =&gt; <span class="ident">movegen::get_king_moves</span>(<span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>),
-            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: PIECE={}&quot;</span>, <span class="ident">PIECE</span>),
+            <span class="ident">KNIGHT</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_knight_moves</span>(<span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="kw-2">&amp;</span><span class="ident">board</span>.<span class="ident">patterns</span>),
+            <span class="ident">BISHOP</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_bishop_moves</span>(<span class="ident">occupancy</span>, <span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>),
+            <span class="ident">ROOK</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_rook_moves</span>(<span class="ident">occupancy</span>, <span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>),
+            <span class="ident">QUEEN</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_queen_moves</span>(<span class="ident">occupancy</span>, <span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>),
+            <span class="ident">KING</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_king_moves</span>(<span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="kw-2">&amp;</span><span class="ident">board</span>.<span class="ident">patterns</span>),
+            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid parameter: fen={}, PIECE={}&quot;</span>, <span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="ident">PIECE</span>),
         };
         <span class="ident">piece_moves</span> <span class="op">&amp;=</span> <span class="op">!</span><span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">board</span>.<span class="ident">active_color</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">&amp;</span> <span class="ident">evasion_mask</span>;
 
@@ -1328,7 +1449,7 @@
             <span class="kw">let</span> <span class="ident">capture</span> <span class="op">=</span> (<span class="ident">to_field</span> <span class="op">&amp;</span> <span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">enemy_color</span> <span class="kw">as</span> <span class="ident">usize</span>]) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>;
             <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">CAPTURES</span> <span class="op">|</span><span class="op">|</span> <span class="ident">capture</span> { <span class="ident">MoveFlags::CAPTURE</span> } <span class="kw">else</span> { <span class="ident">MoveFlags::QUIET</span> };
 
-            <span class="ident">moves</span>[<span class="ident">index</span>] <span class="op">=</span> <span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">flags</span>);
+            <span class="ident">moves</span>[<span class="ident">index</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">flags</span>));
             <span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
         }
 
@@ -1340,7 +1461,7 @@
 
                     <span class="kw">if</span> <span class="ident">king_side_castling_rights</span> <span class="op">&amp;&amp;</span> <span class="ident">king_side_rook_present</span> <span class="op">&amp;&amp;</span> (<span class="ident">occupancy</span> <span class="op">&amp;</span> <span class="number">0x6</span>) <span class="op">==</span> <span class="number">0</span> {
                         <span class="kw">if</span> <span class="op">!</span><span class="ident">board</span>.<span class="ident">are_fields_attacked</span>(<span class="ident">board</span>.<span class="ident">active_color</span>, <span class="kw-2">&amp;</span>[<span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>]) {
-                            <span class="ident">moves</span>[<span class="ident">index</span>] <span class="op">=</span> <span class="ident">Move::new</span>(<span class="number">3</span>, <span class="number">1</span>, <span class="ident">MoveFlags::SHORT_CASTLING</span>);
+                            <span class="ident">moves</span>[<span class="ident">index</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="number">3</span>, <span class="number">1</span>, <span class="ident">MoveFlags::SHORT_CASTLING</span>));
                             <span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
                         }
                     }
@@ -1350,7 +1471,7 @@
 
                     <span class="kw">if</span> <span class="ident">queen_side_castling_rights</span> <span class="op">&amp;&amp;</span> <span class="ident">queen_side_rook_present</span> <span class="op">&amp;&amp;</span> (<span class="ident">occupancy</span> <span class="op">&amp;</span> <span class="number">0x70</span>) <span class="op">==</span> <span class="number">0</span> {
                         <span class="kw">if</span> <span class="op">!</span><span class="ident">board</span>.<span class="ident">are_fields_attacked</span>(<span class="ident">board</span>.<span class="ident">active_color</span>, <span class="kw-2">&amp;</span>[<span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]) {
-                            <span class="ident">moves</span>[<span class="ident">index</span>] <span class="op">=</span> <span class="ident">Move::new</span>(<span class="number">3</span>, <span class="number">5</span>, <span class="ident">MoveFlags::LONG_CASTLING</span>);
+                            <span class="ident">moves</span>[<span class="ident">index</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="number">3</span>, <span class="number">5</span>, <span class="ident">MoveFlags::LONG_CASTLING</span>));
                             <span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
                         }
                     }
@@ -1361,7 +1482,7 @@
 
                     <span class="kw">if</span> <span class="ident">king_side_castling_rights</span> <span class="op">&amp;&amp;</span> <span class="ident">king_side_rook_present</span> <span class="op">&amp;&amp;</span> (<span class="ident">occupancy</span> <span class="op">&amp;</span> <span class="number">0x600000000000000</span>) <span class="op">==</span> <span class="number">0</span> {
                         <span class="kw">if</span> <span class="op">!</span><span class="ident">board</span>.<span class="ident">are_fields_attacked</span>(<span class="ident">board</span>.<span class="ident">active_color</span>, <span class="kw-2">&amp;</span>[<span class="number">59</span>, <span class="number">58</span>, <span class="number">57</span>]) {
-                            <span class="ident">moves</span>[<span class="ident">index</span>] <span class="op">=</span> <span class="ident">Move::new</span>(<span class="number">59</span>, <span class="number">57</span>, <span class="ident">MoveFlags::SHORT_CASTLING</span>);
+                            <span class="ident">moves</span>[<span class="ident">index</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="number">59</span>, <span class="number">57</span>, <span class="ident">MoveFlags::SHORT_CASTLING</span>));
                             <span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
                         }
                     }
@@ -1371,7 +1492,7 @@
 
                     <span class="kw">if</span> <span class="ident">queen_side_castling_rights</span> <span class="op">&amp;&amp;</span> <span class="ident">queen_side_rook_present</span> <span class="op">&amp;&amp;</span> (<span class="ident">occupancy</span> <span class="op">&amp;</span> <span class="number">0x7000000000000000</span>) <span class="op">==</span> <span class="number">0</span> {
                         <span class="kw">if</span> <span class="op">!</span><span class="ident">board</span>.<span class="ident">are_fields_attacked</span>(<span class="ident">board</span>.<span class="ident">active_color</span>, <span class="kw-2">&amp;</span>[<span class="number">59</span>, <span class="number">60</span>, <span class="number">61</span>]) {
-                            <span class="ident">moves</span>[<span class="ident">index</span>] <span class="op">=</span> <span class="ident">Move::new</span>(<span class="number">59</span>, <span class="number">61</span>, <span class="ident">MoveFlags::LONG_CASTLING</span>);
+                            <span class="ident">moves</span>[<span class="ident">index</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="number">59</span>, <span class="number">61</span>, <span class="ident">MoveFlags::LONG_CASTLING</span>));
                             <span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
                         }
                     }
@@ -1392,7 +1513,7 @@
 
     <span class="kw">let</span> <span class="ident">enemy_color</span> <span class="op">=</span> <span class="ident">color</span> <span class="op">^</span> <span class="number">1</span>;
     <span class="kw">let</span> <span class="ident">enemy_king_field</span> <span class="op">=</span> <span class="ident">bit_scan</span>(<span class="ident">board</span>.<span class="ident">pieces</span>[<span class="ident">enemy_color</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">KING</span> <span class="kw">as</span> <span class="ident">usize</span>]);
-    <span class="kw">let</span> <span class="ident">enemy_king_box</span> <span class="op">=</span> <span class="ident">patterns::get_box</span>(<span class="ident">enemy_king_field</span> <span class="kw">as</span> <span class="ident">usize</span>);
+    <span class="kw">let</span> <span class="ident">enemy_king_box</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">patterns</span>.<span class="ident">get_box</span>(<span class="ident">enemy_king_field</span> <span class="kw">as</span> <span class="ident">usize</span>);
 
     <span class="kw">while</span> <span class="ident">pieces</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
         <span class="kw">let</span> <span class="ident">from_field</span> <span class="op">=</span> <span class="ident">get_lsb</span>(<span class="ident">pieces</span>);
@@ -1408,15 +1529,15 @@
         };
 
         <span class="kw">let</span> <span class="ident">piece_moves</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">PIECE</span> {
-            <span class="ident">KNIGHT</span> =&gt; <span class="ident">movegen::get_knight_moves</span>(<span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>),
-            <span class="ident">BISHOP</span> =&gt; <span class="ident">movegen::get_bishop_moves</span>(<span class="ident">occupancy</span>, <span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>),
-            <span class="ident">ROOK</span> =&gt; <span class="ident">movegen::get_rook_moves</span>(<span class="ident">occupancy</span>, <span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>),
-            <span class="ident">QUEEN</span> =&gt; <span class="ident">movegen::get_queen_moves</span>(<span class="ident">occupancy</span>, <span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>),
-            <span class="ident">KING</span> =&gt; <span class="ident">movegen::get_king_moves</span>(<span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>),
-            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: PIECE={}&quot;</span>, <span class="ident">PIECE</span>),
+            <span class="ident">KNIGHT</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_knight_moves</span>(<span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="kw-2">&amp;</span><span class="ident">board</span>.<span class="ident">patterns</span>),
+            <span class="ident">BISHOP</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_bishop_moves</span>(<span class="ident">occupancy</span>, <span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>),
+            <span class="ident">ROOK</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_rook_moves</span>(<span class="ident">occupancy</span>, <span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>),
+            <span class="ident">QUEEN</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_queen_moves</span>(<span class="ident">occupancy</span>, <span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>),
+            <span class="ident">KING</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_king_moves</span>(<span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="kw-2">&amp;</span><span class="ident">board</span>.<span class="ident">patterns</span>),
+            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid parameter: fen={}, PIECE={}&quot;</span>, <span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="ident">PIECE</span>),
         } <span class="op">&amp;</span> <span class="op">!</span><span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">color</span> <span class="kw">as</span> <span class="ident">usize</span>];
 
-        <span class="kw">let</span> <span class="ident">center_mobility</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">parameters::MOBILITY_CENTER_MULTIPLIER</span> } <span class="op">*</span> <span class="ident">bit_count</span>(<span class="ident">piece_moves</span> <span class="op">&amp;</span> <span class="ident">CENTER</span>) <span class="kw">as</span> <span class="ident">i16</span>;
+        <span class="kw">let</span> <span class="ident">center_mobility</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">evaluation_parameters</span>.<span class="ident">mobility_center_multiplier</span>[<span class="ident">PIECE</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">*</span> <span class="ident">bit_count</span>(<span class="ident">piece_moves</span> <span class="op">&amp;</span> <span class="ident">CENTER</span>) <span class="kw">as</span> <span class="ident">i16</span>;
         <span class="kw">let</span> <span class="ident">outside_mobility</span> <span class="op">=</span> <span class="ident">bit_count</span>(<span class="ident">piece_moves</span> <span class="op">&amp;</span> <span class="ident">OUTSIDE</span>) <span class="kw">as</span> <span class="ident">i16</span>;
 
         <span class="ident">mobility</span> <span class="op">+</span><span class="op">=</span> <span class="ident">center_mobility</span> <span class="op">+</span> <span class="ident">outside_mobility</span>;
@@ -1429,7 +1550,7 @@
 <span class="doccomment">/// Generates all possible non-captures (if `CAPTURES` is false) or all possible captures (if `CAPTURES` is true) for the pawns at</span>
 <span class="doccomment">/// the position specified by `board`, stores them into `moves` list (starting from `index`) and returns index of the first free slot.</span>
 <span class="doccomment">/// Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the specified fields (useful during checks).</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">scan_pawn_moves</span><span class="op">&lt;</span><span class="kw">const</span> <span class="ident">CAPTURES</span>: <span class="ident">bool</span><span class="op">&gt;</span>(<span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>, <span class="ident">moves</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">Move</span>], <span class="kw-2">mut</span> <span class="ident">index</span>: <span class="ident">usize</span>, <span class="ident">evasion_mask</span>: <span class="ident">u64</span>) -&gt; <span class="ident">usize</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">scan_pawn_moves</span><span class="op">&lt;</span><span class="kw">const</span> <span class="ident">CAPTURES</span>: <span class="ident">bool</span><span class="op">&gt;</span>(<span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>, <span class="ident">moves</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Move</span><span class="op">&gt;</span>], <span class="kw-2">mut</span> <span class="ident">index</span>: <span class="ident">usize</span>, <span class="ident">evasion_mask</span>: <span class="ident">u64</span>) -&gt; <span class="ident">usize</span> {
     <span class="kw">if</span> <span class="op">!</span><span class="ident">CAPTURES</span> {
         <span class="ident">index</span> <span class="op">=</span> <span class="ident">scan_pawn_moves_single_push</span>(<span class="ident">board</span>, <span class="ident">moves</span>, <span class="ident">index</span>, <span class="ident">evasion_mask</span>);
         <span class="ident">index</span> <span class="op">=</span> <span class="ident">scan_pawn_moves_double_push</span>(<span class="ident">board</span>, <span class="ident">moves</span>, <span class="ident">index</span>, <span class="ident">evasion_mask</span>);
@@ -1444,7 +1565,7 @@
 <span class="doccomment">/// Generates all possible single pushes for the pawns at the position specified by `board`, stores them into `moves` list (starting from `index`)</span>
 <span class="doccomment">/// and returns index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the</span>
 <span class="doccomment">/// specified fields (useful during checks).</span>
-<span class="kw">fn</span> <span class="ident">scan_pawn_moves_single_push</span>(<span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>, <span class="ident">moves</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">Move</span>], <span class="kw-2">mut</span> <span class="ident">index</span>: <span class="ident">usize</span>, <span class="ident">evasion_mask</span>: <span class="ident">u64</span>) -&gt; <span class="ident">usize</span> {
+<span class="kw">fn</span> <span class="ident">scan_pawn_moves_single_push</span>(<span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>, <span class="ident">moves</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Move</span><span class="op">&gt;</span>], <span class="kw-2">mut</span> <span class="ident">index</span>: <span class="ident">usize</span>, <span class="ident">evasion_mask</span>: <span class="ident">u64</span>) -&gt; <span class="ident">usize</span> {
     <span class="kw">let</span> <span class="ident">pieces</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">pieces</span>[<span class="ident">board</span>.<span class="ident">active_color</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">PAWN</span> <span class="kw">as</span> <span class="ident">usize</span>];
     <span class="kw">let</span> <span class="ident">occupancy</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">WHITE</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">|</span> <span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">BLACK</span> <span class="kw">as</span> <span class="ident">usize</span>];
 
@@ -1466,13 +1587,13 @@
         <span class="ident">target_fields</span> <span class="op">=</span> <span class="ident">pop_lsb</span>(<span class="ident">target_fields</span>);
 
         <span class="kw">if</span> (<span class="ident">to_field</span> <span class="op">&amp;</span> <span class="ident">promotion_line</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="ident">moves</span>[<span class="ident">index</span> <span class="op">+</span> <span class="number">0</span>] <span class="op">=</span> <span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::QUEEN_PROMOTION</span>);
-            <span class="ident">moves</span>[<span class="ident">index</span> <span class="op">+</span> <span class="number">1</span>] <span class="op">=</span> <span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::ROOK_PROMOTION</span>);
-            <span class="ident">moves</span>[<span class="ident">index</span> <span class="op">+</span> <span class="number">2</span>] <span class="op">=</span> <span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::BISHOP_PROMOTION</span>);
-            <span class="ident">moves</span>[<span class="ident">index</span> <span class="op">+</span> <span class="number">3</span>] <span class="op">=</span> <span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::KNIGHT_PROMOTION</span>);
+            <span class="ident">moves</span>[<span class="ident">index</span> <span class="op">+</span> <span class="number">0</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::QUEEN_PROMOTION</span>));
+            <span class="ident">moves</span>[<span class="ident">index</span> <span class="op">+</span> <span class="number">1</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::ROOK_PROMOTION</span>));
+            <span class="ident">moves</span>[<span class="ident">index</span> <span class="op">+</span> <span class="number">2</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::BISHOP_PROMOTION</span>));
+            <span class="ident">moves</span>[<span class="ident">index</span> <span class="op">+</span> <span class="number">3</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::KNIGHT_PROMOTION</span>));
             <span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="number">4</span>;
         } <span class="kw">else</span> {
-            <span class="ident">moves</span>[<span class="ident">index</span>] <span class="op">=</span> <span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::QUIET</span>);
+            <span class="ident">moves</span>[<span class="ident">index</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::QUIET</span>));
             <span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
         }
     }
@@ -1483,7 +1604,7 @@
 <span class="doccomment">/// Generates all possible double pushes for the pawns at the position specified by `board`, stores them into `moves` list (starting from `index`)</span>
 <span class="doccomment">/// and returns index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the</span>
 <span class="doccomment">/// specified fields (useful during checks).</span>
-<span class="kw">fn</span> <span class="ident">scan_pawn_moves_double_push</span>(<span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>, <span class="ident">moves</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">Move</span>], <span class="kw-2">mut</span> <span class="ident">index</span>: <span class="ident">usize</span>, <span class="ident">evasion_mask</span>: <span class="ident">u64</span>) -&gt; <span class="ident">usize</span> {
+<span class="kw">fn</span> <span class="ident">scan_pawn_moves_double_push</span>(<span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>, <span class="ident">moves</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Move</span><span class="op">&gt;</span>], <span class="kw-2">mut</span> <span class="ident">index</span>: <span class="ident">usize</span>, <span class="ident">evasion_mask</span>: <span class="ident">u64</span>) -&gt; <span class="ident">usize</span> {
     <span class="kw">let</span> <span class="ident">pieces</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">pieces</span>[<span class="ident">board</span>.<span class="ident">active_color</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">PAWN</span> <span class="kw">as</span> <span class="ident">usize</span>];
     <span class="kw">let</span> <span class="ident">occupancy</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">WHITE</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">|</span> <span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">BLACK</span> <span class="kw">as</span> <span class="ident">usize</span>];
 
@@ -1503,7 +1624,7 @@
         <span class="kw">let</span> <span class="ident">from_field_index</span> <span class="op">=</span> ((<span class="ident">to_field_index</span> <span class="kw">as</span> <span class="ident">i8</span>) <span class="op">-</span> <span class="ident">shift</span>) <span class="kw">as</span> <span class="ident">u8</span>;
         <span class="ident">target_fields</span> <span class="op">=</span> <span class="ident">pop_lsb</span>(<span class="ident">target_fields</span>);
 
-        <span class="ident">moves</span>[<span class="ident">index</span>] <span class="op">=</span> <span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::DOUBLE_PUSH</span>);
+        <span class="ident">moves</span>[<span class="ident">index</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::DOUBLE_PUSH</span>));
         <span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
     }
 
@@ -1513,7 +1634,7 @@
 <span class="doccomment">/// Generates all possible captures for the pawns toward the direction specified by `DIR` and at the position specified by `board`,</span>
 <span class="doccomment">/// stores them into `moves` list (starting from `index`) and returns index of the first free slot. Use `evasion_mask` with value</span>
 <span class="doccomment">/// different than `u64::MAX` to restrict generator to the specified fields (useful during checks).</span>
-<span class="kw">fn</span> <span class="ident">scan_pawn_moves_diagonal_attacks</span><span class="op">&lt;</span><span class="kw">const</span> <span class="ident">DIR</span>: <span class="ident">u8</span><span class="op">&gt;</span>(<span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>, <span class="ident">moves</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">Move</span>], <span class="kw-2">mut</span> <span class="ident">index</span>: <span class="ident">usize</span>, <span class="ident">evasion_mask</span>: <span class="ident">u64</span>) -&gt; <span class="ident">usize</span> {
+<span class="kw">fn</span> <span class="ident">scan_pawn_moves_diagonal_attacks</span><span class="op">&lt;</span><span class="kw">const</span> <span class="ident">DIR</span>: <span class="ident">u8</span><span class="op">&gt;</span>(<span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>, <span class="ident">moves</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Move</span><span class="op">&gt;</span>], <span class="kw-2">mut</span> <span class="ident">index</span>: <span class="ident">usize</span>, <span class="ident">evasion_mask</span>: <span class="ident">u64</span>) -&gt; <span class="ident">usize</span> {
     <span class="kw">let</span> <span class="ident">enemy_color</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">active_color</span> <span class="op">^</span> <span class="number">1</span>;
     <span class="kw">let</span> <span class="ident">pieces</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">pieces</span>[<span class="ident">board</span>.<span class="ident">active_color</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">PAWN</span> <span class="kw">as</span> <span class="ident">usize</span>];
 
@@ -1538,16 +1659,16 @@
         <span class="ident">target_fields</span> <span class="op">=</span> <span class="ident">pop_lsb</span>(<span class="ident">target_fields</span>);
 
         <span class="kw">if</span> (<span class="ident">to_field</span> <span class="op">&amp;</span> <span class="ident">promotion_line</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="ident">moves</span>[<span class="ident">index</span> <span class="op">+</span> <span class="number">0</span>] <span class="op">=</span> <span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::QUEEN_PROMOTION_CAPTURE</span>);
-            <span class="ident">moves</span>[<span class="ident">index</span> <span class="op">+</span> <span class="number">1</span>] <span class="op">=</span> <span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::ROOK_PROMOTION_CAPTURE</span>);
-            <span class="ident">moves</span>[<span class="ident">index</span> <span class="op">+</span> <span class="number">2</span>] <span class="op">=</span> <span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::BISHOP_PROMOTION_CAPTURE</span>);
-            <span class="ident">moves</span>[<span class="ident">index</span> <span class="op">+</span> <span class="number">3</span>] <span class="op">=</span> <span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::KNIGHT_PROMOTION_CAPTURE</span>);
+            <span class="ident">moves</span>[<span class="ident">index</span> <span class="op">+</span> <span class="number">0</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::QUEEN_PROMOTION_CAPTURE</span>));
+            <span class="ident">moves</span>[<span class="ident">index</span> <span class="op">+</span> <span class="number">1</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::ROOK_PROMOTION_CAPTURE</span>));
+            <span class="ident">moves</span>[<span class="ident">index</span> <span class="op">+</span> <span class="number">2</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::BISHOP_PROMOTION_CAPTURE</span>));
+            <span class="ident">moves</span>[<span class="ident">index</span> <span class="op">+</span> <span class="number">3</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::KNIGHT_PROMOTION_CAPTURE</span>));
             <span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="number">4</span>;
         } <span class="kw">else</span> {
             <span class="kw">let</span> <span class="ident">en_passant</span> <span class="op">=</span> (<span class="ident">to_field</span> <span class="op">&amp;</span> <span class="ident">board</span>.<span class="ident">en_passant</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>;
             <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">en_passant</span> { <span class="ident">MoveFlags::EN_PASSANT</span> } <span class="kw">else</span> { <span class="ident">MoveFlags::CAPTURE</span> };
 
-            <span class="ident">moves</span>[<span class="ident">index</span>] <span class="op">=</span> <span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">flags</span>);
+            <span class="ident">moves</span>[<span class="ident">index</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">flags</span>));
             <span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
         }
     }
@@ -1555,5 +1676,5 @@
     <span class="ident">index</span>
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="inanis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0 (9d1b2106e 2022-02-23)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="inanis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.1 (e092d0b6b 2022-07-16)" ></div>
 </body></html>

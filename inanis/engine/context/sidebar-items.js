@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["HelperThreadContext",""],["SearchContext",""],["SearchResult",""],["SearchStatistics",""],["Token",""]]});
+initSidebarItems({"struct":[["HelperThreadContext",""],["SearchContext",""],["SearchResult",""],["SearchResultLine",""],["SearchStatistics",""]]});

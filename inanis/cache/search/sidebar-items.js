@@ -1,1 +1,1 @@
-initSidebarItems({"constant":[["BUCKET_SLOTS",""]],"struct":[["TranspositionTable",""],["TranspositionTableBucket",""],["TranspositionTableEntry",""],["TranspositionTableScoreType",""]]});
+initSidebarItems({"constant":[["BUCKET_SLOTS",""]],"struct":[["TranspositionTable",""],["TranspositionTableBucket",""],["TranspositionTableEntry",""],["TranspositionTableResult",""],["TranspositionTableScoreType",""]]});

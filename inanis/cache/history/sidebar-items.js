@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["HistoryTable",""],["HistoryTableEntry",""],["HistoryTableResult",""]]});

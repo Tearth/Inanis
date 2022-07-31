@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["benchmark",""],["test",""],["tuner",""]]});
+initSidebarItems({"macro":[["conditional_expression",""]],"mod":[["benchmark",""],["fen",""],["pgn",""],["test",""],["tuner",""],["tunerset",""]]});

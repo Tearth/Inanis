@@ -1,1 +1,1 @@
-initSidebarItems({"static":[["PATTERN",""]]});
+initSidebarItems({});
