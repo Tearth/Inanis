@@ -1,5 +1,5 @@
 # Inanis
-UCI chess engine written in Rust, the successor of [Proxima b](https://github.com/Tearth/Proxima-b), [Proxima b 2.0](https://github.com/Tearth/Proxima-b-2.0) and [Cosette](https://github.com/Tearth/Cosette). The project is written after hours, ~~with the goal to reach 2600 Elo (or at least to be stronger than the last version of [Cosette](https://github.com/Tearth/Cosette) which was about 2500 Elo)~~ with the goal to reach 3000 Elo. Perfect as a sparring partner for other chess engines, since it was heavily tested using very fast games. Supports pondering, multithreading, MultiPV and Syzygy tablebases.
+UCI chess engine written in Rust, the successor of [Proxima b](https://github.com/Tearth/Proxima-b), [Proxima b 2.0](https://github.com/Tearth/Proxima-b-2.0) and [Cosette](https://github.com/Tearth/Cosette). The project is written after hours, with the goal to reach a strength of 3000 Elo. Perfect as a sparring partner for other chess engines, since it was heavily tested using very fast games. Supports Syzygy tablebases, MultiPV, pondering and multithreading.
 
 **Current strength**: 2800 Elo (31-07-2022)
 
@@ -61,7 +61,7 @@ Examples of running the tuner:
  - `tuner ./input/quiet.epd ./output/ true true 4` - run tuning with 4 threads (excluding piece values) for positions stored in `quiet.epd`, starting from the values already set in the engine, and saving the result in the `output` directory
 
 Since version 1.1.0, Inanis has also a command to generate epd files with quiet positions, based on provided PGN input:
- - `tunerset ./input/games.pgn ./output/quiet.epd 16 250 50 3` -  generate a new `quiet.epd` file, by parsing `games.pgn` games and taking 3 random positions from each of them, ignoring these with a ply less than 16, evaluation score bigger than 250, and the difference between evaluation score and quiescence search score bigger than 50
+ - `tunerset ./input/games.pgn ./output/quiet.epd 16 250 50 3` -  generate a new `quiet.epd` file, by parsing `games.pgn` and taking 3 random positions from each of the game, ignoring these with a ply less than 16, evaluation score bigger than 250, and the difference between evaluation score and quiescence search score bigger than 50
 
 ## Test suites 
 Testing of strategic evaluation performance can be done by using the `test` command, which performs a fixed-depth search for positions stored in the EPD file.

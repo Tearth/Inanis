@@ -1,11 +1,10 @@
 # Version 1.1.0 (31-07-2022)
  - Added support for Syzygy tablebases
- - Added support for MultiPV UCI option
+ - Added support for "MultiPV" UCI option
  - Added support for "searchmoves" in "go" UCI command
- - Added hashfull in the UCI search output
+ - Added "hashfull" in the UCI search output
  - Added "tunerset" command
- - Added support for multithreading in "test" command
- - Added transposition_table_size parameter to "test" command
+ - Added "transposition_table_size" and "threads_count" parameters to "test" command
  - Added instant move when there is only one possible in the position
  - Added new benchmarks
  - Added tuner dataset generator
