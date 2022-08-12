@@ -512,11 +512,16 @@ impl Iterator for SearchContext {
                     continue;
                 } else {
                     if self.uci_debug {
-                        println!("info string search aborted");
+                        println!("info string Search aborted");
                     }
 
                     return None;
                 }
+            }
+
+            if self.multipv_lines.is_empty() {
+                println!("info string Invalid position");
+                return None;
             }
 
             if self.forced_depth == 0 && self.max_nodes_count == 0 {
