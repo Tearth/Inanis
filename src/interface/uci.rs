@@ -39,7 +39,6 @@ struct UciState {
     search_thread: Option<JoinHandle<()>>,
     abort_token: Arc<AtomicBool>,
     ponder_token: Arc<AtomicBool>,
-    busy_flag: AtomicBool,
     debug_mode: AtomicBool,
 }
 
@@ -56,7 +55,6 @@ impl Default for UciState {
             search_thread: None,
             abort_token: Arc::new(AtomicBool::new(false)),
             ponder_token: Arc::new(AtomicBool::new(false)),
-            busy_flag: AtomicBool::new(false),
             debug_mode: AtomicBool::new(false),
         }
     }
@@ -140,8 +138,6 @@ fn handle_debug(parameters: &[String], state: Arc<Mutex<UciState>>) {
 ///  - `searchmoves [moves]` - restricts search to the provided moves list
 ///  - `ponder` - tells the search to run in the ponder mode (thinking on the opponent's time)
 fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
-    wait_for_busy_flag(state.clone());
-
     let mut white_time = u32::MAX;
     let mut black_time = u32::MAX;
     let mut white_inc_time = 0;
@@ -264,7 +260,6 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
 
     state_lock.abort_token.store(false, Ordering::Relaxed);
     state_lock.ponder_token.store(false, Ordering::Relaxed);
-    state_lock.busy_flag.store(true, Ordering::Relaxed);
     drop(state_lock);
 
     let state_arc = state.clone();
@@ -422,7 +417,6 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
         state_lock.search_thread = None;
         state_lock.killers_table.age_moves();
         state_lock.history_table.age_values();
-        state_lock.busy_flag.store(false, Ordering::Relaxed);
     }));
 
     state.lock().unwrap().search_thread = search_thread;
@@ -430,7 +424,6 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
 
 /// Handles `isready` command by waiting for the busy flag, and then printing response as fast as possible.
 fn handle_isready(state: Arc<Mutex<UciState>>) {
-    wait_for_busy_flag(state);
     println!("readyok");
 }
 
@@ -447,8 +440,6 @@ fn handle_ponderhit(state: Arc<Mutex<UciState>>) {
 ///  - `position fen [fen]` - sets a FEN position
 ///  - `position fen [fen] moves [list of moves]` - sets a FEN position and applies a list of moves
 fn handle_position(parameters: &[String], state: Arc<Mutex<UciState>>) {
-    wait_for_busy_flag(state.clone());
-
     if parameters.len() < 2 {
         return;
     }
@@ -485,8 +476,6 @@ fn handle_position(parameters: &[String], state: Arc<Mutex<UciState>>) {
 /// Handles `setoption [name] value [value]` command by creating or overwriting a `name` option with the specified `value`. Recreates tables if `Hash` or
 /// `Clear Hash` options are modified.
 fn handle_setoption(parameters: &[String], state: Arc<Mutex<UciState>>) {
-    wait_for_busy_flag(state.clone());
-
     let mut reading_name = false;
     let mut reading_value = false;
     let mut name_tokens = Vec::new();
@@ -536,8 +525,6 @@ fn handle_setoption(parameters: &[String], state: Arc<Mutex<UciState>>) {
 
 /// Handles `ucinewgame` command by resetting a board state, recreating abort token and clearing tables.
 fn handle_ucinewgame(state: Arc<Mutex<UciState>>) {
-    wait_for_busy_flag(state.clone());
-
     let mut state_lock = state.lock().unwrap();
     state_lock.abort_token.store(true, Ordering::Relaxed);
     state_lock.board = Bitboard::new_initial_position(None, None, None, None, None);
@@ -555,16 +542,6 @@ fn handle_stop(state: Arc<Mutex<UciState>>) {
 /// Handles `quit` command by terminating engine process.
 fn handle_quit() {
     process::exit(0);
-}
-
-/// Waits for the busy flag before continuing. If the deadline is exceeded, the engine process is terminated.
-fn wait_for_busy_flag(state: Arc<Mutex<UciState>>) {
-    let now = Utc::now();
-    while (*state).lock().unwrap().busy_flag.load(Ordering::Relaxed) {
-        if (Utc::now() - now).num_seconds() >= 10 {
-            process::exit(-1);
-        }
-    }
 }
 
 /// Recreates transposition table, pawn hashtable, killers table and history table.
