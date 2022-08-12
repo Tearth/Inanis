@@ -21,6 +21,7 @@ pub struct PGNLoader {
 
 pub struct ParsedPGN {
     pub result: String,
+    pub fen: Option<String>,
     pub moves: Vec<Move>,
 }
 
@@ -46,6 +47,7 @@ impl PGNLoader {
     /// Parses a single `pgn` and returns [Some] if it has been done with success, otherwise [Err].
     fn parse(&self, pgn: String) -> Result<ParsedPGN, String> {
         let mut result = None;
+        let mut fen = None;
         let mut moves = Vec::new();
 
         for line in pgn.lines() {
@@ -75,17 +77,38 @@ impl PGNLoader {
                 let name = line[name_start_index..name_end_index].to_string();
                 let value = line[value_start_index..value_end_index].to_string();
 
-                if name.as_str() == "Result" {
-                    result = Some(value);
-                };
+                match name.as_str() {
+                    "Result" => result = Some(value),
+                    "FEN" => fen = Some(value),
+                    _ => {}
+                }
             } else if line.starts_with('1') {
-                let mut board = Bitboard::new_initial_position(
-                    Some(self.evaluation_parameters.clone()),
-                    Some(self.zobrist_container.clone()),
-                    Some(self.patterns_container.clone()),
-                    Some(self.see_container.clone()),
-                    Some(self.magic_container.clone()),
-                );
+                let mut board = match fen.clone() {
+                    Some(value) => {
+                        let fen_result = Bitboard::new_from_fen(
+                            &value,
+                            Some(self.evaluation_parameters.clone()),
+                            Some(self.zobrist_container.clone()),
+                            Some(self.patterns_container.clone()),
+                            Some(self.see_container.clone()),
+                            Some(self.magic_container.clone()),
+                        );
+
+                        match fen_result {
+                            Ok(board) => board,
+                            Err(error) => return Err(format!("Invalid initial FEN position: {}", error)),
+                        }
+                    }
+
+                    None => Bitboard::new_initial_position(
+                        Some(self.evaluation_parameters.clone()),
+                        Some(self.zobrist_container.clone()),
+                        Some(self.patterns_container.clone()),
+                        Some(self.see_container.clone()),
+                        Some(self.magic_container.clone()),
+                    ),
+                };
+
                 for token in line.split_ascii_whitespace() {
                     if token.as_bytes()[0].is_ascii_digit() {
                         continue;
@@ -107,7 +130,7 @@ impl PGNLoader {
             None => return Err("No Result property".to_string()),
         };
 
-        Ok(ParsedPGN::new(result, moves))
+        Ok(ParsedPGN::new(result, fen, moves))
     }
 }
 
@@ -146,8 +169,8 @@ impl Iterator for PGNLoader {
 }
 
 impl ParsedPGN {
-    /// Constructs a new instance of [ParsedPGN] with stored `result` and `moves`.
-    pub fn new(result: String, moves: Vec<Move>) -> ParsedPGN {
-        ParsedPGN { result, moves }
+    /// Constructs a new instance of [ParsedPGN] with stored `result`, `fen` and `moves`.
+    pub fn new(result: String, fen: Option<String>, moves: Vec<Move>) -> ParsedPGN {
+        ParsedPGN { result, fen, moves }
     }
 }

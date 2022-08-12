@@ -66,13 +66,34 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
             }
         };
 
-        let board = Bitboard::new_initial_position(
-            Some(evaluation_parameters.clone()),
-            Some(zobrist_container.clone()),
-            Some(patterns_container.clone()),
-            Some(see_container.clone()),
-            Some(magic_container.clone()),
-        );
+        let board = match pgn.fen {
+            Some(fen) => {
+                let fen_result = Bitboard::new_from_fen(
+                    &fen,
+                    Some(evaluation_parameters.clone()),
+                    Some(zobrist_container.clone()),
+                    Some(patterns_container.clone()),
+                    Some(see_container.clone()),
+                    Some(magic_container.clone()),
+                );
+
+                match fen_result {
+                    Ok(board) => board,
+                    Err(error) => {
+                        println!("Invalid PGN file: {}", error);
+                        return;
+                    }
+                }
+            }
+
+            None => Bitboard::new_initial_position(
+                Some(evaluation_parameters.clone()),
+                Some(zobrist_container.clone()),
+                Some(patterns_container.clone()),
+                Some(see_container.clone()),
+                Some(magic_container.clone()),
+            ),
+        };
 
         let mut context = SearchContext::new(
             board,
