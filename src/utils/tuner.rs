@@ -14,6 +14,7 @@ use std::io::BufReader;
 use std::io::Write;
 use std::path::Path;
 use std::sync::Arc;
+use std::thread;
 
 struct TunerContext {
     positions: Vec<TunerPosition>,
@@ -258,11 +259,11 @@ fn calculate_error(context: &mut TunerContext, scaling_constant: f64, threads_co
     let positions_count = context.positions.len();
 
     let evaluation_parameters = Arc::new(context.parameters.clone());
-    crossbeam::thread::scope(|scope| {
+    thread::scope(|scope| {
         let mut threads = Vec::new();
         for chunk in context.positions.chunks_mut(positions_count / threads_count) {
             let evaluation_parameters_arc = evaluation_parameters.clone();
-            threads.push(scope.spawn(move |_| {
+            threads.push(scope.spawn(move || {
                 for position in chunk {
                     let evaluation_parameters_arc = evaluation_parameters_arc.clone();
                     position.board.evaluation_parameters = evaluation_parameters_arc;
@@ -280,8 +281,7 @@ fn calculate_error(context: &mut TunerContext, scaling_constant: f64, threads_co
         for thread in threads {
             sum_of_errors += thread.join().unwrap();
         }
-    })
-    .unwrap();
+    });
 
     sum_of_errors / (positions_count as f64)
 }

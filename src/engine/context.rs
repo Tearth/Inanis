@@ -24,6 +24,7 @@ use std::ops;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
+use std::thread;
 
 pub struct SearchContext {
     pub board: Bitboard,
@@ -449,13 +450,13 @@ impl Iterator for SearchContext {
             };
 
             if !self.helper_contexts.is_empty() {
-                crossbeam::thread::scope(|scope| {
+                thread::scope(|scope| {
                     let depth = self.current_depth;
                     let mut threads = Vec::new();
 
                     for helper_context in &mut self.helper_contexts {
                         helper_context.context.deadline = self.deadline;
-                        threads.push(scope.spawn(move |_| {
+                        threads.push(scope.spawn(move || {
                             search::run::<false>(&mut helper_context.context, depth);
                             helper_context.context.statistics
                         }));
@@ -464,8 +465,7 @@ impl Iterator for SearchContext {
                     for thread in threads {
                         self.statistics += thread.join().unwrap();
                     }
-                })
-                .unwrap();
+                });
             }
 
             self.multipv_lines.clear();

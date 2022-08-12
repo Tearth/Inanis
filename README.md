@@ -85,7 +85,6 @@ Examples of running the tests:
  - [chrono](https://github.com/chronotope/chrono) - feature-complete superset of the time library
  - [bitflags](https://github.com/bitflags/bitflags) - macro to generate structures that behave like a set of bitflags
  - [prettytable-rs](https://github.com/phsym/prettytable-rs) - a formatted and aligned table printer library
- - [crossbeam](https://github.com/crossbeam-rs/crossbeam) - a set of tools for concurrent programming
  - [shakmaty-syzygy](https://github.com/niklasf/shakmaty-syzygy) (with [shakmaty](https://github.com/niklasf/shakmaty) as dependency) - support for Syzygy tablebases
  - [criterion](https://github.com/bheisler/criterion.rs) - benchmark framework
 

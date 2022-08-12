@@ -19,6 +19,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::atomic::AtomicU32;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
+use std::thread;
 
 struct TestContext {
     positions: Vec<TestPosition>,
@@ -71,14 +72,14 @@ fn run_internal(context: &mut TestContext, depth: i8, transposition_table_size: 
 
     let positions_count = context.positions.len();
 
-    crossbeam::thread::scope(|scope| {
+    thread::scope(|scope| {
         for chunk in context.positions.chunks_mut(positions_count / threads_count) {
             let index_arc = index.clone();
             let passed_tests_arc = passed_tests.clone();
             let failed_tests_arc = failed_tests.clone();
             let recognition_depths_sum_arc = recognition_depths_sum.clone();
 
-            scope.spawn(move |_| {
+            scope.spawn(move || {
                 for position in chunk {
                     let transposition_table = Arc::new(TranspositionTable::new(transposition_table_size));
                     let pawn_hashtable = Arc::new(PawnHashTable::new(1 * 1024 * 1024));
@@ -155,8 +156,7 @@ fn run_internal(context: &mut TestContext, depth: i8, transposition_table_size: 
                 }
             });
         }
-    })
-    .unwrap();
+    });
 
     println!("-----------------------------------------------------------------------------");
     println!(
