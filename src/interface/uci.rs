@@ -100,7 +100,7 @@ pub fn run() {
         match tokens[0].to_lowercase().as_str() {
             "debug" => handle_debug(&tokens, state.clone()),
             "go" => handle_go(&tokens, state.clone()),
-            "isready" => handle_isready(state.clone()),
+            "isready" => handle_isready(),
             "ponderhit" => handle_ponderhit(state.clone()),
             "position" => handle_position(&tokens, state.clone()),
             "setoption" => handle_setoption(&tokens, state.clone()),
@@ -423,7 +423,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
 }
 
 /// Handles `isready` command by waiting for the busy flag, and then printing response as fast as possible.
-fn handle_isready(state: Arc<Mutex<UciState>>) {
+fn handle_isready() {
     println!("readyok");
 }
 
