@@ -519,7 +519,7 @@ impl Iterator for SearchContext {
                 }
             }
 
-            if self.multipv_lines.is_empty() {
+            if self.multipv_lines.is_empty() || self.multipv_lines[0].pv_line.is_empty() {
                 println!("info string Invalid position");
                 return None;
             }
