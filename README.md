@@ -1,13 +1,14 @@
 # Inanis
 UCI chess engine written in Rust, the successor of [Proxima b](https://github.com/Tearth/Proxima-b), [Proxima b 2.0](https://github.com/Tearth/Proxima-b-2.0) and [Cosette](https://github.com/Tearth/Cosette). The project is written after hours, with the goal to reach a strength of 3000 Elo. Perfect as a sparring partner for other chess engines, since it was heavily tested using very fast games. Supports Syzygy tablebases, MultiPV, pondering and multithreading.
 
-**Current strength**: 2800 Elo (31-07-2022)
+**Current strength**: 2800 Elo (14-08-2022)
 
 **Documentation**: https://tearth.dev/Inanis/
 
 ## Releases
 | Version                                                       | Release date | Elo  | Main changes |
 |---------------------------------------------------------------|--------------|------|--------------|
+| [1.1.1](https://github.com/Tearth/Inanis/releases/tag/v1.1.1) | 14-08-2022   | 2800 | A bunch of fixes for reported issues, stability improvement |
 | [1.1.0](https://github.com/Tearth/Inanis/releases/tag/v1.1.0) | 31-07-2022   | 2800 | Syzygy tablebases, MultiPV, adjusted evaluation |
 | [1.0.1](https://github.com/Tearth/Inanis/releases/tag/v1.0.1) | 05-04-2022   | 2750 | A bunch of fixes for reported issues, stability improvement |
 | [1.0.0](https://github.com/Tearth/Inanis/releases/tag/v1.0.0) | 02-04-2022   | 2750 | Initial release |
@@ -36,12 +37,12 @@ Inanis has an official lichess account, where you can try to challenge the engin
  - `Crash Files` *(default: false)* - when enabled, saves crash messages in the ./crash directory
 
 ## Algorithms
- - **board representation**: bitboards (a hybrid of make/undo scheme and storing data on stacks)
- - **move generator**: staged (hash move, captures, quiet moves), magic bitboards, precalculated arrays for knight and king
- - **move ordering**: hash move, good captures (SEE with support for x-ray attacks), killer/history table (with random noise if Lazy SMP is enabled), bad captures
- - **search**: negamax, alpha-beta pruning, quiescence search, null-move pruning, static null move pruning, razoring, late move reduction, late move pruning, lazy SMP
- - **cache**: transposition table, pawn hashtable
- - **evaluation**: material, piece-square tables, pawn structure, mobility, king safety
+ - **Board representation**: bitboards (a hybrid of make/undo scheme and storing data on stacks)
+ - **Move generator**: staged (hash move, captures, quiet moves), magic bitboards, precalculated arrays for knight and king
+ - **Move ordering**: hash move, good captures (SEE with support for x-ray attacks), killer table, special moves, history table (with random noise if Lazy SMP is enabled), bad captures
+ - **Search**: negamax, alpha-beta pruning, quiescence search, null-move pruning, static null move pruning, razoring, late move reduction, late move pruning, lazy SMP
+ - **Cache**: transposition table, pawn hashtable
+ - **Evaluation**: material, piece-square tables, pawn structure, mobility, king safety
 
 ## Tuner
 Inanis has a built-in tuner, which allows optimizing all evaluation parameters using a well-known [Texel's tuning method](https://www.chessprogramming.org/Texel%27s_Tuning_Method). As an output, there are Rust source files generated in a way that allows them to be directly pasted into the engine's source code. 
