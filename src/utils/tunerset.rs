@@ -184,7 +184,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
         parsed_pgns += 1;
         if parsed_pgns % 1000 == 0 {
             println!(
-                "Parsed PGNS: {} ({} viable positions, {} ignored positions, {} output positions, {} duplicates)",
+                "Parsed PGNs: {} ({} viable positions, {} ignored positions, {} output positions, {} duplicates)",
                 parsed_pgns,
                 total_viable_positions,
                 ignored_positions,

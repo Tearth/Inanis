@@ -1,7 +1,7 @@
 # Version 1.1.1 (14-08-2022)
  - Added support for FEN property in PGN parser and "tunerset" command
  - Replaced crossbeam package with native scoped threads
- - Fixed invalid handling of "isready" UCI command during search
+ - Fixed invalid handling of "isready" UCI command during a search
  - Fixed engine crash when trying to search invalid position
  - Fixed incorrect version of toolchain used in GitHub Actions
 
