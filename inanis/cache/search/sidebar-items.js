@@ -1,1 +1,1 @@
-initSidebarItems({"constant":[["BUCKET_SLOTS",""]],"struct":[["TranspositionTable",""],["TranspositionTableBucket",""],["TranspositionTableEntry",""],["TranspositionTableResult",""],["TranspositionTableScoreType",""]]});
+window.SIDEBAR_ITEMS = {"constant":[["BUCKET_SLOTS",""]],"struct":[["TranspositionTable",""],["TranspositionTableBucket",""],["TranspositionTableEntry",""],["TranspositionTableResult",""],["TranspositionTableScoreType",""]]};

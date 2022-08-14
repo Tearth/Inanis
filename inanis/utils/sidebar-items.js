@@ -1,1 +1,1 @@
-initSidebarItems({"macro":[["conditional_expression",""]],"mod":[["benchmark",""],["fen",""],["pgn",""],["test",""],["tuner",""],["tunerset",""]]});
+window.SIDEBAR_ITEMS = {"macro":[["conditional_expression",""]],"mod":[["benchmark",""],["fen",""],["pgn",""],["test",""],["tuner",""],["tunerset",""]]};

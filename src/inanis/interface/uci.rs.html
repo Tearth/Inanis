@@ -1,9 +1,10 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/interface/uci.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>uci.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../inanis/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/interface/uci.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>uci.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../inanis/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
         </a><h2 class="location"></h2>
     </nav>
     <nav class="sidebar"><a class="sidebar-logo" href="../../../inanis/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../inanis/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../inanis/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
+                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -579,29 +580,6 @@
 <span id="574">574</span>
 <span id="575">575</span>
 <span id="576">576</span>
-<span id="577">577</span>
-<span id="578">578</span>
-<span id="579">579</span>
-<span id="580">580</span>
-<span id="581">581</span>
-<span id="582">582</span>
-<span id="583">583</span>
-<span id="584">584</span>
-<span id="585">585</span>
-<span id="586">586</span>
-<span id="587">587</span>
-<span id="588">588</span>
-<span id="589">589</span>
-<span id="590">590</span>
-<span id="591">591</span>
-<span id="592">592</span>
-<span id="593">593</span>
-<span id="594">594</span>
-<span id="595">595</span>
-<span id="596">596</span>
-<span id="597">597</span>
-<span id="598">598</span>
-<span id="599">599</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cache::allocator</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cache::history::HistoryTable</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cache::killers::KillersTable</span>;
@@ -643,7 +621,6 @@
     <span class="ident">search_thread</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">JoinHandle</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">abort_token</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">AtomicBool</span><span class="op">&gt;</span>,
     <span class="ident">ponder_token</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">AtomicBool</span><span class="op">&gt;</span>,
-    <span class="ident">busy_flag</span>: <span class="ident">AtomicBool</span>,
     <span class="ident">debug_mode</span>: <span class="ident">AtomicBool</span>,
 }
 
@@ -660,7 +637,6 @@
             <span class="ident">search_thread</span>: <span class="prelude-val">None</span>,
             <span class="ident">abort_token</span>: <span class="ident">Arc::new</span>(<span class="ident">AtomicBool::new</span>(<span class="bool-val">false</span>)),
             <span class="ident">ponder_token</span>: <span class="ident">Arc::new</span>(<span class="ident">AtomicBool::new</span>(<span class="bool-val">false</span>)),
-            <span class="ident">busy_flag</span>: <span class="ident">AtomicBool::new</span>(<span class="bool-val">false</span>),
             <span class="ident">debug_mode</span>: <span class="ident">AtomicBool::new</span>(<span class="bool-val">false</span>),
         }
     }
@@ -706,7 +682,7 @@
         <span class="kw">match</span> <span class="ident">tokens</span>[<span class="number">0</span>].<span class="ident">to_lowercase</span>().<span class="ident">as_str</span>() {
             <span class="string">&quot;debug&quot;</span> =&gt; <span class="ident">handle_debug</span>(<span class="kw-2">&amp;</span><span class="ident">tokens</span>, <span class="ident">state</span>.<span class="ident">clone</span>()),
             <span class="string">&quot;go&quot;</span> =&gt; <span class="ident">handle_go</span>(<span class="kw-2">&amp;</span><span class="ident">tokens</span>, <span class="ident">state</span>.<span class="ident">clone</span>()),
-            <span class="string">&quot;isready&quot;</span> =&gt; <span class="ident">handle_isready</span>(<span class="ident">state</span>.<span class="ident">clone</span>()),
+            <span class="string">&quot;isready&quot;</span> =&gt; <span class="ident">handle_isready</span>(),
             <span class="string">&quot;ponderhit&quot;</span> =&gt; <span class="ident">handle_ponderhit</span>(<span class="ident">state</span>.<span class="ident">clone</span>()),
             <span class="string">&quot;position&quot;</span> =&gt; <span class="ident">handle_position</span>(<span class="kw-2">&amp;</span><span class="ident">tokens</span>, <span class="ident">state</span>.<span class="ident">clone</span>()),
             <span class="string">&quot;setoption&quot;</span> =&gt; <span class="ident">handle_setoption</span>(<span class="kw-2">&amp;</span><span class="ident">tokens</span>, <span class="ident">state</span>.<span class="ident">clone</span>()),
@@ -744,8 +720,6 @@
 <span class="doccomment">///  - `searchmoves [moves]` - restricts search to the provided moves list</span>
 <span class="doccomment">///  - `ponder` - tells the search to run in the ponder mode (thinking on the opponent&#39;s time)</span>
 <span class="kw">fn</span> <span class="ident">handle_go</span>(<span class="ident">parameters</span>: <span class="kw-2">&amp;</span>[<span class="ident">String</span>], <span class="ident">state</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">UciState</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
-    <span class="ident">wait_for_busy_flag</span>(<span class="ident">state</span>.<span class="ident">clone</span>());
-
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">white_time</span> <span class="op">=</span> <span class="ident">u32::MAX</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">black_time</span> <span class="op">=</span> <span class="ident">u32::MAX</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">white_inc_time</span> <span class="op">=</span> <span class="number">0</span>;
@@ -868,7 +842,6 @@
 
     <span class="ident">state_lock</span>.<span class="ident">abort_token</span>.<span class="ident">store</span>(<span class="bool-val">false</span>, <span class="ident">Ordering::Relaxed</span>);
     <span class="ident">state_lock</span>.<span class="ident">ponder_token</span>.<span class="ident">store</span>(<span class="bool-val">false</span>, <span class="ident">Ordering::Relaxed</span>);
-    <span class="ident">state_lock</span>.<span class="ident">busy_flag</span>.<span class="ident">store</span>(<span class="bool-val">true</span>, <span class="ident">Ordering::Relaxed</span>);
     <span class="ident">drop</span>(<span class="ident">state_lock</span>);
 
     <span class="kw">let</span> <span class="ident">state_arc</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">clone</span>();
@@ -1026,15 +999,13 @@
         <span class="ident">state_lock</span>.<span class="ident">search_thread</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="ident">state_lock</span>.<span class="ident">killers_table</span>.<span class="ident">age_moves</span>();
         <span class="ident">state_lock</span>.<span class="ident">history_table</span>.<span class="ident">age_values</span>();
-        <span class="ident">state_lock</span>.<span class="ident">busy_flag</span>.<span class="ident">store</span>(<span class="bool-val">false</span>, <span class="ident">Ordering::Relaxed</span>);
     }));
 
     <span class="ident">state</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>().<span class="ident">search_thread</span> <span class="op">=</span> <span class="ident">search_thread</span>;
 }
 
 <span class="doccomment">/// Handles `isready` command by waiting for the busy flag, and then printing response as fast as possible.</span>
-<span class="kw">fn</span> <span class="ident">handle_isready</span>(<span class="ident">state</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">UciState</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
-    <span class="ident">wait_for_busy_flag</span>(<span class="ident">state</span>);
+<span class="kw">fn</span> <span class="ident">handle_isready</span>() {
     <span class="macro">println!</span>(<span class="string">&quot;readyok&quot;</span>);
 }
 
@@ -1051,8 +1022,6 @@
 <span class="doccomment">///  - `position fen [fen]` - sets a FEN position</span>
 <span class="doccomment">///  - `position fen [fen] moves [list of moves]` - sets a FEN position and applies a list of moves</span>
 <span class="kw">fn</span> <span class="ident">handle_position</span>(<span class="ident">parameters</span>: <span class="kw-2">&amp;</span>[<span class="ident">String</span>], <span class="ident">state</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">UciState</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
-    <span class="ident">wait_for_busy_flag</span>(<span class="ident">state</span>.<span class="ident">clone</span>());
-
     <span class="kw">if</span> <span class="ident">parameters</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">2</span> {
         <span class="kw">return</span>;
     }
@@ -1089,8 +1058,6 @@
 <span class="doccomment">/// Handles `setoption [name] value [value]` command by creating or overwriting a `name` option with the specified `value`. Recreates tables if `Hash` or</span>
 <span class="doccomment">/// `Clear Hash` options are modified.</span>
 <span class="kw">fn</span> <span class="ident">handle_setoption</span>(<span class="ident">parameters</span>: <span class="kw-2">&amp;</span>[<span class="ident">String</span>], <span class="ident">state</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">UciState</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
-    <span class="ident">wait_for_busy_flag</span>(<span class="ident">state</span>.<span class="ident">clone</span>());
-
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">reading_name</span> <span class="op">=</span> <span class="bool-val">false</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">reading_value</span> <span class="op">=</span> <span class="bool-val">false</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">name_tokens</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
@@ -1140,8 +1107,6 @@
 
 <span class="doccomment">/// Handles `ucinewgame` command by resetting a board state, recreating abort token and clearing tables.</span>
 <span class="kw">fn</span> <span class="ident">handle_ucinewgame</span>(<span class="ident">state</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">UciState</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
-    <span class="ident">wait_for_busy_flag</span>(<span class="ident">state</span>.<span class="ident">clone</span>());
-
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state_lock</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>();
     <span class="ident">state_lock</span>.<span class="ident">abort_token</span>.<span class="ident">store</span>(<span class="bool-val">true</span>, <span class="ident">Ordering::Relaxed</span>);
     <span class="ident">state_lock</span>.<span class="ident">board</span> <span class="op">=</span> <span class="ident">Bitboard::new_initial_position</span>(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>);
@@ -1159,16 +1124,6 @@
 <span class="doccomment">/// Handles `quit` command by terminating engine process.</span>
 <span class="kw">fn</span> <span class="ident">handle_quit</span>() {
     <span class="ident">process::exit</span>(<span class="number">0</span>);
-}
-
-<span class="doccomment">/// Waits for the busy flag before continuing. If the deadline is exceeded, the engine process is terminated.</span>
-<span class="kw">fn</span> <span class="ident">wait_for_busy_flag</span>(<span class="ident">state</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">UciState</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
-    <span class="kw">let</span> <span class="ident">now</span> <span class="op">=</span> <span class="ident">Utc::now</span>();
-    <span class="kw">while</span> (<span class="kw-2">*</span><span class="ident">state</span>).<span class="ident">lock</span>().<span class="ident">unwrap</span>().<span class="ident">busy_flag</span>.<span class="ident">load</span>(<span class="ident">Ordering::Relaxed</span>) {
-        <span class="kw">if</span> (<span class="ident">Utc::now</span>() <span class="op">-</span> <span class="ident">now</span>).<span class="ident">num_seconds</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="number">10</span> {
-            <span class="ident">process::exit</span>(<span class="op">-</span><span class="number">1</span>);
-        }
-    }
 }
 
 <span class="doccomment">/// Recreates transposition table, pawn hashtable, killers table and history table.</span>
@@ -1202,5 +1157,5 @@
     <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">panic::take_hook</span>();
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="inanis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.1 (e092d0b6b 2022-07-16)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="inanis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
 </body></html>

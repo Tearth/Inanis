@@ -1,1 +1,1 @@
-initSidebarItems({"static":[["BISHOP_MAGIC_NUMBERS",""],["BISHOP_SHIFTS",""],["ROOK_MAGIC_NUMBERS",""],["ROOK_SHIFTS",""]],"struct":[["MagicContainer",""],["MagicField",""]]});
+window.SIDEBAR_ITEMS = {"static":[["BISHOP_MAGIC_NUMBERS",""],["BISHOP_SHIFTS",""],["ROOK_MAGIC_NUMBERS",""],["ROOK_SHIFTS",""]],"struct":[["MagicContainer",""],["MagicField",""]]};

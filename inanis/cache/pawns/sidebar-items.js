@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["PawnHashTable",""],["PawnHashTableEntry",""],["PawnHashTableResult",""]]});
+window.SIDEBAR_ITEMS = {"struct":[["PawnHashTable",""],["PawnHashTableEntry",""],["PawnHashTableResult",""]]};

@@ -1,1 +1,1 @@
-initSidebarItems({"constant":[["KILLER_SLOTS",""]],"struct":[["KillersTable",""],["KillersTableEntry",""],["KillersTableResult",""]]});
+window.SIDEBAR_ITEMS = {"constant":[["KILLER_SLOTS",""]],"struct":[["KillersTable",""],["KillersTableEntry",""],["KillersTableResult",""]]};

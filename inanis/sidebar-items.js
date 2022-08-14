@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["cache",""],["engine",""],["evaluation",""],["interface",""],["perft",""],["state",""],["utils",""]]});
+window.SIDEBAR_ITEMS = {"mod":[["cache",""],["engine",""],["evaluation",""],["interface",""],["perft",""],["state",""],["utils",""]]};

@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["PerftContext",""]]});
+window.SIDEBAR_ITEMS = {"struct":[["PerftContext",""]]};

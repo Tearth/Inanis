@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["run","Entry point of the fixed-`depth` simple perft. Use `check_integrity` to allow panics when internal state becomes invalid due to some bug."]]});
+window.SIDEBAR_ITEMS = {"fn":[["run","Entry point of the fixed-`depth` simple perft. Use `check_integrity` to allow panics when internal state becomes invalid due to some bug."]]};

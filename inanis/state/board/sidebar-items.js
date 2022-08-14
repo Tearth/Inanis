@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["Bitboard",""],["BitboardState",""],["CastlingRights",""]]});
+window.SIDEBAR_ITEMS = {"struct":[["Bitboard",""],["BitboardState",""],["CastlingRights",""]]};

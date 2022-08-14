@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["HistoryTable",""],["HistoryTableEntry",""],["HistoryTableResult",""]]});
+window.SIDEBAR_ITEMS = {"struct":[["HistoryTable",""],["HistoryTableEntry",""],["HistoryTableResult",""]]};

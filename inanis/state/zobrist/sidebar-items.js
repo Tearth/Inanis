@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["ZobristContainer",""]]});
+window.SIDEBAR_ITEMS = {"struct":[["ZobristContainer",""]]};
