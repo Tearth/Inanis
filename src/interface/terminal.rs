@@ -13,7 +13,6 @@ use crate::utils::test;
 use crate::utils::tuner;
 use crate::utils::tunerset;
 use chrono::Utc;
-use prettytable::cell;
 use prettytable::format;
 use prettytable::row;
 use prettytable::Table;
