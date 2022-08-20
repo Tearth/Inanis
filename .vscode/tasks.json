@@ -2,57 +2,82 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "cargo clean",
+            "label": "rust: cargo clean",
             "type": "shell",
             "command": "cargo clean",
-            "args": [],
             "group": {
                 "kind": "build"
             },
-            "problemMatcher": []
         },
         {
-            "label": "cargo build",
+            "label": "rust: cargo fmt",
+            "type": "shell",
+            "command": "cargo fmt -- --check",
+            "group": {
+                "kind": "build"
+            },
+        },
+        {
+            "label": "rust: cargo clippy",
+            "type": "shell",
+            "command": "cargo clippy -- -Dwarnings",
+            "group": {
+                "kind": "build"
+            },
+        },
+        {
+            "label": "build debug windows",
             "type": "shell",
             "command": "cargo rustc --bin inanis --target=x86_64-pc-windows-msvc -- -C target-feature=+bmi1,+bmi2,+popcnt",
-            "args": [],
             "group": {
                 "kind": "build"
             },
-            "problemMatcher": []
         },
         {
-            "label": "cargo build release windows",
+            "label": "build debug linux",
+            "type": "shell",
+            "command": "cargo rustc --bin inanis --target=x86_64-unknown-linux-musl -- -C target-feature=+bmi1,+bmi2,+popcnt -C linker=rust-lld",
+            "group": {
+                "kind": "build"
+            },
+        },
+        {
+            "label": "build release windows",
             "type": "shell",
             "command": "cargo rustc --bin inanis --release --target=x86_64-pc-windows-msvc -- -C target-feature=+bmi1,+bmi2,+popcnt -C llvm-args=-x86-asm-syntax=intel --emit asm",
-            "args": [],
             "group": {
                 "kind": "build"
             },
-            "problemMatcher": []
         },
         {
-            "label": "cargo build release linux",
+            "label": "build release linux",
             "type": "shell",
             "command": "cargo rustc --bin inanis --release --target=x86_64-unknown-linux-musl -- -C target-feature=+bmi1,+bmi2,+popcnt -C linker=rust-lld -C llvm-args=-x86-asm-syntax=intel --emit asm",
-            "args": [],
             "group": {
                 "kind": "build"
             },
-            "problemMatcher": []
         },
         {
             "label": "build and run release windows",
             "type": "shell",
             "command": "${workspaceFolder}/target/x86_64-pc-windows-msvc/release/inanis.exe",
-            "args": [],
             "group": {
                 "kind": "build"
             },
-            "problemMatcher": [],
             "dependsOn": [
-                "cargo build release windows"
+                "build release windows"
+            ]
+        },
+        {
+            "label": "build and run release linux",
+            "type": "shell",
+            "command": "${workspaceFolder}/target/x86_64-unknown-linux-musl/release/inanis",
+            "group": {
+                "kind": "build"
+            },
+            "dependsOn": [
+                "build release linux"
             ]
         }
-    ]
+    ],
 }
