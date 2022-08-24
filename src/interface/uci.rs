@@ -9,6 +9,7 @@ use crate::engine::context::SearchContext;
 use crate::state::board::Bitboard;
 use crate::state::movescan::Move;
 use crate::state::*;
+use crate::tablebases::syzygy;
 use chrono::Utc;
 use std::cmp;
 use std::collections::HashMap;
@@ -71,6 +72,7 @@ pub fn run() {
     state_lock.options.insert("Threads".to_string(), "1".to_string());
     state_lock.options.insert("SyzygyPath".to_string(), "<empty>".to_string());
     state_lock.options.insert("SyzygyProbeLimit".to_string(), "8".to_string());
+    state_lock.options.insert("SyzygyProbeDepth".to_string(), "6".to_string());
     state_lock.options.insert("Ponder".to_string(), "false".to_string());
     state_lock.options.insert("Crash Files".to_string(), "false".to_string());
     drop(state_lock);
@@ -83,6 +85,7 @@ pub fn run() {
     println!("option name Threads type spin default 1 min 1 max 1024");
     println!("option name SyzygyPath type string default <empty>");
     println!("option name SyzygyProbeLimit type spin default 8 min 1 max 8");
+    println!("option name SyzygyProbeDepth type spin default 6 min 1 max 32");
     println!("option name Ponder type check default false");
     println!("option name Crash Files type check default false");
     println!("option name Clear Hash type button");
@@ -270,8 +273,9 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
         let threads = state_lock.options["Threads"].parse::<usize>().unwrap();
         let ponder = state_lock.options["Ponder"].parse::<bool>().unwrap();
         let syzygy_path = state_lock.options["SyzygyPath"].clone();
-        let syzygy_path = if syzygy_path != "<empty>" { Some(syzygy_path) } else { None };
+        let syzygy_enabled = !syzygy_path.is_empty() && syzygy_path != "<empty>";
         let syzygy_probe_limit = state_lock.options["SyzygyProbeLimit"].parse::<u32>().unwrap();
+        let syzygy_probe_depth = state_lock.options["SyzygyProbeDepth"].parse::<i8>().unwrap();
 
         let mut context = SearchContext::new(
             state_lock.board.clone(),
@@ -288,8 +292,9 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
             ponder_mode,
             false,
             false,
-            syzygy_path,
+            syzygy_enabled,
             syzygy_probe_limit,
+            syzygy_probe_depth,
             state_lock.transposition_table.clone(),
             state_lock.pawn_hashtable.clone(),
             state_lock.killers_table.clone(),
@@ -317,7 +322,8 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
                     false,
                     false,
                     true,
-                    None,
+                    false,
+                    0,
                     0,
                     state_lock.transposition_table.clone(),
                     state_lock.pawn_hashtable.clone(),
@@ -358,7 +364,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
                 println!(
                     "{}",
                     &format!(
-                        "info time {} {} depth {} seldepth {} multipv {} nodes {} hashfull {} pv {}",
+                        "info time {} {} depth {} seldepth {} multipv {} nodes {} hashfull {} tbhits {} pv {}",
                         depth_result.time,
                         formatted_score,
                         depth_result.depth,
@@ -366,6 +372,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
                         multipv_index + 1,
                         depth_result.statistics.nodes_count + depth_result.statistics.q_nodes_count,
                         (depth_result.transposition_table_usage * 10.0) as u32,
+                        depth_result.statistics.tb_hits,
                         pv_line.join(" ").as_str()
                     )
                 );
@@ -511,6 +518,11 @@ fn handle_setoption(parameters: &[String], state: Arc<Mutex<UciState>>) {
     match name.as_str() {
         "Hash" => {
             recreate_state_tables(state);
+        }
+        "SyzygyPath" => {
+            if !value.is_empty() && value != "<empty>" {
+                syzygy::probe::init(&value);
+            }
         }
         "Clear Hash" => {
             recreate_state_tables(state);

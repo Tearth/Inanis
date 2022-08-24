@@ -28,7 +28,7 @@
         {
             "label": "build debug windows",
             "type": "shell",
-            "command": "cargo rustc --bin inanis --target=x86_64-pc-windows-msvc -- -C target-feature=+bmi1,+bmi2,+popcnt",
+            "command": "cargo rustc --bin inanis --target=x86_64-pc-windows-msvc --features syzygy,bindgen -- -C target-feature=+bmi1,+bmi2,+popcnt",
             "group": {
                 "kind": "build"
             },
@@ -36,7 +36,7 @@
         {
             "label": "build debug linux",
             "type": "shell",
-            "command": "cargo rustc --bin inanis --target=x86_64-unknown-linux-musl -- -C target-feature=+bmi1,+bmi2,+popcnt -C linker=rust-lld",
+            "command": "cargo rustc --bin inanis --target=x86_64-unknown-linux-musl --features syzygy,bindgen -- -C target-feature=+bmi1,+bmi2,+popcnt -C linker=rust-lld",
             "group": {
                 "kind": "build"
             },
@@ -44,7 +44,7 @@
         {
             "label": "build release windows",
             "type": "shell",
-            "command": "cargo rustc --bin inanis --release --target=x86_64-pc-windows-msvc -- -C target-feature=+bmi1,+bmi2,+popcnt -C llvm-args=-x86-asm-syntax=intel --emit asm",
+            "command": "cargo rustc --bin inanis --release --target=x86_64-pc-windows-msvc --features syzygy,bindgen -- -C target-feature=+bmi1,+bmi2,+popcnt -C llvm-args=-x86-asm-syntax=intel --emit asm",
             "group": {
                 "kind": "build"
             },

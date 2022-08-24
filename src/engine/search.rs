@@ -4,6 +4,8 @@ use super::qsearch;
 use super::*;
 use crate::cache::search::TranspositionTableScoreType;
 use crate::state::*;
+use crate::tablebases::syzygy;
+use crate::tablebases::WdlResult;
 use crate::utils::conditional_expression;
 use chrono::Utc;
 use std::cmp;
@@ -151,6 +153,17 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
     if context.board.is_repetition_draw(if ROOT { 3 } else { 2 }) || context.board.is_fifty_move_rule_draw() || context.board.is_insufficient_material_draw() {
         conditional_expression!(DIAG, context.statistics.leafs_count += 1);
         return DRAW_SCORE;
+    }
+
+    if context.syzygy_enabled && depth >= context.syzygy_probe_depth && context.board.get_pieces_count() <= syzygy::probe::get_max_pieces_count() {
+        if let Some(wdl) = syzygy::probe::get_wdl(&context.board) {
+            context.statistics.tb_hits += 1;
+            return match wdl {
+                WdlResult::Win => TBMATE_SCORE - (ply as i16),
+                WdlResult::Loss => -TBMATE_SCORE + (ply as i16),
+                WdlResult::Draw => DRAW_SCORE,
+            };
+        }
     }
 
     if depth <= 0 {

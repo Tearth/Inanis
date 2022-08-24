@@ -12,12 +12,10 @@ use crate::evaluation::pst;
 use crate::evaluation::safety;
 use crate::state::board::Bitboard;
 use crate::state::movescan::Move;
+use crate::tablebases::syzygy;
+use crate::tablebases::WdlResult;
 use chrono::DateTime;
 use chrono::Utc;
-use shakmaty::fen::Fen;
-use shakmaty::CastlingMode;
-use shakmaty::Chess;
-use shakmaty_syzygy::Tablebase;
 use std::cmp;
 use std::mem::MaybeUninit;
 use std::ops;
@@ -47,8 +45,9 @@ pub struct SearchContext {
     pub ponder_mode: bool,
     pub diagnostic_mode: bool,
     pub helper_thread: bool,
-    pub syzygy_path: Option<String>,
+    pub syzygy_enabled: bool,
     pub syzygy_probe_limit: u32,
+    pub syzygy_probe_depth: i8,
     pub transposition_table: Arc<TranspositionTable>,
     pub pawn_hashtable: Arc<PawnHashTable>,
     pub killers_table: Arc<KillersTable>,
@@ -88,6 +87,8 @@ pub struct SearchStatistics {
     pub q_leafs_count: u64,
     pub beta_cutoffs: u64,
     pub q_beta_cutoffs: u64,
+
+    pub tb_hits: u64,
 
     pub perfect_cutoffs: u64,
     pub q_perfect_cutoffs: u64,
@@ -156,8 +157,9 @@ impl SearchContext {
     ///  - `ponder_mode` - prevents search from being stopped after detecting a checkmate (ponder mode requirement)
     ///  - `diagnostic_mode` - enables gathering of additional statistics, useful for benchmarks
     ///  - `helper_thread` - enables additional features when the thread is a helper in Lazy SMP (like random noise in move ordering)
-    ///  - `syzygy_path` - path to the directory with Syzygy tablebases
+    ///  - `syzygy_enabled` - enables or disables Syzygy probing
     ///  - `syzygy_probe_limit` - number of pieces for which the probing should be started
+    ///  - `syzygy_probe_depth` - minimal depth at which the probing will be started
     ///  - `transposition_table`, `pawn_hashtable`, `killers_table`, `history_table` - hashtables used during search
     ///  - `abort_token` - token used to abort search from the outside of the context
     ///  - `ponder_token` - token used to change a search mode from pondering to the regular one
@@ -176,8 +178,9 @@ impl SearchContext {
         ponder_mode: bool,
         diagnostic_mode: bool,
         helper_thread: bool,
-        syzygy_path: Option<String>,
+        syzygy_enabled: bool,
         syzygy_probe_limit: u32,
+        syzygy_probe_depth: i8,
         transposition_table: Arc<TranspositionTable>,
         pawn_hashtable: Arc<PawnHashTable>,
         killers_table: Arc<KillersTable>,
@@ -206,8 +209,9 @@ impl SearchContext {
             ponder_mode,
             diagnostic_mode,
             helper_thread,
-            syzygy_path,
+            syzygy_enabled,
             syzygy_probe_limit,
+            syzygy_probe_depth,
             transposition_table,
             pawn_hashtable,
             killers_table,
@@ -298,73 +302,23 @@ impl SearchContext {
 
     /// Checks if there's a Syzygy tablebase move and returns it as [Some], otherwise [None].
     fn get_syzygy_move(&mut self) -> Option<(Move, i16)> {
-        let mut tablebase = Tablebase::new();
-        let mut board = self.board.clone();
-
-        let syzygy_path = self.syzygy_path.as_ref().unwrap();
-        if tablebase.add_directory(syzygy_path).is_err() {
+        let board = self.board.clone();
+        if board.get_pieces_count() > cmp::min(self.syzygy_probe_limit as u8, syzygy::probe::get_max_pieces_count()) {
             return None;
         }
 
-        if board.get_pieces_count() > cmp::min(self.syzygy_probe_limit as usize, tablebase.max_pieces()) as u8 {
+        let (success_root, wdl_root, _dtz_root, r#move) = syzygy::probe::get_root_wdl_dtz(&board);
+        if !success_root {
             return None;
         }
 
-        let mut moves: [MaybeUninit<Move>; MAX_MOVES_COUNT] = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
-        let moves_count = board.get_all_moves(&mut moves, u64::MAX);
-        let mut result = Vec::new();
+        let score = match wdl_root {
+            WdlResult::Win => TBMATE_SCORE,
+            WdlResult::Draw => 0,
+            WdlResult::Loss => -TBMATE_SCORE,
+        };
 
-        for r#move in &moves[0..moves_count] {
-            let r#move = unsafe { r#move.assume_init() };
-            board.make_move(r#move);
-
-            if board.is_king_checked(board.active_color ^ 1) {
-                board.undo_move(r#move);
-                continue;
-            }
-
-            let shakmaty_fen = match board.to_fen().parse::<Fen>() {
-                Ok(value) => value,
-                Err(_) => return None,
-            };
-
-            let shakmaty_position = match shakmaty_fen.into_position::<Chess>(CastlingMode::Standard) {
-                Ok(value) => value,
-                Err(_) => return None,
-            };
-
-            let wdl = match tablebase.probe_wdl_after_zeroing(&shakmaty_position) {
-                Ok(value) => value,
-                Err(_) => return None,
-            };
-
-            // Instantly return 0 if the last move has reset halfmove clock, since probing DTZ would return value not in the context of the original position
-            let dtz = if board.halfmove_clock == 0 {
-                0
-            } else {
-                match tablebase.probe_dtz(&shakmaty_position) {
-                    Ok(value) => value.ignore_rounding().0,
-                    Err(_) => return None,
-                }
-            };
-
-            result.push((r#move, -wdl.signum(), -dtz));
-            board.undo_move(r#move);
-        }
-
-        if let Some(entry) = result.iter().filter(|v| v.1 == 1).min_by_key(|v| v.2) {
-            return Some((entry.0, TBMATE_SCORE));
-        }
-
-        if let Some(entry) = result.iter().filter(|v| v.1 == 0).min_by_key(|v| v.2) {
-            return Some((entry.0, 0));
-        }
-
-        if let Some(entry) = result.iter().filter(|v| v.1 == -1).min_by_key(|v| v.2) {
-            return Some((entry.0, -TBMATE_SCORE));
-        }
-
-        None
+        Some((r#move, score))
     }
 }
 
@@ -411,9 +365,11 @@ impl Iterator for SearchContext {
                     ));
                 }
 
-                if self.syzygy_path.is_some() {
+                if self.syzygy_enabled {
                     if let Some((r#move, score)) = self.get_syzygy_move() {
                         self.search_done = true;
+                        self.statistics.tb_hits = 1;
+
                         return Some(SearchResult::new(
                             0,
                             self.current_depth,
@@ -585,6 +541,8 @@ impl ops::AddAssign<SearchStatistics> for SearchStatistics {
         self.q_leafs_count += rhs.q_leafs_count;
         self.beta_cutoffs += rhs.beta_cutoffs;
         self.q_beta_cutoffs += rhs.q_beta_cutoffs;
+
+        self.tb_hits += rhs.tb_hits;
 
         self.perfect_cutoffs += rhs.perfect_cutoffs;
         self.q_perfect_cutoffs += rhs.q_perfect_cutoffs;
