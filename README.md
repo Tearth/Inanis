@@ -33,8 +33,12 @@ Inanis has an official lichess account, where you can try to challenge the engin
  - `Threads` *(default: 1 thread)* - number of threads to use during search (should be less than a number of processor cores to get the best performance)
  - `SyzygyPath` *(default: &lt;empty&gt;)* - location of the optional Syzygy tablebases
  - `SyzygyProbeLimit` *(default: 8 pieces)* - maximal number of pieces for which the tablebase probe should be executed
+ - `SyzygyProbeDepth` *(default: 6)* - minimal depth at which the tablebase probe should be executed
  - `Ponder` *(default: false)* - allows the engine to think during the opponent's time
  - `Crash Files` *(default: false)* - when enabled, saves crash messages in the ./crash directory
+
+## How to build
+By default, calling `cargo build` or `cargo build --release` will build the engine without support for Syzygy tablebases (but still fully functional). To include it, please add `--features syzygy,bindgen` and make sure you have installed [clang](https://clang.llvm.org/) when working on Windows (MSVC doesn't support some C11 elements, so can't be used).
 
 ## Algorithms
  - **Board representation**: bitboards (a hybrid of make/undo scheme and storing data on stacks)
@@ -82,12 +86,15 @@ Examples of running the tests:
  - `test ./input/STS1.epd 16 64 4` - run a fixed-depth (16 in this case) search for all positions stored in the `STS1.epd` file, using 64 MB transposition table and 4 threads. To classify the test as successful, the last iteration has to return the correct best move.
 
 ## Dependencies
+**Crates**
  - [fastrand](https://github.com/smol-rs/fastrand) - a simple and fast random number generator
  - [chrono](https://github.com/chronotope/chrono) - feature-complete superset of the time library
  - [bitflags](https://github.com/bitflags/bitflags) - macro to generate structures that behave like a set of bitflags
  - [prettytable-rs](https://github.com/phsym/prettytable-rs) - a formatted and aligned table printer library
- - [shakmaty-syzygy](https://github.com/niklasf/shakmaty-syzygy) (with [shakmaty](https://github.com/niklasf/shakmaty) as dependency) - support for Syzygy tablebases
  - [criterion](https://github.com/bheisler/criterion.rs) - benchmark framework
+
+ **Libraries**
+ - [Fathom](https://github.com/jdart1/Fathom) - support for Syzygy tablebases
 
 ## Contributing
 Because Inanis is a pet project, pull requests are not currently accepted - this may or may not change in the future, depending on the way the project will go. However, feel free to make issues or suggestions, they are greatly appreciated. 
