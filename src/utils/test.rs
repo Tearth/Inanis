@@ -11,7 +11,6 @@ use crate::state::movegen::MagicContainer;
 use crate::state::movescan::Move;
 use crate::state::patterns::PatternsContainer;
 use crate::state::zobrist::ZobristContainer;
-use chrono::Utc;
 use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
@@ -20,6 +19,7 @@ use std::sync::atomic::AtomicU32;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::thread;
+use time::Instant;
 
 struct TestContext {
     positions: Vec<TestPosition>,
@@ -68,7 +68,7 @@ fn run_internal(context: &mut TestContext, depth: i8, transposition_table_size: 
     let passed_tests = Arc::new(AtomicU32::new(0));
     let failed_tests = Arc::new(AtomicU32::new(0));
     let recognition_depths_sum = Arc::new(AtomicU32::new(0));
-    let start_time = Utc::now();
+    let start_time = Instant::now();
 
     let positions_count = context.positions.len();
 
@@ -162,7 +162,7 @@ fn run_internal(context: &mut TestContext, depth: i8, transposition_table_size: 
     println!("-----------------------------------------------------------------------------");
     println!(
         "Tests done in {:.2} s: {} passed ({:.2}% with average depth {:.2}), {} failed",
-        ((Utc::now() - start_time).num_milliseconds() as f32) / 1000.0,
+        (start_time.elapsed().whole_milliseconds() as f32) / 1000.0,
         passed_tests.load(Ordering::Relaxed),
         (passed_tests.load(Ordering::Relaxed) as f32) / (positions_count as f32) * 100.0,
         (recognition_depths_sum.load(Ordering::Relaxed) as f32) / (passed_tests.load(Ordering::Relaxed) as f32),

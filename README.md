@@ -88,7 +88,7 @@ Examples of running the tests:
 ## Dependencies
 **Crates**
  - [fastrand](https://github.com/smol-rs/fastrand) - a simple and fast random number generator
- - [chrono](https://github.com/chronotope/chrono) - feature-complete superset of the time library
+ - [time](https://github.com/time-rs/time) - helper functions for formatting time and dates
  - [bitflags](https://github.com/bitflags/bitflags) - macro to generate structures that behave like a set of bitflags
  - [prettytable-rs](https://github.com/phsym/prettytable-rs) - a formatted and aligned table printer library
  - [criterion](https://github.com/bheisler/criterion.rs) - benchmark framework

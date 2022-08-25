@@ -14,8 +14,6 @@ use crate::state::board::Bitboard;
 use crate::state::movescan::Move;
 use crate::tablebases::syzygy;
 use crate::tablebases::WdlResult;
-use chrono::DateTime;
-use chrono::Utc;
 use std::cmp;
 use std::mem::MaybeUninit;
 use std::ops;
@@ -23,6 +21,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::thread;
+use time::Instant;
 
 pub struct SearchContext {
     pub board: Bitboard,
@@ -36,7 +35,7 @@ pub struct SearchContext {
     pub max_move_time: u32,
     pub moves_to_go: u32,
     pub moves_to_search: Vec<Move>,
-    pub search_time_start: DateTime<Utc>,
+    pub search_time_start: Instant,
     pub deadline: u32,
     pub multipv: bool,
     pub multipv_lines: Vec<SearchResultLine>,
@@ -66,7 +65,7 @@ pub struct HelperThreadContext {
 }
 
 pub struct SearchResult {
-    pub time: u64,
+    pub time: u32,
     pub depth: i8,
     pub transposition_table_usage: f32,
     pub lines: Vec<SearchResultLine>,
@@ -200,7 +199,7 @@ impl SearchContext {
             max_move_time,
             moves_to_go,
             moves_to_search,
-            search_time_start: Utc::now(),
+            search_time_start: Instant::now(),
             deadline: 0,
             multipv,
             multipv_lines: Vec::new(),
@@ -431,7 +430,7 @@ impl Iterator for SearchContext {
                 false => search::run::<false>(self, self.current_depth),
             };
 
-            let search_time = (Utc::now() - self.search_time_start).num_milliseconds() as u32;
+            let search_time = self.search_time_start.elapsed().whole_milliseconds() as u32;
             if self.uci_debug {
                 let mut white_attack_mask = 0;
                 let mut black_attack_mask = 0;
@@ -452,13 +451,13 @@ impl Iterator for SearchContext {
                 if self.ponder_token.load(Ordering::Relaxed) {
                     self.current_depth = 1;
                     self.forced_depth = 0;
-                    self.search_time_start = Utc::now();
+                    self.search_time_start = Instant::now();
                     self.statistics = Default::default();
 
                     for helper_context in &mut self.helper_contexts {
                         helper_context.context.current_depth = 1;
                         helper_context.context.forced_depth = 0;
-                        helper_context.context.search_time_start = Utc::now();
+                        helper_context.context.search_time_start = Instant::now();
                         helper_context.context.statistics = Default::default();
                     }
 
@@ -490,7 +489,6 @@ impl Iterator for SearchContext {
                 }
             }
 
-            let total_search_time = (Utc::now() - self.search_time_start).num_milliseconds() as u64;
             if !self.multipv {
                 let pv_line = self.get_pv_line(&mut self.board.clone(), 0);
                 self.multipv_lines.push(SearchResultLine::new(self.multipv_lines[0].score, pv_line));
@@ -502,7 +500,7 @@ impl Iterator for SearchContext {
             self.current_depth += 1;
 
             return Some(SearchResult::new(
-                total_search_time,
+                search_time,
                 self.current_depth - 1,
                 self.transposition_table.get_usage(1000),
                 multipv_result,
@@ -514,7 +512,7 @@ impl Iterator for SearchContext {
 
 impl SearchResult {
     /// Constructs a new instance of [SearchResult] with stored `time`, `depth`, `lines` and `statistics`.
-    pub fn new(time: u64, depth: i8, transposition_table_usage: f32, lines: Vec<SearchResultLine>, statistics: SearchStatistics) -> Self {
+    pub fn new(time: u32, depth: i8, transposition_table_usage: f32, lines: Vec<SearchResultLine>, statistics: SearchStatistics) -> Self {
         Self {
             time,
             depth,

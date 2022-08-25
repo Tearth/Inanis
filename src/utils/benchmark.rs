@@ -4,9 +4,9 @@ use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
 use crate::engine::context::SearchContext;
 use crate::state::board::Bitboard;
-use chrono::Utc;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
+use time::Instant;
 
 #[derive(Default)]
 pub struct BenchmarkResult {
@@ -107,7 +107,7 @@ pub fn run() -> BenchmarkResult {
     ];
 
     let mut benchmark_result: BenchmarkResult = Default::default();
-    let benchmark_time_start = Utc::now();
+    let benchmark_time_start = Instant::now();
 
     for (current_position_index, fen) in benchmark_positions.into_iter().enumerate() {
         println!("{}/{}. {}", current_position_index + 1, benchmark_positions.len(), fen);
@@ -204,6 +204,6 @@ pub fn run() -> BenchmarkResult {
         benchmark_result.result_hash ^= result.lines[0].pv_line[0].data;
     }
 
-    benchmark_result.time = ((Utc::now() - benchmark_time_start).num_milliseconds() as f32) / 1000.0;
+    benchmark_result.time = (benchmark_time_start.elapsed().whole_milliseconds() as f32) / 1000.0;
     benchmark_result
 }

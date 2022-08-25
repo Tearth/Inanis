@@ -6,7 +6,6 @@ use crate::state::movegen::MagicContainer;
 use crate::state::patterns::PatternsContainer;
 use crate::state::zobrist::ZobristContainer;
 use crate::state::*;
-use chrono::Utc;
 use std::fs;
 use std::fs::File;
 use std::io::BufRead;
@@ -15,6 +14,9 @@ use std::io::Write;
 use std::path::Path;
 use std::sync::Arc;
 use std::thread;
+use time::format_description;
+use time::Instant;
+use time::OffsetDateTime;
 
 struct TunerContext {
     positions: Vec<TunerPosition>,
@@ -104,7 +106,7 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
 
         let mut changes = 0;
         let last_best_error = best_error;
-        let start_time = Utc::now();
+        let start_time = Instant::now();
 
         for value_index in 0..best_values.len() {
             // Ignore pawn and king value (no point to tune it)
@@ -190,7 +192,7 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
         println!(
             "Iteration {} done in {} seconds, {} changes made, error reduced from {:.6} to {:.6} ({:.6})",
             iterations_count,
-            (Utc::now() - start_time).num_seconds(),
+            (start_time.elapsed().whole_milliseconds() as f32) / 1000.0,
             changes,
             last_best_error,
             best_error,
@@ -367,7 +369,7 @@ fn load_values(context: &TunerContext, lock_material: bool, random_values: bool)
     parameters.append(&mut king_pst[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
 
     if random_values {
-        fastrand::seed(Utc::now().timestamp() as u64);
+        fastrand::seed(OffsetDateTime::now_utc().unix_timestamp() as u64);
         for parameter in &mut parameters {
             (*parameter).value = fastrand::i16(parameter.min_init..=parameter.max_init);
         }
@@ -548,10 +550,12 @@ fn write_piece_square_table(output_directory: &str, best_error: f64, name: &str,
 /// Gets a generated Rust source file header with timestamp and `best_error`.
 fn get_header(best_error: f64) -> String {
     let mut output = String::new();
+    let time = OffsetDateTime::now_utc();
+    let time_formatted = time.format(&format_description::well_known::Rfc3339).unwrap();
 
-    output.push_str("// --------------------------------------------------- //\n");
-    output.push_str(format!("// Generated at {} UTC (e = {:.6}) //\n", Utc::now().format("%Y-%m-%d %H:%M:%S"), best_error).as_str());
-    output.push_str("// --------------------------------------------------- //\n");
+    output.push_str("// ------------------------------------------------------------ //\n");
+    output.push_str(format!("// Generated at {} UTC (e = {:.6}) //\n", time_formatted, best_error).as_str());
+    output.push_str("// ------------------------------------------------------------ //\n");
     output
 }
 

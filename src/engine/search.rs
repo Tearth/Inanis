@@ -7,7 +7,6 @@ use crate::state::*;
 use crate::tablebases::syzygy;
 use crate::tablebases::WdlResult;
 use crate::utils::conditional_expression;
-use chrono::Utc;
 use std::cmp;
 use std::mem::MaybeUninit;
 use std::sync::atomic::Ordering;
@@ -130,7 +129,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
     }
 
     if context.forced_depth == 0 && context.max_nodes_count == 0 && (context.statistics.nodes_count & 8191) == 0 {
-        if (Utc::now() - context.search_time_start).num_milliseconds() > context.deadline as i64 {
+        if context.search_time_start.elapsed().whole_milliseconds() > context.deadline as i128 {
             context.abort_token.store(true, Ordering::Relaxed);
             return INVALID_SCORE;
         }

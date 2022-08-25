@@ -1,6 +1,7 @@
-use chrono::Utc;
 use std::env;
 use std::process::Command;
+use time::format_description;
+use time::OffsetDateTime;
 
 fn main() {
     println!("cargo:rustc-env=HASH={}", hash());
@@ -26,7 +27,10 @@ fn hash() -> String {
 }
 
 fn date() -> String {
-    Utc::now().format("%d-%m-%Y").to_string()
+    let time = OffsetDateTime::now_utc();
+    let format = format_description::parse("[day]-[month]-[year]").unwrap();
+
+    time.format(&format).unwrap()
 }
 
 fn compiler() -> String {

@@ -10,7 +10,6 @@ use crate::state::board::Bitboard;
 use crate::state::movescan::Move;
 use crate::state::*;
 use crate::tablebases::syzygy;
-use chrono::Utc;
 use std::cmp;
 use std::collections::HashMap;
 use std::fs;
@@ -26,6 +25,7 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
 use std::thread::JoinHandle;
+use time::OffsetDateTime;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
@@ -577,7 +577,7 @@ fn enable_crash_files() {
         let path = Path::new("crash");
         fs::create_dir_all(path).unwrap();
 
-        let path = Path::new("crash").join(format!("{}.txt", Utc::now().timestamp_millis()));
+        let path = Path::new("crash").join(format!("{}.txt", OffsetDateTime::now_utc().unix_timestamp_nanos()));
         write!(&mut File::create(path.clone()).unwrap(), "{}", panic).unwrap();
 
         let absolute_path = fs::canonicalize(path).unwrap();

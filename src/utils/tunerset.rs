@@ -12,7 +12,6 @@ use crate::state::movegen::MagicContainer;
 use crate::state::patterns::PatternsContainer;
 use crate::state::zobrist::ZobristContainer;
 use crate::utils::pgn::PGNLoader;
-use chrono::Utc;
 use std::collections::HashSet;
 use std::fs::File;
 use std::io::BufRead;
@@ -21,13 +20,14 @@ use std::io::LineWriter;
 use std::io::Write;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
+use time::Instant;
 
 /// Runs generator of the dataset for the tuner. It works by parsing `pgn_filename`, and then picking random positions based on the
 /// provided restrictions like `min_ply`, `max_score`, `max_differ` and `density`. Output positions are then stored in the `output_file`.
 pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16, max_diff: u16, density: usize) {
     println!("Loading PGN file...");
 
-    let start_time = Utc::now();
+    let start_time = Instant::now();
     let file = match File::open(pgn_filename) {
         Ok(value) => value,
         Err(error) => {
@@ -212,6 +212,6 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
 
     println!(
         "Tuner dataset generation done in {:.2} s",
-        ((Utc::now() - start_time).num_milliseconds() as f32) / 1000.0
+        (start_time.elapsed().whole_milliseconds() as f32) / 1000.0
     );
 }
