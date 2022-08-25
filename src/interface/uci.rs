@@ -523,6 +523,9 @@ fn handle_setoption(parameters: &[String], state: Arc<Mutex<UciState>>) {
             if !value.is_empty() && value != "<empty>" {
                 syzygy::probe::init(&value);
             }
+
+            #[cfg(not(feature = "syzygy"))]
+            println!("info string Syzygy tablebases not supported in this build");
         }
         "Clear Hash" => {
             recreate_state_tables(state);
