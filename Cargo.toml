@@ -13,12 +13,12 @@ syzygy = ["dep:cc"]
 bindgen = ["dep:bindgen"]
 
 [dependencies]
+common = { path = "./common/" }
 fastrand = { version = "1.8.0" }
-time = { version = "0.3.14", features = ["formatting"]}
 bitflags = { version = "1.3.2" }
 
 [build-dependencies]
-time = { version = "0.3.14", features = ["formatting"]}
+common = { path = "./common/" }
 cc = { version = "1.0.73", optional = true }
 bindgen = { version = "0.60.1", optional = true }
 

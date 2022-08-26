@@ -129,7 +129,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
     }
 
     if context.forced_depth == 0 && context.max_nodes_count == 0 && (context.statistics.nodes_count & 8191) == 0 {
-        if context.search_time_start.elapsed().whole_milliseconds() > context.deadline as i128 {
+        if context.search_time_start.elapsed().unwrap().as_millis() > context.deadline as u128 {
             context.abort_token.store(true, Ordering::Relaxed);
             return INVALID_SCORE;
         }

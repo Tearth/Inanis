@@ -14,7 +14,7 @@ use crate::utils::tuner;
 use crate::utils::tunerset;
 use std::io;
 use std::process;
-use time::Instant;
+use std::time::SystemTime;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
@@ -380,7 +380,7 @@ fn handle_evaluate(input: Vec<&str>) {
 
 /// Handles `magic` command by printing a fresh set of magic numbers.
 fn handle_magic() {
-    let now = Instant::now();
+    let now = SystemTime::now();
     let magic = MagicContainer::default();
     println!("Generating magic numbers for rook...");
 
@@ -395,7 +395,7 @@ fn handle_magic() {
         println!("{},", magic.generate_bishop_magic_number(index));
     }
 
-    let diff = now.elapsed().whole_milliseconds();
+    let diff = now.elapsed().unwrap().as_millis();
     println!("Done! Magic numbers generated in {} ms", diff);
 }
 
@@ -424,10 +424,10 @@ fn handle_perft(input: Vec<&str>) {
     };
 
     for depth in 1..max_depth + 1 {
-        let now = Instant::now();
+        let now = SystemTime::now();
         let count = perft::normal::run(depth, &mut board, false);
 
-        let diff = (now.elapsed().whole_milliseconds() as f64) / 1000.0;
+        let diff = (now.elapsed().unwrap().as_millis() as f64) / 1000.0;
         let mnps = ((count as f64) / 1000000.0) / diff;
 
         println!("Depth {}: {} leafs in {:.2} s ({:.2} ML/s)", depth, count, diff, mnps);
@@ -531,10 +531,10 @@ fn handle_qperft(input: Vec<&str>) {
     };
 
     for depth in 1..=max_depth {
-        let now = Instant::now();
+        let now = SystemTime::now();
         let (count, hashtable_usage) = perft::fast::run(depth, &mut board, hashtable_size * 1024 * 1024, threads_count);
 
-        let diff = (now.elapsed().whole_milliseconds() as f64) / 1000.0;
+        let diff = (now.elapsed().unwrap().as_millis() as f64) / 1000.0;
         let mnps = ((count as f64) / 1000000.0) / diff;
 
         println!(

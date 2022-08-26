@@ -25,7 +25,6 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
 use std::thread::JoinHandle;
-use time::OffsetDateTime;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
@@ -577,7 +576,7 @@ fn enable_crash_files() {
         let path = Path::new("crash");
         fs::create_dir_all(path).unwrap();
 
-        let path = Path::new("crash").join(format!("{}.txt", OffsetDateTime::now_utc().unix_timestamp_nanos()));
+        let path = Path::new("crash").join(format!("{}.txt", common::time::get_unix_timestamp()));
         write!(&mut File::create(path.clone()).unwrap(), "{}", panic).unwrap();
 
         let absolute_path = fs::canonicalize(path).unwrap();

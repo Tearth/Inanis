@@ -14,9 +14,7 @@ use std::io::Write;
 use std::path::Path;
 use std::sync::Arc;
 use std::thread;
-use time::format_description;
-use time::Instant;
-use time::OffsetDateTime;
+use std::time::SystemTime;
 
 struct TunerContext {
     positions: Vec<TunerPosition>,
@@ -106,7 +104,7 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
 
         let mut changes = 0;
         let last_best_error = best_error;
-        let start_time = Instant::now();
+        let start_time = SystemTime::now();
 
         for value_index in 0..best_values.len() {
             // Ignore pawn and king value (no point to tune it)
@@ -192,7 +190,7 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
         println!(
             "Iteration {} done in {} seconds, {} changes made, error reduced from {:.6} to {:.6} ({:.6})",
             iterations_count,
-            (start_time.elapsed().whole_milliseconds() as f32) / 1000.0,
+            (start_time.elapsed().unwrap().as_millis() as f32) / 1000.0,
             changes,
             last_best_error,
             best_error,
@@ -369,7 +367,7 @@ fn load_values(context: &TunerContext, lock_material: bool, random_values: bool)
     parameters.append(&mut king_pst[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
 
     if random_values {
-        fastrand::seed(OffsetDateTime::now_utc().unix_timestamp() as u64);
+        fastrand::seed(common::time::get_unix_timestamp());
         for parameter in &mut parameters {
             (*parameter).value = fastrand::i16(parameter.min_init..=parameter.max_init);
         }
@@ -550,12 +548,17 @@ fn write_piece_square_table(output_directory: &str, best_error: f64, name: &str,
 /// Gets a generated Rust source file header with timestamp and `best_error`.
 fn get_header(best_error: f64) -> String {
     let mut output = String::new();
-    let time = OffsetDateTime::now_utc();
-    let time_formatted = time.format(&format_description::well_known::Rfc3339).unwrap();
 
-    output.push_str("// ------------------------------------------------------------ //\n");
-    output.push_str(format!("// Generated at {} UTC (e = {:.6}) //\n", time_formatted, best_error).as_str());
-    output.push_str("// ------------------------------------------------------------ //\n");
+    let timestamp = common::time::get_unix_timestamp();
+    let datetime = common::time::unix_timestamp_to_datetime(timestamp);
+    let datetime_formatted = format!(
+        "{:0>2}-{:0>2}-{} {:0>2}:{:0>2}:{:0>2}",
+        datetime.day, datetime.month, datetime.year, datetime.hour, datetime.minute, datetime.day
+    );
+
+    output.push_str("// --------------------------------------------------- //\n");
+    output.push_str(format!("// Generated at {} UTC (e = {:.6}) //\n", datetime_formatted, best_error).as_str());
+    output.push_str("// --------------------------------------------------- //\n");
     output
 }
 

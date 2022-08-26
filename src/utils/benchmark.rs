@@ -6,7 +6,7 @@ use crate::engine::context::SearchContext;
 use crate::state::board::Bitboard;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
-use time::Instant;
+use std::time::SystemTime;
 
 #[derive(Default)]
 pub struct BenchmarkResult {
@@ -105,7 +105,7 @@ pub fn run() -> BenchmarkResult {
     ];
 
     let mut benchmark_result: BenchmarkResult = Default::default();
-    let benchmark_time_start = Instant::now();
+    let benchmark_time_start = SystemTime::now();
 
     for (current_position_index, fen) in benchmark_positions.into_iter().enumerate() {
         println!("{}/{}. {}", current_position_index + 1, benchmark_positions.len(), fen);
@@ -200,6 +200,6 @@ pub fn run() -> BenchmarkResult {
         benchmark_result.result_hash ^= result.lines[0].pv_line[0].data;
     }
 
-    benchmark_result.time = (benchmark_time_start.elapsed().whole_milliseconds() as f32) / 1000.0;
+    benchmark_result.time = (benchmark_time_start.elapsed().unwrap().as_millis() as f32) / 1000.0;
     benchmark_result
 }

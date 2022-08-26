@@ -21,7 +21,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::thread;
-use time::Instant;
+use std::time::SystemTime;
 
 pub struct SearchContext {
     pub board: Bitboard,
@@ -35,7 +35,7 @@ pub struct SearchContext {
     pub max_move_time: u32,
     pub moves_to_go: u32,
     pub moves_to_search: Vec<Move>,
-    pub search_time_start: Instant,
+    pub search_time_start: SystemTime,
     pub deadline: u32,
     pub multipv: bool,
     pub multipv_lines: Vec<SearchResultLine>,
@@ -197,7 +197,7 @@ impl SearchContext {
             max_move_time,
             moves_to_go,
             moves_to_search,
-            search_time_start: Instant::now(),
+            search_time_start: SystemTime::now(),
             deadline: 0,
             multipv,
             multipv_lines: Vec::new(),
@@ -426,7 +426,7 @@ impl Iterator for SearchContext {
                 false => search::run::<false>(self, self.current_depth),
             };
 
-            let search_time = self.search_time_start.elapsed().whole_milliseconds() as u32;
+            let search_time = self.search_time_start.elapsed().unwrap().as_millis() as u32;
             if self.uci_debug {
                 let mut white_attack_mask = 0;
                 let mut black_attack_mask = 0;
@@ -447,13 +447,13 @@ impl Iterator for SearchContext {
                 if self.ponder_token.load(Ordering::Relaxed) {
                     self.current_depth = 1;
                     self.forced_depth = 0;
-                    self.search_time_start = Instant::now();
+                    self.search_time_start = SystemTime::now();
                     self.statistics = Default::default();
 
                     for helper_context in &mut self.helper_contexts {
                         helper_context.context.current_depth = 1;
                         helper_context.context.forced_depth = 0;
-                        helper_context.context.search_time_start = Instant::now();
+                        helper_context.context.search_time_start = SystemTime::now();
                         helper_context.context.statistics = Default::default();
                     }
 

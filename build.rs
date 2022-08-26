@@ -1,7 +1,8 @@
+use common::time;
 use std::env;
 use std::process::Command;
-use time::format_description;
-use time::OffsetDateTime;
+use std::time::SystemTime;
+use std::time::UNIX_EPOCH;
 
 fn main() {
     println!("cargo:rustc-env=HASH={}", hash());
@@ -27,10 +28,10 @@ fn hash() -> String {
 }
 
 fn date() -> String {
-    let time = OffsetDateTime::now_utc();
-    let format = format_description::parse("[day]-[month]-[year]").unwrap();
+    let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+    let datetime = time::unix_timestamp_to_datetime(timestamp);
 
-    time.format(&format).unwrap()
+    format!("{:0>2}-{:0>2}-{}", datetime.day, datetime.month, datetime.year)
 }
 
 fn compiler() -> String {
