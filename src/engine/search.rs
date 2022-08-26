@@ -173,9 +173,8 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
     let original_alpha = alpha;
     let mut tt_entry_found = false;
     let mut hash_move = Default::default();
-    let mut collision = false;
 
-    match context.transposition_table.get(context.board.hash, ply, &mut collision) {
+    match context.transposition_table.get(context.board.hash, ply) {
         Some(entry) => {
             conditional_expression!(DIAG, context.statistics.tt_hits += 1);
 
@@ -230,10 +229,6 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
             }
         }
         None => {
-            if collision {
-                conditional_expression!(DIAG, context.statistics.tt_collisions += 1);
-            }
-
             conditional_expression!(DIAG, context.statistics.tt_misses += 1);
         }
     };

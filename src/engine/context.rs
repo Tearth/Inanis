@@ -122,7 +122,6 @@ pub struct SearchStatistics {
     pub tt_added: u64,
     pub tt_hits: u64,
     pub tt_misses: u64,
-    pub tt_collisions: u64,
 
     pub tt_legal_hashmoves: u64,
     pub tt_illegal_hashmoves: u64,
@@ -130,7 +129,6 @@ pub struct SearchStatistics {
     pub pawn_hashtable_added: u64,
     pub pawn_hashtable_hits: u64,
     pub pawn_hashtable_misses: u64,
-    pub pawn_hashtable_collisions: u64,
 
     pub move_generator_hash_move_stages: u64,
     pub move_generator_captures_stages: u64,
@@ -228,9 +226,7 @@ impl SearchContext {
         }
 
         let mut pv_line = Vec::new();
-        let mut collision = false;
-
-        match self.transposition_table.get(board.hash, 0, &mut collision) {
+        match self.transposition_table.get(board.hash, 0) {
             Some(entry) => {
                 if entry.r#type != TranspositionTableScoreType::EXACT_SCORE {
                     return Vec::new();
@@ -575,7 +571,6 @@ impl ops::AddAssign<SearchStatistics> for SearchStatistics {
         self.tt_added += rhs.tt_added;
         self.tt_hits += rhs.tt_hits;
         self.tt_misses += rhs.tt_misses;
-        self.tt_collisions += rhs.tt_collisions;
 
         self.tt_legal_hashmoves += rhs.tt_legal_hashmoves;
         self.tt_illegal_hashmoves += rhs.tt_illegal_hashmoves;
@@ -583,7 +578,6 @@ impl ops::AddAssign<SearchStatistics> for SearchStatistics {
         self.pawn_hashtable_added += rhs.pawn_hashtable_added;
         self.pawn_hashtable_hits += rhs.pawn_hashtable_hits;
         self.pawn_hashtable_misses += rhs.pawn_hashtable_misses;
-        self.pawn_hashtable_collisions += rhs.pawn_hashtable_collisions;
 
         self.move_generator_hash_move_stages += rhs.move_generator_hash_move_stages;
         self.move_generator_captures_stages += rhs.move_generator_captures_stages;

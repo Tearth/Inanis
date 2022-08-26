@@ -41,17 +41,12 @@ impl PawnHashTable {
     }
 
     /// Gets a wanted entry using `hash % self.table.len()` formula to calculate an index. Returns [None] if `hash` is incompatible with the stored key.
-    /// Sets `collision` flag if some entry was found, but the key was invalid.
-    pub fn get(&self, hash: u64, collision: &mut bool) -> Option<PawnHashTableResult> {
+    pub fn get(&self, hash: u64) -> Option<PawnHashTableResult> {
         let entry = &self.table[(hash as usize) % self.table.len()];
         let entry_data = entry.get_data();
 
         if entry_data.key == self.get_key(hash) {
             return Some(entry_data);
-        }
-
-        if entry_data.key != 0 {
-            *collision = true;
         }
 
         None

@@ -16,17 +16,12 @@ use std::cmp;
 /// To improve performance (using the fact that structure of pawns changes relatively rare), each evaluation is saved in the pawn hashtable,
 /// and used again if possible.
 pub fn evaluate<const DIAG: bool>(board: &Bitboard, pawn_hashtable: &PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
-    let mut collision = false;
-    match pawn_hashtable.get(board.pawn_hash, &mut collision) {
+    match pawn_hashtable.get(board.pawn_hash) {
         Some(entry) => {
             conditional_expression!(DIAG, statistics.pawn_hashtable_hits += 1);
             return entry.score;
         }
         None => {
-            if collision {
-                conditional_expression!(DIAG, statistics.pawn_hashtable_collisions += 1);
-            }
-
             conditional_expression!(DIAG, statistics.pawn_hashtable_misses += 1);
         }
     }

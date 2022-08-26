@@ -111,12 +111,11 @@ impl TranspositionTable {
     }
 
     /// Gets a wanted entry using `hash % self.table.len()` formula to calculate an index of the bucket. This function takes care of converting
-    /// mate `score` using passed `ply`. Returns [None] if `hash` is incompatible with the stored key (and sets `collision` flag to true).
-    pub fn get(&self, hash: u64, ply: u16, collision: &mut bool) -> Option<TranspositionTableResult> {
+    /// mate `score` using passed `ply`. Returns [None] if `hash` is incompatible with the stored key.
+    pub fn get(&self, hash: u64, ply: u16) -> Option<TranspositionTableResult> {
         let key = self.get_key(hash);
         let index = (hash as usize) % self.table.len();
         let bucket = &self.table[index];
-        let mut entry_with_key_present = false;
 
         for entry in &bucket.entries {
             let entry_data = entry.get_data();
@@ -139,13 +138,7 @@ impl TranspositionTable {
                     r#type: entry_data.r#type,
                     age: entry_data.age,
                 });
-            } else if entry_data.key != 0 {
-                entry_with_key_present = true;
             }
-        }
-
-        if entry_with_key_present {
-            *collision = true;
         }
 
         None
@@ -154,9 +147,7 @@ impl TranspositionTable {
     /// Gets an entry's best move using `hash % self.table.len()` formula to calculate an index of the bucket.
     /// Returns [None] if `hash` is incompatible with the stored key.
     pub fn get_best_move(&self, hash: u64) -> Option<Move> {
-        let mut collision = false;
-        let entry = self.get(hash, 0, &mut collision);
-
+        let entry = self.get(hash, 0);
         entry.map(|entry| entry.best_move)
     }
 
