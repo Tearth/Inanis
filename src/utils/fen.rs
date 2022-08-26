@@ -1,3 +1,4 @@
+use super::bitflags::BitFlags;
 use crate::engine::see::SEEContainer;
 use crate::evaluation::EvaluationParameters;
 use crate::state::board::Bitboard;

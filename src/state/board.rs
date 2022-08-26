@@ -14,22 +14,22 @@ use crate::evaluation::pawns;
 use crate::evaluation::pst;
 use crate::evaluation::safety;
 use crate::evaluation::EvaluationParameters;
+use crate::utils::bitflags::BitFlags;
 use crate::utils::fen;
 use std::mem::MaybeUninit;
 use std::sync::Arc;
 
-bitflags! {
-    pub struct CastlingRights: u8 {
-        const NONE = 0;
-        const WHITE_SHORT_CASTLING = 1;
-        const WHITE_LONG_CASTLING = 2;
-        const BLACK_SHORT_CASTLING = 4;
-        const BLACK_LONG_CASTLING = 8;
+#[allow(non_snake_case)]
+pub mod CastlingRights {
+    pub const NONE: u8 = 0;
+    pub const WHITE_SHORT_CASTLING: u8 = 1;
+    pub const WHITE_LONG_CASTLING: u8 = 2;
+    pub const BLACK_SHORT_CASTLING: u8 = 4;
+    pub const BLACK_LONG_CASTLING: u8 = 8;
 
-        const WHITE_CASTLING = Self::WHITE_SHORT_CASTLING.bits | Self::WHITE_LONG_CASTLING.bits;
-        const BLACK_CASTLING = Self::BLACK_SHORT_CASTLING.bits | Self::BLACK_LONG_CASTLING.bits;
-        const ALL = Self::WHITE_CASTLING.bits | Self::BLACK_CASTLING.bits;
-    }
+    pub const WHITE_CASTLING: u8 = WHITE_SHORT_CASTLING | WHITE_LONG_CASTLING;
+    pub const BLACK_CASTLING: u8 = BLACK_SHORT_CASTLING | BLACK_LONG_CASTLING;
+    pub const ALL: u8 = WHITE_CASTLING | BLACK_CASTLING;
 }
 
 #[derive(Clone)]
@@ -37,7 +37,7 @@ pub struct Bitboard {
     pub pieces: [[u64; 6]; 2],
     pub occupancy: [u64; 2],
     pub piece_table: [u8; 64],
-    pub castling_rights: CastlingRights,
+    pub castling_rights: u8,
     pub en_passant: u64,
     pub halfmove_clock: u16,
     pub fullmove_number: u16,
@@ -59,7 +59,7 @@ pub struct Bitboard {
 #[derive(Clone)]
 pub struct BitboardState {
     pub halfmove_clock: u16,
-    pub castling_rights: CastlingRights,
+    pub castling_rights: u8,
     pub en_passant: u64,
     pub hash: u64,
     pub pawn_hash: u64,
@@ -894,7 +894,7 @@ impl Bitboard {
 
 impl BitboardState {
     /// Constructs a new instance of [BitboardState] with stored `halfmove_clock`, `castling_rights`, `en_passant`, `hash`, `pawn_hash` and `captured_piece`.
-    pub fn new(halfmove_clock: u16, castling_rights: CastlingRights, en_passant: u64, hash: u64, pawn_hash: u64, captured_piece: u8) -> BitboardState {
+    pub fn new(halfmove_clock: u16, castling_rights: u8, en_passant: u64, hash: u64, pawn_hash: u64, captured_piece: u8) -> BitboardState {
         BitboardState {
             halfmove_clock,
             castling_rights,

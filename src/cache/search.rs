@@ -7,13 +7,12 @@ use std::u64;
 
 const BUCKET_SLOTS: usize = 8;
 
-bitflags! {
-    pub struct TranspositionTableScoreType: u8 {
-        const INVALID = 0;
-        const EXACT_SCORE = 1;
-        const ALPHA_SCORE = 2;
-        const BETA_SCORE = 4;
-    }
+#[allow(non_snake_case)]
+pub mod TranspositionTableScoreType {
+    pub const INVALID: u8 = 0;
+    pub const EXACT_SCORE: u8 = 1;
+    pub const ALPHA_SCORE: u8 = 2;
+    pub const BETA_SCORE: u8 = 4;
 }
 
 pub struct TranspositionTable {
@@ -35,7 +34,7 @@ pub struct TranspositionTableResult {
     pub score: i16,
     pub best_move: Move,
     pub depth: i8,
-    pub r#type: TranspositionTableScoreType,
+    pub r#type: u8,
     pub age: u8,
 }
 
@@ -60,7 +59,7 @@ impl TranspositionTable {
     ///  - slots with the smallest depth (if there are some old entries, prioritize them)
     ///
     /// This function takes care of converting mate `score` using passed `ply`.
-    pub fn add(&self, hash: u64, mut score: i16, best_move: Move, depth: i8, ply: u16, score_type: TranspositionTableScoreType, age: u8) {
+    pub fn add(&self, hash: u64, mut score: i16, best_move: Move, depth: i8, ply: u16, score_type: u8, age: u8) {
         let key = self.get_key(hash);
         let index = (hash as usize) % self.table.len();
         let bucket = &self.table[index];
@@ -185,13 +184,13 @@ impl Default for TranspositionTableBucket {
 
 impl TranspositionTableEntry {
     /// Converts `key`, `score`, `best_move`, `depth`, `r#type` and `age` into an atomic word, and stores it.
-    pub fn set_data(&self, key: u16, score: i16, best_move: Move, depth: i8, r#type: TranspositionTableScoreType, age: u8) {
+    pub fn set_data(&self, key: u16, score: i16, best_move: Move, depth: i8, r#type: u8, age: u8) {
         let key_data = 0
             | (key as u64)
             | (((score as u16) as u64) << 16)
             | ((best_move.data as u64) << 32)
             | (((depth as u8) as u64) << 48)
-            | ((r#type.bits as u64) << 56)
+            | ((r#type as u64) << 56)
             | ((age as u64) << 59);
 
         self.key_data.store(key_data, Ordering::Relaxed);
@@ -205,7 +204,7 @@ impl TranspositionTableEntry {
             score: (key_data >> 16) as i16,
             best_move: Move::new_from_raw((key_data >> 32) as u16),
             depth: (key_data >> 48) as i8,
-            r#type: TranspositionTableScoreType::from_bits(((key_data >> 56) & 0x7) as u8).unwrap(),
+            r#type: ((key_data >> 56) & 0x7) as u8,
             age: (key_data >> 59) as u8,
         }
     }

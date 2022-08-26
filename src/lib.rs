@@ -23,6 +23,3 @@ pub mod perft;
 pub mod state;
 pub mod tablebases;
 pub mod utils;
-
-#[macro_use]
-extern crate bitflags;

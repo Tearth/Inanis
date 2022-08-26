@@ -2,33 +2,33 @@ use super::board::Bitboard;
 use super::board::CastlingRights;
 use super::*;
 use crate::engine;
+use crate::utils::bitflags::BitFlags;
 use std::cmp;
 use std::mem::MaybeUninit;
 
-bitflags! {
-    pub struct MoveFlags: u8 {
-        const QUIET = 0;
-        const DOUBLE_PUSH = 1;
-        const SHORT_CASTLING = 2;
-        const LONG_CASTLING = 3;
-        const CAPTURE = 4;
-        const EN_PASSANT = 5;
-        const UNDEFINED1 = 6;
-        const UNDEFINED2 = 7;
-        const KNIGHT_PROMOTION = 8;
-        const BISHOP_PROMOTION = 9;
-        const ROOK_PROMOTION = 10;
-        const QUEEN_PROMOTION = 11;
-        const KNIGHT_PROMOTION_CAPTURE = 12;
-        const BISHOP_PROMOTION_CAPTURE = 13;
-        const ROOK_PROMOTION_CAPTURE = 14;
-        const QUEEN_PROMOTION_CAPTURE = 15;
+#[allow(non_snake_case)]
+pub mod MoveFlags {
+    pub const QUIET: u8 = 0;
+    pub const DOUBLE_PUSH: u8 = 1;
+    pub const SHORT_CASTLING: u8 = 2;
+    pub const LONG_CASTLING: u8 = 3;
+    pub const CAPTURE: u8 = 4;
+    pub const EN_PASSANT: u8 = 5;
+    pub const UNDEFINED1: u8 = 6;
+    pub const UNDEFINED2: u8 = 7;
+    pub const KNIGHT_PROMOTION: u8 = 8;
+    pub const BISHOP_PROMOTION: u8 = 9;
+    pub const ROOK_PROMOTION: u8 = 10;
+    pub const QUEEN_PROMOTION: u8 = 11;
+    pub const KNIGHT_PROMOTION_CAPTURE: u8 = 12;
+    pub const BISHOP_PROMOTION_CAPTURE: u8 = 13;
+    pub const ROOK_PROMOTION_CAPTURE: u8 = 14;
+    pub const QUEEN_PROMOTION_CAPTURE: u8 = 15;
 
-        const FIELD_SPECIAL_0 = 1;
-        const FIELD_SPECIAL_1 = 2;
-        const FIELD_CAPTURE = 4;
-        const FIELD_PROMOTION = 8;
-    }
+    pub const FIELD_SPECIAL_0: u8 = 1;
+    pub const FIELD_SPECIAL_1: u8 = 2;
+    pub const FIELD_CAPTURE: u8 = 4;
+    pub const FIELD_PROMOTION: u8 = 8;
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -38,9 +38,9 @@ pub struct Move {
 
 impl Move {
     /// Constructs a new instance of [Move] with stored `from`, `to` and `flags`.
-    pub fn new(from: u8, to: u8, flags: MoveFlags) -> Self {
+    pub fn new(from: u8, to: u8, flags: u8) -> Self {
         Self {
-            data: ((flags.bits as u16) << 12) | ((to as u16) << 6) | (from as u16),
+            data: ((flags as u16) << 12) | ((to as u16) << 6) | (from as u16),
         }
     }
 
@@ -57,7 +57,7 @@ impl Move {
 
         loop {
             if flags == MoveFlags::UNDEFINED1 || flags == MoveFlags::UNDEFINED2 {
-                flags = MoveFlags::from_bits(fastrand::u8(0..16)).unwrap();
+                flags = fastrand::u8(0..16);
             } else {
                 break;
             }
@@ -76,7 +76,7 @@ impl Move {
         let mut desired_file: Option<u8> = None;
         let mut desired_rank: Option<u8> = None;
         let mut desired_piece: Option<u8> = None;
-        let mut desired_flags: Option<MoveFlags> = None;
+        let mut desired_flags: Option<u8> = None;
         let mut desired_capture: Option<bool> = None;
         let mut desired_promotion: Option<u8> = None;
 
@@ -326,7 +326,7 @@ impl Move {
             let r#move = unsafe { r#move.assume_init() };
             if r#move.get_from() == from && r#move.get_to() == to {
                 let flags = r#move.get_flags();
-                if promotion_flags == MoveFlags::QUIET || (flags & promotion_flags).bits == flags.bits {
+                if promotion_flags == MoveFlags::QUIET || (flags & promotion_flags) == flags {
                     return Ok(r#move);
                 }
             }
@@ -372,8 +372,8 @@ impl Move {
     }
 
     /// Gets flags from the internal data.
-    pub fn get_flags(&self) -> MoveFlags {
-        unsafe { MoveFlags::from_bits_unchecked((self.data >> 12) as u8) }
+    pub fn get_flags(&self) -> u8 {
+        (self.data >> 12) as u8
     }
 
     /// Gets promotion piece based on the flags saved in the internal data.

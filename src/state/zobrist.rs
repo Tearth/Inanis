@@ -1,5 +1,5 @@
-use super::board::CastlingRights;
 use super::*;
+use crate::utils::bitflags::BitFlags;
 
 pub struct ZobristContainer {
     piece_hashes: [[[u64; 64]; 6]; 2],
@@ -15,12 +15,12 @@ impl ZobristContainer {
     }
 
     /// Gets castling right hash based on the `current` ones and the desired change specified by `right`.
-    pub fn get_castling_right_hash(&self, current: CastlingRights, right: CastlingRights) -> u64 {
+    pub fn get_castling_right_hash(&self, current: u8, right: u8) -> u64 {
         if !current.contains(right) {
             return 0;
         }
 
-        self.castling_hashes[bit_scan(right.bits() as u64) as usize]
+        self.castling_hashes[bit_scan(right as u64) as usize]
     }
 
     /// Gets en passant hash for the `file`.

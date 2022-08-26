@@ -103,7 +103,7 @@ pub fn get_root_wdl_dtz(board: &Bitboard) -> (bool, WdlResult, u32, Move) {
             let r#move = unsafe { r#move.assume_init() };
             if r#move.get_from() == from && r#move.get_to() == to {
                 let flags = r#move.get_flags();
-                if promotion == 0 || (flags & promotion_flags).bits() == flags.bits() {
+                if promotion == 0 || (flags & promotion_flags) == flags {
                     return (success, wdl, dtz, r#move);
                 }
             }

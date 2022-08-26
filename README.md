@@ -90,7 +90,6 @@ Examples of running the tests:
  - [fastrand](https://github.com/smol-rs/fastrand) - a simple and fast random number generator
  - [time](https://github.com/time-rs/time) - helper functions for formatting time and dates
  - [bitflags](https://github.com/bitflags/bitflags) - macro to generate structures that behave like a set of bitflags
- - [prettytable-rs](https://github.com/phsym/prettytable-rs) - a formatted and aligned table printer library
  - [criterion](https://github.com/bheisler/criterion.rs) - benchmark framework
 
  **Libraries**
