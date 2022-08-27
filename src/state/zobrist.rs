@@ -1,5 +1,6 @@
 use super::*;
 use crate::utils::bitflags::BitFlags;
+use crate::utils::rand;
 
 pub struct ZobristContainer {
     piece_hashes: [[[u64; 64]; 6]; 2],
@@ -44,25 +45,25 @@ impl Default for ZobristContainer {
             active_color_hash: 0,
         };
 
-        fastrand::seed(584578);
+        rand::seed(584578);
 
         for color in 0..2 {
             for piece in 0..6 {
                 for field_index in 0..64 {
-                    result.piece_hashes[color as usize][piece as usize][field_index] = fastrand::u64(1..u64::MAX);
+                    result.piece_hashes[color as usize][piece as usize][field_index] = rand::u64(..);
                 }
             }
         }
 
         for castling_index in 0..4 {
-            result.castling_hashes[castling_index as usize] = fastrand::u64(1..u64::MAX);
+            result.castling_hashes[castling_index as usize] = rand::u64(..);
         }
 
         for en_passant_index in 0..8 {
-            result.en_passant_hashes[en_passant_index as usize] = fastrand::u64(1..u64::MAX);
+            result.en_passant_hashes[en_passant_index as usize] = rand::u64(..);
         }
 
-        result.active_color_hash = fastrand::u64(1..u64::MAX);
+        result.active_color_hash = rand::u64(..);
         result
     }
 }

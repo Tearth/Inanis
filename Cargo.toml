@@ -14,7 +14,6 @@ bindgen = ["dep:bindgen"]
 
 [dependencies]
 common = { path = "./common/" }
-fastrand = { version = "1.8.0" }
 
 [build-dependencies]
 common = { path = "./common/" }

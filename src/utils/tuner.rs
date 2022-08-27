@@ -1,4 +1,5 @@
 use super::fen;
+use super::rand;
 use crate::engine::see::SEEContainer;
 use crate::evaluation::EvaluationParameters;
 use crate::state::board::Bitboard;
@@ -367,9 +368,9 @@ fn load_values(context: &TunerContext, lock_material: bool, random_values: bool)
     parameters.append(&mut king_pst[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
 
     if random_values {
-        fastrand::seed(common::time::get_unix_timestamp());
+        rand::seed(common::time::get_unix_timestamp());
         for parameter in &mut parameters {
-            (*parameter).value = fastrand::i16(parameter.min_init..=parameter.max_init);
+            (*parameter).value = rand::i16(parameter.min_init..=parameter.max_init);
         }
     }
 

@@ -7,6 +7,7 @@ use crate::state::*;
 use crate::tablebases::syzygy;
 use crate::tablebases::WdlResult;
 use crate::utils::conditional_expression;
+use crate::utils::rand;
 use std::cmp;
 use std::mem::MaybeUninit;
 use std::sync::atomic::Ordering;
@@ -483,7 +484,7 @@ fn assign_move_scores(
 
             let mut value = context.history_table.get(r#move.get_from(), r#move.get_to(), MOVE_ORDERING_HISTORY_MOVE) as i16;
             if context.helper_thread && value + LAZY_SMP_NOISE < MOVE_ORDERING_HISTORY_MOVE as i16 {
-                value += fastrand::i16(0..=LAZY_SMP_NOISE);
+                value += rand::i16(0..=LAZY_SMP_NOISE);
             }
 
             value += MOVE_ORDERING_HISTORY_MOVE_OFFSET;

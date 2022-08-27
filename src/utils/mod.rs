@@ -2,6 +2,7 @@ pub mod benchmark;
 pub mod bitflags;
 pub mod fen;
 pub mod pgn;
+pub mod rand;
 pub mod test;
 pub mod tuner;
 pub mod tunerset;

@@ -1,5 +1,6 @@
 use super::patterns::PatternsContainer;
 use super::*;
+use crate::utils::rand;
 use std::sync::Arc;
 
 #[rustfmt::skip]
@@ -259,7 +260,7 @@ impl MagicContainer {
         let mut magic_number: u64;
 
         loop {
-            magic_number = fastrand::u64(1..u64::MAX) & fastrand::u64(1..u64::MAX) & fastrand::u64(1..u64::MAX);
+            magic_number = rand::u64(..) & rand::u64(..) & rand::u64(..);
 
             for index in 0..count {
                 let hash = (permutations[index as usize].wrapping_mul(magic_number) >> (64 - shift)) as usize;

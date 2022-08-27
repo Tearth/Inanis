@@ -3,6 +3,7 @@ use super::board::CastlingRights;
 use super::*;
 use crate::engine;
 use crate::utils::bitflags::BitFlags;
+use crate::utils::rand;
 use std::cmp;
 use std::mem::MaybeUninit;
 
@@ -51,13 +52,13 @@ impl Move {
 
     /// Constructs a new instance of [Move] with random values, not restricted by chess rules.
     pub fn new_random() -> Self {
-        let from = fastrand::u8(0..64);
-        let to = fastrand::u8(0..64);
+        let from = rand::u8(0..64);
+        let to = rand::u8(0..64);
         let mut flags = MoveFlags::UNDEFINED1;
 
         loop {
             if flags == MoveFlags::UNDEFINED1 || flags == MoveFlags::UNDEFINED2 {
-                flags = fastrand::u8(0..16);
+                flags = rand::u8(0..16);
             } else {
                 break;
             }

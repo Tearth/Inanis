@@ -12,6 +12,7 @@ use crate::state::movegen::MagicContainer;
 use crate::state::patterns::PatternsContainer;
 use crate::state::zobrist::ZobristContainer;
 use crate::utils::pgn::PGNLoader;
+use crate::utils::rand;
 use std::collections::HashSet;
 use std::fs::File;
 use std::io::BufRead;
@@ -167,7 +168,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
                 break;
             }
 
-            let index = fastrand::usize(0..viable_positions.len());
+            let index = rand::usize(0..viable_positions.len());
             let position = viable_positions[index].to_owned();
 
             if output_positions.contains(&position) {
