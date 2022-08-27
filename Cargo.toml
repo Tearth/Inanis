@@ -27,7 +27,7 @@ criterion = { version = "0.3.6", features = ["html_reports"] }
 panic = "abort"
 lto = true
 strip = true
-debug = false
+codegen-units = 1
 
 [[bench]]
 name = "evaluation_benchmark"
