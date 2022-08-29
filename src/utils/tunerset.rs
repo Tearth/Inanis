@@ -24,8 +24,8 @@ use std::sync::Arc;
 use std::time::SystemTime;
 
 /// Runs generator of the dataset for the tuner. It works by parsing `pgn_filename`, and then picking random positions based on the
-/// provided restrictions like `min_ply`, `max_score`, `max_differ` and `density`. Output positions are then stored in the `output_file`.
-pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16, max_diff: u16, density: usize) {
+/// provided restrictions like `min_ply`, `max_score`, `max_differ`, `density` and `avg_game_phase`. Output positions are then stored in the `output_file`.
+pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16, max_diff: u16, density: usize, avg_game_phase: f32) {
     println!("Loading PGN file...");
 
     let start_time = SystemTime::now();
@@ -167,6 +167,8 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
         }
 
         let mut picked_positions = 0;
+        let mut tries = 0;
+
         while picked_positions < density {
             if viable_positions.is_empty() {
                 break;
@@ -179,6 +181,15 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
                 viable_positions.remove(index);
                 duplicates += 1;
 
+                continue;
+            }
+
+            let current_average_game_phase = sum_of_game_phases / (output_positions.len() as f32);
+            if tries < 10
+                && ((current_average_game_phase < avg_game_phase && game_phase < avg_game_phase)
+                    || (current_average_game_phase > avg_game_phase && game_phase > avg_game_phase))
+            {
+                tries += 1;
                 continue;
             }
 
