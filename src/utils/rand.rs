@@ -14,13 +14,13 @@ macro_rules! rand_definition {
         pub fn $type(range: impl RangeBounds<$type>) -> $type {
             let from = match range.start_bound() {
                 std::ops::Bound::Included(v) => *v,
-                std::ops::Bound::Excluded(v) => *v,
+                std::ops::Bound::Excluded(v) => *v - 1,
                 std::ops::Bound::Unbounded => $min_value,
             };
 
             let to = match range.end_bound() {
                 std::ops::Bound::Included(v) => *v,
-                std::ops::Bound::Excluded(v) => *v,
+                std::ops::Bound::Excluded(v) => *v - 1,
                 std::ops::Bound::Unbounded => $max_value,
             };
 
