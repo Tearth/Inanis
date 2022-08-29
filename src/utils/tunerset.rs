@@ -57,6 +57,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
     let mut total_viable_positions = 0;
     let mut ignored_positions = 0;
     let mut duplicates = 0;
+    let mut sum_of_game_phases = 0.0;
 
     for pgn in pgn_loader {
         let pgn = match pgn {
@@ -158,7 +159,10 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
                 continue;
             }
 
-            viable_positions.push(format!("{} c9 \"{}\";", context.board.to_epd(), pgn.result));
+            let epd = format!("{} c9 \"{}\";", context.board.to_epd(), pgn.result);
+            let game_phase = context.board.get_game_phase();
+
+            viable_positions.push((epd, game_phase));
             total_viable_positions += 1;
         }
 
@@ -169,7 +173,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
             }
 
             let index = rand::usize(0..viable_positions.len());
-            let position = viable_positions[index].to_owned();
+            let (position, game_phase) = viable_positions[index].to_owned();
 
             if output_positions.contains(&position) {
                 viable_positions.remove(index);
@@ -178,9 +182,10 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
                 continue;
             }
 
-            output_positions.insert(viable_positions[index].to_owned());
+            output_positions.insert(position);
             viable_positions.remove(index);
             picked_positions += 1;
+            sum_of_game_phases += game_phase;
         }
 
         parsed_pgns += 1;
@@ -207,12 +212,15 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
         }
     };
     let mut output_file_line_writer = LineWriter::new(output_file);
+    let positions_count = output_positions.len();
+
     for fen in output_positions {
         output_file_line_writer.write_all((fen + "\n").as_bytes()).unwrap();
     }
 
     println!(
-        "Tuner dataset generation done in {:.2} s",
-        (start_time.elapsed().unwrap().as_millis() as f32) / 1000.0
+        "Tuner dataset generation done in {:.2} s, average game phase: {:.2}",
+        (start_time.elapsed().unwrap().as_millis() as f32) / 1000.0,
+        sum_of_game_phases / (positions_count as f32)
     );
 }
