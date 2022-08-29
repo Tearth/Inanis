@@ -148,7 +148,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
             }
 
             let q_score = qsearch::run::<false>(&mut context, 0, 0, MIN_ALPHA, MIN_BETA);
-            if q_score > max_score {
+            if q_score.abs() > max_score {
                 ignored_positions += 1;
                 continue;
             }
