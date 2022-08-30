@@ -425,12 +425,23 @@ fn handle_perft(input: Vec<&str>) {
 
     for depth in 1..max_depth + 1 {
         let now = SystemTime::now();
-        let count = perft::normal::run(depth, &mut board, false);
+        let result = perft::normal::run(depth, &mut board, false);
 
         let diff = (now.elapsed().unwrap().as_millis() as f64) / 1000.0;
-        let mnps = ((count as f64) / 1000000.0) / diff;
+        let mnps = ((result.nodes as f64) / 1000000.0) / diff;
 
-        println!("Depth {}: {} leafs in {:.2} s ({:.2} ML/s)", depth, count, diff, mnps);
+        println!(
+            "Depth {}: {} leafs in {:.2} s ({:.2} ML/s), {} captures, {} en passants, {} castles, {} promotions, {} checks",
+            depth,
+            result.nodes,
+            diff,
+            mnps,
+            result.statistics.captures,
+            result.statistics.en_passants,
+            result.statistics.castles,
+            result.statistics.promotions,
+            result.statistics.checks
+        );
     }
 
     println!("Perft done!");

@@ -78,6 +78,28 @@ pub fn run_internal(context: &mut PerftContext, depth: i32) -> u64 {
 
         if !context.board.is_king_checked(context.board.active_color ^ 1) {
             count += run_internal(context, depth - 1);
+
+            if !context.fast && depth == 1 {
+                if r#move.is_capture() {
+                    context.statistics.captures += 1;
+                }
+
+                if r#move.is_en_passant() {
+                    context.statistics.en_passants += 1;
+                }
+
+                if r#move.is_castling() {
+                    context.statistics.castles += 1;
+                }
+
+                if r#move.is_promotion() {
+                    context.statistics.promotions += 1;
+                }
+
+                if context.board.is_king_checked(context.board.active_color) {
+                    context.statistics.checks += 1;
+                }
+            }
         }
 
         context.board.undo_move(r#move);

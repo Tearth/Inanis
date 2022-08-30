@@ -7,6 +7,16 @@ pub struct PerftContext<'a> {
     pub hashtable: &'a Arc<PerftHashTable>,
     pub check_integrity: bool,
     pub fast: bool,
+    pub statistics: PerftStatistics,
+}
+
+#[derive(Default)]
+pub struct PerftStatistics {
+    pub captures: u64,
+    pub en_passants: u64,
+    pub castles: u64,
+    pub promotions: u64,
+    pub checks: u64,
 }
 
 impl<'a> PerftContext<'a> {
@@ -18,6 +28,7 @@ impl<'a> PerftContext<'a> {
             hashtable,
             check_integrity,
             fast,
+            statistics: Default::default(),
         }
     }
 }

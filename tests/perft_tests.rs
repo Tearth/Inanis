@@ -8,7 +8,7 @@ mod perft_tests {
             $(
                 #[test]
                 fn $name() {
-                    assert_eq!($expected_leafs_count, perft::normal::run($depth, &mut Bitboard::new_from_fen($fen, None, None, None, None, None).unwrap(), false));
+                    assert_eq!($expected_leafs_count, perft::normal::run($depth, &mut Bitboard::new_from_fen($fen, None, None, None, None, None).unwrap(), false).nodes);
                 }
             )*
         }
