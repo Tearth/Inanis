@@ -6,6 +6,7 @@ use crate::engine::context::SearchContext;
 use crate::engine::qsearch;
 use crate::engine::see::SEEContainer;
 use crate::engine::*;
+use crate::evaluation::material;
 use crate::evaluation::EvaluationParameters;
 use crate::state::board::Bitboard;
 use crate::state::movegen::MagicContainer;
@@ -147,12 +148,13 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
                 continue;
             }
 
-            let q_score = qsearch::run::<false>(&mut context, 0, 0, MIN_ALPHA, MIN_BETA);
-            if q_score.abs() > max_score {
+            let material_evaluation = material::evaluate(&context.board);
+            if material_evaluation.abs() > max_score {
                 ignored_positions += 1;
                 continue;
             }
 
+            let q_score = qsearch::run::<false>(&mut context, 0, 0, MIN_ALPHA, MIN_BETA);
             let evaluation = context.board.evaluate_without_cache(context.board.active_color);
             if evaluation.abs_diff(q_score) > max_diff {
                 ignored_positions += 1;
