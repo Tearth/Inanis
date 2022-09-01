@@ -1,5 +1,5 @@
 // --------------------------------------------------- //
-// Generated at 2022-07-08 11:00:32 UTC (e = 0.082809) //
+// Generated at 01-09-2022 09:19:01 UTC (e = 0.070673) //
 // --------------------------------------------------- //
 
 use super::*;
@@ -7,33 +7,33 @@ use super::*;
 impl Default for EvaluationParameters {
     fn default() -> Self {
         let mut evaluation_parameters = Self {
-            piece_value: [100, 387, 420, 604, 1245, 10000],
-            initial_material: 9734,
+            piece_value: [100, 396, 409, 591, 1218, 10000],
+            initial_material: 9620,
 
-            mobility_opening: [3, 4, 3, 5, 1, 6],
-            mobility_ending: [3, 1, 0, 6, 3, 6],
-            mobility_center_multiplier: [3, 2, 4, 1, 3, 5],
+            mobility_opening: [3, 0, 2, 5, 1, 6],
+            mobility_ending: [4, 0, 0, 7, 6, 4],
+            mobility_center_multiplier: [2, 1, 7, 1, 2, 5],
 
-            doubled_pawn_opening: 0,
-            doubled_pawn_ending: -11,
+            doubled_pawn_opening: 1,
+            doubled_pawn_ending: -12,
 
-            isolated_pawn_opening: -18,
-            isolated_pawn_ending: -9,
+            isolated_pawn_opening: -23,
+            isolated_pawn_ending: -7,
 
-            chained_pawn_opening: 5,
-            chained_pawn_ending: 7,
+            chained_pawn_opening: 4,
+            chained_pawn_ending: 8,
 
-            passing_pawn_opening: -10,
-            passing_pawn_ending: 64,
+            passing_pawn_opening: -6,
+            passing_pawn_ending: 63,
 
-            pawn_shield_opening: 7,
+            pawn_shield_opening: 8,
             pawn_shield_ending: 3,
 
             pawn_shield_open_file_opening: -26,
             pawn_shield_open_file_ending: 6,
 
-            king_attacked_fields_opening: -22,
-            king_attacked_fields_ending: 7,
+            king_attacked_fields_opening: -9,
+            king_attacked_fields_ending: 3,
 
             pst: [[[[0; 64]; 2]; 6]; 2],
             pst_patterns: [[[0; 64]; 2]; 6],
