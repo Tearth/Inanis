@@ -688,20 +688,22 @@ pub fn get_piece_mobility<const PIECE: u8>(board: &Bitboard, color: u8, dangered
             _ => 0,
         };
 
-        let piece_moves = match PIECE {
+        let mut piece_moves = match PIECE {
             KNIGHT => board.magic.get_knight_moves(from_field_index as usize, &board.patterns),
             BISHOP => board.magic.get_bishop_moves(occupancy, from_field_index as usize),
             ROOK => board.magic.get_rook_moves(occupancy, from_field_index as usize),
             QUEEN => board.magic.get_queen_moves(occupancy, from_field_index as usize),
             KING => board.magic.get_king_moves(from_field_index as usize, &board.patterns),
             _ => panic!("Invalid parameter: fen={}, PIECE={}", board.to_fen(), PIECE),
-        } & !board.occupancy[color as usize];
+        };
+
+        *dangered_king_fields += bit_count(enemy_king_box & (piece_moves | from_field)) as u32;
+        piece_moves &= !board.occupancy[color as usize];
 
         let center_mobility = board.evaluation_parameters.mobility_center_multiplier[PIECE as usize] * bit_count(piece_moves & CENTER) as i16;
         let outside_mobility = bit_count(piece_moves & OUTSIDE) as i16;
 
         mobility += center_mobility + outside_mobility;
-        *dangered_king_fields += bit_count(enemy_king_box & piece_moves) as u32;
     }
 
     mobility
