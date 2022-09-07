@@ -23,8 +23,8 @@ impl Default for EvaluationParameters {
             chained_pawn_opening: 4,
             chained_pawn_ending: 9,
 
-            passing_pawn_opening: -4,
-            passing_pawn_ending: 68,
+            passed_pawn_opening: -4,
+            passed_pawn_ending: 68,
 
             pawn_shield_opening: 8,
             pawn_shield_ending: 3,

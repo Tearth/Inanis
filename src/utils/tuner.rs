@@ -331,8 +331,8 @@ fn load_values(context: &TunerContext, lock_material: bool, random_values: bool)
     parameters.push(TunerParameter::new(context.parameters.chained_pawn_opening, -999, 10, 40, 999));
     parameters.push(TunerParameter::new(context.parameters.chained_pawn_ending, -999, 10, 40, 999));
 
-    parameters.push(TunerParameter::new(context.parameters.passing_pawn_opening, -999, 10, 40, 999));
-    parameters.push(TunerParameter::new(context.parameters.passing_pawn_ending, -999, 10, 40, 999));
+    parameters.push(TunerParameter::new(context.parameters.passed_pawn_opening, -999, 10, 40, 999));
+    parameters.push(TunerParameter::new(context.parameters.passed_pawn_ending, -999, 10, 40, 999));
 
     parameters.push(TunerParameter::new(context.parameters.pawn_shield_opening, -999, 10, 40, 999));
     parameters.push(TunerParameter::new(context.parameters.pawn_shield_ending, -999, 10, 40, 999));
@@ -403,8 +403,8 @@ fn save_values(context: &mut TunerContext, values: &mut [TunerParameter], lock_m
     save_values_internal(values, &mut context.parameters.chained_pawn_opening, &mut index);
     save_values_internal(values, &mut context.parameters.chained_pawn_ending, &mut index);
 
-    save_values_internal(values, &mut context.parameters.passing_pawn_opening, &mut index);
-    save_values_internal(values, &mut context.parameters.passing_pawn_ending, &mut index);
+    save_values_internal(values, &mut context.parameters.passed_pawn_opening, &mut index);
+    save_values_internal(values, &mut context.parameters.passed_pawn_ending, &mut index);
 
     save_values_internal(values, &mut context.parameters.pawn_shield_opening, &mut index);
     save_values_internal(values, &mut context.parameters.pawn_shield_ending, &mut index);
@@ -487,8 +487,8 @@ fn write_evaluation_parameters(context: &mut TunerContext, output_directory: &st
     output.push_str(get_parameter("chained_pawn_opening", context.parameters.chained_pawn_opening).as_str());
     output.push_str(get_parameter("chained_pawn_ending", context.parameters.chained_pawn_ending).as_str());
     output.push('\n');
-    output.push_str(get_parameter("passing_pawn_opening", context.parameters.passing_pawn_opening).as_str());
-    output.push_str(get_parameter("passing_pawn_ending", context.parameters.passing_pawn_ending).as_str());
+    output.push_str(get_parameter("passed_pawn_opening", context.parameters.passed_pawn_opening).as_str());
+    output.push_str(get_parameter("passed_pawn_ending", context.parameters.passed_pawn_ending).as_str());
     output.push('\n');
     output.push_str(get_parameter("pawn_shield_opening", context.parameters.pawn_shield_opening).as_str());
     output.push_str(get_parameter("pawn_shield_ending", context.parameters.pawn_shield_ending).as_str());

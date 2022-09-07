@@ -10,7 +10,7 @@ use std::cmp;
 ///  - doubled pawns (negative score)
 ///  - isolated pawns (negative score)
 ///  - chained pawns (positive score)
-///  - passing pawns (positive score)
+///  - passed pawns (positive score)
 ///  - opened files next to the king (negative score)
 ///
 /// To improve performance (using the fact that structure of pawns changes relatively rare), each evaluation is saved in the pawn hashtable,
@@ -43,7 +43,7 @@ fn evaluate_color(board: &Bitboard, color: u8) -> i16 {
     let mut doubled_pawns = 0;
     let mut isolated_pawns = 0;
     let mut chained_pawns = 0;
-    let mut passing_pawns = 0;
+    let mut passed_pawns = 0;
     let mut opened_files = 0;
 
     for file in 0..8 {
@@ -73,7 +73,7 @@ fn evaluate_color(board: &Bitboard, color: u8) -> i16 {
         let friendly_pawns_ahead_count = bit_count(front & board.patterns.get_file(field_index as usize) & board.pieces[color as usize][PAWN as usize]);
 
         if enemy_pawns_ahead_count == 0 && friendly_pawns_ahead_count == 0 {
-            passing_pawns += 1;
+            passed_pawns += 1;
         }
     }
 
@@ -93,14 +93,14 @@ fn evaluate_color(board: &Bitboard, color: u8) -> i16 {
         + (doubled_pawns as i16) * board.evaluation_parameters.doubled_pawn_opening
         + (isolated_pawns as i16) * board.evaluation_parameters.isolated_pawn_opening
         + (chained_pawns as i16) * board.evaluation_parameters.chained_pawn_opening
-        + (passing_pawns as i16) * board.evaluation_parameters.passing_pawn_opening
+        + (passed_pawns as i16) * board.evaluation_parameters.passed_pawn_opening
         + (pawn_shield as i16) * board.evaluation_parameters.pawn_shield_opening
         + (opened_files as i16) * board.evaluation_parameters.pawn_shield_open_file_opening;
     let ending_score = 0
         + (doubled_pawns as i16) * board.evaluation_parameters.doubled_pawn_ending
         + (isolated_pawns as i16) * board.evaluation_parameters.isolated_pawn_ending
         + (chained_pawns as i16) * board.evaluation_parameters.chained_pawn_ending
-        + (passing_pawns as i16) * board.evaluation_parameters.passing_pawn_ending
+        + (passed_pawns as i16) * board.evaluation_parameters.passed_pawn_ending
         + (pawn_shield as i16) * board.evaluation_parameters.pawn_shield_ending
         + (opened_files as i16) * board.evaluation_parameters.pawn_shield_open_file_ending;
 

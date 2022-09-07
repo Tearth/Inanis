@@ -25,8 +25,8 @@ pub struct EvaluationParameters {
     pub chained_pawn_opening: i16,
     pub chained_pawn_ending: i16,
 
-    pub passing_pawn_opening: i16,
-    pub passing_pawn_ending: i16,
+    pub passed_pawn_opening: i16,
+    pub passed_pawn_ending: i16,
 
     pub pawn_shield_opening: i16,
     pub pawn_shield_ending: i16,
