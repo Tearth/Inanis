@@ -68,9 +68,11 @@ fn evaluate_color(board: &Bitboard, color: u8) -> i16 {
 
         chained_pawns += bit_count(board.patterns.get_star(field_index as usize) & board.pieces[color as usize][PAWN as usize]);
 
-        let enemy_pawns_ahead_count =
-            bit_count(board.patterns.get_front(color as usize, field_index as usize) & board.pieces[(color ^ 1) as usize][PAWN as usize]);
-        if enemy_pawns_ahead_count == 0 {
+        let front = board.patterns.get_front(color as usize, field_index as usize);
+        let enemy_pawns_ahead_count = bit_count(front & board.pieces[(color ^ 1) as usize][PAWN as usize]);
+        let friendly_pawns_ahead_count = bit_count(front & board.patterns.get_file(field_index as usize) & board.pieces[color as usize][PAWN as usize]);
+
+        if enemy_pawns_ahead_count == 0 && friendly_pawns_ahead_count == 0 {
             passing_pawns += 1;
         }
     }
