@@ -1,8 +1,6 @@
 use common::time;
 use std::env;
 use std::process::Command;
-use std::time::SystemTime;
-use std::time::UNIX_EPOCH;
 
 fn main() {
     println!("cargo:rustc-env=HASH={}", hash());
@@ -28,7 +26,7 @@ fn hash() -> String {
 }
 
 fn date() -> String {
-    let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+    let timestamp = time::get_unix_timestamp();
     let datetime = time::unix_timestamp_to_datetime(timestamp);
 
     format!("{:0>2}-{:0>2}-{}", datetime.day, datetime.month, datetime.year)
