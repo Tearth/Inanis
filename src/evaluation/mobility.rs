@@ -4,18 +4,18 @@ use crate::state::movescan;
 
 /// Evaluates mobility and part of the king safety on the `board` and returns score from the white color perspective (more than 0 when advantage,
 /// less than 0 when disadvantage). This evaluator does two things at once: first, counts all possible moves of knight, bishop, rook, queen
-/// (pawns and king are too slow and not very important), and second, sums how many fields around both kings are dangered by enemy side
-/// (`dangered_white_king_fields` and `dangered_black_king_fields`). This is used in the safety evaluator, to prevent calculating the same thing twice.
-pub fn evaluate(board: &Bitboard, dangered_white_king_fields: &mut u32, dangered_black_king_fields: &mut u32) -> i16 {
-    evaluate_color(board, WHITE, dangered_black_king_fields) - evaluate_color(board, BLACK, dangered_white_king_fields)
+/// (pawns and king are too slow and not very important), and second, sums how many squares around both kings are dangered by enemy side
+/// (`dangered_white_king_squares` and `dangered_black_king_squares`). This is used in the safety evaluator, to prevent calculating the same thing twice.
+pub fn evaluate(board: &Bitboard, dangered_white_king_squares: &mut u32, dangered_black_king_squares: &mut u32) -> i16 {
+    evaluate_color(board, WHITE, dangered_black_king_squares) - evaluate_color(board, BLACK, dangered_white_king_squares)
 }
 
-/// Evaluates mobility and `dangered_king_fields` on the `board` for the specified `color`.
-fn evaluate_color(board: &Bitboard, color: u8, dangered_king_fields: &mut u32) -> i16 {
-    let knight_mobility = movescan::get_piece_mobility::<KNIGHT>(board, color, dangered_king_fields);
-    let bishop_mobility = movescan::get_piece_mobility::<BISHOP>(board, color, dangered_king_fields);
-    let rook_mobility = movescan::get_piece_mobility::<ROOK>(board, color, dangered_king_fields);
-    let queen_mobility = movescan::get_piece_mobility::<QUEEN>(board, color, dangered_king_fields);
+/// Evaluates mobility and `dangered_king_squares` on the `board` for the specified `color`.
+fn evaluate_color(board: &Bitboard, color: u8, dangered_king_squares: &mut u32) -> i16 {
+    let knight_mobility = movescan::get_piece_mobility::<KNIGHT>(board, color, dangered_king_squares);
+    let bishop_mobility = movescan::get_piece_mobility::<BISHOP>(board, color, dangered_king_squares);
+    let rook_mobility = movescan::get_piece_mobility::<ROOK>(board, color, dangered_king_squares);
+    let queen_mobility = movescan::get_piece_mobility::<QUEEN>(board, color, dangered_king_squares);
 
     let game_phase = board.get_game_phase();
 

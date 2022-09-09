@@ -17,7 +17,7 @@ pub struct ParsedEPD {
 }
 
 impl ParsedEPD {
-    /// Constructs a new instance of [ParsedEPD] with the `board` and rest of the fields zeroed.
+    /// Constructs a new instance of [ParsedEPD] with the `board` and rest of the squares zeroed.
     pub fn new(board: Bitboard) -> Self {
         Self {
             board,
@@ -144,16 +144,16 @@ fn get_epd_parameter(mut epd: &str, name: &[&str]) -> Option<String> {
 
 /// Parses FEN's pieces and stores them into the `board`. Returns [Err] with the proper error message if `pieces` couldn't be parsed.
 fn fen_to_pieces(board: &mut Bitboard, pieces: &str) -> Result<(), String> {
-    let mut current_field_index = 63;
+    let mut current_square_index = 63;
     for char in pieces.chars().filter(|&x| x != '/') {
         if char.is_ascii_digit() {
-            current_field_index -= char.to_digit(10).ok_or(format!("Invalid FEN, bad symbol: pieces={}", pieces))? as i32;
+            current_square_index -= char.to_digit(10).ok_or(format!("Invalid FEN, bad symbol: pieces={}", pieces))? as i32;
         } else {
             let color = if char.is_uppercase() { WHITE } else { BLACK };
             let piece = symbol_to_piece(char)?;
 
-            board.add_piece(color, piece, current_field_index as u8);
-            current_field_index -= 1;
+            board.add_piece(color, piece, current_square_index as u8);
+            current_square_index -= 1;
         }
     }
 
@@ -163,33 +163,33 @@ fn fen_to_pieces(board: &mut Bitboard, pieces: &str) -> Result<(), String> {
 /// Converts pieces from the `board` into the FEN chunk.
 fn pieces_to_fen(board: &Bitboard) -> String {
     let mut result = String::new();
-    let mut fields_without_piece = 0;
+    let mut squares_without_piece = 0;
 
-    for field_index in (0..64).rev() {
-        let piece = board.get_piece(field_index);
+    for square_index in (0..64).rev() {
+        let piece = board.get_piece(square_index);
         if piece == u8::MAX {
-            fields_without_piece += 1;
+            squares_without_piece += 1;
         } else {
-            if fields_without_piece != 0 {
-                result.push(char::from_digit(fields_without_piece, 10).unwrap());
-                fields_without_piece = 0;
+            if squares_without_piece != 0 {
+                result.push(char::from_digit(squares_without_piece, 10).unwrap());
+                squares_without_piece = 0;
             }
 
             let mut piece_symbol = piece_to_symbol(piece).unwrap();
-            if (board.pieces[WHITE as usize][piece as usize] & (1u64 << field_index)) == 0 {
+            if (board.pieces[WHITE as usize][piece as usize] & (1u64 << square_index)) == 0 {
                 piece_symbol = piece_symbol.to_lowercase().collect::<Vec<char>>()[0];
             }
 
             result.push(piece_symbol);
         }
 
-        if (field_index % 8) == 0 {
-            if fields_without_piece != 0 {
-                result.push(char::from_digit(fields_without_piece, 10).unwrap());
-                fields_without_piece = 0;
+        if (square_index % 8) == 0 {
+            if squares_without_piece != 0 {
+                result.push(char::from_digit(squares_without_piece, 10).unwrap());
+                squares_without_piece = 0;
             }
 
-            if field_index != 0 {
+            if square_index != 0 {
                 result.push('/');
             }
         }
@@ -275,8 +275,8 @@ fn fen_to_en_passant(board: &mut Bitboard, en_passant: &str) -> Result<(), Strin
     let file = chars.next().ok_or(format!("Invalid FEN, bad en passant file: en_passant={}", en_passant))? as u8;
     let rank = chars.next().ok_or(format!("Invalid FEN, bad en passant rank: en_passant={}", en_passant))? as u8;
 
-    let field_index = (7 - (file - b'a')) + 8 * (rank - b'1');
-    board.en_passant = 1u64 << field_index;
+    let square_index = (7 - (file - b'a')) + 8 * (rank - b'1');
+    board.en_passant = 1u64 << square_index;
 
     Ok(())
 }
@@ -287,9 +287,9 @@ fn en_passant_to_fen(board: &Bitboard) -> String {
         return "-".to_string();
     }
 
-    let field_index = bit_scan(board.en_passant);
-    let file = field_index % 8;
-    let rank = field_index / 8;
+    let square_index = bit_scan(board.en_passant);
+    let file = square_index % 8;
+    let rank = square_index / 8;
 
     let result = vec![char::from(b'a' + (7 - file)), char::from(b'1' + rank)];
     result.into_iter().collect()

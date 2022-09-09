@@ -62,15 +62,15 @@ fn evaluate_color(board: &Bitboard, color: u8) -> i16 {
 
     let mut pawns = board.pieces[color as usize][PAWN as usize];
     while pawns != 0 {
-        let field = get_lsb(pawns);
-        let field_index = bit_scan(field);
+        let square = get_lsb(pawns);
+        let square_index = bit_scan(square);
         pawns = pop_lsb(pawns);
 
-        chained_pawns += bit_count(board.patterns.get_star(field_index as usize) & board.pieces[color as usize][PAWN as usize]);
+        chained_pawns += bit_count(board.patterns.get_star(square_index as usize) & board.pieces[color as usize][PAWN as usize]);
 
-        let front = board.patterns.get_front(color as usize, field_index as usize);
+        let front = board.patterns.get_front(color as usize, square_index as usize);
         let enemy_pawns_ahead_count = bit_count(front & board.pieces[(color ^ 1) as usize][PAWN as usize]);
-        let friendly_pawns_ahead_count = bit_count(front & board.patterns.get_file(field_index as usize) & board.pieces[color as usize][PAWN as usize]);
+        let friendly_pawns_ahead_count = bit_count(front & board.patterns.get_file(square_index as usize) & board.pieces[color as usize][PAWN as usize]);
 
         if enemy_pawns_ahead_count == 0 && friendly_pawns_ahead_count == 0 {
             passed_pawns += 1;
@@ -78,11 +78,11 @@ fn evaluate_color(board: &Bitboard, color: u8) -> i16 {
     }
 
     let king = board.pieces[color as usize][KING as usize];
-    let king_field = bit_scan(king);
-    let king_field_file = (king_field & 7) as i8;
-    let pawn_shield = bit_count(board.patterns.get_box(king_field as usize) & board.pieces[color as usize][PAWN as usize]);
+    let king_square = bit_scan(king);
+    let king_square_file = (king_square & 7) as i8;
+    let pawn_shield = bit_count(board.patterns.get_box(king_square as usize) & board.pieces[color as usize][PAWN as usize]);
 
-    for file in cmp::max(0, king_field_file - 1)..=(cmp::min(7, king_field_file + 1)) {
+    for file in cmp::max(0, king_square_file - 1)..=(cmp::min(7, king_square_file + 1)) {
         if (board.patterns.get_file(file as usize) & board.pieces[color as usize][PAWN as usize]) == 0 {
             opened_files += 1;
         }

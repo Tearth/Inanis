@@ -340,8 +340,8 @@ fn load_values(context: &TunerContext, lock_material: bool, random_values: bool)
     parameters.push(TunerParameter::new(context.parameters.pawn_shield_open_file_opening, -999, -40, -10, 999));
     parameters.push(TunerParameter::new(context.parameters.pawn_shield_open_file_ending, -999, -40, -10, 999));
 
-    parameters.push(TunerParameter::new(context.parameters.king_attacked_fields_opening, -999, -40, -10, 999));
-    parameters.push(TunerParameter::new(context.parameters.king_attacked_fields_ending, -999, -40, -10, 999));
+    parameters.push(TunerParameter::new(context.parameters.king_attacked_squares_opening, -999, -40, -10, 999));
+    parameters.push(TunerParameter::new(context.parameters.king_attacked_squares_ending, -999, -40, -10, 999));
 
     let pawn_pst = &context.parameters.pst_patterns[PAWN as usize];
     parameters.append(&mut pawn_pst[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
@@ -412,8 +412,8 @@ fn save_values(context: &mut TunerContext, values: &mut [TunerParameter], lock_m
     save_values_internal(values, &mut context.parameters.pawn_shield_open_file_opening, &mut index);
     save_values_internal(values, &mut context.parameters.pawn_shield_open_file_ending, &mut index);
 
-    save_values_internal(values, &mut context.parameters.king_attacked_fields_opening, &mut index);
-    save_values_internal(values, &mut context.parameters.king_attacked_fields_ending, &mut index);
+    save_values_internal(values, &mut context.parameters.king_attacked_squares_opening, &mut index);
+    save_values_internal(values, &mut context.parameters.king_attacked_squares_ending, &mut index);
 
     let pawn_pst = &mut context.parameters.pst_patterns[PAWN as usize];
     save_values_to_i8_array_internal(values, &mut pawn_pst[0], &mut index);
@@ -496,8 +496,8 @@ fn write_evaluation_parameters(context: &mut TunerContext, output_directory: &st
     output.push_str(get_parameter("pawn_shield_open_file_opening", context.parameters.pawn_shield_open_file_opening).as_str());
     output.push_str(get_parameter("pawn_shield_open_file_ending", context.parameters.pawn_shield_open_file_ending).as_str());
     output.push('\n');
-    output.push_str(get_parameter("king_attacked_fields_opening", context.parameters.king_attacked_fields_opening).as_str());
-    output.push_str(get_parameter("king_attacked_fields_ending", context.parameters.king_attacked_fields_ending).as_str());
+    output.push_str(get_parameter("king_attacked_squares_opening", context.parameters.king_attacked_squares_opening).as_str());
+    output.push_str(get_parameter("king_attacked_squares_ending", context.parameters.king_attacked_squares_ending).as_str());
     output.push('\n');
     output.push_str("            pst: [[[[0; 64]; 2]; 6]; 2],\n");
     output.push_str("            pst_patterns: [[[0; 64]; 2]; 6],\n");

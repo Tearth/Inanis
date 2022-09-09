@@ -286,11 +286,11 @@ impl Move {
         let promotion = chars.next();
 
         if !(b'a'..=b'h').contains(&from_file) || !(b'a'..=b'h').contains(&to_file) {
-            return Err(format!("Invalid move, bad source field: fen={}, text={}", board.to_fen(), text));
+            return Err(format!("Invalid move, bad source square: fen={}, text={}", board.to_fen(), text));
         }
 
         if !(b'1'..=b'8').contains(&from_rank) || !(b'1'..=b'8').contains(&to_rank) {
-            return Err(format!("Invalid move, bad destination field: fen={}, text={}", board.to_fen(), text));
+            return Err(format!("Invalid move, bad destination square: fen={}, text={}", board.to_fen(), text));
         }
 
         if let Some(promotion_piece) = promotion {
@@ -362,12 +362,12 @@ impl Move {
         result.into_iter().collect()
     }
 
-    /// Gets source field from the internal data.
+    /// Gets source square from the internal data.
     pub fn get_from(&self) -> u8 {
         (self.data & 0x3f) as u8
     }
 
-    /// Gets destination field from the internal data.
+    /// Gets destination square from the internal data.
     pub fn get_to(&self) -> u8 {
         ((self.data >> 6) & 0x3f) as u8
     }
@@ -421,9 +421,9 @@ impl Move {
     /// Checks if the move is legal, using `board` as the context.
     pub fn is_legal(&self, board: &Bitboard) -> bool {
         let from = self.get_from();
-        let from_field = 1u64 << from;
+        let from_square = 1u64 << from;
         let to = self.get_to();
-        let to_field = 1u64 << to;
+        let to_square = 1u64 << to;
         let piece = board.get_piece(from);
         let piece_color = board.get_piece_color(from);
 
@@ -443,7 +443,7 @@ impl Move {
         let moves = match piece {
             PAWN => match self.get_flags() {
                 MoveFlags::DOUBLE_PUSH => {
-                    if (board.active_color == WHITE && (from_field & 65280) == 0) || (board.active_color == BLACK && (from_field & 71776119061217280) == 0) {
+                    if (board.active_color == WHITE && (from_square & 65280) == 0) || (board.active_color == BLACK && (from_square & 71776119061217280) == 0) {
                         return false;
                     }
 
@@ -490,7 +490,7 @@ impl Move {
             _ => panic!("Invalid value: fen={}, piece={}", board.to_fen(), piece),
         };
 
-        if (moves & to_field) == 0 {
+        if (moves & to_square) == 0 {
             return false;
         }
 
@@ -499,8 +499,8 @@ impl Move {
 
         if self.is_quiet() {
             if self.is_double_push() {
-                let middle_field_index = (cmp::max(from, to) + cmp::min(from, to)) / 2;
-                if board.get_piece(middle_field_index) != u8::MAX {
+                let middle_square_index = (cmp::max(from, to) + cmp::min(from, to)) / 2;
+                if board.get_piece(middle_square_index) != u8::MAX {
                     return false;
                 }
             }
@@ -526,8 +526,8 @@ impl Move {
             }
         } else if self.is_castling() {
             if piece == KING && target_piece == u8::MAX {
-                let mut rook_field = 0;
-                let mut rook_target_field = 0;
+                let mut rook_square = 0;
+                let mut rook_target_square = 0;
 
                 if (board.active_color == WHITE && from != 3) || (board.active_color == BLACK && from != 59) {
                     return false;
@@ -535,19 +535,19 @@ impl Move {
 
                 match self.get_flags() {
                     MoveFlags::SHORT_CASTLING => {
-                        rook_field = from - 3;
-                        rook_target_field = from - 1;
+                        rook_square = from - 3;
+                        rook_target_square = from - 1;
                     }
                     MoveFlags::LONG_CASTLING => {
-                        rook_field = from + 4;
-                        rook_target_field = from + 1;
+                        rook_square = from + 4;
+                        rook_target_square = from + 1;
                     }
                     _ => panic!("Invalid value: fen={}, self.get_flags()={:?}", board.to_fen(), self.get_flags()),
                 };
 
-                if board.get_piece(rook_target_field) == u8::MAX
-                    && board.get_piece(rook_field) == ROOK
-                    && board.get_piece_color(rook_field) == board.active_color
+                if board.get_piece(rook_target_square) == u8::MAX
+                    && board.get_piece(rook_square) == ROOK
+                    && board.get_piece_color(rook_square) == board.active_color
                 {
                     return true;
                 }
@@ -569,7 +569,7 @@ impl Default for Move {
 
 /// Generates all possible non-captures (if `CAPTURES` is false) or all possible captures (if `CAPTURES` is true) for the `PIECE` at
 /// the position specified by `board`, stores them into `moves` list (starting from `index`) and returns index of the first free slot.
-/// Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the specified fields (useful during checks).
+/// Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the specified squares (useful during checks).
 pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(
     board: &Bitboard,
     moves: &mut [MaybeUninit<Move>],
@@ -580,17 +580,17 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(
     let mut pieces = board.pieces[board.active_color as usize][PIECE as usize];
 
     while pieces != 0 {
-        let from_field = get_lsb(pieces);
-        let from_field_index = bit_scan(from_field);
+        let from_square = get_lsb(pieces);
+        let from_square_index = bit_scan(from_square);
         pieces = pop_lsb(pieces);
 
         let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
         let mut piece_moves = match PIECE {
-            KNIGHT => board.magic.get_knight_moves(from_field_index as usize, &board.patterns),
-            BISHOP => board.magic.get_bishop_moves(occupancy, from_field_index as usize),
-            ROOK => board.magic.get_rook_moves(occupancy, from_field_index as usize),
-            QUEEN => board.magic.get_queen_moves(occupancy, from_field_index as usize),
-            KING => board.magic.get_king_moves(from_field_index as usize, &board.patterns),
+            KNIGHT => board.magic.get_knight_moves(from_square_index as usize, &board.patterns),
+            BISHOP => board.magic.get_bishop_moves(occupancy, from_square_index as usize),
+            ROOK => board.magic.get_rook_moves(occupancy, from_square_index as usize),
+            QUEEN => board.magic.get_queen_moves(occupancy, from_square_index as usize),
+            KING => board.magic.get_king_moves(from_square_index as usize, &board.patterns),
             _ => panic!("Invalid parameter: fen={}, PIECE={}", board.to_fen(), PIECE),
         };
         piece_moves &= !board.occupancy[board.active_color as usize] & evasion_mask;
@@ -602,14 +602,14 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(
         }
 
         while piece_moves != 0 {
-            let to_field = get_lsb(piece_moves);
-            let to_field_index = bit_scan(to_field);
+            let to_square = get_lsb(piece_moves);
+            let to_square_index = bit_scan(to_square);
             piece_moves = pop_lsb(piece_moves);
 
-            let capture = (to_field & board.occupancy[enemy_color as usize]) != 0;
+            let capture = (to_square & board.occupancy[enemy_color as usize]) != 0;
             let flags = if CAPTURES || capture { MoveFlags::CAPTURE } else { MoveFlags::QUIET };
 
-            moves[index].write(Move::new(from_field_index, to_field_index, flags));
+            moves[index].write(Move::new(from_square_index, to_square_index, flags));
             index += 1;
         }
 
@@ -620,7 +620,7 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(
                     let king_side_rook_present = (board.pieces[board.active_color as usize][ROOK as usize] & 0x1) != 0;
 
                     if king_side_castling_rights && king_side_rook_present && (occupancy & 0x6) == 0 {
-                        if !board.are_fields_attacked(board.active_color, &[3, 2, 1]) {
+                        if !board.are_squares_attacked(board.active_color, &[3, 2, 1]) {
                             moves[index].write(Move::new(3, 1, MoveFlags::SHORT_CASTLING));
                             index += 1;
                         }
@@ -630,7 +630,7 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(
                     let queen_side_rook_present = (board.pieces[board.active_color as usize][ROOK as usize] & 0x80) != 0;
 
                     if queen_side_castling_rights && queen_side_rook_present && (occupancy & 0x70) == 0 {
-                        if !board.are_fields_attacked(board.active_color, &[3, 4, 5]) {
+                        if !board.are_squares_attacked(board.active_color, &[3, 4, 5]) {
                             moves[index].write(Move::new(3, 5, MoveFlags::LONG_CASTLING));
                             index += 1;
                         }
@@ -641,7 +641,7 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(
                     let king_side_rook_present = (board.pieces[board.active_color as usize][ROOK as usize] & 0x100000000000000) != 0;
 
                     if king_side_castling_rights && king_side_rook_present && (occupancy & 0x600000000000000) == 0 {
-                        if !board.are_fields_attacked(board.active_color, &[59, 58, 57]) {
+                        if !board.are_squares_attacked(board.active_color, &[59, 58, 57]) {
                             moves[index].write(Move::new(59, 57, MoveFlags::SHORT_CASTLING));
                             index += 1;
                         }
@@ -651,7 +651,7 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(
                     let queen_side_rook_present = (board.pieces[board.active_color as usize][ROOK as usize] & 0x8000000000000000) != 0;
 
                     if queen_side_castling_rights && queen_side_rook_present && (occupancy & 0x7000000000000000) == 0 {
-                        if !board.are_fields_attacked(board.active_color, &[59, 60, 61]) {
+                        if !board.are_squares_attacked(board.active_color, &[59, 60, 61]) {
                             moves[index].write(Move::new(59, 61, MoveFlags::LONG_CASTLING));
                             index += 1;
                         }
@@ -665,19 +665,19 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(
     index
 }
 
-/// Gets `PIECE` mobility (by counting all possible moves at the position specified by `board`) with `color` and increases `dangered_king_fields` if the enemy
-/// king is near to the fields included in the mobility.
-pub fn get_piece_mobility<const PIECE: u8>(board: &Bitboard, color: u8, dangered_king_fields: &mut u32) -> i16 {
+/// Gets `PIECE` mobility (by counting all possible moves at the position specified by `board`) with `color` and increases `dangered_king_squares` if the enemy
+/// king is near to the squares included in the mobility.
+pub fn get_piece_mobility<const PIECE: u8>(board: &Bitboard, color: u8, dangered_king_squares: &mut u32) -> i16 {
     let mut pieces = board.pieces[color as usize][PIECE as usize];
     let mut mobility = 0;
 
     let enemy_color = color ^ 1;
-    let enemy_king_field = bit_scan(board.pieces[enemy_color as usize][KING as usize]);
-    let enemy_king_box = board.patterns.get_box(enemy_king_field as usize);
+    let enemy_king_square = bit_scan(board.pieces[enemy_color as usize][KING as usize]);
+    let enemy_king_box = board.patterns.get_box(enemy_king_square as usize);
 
     while pieces != 0 {
-        let from_field = get_lsb(pieces);
-        let from_field_index = bit_scan(from_field);
+        let from_square = get_lsb(pieces);
+        let from_square_index = bit_scan(from_square);
         pieces = pop_lsb(pieces);
 
         let mut occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
@@ -689,15 +689,15 @@ pub fn get_piece_mobility<const PIECE: u8>(board: &Bitboard, color: u8, dangered
         };
 
         let mut piece_moves = match PIECE {
-            KNIGHT => board.magic.get_knight_moves(from_field_index as usize, &board.patterns),
-            BISHOP => board.magic.get_bishop_moves(occupancy, from_field_index as usize),
-            ROOK => board.magic.get_rook_moves(occupancy, from_field_index as usize),
-            QUEEN => board.magic.get_queen_moves(occupancy, from_field_index as usize),
-            KING => board.magic.get_king_moves(from_field_index as usize, &board.patterns),
+            KNIGHT => board.magic.get_knight_moves(from_square_index as usize, &board.patterns),
+            BISHOP => board.magic.get_bishop_moves(occupancy, from_square_index as usize),
+            ROOK => board.magic.get_rook_moves(occupancy, from_square_index as usize),
+            QUEEN => board.magic.get_queen_moves(occupancy, from_square_index as usize),
+            KING => board.magic.get_king_moves(from_square_index as usize, &board.patterns),
             _ => panic!("Invalid parameter: fen={}, PIECE={}", board.to_fen(), PIECE),
         };
 
-        *dangered_king_fields += bit_count(enemy_king_box & (piece_moves | from_field)) as u32;
+        *dangered_king_squares += bit_count(enemy_king_box & (piece_moves | from_square)) as u32;
         piece_moves &= !board.occupancy[color as usize];
 
         let center_mobility = board.evaluation_parameters.mobility_center_multiplier[PIECE as usize] * bit_count(piece_moves & CENTER) as i16;
@@ -711,7 +711,7 @@ pub fn get_piece_mobility<const PIECE: u8>(board: &Bitboard, color: u8, dangered
 
 /// Generates all possible non-captures (if `CAPTURES` is false) or all possible captures (if `CAPTURES` is true) for the pawns at
 /// the position specified by `board`, stores them into `moves` list (starting from `index`) and returns index of the first free slot.
-/// Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the specified fields (useful during checks).
+/// Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the specified squares (useful during checks).
 pub fn scan_pawn_moves<const CAPTURES: bool>(board: &Bitboard, moves: &mut [MaybeUninit<Move>], mut index: usize, evasion_mask: u64) -> usize {
     if !CAPTURES {
         index = scan_pawn_moves_single_push(board, moves, index, evasion_mask);
@@ -726,36 +726,36 @@ pub fn scan_pawn_moves<const CAPTURES: bool>(board: &Bitboard, moves: &mut [Mayb
 
 /// Generates all possible single pushes for the pawns at the position specified by `board`, stores them into `moves` list (starting from `index`)
 /// and returns index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the
-/// specified fields (useful during checks).
+/// specified squares (useful during checks).
 fn scan_pawn_moves_single_push(board: &Bitboard, moves: &mut [MaybeUninit<Move>], mut index: usize, evasion_mask: u64) -> usize {
     let pieces = board.pieces[board.active_color as usize][PAWN as usize];
     let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
 
     let shift = 8 - 16 * (board.active_color as i8);
     let promotion_line = RANK_H >> (56 * (board.active_color as u8));
-    let mut target_fields = match board.active_color {
+    let mut target_squares = match board.active_color {
         WHITE => (pieces << 8),
         BLACK => (pieces >> 8),
         _ => {
             panic!("Invalid value: board.active_color={}", board.active_color);
         }
     };
-    target_fields &= !occupancy & evasion_mask;
+    target_squares &= !occupancy & evasion_mask;
 
-    while target_fields != 0 {
-        let to_field = get_lsb(target_fields);
-        let to_field_index = bit_scan(to_field);
-        let from_field_index = ((to_field_index as i8) - shift) as u8;
-        target_fields = pop_lsb(target_fields);
+    while target_squares != 0 {
+        let to_square = get_lsb(target_squares);
+        let to_square_index = bit_scan(to_square);
+        let from_square_index = ((to_square_index as i8) - shift) as u8;
+        target_squares = pop_lsb(target_squares);
 
-        if (to_field & promotion_line) != 0 {
-            moves[index + 0].write(Move::new(from_field_index, to_field_index, MoveFlags::QUEEN_PROMOTION));
-            moves[index + 1].write(Move::new(from_field_index, to_field_index, MoveFlags::ROOK_PROMOTION));
-            moves[index + 2].write(Move::new(from_field_index, to_field_index, MoveFlags::BISHOP_PROMOTION));
-            moves[index + 3].write(Move::new(from_field_index, to_field_index, MoveFlags::KNIGHT_PROMOTION));
+        if (to_square & promotion_line) != 0 {
+            moves[index + 0].write(Move::new(from_square_index, to_square_index, MoveFlags::QUEEN_PROMOTION));
+            moves[index + 1].write(Move::new(from_square_index, to_square_index, MoveFlags::ROOK_PROMOTION));
+            moves[index + 2].write(Move::new(from_square_index, to_square_index, MoveFlags::BISHOP_PROMOTION));
+            moves[index + 3].write(Move::new(from_square_index, to_square_index, MoveFlags::KNIGHT_PROMOTION));
             index += 4;
         } else {
-            moves[index].write(Move::new(from_field_index, to_field_index, MoveFlags::QUIET));
+            moves[index].write(Move::new(from_square_index, to_square_index, MoveFlags::QUIET));
             index += 1;
         }
     }
@@ -765,28 +765,28 @@ fn scan_pawn_moves_single_push(board: &Bitboard, moves: &mut [MaybeUninit<Move>]
 
 /// Generates all possible double pushes for the pawns at the position specified by `board`, stores them into `moves` list (starting from `index`)
 /// and returns index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the
-/// specified fields (useful during checks).
+/// specified squares (useful during checks).
 fn scan_pawn_moves_double_push(board: &Bitboard, moves: &mut [MaybeUninit<Move>], mut index: usize, evasion_mask: u64) -> usize {
     let pieces = board.pieces[board.active_color as usize][PAWN as usize];
     let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
 
     let shift = 16 - 32 * (board.active_color as i8);
-    let mut target_fields = match board.active_color {
+    let mut target_squares = match board.active_color {
         WHITE => ((((pieces & RANK_B) << 8) & !occupancy) << 8),
         BLACK => ((((pieces & RANK_G) >> 8) & !occupancy) >> 8),
         _ => {
             panic!("Invalid value: board.active_color={}", board.active_color);
         }
     };
-    target_fields &= !occupancy & evasion_mask;
+    target_squares &= !occupancy & evasion_mask;
 
-    while target_fields != 0 {
-        let to_field = get_lsb(target_fields);
-        let to_field_index = bit_scan(to_field);
-        let from_field_index = ((to_field_index as i8) - shift) as u8;
-        target_fields = pop_lsb(target_fields);
+    while target_squares != 0 {
+        let to_square = get_lsb(target_squares);
+        let to_square_index = bit_scan(to_square);
+        let from_square_index = ((to_square_index as i8) - shift) as u8;
+        target_squares = pop_lsb(target_squares);
 
-        moves[index].write(Move::new(from_field_index, to_field_index, MoveFlags::DOUBLE_PUSH));
+        moves[index].write(Move::new(from_square_index, to_square_index, MoveFlags::DOUBLE_PUSH));
         index += 1;
     }
 
@@ -795,7 +795,7 @@ fn scan_pawn_moves_double_push(board: &Bitboard, moves: &mut [MaybeUninit<Move>]
 
 /// Generates all possible captures for the pawns toward the direction specified by `DIR` and at the position specified by `board`,
 /// stores them into `moves` list (starting from `index`) and returns index of the first free slot. Use `evasion_mask` with value
-/// different than `u64::MAX` to restrict generator to the specified fields (useful during checks).
+/// different than `u64::MAX` to restrict generator to the specified squares (useful during checks).
 fn scan_pawn_moves_diagonal_attacks<const DIR: u8>(board: &Bitboard, moves: &mut [MaybeUninit<Move>], mut index: usize, evasion_mask: u64) -> usize {
     let enemy_color = board.active_color ^ 1;
     let pieces = board.pieces[board.active_color as usize][PAWN as usize];
@@ -805,32 +805,32 @@ fn scan_pawn_moves_diagonal_attacks<const DIR: u8>(board: &Bitboard, moves: &mut
     let signed_shift = (shift as i8) - ((board.active_color as i8) * 2 * (shift as i8));
     let promotion_line = RANK_H >> (56 * (board.active_color as u8));
 
-    let mut target_fields = match board.active_color {
+    let mut target_squares = match board.active_color {
         WHITE => ((pieces & !forbidden_file) << shift),
         BLACK => ((pieces & !forbidden_file) >> shift),
         _ => {
             panic!("Invalid value: board.active_color={}", board.active_color);
         }
     };
-    target_fields &= (board.occupancy[enemy_color as usize] | board.en_passant) & evasion_mask;
+    target_squares &= (board.occupancy[enemy_color as usize] | board.en_passant) & evasion_mask;
 
-    while target_fields != 0 {
-        let to_field = get_lsb(target_fields);
-        let to_field_index = bit_scan(to_field);
-        let from_field_index = ((to_field_index as i8) - signed_shift) as u8;
-        target_fields = pop_lsb(target_fields);
+    while target_squares != 0 {
+        let to_square = get_lsb(target_squares);
+        let to_square_index = bit_scan(to_square);
+        let from_square_index = ((to_square_index as i8) - signed_shift) as u8;
+        target_squares = pop_lsb(target_squares);
 
-        if (to_field & promotion_line) != 0 {
-            moves[index + 0].write(Move::new(from_field_index, to_field_index, MoveFlags::QUEEN_PROMOTION_CAPTURE));
-            moves[index + 1].write(Move::new(from_field_index, to_field_index, MoveFlags::ROOK_PROMOTION_CAPTURE));
-            moves[index + 2].write(Move::new(from_field_index, to_field_index, MoveFlags::BISHOP_PROMOTION_CAPTURE));
-            moves[index + 3].write(Move::new(from_field_index, to_field_index, MoveFlags::KNIGHT_PROMOTION_CAPTURE));
+        if (to_square & promotion_line) != 0 {
+            moves[index + 0].write(Move::new(from_square_index, to_square_index, MoveFlags::QUEEN_PROMOTION_CAPTURE));
+            moves[index + 1].write(Move::new(from_square_index, to_square_index, MoveFlags::ROOK_PROMOTION_CAPTURE));
+            moves[index + 2].write(Move::new(from_square_index, to_square_index, MoveFlags::BISHOP_PROMOTION_CAPTURE));
+            moves[index + 3].write(Move::new(from_square_index, to_square_index, MoveFlags::KNIGHT_PROMOTION_CAPTURE));
             index += 4;
         } else {
-            let en_passant = (to_field & board.en_passant) != 0;
+            let en_passant = (to_square & board.en_passant) != 0;
             let flags = if en_passant { MoveFlags::EN_PASSANT } else { MoveFlags::CAPTURE };
 
-            moves[index].write(Move::new(from_field_index, to_field_index, flags));
+            moves[index].write(Move::new(from_square_index, to_square_index, flags));
             index += 1;
         }
     }

@@ -9,7 +9,7 @@ pub mod queen;
 pub mod rook;
 
 /// Evaluates piece-square table value on the `board` and returns score from the white color perspective (more than 0 when advantage, less than 0 when disadvantage).
-/// This evaluator sums all values of the pieces for the specified fields, using incremental counters in `board`.
+/// This evaluator sums all values of the pieces for the specified squares, using incremental counters in `board`.
 pub fn evaluate(board: &Bitboard) -> i16 {
     let game_phase = board.get_game_phase();
     let opening_score = board.pst_scores[WHITE as usize][OPENING as usize] - board.pst_scores[BLACK as usize][OPENING as usize];
@@ -26,11 +26,11 @@ pub fn recalculate_incremental_values(board: &mut Bitboard) {
             for piece_index in 0..6 {
                 let mut pieces = board.pieces[color_index][piece_index];
                 while pieces != 0 {
-                    let field = get_lsb(pieces);
-                    let field_index = bit_scan(field);
+                    let square = get_lsb(pieces);
+                    let square_index = bit_scan(square);
                     pieces = pop_lsb(pieces);
 
-                    score += board.evaluation_parameters.pst[color_index as usize][piece_index as usize][phase as usize][field_index as usize] as i16;
+                    score += board.evaluation_parameters.pst[color_index as usize][piece_index as usize][phase as usize][square_index as usize] as i16;
                 }
             }
 

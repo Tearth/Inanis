@@ -115,11 +115,11 @@ fn assign_move_scores(context: &SearchContext, moves: &[MaybeUninit<Move>], move
             continue;
         }
 
-        let field = r#move.get_to();
+        let square = r#move.get_to();
         let attacking_piece = context.board.get_piece(r#move.get_from());
         let captured_piece = context.board.get_piece(r#move.get_to());
-        let attackers = context.board.get_attacking_pieces(context.board.active_color ^ 1, field);
-        let defenders = context.board.get_attacking_pieces(context.board.active_color, field);
+        let attackers = context.board.get_attacking_pieces(context.board.active_color ^ 1, square);
+        let defenders = context.board.get_attacking_pieces(context.board.active_color, square);
 
         let see_container = &context.board.see;
         let see = see_container.get(attacking_piece, captured_piece, attackers, defenders, &context.board.evaluation_parameters);

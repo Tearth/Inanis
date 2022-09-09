@@ -165,7 +165,7 @@ impl Bitboard {
 
     /// Generates all possible non-captures (if `CAPTURES` is false) or all possible captures (if `CAPTURES` is true) at the current position, stores
     /// them into `moves` list (starting from `index`) and returns index of the first free slot. Use `evasion_mask` with value different
-    /// than `u64::MAX` to restrict generator to the specified fields (useful during checks).
+    /// than `u64::MAX` to restrict generator to the specified squares (useful during checks).
     pub fn get_moves<const CAPTURES: bool>(&self, moves: &mut [MaybeUninit<Move>], mut index: usize, evasion_mask: u64) -> usize {
         index = movescan::scan_pawn_moves::<CAPTURES>(self, moves, index, evasion_mask);
         index = movescan::scan_piece_moves::<KNIGHT, CAPTURES>(self, moves, index, evasion_mask);
@@ -178,7 +178,7 @@ impl Bitboard {
     }
 
     /// Generates all possible moves (non-captures and captures) at the current position, stores them into `moves` list (starting from `index`) and returns
-    /// index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the specified fields (useful during checks).
+    /// index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the specified squares (useful during checks).
     pub fn get_all_moves(&self, moves: &mut [MaybeUninit<Move>], evasion_mask: u64) -> usize {
         let mut index = 0;
         index = self.get_moves::<true>(moves, index, evasion_mask);
@@ -291,11 +291,11 @@ impl Bitboard {
                 self.pawn_hash ^= self.zobrist.get_piece_hash(color, piece, from);
                 self.pawn_hash ^= self.zobrist.get_piece_hash(color, piece, to);
 
-                let enemy_pawn_field_index = ((to as i8) + 8 * ((color as i8) * 2 - 1)) as u8;
+                let enemy_pawn_square_index = ((to as i8) + 8 * ((color as i8) * 2 - 1)) as u8;
 
-                self.remove_piece(enemy_color, PAWN, enemy_pawn_field_index);
-                self.hash ^= self.zobrist.get_piece_hash(enemy_color, piece, enemy_pawn_field_index);
-                self.pawn_hash ^= self.zobrist.get_piece_hash(enemy_color, piece, enemy_pawn_field_index);
+                self.remove_piece(enemy_color, PAWN, enemy_pawn_square_index);
+                self.hash ^= self.zobrist.get_piece_hash(enemy_color, piece, enemy_pawn_square_index);
+                self.pawn_hash ^= self.zobrist.get_piece_hash(enemy_color, piece, enemy_pawn_square_index);
             }
             _ => {
                 let promotion_piece = r#move.get_promotion_piece();
@@ -495,40 +495,40 @@ impl Bitboard {
         self.captured_piece = state.captured_piece;
     }
 
-    /// Checks if the field specified by `field_index` is attacked by enemy, from the `color` perspective.
-    pub fn is_field_attacked(&self, color: u8, field_index: u8) -> bool {
+    /// Checks if the square specified by `square_index` is attacked by enemy, from the `color` perspective.
+    pub fn is_square_attacked(&self, color: u8, square_index: u8) -> bool {
         let enemy_color = color ^ 1;
         let occupancy = self.occupancy[WHITE as usize] | self.occupancy[BLACK as usize];
 
-        let rook_queen_attacks = self.magic.get_rook_moves(occupancy, field_index as usize);
+        let rook_queen_attacks = self.magic.get_rook_moves(occupancy, square_index as usize);
         let enemy_rooks_queens = self.pieces[enemy_color as usize][ROOK as usize] | self.pieces[enemy_color as usize][QUEEN as usize];
         if (rook_queen_attacks & enemy_rooks_queens) != 0 {
             return true;
         }
 
-        let bishop_queen_attacks = self.magic.get_bishop_moves(occupancy, field_index as usize);
+        let bishop_queen_attacks = self.magic.get_bishop_moves(occupancy, square_index as usize);
         let enemy_bishops_queens = self.pieces[enemy_color as usize][BISHOP as usize] | self.pieces[enemy_color as usize][QUEEN as usize];
         if (bishop_queen_attacks & enemy_bishops_queens) != 0 {
             return true;
         }
 
-        let knight_attacks = self.magic.get_knight_moves(field_index as usize, &self.patterns);
+        let knight_attacks = self.magic.get_knight_moves(square_index as usize, &self.patterns);
         let enemy_knights = self.pieces[enemy_color as usize][KNIGHT as usize];
         if (knight_attacks & enemy_knights) != 0 {
             return true;
         }
 
-        let king_attacks = self.magic.get_king_moves(field_index as usize, &self.patterns);
+        let king_attacks = self.magic.get_king_moves(square_index as usize, &self.patterns);
         let enemy_kings = self.pieces[enemy_color as usize][KING as usize];
         if (king_attacks & enemy_kings) != 0 {
             return true;
         }
 
-        let field = 1u64 << field_index;
+        let square = 1u64 << square_index;
         let potential_enemy_pawns = king_attacks & self.pieces[enemy_color as usize][PAWN as usize];
         let attacking_enemy_pawns = match color {
-            WHITE => field & ((potential_enemy_pawns >> 7) | (potential_enemy_pawns >> 9)),
-            BLACK => field & ((potential_enemy_pawns << 7) | (potential_enemy_pawns << 9)),
+            WHITE => square & ((potential_enemy_pawns >> 7) | (potential_enemy_pawns >> 9)),
+            BLACK => square & ((potential_enemy_pawns << 7) | (potential_enemy_pawns << 9)),
             _ => panic!("Invalid parameter: fen={}, color={}", self.to_fen(), color),
         };
 
@@ -539,18 +539,18 @@ impl Bitboard {
         false
     }
 
-    /// Checks if any of the field specified by `field_indexes` list is attacked by enemy, from the `color` perspective.
-    pub fn are_fields_attacked(&self, color: u8, field_indexes: &[u8]) -> bool {
-        field_indexes.iter().any(|field_index| self.is_field_attacked(color, *field_index))
+    /// Checks if any of the square specified by `square_indexes` list is attacked by enemy, from the `color` perspective.
+    pub fn are_squares_attacked(&self, color: u8, square_indexes: &[u8]) -> bool {
+        square_indexes.iter().any(|square_index| self.is_square_attacked(color, *square_index))
     }
 
-    /// Gets a list of enemy pieces attacking a field specified by `fields_index`, from the `color` perspective. The encoding looks as follows:
+    /// Gets a list of enemy pieces attacking a square specified by `squares_index`, from the `color` perspective. The encoding looks as follows:
     ///  - bit 0 - Pawn
     ///  - bit 1, 2, 3 - Knight/Bishop
     ///  - bit 4, 5 - Rook
     ///  - bit 6 - Queen
     ///  - bit 7 - King
-    pub fn get_attacking_pieces(&self, color: u8, field_index: u8) -> u8 {
+    pub fn get_attacking_pieces(&self, color: u8, square_index: u8) -> u8 {
         let mut result = 0;
         let enemy_color = color ^ 1;
         let occupancy = self.occupancy[WHITE as usize] | self.occupancy[BLACK as usize];
@@ -559,17 +559,17 @@ impl Bitboard {
         let rooks_queens = self.pieces[enemy_color as usize][ROOK as usize] | self.pieces[enemy_color as usize][QUEEN as usize];
         let bishops_queens = self.pieces[enemy_color as usize][BISHOP as usize] | self.pieces[enemy_color as usize][QUEEN as usize];
 
-        let king_attacks = self.magic.get_king_moves(field_index as usize, &self.patterns);
+        let king_attacks = self.magic.get_king_moves(square_index as usize, &self.patterns);
         if (king_attacks & self.pieces[enemy_color as usize][KING as usize]) != 0 {
             result |= 1 << 7;
         }
 
-        let queen_attacks = self.magic.get_queen_moves(occupancy & !bishops_rooks, field_index as usize);
+        let queen_attacks = self.magic.get_queen_moves(occupancy & !bishops_rooks, square_index as usize);
         if (queen_attacks & self.pieces[enemy_color as usize][QUEEN as usize]) != 0 {
             result |= 1 << 6;
         }
 
-        let rook_attacks = self.magic.get_rook_moves(occupancy & !rooks_queens, field_index as usize);
+        let rook_attacks = self.magic.get_rook_moves(occupancy & !rooks_queens, square_index as usize);
         let attacking_rooks = rook_attacks & self.pieces[enemy_color as usize][ROOK as usize];
         if attacking_rooks != 0 {
             result |= match bit_count(attacking_rooks) {
@@ -580,14 +580,14 @@ impl Bitboard {
 
         let mut attacking_knights_bishops_count = 0;
 
-        let knight_attacks = self.magic.get_knight_moves(field_index as usize, &self.patterns);
+        let knight_attacks = self.magic.get_knight_moves(square_index as usize, &self.patterns);
         let enemy_knights = self.pieces[enemy_color as usize][KNIGHT as usize];
         let attacking_knights = knight_attacks & enemy_knights;
         if (knight_attacks & enemy_knights) != 0 {
             attacking_knights_bishops_count += bit_count(attacking_knights);
         }
 
-        let bishop_attacks = self.magic.get_bishop_moves(occupancy & !bishops_queens, field_index as usize);
+        let bishop_attacks = self.magic.get_bishop_moves(occupancy & !bishops_queens, square_index as usize);
         let enemy_bishops = self.pieces[enemy_color as usize][BISHOP as usize];
         let attacking_bishops = bishop_attacks & enemy_bishops;
         if (bishop_attacks & enemy_bishops) != 0 {
@@ -602,11 +602,11 @@ impl Bitboard {
             };
         }
 
-        let field = 1u64 << field_index;
+        let square = 1u64 << square_index;
         let potential_enemy_pawns = king_attacks & self.pieces[enemy_color as usize][PAWN as usize];
         let attacking_enemy_pawns = match color {
-            WHITE => field & ((potential_enemy_pawns >> 7) | (potential_enemy_pawns >> 9)),
-            BLACK => field & ((potential_enemy_pawns << 7) | (potential_enemy_pawns << 9)),
+            WHITE => square & ((potential_enemy_pawns >> 7) | (potential_enemy_pawns >> 9)),
+            BLACK => square & ((potential_enemy_pawns << 7) | (potential_enemy_pawns << 9)),
             _ => panic!("Invalid parameter: fen={}, color={}", self.to_fen(), color),
         };
 
@@ -623,51 +623,51 @@ impl Bitboard {
             return false;
         }
 
-        self.is_field_attacked(color, bit_scan(self.pieces[color as usize][KING as usize]))
+        self.is_square_attacked(color, bit_scan(self.pieces[color as usize][KING as usize]))
     }
 
-    /// Gets piece on the field specified by `field_index`.
-    pub fn get_piece(&self, field_index: u8) -> u8 {
-        self.piece_table[field_index as usize]
+    /// Gets piece on the square specified by `square_index`.
+    pub fn get_piece(&self, square_index: u8) -> u8 {
+        self.piece_table[square_index as usize]
     }
 
-    /// Gets piece's color on the field specified by `field_index`. Returns `u8::MAX` if there is no piece there.
-    pub fn get_piece_color(&self, field_index: u8) -> u8 {
-        let piece = self.piece_table[field_index as usize];
+    /// Gets piece's color on the square specified by `square_index`. Returns `u8::MAX` if there is no piece there.
+    pub fn get_piece_color(&self, square_index: u8) -> u8 {
+        let piece = self.piece_table[square_index as usize];
         if piece == u8::MAX {
             return u8::MAX;
         }
 
-        if ((1u64 << field_index) & self.occupancy[WHITE as usize]) != 0 {
+        if ((1u64 << square_index) & self.occupancy[WHITE as usize]) != 0 {
             WHITE
         } else {
             BLACK
         }
     }
 
-    /// Adds `piece` on the `field` with the specified `color`, also updates occupancy and incremental values.
-    pub fn add_piece(&mut self, color: u8, piece: u8, field: u8) {
-        self.pieces[color as usize][piece as usize] |= 1u64 << field;
-        self.occupancy[color as usize] |= 1u64 << field;
-        self.piece_table[field as usize] = piece;
+    /// Adds `piece` on the `square` with the specified `color`, also updates occupancy and incremental values.
+    pub fn add_piece(&mut self, color: u8, piece: u8, square: u8) {
+        self.pieces[color as usize][piece as usize] |= 1u64 << square;
+        self.occupancy[color as usize] |= 1u64 << square;
+        self.piece_table[square as usize] = piece;
         self.material_scores[color as usize] += self.evaluation_parameters.piece_value[piece as usize];
 
-        self.pst_scores[color as usize][OPENING as usize] += self.evaluation_parameters.get_pst_value(color, piece, OPENING, field);
-        self.pst_scores[color as usize][ENDING as usize] += self.evaluation_parameters.get_pst_value(color, piece, ENDING, field);
+        self.pst_scores[color as usize][OPENING as usize] += self.evaluation_parameters.get_pst_value(color, piece, OPENING, square);
+        self.pst_scores[color as usize][ENDING as usize] += self.evaluation_parameters.get_pst_value(color, piece, ENDING, square);
     }
 
-    /// Removes `piece` on the `field` with the specified `color`, also updates occupancy and incremental values.
-    pub fn remove_piece(&mut self, color: u8, piece: u8, field: u8) {
-        self.pieces[color as usize][piece as usize] &= !(1u64 << field);
-        self.occupancy[color as usize] &= !(1u64 << field);
-        self.piece_table[field as usize] = u8::MAX;
+    /// Removes `piece` on the `square` with the specified `color`, also updates occupancy and incremental values.
+    pub fn remove_piece(&mut self, color: u8, piece: u8, square: u8) {
+        self.pieces[color as usize][piece as usize] &= !(1u64 << square);
+        self.occupancy[color as usize] &= !(1u64 << square);
+        self.piece_table[square as usize] = u8::MAX;
         self.material_scores[color as usize] -= self.evaluation_parameters.piece_value[piece as usize];
 
-        self.pst_scores[color as usize][OPENING as usize] -= self.evaluation_parameters.get_pst_value(color, piece, OPENING, field);
-        self.pst_scores[color as usize][ENDING as usize] -= self.evaluation_parameters.get_pst_value(color, piece, ENDING, field);
+        self.pst_scores[color as usize][OPENING as usize] -= self.evaluation_parameters.get_pst_value(color, piece, OPENING, square);
+        self.pst_scores[color as usize][ENDING as usize] -= self.evaluation_parameters.get_pst_value(color, piece, ENDING, square);
     }
 
-    /// Moves `piece` from the field specified by `from` to the field specified by `to` with the specified `color`, also updates occupancy and incremental values.
+    /// Moves `piece` from the square specified by `from` to the square specified by `to` with the specified `color`, also updates occupancy and incremental values.
     pub fn move_piece(&mut self, color: u8, piece: u8, from: u8, to: u8) {
         self.pieces[color as usize][piece as usize] ^= (1u64 << from) | (1u64 << to);
         self.occupancy[color as usize] ^= (1u64 << from) | (1u64 << to);
@@ -699,11 +699,11 @@ impl Bitboard {
             for piece_index in 0..6 {
                 let mut pieces = self.pieces[color as usize][piece_index as usize];
                 while pieces != 0 {
-                    let field = get_lsb(pieces);
-                    let field_index = bit_scan(field);
+                    let square = get_lsb(pieces);
+                    let square_index = bit_scan(square);
                     pieces = pop_lsb(pieces);
 
-                    hash ^= self.zobrist.get_piece_hash(color, piece_index, field_index);
+                    hash ^= self.zobrist.get_piece_hash(color, piece_index, square_index);
                 }
             }
         }
@@ -740,11 +740,11 @@ impl Bitboard {
             for piece in [PAWN, KING] {
                 let mut pieces = self.pieces[color as usize][piece as usize];
                 while pieces != 0 {
-                    let field = get_lsb(pieces);
-                    let field_index = bit_scan(field);
+                    let square = get_lsb(pieces);
+                    let square_index = bit_scan(square);
                     pieces = pop_lsb(pieces);
 
-                    hash ^= self.zobrist.get_piece_hash(color, piece, field_index);
+                    hash ^= self.zobrist.get_piece_hash(color, piece, square_index);
                 }
             }
         }

@@ -527,7 +527,7 @@ impl SearchResultLine {
 }
 
 impl ops::AddAssign<SearchStatistics> for SearchStatistics {
-    /// Implements `+=` operator for [SearchStatistics] by adding all corresponding fields together (except `max_ply`, where the highest value is taken).
+    /// Implements `+=` operator for [SearchStatistics] by adding all corresponding squares together (except `max_ply`, where the highest value is taken).
     fn add_assign(&mut self, rhs: SearchStatistics) {
         self.nodes_count += rhs.nodes_count;
         self.q_nodes_count += rhs.q_nodes_count;

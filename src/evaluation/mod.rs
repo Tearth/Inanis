@@ -34,8 +34,8 @@ pub struct EvaluationParameters {
     pub pawn_shield_open_file_opening: i16,
     pub pawn_shield_open_file_ending: i16,
 
-    pub king_attacked_fields_opening: i16,
-    pub king_attacked_fields_ending: i16,
+    pub king_attacked_squares_opening: i16,
+    pub king_attacked_squares_ending: i16,
 
     pub pst: [[[[i16; 64]; 2]; 6]; 2],
     pub pst_patterns: [[[i16; 64]; 2]; 6],
@@ -76,8 +76,8 @@ impl EvaluationParameters {
 
         match color {
             WHITE => {
-                for field_index in 0..64 {
-                    array[field_index] = pattern[63 - field_index];
+                for square_index in 0..64 {
+                    array[square_index] = pattern[63 - square_index];
                 }
             }
             BLACK => {
@@ -93,9 +93,9 @@ impl EvaluationParameters {
         array
     }
 
-    /// Gets a PST value for the specified `color`, `piece`, `phase` and `field`.
-    pub fn get_pst_value(&self, color: u8, piece: u8, phase: u8, field: u8) -> i16 {
-        self.pst[color as usize][piece as usize][phase as usize][field as usize] as i16
+    /// Gets a PST value for the specified `color`, `piece`, `phase` and `square`.
+    pub fn get_pst_value(&self, color: u8, piece: u8, phase: u8, square: u8) -> i16 {
+        self.pst[color as usize][piece as usize][phase as usize][square as usize] as i16
     }
 }
 

@@ -32,8 +32,8 @@ impl Default for EvaluationParameters {
             pawn_shield_open_file_opening: -28,
             pawn_shield_open_file_ending: 5,
 
-            king_attacked_fields_opening: -8,
-            king_attacked_fields_ending: 3,
+            king_attacked_squares_opening: -8,
+            king_attacked_squares_ending: 3,
 
             pst: [[[[0; 64]; 2]; 6]; 2],
             pst_patterns: [[[0; 64]; 2]; 6],

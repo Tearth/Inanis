@@ -497,11 +497,11 @@ fn assign_move_scores(
                 continue;
             }
 
-            let field = r#move.get_to();
+            let square = r#move.get_to();
             let attacking_piece = context.board.get_piece(r#move.get_from());
             let captured_piece = context.board.get_piece(r#move.get_to());
-            let attackers = context.board.get_attacking_pieces(context.board.active_color ^ 1, field);
-            let defenders = context.board.get_attacking_pieces(context.board.active_color, field);
+            let attackers = context.board.get_attacking_pieces(context.board.active_color ^ 1, square);
+            let defenders = context.board.get_attacking_pieces(context.board.active_color, square);
 
             let see_container = &context.board.see;
             let see = see_container.get(attacking_piece, captured_piece, attackers, defenders, &context.board.evaluation_parameters);
@@ -578,11 +578,11 @@ fn get_next_move<const DIAG: bool>(
                     if context.board.pieces[context.board.active_color as usize][KING as usize] == 0 {
                         u64::MAX
                     } else {
-                        let king_field_index = bit_scan(context.board.pieces[context.board.active_color as usize][KING as usize]);
+                        let king_square_index = bit_scan(context.board.pieces[context.board.active_color as usize][KING as usize]);
                         let occupancy = context.board.occupancy[WHITE as usize] | context.board.occupancy[BLACK as usize];
 
-                        let queen_moves = context.board.magic.get_queen_moves(occupancy, king_field_index as usize);
-                        let knight_moves = context.board.magic.get_knight_moves(king_field_index as usize, &context.board.patterns);
+                        let queen_moves = context.board.magic.get_queen_moves(occupancy, king_square_index as usize);
+                        let knight_moves = context.board.magic.get_knight_moves(king_square_index as usize, &context.board.patterns);
 
                         queen_moves | knight_moves
                     }
