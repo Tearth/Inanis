@@ -85,8 +85,8 @@ fn run_internal(context: &mut TestContext, depth: i8, transposition_table_size: 
                     let pawn_hashtable = Arc::new(PawnHashTable::new(1 * 1024 * 1024));
                     let killers_table = Arc::new(KillersTable::default());
                     let history_table = Arc::new(HistoryTable::default());
-                    let abort_token = Arc::new(AtomicBool::new(false));
-                    let ponder_token = Arc::new(AtomicBool::new(false));
+                    let abort_flag = Arc::new(AtomicBool::new(false));
+                    let ponder_flag = Arc::new(AtomicBool::new(false));
 
                     let board_clone = position.board.clone();
                     let context = SearchContext::new(
@@ -111,8 +111,8 @@ fn run_internal(context: &mut TestContext, depth: i8, transposition_table_size: 
                         pawn_hashtable.clone(),
                         killers_table.clone(),
                         history_table.clone(),
-                        abort_token.clone(),
-                        ponder_token.clone(),
+                        abort_flag.clone(),
+                        ponder_flag.clone(),
                     );
 
                     let mut last_best_move = Default::default();

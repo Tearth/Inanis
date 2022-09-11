@@ -37,8 +37,8 @@ struct UciState {
     killers_table: Arc<KillersTable>,
     history_table: Arc<HistoryTable>,
     search_thread: Option<JoinHandle<()>>,
-    abort_token: Arc<AtomicBool>,
-    ponder_token: Arc<AtomicBool>,
+    abort_flag: Arc<AtomicBool>,
+    ponder_flag: Arc<AtomicBool>,
     debug_mode: AtomicBool,
 }
 
@@ -53,8 +53,8 @@ impl Default for UciState {
             killers_table: Arc::new(Default::default()),
             history_table: Arc::new(Default::default()),
             search_thread: None,
-            abort_token: Arc::new(AtomicBool::new(false)),
-            ponder_token: Arc::new(AtomicBool::new(false)),
+            abort_flag: Arc::new(AtomicBool::new(false)),
+            ponder_flag: Arc::new(AtomicBool::new(false)),
             debug_mode: AtomicBool::new(false),
         }
     }
@@ -260,8 +260,8 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
         _ => panic!("Invalid value: state_lock.board.active_color={}", state_lock.board.active_color),
     };
 
-    state_lock.abort_token.store(false, Ordering::Relaxed);
-    state_lock.ponder_token.store(false, Ordering::Relaxed);
+    state_lock.abort_flag.store(false, Ordering::Relaxed);
+    state_lock.ponder_flag.store(false, Ordering::Relaxed);
     drop(state_lock);
 
     let state_arc = state.clone();
@@ -298,8 +298,8 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
             state_lock.pawn_hashtable.clone(),
             state_lock.killers_table.clone(),
             state_lock.history_table.clone(),
-            state_lock.abort_token.clone(),
-            state_lock.ponder_token.clone(),
+            state_lock.abort_flag.clone(),
+            state_lock.ponder_flag.clone(),
         );
         drop(state_lock);
 
@@ -328,8 +328,8 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
                     state_lock.pawn_hashtable.clone(),
                     state_lock.killers_table.clone(),
                     state_lock.history_table.clone(),
-                    state_lock.abort_token.clone(),
-                    state_lock.ponder_token.clone(),
+                    state_lock.abort_flag.clone(),
+                    state_lock.ponder_flag.clone(),
                 );
                 drop(state_lock);
 
@@ -433,11 +433,11 @@ fn handle_isready() {
     println!("readyok");
 }
 
-/// Handles `ponderhit` command by setting abort and ponder tokens, which should switch a search mode from the ponder to the regular one.
+/// Handles `ponderhit` command by setting abort and ponder flags, which should switch a search mode from the ponder to the regular one.
 fn handle_ponderhit(state: Arc<Mutex<UciState>>) {
     let state_lock = state.lock().unwrap();
-    state_lock.ponder_token.store(true, Ordering::Relaxed);
-    state_lock.abort_token.store(true, Ordering::Relaxed);
+    state_lock.ponder_flag.store(true, Ordering::Relaxed);
+    state_lock.abort_flag.store(true, Ordering::Relaxed);
 }
 
 /// Handles `position ...` command with the following variants:
@@ -537,20 +537,20 @@ fn handle_setoption(parameters: &[String], state: Arc<Mutex<UciState>>) {
     }
 }
 
-/// Handles `ucinewgame` command by resetting a board state, recreating abort token and clearing tables.
+/// Handles `ucinewgame` command by resetting a board state, recreating abort flag and clearing tables.
 fn handle_ucinewgame(state: Arc<Mutex<UciState>>) {
     let mut state_lock = state.lock().unwrap();
-    state_lock.abort_token.store(true, Ordering::Relaxed);
+    state_lock.abort_flag.store(true, Ordering::Relaxed);
     state_lock.board = Bitboard::new_initial_position(None, None, None, None, None);
-    state_lock.abort_token = Default::default();
+    state_lock.abort_flag = Default::default();
     drop(state_lock);
 
     recreate_state_tables(state.clone());
 }
 
-/// Handles `stop` command by setting abort token, which should stop ongoing search as fast as possible.
+/// Handles `stop` command by setting abort flag, which should stop ongoing search as fast as possible.
 fn handle_stop(state: Arc<Mutex<UciState>>) {
-    state.lock().unwrap().abort_token.store(true, Ordering::Relaxed);
+    state.lock().unwrap().abort_flag.store(true, Ordering::Relaxed);
 }
 
 /// Handles `quit` command by terminating engine process.

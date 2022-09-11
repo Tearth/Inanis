@@ -99,7 +99,7 @@ pub fn run<const DIAG: bool>(context: &mut SearchContext, depth: i8, ply: u16, m
 /// Assigns scores for `moves` by filling `move_scores` array with `moves_count` length, based on current `context`. Move ordering in
 /// quiescence search is mainly based on SEE and works as follows:
 ///  - for every en passant, assign 0
-///  - for every capture with promotion, assign value of the promoted piece
+///  - for every capture with promotion (excluding underpromotions), assign value of the promoted piece
 ///  - for rest of the moves, assign SEE result
 fn assign_move_scores(context: &SearchContext, moves: &[MaybeUninit<Move>], move_scores: &mut [MaybeUninit<i16>], moves_count: usize) {
     for move_index in 0..moves_count {

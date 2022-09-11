@@ -52,8 +52,8 @@ pub struct SearchContext {
     pub killers_table: Arc<KillersTable>,
     pub history_table: Arc<HistoryTable>,
     pub helper_contexts: Vec<HelperThreadContext>,
-    pub abort_token: Arc<AtomicBool>,
-    pub ponder_token: Arc<AtomicBool>,
+    pub abort_flag: Arc<AtomicBool>,
+    pub ponder_flag: Arc<AtomicBool>,
 }
 
 pub struct HelperThreadContext {
@@ -158,8 +158,8 @@ impl SearchContext {
     ///  - `syzygy_probe_limit` - number of pieces for which the probing should be started
     ///  - `syzygy_probe_depth` - minimal depth at which the probing will be started
     ///  - `transposition_table`, `pawn_hashtable`, `killers_table`, `history_table` - hashtables used during search
-    ///  - `abort_token` - token used to abort search from the outside of the context
-    ///  - `ponder_token` - token used to change a search mode from pondering to the regular one
+    ///  - `abort_flag` - flag used to abort search from the outside of the context
+    ///  - `ponder_flag` - flag used to change a search mode from pondering to the regular one
     pub fn new(
         board: Bitboard,
         search_id: u8,
@@ -182,8 +182,8 @@ impl SearchContext {
         pawn_hashtable: Arc<PawnHashTable>,
         killers_table: Arc<KillersTable>,
         history_table: Arc<HistoryTable>,
-        abort_token: Arc<AtomicBool>,
-        ponder_token: Arc<AtomicBool>,
+        abort_flag: Arc<AtomicBool>,
+        ponder_flag: Arc<AtomicBool>,
     ) -> Self {
         Self {
             board,
@@ -214,8 +214,8 @@ impl SearchContext {
             killers_table,
             history_table,
             helper_contexts: Vec::new(),
-            abort_token,
-            ponder_token,
+            abort_flag,
+            ponder_flag,
         }
     }
 
@@ -338,7 +338,7 @@ impl Iterator for SearchContext {
             // If the max depth was reached, but search is in ponder mode, wait for "ponderhit" or "stop" command before executing the last iteration
             if self.ponder_mode && self.forced_depth != 0 && self.current_depth == self.forced_depth {
                 loop {
-                    if self.abort_token.load(Ordering::Relaxed) {
+                    if self.abort_flag.load(Ordering::Relaxed) {
                         break;
                     }
                 }
@@ -443,8 +443,8 @@ impl Iterator for SearchContext {
                 );
             }
 
-            if self.abort_token.load(Ordering::Relaxed) {
-                if self.ponder_token.load(Ordering::Relaxed) {
+            if self.abort_flag.load(Ordering::Relaxed) {
+                if self.ponder_flag.load(Ordering::Relaxed) {
                     self.current_depth = 1;
                     self.forced_depth = 0;
                     self.search_time_start = SystemTime::now();
@@ -457,8 +457,8 @@ impl Iterator for SearchContext {
                         helper_context.context.statistics = Default::default();
                     }
 
-                    self.ponder_token.store(false, Ordering::Relaxed);
-                    self.abort_token.store(false, Ordering::Relaxed);
+                    self.ponder_flag.store(false, Ordering::Relaxed);
+                    self.abort_flag.store(false, Ordering::Relaxed);
 
                     continue;
                 } else {

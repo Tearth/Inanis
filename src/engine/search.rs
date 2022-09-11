@@ -84,6 +84,7 @@ pub fn run<const DIAG: bool>(context: &mut SearchContext, depth: i8) {
 /// performance penalty).
 ///
 /// Search steps for PV node:
+///  - test of abort flag
 ///  - test of initial constraints: abort flag, forced depth
 ///  - test if the enemy king is checked
 ///  - test if there's threefold repetition draw, fifty move rule draw or insufficient material draw
@@ -94,11 +95,11 @@ pub fn run<const DIAG: bool>(context: &mut SearchContext, depth: i8) {
 ///     - filter moves (if `ROOT` is set)
 ///     - late move reduction (<https://www.chessprogramming.org/Late_Move_Reductions>)
 ///     - PVS framework (<https://www.chessprogramming.org/Principal_Variation_Search>)
-///  - test of abort flag
 ///  - test if stalemate draw is detected
 ///  - update transposition table
 ///
 /// Search steps for non-PV node:
+///  - test of abort flag
 ///  - test of initial constraints: abort flag, forced depth, max nodes count
 ///  - test if the enemy king is checked
 ///  - test if there's threefold repetition draw, fifty move rule draw or insufficient material draw
@@ -113,7 +114,6 @@ pub fn run<const DIAG: bool>(context: &mut SearchContext, depth: i8) {
 ///     - late move pruning (<https://www.chessprogramming.org/Futility_Pruning#MoveCountBasedPruning>)
 ///     - late move reduction (<https://www.chessprogramming.org/Late_Move_Reductions>)
 ///     - PVS framework (<https://www.chessprogramming.org/Principal_Variation_Search>)
-///  - test of abort flag
 ///  - test if stalemate draw is detected
 ///  - update transposition table
 fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
@@ -125,20 +125,20 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
     mut allow_null_move: bool,
     friendly_king_checked: bool,
 ) -> i16 {
-    if context.abort_token.load(Ordering::Relaxed) {
+    if context.abort_flag.load(Ordering::Relaxed) {
         return INVALID_SCORE;
     }
 
     if context.forced_depth == 0 && context.max_nodes_count == 0 && (context.statistics.nodes_count & 8191) == 0 {
         if context.search_time_start.elapsed().unwrap().as_millis() > context.deadline as u128 {
-            context.abort_token.store(true, Ordering::Relaxed);
+            context.abort_flag.store(true, Ordering::Relaxed);
             return INVALID_SCORE;
         }
     }
 
     if PV && context.max_nodes_count != 0 {
         if context.statistics.nodes_count + context.statistics.q_nodes_count >= context.max_nodes_count {
-            context.abort_token.store(true, Ordering::Relaxed);
+            context.abort_flag.store(true, Ordering::Relaxed);
             return INVALID_SCORE;
         }
     }
@@ -414,10 +414,6 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
             alpha = original_alpha;
             best_score = -CHECKMATE_SCORE;
         }
-    }
-
-    if context.abort_token.load(Ordering::Relaxed) {
-        return INVALID_SCORE;
     }
 
     if best_score == -CHECKMATE_SCORE + (ply as i16) + 1 && !friendly_king_checked {
