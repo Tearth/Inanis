@@ -111,7 +111,12 @@ fn assign_move_scores(context: &SearchContext, moves: &[MaybeUninit<Move>], move
         }
 
         if r#move.is_promotion() {
-            move_scores[move_index].write(context.board.evaluation_parameters.piece_value[r#move.get_promotion_piece() as usize]);
+            if r#move.get_promotion_piece() == QUEEN {
+                move_scores[move_index].write(context.board.evaluation_parameters.piece_value[r#move.get_promotion_piece() as usize]);
+            } else {
+                move_scores[move_index].write(-9999);
+            }
+
             continue;
         }
 
