@@ -118,16 +118,16 @@ impl TranspositionTable {
 
         for entry in &bucket.entries {
             let entry_data = entry.get_data();
-            let mut entry_score = entry_data.score;
-
             if entry_data.key == key {
-                if engine::is_score_near_checkmate(entry_score) {
-                    if entry_score > 0 {
-                        entry_score -= ply as i16;
+                let entry_score = if engine::is_score_near_checkmate(entry_data.score) {
+                    if entry_data.score > 0 {
+                        entry_data.score - (ply as i16)
                     } else {
-                        entry_score += ply as i16;
+                        entry_data.score + (ply as i16)
                     }
-                }
+                } else {
+                    entry_data.score
+                };
 
                 return Some(TranspositionTableResult {
                     key: entry_data.key,

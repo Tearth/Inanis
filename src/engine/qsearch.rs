@@ -73,19 +73,16 @@ pub fn run<const DIAG: bool>(context: &mut SearchContext, depth: i8, ply: u16, m
         let score = -run::<DIAG>(context, depth - 1, ply + 1, -beta, -alpha);
         context.board.undo_move(r#move);
 
-        if score > alpha {
-            alpha = score;
-
-            if alpha >= beta {
-                conditional_expression!(DIAG, context.statistics.q_beta_cutoffs += 1);
-                if move_index == 0 {
-                    conditional_expression!(DIAG, context.statistics.q_perfect_cutoffs += 1);
-                } else {
-                    conditional_expression!(DIAG, context.statistics.q_non_perfect_cutoffs += 1);
-                }
-
-                break;
+        alpha = cmp::max(alpha, score);
+        if alpha >= beta {
+            conditional_expression!(DIAG, context.statistics.q_beta_cutoffs += 1);
+            if move_index == 0 {
+                conditional_expression!(DIAG, context.statistics.q_perfect_cutoffs += 1);
+            } else {
+                conditional_expression!(DIAG, context.statistics.q_non_perfect_cutoffs += 1);
             }
+
+            break;
         }
     }
 

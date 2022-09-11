@@ -376,12 +376,9 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
         context.board.undo_move(r#move);
 
         if score > best_score {
-            best_score = score;
+            best_score = cmp::max(best_score, score);
+            alpha = cmp::max(alpha, best_score);
             best_move = r#move;
-        }
-
-        if best_score > alpha {
-            alpha = best_score;
 
             if alpha >= beta {
                 if r#move.is_quiet() {
@@ -469,9 +466,7 @@ fn assign_move_scores(
         if r#move == tt_move {
             move_scores[move_index].write(MOVE_ORDERING_HASH_MOVE);
             continue;
-        }
-
-        if r#move.is_quiet() {
+        } else if r#move.is_quiet() {
             if context.killers_table.exists(ply, r#move) {
                 move_scores[move_index].write(MOVE_ORDERING_KILLER_MOVE);
                 continue;

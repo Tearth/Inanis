@@ -254,30 +254,30 @@ impl Bitboard {
                 }
             }
             MoveFlags::SHORT_CASTLING => {
-                let king_from = 3 + 56 * (color as u8);
-                let king_to = 1 + 56 * (color as u8);
+                let king_from = 3 + 56 * color;
+                let king_to = 1 + 56 * color;
 
                 self.move_piece(color, KING, king_from, king_to);
                 self.hash ^= self.zobrist.get_piece_hash(color, KING, king_from);
                 self.hash ^= self.zobrist.get_piece_hash(color, KING, king_to);
 
-                let rook_from = 0 + 56 * (color as u8);
-                let rook_to = 2 + 56 * (color as u8);
+                let rook_from = 0 + 56 * color;
+                let rook_to = 2 + 56 * color;
 
                 self.move_piece(color, ROOK, rook_from, rook_to);
                 self.hash ^= self.zobrist.get_piece_hash(color, ROOK, rook_from);
                 self.hash ^= self.zobrist.get_piece_hash(color, ROOK, rook_to);
             }
             MoveFlags::LONG_CASTLING => {
-                let king_from = 3 + 56 * (color as u8);
-                let king_to = 5 + 56 * (color as u8);
+                let king_from = 3 + 56 * color;
+                let king_to = 5 + 56 * color;
 
                 self.move_piece(color, KING, king_from, king_to);
                 self.hash ^= self.zobrist.get_piece_hash(color, KING, king_from);
                 self.hash ^= self.zobrist.get_piece_hash(color, KING, king_to);
 
-                let rook_from = 7 + 56 * (color as u8);
-                let rook_to = 4 + 56 * (color as u8);
+                let rook_from = 7 + 56 * color;
+                let rook_to = 4 + 56 * color;
 
                 self.move_piece(color, ROOK, rook_from, rook_to);
                 self.hash ^= self.zobrist.get_piece_hash(color, ROOK, rook_from);
@@ -333,9 +333,7 @@ impl Bitboard {
 
             self.pawn_hash ^= self.zobrist.get_piece_hash(color, KING, from);
             self.pawn_hash ^= self.zobrist.get_piece_hash(color, KING, to);
-        }
-
-        if piece == ROOK {
+        } else if piece == ROOK {
             match color {
                 WHITE => {
                     if from == 0 {
@@ -401,12 +399,12 @@ impl Bitboard {
                 self.add_piece(enemy_color, self.captured_piece, to);
             }
             MoveFlags::SHORT_CASTLING => {
-                self.move_piece(color, KING, 1 + 56 * (color as u8), 3 + 56 * (color as u8));
-                self.move_piece(color, ROOK, 2 + 56 * (color as u8), 0 + 56 * (color as u8));
+                self.move_piece(color, KING, 1 + 56 * color, 3 + 56 * color);
+                self.move_piece(color, ROOK, 2 + 56 * color, 0 + 56 * color);
             }
             MoveFlags::LONG_CASTLING => {
-                self.move_piece(color, KING, 5 + 56 * (color as u8), 3 + 56 * (color as u8));
-                self.move_piece(color, ROOK, 4 + 56 * (color as u8), 7 + 56 * (color as u8));
+                self.move_piece(color, KING, 5 + 56 * color, 3 + 56 * color);
+                self.move_piece(color, ROOK, 4 + 56 * color, 7 + 56 * color);
             }
             MoveFlags::EN_PASSANT => {
                 self.move_piece(color, piece, to, from);
