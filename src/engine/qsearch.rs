@@ -99,6 +99,9 @@ pub fn run<const DIAG: bool>(context: &mut SearchContext, depth: i8, ply: u16, m
 ///  - for every capture with promotion (excluding underpromotions), assign value of the promoted piece
 ///  - for rest of the moves, assign SEE result
 fn assign_move_scores(context: &SearchContext, moves: &[MaybeUninit<Move>], move_scores: &mut [MaybeUninit<i16>], moves_count: usize) {
+    let mut attackers_cache = [0u8; 64];
+    let mut defenders_cache = [0u8; 64];
+
     for move_index in 0..moves_count {
         let r#move = unsafe { moves[move_index].assume_init() };
 
@@ -120,8 +123,20 @@ fn assign_move_scores(context: &SearchContext, moves: &[MaybeUninit<Move>], move
         let square = r#move.get_to();
         let attacking_piece = context.board.get_piece(r#move.get_from());
         let captured_piece = context.board.get_piece(r#move.get_to());
-        let attackers = context.board.get_attacking_pieces(context.board.active_color ^ 1, square);
-        let defenders = context.board.get_attacking_pieces(context.board.active_color, square);
+
+        let attackers = if attackers_cache[square as usize] != 0 {
+            attackers_cache[square as usize]
+        } else {
+            attackers_cache[square as usize] = context.board.get_attacking_pieces(context.board.active_color ^ 1, square);
+            attackers_cache[square as usize]
+        };
+
+        let defenders = if defenders_cache[square as usize] != 0 {
+            defenders_cache[square as usize]
+        } else {
+            defenders_cache[square as usize] = context.board.get_attacking_pieces(context.board.active_color, square);
+            defenders_cache[square as usize]
+        };
 
         let see_container = &context.board.see;
         let see = see_container.get(attacking_piece, captured_piece, attackers, defenders, &context.board.evaluation_parameters);
