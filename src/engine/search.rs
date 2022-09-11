@@ -289,8 +289,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
             let r = null_move_pruning_get_r(depth);
 
             context.board.make_null_move();
-            let king_checked = context.board.is_king_checked(context.board.active_color);
-            let score = -run_internal::<false, false, DIAG>(context, depth - r - 1, ply + 1, -beta, -beta + 1, false, king_checked);
+            let score = -run_internal::<false, false, DIAG>(context, depth - r - 1, ply + 1, -beta, -beta + 1, false, false);
             context.board.undo_null_move();
 
             if score >= beta {
