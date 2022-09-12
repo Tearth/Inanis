@@ -558,47 +558,32 @@ impl Bitboard {
         let bishops_queens = self.pieces[enemy_color as usize][BISHOP as usize] | self.pieces[enemy_color as usize][QUEEN as usize];
 
         let king_attacks = self.magic.get_king_moves(square_index as usize, &self.patterns);
-        if (king_attacks & self.pieces[enemy_color as usize][KING as usize]) != 0 {
-            result |= 1 << 7;
-        }
+        result |= (((king_attacks & self.pieces[enemy_color as usize][KING as usize]) != 0) as u8) << 7;
 
         let queen_attacks = self.magic.get_queen_moves(occupancy & !bishops_rooks, square_index as usize);
-        if (queen_attacks & self.pieces[enemy_color as usize][QUEEN as usize]) != 0 {
-            result |= 1 << 6;
-        }
+        result |= (((queen_attacks & self.pieces[enemy_color as usize][QUEEN as usize]) != 0) as u8) << 6;
 
         let rook_attacks = self.magic.get_rook_moves(occupancy & !rooks_queens, square_index as usize);
-        let attacking_rooks = rook_attacks & self.pieces[enemy_color as usize][ROOK as usize];
-        if attacking_rooks != 0 {
-            result |= match bit_count(attacking_rooks) {
-                1 => 1 << 4,
-                _ => 3 << 4,
-            };
-        }
+        let attakcing_rooks_count = bit_count(rook_attacks & self.pieces[enemy_color as usize][ROOK as usize]);
 
-        let mut attacking_knights_bishops_count = 0;
+        result |= match attakcing_rooks_count {
+            0 => 0,
+            1 => 1 << 4,
+            _ => 3 << 4,
+        };
 
         let knight_attacks = self.magic.get_knight_moves(square_index as usize, &self.patterns);
         let enemy_knights = self.pieces[enemy_color as usize][KNIGHT as usize];
-        let attacking_knights = knight_attacks & enemy_knights;
-        if (knight_attacks & enemy_knights) != 0 {
-            attacking_knights_bishops_count += bit_count(attacking_knights);
-        }
-
         let bishop_attacks = self.magic.get_bishop_moves(occupancy & !bishops_queens, square_index as usize);
         let enemy_bishops = self.pieces[enemy_color as usize][BISHOP as usize];
-        let attacking_bishops = bishop_attacks & enemy_bishops;
-        if (bishop_attacks & enemy_bishops) != 0 {
-            attacking_knights_bishops_count += bit_count(attacking_bishops);
-        }
+        let attacking_knights_bishops_count = bit_count(knight_attacks & enemy_knights) + bit_count(bishop_attacks & enemy_bishops);
 
-        if attacking_knights_bishops_count != 0 {
-            result |= match attacking_knights_bishops_count {
-                1 => 1 << 1,
-                2 => 3 << 1,
-                _ => 7 << 1,
-            };
-        }
+        result |= match attacking_knights_bishops_count {
+            0 => 0,
+            1 => 1 << 1,
+            2 => 3 << 1,
+            _ => 7 << 1,
+        };
 
         let square = 1u64 << square_index;
         let potential_enemy_pawns = king_attacks & self.pieces[enemy_color as usize][PAWN as usize];
@@ -608,10 +593,7 @@ impl Bitboard {
             _ => panic!("Invalid parameter: fen={}, color={}", self.to_fen(), color),
         };
 
-        if attacking_enemy_pawns != 0 {
-            result |= 1;
-        }
-
+        result |= (attacking_enemy_pawns != 0) as u8;
         result
     }
 
