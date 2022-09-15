@@ -462,6 +462,7 @@ fn assign_move_scores(
 ) {
     let mut attackers_cache = [0; 64];
     let mut defenders_cache = [0; 64];
+    let killer_moves = context.killers_table.get(ply);
 
     for move_index in start_index..moves_count {
         let r#move = unsafe { moves[move_index].assume_init() };
@@ -470,7 +471,7 @@ fn assign_move_scores(
             move_scores[move_index].write(MOVE_ORDERING_HASH_MOVE);
             continue;
         } else if r#move.is_quiet() {
-            if context.killers_table.exists(ply, r#move) {
+            if killer_moves.iter().any(|&entry| entry == r#move) {
                 move_scores[move_index].write(MOVE_ORDERING_KILLER_MOVE);
                 continue;
             }

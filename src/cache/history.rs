@@ -1,3 +1,4 @@
+use std::cmp;
 use std::sync::atomic::AtomicU32;
 use std::sync::atomic::Ordering;
 
@@ -21,9 +22,8 @@ impl HistoryTable {
         let entry_data = entry.get_data();
         let updated_value = entry_data.value + (depth as u32).pow(2);
 
-        if updated_value > self.max.load(Ordering::Relaxed) {
-            self.max.store(updated_value, Ordering::Relaxed);
-        }
+        let max = self.max.load(Ordering::Relaxed);
+        self.max.store(cmp::max(max, updated_value), Ordering::Relaxed);
 
         entry.set_data(updated_value);
     }
@@ -40,16 +40,18 @@ impl HistoryTable {
 
     /// Ages all values in the history table by performing a square root operation and ceiling.
     pub fn age_values(&self) {
-        for x in 0..64 {
-            for y in 0..64 {
-                let entry = &self.table[x][y];
+        for row in &self.table {
+            for entry in row {
                 let entry_data = entry.get_data();
+                let value_aged = self.age_value(entry_data.value);
 
-                self.table[x][y].set_data(self.age_value(entry_data.value));
+                entry.set_data(value_aged);
             }
         }
 
-        self.max.store(self.age_value(self.max.load(Ordering::Relaxed)), Ordering::Relaxed);
+        let max = self.max.load(Ordering::Relaxed);
+        let max_aged = self.age_value(max);
+        self.max.store(max_aged, Ordering::Relaxed);
     }
 
     /// Ages a single value by performing a square root operation and ceiling.

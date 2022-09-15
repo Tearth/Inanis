@@ -32,19 +32,24 @@ impl KillersTable {
         self.table[ply as usize][0].set_data(r#move);
     }
 
-    /// Checks if killer `r#move` exists at the level specified by `ply`.
-    pub fn exists(&self, ply: u16, r#move: Move) -> bool {
-        self.table[ply as usize].iter().any(|entry| entry.get_data().r#move == r#move)
+    /// Gets all killer moves at the level specified by `ply`.
+    pub fn get(&self, ply: u16) -> [Move; KILLER_SLOTS] {
+        let mut result = [Default::default(); KILLER_SLOTS];
+        for (index, slot) in self.table[ply as usize].iter().enumerate() {
+            result[index] = slot.get_data().r#move;
+        }
+
+        result
     }
 
     /// Ages killer table by shifting all ply levels by two positions up, to ensure that killer moves inside match board after two halfmoves.
     pub fn age_moves(&self) {
-        for ply in 3..MAX_DEPTH {
+        for row in 2..MAX_DEPTH {
             for slot_index in 0..KILLER_SLOTS {
-                let entry = &self.table[ply as usize][slot_index];
+                let entry = &self.table[row as usize][slot_index];
                 let entry_data = entry.get_data();
 
-                self.table[(ply as usize) - 2][slot_index].set_data(entry_data.r#move);
+                self.table[(row as usize) - 2][slot_index].set_data(entry_data.r#move);
             }
         }
 
