@@ -21,28 +21,31 @@ impl PawnHashTable {
     /// Constructs a new instance of [PawnHashTable] by allocating `size` bytes of memory.
     pub fn new(size: usize) -> Self {
         let bucket_size = mem::size_of::<PawnHashTableEntry>();
+        let aligned_size = 1 << (63 - size.leading_zeros());
+
         let mut hashtable = Self {
-            table: Vec::with_capacity(size / bucket_size),
+            table: Vec::with_capacity(aligned_size / bucket_size),
         };
 
-        if size != 0 {
+        if aligned_size != 0 {
             hashtable.table.resize(hashtable.table.capacity(), Default::default());
         }
 
         hashtable
     }
 
-    /// Adds a new entry (storing the key and `score`) using `hash % self.table.len()` formula to calculate an index.
+    /// Adds a new entry (storing the key and `score`) using `hash & (self.table.len() - 1)` formula to calculate an index.
     pub fn add(&self, hash: u64, score: i16) {
         let key = self.get_key(hash);
-        let index = (hash as usize) % self.table.len();
+        let index = self.get_index(hash);
 
         self.table[index].set_data(key, score);
     }
 
-    /// Gets a wanted entry using `hash % self.table.len()` formula to calculate an index. Returns [None] if `hash` is incompatible with the stored key.
+    /// Gets a wanted entry using `hash & (self.table.len() - 1)` formula to calculate an index. Returns [None] if `hash` is incompatible with the stored key.
     pub fn get(&self, hash: u64) -> Option<PawnHashTableResult> {
-        let entry = &self.table[(hash as usize) % self.table.len()];
+        let index = self.get_index(hash);
+        let entry = &self.table[index];
         let entry_data = entry.get_data();
 
         if entry_data.key == self.get_key(hash) {
@@ -68,6 +71,10 @@ impl PawnHashTable {
     /// Calculates a key for the `hash` by taking the last 16 bits of it.
     fn get_key(&self, hash: u64) -> u16 {
         (hash >> 48) as u16
+    }
+
+    fn get_index(&self, hash: u64) -> usize {
+        (hash as usize) & (self.table.len() - 1)
     }
 }
 

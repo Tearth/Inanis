@@ -28,20 +28,22 @@ impl PerftHashTable {
     /// Constructs a new instance of [PerftHashTable] by allocating `size` bytes of memory.
     pub fn new(size: usize) -> Self {
         let bucket_size = mem::size_of::<PerftHashTableBucket>();
+        let aligned_size = 1 << (63 - size.leading_zeros());
+
         let mut hashtable = Self {
-            table: Vec::with_capacity(size / bucket_size),
+            table: Vec::with_capacity(aligned_size / bucket_size),
         };
 
-        if size != 0 {
+        if aligned_size != 0 {
             hashtable.table.resize(hashtable.table.capacity(), Default::default());
         }
 
         hashtable
     }
 
-    /// Adds a new entry (storing `hash`, `depth` and `leafs_count`) using `hash % self.table.len()` formula to calculate an index of the bucket.
+    /// Adds a new entry (storing `hash`, `depth` and `leafs_count`) using `hash & (self.table.len() - 1)` formula to calculate an index of the bucket.
     pub fn add(&self, hash: u64, depth: u8, leafs_count: u64) {
-        let index = (hash as usize) % self.table.len();
+        let index = self.get_index(hash);
         let bucket = &self.table[index];
 
         let mut smallest_depth = u8::MAX;
@@ -65,10 +67,10 @@ impl PerftHashTable {
         bucket.entries[smallest_depth_index].data.store(data, Ordering::Relaxed);
     }
 
-    /// Gets a wanted entry from the specified `depth` using `hash % self.table.len()` formula to calculate an index of the bucket.
+    /// Gets a wanted entry from the specified `depth` using `hash & (self.table.len() - 1)` formula to calculate an index of the bucket.
     /// Returns [None] if `hash` is incompatible with the stored key.
     pub fn get(&self, hash: u64, depth: u8) -> Option<PerftHashTableResult> {
-        let index = (hash as usize) % self.table.len();
+        let index = self.get_index(hash);
         let bucket = &self.table[index];
 
         for entry in &bucket.entries {
@@ -98,6 +100,10 @@ impl PerftHashTable {
         }
 
         ((filled_entries as f32) / (resolution as f32)) * 100.0
+    }
+
+    fn get_index(&self, hash: u64) -> usize {
+        (hash as usize) & (self.table.len() - 1)
     }
 }
 

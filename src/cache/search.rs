@@ -42,18 +42,20 @@ impl TranspositionTable {
     /// Constructs a new instance of [TranspositionTable] by allocating `size` bytes of memory.
     pub fn new(size: usize) -> Self {
         let bucket_size = mem::size_of::<TranspositionTableBucket>();
+        let aligned_size = 1 << (63 - size.leading_zeros());
+
         let mut hashtable = Self {
-            table: Vec::with_capacity(size / bucket_size),
+            table: Vec::with_capacity(aligned_size / bucket_size),
         };
 
-        if size != 0 {
+        if aligned_size != 0 {
             hashtable.table.resize(hashtable.table.capacity(), Default::default());
         }
 
         hashtable
     }
 
-    /// Adds a new entry (storing the key, `score`, `best_move`, `depth`, `ply`, `score_type` and `age`) using `hash % self.table.len()` formula
+    /// Adds a new entry (storing the key, `score`, `best_move`, `depth`, `ply`, `score_type` and `age`) using `hash & (self.table.len() - 1)` formula
     /// to calculate an index of the bucket. Replacement strategy considers a few elements to optimize memory usage and prioritizes slots to replace as follows:
     ///  - empty slots or slots with the same key as the new entry
     ///  - slots with the smallest depth (if there are some old entries, prioritize them)
@@ -61,7 +63,7 @@ impl TranspositionTable {
     /// This function takes care of converting mate `score` using passed `ply`.
     pub fn add(&self, hash: u64, mut score: i16, best_move: Move, depth: i8, ply: u16, score_type: u8, age: u8) {
         let key = self.get_key(hash);
-        let index = (hash as usize) % self.table.len();
+        let index = self.get_index(hash);
         let bucket = &self.table[index];
 
         let mut smallest_depth = i8::MAX;
@@ -109,11 +111,11 @@ impl TranspositionTable {
         bucket.entries[desired_index].set_data(key, score, best_move, depth, score_type, age);
     }
 
-    /// Gets a wanted entry using `hash % self.table.len()` formula to calculate an index of the bucket. This function takes care of converting
+    /// Gets a wanted entry using `hash & (self.table.len() - 1)` formula to calculate an index of the bucket. This function takes care of converting
     /// mate `score` using passed `ply`. Returns [None] if `hash` is incompatible with the stored key.
     pub fn get(&self, hash: u64, ply: u16) -> Option<TranspositionTableResult> {
         let key = self.get_key(hash);
-        let index = (hash as usize) % self.table.len();
+        let index = self.get_index(hash);
         let bucket = &self.table[index];
 
         for entry in &bucket.entries {
@@ -143,7 +145,7 @@ impl TranspositionTable {
         None
     }
 
-    /// Gets an entry's best move using `hash % self.table.len()` formula to calculate an index of the bucket.
+    /// Gets an entry's best move using `hash & (self.table.len() - 1)` formula to calculate an index of the bucket.
     /// Returns [None] if `hash` is incompatible with the stored key.
     pub fn get_best_move(&self, hash: u64) -> Option<Move> {
         let entry = self.get(hash, 0);
@@ -172,6 +174,10 @@ impl TranspositionTable {
     /// Calculates a key for the `hash` by taking the last 16 bits of it.
     fn get_key(&self, hash: u64) -> u16 {
         (hash >> 48) as u16
+    }
+
+    fn get_index(&self, hash: u64) -> usize {
+        (hash as usize) & (self.table.len() - 1)
     }
 }
 
