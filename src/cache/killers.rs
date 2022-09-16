@@ -19,7 +19,7 @@ pub struct KillersTableResult {
 }
 
 impl KillersTable {
-    /// Adds a new killer `r#move` at the level specified by `ply` value. Maximum amount of slots for each of them is set by
+    /// Adds a new killer `r#move` at the level specified by `ply` value. Maximal amount of slots for each of them is set by
     /// [KILLER_SLOTS] constant, and newer entries have always a priority over old ones.
     pub fn add(&self, ply: u16, r#move: Move) {
         for slot_index in (1..KILLER_SLOTS).rev() {

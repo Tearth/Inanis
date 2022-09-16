@@ -133,7 +133,7 @@ fn handle_debug(parameters: &[String], state: Arc<Mutex<UciState>>) {
 ///  - `nodes x` - fixed nodes count, after which the search will try to stop as soon as possible
 ///  - `movetime x` - fixed time allocated for the search in milliseconds
 ///  - `movestogo x` - amount of moves, after which the time will be increased
-///  - `infinite` - tells the search to run until it reaches the maximum depth for the engine
+///  - `infinite` - tells the search to run until it reaches the maximal depth for the engine
 ///  - `searchmoves [moves]` - restricts search to the provided moves list
 ///  - `ponder` - tells the search to run in the ponder mode (thinking on the opponent's time)
 fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
