@@ -24,7 +24,6 @@ use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
-use std::thread::JoinHandle;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
@@ -36,7 +35,6 @@ struct UciState {
     pawn_hashtable: Arc<PawnHashTable>,
     killers_table: Arc<KillersTable>,
     history_table: Arc<HistoryTable>,
-    search_thread: Option<JoinHandle<()>>,
     abort_flag: Arc<AtomicBool>,
     ponder_flag: Arc<AtomicBool>,
     debug_mode: AtomicBool,
@@ -52,7 +50,6 @@ impl Default for UciState {
             pawn_hashtable: Arc::new(PawnHashTable::new(1 * 1024 * 1024)),
             killers_table: Arc::new(Default::default()),
             history_table: Arc::new(Default::default()),
-            search_thread: None,
             abort_flag: Arc::new(AtomicBool::new(false)),
             ponder_flag: Arc::new(AtomicBool::new(false)),
             debug_mode: AtomicBool::new(false),
@@ -265,7 +262,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
     drop(state_lock);
 
     let state_arc = state.clone();
-    let search_thread = Some(thread::spawn(move || {
+    thread::spawn(move || {
         let state_lock = state_arc.lock().unwrap();
 
         let multipv = state_lock.options["MultiPV"].parse::<u32>().unwrap();
@@ -419,13 +416,10 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
             println!("bestmove {}", best_move.to_long_notation());
         }
 
-        let mut state_lock = state_arc.lock().unwrap();
-        state_lock.search_thread = None;
+        let state_lock = state_arc.lock().unwrap();
         state_lock.killers_table.age_moves();
         state_lock.history_table.age_values();
-    }));
-
-    state.lock().unwrap().search_thread = search_thread;
+    });
 }
 
 /// Handles `isready` command by waiting for the busy flag, and then printing response as fast as possible.
