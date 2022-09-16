@@ -10,12 +10,11 @@ pub mod rook;
 
 /// Evaluates piece-square table value on the `board` and returns score from the white color perspective (more than 0 when advantage, less than 0 when disadvantage).
 /// This evaluator sums all values of the pieces for the specified squares, using incremental counters in `board`.
-pub fn evaluate(board: &Bitboard) -> i16 {
-    let game_phase = board.get_game_phase();
+pub fn evaluate(board: &Bitboard) -> EvaluationResult {
     let opening_score = board.pst_scores[WHITE as usize][OPENING as usize] - board.pst_scores[BLACK as usize][OPENING as usize];
     let ending_score = board.pst_scores[WHITE as usize][ENDING as usize] - board.pst_scores[BLACK as usize][ENDING as usize];
 
-    taper_score(game_phase, opening_score, ending_score)
+    EvaluationResult::new(opening_score, ending_score)
 }
 
 /// Recalculates incremental counters on the `board`. This function should be called only once during board initialization, as it's too slow in regular search.

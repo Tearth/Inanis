@@ -1,4 +1,5 @@
 use crate::state::*;
+use std::ops;
 
 pub mod material;
 pub mod mobility;
@@ -39,6 +40,11 @@ pub struct EvaluationParameters {
 
     pub pst: [[[[i16; 64]; 2]; 6]; 2],
     pub pst_patterns: [[[i16; 64]; 2]; 6],
+}
+
+pub struct EvaluationResult {
+    pub opening_score: i16,
+    pub ending_score: i16,
 }
 
 impl EvaluationParameters {
@@ -99,10 +105,48 @@ impl EvaluationParameters {
     }
 }
 
-/// Blends `opening_score` and `ending_score` with the ratio passed in `game_phase`. The ratio is a number from 0.0 to 1.0, where:
-///  - 1.0 represents a board with the initial state set (opening phase)
-///  - 0.0 represents a board without any piece (ending phase)
-///  - every value between them represents a board state somewhere in the middle game
-pub fn taper_score(game_phase: f32, opening_score: i16, ending_score: i16) -> i16 {
-    ((game_phase * (opening_score as f32)) + ((1.0 - game_phase) * (ending_score as f32))) as i16
+impl EvaluationResult {
+    pub fn new(opening_score: i16, ending_score: i16) -> EvaluationResult {
+        EvaluationResult { opening_score, ending_score }
+    }
+
+    /// Blends `opening_score` and `ending_score` with the ratio passed in `game_phase`. The ratio is a number from 0.0 to 1.0, where:
+    ///  - 1.0 represents a board with the initial state set (opening phase)
+    ///  - 0.0 represents a board without any piece (ending phase)
+    ///  - every value between them represents a board state somewhere in the middle game
+    pub fn taper_score(&self, game_phase: f32) -> i16 {
+        ((game_phase * (self.opening_score as f32)) + ((1.0 - game_phase) * (self.ending_score as f32))) as i16
+    }
+}
+
+impl ops::Add<i16> for EvaluationResult {
+    type Output = EvaluationResult;
+
+    fn add(self, rhs: i16) -> EvaluationResult {
+        EvaluationResult::new(self.opening_score + rhs, self.ending_score + rhs)
+    }
+}
+
+impl ops::Add<EvaluationResult> for i16 {
+    type Output = EvaluationResult;
+
+    fn add(self, rhs: EvaluationResult) -> EvaluationResult {
+        EvaluationResult::new(self + rhs.opening_score, self + rhs.ending_score)
+    }
+}
+
+impl ops::Add<EvaluationResult> for EvaluationResult {
+    type Output = EvaluationResult;
+
+    fn add(self, rhs: EvaluationResult) -> EvaluationResult {
+        EvaluationResult::new(self.opening_score + rhs.opening_score, self.ending_score + rhs.ending_score)
+    }
+}
+
+impl ops::Sub<EvaluationResult> for EvaluationResult {
+    type Output = EvaluationResult;
+
+    fn sub(self, rhs: EvaluationResult) -> EvaluationResult {
+        EvaluationResult::new(self.opening_score - rhs.opening_score, self.ending_score - rhs.ending_score)
+    }
 }

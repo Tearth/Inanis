@@ -7,7 +7,6 @@ use crate::evaluation::safety;
 use crate::perft;
 use crate::state::board::Bitboard;
 use crate::state::movegen::MagicContainer;
-use crate::state::*;
 use crate::utils::benchmark;
 use crate::utils::test;
 use crate::utils::tuner;
@@ -356,6 +355,7 @@ fn handle_evaluate(input: Vec<&str>) {
     let mut white_attack_mask = 0;
     let mut black_attack_mask = 0;
 
+    let game_phase = board.get_game_phase();
     let material_evaluation = material::evaluate(&board);
     let pst_evaluation = pst::evaluate(&board);
     let mobility_evaluation = mobility::evaluate(&board, &mut white_attack_mask, &mut black_attack_mask);
@@ -363,19 +363,13 @@ fn handle_evaluate(input: Vec<&str>) {
     let pawns_evaluation = pawns::evaluate_without_cache(&board);
 
     println!("Material: {}", material_evaluation);
-    println!("Piece-square tables: {}", pst_evaluation);
-    println!("Mobility: {}", mobility_evaluation);
-    println!("Safety: {}", safety_evaluation);
-    println!("Pawns: {}", pawns_evaluation);
+    println!("Piece-square tables: {}", pst_evaluation.taper_score(game_phase));
+    println!("Mobility: {}", mobility_evaluation.taper_score(game_phase));
+    println!("Safety: {}", safety_evaluation.taper_score(game_phase));
+    println!("Pawns: {}", pawns_evaluation.taper_score(game_phase));
 
     let sum = material_evaluation + pst_evaluation + mobility_evaluation + safety_evaluation + pawns_evaluation;
-    let board_evaluation = board.evaluate_without_cache(WHITE);
-
-    if sum != board_evaluation {
-        println!(" --- Integration check failed --- ");
-    } else {
-        println!(" --- Total: {} --- ", sum);
-    }
+    println!(" --- Total: {} --- ", sum.taper_score(game_phase));
 }
 
 /// Handles `magic` command by printing a fresh set of magic numbers.

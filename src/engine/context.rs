@@ -431,6 +431,7 @@ impl Iterator for SearchContext {
                 let mut white_attack_mask = 0;
                 let mut black_attack_mask = 0;
 
+                let game_phase = self.board.get_game_phase();
                 let material_evaluation = material::evaluate(&self.board);
                 let pst_evaluation = pst::evaluate(&self.board);
                 let mobility_evaluation = mobility::evaluate(&self.board, &mut white_attack_mask, &mut black_attack_mask);
@@ -439,7 +440,13 @@ impl Iterator for SearchContext {
 
                 println!(
                     "info string search_time={}, desired_time={}, material={}, pst={}, mobility={}, safety={}, pawns={}",
-                    search_time, desired_time, material_evaluation, pst_evaluation, mobility_evaluation, safety_evaluation, pawns_evaluation
+                    search_time,
+                    desired_time,
+                    material_evaluation,
+                    pst_evaluation.taper_score(game_phase),
+                    mobility_evaluation.taper_score(game_phase),
+                    safety_evaluation.taper_score(game_phase),
+                    pawns_evaluation.taper_score(game_phase)
                 );
             }
 

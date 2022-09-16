@@ -741,6 +741,7 @@ impl Bitboard {
         let mut black_attack_mask = 0;
         let mobility_score = mobility::evaluate(self, &mut white_attack_mask, &mut black_attack_mask);
 
+        let game_phase = self.get_game_phase();
         let evaluation = 0
             + material::evaluate(self)
             + pst::evaluate(self)
@@ -748,7 +749,7 @@ impl Bitboard {
             + safety::evaluate(self, white_attack_mask, black_attack_mask)
             + mobility_score;
 
-        -((color as i16) * 2 - 1) * evaluation
+        -((color as i16) * 2 - 1) * evaluation.taper_score(game_phase)
     }
 
     /// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position.
@@ -758,6 +759,7 @@ impl Bitboard {
         let mut black_attack_mask = 0;
         let mobility_score = mobility::evaluate(self, &mut white_attack_mask, &mut black_attack_mask);
 
+        let game_phase = self.get_game_phase();
         let evaluation = 0
             + material::evaluate(self)
             + pst::evaluate(self)
@@ -765,13 +767,14 @@ impl Bitboard {
             + safety::evaluate(self, white_attack_mask, black_attack_mask)
             + mobility_score;
 
-        -((color as i16) * 2 - 1) * evaluation
+        -((color as i16) * 2 - 1) * evaluation.taper_score(game_phase)
     }
 
     /// Runs lazy (fast) evaluations, considering only material and piece-square tables. Returns score from the `color` perspective (more than 0 when
     /// advantage, less than 0 when disadvantage).
     pub fn evaluate_lazy(&self, color: u8) -> i16 {
-        -((color as i16) * 2 - 1) * (material::evaluate(self) + pst::evaluate(self))
+        let game_phase = self.get_game_phase();
+        -((color as i16) * 2 - 1) * (material::evaluate(self) + pst::evaluate(self)).taper_score(game_phase)
     }
 
     /// Recalculates incremental values (material and piece-square tables) entirely.

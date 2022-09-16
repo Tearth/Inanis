@@ -26,7 +26,10 @@ pub fn evaluate<const DIAG: bool>(board: &Bitboard, pawn_hashtable: &PawnHashTab
         }
     }
 
+    let game_phase = board.get_game_phase();
     let score = evaluate_color(board, WHITE) - evaluate_color(board, BLACK);
+    let score = score.taper_score(game_phase);
+
     pawn_hashtable.add(board.pawn_hash, score);
     conditional_expression!(DIAG, statistics.pawn_hashtable_added += 1);
 
@@ -34,12 +37,12 @@ pub fn evaluate<const DIAG: bool>(board: &Bitboard, pawn_hashtable: &PawnHashTab
 }
 
 /// Does the same thing as [evaluate], but doesn't use pawn hashtable to save evalations.
-pub fn evaluate_without_cache(board: &Bitboard) -> i16 {
+pub fn evaluate_without_cache(board: &Bitboard) -> EvaluationResult {
     evaluate_color(board, WHITE) - evaluate_color(board, BLACK)
 }
 
 /// Evaluates pawn structure on the `board` for the specified `color`.
-fn evaluate_color(board: &Bitboard, color: u8) -> i16 {
+fn evaluate_color(board: &Bitboard, color: u8) -> EvaluationResult {
     let mut doubled_pawns = 0;
     let mut isolated_pawns = 0;
     let mut chained_pawns = 0;
@@ -88,7 +91,6 @@ fn evaluate_color(board: &Bitboard, color: u8) -> i16 {
         }
     }
 
-    let game_phase = board.get_game_phase();
     let opening_score = 0
         + (doubled_pawns as i16) * board.evaluation_parameters.doubled_pawn_opening
         + (isolated_pawns as i16) * board.evaluation_parameters.isolated_pawn_opening
@@ -104,5 +106,5 @@ fn evaluate_color(board: &Bitboard, color: u8) -> i16 {
         + (pawn_shield as i16) * board.evaluation_parameters.pawn_shield_ending
         + (opened_files as i16) * board.evaluation_parameters.pawn_shield_open_file_ending;
 
-    taper_score(game_phase, opening_score, ending_score)
+    EvaluationResult::new(opening_score, ending_score)
 }
