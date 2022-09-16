@@ -453,8 +453,8 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
 ///  - for every negative capture, assign SEE score + [MOVE_ORDERING_LOSING_CAPTURES_OFFSET]
 fn assign_move_scores(
     context: &SearchContext,
-    moves: &[MaybeUninit<Move>],
-    move_scores: &mut [MaybeUninit<i16>],
+    moves: &[MaybeUninit<Move>; MAX_MOVES_COUNT],
+    move_scores: &mut [MaybeUninit<i16>; MAX_MOVES_COUNT],
     start_index: usize,
     moves_count: usize,
     tt_move: Move,
@@ -552,8 +552,8 @@ fn assign_move_scores(
 fn get_next_move<const DIAG: bool>(
     context: &mut SearchContext,
     stage: &mut MoveGeneratorStage,
-    moves: &mut [MaybeUninit<Move>],
-    move_scores: &mut [MaybeUninit<i16>],
+    moves: &mut [MaybeUninit<Move>; MAX_MOVES_COUNT],
+    move_scores: &mut [MaybeUninit<i16>; MAX_MOVES_COUNT],
     move_index: &mut usize,
     moves_count: &mut usize,
     hash_move: Move,

@@ -98,7 +98,12 @@ pub fn run<const DIAG: bool>(context: &mut SearchContext, depth: i8, ply: u16, m
 ///  - for every en passant, assign 0
 ///  - for every capture with promotion (excluding underpromotions), assign value of the promoted piece
 ///  - for rest of the moves, assign SEE result
-fn assign_move_scores(context: &SearchContext, moves: &[MaybeUninit<Move>], move_scores: &mut [MaybeUninit<i16>], moves_count: usize) {
+fn assign_move_scores(
+    context: &SearchContext,
+    moves: &[MaybeUninit<Move>; MAX_MOVES_COUNT],
+    move_scores: &mut [MaybeUninit<i16>; MAX_MOVES_COUNT],
+    moves_count: usize,
+) {
     let mut attackers_cache = [0u8; 64];
     let mut defenders_cache = [0u8; 64];
 

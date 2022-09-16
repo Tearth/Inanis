@@ -572,7 +572,7 @@ impl Default for Move {
 /// Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the specified squares (useful during checks).
 pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(
     board: &Bitboard,
-    moves: &mut [MaybeUninit<Move>],
+    moves: &mut [MaybeUninit<Move>; engine::MAX_MOVES_COUNT],
     mut index: usize,
     evasion_mask: u64,
 ) -> usize {
@@ -712,7 +712,12 @@ pub fn get_piece_mobility<const PIECE: u8>(board: &Bitboard, color: u8, dangered
 /// Generates all possible non-captures (if `CAPTURES` is false) or all possible captures (if `CAPTURES` is true) for the pawns at
 /// the position specified by `board`, stores them into `moves` list (starting from `index`) and returns index of the first free slot.
 /// Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the specified squares (useful during checks).
-pub fn scan_pawn_moves<const CAPTURES: bool>(board: &Bitboard, moves: &mut [MaybeUninit<Move>], mut index: usize, evasion_mask: u64) -> usize {
+pub fn scan_pawn_moves<const CAPTURES: bool>(
+    board: &Bitboard,
+    moves: &mut [MaybeUninit<Move>; engine::MAX_MOVES_COUNT],
+    mut index: usize,
+    evasion_mask: u64,
+) -> usize {
     if !CAPTURES {
         index = scan_pawn_moves_single_push(board, moves, index, evasion_mask);
         index = scan_pawn_moves_double_push(board, moves, index, evasion_mask);
@@ -727,7 +732,7 @@ pub fn scan_pawn_moves<const CAPTURES: bool>(board: &Bitboard, moves: &mut [Mayb
 /// Generates all possible single pushes for the pawns at the position specified by `board`, stores them into `moves` list (starting from `index`)
 /// and returns index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the
 /// specified squares (useful during checks).
-fn scan_pawn_moves_single_push(board: &Bitboard, moves: &mut [MaybeUninit<Move>], mut index: usize, evasion_mask: u64) -> usize {
+fn scan_pawn_moves_single_push(board: &Bitboard, moves: &mut [MaybeUninit<Move>; engine::MAX_MOVES_COUNT], mut index: usize, evasion_mask: u64) -> usize {
     let pieces = board.pieces[board.active_color as usize][PAWN as usize];
     let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
 
@@ -766,7 +771,7 @@ fn scan_pawn_moves_single_push(board: &Bitboard, moves: &mut [MaybeUninit<Move>]
 /// Generates all possible double pushes for the pawns at the position specified by `board`, stores them into `moves` list (starting from `index`)
 /// and returns index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the
 /// specified squares (useful during checks).
-fn scan_pawn_moves_double_push(board: &Bitboard, moves: &mut [MaybeUninit<Move>], mut index: usize, evasion_mask: u64) -> usize {
+fn scan_pawn_moves_double_push(board: &Bitboard, moves: &mut [MaybeUninit<Move>; engine::MAX_MOVES_COUNT], mut index: usize, evasion_mask: u64) -> usize {
     let pieces = board.pieces[board.active_color as usize][PAWN as usize];
     let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
 
@@ -796,7 +801,12 @@ fn scan_pawn_moves_double_push(board: &Bitboard, moves: &mut [MaybeUninit<Move>]
 /// Generates all possible captures for the pawns toward the direction specified by `DIR` and at the position specified by `board`,
 /// stores them into `moves` list (starting from `index`) and returns index of the first free slot. Use `evasion_mask` with value
 /// different than `u64::MAX` to restrict generator to the specified squares (useful during checks).
-fn scan_pawn_moves_diagonal_attacks<const DIR: u8>(board: &Bitboard, moves: &mut [MaybeUninit<Move>], mut index: usize, evasion_mask: u64) -> usize {
+fn scan_pawn_moves_diagonal_attacks<const DIR: u8>(
+    board: &Bitboard,
+    moves: &mut [MaybeUninit<Move>; engine::MAX_MOVES_COUNT],
+    mut index: usize,
+    evasion_mask: u64,
+) -> usize {
     let enemy_color = board.active_color ^ 1;
     let pieces = board.pieces[board.active_color as usize][PAWN as usize];
 

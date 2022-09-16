@@ -6,6 +6,7 @@ use super::patterns::PatternsContainer;
 use super::zobrist::ZobristContainer;
 use super::*;
 use crate::cache::pawns::PawnHashTable;
+use crate::engine;
 use crate::engine::context::SearchStatistics;
 use crate::engine::see::SEEContainer;
 use crate::evaluation::material;
@@ -166,7 +167,7 @@ impl Bitboard {
     /// Generates all possible non-captures (if `CAPTURES` is false) or all possible captures (if `CAPTURES` is true) at the current position, stores
     /// them into `moves` list (starting from `index`) and returns index of the first free slot. Use `evasion_mask` with value different
     /// than `u64::MAX` to restrict generator to the specified squares (useful during checks).
-    pub fn get_moves<const CAPTURES: bool>(&self, moves: &mut [MaybeUninit<Move>], mut index: usize, evasion_mask: u64) -> usize {
+    pub fn get_moves<const CAPTURES: bool>(&self, moves: &mut [MaybeUninit<Move>; engine::MAX_MOVES_COUNT], mut index: usize, evasion_mask: u64) -> usize {
         index = movescan::scan_pawn_moves::<CAPTURES>(self, moves, index, evasion_mask);
         index = movescan::scan_piece_moves::<KNIGHT, CAPTURES>(self, moves, index, evasion_mask);
         index = movescan::scan_piece_moves::<BISHOP, CAPTURES>(self, moves, index, evasion_mask);
@@ -179,7 +180,7 @@ impl Bitboard {
 
     /// Generates all possible moves (non-captures and captures) at the current position, stores them into `moves` list (starting from `index`) and returns
     /// index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the specified squares (useful during checks).
-    pub fn get_all_moves(&self, moves: &mut [MaybeUninit<Move>], evasion_mask: u64) -> usize {
+    pub fn get_all_moves(&self, moves: &mut [MaybeUninit<Move>; engine::MAX_MOVES_COUNT], evasion_mask: u64) -> usize {
         let mut index = 0;
         index = self.get_moves::<true>(moves, index, evasion_mask);
         index = self.get_moves::<false>(moves, index, evasion_mask);
