@@ -59,6 +59,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
     let mut ignored_positions = 0;
     let mut duplicates = 0;
     let mut sum_of_game_phases = 0.0;
+    let avg_game_phase = avg_game_phase * (evaluation_parameters.initial_game_phase as f32);
 
     for pgn in pgn_loader {
         let pgn = match pgn {
@@ -162,7 +163,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
             }
 
             let epd = format!("{} c9 \"{}\";", context.board.to_epd(), pgn.result);
-            let game_phase = context.board.get_game_phase();
+            let game_phase = (context.board.game_phase as f32) / (evaluation_parameters.initial_game_phase as f32);
 
             viable_positions.push((epd, game_phase));
             total_viable_positions += 1;

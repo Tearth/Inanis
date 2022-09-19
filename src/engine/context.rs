@@ -431,7 +431,9 @@ impl Iterator for SearchContext {
                 let mut white_attack_mask = 0;
                 let mut black_attack_mask = 0;
 
-                let game_phase = self.board.get_game_phase();
+                let game_phase = self.board.game_phase;
+                let initial_game_phase = self.board.evaluation_parameters.initial_game_phase;
+
                 let material_evaluation = material::evaluate(&self.board);
                 let pst_evaluation = pst::evaluate(&self.board);
                 let mobility_evaluation = mobility::evaluate(&self.board, &mut white_attack_mask, &mut black_attack_mask);
@@ -439,14 +441,15 @@ impl Iterator for SearchContext {
                 let pawns_evaluation = pawns::evaluate_without_cache(&self.board);
 
                 println!(
-                    "info string search_time={}, desired_time={}, material={}, pst={}, mobility={}, safety={}, pawns={}",
+                    "info string search_time={}, desired_time={}, game_phase={}, material={}, pst={}, mobility={}, safety={}, pawns={}",
                     search_time,
                     desired_time,
+                    game_phase,
                     material_evaluation,
-                    pst_evaluation.taper_score(game_phase),
-                    mobility_evaluation.taper_score(game_phase),
-                    safety_evaluation.taper_score(game_phase),
-                    pawns_evaluation.taper_score(game_phase)
+                    pst_evaluation.taper_score(game_phase, initial_game_phase),
+                    mobility_evaluation.taper_score(game_phase, initial_game_phase),
+                    safety_evaluation.taper_score(game_phase, initial_game_phase),
+                    pawns_evaluation.taper_score(game_phase, initial_game_phase)
                 );
             }
 

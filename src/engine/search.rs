@@ -24,7 +24,7 @@ pub const STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_MULTIPLIER: i16 = 150;
 
 pub const NULL_MOVE_PRUNING_MIN_DEPTH: i8 = 2;
 pub const NULL_MOVE_PRUNING_R_CHANGE_DEPTH: i8 = 5;
-pub const NULL_MOVE_PRUNING_MIN_GAME_PHASE: f32 = 0.15;
+pub const NULL_MOVE_PRUNING_MIN_GAME_PHASE: u8 = 3;
 pub const NULL_MOVE_PRUNING_MARGIN: i16 = 50;
 pub const NULL_MOVE_PRUNING_SMALL_R: i8 = 2;
 pub const NULL_MOVE_PRUNING_BIG_R: i8 = 3;
@@ -716,7 +716,7 @@ fn null_move_pruning_can_be_applied<const PV: bool>(
     friendly_king_checked: bool,
 ) -> bool {
     !PV && depth >= NULL_MOVE_PRUNING_MIN_DEPTH
-        && context.board.get_game_phase() > NULL_MOVE_PRUNING_MIN_GAME_PHASE
+        && context.board.game_phase > NULL_MOVE_PRUNING_MIN_GAME_PHASE
         && !is_score_near_checkmate(beta)
         && !friendly_king_checked
         && allow_null_move

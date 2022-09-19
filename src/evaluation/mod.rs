@@ -11,7 +11,8 @@ pub mod safety;
 #[derive(Clone)]
 pub struct EvaluationParameters {
     pub piece_value: [i16; 6],
-    pub initial_material: i16,
+    pub piece_phase_value: [u8; 6],
+    pub initial_game_phase: u8,
 
     pub mobility_opening: [i16; 6],
     pub mobility_ending: [i16; 6],
@@ -60,13 +61,6 @@ impl EvaluationParameters {
 
     /// Recalculates initial material and PST tables.
     pub fn recalculate(&mut self) {
-        self.initial_material = 0
-            + 16 * self.piece_value[PAWN as usize]
-            + 4 * self.piece_value[KNIGHT as usize]
-            + 4 * self.piece_value[BISHOP as usize]
-            + 4 * self.piece_value[ROOK as usize]
-            + 2 * self.piece_value[QUEEN as usize];
-
         for color in 0..2 {
             for piece in 0..6 {
                 for phase in 0..2 {
@@ -110,12 +104,15 @@ impl EvaluationResult {
         EvaluationResult { opening_score, ending_score }
     }
 
-    /// Blends `opening_score` and `ending_score` with the ratio passed in `game_phase`. The ratio is a number from 0.0 to 1.0, where:
-    ///  - 1.0 represents a board with the initial state set (opening phase)
-    ///  - 0.0 represents a board without any piece (ending phase)
+    /// Blends `opening_score` and `ending_score` with the ratio passed in `game_phase`. The ratio is a number from 0 to `max_game_phase`, where:
+    ///  - `max_game_phase` represents a board with the initial state set (opening phase)
+    ///  - 0 represents a board without any piece (ending phase)
     ///  - every value between them represents a board state somewhere in the middle game
-    pub fn taper_score(&self, game_phase: f32) -> i16 {
-        ((game_phase * (self.opening_score as f32)) + ((1.0 - game_phase) * (self.ending_score as f32))) as i16
+    pub fn taper_score(&self, game_phase: u8, max_game_phase: u8) -> i16 {
+        let opening_score = (self.opening_score as i32) * (game_phase as i32);
+        let ending_score = (self.ending_score as i32) * ((max_game_phase as i32) - (game_phase as i32));
+
+        ((opening_score + ending_score) / (max_game_phase as i32)) as i16
     }
 }
 

@@ -26,9 +26,11 @@ pub fn evaluate<const DIAG: bool>(board: &Bitboard, pawn_hashtable: &PawnHashTab
         }
     }
 
-    let game_phase = board.get_game_phase();
+    let game_phase = board.game_phase;
+    let initial_game_phase = board.evaluation_parameters.initial_game_phase;
+
     let score = evaluate_color(board, WHITE) - evaluate_color(board, BLACK);
-    let score = score.taper_score(game_phase);
+    let score = score.taper_score(game_phase, initial_game_phase);
 
     pawn_hashtable.add(board.pawn_hash, score);
     conditional_expression!(DIAG, statistics.pawn_hashtable_added += 1);

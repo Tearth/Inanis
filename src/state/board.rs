@@ -47,6 +47,7 @@ pub struct Bitboard {
     pub pawn_hash: u64,
     pub null_moves: u8,
     pub captured_piece: u8,
+    pub game_phase: u8,
     pub state_stack: Vec<BitboardState>,
     pub material_scores: [i16; 2],
     pub pst_scores: [[i16; 2]; 2],
@@ -95,6 +96,7 @@ impl Bitboard {
             pawn_hash: 0,
             null_moves: 0,
             captured_piece: 0,
+            game_phase: 0,
             state_stack: Vec::new(),
             material_scores: [0; 2],
             pst_scores: [[0, 2]; 2],
@@ -634,6 +636,7 @@ impl Bitboard {
         self.occupancy[color as usize] |= 1u64 << square;
         self.piece_table[square as usize] = piece;
         self.material_scores[color as usize] += self.evaluation_parameters.piece_value[piece as usize];
+        self.game_phase += self.evaluation_parameters.piece_phase_value[piece as usize];
 
         self.pst_scores[color as usize][OPENING as usize] += self.evaluation_parameters.get_pst_value(color, piece, OPENING, square);
         self.pst_scores[color as usize][ENDING as usize] += self.evaluation_parameters.get_pst_value(color, piece, ENDING, square);
@@ -645,6 +648,7 @@ impl Bitboard {
         self.occupancy[color as usize] &= !(1u64 << square);
         self.piece_table[square as usize] = u8::MAX;
         self.material_scores[color as usize] -= self.evaluation_parameters.piece_value[piece as usize];
+        self.game_phase -= self.evaluation_parameters.piece_phase_value[piece as usize];
 
         self.pst_scores[color as usize][OPENING as usize] -= self.evaluation_parameters.get_pst_value(color, piece, OPENING, square);
         self.pst_scores[color as usize][ENDING as usize] -= self.evaluation_parameters.get_pst_value(color, piece, ENDING, square);
@@ -742,7 +746,9 @@ impl Bitboard {
         let mut black_attack_mask = 0;
         let mobility_score = mobility::evaluate(self, &mut white_attack_mask, &mut black_attack_mask);
 
-        let game_phase = self.get_game_phase();
+        let game_phase = self.game_phase;
+        let initial_game_phase = self.evaluation_parameters.initial_game_phase;
+
         let evaluation = 0
             + material::evaluate(self)
             + pst::evaluate(self)
@@ -750,7 +756,7 @@ impl Bitboard {
             + safety::evaluate(self, white_attack_mask, black_attack_mask)
             + mobility_score;
 
-        -((color as i16) * 2 - 1) * evaluation.taper_score(game_phase)
+        -((color as i16) * 2 - 1) * evaluation.taper_score(game_phase, initial_game_phase)
     }
 
     /// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position.
@@ -760,7 +766,9 @@ impl Bitboard {
         let mut black_attack_mask = 0;
         let mobility_score = mobility::evaluate(self, &mut white_attack_mask, &mut black_attack_mask);
 
-        let game_phase = self.get_game_phase();
+        let game_phase = self.game_phase;
+        let initial_game_phase = self.evaluation_parameters.initial_game_phase;
+
         let evaluation = 0
             + material::evaluate(self)
             + pst::evaluate(self)
@@ -768,14 +776,16 @@ impl Bitboard {
             + safety::evaluate(self, white_attack_mask, black_attack_mask)
             + mobility_score;
 
-        -((color as i16) * 2 - 1) * evaluation.taper_score(game_phase)
+        -((color as i16) * 2 - 1) * evaluation.taper_score(game_phase, initial_game_phase)
     }
 
     /// Runs lazy (fast) evaluations, considering only material and piece-square tables. Returns score from the `color` perspective (more than 0 when
     /// advantage, less than 0 when disadvantage).
     pub fn evaluate_lazy(&self, color: u8) -> i16 {
-        let game_phase = self.get_game_phase();
-        -((color as i16) * 2 - 1) * (material::evaluate(self) + pst::evaluate(self)).taper_score(game_phase)
+        let game_phase = self.game_phase;
+        let initial_game_phase = self.evaluation_parameters.initial_game_phase;
+
+        -((color as i16) * 2 - 1) * (material::evaluate(self) + pst::evaluate(self)).taper_score(game_phase, initial_game_phase)
     }
 
     /// Recalculates incremental values (material and piece-square tables) entirely.
@@ -862,14 +872,6 @@ impl Bitboard {
         }
 
         false
-    }
-
-    /// Calculates a game phase at the current position: 1.0 means opening (all pieces present, considering the default position), 0.0 is ending (no pieces at all).
-    pub fn get_game_phase(&self) -> f32 {
-        let total_material = self.material_scores[WHITE as usize] + self.material_scores[BLACK as usize];
-        let total_material_without_kings = total_material - 2 * self.evaluation_parameters.piece_value[KING as usize];
-
-        (total_material_without_kings as f32) / (self.evaluation_parameters.initial_material as f32)
     }
 
     /// Gets pieces count by counting set bits in occupancy.

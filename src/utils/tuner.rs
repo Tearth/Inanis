@@ -7,6 +7,7 @@ use crate::state::movegen::MagicContainer;
 use crate::state::patterns::PatternsContainer;
 use crate::state::zobrist::ZobristContainer;
 use crate::state::*;
+use std::fmt::Display;
 use std::fs;
 use std::fs::File;
 use std::io::BufRead;
@@ -472,7 +473,8 @@ fn write_evaluation_parameters(context: &mut TunerContext, output_directory: &st
     output.push_str("    fn default() -> Self {\n");
     output.push_str("        let mut evaluation_parameters = Self {\n");
     output.push_str(get_array("piece_value", &context.parameters.piece_value).as_str());
-    output.push_str(get_parameter("initial_material", context.parameters.initial_material).as_str());
+    output.push_str(get_array("piece_phase_value", &context.parameters.piece_phase_value).as_str());
+    output.push_str(get_parameter("initial_game_phase", context.parameters.initial_game_phase).as_str());
     output.push('\n');
     output.push_str(get_array("mobility_opening", &context.parameters.mobility_opening).as_str());
     output.push_str(get_array("mobility_ending", &context.parameters.mobility_ending).as_str());
@@ -564,7 +566,10 @@ fn get_header(best_error: f64) -> String {
 }
 
 /// Gets a Rust representation of the piece `values` array.
-fn get_array(name: &str, values: &[i16]) -> String {
+fn get_array<T>(name: &str, values: &[T]) -> String
+where
+    T: Display,
+{
     format!(
         "            {}: [{}, {}, {}, {}, {}, {}],\n",
         name, values[0], values[1], values[2], values[3], values[4], values[5]
@@ -572,7 +577,10 @@ fn get_array(name: &str, values: &[i16]) -> String {
 }
 
 /// Gets a Rust representation of the parameter with the specified `name` and `value`.
-fn get_parameter(name: &str, value: i16) -> String {
+fn get_parameter<T>(name: &str, value: T) -> String
+where
+    T: Display,
+{
     format!("            {}: {},\n", name, value)
 }
 
