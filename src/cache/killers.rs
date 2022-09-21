@@ -3,7 +3,7 @@ use crate::state::movescan::Move;
 use std::sync::atomic::AtomicU16;
 use std::sync::atomic::Ordering;
 
-const KILLER_SLOTS: usize = 3;
+const KILLER_SLOTS: usize = 2;
 
 #[derive(Clone)]
 pub struct KillersTable {
@@ -22,6 +22,10 @@ impl KillersTable {
     /// Adds a new killer `r#move` at the level specified by `ply` value. Maximal amount of slots for each of them is set by
     /// [KILLER_SLOTS] constant, and newer entries have always a priority over old ones.
     pub fn add(&self, ply: u16, r#move: Move) {
+        if self.table[ply as usize][0].get_data().r#move == r#move {
+            return;
+        }
+
         for slot_index in (1..KILLER_SLOTS).rev() {
             let entry = &self.table[ply as usize][slot_index - 1];
             let entry_data = entry.get_data();

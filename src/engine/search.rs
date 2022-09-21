@@ -53,7 +53,7 @@ pub const MOVE_ORDERING_ROOK_PROMOTION: i16 = 98;
 pub const MOVE_ORDERING_BISHOP_PROMOTION: i16 = 97;
 pub const MOVE_ORDERING_KNIGHT_PROMOTION: i16 = 96;
 pub const MOVE_ORDERING_KILLER_MOVE: i16 = 95;
-pub const MOVE_ORDERING_CASTLING: i16 = 94;
+pub const MOVE_ORDERING_CASTLING: i16 = 92;
 pub const MOVE_ORDERING_HISTORY_MOVE: u8 = 180;
 pub const MOVE_ORDERING_HISTORY_MOVE_OFFSET: i16 = -90;
 pub const MOVE_ORDERING_LOSING_CAPTURES_OFFSET: i16 = -100;
@@ -471,8 +471,16 @@ fn assign_move_scores(
             move_scores[move_index].write(MOVE_ORDERING_HASH_MOVE);
             continue;
         } else if r#move.is_quiet() {
-            if killer_moves.iter().any(|&entry| entry == r#move) {
-                move_scores[move_index].write(MOVE_ORDERING_KILLER_MOVE);
+            let mut killer_move_found = false;
+            for (index, &killer_move) in killer_moves.iter().enumerate() {
+                if killer_move == r#move {
+                    move_scores[move_index].write(MOVE_ORDERING_KILLER_MOVE - (index as i16));
+                    killer_move_found = true;
+                    break;
+                }
+            }
+
+            if killer_move_found {
                 continue;
             }
 
