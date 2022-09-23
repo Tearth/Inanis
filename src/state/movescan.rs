@@ -739,8 +739,8 @@ fn scan_pawn_moves_single_push(board: &Bitboard, moves: &mut [MaybeUninit<Move>;
     let shift = 8 - 16 * (board.active_color as i8);
     let promotion_line = RANK_H >> (56 * (board.active_color as u8));
     let mut target_squares = match board.active_color {
-        WHITE => (pieces << 8),
-        BLACK => (pieces >> 8),
+        WHITE => pieces << 8,
+        BLACK => pieces >> 8,
         _ => {
             panic!("Invalid value: board.active_color={}", board.active_color);
         }
@@ -777,8 +777,8 @@ fn scan_pawn_moves_double_push(board: &Bitboard, moves: &mut [MaybeUninit<Move>;
 
     let shift = 16 - 32 * (board.active_color as i8);
     let mut target_squares = match board.active_color {
-        WHITE => ((((pieces & RANK_B) << 8) & !occupancy) << 8),
-        BLACK => ((((pieces & RANK_G) >> 8) & !occupancy) >> 8),
+        WHITE => (((pieces & RANK_B) << 8) & !occupancy) << 8,
+        BLACK => (((pieces & RANK_G) >> 8) & !occupancy) >> 8,
         _ => {
             panic!("Invalid value: board.active_color={}", board.active_color);
         }
@@ -816,8 +816,8 @@ fn scan_pawn_moves_diagonal_attacks<const DIR: u8>(
     let promotion_line = RANK_H >> (56 * (board.active_color as u8));
 
     let mut target_squares = match board.active_color {
-        WHITE => ((pieces & !forbidden_file) << shift),
-        BLACK => ((pieces & !forbidden_file) >> shift),
+        WHITE => (pieces & !forbidden_file) << shift,
+        BLACK => (pieces & !forbidden_file) >> shift,
         _ => {
             panic!("Invalid value: board.active_color={}", board.active_color);
         }
