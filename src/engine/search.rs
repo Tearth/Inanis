@@ -440,18 +440,74 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
     best_score
 }
 
-/// Assigns scores for `moves` by filling `move_scores` array with `moves_count` length (starting from `start_index`), based on current `context`.
+/// Assigns capture scores for `moves` by filling `move_scores` array with `moves_count` length (starting from `start_index`), based on current `context`.
 /// If transposition table move is available, it's passed as `tt_move` too. Moves are prioritized as follows (from most important to the less ones):
 ///  - for transposition table move, assign [MOVE_ORDERING_HASH_MOVE]
 ///  - for every positive capture, assign SEE score + [MOVE_ORDERING_WINNING_CAPTURES_OFFSET]
+///  - for every negative capture, assign SEE score + [MOVE_ORDERING_LOSING_CAPTURES_OFFSET]
+fn assign_capture_scores(
+    context: &SearchContext,
+    moves: &[MaybeUninit<Move>; MAX_MOVES_COUNT],
+    move_scores: &mut [MaybeUninit<i16>; MAX_MOVES_COUNT],
+    start_index: usize,
+    moves_count: usize,
+    tt_move: Move,
+) {
+    let mut attackers_cache = [0; 64];
+    let mut defenders_cache = [0; 64];
+
+    for move_index in start_index..moves_count {
+        let r#move = unsafe { moves[move_index].assume_init() };
+
+        if r#move == tt_move {
+            move_scores[move_index].write(MOVE_ORDERING_HASH_MOVE);
+            continue;
+        }
+
+        if r#move.is_en_passant() {
+            move_scores[move_index].write(MOVE_ORDERING_WINNING_CAPTURES_OFFSET);
+            continue;
+        }
+
+        let square = r#move.get_to();
+        let attacking_piece = context.board.get_piece(r#move.get_from());
+        let captured_piece = context.board.get_piece(r#move.get_to());
+
+        let attackers = if attackers_cache[square as usize] != 0 {
+            attackers_cache[square as usize]
+        } else {
+            attackers_cache[square as usize] = context.board.get_attacking_pieces(context.board.active_color ^ 1, square);
+            attackers_cache[square as usize]
+        };
+
+        let defenders = if defenders_cache[square as usize] != 0 {
+            defenders_cache[square as usize]
+        } else {
+            defenders_cache[square as usize] = context.board.get_attacking_pieces(context.board.active_color, square);
+            defenders_cache[square as usize]
+        };
+
+        let see_container = &context.board.see;
+        let see = see_container.get(attacking_piece, captured_piece, attackers, defenders, &context.board.evaluation_parameters);
+
+        move_scores[move_index].write(if see >= 0 {
+            see + MOVE_ORDERING_WINNING_CAPTURES_OFFSET
+        } else {
+            see + MOVE_ORDERING_LOSING_CAPTURES_OFFSET
+        });
+    }
+}
+
+/// Assigns quiet scores for `moves` by filling `move_scores` array with `moves_count` length (starting from `start_index`), based on current `context`.
+/// If transposition table move is available, it's passed as `tt_move` too. Moves are prioritized as follows (from most important to the less ones):
+///  - for transposition table move, assign [MOVE_ORDERING_HASH_MOVE]
 ///  - for every promotion (excluding these with capture), assign [MOVE_ORDERING_QUEEN_PROMOTION], [MOVE_ORDERING_ROOK_PROMOTION],
 ///    [MOVE_ORDERING_BISHOP_PROMOTION] or [MOVE_ORDERING_KNIGHT_PROMOTION]
 ///  - for every move found in killer table, assign [MOVE_ORDERING_KILLER_MOVE]
 ///  - for every castling, assign [MOVE_ORDERING_CASTLING]
 ///  - for every quiet move which wasn't categoried in other categories, assign score from history table + [MOVE_ORDERING_HISTORY_MOVE_OFFSET] + random noise
 ///    defined by [LAZY_SMP_NOISE] if Lazy SMP is enabled
-///  - for every negative capture, assign SEE score + [MOVE_ORDERING_LOSING_CAPTURES_OFFSET]
-fn assign_move_scores(
+fn assign_quiet_scores(
     context: &SearchContext,
     moves: &[MaybeUninit<Move>; MAX_MOVES_COUNT],
     move_scores: &mut [MaybeUninit<i16>; MAX_MOVES_COUNT],
@@ -460,10 +516,7 @@ fn assign_move_scores(
     tt_move: Move,
     ply: u16,
 ) {
-    let mut attackers_cache = [0; 64];
-    let mut defenders_cache = [0; 64];
     let killer_moves = context.killers_table.get(ply);
-
     for move_index in start_index..moves_count {
         let r#move = unsafe { moves[move_index].assume_init() };
 
@@ -491,40 +544,6 @@ fn assign_move_scores(
 
             value += MOVE_ORDERING_HISTORY_MOVE_OFFSET;
             move_scores[move_index].write(value);
-
-            continue;
-        } else if r#move.is_capture() {
-            if r#move.is_en_passant() {
-                move_scores[move_index].write(MOVE_ORDERING_WINNING_CAPTURES_OFFSET);
-                continue;
-            }
-
-            let square = r#move.get_to();
-            let attacking_piece = context.board.get_piece(r#move.get_from());
-            let captured_piece = context.board.get_piece(r#move.get_to());
-
-            let attackers = if attackers_cache[square as usize] != 0 {
-                attackers_cache[square as usize]
-            } else {
-                attackers_cache[square as usize] = context.board.get_attacking_pieces(context.board.active_color ^ 1, square);
-                attackers_cache[square as usize]
-            };
-
-            let defenders = if defenders_cache[square as usize] != 0 {
-                defenders_cache[square as usize]
-            } else {
-                defenders_cache[square as usize] = context.board.get_attacking_pieces(context.board.active_color, square);
-                defenders_cache[square as usize]
-            };
-
-            let see_container = &context.board.see;
-            let see = see_container.get(attacking_piece, captured_piece, attackers, defenders, &context.board.evaluation_parameters);
-
-            move_scores[move_index].write(if see >= 0 {
-                see + MOVE_ORDERING_WINNING_CAPTURES_OFFSET
-            } else {
-                see + MOVE_ORDERING_LOSING_CAPTURES_OFFSET
-            });
 
             continue;
         } else if r#move.is_promotion() {
@@ -612,7 +631,7 @@ fn get_next_move<const DIAG: bool>(
                     continue;
                 }
 
-                assign_move_scores(context, moves, move_scores, 0, *moves_count, hash_move, ply);
+                assign_capture_scores(context, moves, move_scores, 0, *moves_count, hash_move);
                 *stage = MoveGeneratorStage::Captures;
             }
             MoveGeneratorStage::Captures => {
@@ -640,7 +659,7 @@ fn get_next_move<const DIAG: bool>(
                 *moves_count = context.board.get_moves::<false>(moves, *moves_count, *evasion_mask);
                 conditional_expression!(DIAG, context.statistics.move_generator_quiet_moves_stages += 1);
 
-                assign_move_scores(context, moves, move_scores, original_moves_count, *moves_count, hash_move, ply);
+                assign_quiet_scores(context, moves, move_scores, original_moves_count, *moves_count, hash_move, ply);
 
                 *stage = MoveGeneratorStage::AllGenerated;
             }
