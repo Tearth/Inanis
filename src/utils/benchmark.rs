@@ -61,6 +61,7 @@ pub struct BenchmarkResult {
 
     pub move_generator_hash_move_stages: u64,
     pub move_generator_captures_stages: u64,
+    pub move_generator_killers_stages: u64,
     pub move_generator_quiet_moves_stages: u64,
 
     pub result_hash: u16,
@@ -195,6 +196,7 @@ pub fn run() -> BenchmarkResult {
 
         benchmark_result.move_generator_hash_move_stages += result.statistics.move_generator_hash_move_stages;
         benchmark_result.move_generator_captures_stages += result.statistics.move_generator_captures_stages;
+        benchmark_result.move_generator_killers_stages += result.statistics.move_generator_killers_stages;
         benchmark_result.move_generator_quiet_moves_stages += result.statistics.move_generator_quiet_moves_stages;
 
         benchmark_result.result_hash ^= result.lines[0].pv_line[0].data;

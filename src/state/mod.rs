@@ -29,14 +29,14 @@ pub const FILE_F: u64 = 0x0404040404040404;
 pub const FILE_G: u64 = 0x0202020202020202;
 pub const FILE_H: u64 = 0x0101010101010101;
 
-pub const RANK_A: u64 = 0x00000000000000ff;
-pub const RANK_B: u64 = 0x000000000000ff00;
-pub const RANK_C: u64 = 0x0000000000ff0000;
-pub const RANK_D: u64 = 0x00000000ff000000;
-pub const RANK_E: u64 = 0x000000ff00000000;
-pub const RANK_F: u64 = 0x0000ff0000000000;
-pub const RANK_G: u64 = 0x00ff000000000000;
-pub const RANK_H: u64 = 0xff00000000000000;
+pub const RANK_1: u64 = 0x00000000000000ff;
+pub const RANK_2: u64 = 0x000000000000ff00;
+pub const RANK_3: u64 = 0x0000000000ff0000;
+pub const RANK_4: u64 = 0x00000000ff000000;
+pub const RANK_5: u64 = 0x000000ff00000000;
+pub const RANK_6: u64 = 0x0000ff0000000000;
+pub const RANK_7: u64 = 0x00ff000000000000;
+pub const RANK_8: u64 = 0xff00000000000000;
 
 pub const CENTER: u64 = 0x3c3c3c3c0000;
 pub const OUTSIDE: u64 = 0xffffc3c3c3c3ffff;

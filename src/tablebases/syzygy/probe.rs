@@ -96,7 +96,7 @@ pub fn get_root_wdl_dtz(board: &Bitboard) -> (bool, WdlResult, u32, Move) {
             TB_PROMOTES_ROOK => MoveFlags::ROOK_PROMOTION,
             TB_PROMOTES_BISHOP => MoveFlags::BISHOP_PROMOTION,
             TB_PROMOTES_KNIGHT => MoveFlags::KNIGHT_PROMOTION,
-            _ => MoveFlags::QUIET,
+            _ => MoveFlags::SINGLE_PUSH,
         };
 
         for r#move in &moves[0..moves_count] {

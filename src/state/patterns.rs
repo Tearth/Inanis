@@ -142,7 +142,7 @@ impl PatternsContainer {
     /// Generates rank patterns for all squares.
     pub fn regenerate_ranks(&mut self) {
         for square_index in 0..64 {
-            self.rank_patterns[square_index] = (RANK_A << (8 * (square_index / 8))) & !(1u64 << square_index);
+            self.rank_patterns[square_index] = (RANK_1 << (8 * (square_index / 8))) & !(1u64 << square_index);
         }
     }
 
@@ -191,8 +191,8 @@ impl PatternsContainer {
                 | ((square & !FILE_H) >> 1)
                 | ((square & !FILE_H) << 7)
                 | ((square & !FILE_A) >> 7)
-                | ((square & !RANK_H) << 8)
-                | ((square & !RANK_A) >> 8)
+                | ((square & !RANK_8) << 8)
+                | ((square & !RANK_1) >> 8)
                 | ((square & !FILE_A) << 9)
                 | ((square & !FILE_H) >> 9);
         }

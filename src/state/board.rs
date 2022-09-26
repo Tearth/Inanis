@@ -217,7 +217,7 @@ impl Bitboard {
         }
 
         match flags {
-            MoveFlags::QUIET => {
+            MoveFlags::SINGLE_PUSH => {
                 self.move_piece(color, piece, from, to);
                 self.hash ^= self.zobrist.get_piece_hash(color, piece, from);
                 self.hash ^= self.zobrist.get_piece_hash(color, piece, to);
@@ -391,7 +391,7 @@ impl Bitboard {
         let piece = self.get_piece(to);
 
         match flags {
-            MoveFlags::QUIET => {
+            MoveFlags::SINGLE_PUSH => {
                 self.move_piece(color, piece, to, from);
             }
             MoveFlags::DOUBLE_PUSH => {

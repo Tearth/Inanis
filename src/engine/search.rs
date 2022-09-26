@@ -48,12 +48,13 @@ pub const LATE_MOVE_REDUCTION_PV_MAX_REDUCTION: i8 = 2;
 
 pub const MOVE_ORDERING_HASH_MOVE: i16 = 10000;
 pub const MOVE_ORDERING_WINNING_CAPTURES_OFFSET: i16 = 100;
-pub const MOVE_ORDERING_QUEEN_PROMOTION: i16 = 99;
-pub const MOVE_ORDERING_ROOK_PROMOTION: i16 = 98;
-pub const MOVE_ORDERING_BISHOP_PROMOTION: i16 = 97;
-pub const MOVE_ORDERING_KNIGHT_PROMOTION: i16 = 96;
-pub const MOVE_ORDERING_KILLER_MOVE: i16 = 95;
-pub const MOVE_ORDERING_CASTLING: i16 = 92;
+pub const MOVE_ORDERING_KILLER_MOVE_1: i16 = 99;
+pub const MOVE_ORDERING_KILLER_MOVE_2: i16 = 98;
+pub const MOVE_ORDERING_QUEEN_PROMOTION: i16 = 95;
+pub const MOVE_ORDERING_ROOK_PROMOTION: i16 = 94;
+pub const MOVE_ORDERING_BISHOP_PROMOTION: i16 = 93;
+pub const MOVE_ORDERING_KNIGHT_PROMOTION: i16 = 92;
+pub const MOVE_ORDERING_CASTLING: i16 = 91;
 pub const MOVE_ORDERING_HISTORY_MOVE: u8 = 180;
 pub const MOVE_ORDERING_HISTORY_MOVE_OFFSET: i16 = -90;
 pub const MOVE_ORDERING_LOSING_CAPTURES_OFFSET: i16 = -100;
@@ -65,6 +66,8 @@ enum MoveGeneratorStage {
     ReadyToCheckHashMove,
     ReadyToGenerateCaptures,
     Captures,
+    ReadyToGenerateKillerMoves,
+    KillerMoves,
     ReadyToGenerateQuietMoves,
     AllGenerated,
 }
@@ -311,6 +314,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
     let mut move_generator_stage = MoveGeneratorStage::ReadyToCheckHashMove;
 
     let mut move_index = 0;
+    let mut move_number = 0;
     let mut moves_count = 0;
     let mut evasion_mask = 0;
 
@@ -320,6 +324,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
         &mut moves,
         &mut move_scores,
         &mut move_index,
+        &mut move_number,
         &mut moves_count,
         hash_move,
         &mut evasion_mask,
@@ -330,7 +335,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
             continue;
         }
 
-        if late_move_pruning_can_be_applied::<PV>(depth, move_index, score, friendly_king_checked) {
+        if late_move_pruning_can_be_applied::<PV>(depth, move_number, score, friendly_king_checked) {
             conditional_expression!(DIAG, context.statistics.late_move_pruning_accepted += 1);
             break;
         } else {
@@ -340,8 +345,8 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
         context.board.make_move(r#move);
 
         let king_checked = context.board.is_king_checked(context.board.active_color);
-        let r = if late_move_reduction_can_be_applied(depth, r#move, move_index, score, friendly_king_checked, king_checked) {
-            late_move_reduction_get_r::<PV>(move_index)
+        let r = if late_move_reduction_can_be_applied(depth, r#move, move_number, score, friendly_king_checked, king_checked) {
+            late_move_reduction_get_r::<PV>(move_number)
         } else {
             0
         };
@@ -527,7 +532,7 @@ fn assign_quiet_scores(
             let mut killer_move_found = false;
             for (index, &killer_move) in killer_moves.iter().enumerate() {
                 if killer_move == r#move {
-                    move_scores[move_index].write(MOVE_ORDERING_KILLER_MOVE - (index as i16));
+                    move_scores[move_index].write(MOVE_ORDERING_KILLER_MOVE_1 - (index as i16));
                     killer_move_found = true;
                     break;
                 }
@@ -582,26 +587,29 @@ fn get_next_move<const DIAG: bool>(
     moves: &mut [MaybeUninit<Move>; MAX_MOVES_COUNT],
     move_scores: &mut [MaybeUninit<i16>; MAX_MOVES_COUNT],
     move_index: &mut usize,
+    move_number: &mut usize,
     moves_count: &mut usize,
     hash_move: Move,
     evasion_mask: &mut u64,
     ply: u16,
     friendly_king_checked: bool,
 ) -> Option<(Move, i16)> {
-    if *stage == MoveGeneratorStage::Captures || *stage == MoveGeneratorStage::AllGenerated {
+    if *stage == MoveGeneratorStage::Captures || *stage == MoveGeneratorStage::KillerMoves || *stage == MoveGeneratorStage::AllGenerated {
         *move_index += 1;
+        *move_number += 1;
     }
 
     loop {
         match stage {
             MoveGeneratorStage::ReadyToCheckHashMove => {
                 *stage = MoveGeneratorStage::ReadyToGenerateCaptures;
+                conditional_expression!(DIAG, context.statistics.move_generator_hash_move_stages += 1);
 
                 if hash_move != Default::default() {
                     moves[0].write(hash_move);
                     move_scores[0].write(MOVE_ORDERING_HASH_MOVE);
-                    conditional_expression!(DIAG, context.statistics.move_generator_hash_move_stages += 1);
                     *moves_count = 1;
+                    *move_number = 1;
 
                     return Some((hash_move, MOVE_ORDERING_HASH_MOVE));
                 }
@@ -627,7 +635,7 @@ fn get_next_move<const DIAG: bool>(
                 conditional_expression!(DIAG, context.statistics.move_generator_captures_stages += 1);
 
                 if *moves_count == 0 {
-                    *stage = MoveGeneratorStage::ReadyToGenerateQuietMoves;
+                    *stage = MoveGeneratorStage::ReadyToGenerateKillerMoves;
                     continue;
                 }
 
@@ -635,6 +643,47 @@ fn get_next_move<const DIAG: bool>(
                 *stage = MoveGeneratorStage::Captures;
             }
             MoveGeneratorStage::Captures => {
+                if move_index >= moves_count {
+                    *stage = MoveGeneratorStage::ReadyToGenerateKillerMoves;
+                    continue;
+                }
+
+                let r#move = sort_next_move(moves, move_scores, *move_index, *moves_count);
+                if r#move == hash_move {
+                    *move_index += 1;
+                    continue;
+                }
+
+                let score = unsafe { move_scores[*move_index].assume_init() };
+                if score < MOVE_ORDERING_WINNING_CAPTURES_OFFSET {
+                    *stage = MoveGeneratorStage::ReadyToGenerateKillerMoves;
+                    continue;
+                }
+
+                return Some((r#move, score));
+            }
+            MoveGeneratorStage::ReadyToGenerateKillerMoves => {
+                let original_moves_count = *moves_count;
+                let killer_moves = context.killers_table.get(ply);
+
+                for (index, &killer_move) in killer_moves.iter().enumerate() {
+                    if killer_move != hash_move && ((1u64 << killer_move.get_to()) & *evasion_mask) != 0 && killer_move.is_legal(&context.board) {
+                        moves[*moves_count].write(killer_move);
+                        move_scores[*moves_count].write(MOVE_ORDERING_KILLER_MOVE_1 - (index as i16));
+
+                        *moves_count += 1;
+                    }
+                }
+
+                conditional_expression!(DIAG, context.statistics.move_generator_killers_stages += 1);
+
+                if original_moves_count != *moves_count {
+                    *stage = MoveGeneratorStage::KillerMoves;
+                } else {
+                    *stage = MoveGeneratorStage::ReadyToGenerateQuietMoves;
+                }
+            }
+            MoveGeneratorStage::KillerMoves => {
                 if move_index >= moves_count {
                     *stage = MoveGeneratorStage::ReadyToGenerateQuietMoves;
                     continue;
@@ -647,7 +696,7 @@ fn get_next_move<const DIAG: bool>(
                 }
 
                 let score = unsafe { move_scores[*move_index].assume_init() };
-                if score < MOVE_ORDERING_WINNING_CAPTURES_OFFSET {
+                if score < MOVE_ORDERING_KILLER_MOVE_2 {
                     *stage = MoveGeneratorStage::ReadyToGenerateQuietMoves;
                     continue;
                 }
@@ -672,6 +721,11 @@ fn get_next_move<const DIAG: bool>(
                 let score = unsafe { move_scores[*move_index].assume_init() };
 
                 if r#move == hash_move {
+                    *move_index += 1;
+                    continue;
+                }
+
+                if score == MOVE_ORDERING_KILLER_MOVE_1 || score == MOVE_ORDERING_KILLER_MOVE_2 {
                     *move_index += 1;
                     continue;
                 }

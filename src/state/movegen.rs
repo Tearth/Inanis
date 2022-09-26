@@ -370,7 +370,7 @@ impl MagicContainer {
 
     /// Gets a rook mask for the square specified by `square_index`, without considering occupancy.
     fn get_rook_mask(&self, square_index: usize, patterns: &PatternsContainer) -> u64 {
-        (patterns.get_file(square_index) & !RANK_A & !RANK_H) | (patterns.get_rank(square_index) & !FILE_A & !FILE_H)
+        (patterns.get_file(square_index) & !RANK_1 & !RANK_8) | (patterns.get_rank(square_index) & !FILE_A & !FILE_H)
     }
 
     /// Gets a bishop mask for the square specified by `square_index`, without considering occupancy.

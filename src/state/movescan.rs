@@ -9,7 +9,7 @@ use std::mem::MaybeUninit;
 
 #[allow(non_snake_case)]
 pub mod MoveFlags {
-    pub const QUIET: u8 = 0;
+    pub const SINGLE_PUSH: u8 = 0;
     pub const DOUBLE_PUSH: u8 = 1;
     pub const SHORT_CASTLING: u8 = 2;
     pub const LONG_CASTLING: u8 = 3;
@@ -317,7 +317,7 @@ impl Move {
 
                 flags
             }
-            None => MoveFlags::QUIET,
+            None => MoveFlags::SINGLE_PUSH,
         };
 
         let mut moves: [MaybeUninit<Move>; engine::MAX_MOVES_COUNT] = [MaybeUninit::uninit(); engine::MAX_MOVES_COUNT];
@@ -327,7 +327,7 @@ impl Move {
             let r#move = unsafe { r#move.assume_init() };
             if r#move.get_from() == from && r#move.get_to() == to {
                 let flags = r#move.get_flags();
-                if promotion_flags == MoveFlags::QUIET || (flags & promotion_flags) == flags {
+                if promotion_flags == MoveFlags::SINGLE_PUSH || (flags & promotion_flags) == flags {
                     return Ok(r#move);
                 }
             }
@@ -379,23 +379,29 @@ impl Move {
 
     /// Gets promotion piece based on the flags saved in the internal data.
     pub fn get_promotion_piece(&self) -> u8 {
+        let flags = self.get_flags();
         match self.get_flags() {
             MoveFlags::KNIGHT_PROMOTION | MoveFlags::KNIGHT_PROMOTION_CAPTURE => KNIGHT,
             MoveFlags::BISHOP_PROMOTION | MoveFlags::BISHOP_PROMOTION_CAPTURE => BISHOP,
             MoveFlags::ROOK_PROMOTION | MoveFlags::ROOK_PROMOTION_CAPTURE => ROOK,
             MoveFlags::QUEEN_PROMOTION | MoveFlags::QUEEN_PROMOTION_CAPTURE => QUEEN,
-            _ => panic!("Invalid value: self.get_flags()={:?}", self.get_flags()),
+            _ => panic!("Invalid value: flags={:?}", flags),
         }
     }
 
-    /// Checks if the move is quiet (single or double pushes).
-    pub fn is_quiet(&self) -> bool {
-        self.get_flags() == MoveFlags::QUIET || self.get_flags() == MoveFlags::DOUBLE_PUSH
+    /// Checks if the move is a single push.
+    pub fn is_single_push(&self) -> bool {
+        self.get_flags() == MoveFlags::SINGLE_PUSH
     }
 
     /// Checks if the move is a double push.
     pub fn is_double_push(&self) -> bool {
         self.get_flags() == MoveFlags::DOUBLE_PUSH
+    }
+
+    /// Checks if the move is quiet (single or double pushes).
+    pub fn is_quiet(&self) -> bool {
+        self.get_flags() == MoveFlags::SINGLE_PUSH || self.get_flags() == MoveFlags::DOUBLE_PUSH
     }
 
     /// Checks if the move is a capture (excluding en passant, but including promotions).
@@ -427,143 +433,177 @@ impl Move {
         let piece = board.get_piece(from);
         let piece_color = board.get_piece_color(from);
 
+        // Fast check: source square must contain a piece with the proper color
         if piece == u8::MAX || piece_color != board.active_color {
-            return false;
-        }
-
-        if (self.is_double_push() || self.is_en_passant() || self.is_promotion()) && piece != PAWN {
-            return false;
-        }
-
-        if self.is_castling() && piece != KING {
-            return false;
-        }
-
-        let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
-        let moves = match piece {
-            PAWN => match self.get_flags() {
-                MoveFlags::DOUBLE_PUSH => {
-                    if (board.active_color == WHITE && (from_square & 65280) == 0) || (board.active_color == BLACK && (from_square & 71776119061217280) == 0) {
-                        return false;
-                    }
-
-                    match board.active_color {
-                        WHITE => 1u64.checked_shl(from.wrapping_add(16) as u32).unwrap_or(0),
-                        BLACK => 1u64.checked_shl(from.wrapping_sub(16) as u32).unwrap_or(0),
-                        _ => panic!("Invalid value: board.active_color={}", board.active_color),
-                    }
-                }
-                MoveFlags::EN_PASSANT => board.en_passant,
-                _ => {
-                    (match board.active_color {
-                        WHITE => {
-                            1u64.checked_shl((from.wrapping_add(7)) as u32).unwrap_or(0)
-                                | 1u64.checked_shl((from.wrapping_add(8)) as u32).unwrap_or(0)
-                                | 1u64.checked_shl((from.wrapping_add(9)) as u32).unwrap_or(0)
-                        }
-                        BLACK => {
-                            1u64.checked_shl((from.wrapping_sub(7)) as u32).unwrap_or(0)
-                                | 1u64.checked_shl((from.wrapping_sub(8)) as u32).unwrap_or(0)
-                                | 1u64.checked_shl((from.wrapping_sub(9)) as u32).unwrap_or(0)
-                        }
-                        _ => panic!("Invalid value: board.active_color={}", board.active_color),
-                    }) & board.patterns.get_box(from as usize)
-                }
-            },
-            KNIGHT => board.magic.get_knight_moves(from as usize, &board.patterns),
-            BISHOP => board.magic.get_bishop_moves(occupancy, from as usize),
-            ROOK => board.magic.get_rook_moves(occupancy, from as usize),
-            QUEEN => board.magic.get_queen_moves(occupancy, from as usize),
-            KING => {
-                if self.is_castling() {
-                    if (board.active_color == WHITE && from != 3) || (board.active_color == BLACK && from != 59) {
-                        return false;
-                    }
-                }
-
-                match self.get_flags() {
-                    MoveFlags::SHORT_CASTLING => 1u64 << (from - 2),
-                    MoveFlags::LONG_CASTLING => 1u64 << (from + 2),
-                    _ => board.magic.get_king_moves(from as usize, &board.patterns),
-                }
-            }
-            _ => panic!("Invalid value: fen={}, piece={}", board.to_fen(), piece),
-        };
-
-        if (moves & to_square) == 0 {
             return false;
         }
 
         let target_piece = board.get_piece(to);
         let target_piece_color = board.get_piece_color(to);
 
-        if self.is_quiet() {
-            if self.is_double_push() {
-                let middle_square_index = (cmp::max(from, to) + cmp::min(from, to)) / 2;
-                if board.get_piece(middle_square_index) != u8::MAX {
-                    return false;
-                }
-            }
+        // Fast check: for promotions with captures, there must be some victim with opposite color
+        if self.is_capture() && !self.is_en_passant() && (target_piece == u8::MAX || piece_color == target_piece_color) {
+            return false;
+        }
 
-            if target_piece == u8::MAX {
-                return true;
-            }
-        } else if self.is_en_passant() {
-            if piece == PAWN && target_piece == u8::MAX {
-                return true;
-            }
-        } else if self.is_promotion() {
+        // Fast check: target square must be empty for non-capture moves
+        if !self.is_capture() && target_piece != u8::MAX {
+            return false;
+        }
+
+        let flags = self.get_flags();
+        let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
+
+        // Checking what squares are reachable for the piece
+        let moves = match piece {
+            PAWN => match flags {
+                MoveFlags::DOUBLE_PUSH => match board.active_color {
+                    WHITE => from_square << 16,
+                    BLACK => from_square >> 16,
+                    _ => panic!("Invalid value: board.active_color={}", board.active_color),
+                },
+                MoveFlags::EN_PASSANT => board.en_passant,
+                _ => match board.active_color {
+                    WHITE => ((from_square & !FILE_H) << 7) | ((from_square & !RANK_8) << 8) | ((from_square & !FILE_A) << 9),
+                    BLACK => ((from_square & !FILE_A) >> 7) | ((from_square & !RANK_1) >> 8) | ((from_square & !FILE_H) >> 9),
+                    _ => panic!("Invalid value: board.active_color={}", board.active_color),
+                },
+            },
+            KNIGHT => board.magic.get_knight_moves(from as usize, &board.patterns),
+            BISHOP => board.magic.get_bishop_moves(occupancy, from as usize),
+            ROOK => board.magic.get_rook_moves(occupancy, from as usize),
+            QUEEN => board.magic.get_queen_moves(occupancy, from as usize),
+            KING => match flags {
+                MoveFlags::SHORT_CASTLING => 1u64 << (from - 2),
+                MoveFlags::LONG_CASTLING => 1u64 << (from + 2),
+                _ => board.magic.get_king_moves(from as usize, &board.patterns),
+            },
+            _ => panic!("Invalid value: fen={}, piece={}", board.to_fen(), piece),
+        };
+
+        // Target square must be valid in this position
+        if (moves & to_square) == 0 {
+            return false;
+        }
+
+        // Special rules, not covered by fast checks
+        if self.is_single_push() {
             if piece == PAWN {
-                if !self.is_capture() && target_piece == u8::MAX {
-                    return true;
-                } else if self.is_capture() && target_piece != u8::MAX && target_piece != KING && piece_color != target_piece_color {
-                    return true;
-                }
-            }
-        } else if self.is_capture() {
-            if target_piece != u8::MAX && target_piece != KING && piece_color != target_piece_color {
-                return true;
-            }
-        } else if self.is_castling() {
-            if piece == KING && target_piece == u8::MAX {
-                let mut rook_square = 0;
-                let mut rook_target_square = 0;
-
-                if (board.active_color == WHITE && from != 3) || (board.active_color == BLACK && from != 59) {
+                // Pawn at promotion rank, but without proper flags
+                if ((1u64 << to) & 18374686479671623935) != 0 {
                     return false;
                 }
 
-                match self.get_flags() {
-                    MoveFlags::SHORT_CASTLING => {
-                        rook_square = from - 3;
-                        rook_target_square = from - 1;
-                    }
-                    MoveFlags::LONG_CASTLING => {
-                        rook_square = from + 4;
-                        rook_target_square = from + 1;
-                    }
-                    _ => panic!("Invalid value: fen={}, self.get_flags()={:?}", board.to_fen(), self.get_flags()),
-                };
-
-                if board.get_piece(rook_target_square) == u8::MAX
-                    && board.get_piece(rook_square) == ROOK
-                    && board.get_piece_color(rook_square) == board.active_color
-                {
-                    return true;
+                // Non-capture pawn move can only go straight by one rank
+                if ((from as i8) - (to as i8)).abs() != 8 {
+                    return false;
                 }
             }
+
+            true
+        } else if self.is_double_push() {
+            // Double push can be performed only by pawns
+            if piece != PAWN {
+                return false;
+            }
+
+            // Double push can be performed only from the specific ranks (2 for white, 7 for black)
+            if (board.active_color == WHITE && (from_square & RANK_2) == 0) || (board.active_color == BLACK && (from_square & RANK_7) == 0) {
+                return false;
+            }
+
+            // The square between source and target ones must be empty
+            if board.get_piece((cmp::max(from, to) + cmp::min(from, to)) / 2) != u8::MAX {
+                return false;
+            }
+
+            true
+        } else if self.is_en_passant() {
+            // En passant can be performed only by pawns
+            if piece != PAWN {
+                return false;
+            }
+
+            true
+        } else if self.is_promotion() {
+            // Promotion can be performed only by pawns
+            if piece != PAWN {
+                return false;
+            }
+
+            if self.is_capture() {
+                let direction = ((from as i8) - (to as i8)).abs();
+
+                // Captures with pawns can go only diagonally
+                if direction != 7 && direction != 9 {
+                    return false;
+                }
+            }
+
+            true
+        } else if self.is_capture() {
+            if piece == PAWN {
+                let direction = ((from as i8) - (to as i8)).abs();
+
+                // Captures with pawns can go only diagonally
+                if direction != 7 && direction != 9 {
+                    return false;
+                }
+            }
+
+            true
+        } else if self.is_castling() {
+            // Castling can be performed only by kings
+            if piece != KING {
+                return false;
+            }
+
+            // Castling can be performed only from the specific squares (e1 for white, e8 for black)
+            if (board.active_color == WHITE && from != 3) || (board.active_color == BLACK && from != 59) {
+                return false;
+            }
+
+            let castling_area = match flags {
+                MoveFlags::SHORT_CASTLING => match piece_color {
+                    WHITE => 6,
+                    BLACK => 432345564227567616,
+                    _ => panic!("Invalid value: fen={}, piece_color={}", board.to_fen(), piece_color),
+                },
+                MoveFlags::LONG_CASTLING => match piece_color {
+                    WHITE => 112,
+                    BLACK => 8070450532247928832,
+                    _ => panic!("Invalid value: fen={}, piece_color={}", board.to_fen(), piece_color),
+                },
+                _ => panic!("Invalid value: fen={}, flags={:?}", board.to_fen(), flags),
+            };
+
+            // There must be a free space for castling
+            if (castling_area & occupancy) != 0 {
+                return false;
+            }
+
+            let rook_square = match flags {
+                MoveFlags::SHORT_CASTLING => from - 3,
+                MoveFlags::LONG_CASTLING => from + 4,
+                _ => panic!("Invalid value: fen={}, flags={:?}", board.to_fen(), flags),
+            };
+
+            // There must be a valid rook to perform castling
+            if board.get_piece(rook_square) != ROOK || board.get_piece_color(rook_square) != board.active_color {
+                return false;
+            }
+
+            true
         } else {
             panic!("Move legality check failed: fen={}, self.data={}", board.to_fen(), self.data);
         }
-
-        false
     }
 }
 
 impl Default for Move {
     /// Constructs a new instance of [Move] with zeroed values.
     fn default() -> Self {
-        Move::new(0, 0, MoveFlags::QUIET)
+        Move::new(0, 0, MoveFlags::SINGLE_PUSH)
     }
 }
 
@@ -607,7 +647,7 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(
             piece_moves = pop_lsb(piece_moves);
 
             let capture = (to_square & board.occupancy[enemy_color as usize]) != 0;
-            let flags = if CAPTURES || capture { MoveFlags::CAPTURE } else { MoveFlags::QUIET };
+            let flags = if CAPTURES || capture { MoveFlags::CAPTURE } else { MoveFlags::SINGLE_PUSH };
 
             moves[index].write(Move::new(from_square_index, to_square_index, flags));
             index += 1;
@@ -737,7 +777,7 @@ fn scan_pawn_moves_single_push(board: &Bitboard, moves: &mut [MaybeUninit<Move>;
     let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
 
     let shift = 8 - 16 * (board.active_color as i8);
-    let promotion_line = RANK_H >> (56 * (board.active_color as u8));
+    let promotion_line = RANK_8 >> (56 * (board.active_color as u8));
     let mut target_squares = match board.active_color {
         WHITE => pieces << 8,
         BLACK => pieces >> 8,
@@ -760,7 +800,7 @@ fn scan_pawn_moves_single_push(board: &Bitboard, moves: &mut [MaybeUninit<Move>;
             moves[index + 3].write(Move::new(from_square_index, to_square_index, MoveFlags::KNIGHT_PROMOTION));
             index += 4;
         } else {
-            moves[index].write(Move::new(from_square_index, to_square_index, MoveFlags::QUIET));
+            moves[index].write(Move::new(from_square_index, to_square_index, MoveFlags::SINGLE_PUSH));
             index += 1;
         }
     }
@@ -777,8 +817,8 @@ fn scan_pawn_moves_double_push(board: &Bitboard, moves: &mut [MaybeUninit<Move>;
 
     let shift = 16 - 32 * (board.active_color as i8);
     let mut target_squares = match board.active_color {
-        WHITE => (((pieces & RANK_B) << 8) & !occupancy) << 8,
-        BLACK => (((pieces & RANK_G) >> 8) & !occupancy) >> 8,
+        WHITE => (((pieces & RANK_2) << 8) & !occupancy) << 8,
+        BLACK => (((pieces & RANK_7) >> 8) & !occupancy) >> 8,
         _ => {
             panic!("Invalid value: board.active_color={}", board.active_color);
         }
@@ -813,7 +853,7 @@ fn scan_pawn_moves_diagonal_attacks<const DIR: u8>(
     let forbidden_file = FILE_A >> (DIR * 7);
     let shift = 9 - (board.active_color ^ DIR) * 2;
     let signed_shift = (shift as i8) - ((board.active_color as i8) * 2 * (shift as i8));
-    let promotion_line = RANK_H >> (56 * (board.active_color as u8));
+    let promotion_line = RANK_8 >> (56 * (board.active_color as u8));
 
     let mut target_squares = match board.active_color {
         WHITE => (pieces & !forbidden_file) << shift,
