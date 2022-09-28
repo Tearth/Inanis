@@ -12,12 +12,7 @@ fn main() {
 }
 
 fn hash() -> String {
-    let output = Command::new("git")
-        .arg("log")
-        .arg("-1")
-        .arg("--pretty=format:%H")
-        .current_dir(env!("CARGO_MANIFEST_DIR"))
-        .output();
+    let output = Command::new("git").arg("log").arg("-1").arg("--pretty=format:%H").current_dir(env!("CARGO_MANIFEST_DIR")).output();
 
     match output {
         Ok(v) => String::from_utf8_lossy(&v.stdout).to_string(),

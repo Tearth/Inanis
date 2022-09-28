@@ -11,9 +11,7 @@ impl SEEContainer {
     /// Constructs a default instance of [SEEContainer] with zeroed elements.
     pub fn new(evaluation_parameters: Option<Arc<EvaluationParameters>>) -> Self {
         let evaluation_parameters = evaluation_parameters.unwrap_or_else(|| Arc::new(Default::default()));
-        let mut result = Self {
-            table: Box::new([[[0; 256]; 256]; 6]),
-        };
+        let mut result = Self { table: Box::new([[[0; 256]; 256]; 6]) };
 
         for target_piece in 0..6 {
             for attackers in 0..256 {

@@ -40,9 +40,7 @@ pub struct Move {
 impl Move {
     /// Constructs a new instance of [Move] with stored `from`, `to` and `flags`.
     pub fn new(from: u8, to: u8, flags: u8) -> Self {
-        Self {
-            data: ((flags as u16) << 12) | ((to as u16) << 6) | (from as u16),
-        }
+        Self { data: ((flags as u16) << 12) | ((to as u16) << 6) | (from as u16) }
     }
 
     /// Constructs a new instance of [Move] using raw bits, which will be directly used as a data.
@@ -341,12 +339,7 @@ impl Move {
         let from = self.get_from();
         let to = self.get_to();
 
-        let mut result = vec![
-            char::from(b'a' + (7 - from % 8)),
-            char::from(b'1' + from / 8),
-            char::from(b'a' + (7 - to % 8)),
-            char::from(b'1' + to / 8),
-        ];
+        let mut result = vec![char::from(b'a' + (7 - from % 8)), char::from(b'1' + from / 8), char::from(b'a' + (7 - to % 8)), char::from(b'1' + to / 8)];
 
         let flags = self.get_flags();
         if flags.contains(MoveFlags::KNIGHT_PROMOTION) {

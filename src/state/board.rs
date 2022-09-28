@@ -137,14 +137,7 @@ impl Bitboard {
         see_container: Option<Arc<SEEContainer>>,
         magic_container: Option<Arc<MagicContainer>>,
     ) -> Result<Self, String> {
-        fen::fen_to_board(
-            fen,
-            evaluation_parameters,
-            zobrist_container,
-            patterns_container,
-            see_container,
-            magic_container,
-        )
+        fen::fen_to_board(fen, evaluation_parameters, zobrist_container, patterns_container, see_container, magic_container)
     }
 
     /// Constructs a new instance of [Bitboard] with position specified by list of `moves`, using provided containers. If the parameter is [None],
@@ -475,14 +468,7 @@ impl Bitboard {
 
     /// Preserves halfmove clock, castling rights, en passant bitboard, board hash, pawn hash and captured piece on the stack
     pub fn push_state(&mut self) {
-        self.state_stack.push(BitboardState::new(
-            self.halfmove_clock,
-            self.castling_rights,
-            self.en_passant,
-            self.hash,
-            self.pawn_hash,
-            self.captured_piece,
-        ));
+        self.state_stack.push(BitboardState::new(self.halfmove_clock, self.castling_rights, self.en_passant, self.hash, self.pawn_hash, self.captured_piece));
     }
 
     /// Restores halfmove clock, castling rights, en passant bitboard, board hash, pawn hash and captured piece from the stack
@@ -883,13 +869,6 @@ impl Bitboard {
 impl BitboardState {
     /// Constructs a new instance of [BitboardState] with stored `halfmove_clock`, `castling_rights`, `en_passant`, `hash`, `pawn_hash` and `captured_piece`.
     pub fn new(halfmove_clock: u16, castling_rights: u8, en_passant: u64, hash: u64, pawn_hash: u64, captured_piece: u8) -> BitboardState {
-        BitboardState {
-            halfmove_clock,
-            castling_rights,
-            en_passant,
-            hash,
-            pawn_hash,
-            captured_piece,
-        }
+        BitboardState { halfmove_clock, castling_rights, en_passant, hash, pawn_hash, captured_piece }
     }
 }

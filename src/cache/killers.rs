@@ -71,9 +71,7 @@ impl Default for KillersTable {
         const INIT_1: KillersTableEntry = KillersTableEntry::new_const();
         const INIT_2: [KillersTableEntry; KILLER_SLOTS] = [INIT_1; KILLER_SLOTS];
 
-        Self {
-            table: [INIT_2; MAX_DEPTH as usize],
-        }
+        Self { table: [INIT_2; MAX_DEPTH as usize] }
     }
 }
 
@@ -90,9 +88,7 @@ impl KillersTableEntry {
 
     /// Loads and parses atomic value into a [KillersTableEntry] struct.
     pub fn get_data(&self) -> KillersTableResult {
-        KillersTableResult {
-            r#move: Move::new_from_raw(self.data.load(Ordering::Relaxed)),
-        }
+        KillersTableResult { r#move: Move::new_from_raw(self.data.load(Ordering::Relaxed)) }
     }
 }
 
@@ -106,8 +102,6 @@ impl Default for KillersTableEntry {
 impl Clone for KillersTableEntry {
     /// Clones [KillersTableEntry] by creating a new atomic (with the original value).
     fn clone(&self) -> Self {
-        Self {
-            data: AtomicU16::new(self.data.load(Ordering::Relaxed)),
-        }
+        Self { data: AtomicU16::new(self.data.load(Ordering::Relaxed)) }
     }
 }

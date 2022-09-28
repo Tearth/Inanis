@@ -16,8 +16,5 @@ pub fn run(depth: i32, board: &mut Bitboard, check_integrity: bool) -> NormalPer
     let hashtable = Arc::new(PerftHashTable::new(0));
     let mut context = PerftContext::new(board, &hashtable, check_integrity, false);
 
-    NormalPerftResult {
-        nodes: run_internal(&mut context, depth),
-        statistics: context.statistics,
-    }
+    NormalPerftResult { nodes: run_internal(&mut context, depth), statistics: context.statistics }
 }

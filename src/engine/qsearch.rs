@@ -29,9 +29,7 @@ pub fn run<const DIAG: bool>(context: &mut SearchContext, depth: i8, ply: u16, m
         return -CHECKMATE_SCORE + (ply as i16);
     }
 
-    let stand_pat = context
-        .board
-        .evaluate::<DIAG>(context.board.active_color, &context.pawn_hashtable, &mut context.statistics);
+    let stand_pat = context.board.evaluate::<DIAG>(context.board.active_color, &context.pawn_hashtable, &mut context.statistics);
     if stand_pat >= beta {
         conditional_expression!(DIAG, context.statistics.q_leafs_count += 1);
         conditional_expression!(DIAG, context.statistics.q_beta_cutoffs += 1);

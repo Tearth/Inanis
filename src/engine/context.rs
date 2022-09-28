@@ -506,13 +506,7 @@ impl Iterator for SearchContext {
 
             self.current_depth += 1;
 
-            return Some(SearchResult::new(
-                search_time,
-                self.current_depth - 1,
-                self.transposition_table.get_usage(1000),
-                multipv_result,
-                self.statistics,
-            ));
+            return Some(SearchResult::new(search_time, self.current_depth - 1, self.transposition_table.get_usage(1000), multipv_result, self.statistics));
         }
     }
 }
@@ -520,13 +514,7 @@ impl Iterator for SearchContext {
 impl SearchResult {
     /// Constructs a new instance of [SearchResult] with stored `time`, `depth`, `lines` and `statistics`.
     pub fn new(time: u32, depth: i8, transposition_table_usage: f32, lines: Vec<SearchResultLine>, statistics: SearchStatistics) -> Self {
-        Self {
-            time,
-            depth,
-            transposition_table_usage,
-            lines,
-            statistics,
-        }
+        Self { time, depth, transposition_table_usage, lines, statistics }
     }
 }
 

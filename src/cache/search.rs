@@ -44,9 +44,7 @@ impl TranspositionTable {
         let bucket_size = mem::size_of::<TranspositionTableBucket>();
         let aligned_size = 1 << (63 - size.leading_zeros());
 
-        let mut hashtable = Self {
-            table: Vec::with_capacity(aligned_size / bucket_size),
-        };
+        let mut hashtable = Self { table: Vec::with_capacity(aligned_size / bucket_size) };
 
         if aligned_size != 0 {
             hashtable.table.resize(hashtable.table.capacity(), Default::default());
@@ -226,8 +224,6 @@ impl Default for TranspositionTableEntry {
 impl Clone for TranspositionTableEntry {
     /// Clones [TranspositionTableEntry] by creating a new atomics (with the original values).
     fn clone(&self) -> Self {
-        Self {
-            key_data: AtomicU64::new(self.key_data.load(Ordering::Relaxed)),
-        }
+        Self { key_data: AtomicU64::new(self.key_data.load(Ordering::Relaxed)) }
     }
 }

@@ -134,13 +134,7 @@ fn run_internal(context: &mut TestContext, depth: i8, transposition_table_size: 
 
                     let index_to_display = index_arc.fetch_add(1, Ordering::Relaxed);
                     if last_best_move == position.best_move {
-                        println!(
-                            "{}/{}. Test {} PASSED (depth: {})",
-                            index_to_display + 1,
-                            positions_count,
-                            position.id,
-                            recognition_depth
-                        );
+                        println!("{}/{}. Test {} PASSED (depth: {})", index_to_display + 1, positions_count, position.id, recognition_depth);
                         recognition_depths_sum_arc.fetch_add(recognition_depth as u32, Ordering::Relaxed);
                         passed_tests_arc.fetch_add(1, Ordering::Relaxed);
                     } else {

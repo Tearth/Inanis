@@ -30,9 +30,7 @@ impl PerftHashTable {
         let bucket_size = mem::size_of::<PerftHashTableBucket>();
         let aligned_size = 1 << (63 - size.leading_zeros());
 
-        let mut hashtable = Self {
-            table: Vec::with_capacity(aligned_size / bucket_size),
-        };
+        let mut hashtable = Self { table: Vec::with_capacity(aligned_size / bucket_size) };
 
         if aligned_size != 0 {
             hashtable.table.resize(hashtable.table.capacity(), Default::default());
@@ -117,10 +115,7 @@ impl Default for PerftHashTableBucket {
 impl Default for PerftHashTableEntry {
     /// Constructs a default instance of [PerftHashTableEntry] with zeroed elements.
     fn default() -> Self {
-        Self {
-            key: AtomicU64::new(0),
-            data: AtomicU64::new(0),
-        }
+        Self { key: AtomicU64::new(0), data: AtomicU64::new(0) }
     }
 }
 
@@ -134,9 +129,6 @@ impl PerftHashTableResult {
 impl Clone for PerftHashTableEntry {
     /// Clones [PerftHashTableEntry] by creating a new atomics (with the original values).
     fn clone(&self) -> Self {
-        Self {
-            key: AtomicU64::new(self.key.load(Ordering::Relaxed)),
-            data: AtomicU64::new(self.data.load(Ordering::Relaxed)),
-        }
+        Self { key: AtomicU64::new(self.key.load(Ordering::Relaxed)), data: AtomicU64::new(self.data.load(Ordering::Relaxed)) }
     }
 }

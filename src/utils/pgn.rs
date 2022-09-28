@@ -34,14 +34,7 @@ impl PGNLoader {
         let see_container = Arc::new(SEEContainer::new(Some(evaluation_parameters.clone())));
         let magic_container = Arc::new(MagicContainer::default());
 
-        PGNLoader {
-            file_iterator,
-            evaluation_parameters,
-            zobrist_container,
-            patterns_container,
-            see_container,
-            magic_container,
-        }
+        PGNLoader { file_iterator, evaluation_parameters, zobrist_container, patterns_container, see_container, magic_container }
     }
 
     /// Parses a single `pgn` and returns [Some] if it has been done with success, otherwise [Err].

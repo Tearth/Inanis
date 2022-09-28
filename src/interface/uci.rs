@@ -117,11 +117,7 @@ fn handle_debug(parameters: &[String], state: Arc<Mutex<UciState>>) {
         return;
     }
 
-    state
-        .lock()
-        .unwrap()
-        .debug_mode
-        .store(matches!(parameters[1].as_str(), "on"), Ordering::Relaxed);
+    state.lock().unwrap().debug_mode.store(matches!(parameters[1].as_str(), "on"), Ordering::Relaxed);
 }
 
 /// Handles `go [parameters]` command by running a new search for a position which was set using `position` command. Supported parameters:
@@ -205,19 +201,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
                 forced_depth = engine::MAX_DEPTH;
             }
             "searchmoves" => {
-                let keywords = [
-                    "wtime",
-                    "btime",
-                    "winc",
-                    "binc",
-                    "depth",
-                    "nodes",
-                    "movetime",
-                    "movestogo",
-                    "infinite",
-                    "searchmoves",
-                    "ponder",
-                ];
+                let keywords = ["wtime", "btime", "winc", "binc", "depth", "nodes", "movetime", "movestogo", "infinite", "searchmoves", "ponder"];
 
                 while let Some(value) = iter.peek() {
                     if keywords.contains(&value.as_str()) {

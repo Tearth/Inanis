@@ -13,8 +13,5 @@ pub fn get_allocation(total_size: usize) -> AllocationResult {
     let pawn_hashtable_size = 1 + total_size / PAWN_HASHTABLE_SIZE_FRACTION;
     let transposition_table_size = cmp::max(1, total_size);
 
-    AllocationResult {
-        transposition_table_size,
-        pawn_hashtable_size,
-    }
+    AllocationResult { transposition_table_size, pawn_hashtable_size }
 }

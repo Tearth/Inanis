@@ -40,10 +40,7 @@ struct TunerParameter {
 impl TunerContext {
     /// Constructs a new instance of [TunerContext] with stored `positions`.
     pub fn new(positions: Vec<TunerPosition>) -> Self {
-        Self {
-            positions,
-            parameters: Default::default(),
-        }
+        Self { positions, parameters: Default::default() }
     }
 }
 
@@ -57,13 +54,7 @@ impl TunerPosition {
 impl TunerParameter {
     /// Constructs a new instance of [TunerParameter] with stored `value`, `min`, `min_init`, `max_init` and `max`.
     pub fn new(value: i16, min: i16, min_init: i16, max_init: i16, max: i16) -> Self {
-        Self {
-            value,
-            min,
-            min_init,
-            max_init,
-            max,
-        }
+        Self { value, min, min_init, max_init, max }
     }
 }
 
@@ -164,12 +155,7 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
                     value_changed = true;
                     changes += 1;
 
-                    println!(
-                        "Value {} changed by {} (tendence change, new error: {:.6})",
-                        value_index,
-                        -step.signum(),
-                        best_error
-                    );
+                    println!("Value {} changed by {} (tendence change, new error: {:.6})", value_index, -step.signum(), best_error);
                 }
             }
 
@@ -554,10 +540,8 @@ fn get_header(best_error: f64) -> String {
 
     let timestamp = common::time::get_unix_timestamp();
     let datetime = common::time::unix_timestamp_to_datetime(timestamp);
-    let datetime_formatted = format!(
-        "{:0>2}-{:0>2}-{} {:0>2}:{:0>2}:{:0>2}",
-        datetime.day, datetime.month, datetime.year, datetime.hour, datetime.minute, datetime.day
-    );
+    let datetime_formatted =
+        format!("{:0>2}-{:0>2}-{} {:0>2}:{:0>2}:{:0>2}", datetime.day, datetime.month, datetime.year, datetime.hour, datetime.minute, datetime.day);
 
     output.push_str("// --------------------------------------------------- //\n");
     output.push_str(format!("// Generated at {} UTC (e = {:.6}) //\n", datetime_formatted, best_error).as_str());
@@ -570,10 +554,7 @@ fn get_array<T>(name: &str, values: &[T]) -> String
 where
     T: Display,
 {
-    format!(
-        "            {}: [{}, {}, {}, {}, {}, {}],\n",
-        name, values[0], values[1], values[2], values[3], values[4], values[5]
-    )
+    format!("            {}: [{}, {}, {}, {}, {}, {}],\n", name, values[0], values[1], values[2], values[3], values[4], values[5])
 }
 
 /// Gets a Rust representation of the parameter with the specified `name` and `value`.

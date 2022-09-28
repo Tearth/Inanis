@@ -67,11 +67,7 @@ pub fn run_internal(context: &mut PerftContext, depth: i32) -> u64 {
     for r#move in &moves[0..moves_count] {
         let r#move = unsafe { r#move.assume_init() };
         if context.check_integrity && !r#move.is_legal(context.board) {
-            panic!(
-                "Integrity check failed, illegal move: fen={}, r#move.data={}",
-                context.board.to_fen(),
-                r#move.data
-            );
+            panic!("Integrity check failed, illegal move: fen={}, r#move.data={}", context.board.to_fen(), r#move.data);
         }
 
         context.board.make_move(r#move);

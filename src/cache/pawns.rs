@@ -23,9 +23,7 @@ impl PawnHashTable {
         let bucket_size = mem::size_of::<PawnHashTableEntry>();
         let aligned_size = 1 << (63 - size.leading_zeros());
 
-        let mut hashtable = Self {
-            table: Vec::with_capacity(aligned_size / bucket_size),
-        };
+        let mut hashtable = Self { table: Vec::with_capacity(aligned_size / bucket_size) };
 
         if aligned_size != 0 {
             hashtable.table.resize(hashtable.table.capacity(), Default::default());
@@ -88,10 +86,7 @@ impl PawnHashTableEntry {
     /// Loads and parses atomic value into a [PawnHashTableResult] struct.
     pub fn get_data(&self) -> PawnHashTableResult {
         let key_data = self.key_data.load(Ordering::Relaxed);
-        PawnHashTableResult {
-            key: key_data as u16,
-            score: (key_data >> 16) as i16,
-        }
+        PawnHashTableResult { key: key_data as u16, score: (key_data >> 16) as i16 }
     }
 }
 
@@ -105,8 +100,6 @@ impl Default for PawnHashTableEntry {
 impl Clone for PawnHashTableEntry {
     /// Clones [PawnHashTableEntry] by creating a new atomic (with the original value).
     fn clone(&self) -> Self {
-        Self {
-            key_data: AtomicU32::new(self.key_data.load(Ordering::Relaxed)),
-        }
+        Self { key_data: AtomicU32::new(self.key_data.load(Ordering::Relaxed)) }
     }
 }

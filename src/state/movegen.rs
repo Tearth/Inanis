@@ -423,10 +423,7 @@ impl Default for MagicContainer {
     fn default() -> Self {
         const INIT: MagicSquare = MagicSquare::new();
 
-        let mut result = Self {
-            rook_squares: [INIT; 64],
-            bishop_squares: [INIT; 64],
-        };
+        let mut result = Self { rook_squares: [INIT; 64], bishop_squares: [INIT; 64] };
 
         for index in 0..64 {
             result.apply_rook_magic(index);
@@ -440,11 +437,6 @@ impl Default for MagicContainer {
 impl MagicSquare {
     /// Constructs a new instance of [MagicSquare] with zeroed values.
     pub const fn new() -> Self {
-        Self {
-            mask: 0,
-            shift: 0,
-            magic: 0,
-            attacks: Vec::new(),
-        }
+        Self { mask: 0, shift: 0, magic: 0, attacks: Vec::new() }
     }
 }

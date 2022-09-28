@@ -431,9 +431,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
             TranspositionTableScoreType::EXACT_SCORE
         };
 
-        context
-            .transposition_table
-            .add(context.board.hash, alpha, best_move, depth as i8, ply, score_type, context.search_id);
+        context.transposition_table.add(context.board.hash, alpha, best_move, depth as i8, ply, score_type, context.search_id);
         conditional_expression!(DIAG, context.statistics.tt_added += 1);
     }
 
@@ -492,14 +490,8 @@ fn assign_capture_scores(
             defenders_cache[square as usize]
         };
 
-        let see_container = &context.board.see;
-        let see = see_container.get(attacking_piece, captured_piece, attackers, defenders, &context.board.evaluation_parameters);
-
-        move_scores[move_index].write(if see >= 0 {
-            see + MOVE_ORDERING_WINNING_CAPTURES_OFFSET
-        } else {
-            see + MOVE_ORDERING_LOSING_CAPTURES_OFFSET
-        });
+        let see = context.board.see.get(attacking_piece, captured_piece, attackers, defenders, &context.board.evaluation_parameters);
+        move_scores[move_index].write(if see >= 0 { see + MOVE_ORDERING_WINNING_CAPTURES_OFFSET } else { see + MOVE_ORDERING_LOSING_CAPTURES_OFFSET });
     }
 }
 

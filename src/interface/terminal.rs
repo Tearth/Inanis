@@ -104,15 +104,7 @@ fn handle_benchmark() {
     println!("Benchmark done in {:.2} s", result.time);
     println!();
 
-    println!(
-        "{: <H$} {: <V$} {: <V$} {: <V$}",
-        "",
-        "Normal",
-        "Quiescence",
-        "Total",
-        H = header_intendation,
-        V = value_intendation
-    );
+    println!("{: <H$} {: <V$} {: <V$} {: <V$}", "", "Normal", "Quiescence", "Total", H = header_intendation, V = value_intendation);
     let t_nodes_count = result.nodes_count + result.q_nodes_count;
     let t_leafs_count = result.leafs_count + result.q_leafs_count;
 
@@ -186,15 +178,7 @@ fn handle_benchmark() {
     );
 
     println!();
-    println!(
-        "{: <H$} {: <V$} {: <V$} {: <V$}",
-        "",
-        "Added",
-        "Hits",
-        "Misses",
-        H = header_intendation,
-        V = value_intendation
-    );
+    println!("{: <H$} {: <V$} {: <V$} {: <V$}", "", "Added", "Hits", "Misses", H = header_intendation, V = value_intendation);
 
     let tt_attempts = result.tt_hits + result.tt_misses;
     let tt_hits_percent = percent(result.tt_hits, tt_attempts);
@@ -223,15 +207,7 @@ fn handle_benchmark() {
     );
 
     println!();
-    println!(
-        "{: <H$} {: <V$} {: <V$} {: <V$}",
-        "",
-        "Attempts",
-        "Accepted",
-        "Rejected",
-        H = header_intendation,
-        V = value_intendation
-    );
+    println!("{: <H$} {: <V$} {: <V$} {: <V$}", "", "Attempts", "Accepted", "Rejected", H = header_intendation, V = value_intendation);
 
     let static_null_move_pruning_accepted_percent = percent(result.static_null_move_pruning_accepted, result.static_null_move_pruning_attempts);
     let static_null_move_pruning_rejected_percent = percent(result.static_null_move_pruning_rejected, result.static_null_move_pruning_attempts);
@@ -239,14 +215,8 @@ fn handle_benchmark() {
         "{: <H$} {: <V$} {: <V$} {: <V$}",
         "Static null move pruning",
         format!("{:.2}", result.static_null_move_pruning_attempts),
-        format!(
-            "{} ({:.2}%)",
-            result.static_null_move_pruning_accepted, static_null_move_pruning_accepted_percent
-        ),
-        format!(
-            "{} ({:.2}%)",
-            result.static_null_move_pruning_rejected, static_null_move_pruning_rejected_percent
-        ),
+        format!("{} ({:.2}%)", result.static_null_move_pruning_accepted, static_null_move_pruning_accepted_percent),
+        format!("{} ({:.2}%)", result.static_null_move_pruning_rejected, static_null_move_pruning_rejected_percent),
         H = header_intendation,
         V = value_intendation
     );
@@ -324,13 +294,13 @@ fn handle_benchmark() {
 
     println!(
         "Move generator stages: {} hash moves, {} captures, {} killers, {} quiet",
-        result.move_generator_hash_move_stages, result.move_generator_captures_stages, result.move_generator_killers_stages, result.move_generator_quiet_moves_stages
+        result.move_generator_hash_move_stages,
+        result.move_generator_captures_stages,
+        result.move_generator_killers_stages,
+        result.move_generator_quiet_moves_stages
     );
 
-    println!(
-        "Transposition table move legality check: {} legal, {} illegal",
-        result.tt_legal_hashmoves, result.tt_illegal_hashmoves
-    );
+    println!("Transposition table move legality check: {} legal, {} illegal", result.tt_legal_hashmoves, result.tt_illegal_hashmoves);
 
     println!("Result hash: {}", result.result_hash);
     println!();
@@ -544,10 +514,7 @@ fn handle_qperft(input: Vec<&str>) {
         let diff = (now.elapsed().unwrap().as_millis() as f64) / 1000.0;
         let mnps = ((count as f64) / 1000000.0) / diff;
 
-        println!(
-            "Depth {}: {} leafs in {:.2} s ({:.2} ML/s, {:.2}% of hashtable used)",
-            depth, count, diff, mnps, hashtable_usage
-        );
+        println!("Depth {}: {} leafs in {:.2} s ({:.2} ML/s, {:.2}% of hashtable used)", depth, count, diff, mnps, hashtable_usage);
     }
 
     println!("Perft done!");

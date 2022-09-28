@@ -66,20 +66,14 @@ impl Default for HistoryTable {
         const INIT_1: HistoryTableEntry = HistoryTableEntry::new_const();
         const INIT_2: [HistoryTableEntry; 64] = [INIT_1; 64];
 
-        HistoryTable {
-            table: [INIT_2; 64],
-            max: AtomicU32::new(1),
-        }
+        HistoryTable { table: [INIT_2; 64], max: AtomicU32::new(1) }
     }
 }
 
 impl Clone for HistoryTable {
     /// Clones [HistoryTable] by creating a new atomics (with the original values).
     fn clone(&self) -> Self {
-        Self {
-            table: self.table.clone(),
-            max: AtomicU32::new(self.max.load(Ordering::Relaxed)),
-        }
+        Self { table: self.table.clone(), max: AtomicU32::new(self.max.load(Ordering::Relaxed)) }
     }
 }
 
@@ -96,9 +90,7 @@ impl HistoryTableEntry {
 
     /// Loads and parses atomic value into a [HistoryTableEntry] struct.
     pub fn get_data(&self) -> HistoryTableResult {
-        HistoryTableResult {
-            value: self.data.load(Ordering::Relaxed),
-        }
+        HistoryTableResult { value: self.data.load(Ordering::Relaxed) }
     }
 }
 
@@ -112,8 +104,6 @@ impl Default for HistoryTableEntry {
 impl Clone for HistoryTableEntry {
     /// Clones [HistoryTableEntry] by creating a new atomic (with the original value).
     fn clone(&self) -> Self {
-        Self {
-            data: AtomicU32::new(self.data.load(Ordering::Relaxed)),
-        }
+        Self { data: AtomicU32::new(self.data.load(Ordering::Relaxed)) }
     }
 }

@@ -19,12 +19,7 @@ pub struct ParsedEPD {
 impl ParsedEPD {
     /// Constructs a new instance of [ParsedEPD] with the `board` and rest of the squares zeroed.
     pub fn new(board: Bitboard) -> Self {
-        Self {
-            board,
-            id: None,
-            best_move: None,
-            comment: None,
-        }
+        Self { board, id: None, best_move: None, comment: None }
     }
 }
 
@@ -38,14 +33,7 @@ pub fn fen_to_board(
     see_container: Option<Arc<SEEContainer>>,
     magic_container: Option<Arc<MagicContainer>>,
 ) -> Result<Bitboard, String> {
-    let result = epd_to_board(
-        fen,
-        evaluation_parameters,
-        zobrist_container,
-        patterns_container,
-        see_container,
-        magic_container,
-    )?;
+    let result = epd_to_board(fen, evaluation_parameters, zobrist_container, patterns_container, see_container, magic_container)?;
     Ok(result.board)
 }
 
