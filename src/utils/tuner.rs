@@ -7,6 +7,7 @@ use crate::state::movegen::MagicContainer;
 use crate::state::patterns::PatternsContainer;
 use crate::state::zobrist::ZobristContainer;
 use crate::state::*;
+use common::time::DateTime;
 use std::fmt::Display;
 use std::fs;
 use std::fs::File;
@@ -538,8 +539,7 @@ fn write_piece_square_table(output_directory: &str, best_error: f64, name: &str,
 fn get_header(best_error: f64) -> String {
     let mut output = String::new();
 
-    let timestamp = common::time::get_unix_timestamp();
-    let datetime = common::time::unix_timestamp_to_datetime(timestamp);
+    let datetime = DateTime::now();
     let datetime_formatted =
         format!("{:0>2}-{:0>2}-{} {:0>2}:{:0>2}:{:0>2}", datetime.day, datetime.month, datetime.year, datetime.hour, datetime.minute, datetime.day);
 

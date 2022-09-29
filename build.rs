@@ -1,4 +1,4 @@
-use common::time;
+use common::time::DateTime;
 use std::env;
 use std::process::Command;
 
@@ -21,9 +21,7 @@ fn hash() -> String {
 }
 
 fn date() -> String {
-    let timestamp = time::get_unix_timestamp();
-    let datetime = time::unix_timestamp_to_datetime(timestamp);
-
+    let datetime = DateTime::now();
     format!("{:0>2}-{:0>2}-{}", datetime.day, datetime.month, datetime.year)
 }
 
