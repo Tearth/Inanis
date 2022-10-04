@@ -1,10 +1,10 @@
-use super::fen;
 use super::rand;
 use crate::engine::see::SEEContainer;
 use crate::evaluation::EvaluationParameters;
 use crate::state::movegen::MagicContainer;
 use crate::state::patterns::PatternsContainer;
 use crate::state::representation::Board;
+use crate::state::text::fen;
 use crate::state::zobrist::ZobristContainer;
 use crate::state::*;
 use common::time::DateTime;

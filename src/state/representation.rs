@@ -3,6 +3,7 @@ use super::movescan;
 use super::movescan::Move;
 use super::movescan::MoveFlags;
 use super::patterns::PatternsContainer;
+use super::text::fen;
 use super::zobrist::ZobristContainer;
 use super::*;
 use crate::cache::pawns::PawnHashTable;
@@ -16,7 +17,6 @@ use crate::evaluation::pst;
 use crate::evaluation::safety;
 use crate::evaluation::EvaluationParameters;
 use crate::utils::bitflags::BitFlags;
-use crate::utils::fen;
 use std::mem::MaybeUninit;
 use std::sync::Arc;
 

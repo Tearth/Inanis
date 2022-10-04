@@ -1,4 +1,3 @@
-use super::bitflags::BitFlags;
 use crate::engine::see::SEEContainer;
 use crate::evaluation::EvaluationParameters;
 use crate::state::movegen::MagicContainer;
@@ -7,6 +6,7 @@ use crate::state::representation::Board;
 use crate::state::representation::CastlingRights;
 use crate::state::zobrist::ZobristContainer;
 use crate::state::*;
+use crate::utils::bitflags::BitFlags;
 use std::sync::Arc;
 
 pub struct ParsedEPD {

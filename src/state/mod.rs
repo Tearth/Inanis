@@ -2,6 +2,7 @@ pub mod movegen;
 pub mod movescan;
 pub mod patterns;
 pub mod representation;
+pub mod text;
 pub mod zobrist;
 
 pub const WHITE: u8 = 0;

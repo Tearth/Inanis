@@ -1,4 +1,3 @@
-use super::fen;
 use crate::cache::history::HistoryTable;
 use crate::cache::killers::KillersTable;
 use crate::cache::pawns::PawnHashTable;
@@ -10,6 +9,7 @@ use crate::state::movegen::MagicContainer;
 use crate::state::movescan::Move;
 use crate::state::patterns::PatternsContainer;
 use crate::state::representation::Board;
+use crate::state::text::fen;
 use crate::state::zobrist::ZobristContainer;
 use std::fs::File;
 use std::io::BufRead;
