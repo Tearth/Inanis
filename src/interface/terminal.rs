@@ -23,7 +23,7 @@ const HASH: &str = env!("HASH");
 const COMPILER: &str = env!("COMPILER");
 
 /// Entry point of the terminal interface and command loop.
-pub fn run(target_features: Vec<String>) {
+pub fn run(target_features: Vec<&'static str>) {
     let header = if target_features.is_empty() {
         format!("Inanis {} ({}), created by {}", VERSION, DATE, AUTHOR)
     } else {
@@ -41,6 +41,7 @@ pub fn run(target_features: Vec<String>) {
         let mut input = String::new();
         let read_bytes = io::stdin().read_line(&mut input).unwrap();
 
+        // Input stream has reached EOF, according to https://doc.rust-lang.org/stable/std/io/trait.BufRead.html#method.read_line
         if read_bytes == 0 {
             process::exit(0);
         }
@@ -99,8 +100,8 @@ fn handle_benchmark() {
     let value_intendation = 20;
 
     println!("Starting benchmark...");
-    let result = benchmark::run();
     println!();
+    let result = benchmark::run();
     println!("Benchmark done in {:.2} s", result.time);
     println!();
 
@@ -301,7 +302,6 @@ fn handle_benchmark() {
     );
 
     println!("Transposition table move legality check: {} legal, {} illegal", result.tt_legal_hashmoves, result.tt_illegal_hashmoves);
-
     println!("Result hash: {}", result.result_hash);
     println!();
 }
@@ -389,7 +389,7 @@ fn handle_perft(input: Vec<&str>) {
         }
     };
 
-    for depth in 1..max_depth + 1 {
+    for depth in 1..=max_depth {
         let now = SystemTime::now();
         let result = perft::normal::run(depth, &mut board, false);
 
