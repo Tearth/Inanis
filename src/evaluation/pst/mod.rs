@@ -1,5 +1,5 @@
 use super::*;
-use crate::state::board::Bitboard;
+use crate::state::representation::Board;
 
 pub mod bishop;
 pub mod king;
@@ -10,7 +10,7 @@ pub mod rook;
 
 /// Evaluates piece-square table value on the `board` and returns score from the white color perspective (more than 0 when advantage, less than 0 when disadvantage).
 /// This evaluator sums all values of the pieces for the specified squares, using incremental counters in `board`.
-pub fn evaluate(board: &Bitboard) -> EvaluationResult {
+pub fn evaluate(board: &Board) -> EvaluationResult {
     let opening_score = board.pst_scores[WHITE as usize][OPENING as usize] - board.pst_scores[BLACK as usize][OPENING as usize];
     let ending_score = board.pst_scores[WHITE as usize][ENDING as usize] - board.pst_scores[BLACK as usize][ENDING as usize];
 
@@ -18,7 +18,7 @@ pub fn evaluate(board: &Bitboard) -> EvaluationResult {
 }
 
 /// Recalculates incremental counters on the `board`. This function should be called only once during board initialization, as it's too slow in regular search.
-pub fn recalculate_incremental_values(board: &mut Bitboard) {
+pub fn recalculate_incremental_values(board: &mut Board) {
     for color_index in 0..2 {
         for phase in 0..2 {
             let mut score = 0;

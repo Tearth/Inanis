@@ -2,9 +2,9 @@ use super::fen;
 use super::rand;
 use crate::engine::see::SEEContainer;
 use crate::evaluation::EvaluationParameters;
-use crate::state::board::Bitboard;
 use crate::state::movegen::MagicContainer;
 use crate::state::patterns::PatternsContainer;
+use crate::state::representation::Board;
 use crate::state::zobrist::ZobristContainer;
 use crate::state::*;
 use common::time::DateTime;
@@ -25,7 +25,7 @@ struct TunerContext {
 }
 
 struct TunerPosition {
-    board: Bitboard,
+    board: Board,
     result: f64,
 }
 
@@ -47,7 +47,7 @@ impl TunerContext {
 
 impl TunerPosition {
     /// Constructs a new instance of [TunerPosition] with stored `board` and `result`.
-    pub fn new(board: Bitboard, result: f64) -> Self {
+    pub fn new(board: Board, result: f64) -> Self {
         Self { board, result }
     }
 }

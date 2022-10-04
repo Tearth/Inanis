@@ -1,13 +1,13 @@
 #[cfg(test)]
 mod fen_tests {
-    use inanis::state::board::Bitboard;
+    use inanis::state::representation::Board;
 
     macro_rules! fen_tests {
         ($($name:ident: $original_fen:expr,)*) => {
             $(
                 #[test]
                 fn $name() {
-                    assert_eq!($original_fen, Bitboard::new_from_fen($original_fen, None, None, None, None, None).unwrap().to_fen());
+                    assert_eq!($original_fen, Board::new_from_fen($original_fen, None, None, None, None, None).unwrap().to_fen());
                 }
             )*
         }

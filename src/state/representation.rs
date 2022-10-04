@@ -34,7 +34,7 @@ pub mod CastlingRights {
 }
 
 #[derive(Clone)]
-pub struct Bitboard {
+pub struct Board {
     pub pieces: [[u64; 6]; 2],
     pub occupancy: [u64; 2],
     pub piece_table: [u8; 64],
@@ -68,7 +68,7 @@ pub struct BitboardState {
     pub captured_piece: u8,
 }
 
-impl Bitboard {
+impl Board {
     /// Constructs a new instance of [Bitboard], using provided containers. If the parameter is [None], then the new container is created.
     pub fn new(
         evaluation_parameters: Option<Arc<EvaluationParameters>>,
@@ -83,7 +83,7 @@ impl Bitboard {
         let see_container = see_container.unwrap_or_else(|| Arc::new(SEEContainer::new(Some(evaluation_parameters.clone()))));
         let magic_container = magic_container.unwrap_or_else(|| Arc::new(Default::default()));
 
-        Bitboard {
+        Board {
             pieces: [[0; 6], [0; 6]],
             occupancy: [0; 2],
             piece_table: [u8::MAX; 64],
@@ -116,7 +116,7 @@ impl Bitboard {
         see_container: Option<Arc<SEEContainer>>,
         magic_container: Option<Arc<MagicContainer>>,
     ) -> Self {
-        Bitboard::new_from_fen(
+        Board::new_from_fen(
             "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
             evaluation_parameters,
             zobrist_container,
@@ -150,7 +150,7 @@ impl Bitboard {
         see_container: Option<Arc<SEEContainer>>,
         magic_container: Option<Arc<MagicContainer>>,
     ) -> Result<Self, String> {
-        let mut board = Bitboard::new_initial_position(evaluation_parameters, zobrist_container, patterns_container, see_container, magic_container);
+        let mut board = Board::new_initial_position(evaluation_parameters, zobrist_container, patterns_container, see_container, magic_container);
         for premade_move in moves {
             let parsed_move = Move::from_long_notation(premade_move, &board)?;
             board.make_move(parsed_move);

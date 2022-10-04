@@ -3,7 +3,7 @@ use crate::cache::killers::KillersTable;
 use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
 use crate::engine::context::SearchContext;
-use crate::state::board::Bitboard;
+use crate::state::representation::Board;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 use std::time::SystemTime;
@@ -118,7 +118,7 @@ pub fn run() -> BenchmarkResult {
         let abort_flag = Arc::new(AtomicBool::new(false));
         let ponder_flag = Arc::new(AtomicBool::new(false));
 
-        let board = Bitboard::new_from_fen(fen, None, None, None, None, None).unwrap();
+        let board = Board::new_from_fen(fen, None, None, None, None, None).unwrap();
         let context = SearchContext::new(
             board,
             0,

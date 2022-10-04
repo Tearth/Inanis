@@ -1,6 +1,6 @@
 use super::bindings::*;
-use crate::state::board::Bitboard;
 use crate::state::movescan::{Move, MoveFlags};
+use crate::state::representation::Board;
 use crate::tablebases::WdlResult;
 use crate::{engine, state::*};
 use std::ffi::CString;
@@ -23,7 +23,7 @@ pub fn get_max_pieces_count() -> u8 {
     0
 }
 
-pub fn get_wdl(board: &Bitboard) -> Option<WdlResult> {
+pub fn get_wdl(board: &Board) -> Option<WdlResult> {
     #[cfg(feature = "syzygy")]
     unsafe {
         let wdl = tb_probe_wdl(
@@ -52,7 +52,7 @@ pub fn get_wdl(board: &Bitboard) -> Option<WdlResult> {
     None
 }
 
-pub fn get_root_wdl_dtz(board: &Bitboard) -> (bool, WdlResult, u32, Move) {
+pub fn get_root_wdl_dtz(board: &Board) -> (bool, WdlResult, u32, Move) {
     #[cfg(feature = "syzygy")]
     unsafe {
         let result = tb_probe_root(

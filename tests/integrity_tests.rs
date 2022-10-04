@@ -1,14 +1,14 @@
 #[cfg(test)]
 mod integrity_tests {
     use inanis::perft;
-    use inanis::state::board::Bitboard;
+    use inanis::state::representation::Board;
 
     macro_rules! integrity_tests {
         ($($name:ident: $depth:expr, $fen:expr,)*) => {
             $(
                 #[test]
                 fn $name() {
-                    perft::normal::run($depth, &mut Bitboard::new_from_fen($fen, None, None, None, None, None).unwrap(), true);
+                    perft::normal::run($depth, &mut Board::new_from_fen($fen, None, None, None, None, None).unwrap(), true);
                 }
             )*
         }

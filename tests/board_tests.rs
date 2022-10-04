@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod board_tests {
-    use inanis::state::board::Bitboard;
+    use inanis::state::representation::Board;
     use inanis::state::*;
 
     macro_rules! is_square_attacked_tests {
@@ -8,7 +8,7 @@ mod board_tests {
             $(
                 #[test]
                 fn $name() {
-                    let board = Bitboard::new_from_fen($fen, None, None, None, None, None).unwrap();
+                    let board = Board::new_from_fen($fen, None, None, None, None, None).unwrap();
 
                     for color in 0..2 {
                         let mut result = 0u64;
@@ -44,7 +44,7 @@ mod board_tests {
             $(
                 #[test]
                 fn $name() {
-                    let board = Bitboard::new_from_fen($fen, None, None, None, None, None).unwrap();
+                    let board = Board::new_from_fen($fen, None, None, None, None, None).unwrap();
                     assert_eq!($expected_result, board.get_attacking_pieces($color, $square_index));
                 }
             )*

@@ -1,9 +1,9 @@
 use crate::engine::see::SEEContainer;
 use crate::evaluation::EvaluationParameters;
-use crate::state::board::Bitboard;
 use crate::state::movegen::MagicContainer;
 use crate::state::movescan::Move;
 use crate::state::patterns::PatternsContainer;
+use crate::state::representation::Board;
 use crate::state::zobrist::ZobristContainer;
 use std::fs::File;
 use std::io::BufReader;
@@ -78,7 +78,7 @@ impl PGNLoader {
             } else if line.starts_with('1') {
                 let mut board = match fen.clone() {
                     Some(value) => {
-                        let fen_result = Bitboard::new_from_fen(
+                        let fen_result = Board::new_from_fen(
                             &value,
                             Some(self.evaluation_parameters.clone()),
                             Some(self.zobrist_container.clone()),
@@ -93,7 +93,7 @@ impl PGNLoader {
                         }
                     }
 
-                    None => Bitboard::new_initial_position(
+                    None => Board::new_initial_position(
                         Some(self.evaluation_parameters.clone()),
                         Some(self.zobrist_container.clone()),
                         Some(self.patterns_container.clone()),

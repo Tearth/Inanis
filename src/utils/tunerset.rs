@@ -8,9 +8,9 @@ use crate::engine::see::SEEContainer;
 use crate::engine::*;
 use crate::evaluation::material;
 use crate::evaluation::EvaluationParameters;
-use crate::state::board::Bitboard;
 use crate::state::movegen::MagicContainer;
 use crate::state::patterns::PatternsContainer;
+use crate::state::representation::Board;
 use crate::state::zobrist::ZobristContainer;
 use crate::utils::pgn::PGNLoader;
 use crate::utils::rand;
@@ -72,7 +72,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
 
         let board = match pgn.fen {
             Some(fen) => {
-                let fen_result = Bitboard::new_from_fen(
+                let fen_result = Board::new_from_fen(
                     &fen,
                     Some(evaluation_parameters.clone()),
                     Some(zobrist_container.clone()),
@@ -90,7 +90,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
                 }
             }
 
-            None => Bitboard::new_initial_position(
+            None => Board::new_initial_position(
                 Some(evaluation_parameters.clone()),
                 Some(zobrist_container.clone()),
                 Some(patterns_container.clone()),

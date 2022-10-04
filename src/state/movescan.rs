@@ -1,5 +1,5 @@
-use super::board::Bitboard;
-use super::board::CastlingRights;
+use super::representation::Board;
+use super::representation::CastlingRights;
 use super::*;
 use crate::engine;
 use crate::utils::bitflags::BitFlags;
@@ -67,7 +67,7 @@ impl Move {
 
     /// Converts short-notated move (e4, Rc8, Qxb6) in `text` into the [Move] instance, using the `board` as context.
     /// Returns [Err] with the proper message if `text` couldn't be parsed correctly.
-    pub fn from_short_notation(mut text: &str, board: &mut Bitboard) -> Result<Move, String> {
+    pub fn from_short_notation(mut text: &str, board: &mut Board) -> Result<Move, String> {
         let mut moves: [MaybeUninit<Move>; engine::MAX_MOVES_COUNT] = [MaybeUninit::uninit(); engine::MAX_MOVES_COUNT];
         let moves_count = board.get_all_moves(&mut moves, u64::MAX);
 
@@ -275,7 +275,7 @@ impl Move {
 
     /// Converts long-notated move (e2e4, a1a8) in `text` into the [Move] instance, using the `board` as context.
     /// Returns [Err] with the proper message if `text` couldn't be parsed correctly.
-    pub fn from_long_notation(text: &str, board: &Bitboard) -> Result<Move, String> {
+    pub fn from_long_notation(text: &str, board: &Board) -> Result<Move, String> {
         let mut chars = text.chars();
         let from_file = chars.next().ok_or(format!("Invalid move, bad source file: text={}", text))? as u8;
         let from_rank = chars.next().ok_or(format!("Invalid move, bad source rank: text={}", text))? as u8;
@@ -418,7 +418,7 @@ impl Move {
     }
 
     /// Checks if the move is legal, using `board` as the context.
-    pub fn is_legal(&self, board: &Bitboard) -> bool {
+    pub fn is_legal(&self, board: &Board) -> bool {
         let from = self.get_from();
         let from_square = 1u64 << from;
         let to = self.get_to();
@@ -604,7 +604,7 @@ impl Default for Move {
 /// the position specified by `board`, stores them into `moves` list (starting from `index`) and returns index of the first free slot.
 /// Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the specified squares (useful during checks).
 pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(
-    board: &Bitboard,
+    board: &Board,
     moves: &mut [MaybeUninit<Move>; engine::MAX_MOVES_COUNT],
     mut index: usize,
     evasion_mask: u64,
@@ -700,7 +700,7 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(
 
 /// Gets `PIECE` mobility (by counting all possible moves at the position specified by `board`) with `color` and increases `dangered_king_squares` if the enemy
 /// king is near to the squares included in the mobility.
-pub fn get_piece_mobility<const PIECE: u8>(board: &Bitboard, color: u8, dangered_king_squares: &mut u32) -> i16 {
+pub fn get_piece_mobility<const PIECE: u8>(board: &Board, color: u8, dangered_king_squares: &mut u32) -> i16 {
     let mut pieces = board.pieces[color as usize][PIECE as usize];
     let mut mobility = 0;
 
@@ -746,7 +746,7 @@ pub fn get_piece_mobility<const PIECE: u8>(board: &Bitboard, color: u8, dangered
 /// the position specified by `board`, stores them into `moves` list (starting from `index`) and returns index of the first free slot.
 /// Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the specified squares (useful during checks).
 pub fn scan_pawn_moves<const CAPTURES: bool>(
-    board: &Bitboard,
+    board: &Board,
     moves: &mut [MaybeUninit<Move>; engine::MAX_MOVES_COUNT],
     mut index: usize,
     evasion_mask: u64,
@@ -765,7 +765,7 @@ pub fn scan_pawn_moves<const CAPTURES: bool>(
 /// Generates all possible single pushes for the pawns at the position specified by `board`, stores them into `moves` list (starting from `index`)
 /// and returns index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the
 /// specified squares (useful during checks).
-fn scan_pawn_moves_single_push(board: &Bitboard, moves: &mut [MaybeUninit<Move>; engine::MAX_MOVES_COUNT], mut index: usize, evasion_mask: u64) -> usize {
+fn scan_pawn_moves_single_push(board: &Board, moves: &mut [MaybeUninit<Move>; engine::MAX_MOVES_COUNT], mut index: usize, evasion_mask: u64) -> usize {
     let pieces = board.pieces[board.active_color as usize][PAWN as usize];
     let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
 
@@ -804,7 +804,7 @@ fn scan_pawn_moves_single_push(board: &Bitboard, moves: &mut [MaybeUninit<Move>;
 /// Generates all possible double pushes for the pawns at the position specified by `board`, stores them into `moves` list (starting from `index`)
 /// and returns index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the
 /// specified squares (useful during checks).
-fn scan_pawn_moves_double_push(board: &Bitboard, moves: &mut [MaybeUninit<Move>; engine::MAX_MOVES_COUNT], mut index: usize, evasion_mask: u64) -> usize {
+fn scan_pawn_moves_double_push(board: &Board, moves: &mut [MaybeUninit<Move>; engine::MAX_MOVES_COUNT], mut index: usize, evasion_mask: u64) -> usize {
     let pieces = board.pieces[board.active_color as usize][PAWN as usize];
     let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
 
@@ -835,7 +835,7 @@ fn scan_pawn_moves_double_push(board: &Bitboard, moves: &mut [MaybeUninit<Move>;
 /// stores them into `moves` list (starting from `index`) and returns index of the first free slot. Use `evasion_mask` with value
 /// different than `u64::MAX` to restrict generator to the specified squares (useful during checks).
 fn scan_pawn_moves_diagonal_attacks<const DIR: u8>(
-    board: &Bitboard,
+    board: &Board,
     moves: &mut [MaybeUninit<Move>; engine::MAX_MOVES_COUNT],
     mut index: usize,
     evasion_mask: u64,

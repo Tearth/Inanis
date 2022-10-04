@@ -6,8 +6,8 @@ use crate::cache::search::TranspositionTable;
 use crate::engine;
 use crate::engine::context::HelperThreadContext;
 use crate::engine::context::SearchContext;
-use crate::state::board::Bitboard;
 use crate::state::movescan::Move;
+use crate::state::representation::Board;
 use crate::state::*;
 use crate::tablebases::syzygy;
 use std::cmp;
@@ -29,7 +29,7 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
 
 struct UciState {
-    board: Bitboard,
+    board: Board,
     options: HashMap<String, String>,
     transposition_table: Arc<TranspositionTable>,
     pawn_hashtable: Arc<PawnHashTable>,
@@ -44,7 +44,7 @@ impl Default for UciState {
     /// Constructs a default instance of [UciState] with zeroed elements and hashtables with their default sizes.
     fn default() -> Self {
         UciState {
-            board: Bitboard::new_initial_position(None, None, None, None, None),
+            board: Board::new_initial_position(None, None, None, None, None),
             options: HashMap::new(),
             transposition_table: Arc::new(TranspositionTable::new(1 * 1024 * 1024)),
             pawn_hashtable: Arc::new(PawnHashTable::new(1 * 1024 * 1024)),
@@ -431,7 +431,7 @@ fn handle_position(parameters: &[String], state: Arc<Mutex<UciState>>) {
     state.lock().unwrap().board = match parameters[1].as_str() {
         "fen" => {
             let fen = parameters[2..].join(" ");
-            match Bitboard::new_from_fen(fen.as_str(), None, None, None, None, None) {
+            match Board::new_from_fen(fen.as_str(), None, None, None, None, None) {
                 Ok(board) => board,
                 Err(error) => {
                     println!("info string Error: {}", error);
@@ -439,7 +439,7 @@ fn handle_position(parameters: &[String], state: Arc<Mutex<UciState>>) {
                 }
             }
         }
-        _ => Bitboard::new_initial_position(None, None, None, None, None),
+        _ => Board::new_initial_position(None, None, None, None, None),
     };
 
     if let Some(index) = parameters.iter().position(|s| s == "moves") {
@@ -519,7 +519,7 @@ fn handle_setoption(parameters: &[String], state: Arc<Mutex<UciState>>) {
 fn handle_ucinewgame(state: Arc<Mutex<UciState>>) {
     let mut state_lock = state.lock().unwrap();
     state_lock.abort_flag.store(true, Ordering::Relaxed);
-    state_lock.board = Bitboard::new_initial_position(None, None, None, None, None);
+    state_lock.board = Board::new_initial_position(None, None, None, None, None);
     state_lock.abort_flag = Default::default();
     drop(state_lock);
 

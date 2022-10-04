@@ -5,8 +5,8 @@ mod see_tests {
     use crate::see_tests::see::SEEContainer;
     use inanis::engine::see;
     use inanis::evaluation::EvaluationParameters;
-    use inanis::state::board::Bitboard;
     use inanis::state::movescan::Move;
+    use inanis::state::representation::Board;
     use std::mem::MaybeUninit;
     use std::sync::Arc;
 
@@ -26,7 +26,7 @@ mod see_tests {
                     evaluation_parameters.piece_value = [P, N, B, R, Q, K];
 
                     let evaluation_parameters = Arc::new(evaluation_parameters);
-                    let board = Bitboard::new_from_fen($fen, Some(evaluation_parameters.clone()), None, None, None, None).unwrap();
+                    let board = Board::new_from_fen($fen, Some(evaluation_parameters.clone()), None, None, None, None).unwrap();
 
                     let mut moves: [MaybeUninit<Move>; 218] = [MaybeUninit::uninit(); 218];
                     let moves_count = board.get_all_moves(&mut moves, u64::MAX);

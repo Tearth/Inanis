@@ -6,10 +6,10 @@ use crate::cache::search::TranspositionTable;
 use crate::engine::context::SearchContext;
 use crate::engine::see::SEEContainer;
 use crate::evaluation::EvaluationParameters;
-use crate::state::board::Bitboard;
 use crate::state::movegen::MagicContainer;
 use crate::state::movescan::Move;
 use crate::state::patterns::PatternsContainer;
+use crate::state::representation::Board;
 use crate::state::zobrist::ZobristContainer;
 use std::fs::File;
 use std::io::BufRead;
@@ -27,7 +27,7 @@ struct TestContext {
 
 struct TestPosition {
     id: String,
-    board: Bitboard,
+    board: Board,
     best_move: Move,
 }
 
@@ -40,7 +40,7 @@ impl TestContext {
 
 impl TestPosition {
     /// Constructs a new instance of [TestPosition] with stored `id`, `board` and `best_move`.
-    pub fn new(id: String, board: Bitboard, best_move: Move) -> Self {
+    pub fn new(id: String, board: Board, best_move: Move) -> Self {
         Self { id, board, best_move }
     }
 }

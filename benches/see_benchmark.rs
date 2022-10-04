@@ -2,11 +2,11 @@ use criterion::criterion_group;
 use criterion::criterion_main;
 use criterion::Criterion;
 use inanis::engine::see::SEEContainer;
-use inanis::state::board::Bitboard;
+use inanis::state::representation::Board;
 
 fn see_benchmark(criterion: &mut Criterion) {
     let fen = "1b2r2k/2qnrn2/5p2/4R3/5P2/3N1N2/1B2Q3/K3R3 w - - 0 1";
-    let board = Bitboard::new_from_fen(fen, None, None, None, None, None).unwrap();
+    let board = Board::new_from_fen(fen, None, None, None, None, None).unwrap();
     let see_container = SEEContainer::new(Some(board.evaluation_parameters.clone()));
 
     criterion.bench_function("see_benchmark", |bencher| {

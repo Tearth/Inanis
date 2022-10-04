@@ -10,8 +10,8 @@ use crate::evaluation::mobility;
 use crate::evaluation::pawns;
 use crate::evaluation::pst;
 use crate::evaluation::safety;
-use crate::state::board::Bitboard;
 use crate::state::movescan::Move;
+use crate::state::representation::Board;
 use crate::tablebases::syzygy;
 use crate::tablebases::WdlResult;
 use std::cmp;
@@ -24,7 +24,7 @@ use std::thread;
 use std::time::SystemTime;
 
 pub struct SearchContext {
-    pub board: Bitboard,
+    pub board: Board,
     pub statistics: SearchStatistics,
     pub search_id: u8,
     pub time: u32,
@@ -57,7 +57,7 @@ pub struct SearchContext {
 }
 
 pub struct HelperThreadContext {
-    pub board: Bitboard,
+    pub board: Board,
     pub pawn_hashtable: Arc<PawnHashTable>,
     pub killers_table: Arc<KillersTable>,
     pub history_table: Arc<HistoryTable>,
@@ -162,7 +162,7 @@ impl SearchContext {
     ///  - `abort_flag` - flag used to abort search from the outside of the context
     ///  - `ponder_flag` - flag used to change a search mode from pondering to the regular one
     pub fn new(
-        board: Bitboard,
+        board: Board,
         search_id: u8,
         time: u32,
         inc_time: u32,
@@ -221,7 +221,7 @@ impl SearchContext {
     }
 
     /// Retrieves PV line from the transposition table, using `board` position and the current `ply`.
-    pub fn get_pv_line(&self, board: &mut Bitboard, ply: i8) -> Vec<Move> {
+    pub fn get_pv_line(&self, board: &mut Board, ply: i8) -> Vec<Move> {
         if ply >= MAX_DEPTH {
             return Vec::new();
         }

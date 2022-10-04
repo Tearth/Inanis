@@ -1,7 +1,7 @@
 use super::*;
 use crate::cache::pawns::PawnHashTable;
 use crate::engine::context::SearchStatistics;
-use crate::state::board::Bitboard;
+use crate::state::representation::Board;
 use crate::utils::conditional_expression;
 use std::cmp;
 
@@ -15,7 +15,7 @@ use std::cmp;
 ///
 /// To improve performance (using the fact that structure of pawns changes relatively rare), each evaluation is saved in the pawn hashtable,
 /// and used again if possible.
-pub fn evaluate<const DIAG: bool>(board: &Bitboard, pawn_hashtable: &PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
+pub fn evaluate<const DIAG: bool>(board: &Board, pawn_hashtable: &PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
     match pawn_hashtable.get(board.pawn_hash) {
         Some(entry) => {
             conditional_expression!(DIAG, statistics.pawn_hashtable_hits += 1);
@@ -39,12 +39,12 @@ pub fn evaluate<const DIAG: bool>(board: &Bitboard, pawn_hashtable: &PawnHashTab
 }
 
 /// Does the same thing as [evaluate], but doesn't use pawn hashtable to save evalations.
-pub fn evaluate_without_cache(board: &Bitboard) -> EvaluationResult {
+pub fn evaluate_without_cache(board: &Board) -> EvaluationResult {
     evaluate_color(board, WHITE) - evaluate_color(board, BLACK)
 }
 
 /// Evaluates pawn structure on the `board` for the specified `color`.
-fn evaluate_color(board: &Bitboard, color: u8) -> EvaluationResult {
+fn evaluate_color(board: &Board, color: u8) -> EvaluationResult {
     let mut doubled_pawns = 0;
     let mut isolated_pawns = 0;
     let mut chained_pawns = 0;

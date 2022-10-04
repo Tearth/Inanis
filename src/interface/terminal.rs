@@ -5,8 +5,8 @@ use crate::evaluation::pawns;
 use crate::evaluation::pst;
 use crate::evaluation::safety;
 use crate::perft;
-use crate::state::board::Bitboard;
 use crate::state::movegen::MagicContainer;
+use crate::state::representation::Board;
 use crate::utils::benchmark;
 use crate::utils::test;
 use crate::utils::tuner;
@@ -100,8 +100,8 @@ fn handle_benchmark() {
     let value_intendation = 20;
 
     println!("Starting benchmark...");
-    println!();
     let result = benchmark::run();
+    println!();
     println!("Benchmark done in {:.2} s", result.time);
     println!();
 
@@ -314,7 +314,7 @@ fn handle_evaluate(input: Vec<&str>) {
     }
 
     let fen = input[1..].join(" ");
-    let board = match Bitboard::new_from_fen(fen.as_str(), None, None, None, None, None) {
+    let board = match Board::new_from_fen(fen.as_str(), None, None, None, None, None) {
         Ok(board) => board,
         Err(error) => {
             println!("Invalid FEN parameter: {}", error);
@@ -734,17 +734,17 @@ fn handle_unknown_command() {
 }
 
 /// Creates a new board based on the input with FEN or moves list - returns [Err] if internal parser failed.
-fn prepare_board(parameters: &[&str]) -> Result<Bitboard, String> {
+fn prepare_board(parameters: &[&str]) -> Result<Board, String> {
     if parameters.is_empty() {
-        return Ok(Bitboard::new_initial_position(None, None, None, None, None));
+        return Ok(Board::new_initial_position(None, None, None, None, None));
     }
 
     match parameters[0] {
         "fen" => {
             let fen = parameters[1..].join(" ");
-            Bitboard::new_from_fen(fen.as_str(), None, None, None, None, None)
+            Board::new_from_fen(fen.as_str(), None, None, None, None, None)
         }
-        "moves" => Bitboard::new_from_moves(&parameters[1..], None, None, None, None, None),
+        "moves" => Board::new_from_moves(&parameters[1..], None, None, None, None, None),
         _ => Err(format!("Invalid mode: parameter[0]={}", parameters[0])),
     }
 }
