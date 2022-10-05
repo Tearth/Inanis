@@ -3,7 +3,6 @@ use super::movescan;
 use super::movescan::Move;
 use super::movescan::MoveFlags;
 use super::patterns::PatternsContainer;
-use super::text::fen;
 use super::zobrist::ZobristContainer;
 use super::*;
 use crate::cache::pawns::PawnHashTable;
@@ -126,38 +125,6 @@ impl Board {
             magic_container,
         )
         .unwrap()
-    }
-
-    /// Constructs a new instance of [Bitboard] with position specified by `fen`, using provided containers. If the parameter is [None],
-    /// then the new container is created. Returns [Err] with proper error message if `fen` couldn't be parsed correctly.
-    pub fn new_from_fen(
-        fen: &str,
-        evaluation_parameters: Option<Arc<EvaluationParameters>>,
-        zobrist_container: Option<Arc<ZobristContainer>>,
-        patterns_container: Option<Arc<PatternsContainer>>,
-        see_container: Option<Arc<SEEContainer>>,
-        magic_container: Option<Arc<MagicContainer>>,
-    ) -> Result<Self, String> {
-        fen::fen_to_board(fen, evaluation_parameters, zobrist_container, patterns_container, see_container, magic_container)
-    }
-
-    /// Constructs a new instance of [Bitboard] with position specified by list of `moves`, using provided containers. If the parameter is [None],
-    /// then the new container is created. Returns [Err] with proper error message is `moves` couldn't be parsed correctly.
-    pub fn new_from_moves(
-        moves: &[&str],
-        evaluation_parameters: Option<Arc<EvaluationParameters>>,
-        zobrist_container: Option<Arc<ZobristContainer>>,
-        patterns_container: Option<Arc<PatternsContainer>>,
-        see_container: Option<Arc<SEEContainer>>,
-        magic_container: Option<Arc<MagicContainer>>,
-    ) -> Result<Self, String> {
-        let mut board = Board::new_initial_position(evaluation_parameters, zobrist_container, patterns_container, see_container, magic_container);
-        for premade_move in moves {
-            let parsed_move = Move::from_long_notation(premade_move, &board)?;
-            board.make_move(parsed_move);
-        }
-
-        Ok(board)
     }
 
     /// Generates all possible non-captures (if `CAPTURES` is false) or all possible captures (if `CAPTURES` is true) at the current position, stores
@@ -653,16 +620,6 @@ impl Board {
         self.pst_scores[color as usize][ENDING as usize] -= self.evaluation_parameters.get_pst_value(color, piece, ENDING, from);
         self.pst_scores[color as usize][OPENING as usize] += self.evaluation_parameters.get_pst_value(color, piece, OPENING, to);
         self.pst_scores[color as usize][ENDING as usize] += self.evaluation_parameters.get_pst_value(color, piece, ENDING, to);
-    }
-
-    /// Converts the board's state into FEN.
-    pub fn to_fen(&self) -> String {
-        fen::board_to_fen(self)
-    }
-
-    /// Converts the board`s state into EPD.
-    pub fn to_epd(&self) -> String {
-        fen::board_to_epd(self)
     }
 
     /// Recalculates board's hash entirely.

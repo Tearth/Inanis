@@ -1,6 +1,7 @@
 use super::*;
 
 pub mod fen;
+pub mod moves;
 pub mod pgn;
 
 /// Converts piece `symbol` (p/P, n/N, b/B, r/R, q/Q, k/K) into the corresponding [u8] value. Returns [Err] with the proper error messages when the `symbol` is unknown.
