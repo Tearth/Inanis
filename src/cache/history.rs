@@ -2,6 +2,8 @@ use std::cmp;
 use std::sync::atomic::AtomicU32;
 use std::sync::atomic::Ordering;
 
+const AGING_DIVISOR: u32 = 64;
+
 pub struct HistoryTable {
     pub table: [[HistoryTableEntry; 64]; 64],
     pub max: AtomicU32,
@@ -56,7 +58,8 @@ impl HistoryTable {
 
     /// Ages a single value by performing a square root operation and ceiling.
     fn age_value(&self, value: u32) -> u32 {
-        (value as f32).sqrt().ceil() as u32
+        // Integer ceiling: https://stackoverflow.com/a/2745086
+        (value + AGING_DIVISOR - 1) / AGING_DIVISOR
     }
 }
 
