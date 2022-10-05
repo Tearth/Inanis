@@ -1,9 +1,29 @@
 pub trait BitFlags {
-    fn contains(&self, value: u8) -> bool;
+    type Item;
+
+    fn contains(&self, value: Self::Item) -> bool;
 }
 
-impl BitFlags for u8 {
-    fn contains(&self, value: u8) -> bool {
-        (self & value) != 0
-    }
+macro_rules! bit_flags_implementation {
+    ($type:ident) => {
+        impl BitFlags for $type {
+            type Item = $type;
+
+            #[inline(always)]
+            fn contains(&self, value: $type) -> bool {
+                (self & value) != 0
+            }
+        }
+    };
 }
+
+bit_flags_implementation!(i8);
+bit_flags_implementation!(u8);
+bit_flags_implementation!(i16);
+bit_flags_implementation!(u16);
+bit_flags_implementation!(i32);
+bit_flags_implementation!(u32);
+bit_flags_implementation!(i64);
+bit_flags_implementation!(u64);
+bit_flags_implementation!(isize);
+bit_flags_implementation!(usize);
