@@ -1,4 +1,3 @@
-use super::rand;
 use crate::engine::see::SEEContainer;
 use crate::evaluation::EvaluationParameters;
 use crate::state::movegen::MagicContainer;
@@ -7,6 +6,7 @@ use crate::state::representation::Board;
 use crate::state::text::fen;
 use crate::state::zobrist::ZobristContainer;
 use crate::state::*;
+use crate::utils::rand;
 use common::time::DateTime;
 use std::fmt::Display;
 use std::fs;

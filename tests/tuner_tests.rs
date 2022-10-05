@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tuner_tests {
-    use inanis::utils::tuner;
+    use inanis::tuning::tuner;
 
     #[test]
     fn tuner_validate() {

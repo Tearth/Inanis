@@ -22,4 +22,5 @@ pub mod interface;
 pub mod perft;
 pub mod state;
 pub mod tablebases;
+pub mod tuning;
 pub mod utils;
