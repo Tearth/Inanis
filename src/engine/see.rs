@@ -1,5 +1,6 @@
 use crate::evaluation::EvaluationParameters;
 use crate::state::*;
+use crate::utils::bithelpers::BitHelpers;
 use std::cmp;
 use std::sync::Arc;
 
@@ -41,7 +42,7 @@ impl SEEContainer {
             return 0;
         }
 
-        let attacking_piece_index = bit_scan(get_lsb(attackers as u64)) as u8;
+        let attacking_piece_index = attackers.get_lsb().bit_scan();
         let target_piece_index = self.get_see_piece_index(target_piece);
 
         self.evaluate_internal(attacking_piece_index, target_piece_index, attackers, defenders, evaluation_parameters)
@@ -57,7 +58,7 @@ impl SEEContainer {
         let new_attackers = attackers & !(1 << attacking_piece);
         let new_attacking_piece = match defenders {
             0 => 0,
-            _ => bit_scan(get_lsb(defenders as u64)) as u8,
+            _ => defenders.get_lsb().bit_scan(),
         };
 
         let see = self.evaluate_internal(new_attacking_piece, attacking_piece, defenders, new_attackers, evaluation_parameters);

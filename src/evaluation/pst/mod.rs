@@ -1,5 +1,5 @@
 use super::*;
-use crate::state::representation::Board;
+use crate::{state::representation::Board, utils::bithelpers::BitHelpers};
 
 pub mod bishop;
 pub mod king;
@@ -25,9 +25,9 @@ pub fn recalculate_incremental_values(board: &mut Board) {
             for piece_index in 0..6 {
                 let mut pieces = board.pieces[color_index][piece_index];
                 while pieces != 0 {
-                    let square = get_lsb(pieces);
-                    let square_index = bit_scan(square);
-                    pieces = pop_lsb(pieces);
+                    let square = pieces.get_lsb();
+                    let square_index = square.bit_scan();
+                    pieces = pieces.pop_lsb();
 
                     score += board.evaluation_parameters.pst[color_index as usize][piece_index as usize][phase as usize][square_index as usize] as i16;
                 }

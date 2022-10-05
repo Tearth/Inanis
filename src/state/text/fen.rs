@@ -7,6 +7,7 @@ use crate::state::representation::CastlingRights;
 use crate::state::zobrist::ZobristContainer;
 use crate::state::*;
 use crate::utils::bitflags::BitFlags;
+use crate::utils::bithelpers::BitHelpers;
 use std::sync::Arc;
 
 pub struct ParsedEPD {
@@ -138,7 +139,7 @@ fn fen_to_pieces(board: &mut Board, pieces: &str) -> Result<(), String> {
             current_square_index -= char.to_digit(10).ok_or(format!("Invalid FEN, bad symbol: pieces={}", pieces))? as i32;
         } else {
             let color = if char.is_uppercase() { WHITE } else { BLACK };
-            let piece = symbol_to_piece(char)?;
+            let piece = text::symbol_to_piece(char)?;
 
             board.add_piece(color, piece, current_square_index as u8);
             current_square_index -= 1;
@@ -163,7 +164,7 @@ fn pieces_to_fen(board: &Board) -> String {
                 squares_without_piece = 0;
             }
 
-            let mut piece_symbol = piece_to_symbol(piece).unwrap();
+            let mut piece_symbol = text::piece_to_symbol(piece).unwrap();
             if (board.pieces[WHITE as usize][piece as usize] & (1u64 << square_index)) == 0 {
                 piece_symbol = piece_symbol.to_lowercase().collect::<Vec<char>>()[0];
             }
@@ -275,7 +276,7 @@ fn en_passant_to_fen(board: &Board) -> String {
         return "-".to_string();
     }
 
-    let square_index = bit_scan(board.en_passant);
+    let square_index = board.en_passant.bit_scan();
     let file = square_index % 8;
     let rank = square_index / 8;
 

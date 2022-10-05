@@ -17,6 +17,7 @@ use crate::evaluation::pst;
 use crate::evaluation::safety;
 use crate::evaluation::EvaluationParameters;
 use crate::utils::bitflags::BitFlags;
+use crate::utils::bithelpers::BitHelpers;
 use std::mem::MaybeUninit;
 use std::sync::Arc;
 
@@ -205,7 +206,7 @@ impl Board {
         let piece = self.get_piece(from);
 
         if self.en_passant != 0 {
-            self.hash ^= self.zobrist.get_en_passant_hash((bit_scan(self.en_passant) & 7) as u8);
+            self.hash ^= self.zobrist.get_en_passant_hash(self.en_passant.bit_scan() & 7);
             self.en_passant = 0;
         }
 
@@ -229,7 +230,7 @@ impl Board {
                 self.pawn_hash ^= self.zobrist.get_piece_hash(color, piece, to);
 
                 self.en_passant = 1u64 << ((to as i8) + 8 * ((color as i8) * 2 - 1));
-                self.hash ^= self.zobrist.get_en_passant_hash((bit_scan(self.en_passant) & 7) as u8);
+                self.hash ^= self.zobrist.get_en_passant_hash(self.en_passant.bit_scan() & 7);
             }
             MoveFlags::CAPTURE => {
                 self.captured_piece = self.get_piece(to);
@@ -436,7 +437,7 @@ impl Board {
         self.push_state();
 
         if self.en_passant != 0 {
-            self.hash ^= self.zobrist.get_en_passant_hash((bit_scan(self.en_passant) & 7) as u8);
+            self.hash ^= self.zobrist.get_en_passant_hash(self.en_passant.bit_scan() & 7);
             self.en_passant = 0;
         }
 
@@ -555,7 +556,7 @@ impl Board {
         result |= attacking_queens_count << 6;
 
         let rook_attacks = self.magic.get_rook_moves(occupancy & !rooks_queens, square_index as usize);
-        let attacking_rooks_count = bit_count(rook_attacks & self.pieces[enemy_color as usize][ROOK as usize]);
+        let attacking_rooks_count = (rook_attacks & self.pieces[enemy_color as usize][ROOK as usize]).bit_count();
 
         result |= match attacking_rooks_count {
             0 => 0,
@@ -564,9 +565,9 @@ impl Board {
         };
 
         let knight_attacks = self.magic.get_knight_moves(square_index as usize, &self.patterns);
-        let attacking_knights_count = bit_count(knight_attacks & self.pieces[enemy_color as usize][KNIGHT as usize]);
+        let attacking_knights_count = (knight_attacks & self.pieces[enemy_color as usize][KNIGHT as usize]).bit_count();
         let bishop_attacks = self.magic.get_bishop_moves(occupancy & !bishops_queens, square_index as usize);
-        let attacking_bishops_count = bit_count(bishop_attacks & self.pieces[enemy_color as usize][BISHOP as usize]);
+        let attacking_bishops_count = (bishop_attacks & self.pieces[enemy_color as usize][BISHOP as usize]).bit_count();
         let attacking_knights_bishops_count = attacking_knights_count + attacking_bishops_count;
 
         result |= match attacking_knights_bishops_count {
@@ -594,7 +595,7 @@ impl Board {
             return false;
         }
 
-        self.is_square_attacked(color, bit_scan(self.pieces[color as usize][KING as usize]))
+        self.is_square_attacked(color, (self.pieces[color as usize][KING as usize]).bit_scan())
     }
 
     /// Gets piece on the square specified by `square_index`.
@@ -672,9 +673,9 @@ impl Board {
             for piece_index in 0..6 {
                 let mut pieces = self.pieces[color as usize][piece_index as usize];
                 while pieces != 0 {
-                    let square = get_lsb(pieces);
-                    let square_index = bit_scan(square);
-                    pieces = pop_lsb(pieces);
+                    let square = pieces.get_lsb();
+                    let square_index = square.bit_scan();
+                    pieces = pieces.pop_lsb();
 
                     hash ^= self.zobrist.get_piece_hash(color, piece_index, square_index);
                 }
@@ -695,7 +696,7 @@ impl Board {
         }
 
         if self.en_passant != 0 {
-            hash ^= self.zobrist.get_en_passant_hash((bit_scan(self.en_passant) & 7) as u8);
+            hash ^= self.zobrist.get_en_passant_hash(self.en_passant.bit_scan() & 7);
         }
 
         if self.active_color == BLACK {
@@ -713,9 +714,9 @@ impl Board {
             for piece in [PAWN, KING] {
                 let mut pieces = self.pieces[color as usize][piece as usize];
                 while pieces != 0 {
-                    let square = get_lsb(pieces);
-                    let square_index = bit_scan(square);
-                    pieces = pop_lsb(pieces);
+                    let square = pieces.get_lsb();
+                    let square_index = square.bit_scan();
+                    pieces = pieces.pop_lsb();
 
                     hash ^= self.zobrist.get_piece_hash(color, piece, square_index);
                 }
@@ -824,7 +825,7 @@ impl Board {
         let white_material = self.material_scores[WHITE as usize] - self.evaluation_parameters.piece_value[KING as usize];
         let black_material = self.material_scores[BLACK as usize] - self.evaluation_parameters.piece_value[KING as usize];
         let bishop_value = self.evaluation_parameters.piece_value[BISHOP as usize];
-        let pawns_count = bit_count(self.pieces[WHITE as usize][PAWN as usize]) + bit_count(self.pieces[BLACK as usize][PAWN as usize]);
+        let pawns_count = (self.pieces[WHITE as usize][PAWN as usize]).bit_count() + (self.pieces[BLACK as usize][PAWN as usize]).bit_count();
 
         if white_material <= bishop_value && black_material <= bishop_value && pawns_count == 0 {
             // King vs King
@@ -833,10 +834,10 @@ impl Board {
             }
 
             let light_pieces_count = 0
-                + bit_count(self.pieces[WHITE as usize][KNIGHT as usize])
-                + bit_count(self.pieces[WHITE as usize][BISHOP as usize])
-                + bit_count(self.pieces[BLACK as usize][KNIGHT as usize])
-                + bit_count(self.pieces[BLACK as usize][BISHOP as usize]);
+                + (self.pieces[WHITE as usize][KNIGHT as usize]).bit_count()
+                + (self.pieces[WHITE as usize][BISHOP as usize]).bit_count()
+                + (self.pieces[BLACK as usize][KNIGHT as usize]).bit_count()
+                + (self.pieces[BLACK as usize][BISHOP as usize]).bit_count();
 
             // King + Knight/Bishop vs King
             if light_pieces_count == 1 {
@@ -862,7 +863,7 @@ impl Board {
 
     /// Gets pieces count by counting set bits in occupancy.
     pub fn get_pieces_count(&self) -> u8 {
-        bit_count(self.occupancy[WHITE as usize] | self.occupancy[BLACK as usize])
+        (self.occupancy[WHITE as usize] | self.occupancy[BLACK as usize]).bit_count()
     }
 }
 

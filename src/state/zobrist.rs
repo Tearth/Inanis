@@ -1,5 +1,5 @@
-use super::*;
 use crate::utils::bitflags::BitFlags;
+use crate::utils::bithelpers::BitHelpers;
 use crate::utils::rand;
 
 pub struct ZobristContainer {
@@ -21,7 +21,7 @@ impl ZobristContainer {
             return 0;
         }
 
-        self.castling_hashes[bit_scan(right as u64) as usize]
+        self.castling_hashes[right.bit_scan() as usize]
     }
 
     /// Gets en passant hash for the `file`.

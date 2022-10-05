@@ -6,6 +6,7 @@ use crate::cache::search::TranspositionTableScoreType;
 use crate::state::*;
 use crate::tablebases::syzygy;
 use crate::tablebases::WdlResult;
+use crate::utils::bithelpers::BitHelpers;
 use crate::utils::conditional_expression;
 use crate::utils::rand;
 use std::cmp;
@@ -611,7 +612,7 @@ fn get_next_move<const DIAG: bool>(
                     if context.board.pieces[context.board.active_color as usize][KING as usize] == 0 {
                         u64::MAX
                     } else {
-                        let king_square_index = bit_scan(context.board.pieces[context.board.active_color as usize][KING as usize]);
+                        let king_square_index = (context.board.pieces[context.board.active_color as usize][KING as usize]).bit_scan();
                         let occupancy = context.board.occupancy[WHITE as usize] | context.board.occupancy[BLACK as usize];
 
                         let queen_moves = context.board.magic.get_queen_moves(occupancy, king_square_index as usize);

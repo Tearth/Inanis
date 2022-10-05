@@ -3,6 +3,7 @@ use super::representation::CastlingRights;
 use super::*;
 use crate::engine;
 use crate::utils::bitflags::BitFlags;
+use crate::utils::bithelpers::BitHelpers;
 use crate::utils::rand;
 use std::cmp;
 use std::mem::MaybeUninit;
@@ -127,7 +128,7 @@ impl Move {
                     let rank = chars.next().ok_or(format!("Invalid move, bad destination rank: text={}", text))? as u8;
 
                     let to = (7 - (file - b'a')) + 8 * (rank - b'1');
-                    let piece_type = symbol_to_piece(piece)?;
+                    let piece_type = text::symbol_to_piece(piece)?;
 
                     desired_to = Some(to);
                     desired_piece = Some(piece_type);
@@ -152,7 +153,7 @@ impl Move {
                             desired_capture = Some(true);
                         // Rxf5
                         } else {
-                            let piece_type = symbol_to_piece(piece_or_file)?;
+                            let piece_type = text::symbol_to_piece(piece_or_file)?;
 
                             desired_to = Some(to);
                             desired_piece = Some(piece_type);
@@ -160,7 +161,7 @@ impl Move {
                         }
                     // N3e4
                     } else if capture_or_file_rank.is_ascii_digit() {
-                        let piece_type = symbol_to_piece(piece_or_file)?;
+                        let piece_type = text::symbol_to_piece(piece_or_file)?;
                         let rank_from = (capture_or_file_rank as u8) - b'1';
 
                         desired_to = Some(to);
@@ -170,7 +171,7 @@ impl Move {
                     // Nde4
                     else {
                         let file_from = 7 - ((capture_or_file_rank as u8) - b'a');
-                        let piece_type = symbol_to_piece(piece_or_file)?;
+                        let piece_type = text::symbol_to_piece(piece_or_file)?;
 
                         desired_to = Some(to);
                         desired_piece = Some(piece_type);
@@ -185,7 +186,7 @@ impl Move {
                     let file = chars.next().ok_or(format!("Invalid move, bad destination file: text={}", text))? as u8;
                     let rank = chars.next().ok_or(format!("Invalid move, bad destination rank: text={}", text))? as u8;
                     let to = (7 - (file - b'a')) + 8 * (rank - b'1');
-                    let piece_type = symbol_to_piece(piece)?;
+                    let piece_type = text::symbol_to_piece(piece)?;
 
                     if capture_or_rank == 'x' {
                         // R2xc2
@@ -225,7 +226,7 @@ impl Move {
                     let file = chars.next().ok_or(format!("Invalid move, bad destination file: text={}", text))? as u8;
                     let rank = chars.next().ok_or(format!("Invalid move, bad destination rank: text={}", text))? as u8;
                     let to = (7 - (file - b'a')) + 8 * (rank - b'1');
-                    let piece_type = symbol_to_piece(piece)?;
+                    let piece_type = text::symbol_to_piece(piece)?;
 
                     let file_from = 7 - ((source_file as u8) - b'a');
                     let rank_from = (source_rank as u8) - b'1';
@@ -613,9 +614,9 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(
     let mut pieces = board.pieces[board.active_color as usize][PIECE as usize];
 
     while pieces != 0 {
-        let from_square = get_lsb(pieces);
-        let from_square_index = bit_scan(from_square);
-        pieces = pop_lsb(pieces);
+        let from_square = pieces.get_lsb();
+        let from_square_index = from_square.bit_scan();
+        pieces = pieces.pop_lsb();
 
         let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
         let mut piece_moves = match PIECE {
@@ -635,9 +636,9 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(
         }
 
         while piece_moves != 0 {
-            let to_square = get_lsb(piece_moves);
-            let to_square_index = bit_scan(to_square);
-            piece_moves = pop_lsb(piece_moves);
+            let to_square = piece_moves.get_lsb();
+            let to_square_index = to_square.bit_scan();
+            piece_moves = piece_moves.pop_lsb();
 
             let capture = (to_square & board.occupancy[enemy_color as usize]) != 0;
             let flags = if CAPTURES || capture { MoveFlags::CAPTURE } else { MoveFlags::SINGLE_PUSH };
@@ -705,13 +706,13 @@ pub fn get_piece_mobility<const PIECE: u8>(board: &Board, color: u8, dangered_ki
     let mut mobility = 0;
 
     let enemy_color = color ^ 1;
-    let enemy_king_square = bit_scan(board.pieces[enemy_color as usize][KING as usize]);
+    let enemy_king_square = (board.pieces[enemy_color as usize][KING as usize]).bit_scan();
     let enemy_king_box = board.patterns.get_box(enemy_king_square as usize);
 
     while pieces != 0 {
-        let from_square = get_lsb(pieces);
-        let from_square_index = bit_scan(from_square);
-        pieces = pop_lsb(pieces);
+        let from_square = pieces.get_lsb();
+        let from_square_index = from_square.bit_scan();
+        pieces = pieces.pop_lsb();
 
         let mut occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
         occupancy &= !match PIECE {
@@ -730,11 +731,11 @@ pub fn get_piece_mobility<const PIECE: u8>(board: &Board, color: u8, dangered_ki
             _ => panic!("Invalid parameter: fen={}, PIECE={}", board.to_fen(), PIECE),
         };
 
-        *dangered_king_squares += bit_count(enemy_king_box & (piece_moves | from_square)) as u32;
+        *dangered_king_squares += (enemy_king_box & (piece_moves | from_square)).bit_count() as u32;
         piece_moves &= !board.occupancy[color as usize];
 
-        let center_mobility = board.evaluation_parameters.mobility_center_multiplier[PIECE as usize] * bit_count(piece_moves & CENTER) as i16;
-        let outside_mobility = bit_count(piece_moves & OUTSIDE) as i16;
+        let center_mobility = board.evaluation_parameters.mobility_center_multiplier[PIECE as usize] * (piece_moves & CENTER).bit_count() as i16;
+        let outside_mobility = (piece_moves & OUTSIDE).bit_count() as i16;
 
         mobility += center_mobility + outside_mobility;
     }
@@ -781,10 +782,10 @@ fn scan_pawn_moves_single_push(board: &Board, moves: &mut [MaybeUninit<Move>; en
     target_squares &= !occupancy & evasion_mask;
 
     while target_squares != 0 {
-        let to_square = get_lsb(target_squares);
-        let to_square_index = bit_scan(to_square);
+        let to_square = target_squares.get_lsb();
+        let to_square_index = to_square.bit_scan();
         let from_square_index = ((to_square_index as i8) - shift) as u8;
-        target_squares = pop_lsb(target_squares);
+        target_squares = target_squares.pop_lsb();
 
         if (to_square & promotion_line) != 0 {
             moves[index + 0].write(Move::new(from_square_index, to_square_index, MoveFlags::QUEEN_PROMOTION));
@@ -819,10 +820,10 @@ fn scan_pawn_moves_double_push(board: &Board, moves: &mut [MaybeUninit<Move>; en
     target_squares &= !occupancy & evasion_mask;
 
     while target_squares != 0 {
-        let to_square = get_lsb(target_squares);
-        let to_square_index = bit_scan(to_square);
+        let to_square = target_squares.get_lsb();
+        let to_square_index = to_square.bit_scan();
         let from_square_index = ((to_square_index as i8) - shift) as u8;
-        target_squares = pop_lsb(target_squares);
+        target_squares = target_squares.pop_lsb();
 
         moves[index].write(Move::new(from_square_index, to_square_index, MoveFlags::DOUBLE_PUSH));
         index += 1;
@@ -858,10 +859,10 @@ fn scan_pawn_moves_diagonal_attacks<const DIR: u8>(
     target_squares &= (board.occupancy[enemy_color as usize] | board.en_passant) & evasion_mask;
 
     while target_squares != 0 {
-        let to_square = get_lsb(target_squares);
-        let to_square_index = bit_scan(to_square);
+        let to_square = target_squares.get_lsb();
+        let to_square_index = to_square.bit_scan();
         let from_square_index = ((to_square_index as i8) - signed_shift) as u8;
-        target_squares = pop_lsb(target_squares);
+        target_squares = target_squares.pop_lsb();
 
         if (to_square & promotion_line) != 0 {
             moves[index + 0].write(Move::new(from_square_index, to_square_index, MoveFlags::QUEEN_PROMOTION_CAPTURE));

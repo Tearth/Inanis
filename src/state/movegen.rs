@@ -1,5 +1,6 @@
 use super::patterns::PatternsContainer;
 use super::*;
+use crate::utils::bithelpers::BitHelpers;
 use crate::utils::rand;
 use std::sync::Arc;
 
@@ -357,9 +358,9 @@ impl MagicContainer {
         let mut result = 0u64;
 
         while mask != 0 {
-            let lsb = get_lsb(mask);
-            let lsb_index = bit_scan(lsb);
-            mask = pop_lsb(mask);
+            let lsb = mask.get_lsb();
+            let lsb_index = lsb.bit_scan();
+            mask = mask.pop_lsb();
 
             result |= (index & 1) << lsb_index;
             index >>= 1;
