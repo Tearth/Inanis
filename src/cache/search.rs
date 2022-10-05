@@ -42,7 +42,7 @@ impl TranspositionTable {
     /// Constructs a new instance of [TranspositionTable] by allocating `size` bytes of memory.
     pub fn new(size: usize) -> Self {
         let bucket_size = mem::size_of::<TranspositionTableBucket>();
-        let aligned_size = 1 << (63 - size.leading_zeros());
+        let aligned_size = if size != 0 { 1 << (63 - size.leading_zeros()) } else { 0 };
 
         let mut hashtable = Self { table: Vec::with_capacity(aligned_size / bucket_size) };
 
