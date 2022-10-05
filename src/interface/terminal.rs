@@ -7,10 +7,10 @@ use crate::evaluation::safety;
 use crate::perft;
 use crate::state::movegen::MagicContainer;
 use crate::state::representation::Board;
+use crate::testing::benchmark;
+use crate::testing::testset;
 use crate::tuning::tuner;
 use crate::tuning::tunerset;
-use crate::utils::benchmark;
-use crate::utils::test;
 use std::io;
 use std::process;
 use std::time::SystemTime;
@@ -55,7 +55,7 @@ pub fn run(target_features: Vec<&'static str>) {
             "perft" => handle_perft(tokens),
             "dperft" => handle_dperft(tokens),
             "qperft" => handle_qperft(tokens),
-            "test" => handle_test(tokens),
+            "testset" => handle_testset(tokens),
             "tuner" => handle_tuner(tokens),
             "tunerset" => handle_tunerset(tokens),
             "uci" => handle_uci(),
@@ -72,7 +72,7 @@ fn handle_help() {
     println!(" benchmark - run test for a set of positions");
     println!(" evaluate [fen] - show score for the position");
     println!(" magic - generate magic numbers");
-    println!(" test [epd] [depth] [transposition_table_size] [threads_count] - run test of positions");
+    println!(" testset [epd] [depth] [transposition_table_size] [threads_count] - run test of positions");
     println!(" tuner [epd] [output] [lock_material] [randomize] [threads_count] - run tuning");
     println!(" tunerset [pgn] [output] [min_ply] [max_score] [max_diff] [density] [avg_game_phase] - dataset generator");
     println!(" uci - run Universal Chess Interface");
@@ -520,9 +520,9 @@ fn handle_qperft(input: Vec<&str>) {
     println!("Perft done!");
 }
 
-/// Handles `test [epd] [depth] [transposition_table_size] [threads_count]` command by running a fixed-`depth` search of positions stored in the `epd` file,
+/// Handles `testset [epd] [depth] [transposition_table_size] [threads_count]` command by running a fixed-`depth` search of positions stored in the `epd` file,
 /// using hashtable with size specified in `transposition_table_size`. To classify the test as successful, the last iteration has to return the correct best move.
-fn handle_test(input: Vec<&str>) {
+fn handle_testset(input: Vec<&str>) {
     if input.len() < 2 {
         println!("EPD filename parameter not found");
         return;
@@ -572,7 +572,7 @@ fn handle_test(input: Vec<&str>) {
         }
     };
 
-    test::run(input[1], depth, transposition_table_size * 1024 * 1024, threads_count);
+    testset::run(input[1], depth, transposition_table_size * 1024 * 1024, threads_count);
 }
 
 /// Handles `tuner [epd] [output] [lock_material] [randomize] [threads_count]` command by running the evaluation parameters tuner. The input file is specified by `epd`

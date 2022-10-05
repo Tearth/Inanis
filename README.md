@@ -83,7 +83,7 @@ Example test suite file:
 
 Examples of running the tests:
 
- - `test ./input/STS1.epd 16 64 4` - run a fixed-depth (16 in this case) search for all positions stored in the `STS1.epd` file, using 64 MB transposition table and 4 threads. To classify the test as successful, the last iteration has to return the correct best move.
+ - `testset ./input/STS1.epd 16 64 4` - run a fixed-depth (16 in this case) search for all positions stored in the `STS1.epd` file, using 64 MB transposition table and 4 threads. To classify the test as successful, the last iteration has to return the correct best move.
 
 ## Dependencies
 **Build dependencies**
@@ -105,7 +105,7 @@ Because Inanis is a pet project, pull requests are not currently accepted - this
  benchmark - run test for a set of positions
  evaluate [fen] - show score for the position
  magic - generate magic numbers
- test [epd] [depth] [transposition_table_size] [threads_count] - run test of positions
+ testset [epd] [depth] [transposition_table_size] [threads_count] - run test of positions
  tuner [epd] [output] [lock_material] [randomize] [threads_count] - run tuning
  tunerset [pgn] [output] [min_ply] [max_score] [max_diff] [density] - dataset generator
  uci - run Universal Chess Interface
