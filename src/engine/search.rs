@@ -65,6 +65,7 @@ pub const LAZY_SMP_NOISE: i16 = 10;
 #[derive(std::cmp::PartialEq)]
 enum MoveGeneratorStage {
     ReadyToCheckHashMove,
+    HashMove,
     ReadyToGenerateCaptures,
     Captures,
     ReadyToGenerateKillerMoves,
@@ -587,7 +588,11 @@ fn get_next_move<const DIAG: bool>(
     ply: u16,
     friendly_king_checked: bool,
 ) -> Option<(Move, i16)> {
-    if *stage == MoveGeneratorStage::Captures || *stage == MoveGeneratorStage::KillerMoves || *stage == MoveGeneratorStage::AllGenerated {
+    if *stage == MoveGeneratorStage::HashMove
+        || *stage == MoveGeneratorStage::Captures
+        || *stage == MoveGeneratorStage::KillerMoves
+        || *stage == MoveGeneratorStage::AllGenerated
+    {
         *move_index += 1;
         *move_number += 1;
     }
@@ -595,17 +600,22 @@ fn get_next_move<const DIAG: bool>(
     loop {
         match stage {
             MoveGeneratorStage::ReadyToCheckHashMove => {
-                *stage = MoveGeneratorStage::ReadyToGenerateCaptures;
                 conditional_expression!(DIAG, context.statistics.move_generator_hash_move_stages += 1);
 
                 if hash_move != Default::default() {
-                    moves[0].write(hash_move);
-                    move_scores[0].write(MOVE_ORDERING_HASH_MOVE);
+                    *stage = MoveGeneratorStage::HashMove;
                     *moves_count = 1;
-                    *move_number = 1;
-
-                    return Some((hash_move, MOVE_ORDERING_HASH_MOVE));
+                } else {
+                    *stage = MoveGeneratorStage::ReadyToGenerateCaptures;
                 }
+            }
+            MoveGeneratorStage::HashMove => {
+                if move_index >= moves_count {
+                    *stage = MoveGeneratorStage::ReadyToGenerateCaptures;
+                    continue;
+                }
+
+                return Some((hash_move, MOVE_ORDERING_HASH_MOVE));
             }
             MoveGeneratorStage::ReadyToGenerateCaptures => {
                 *evasion_mask = if friendly_king_checked {
@@ -624,6 +634,7 @@ fn get_next_move<const DIAG: bool>(
                     u64::MAX
                 };
 
+                *move_index = 0;
                 *moves_count = context.board.get_moves::<true>(moves, 0, *evasion_mask);
                 conditional_expression!(DIAG, context.statistics.move_generator_captures_stages += 1);
 
