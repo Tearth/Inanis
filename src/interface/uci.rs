@@ -314,13 +314,13 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
                 );
                 drop(state_lock);
 
-                let data = HelperThreadContext {
-                    board: context.board.clone(),
-                    pawn_hashtable: Arc::new((*context.pawn_hashtable).clone()),
-                    killers_table: Arc::new((*context.killers_table).clone()),
-                    history_table: Arc::new((*context.history_table).clone()),
-                    context: helper_context,
-                };
+                let data = HelperThreadContext::new(
+                    context.board.clone(),
+                    Arc::new((*context.pawn_hashtable).clone()),
+                    Arc::new((*context.killers_table).clone()),
+                    Arc::new((*context.history_table).clone()),
+                    helper_context,
+                );
 
                 context.helper_contexts.push(data);
             }

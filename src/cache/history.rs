@@ -92,7 +92,7 @@ impl HistoryTableEntry {
 
     /// Loads and parses atomic value into a [HistoryTableEntry] struct.
     pub fn get_data(&self) -> HistoryTableResult {
-        HistoryTableResult { value: self.data.load(Ordering::Relaxed) }
+        HistoryTableResult::new(self.data.load(Ordering::Relaxed))
     }
 }
 
@@ -107,5 +107,12 @@ impl Clone for HistoryTableEntry {
     /// Clones [HistoryTableEntry] by creating a new atomic (with the original value).
     fn clone(&self) -> Self {
         Self { data: AtomicU32::new(self.data.load(Ordering::Relaxed)) }
+    }
+}
+
+impl HistoryTableResult {
+    /// Constructs a new instance of [HistoryTableResult] with `value`.
+    pub fn new(value: u32) -> Self {
+        Self { r#value }
     }
 }

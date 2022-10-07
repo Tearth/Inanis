@@ -86,7 +86,11 @@ impl PawnHashTableEntry {
     /// Loads and parses atomic value into a [PawnHashTableResult] struct.
     pub fn get_data(&self) -> PawnHashTableResult {
         let key_data = self.key_data.load(Ordering::Relaxed);
-        PawnHashTableResult { key: key_data as u16, score: (key_data >> 16) as i16 }
+
+        let key = key_data as u16;
+        let score = (key_data >> 16) as i16;
+
+        PawnHashTableResult::new(key, score)
     }
 }
 
@@ -101,5 +105,12 @@ impl Clone for PawnHashTableEntry {
     /// Clones [PawnHashTableEntry] by creating a new atomic (with the original value).
     fn clone(&self) -> Self {
         Self { key_data: AtomicU32::new(self.key_data.load(Ordering::Relaxed)) }
+    }
+}
+
+impl PawnHashTableResult {
+    /// Constructs a new instance of [PawnHashTableResult] with `leafs_count`.
+    pub fn new(key: u16, score: i16) -> Self {
+        Self { key, score }
     }
 }

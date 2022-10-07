@@ -5,8 +5,15 @@ struct RandState {
     pub seed: Cell<u64>,
 }
 
+impl RandState {
+    /// Constructs a new instance of [RandState] with stored `seed`.
+    pub fn new(seed: u64) -> Self {
+        Self { seed: Cell::new(seed) }
+    }
+}
+
 thread_local! {
-     static SEED: RandState = RandState { seed: Cell::new(common::time::get_unix_timestamp()) }
+     static SEED: RandState = RandState::new(common::time::get_unix_timestamp())
 }
 
 macro_rules! rand_definition {

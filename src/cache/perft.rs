@@ -119,16 +119,16 @@ impl Default for PerftHashTableEntry {
     }
 }
 
-impl PerftHashTableResult {
-    /// Constructs a new instance of [PerftHashTableResult] with `leafs_count`.
-    pub fn new(leafs_count: u64) -> Self {
-        Self { leafs_count }
-    }
-}
-
 impl Clone for PerftHashTableEntry {
     /// Clones [PerftHashTableEntry] by creating a new atomics (with the original values).
     fn clone(&self) -> Self {
         Self { key: AtomicU64::new(self.key.load(Ordering::Relaxed)), data: AtomicU64::new(self.data.load(Ordering::Relaxed)) }
+    }
+}
+
+impl PerftHashTableResult {
+    /// Constructs a new instance of [PerftHashTableResult] with `leafs_count`.
+    pub fn new(leafs_count: u64) -> Self {
+        Self { leafs_count }
     }
 }

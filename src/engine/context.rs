@@ -511,6 +511,19 @@ impl Iterator for SearchContext {
     }
 }
 
+impl HelperThreadContext {
+    /// Constructs a new instance of [HelperThreadContext] with stored `board`, `pawn_hashtable`, `killers_table`, `history_table` and `context`.
+    pub fn new(
+        board: Board,
+        pawn_hashtable: Arc<PawnHashTable>,
+        killers_table: Arc<KillersTable>,
+        history_table: Arc<HistoryTable>,
+        context: SearchContext,
+    ) -> Self {
+        Self { board, pawn_hashtable, killers_table, history_table, context }
+    }
+}
+
 impl SearchResult {
     /// Constructs a new instance of [SearchResult] with stored `time`, `depth`, `lines` and `statistics`.
     pub fn new(time: u32, depth: i8, transposition_table_usage: f32, lines: Vec<SearchResultLine>, statistics: SearchStatistics) -> Self {

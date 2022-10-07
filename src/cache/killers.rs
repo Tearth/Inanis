@@ -88,7 +88,7 @@ impl KillersTableEntry {
 
     /// Loads and parses atomic value into a [KillersTableEntry] struct.
     pub fn get_data(&self) -> KillersTableResult {
-        KillersTableResult { r#move: Move::new_from_raw(self.data.load(Ordering::Relaxed)) }
+        KillersTableResult::new(Move::new_from_raw(self.data.load(Ordering::Relaxed)))
     }
 }
 
@@ -103,5 +103,12 @@ impl Clone for KillersTableEntry {
     /// Clones [KillersTableEntry] by creating a new atomic (with the original value).
     fn clone(&self) -> Self {
         Self { data: AtomicU16::new(self.data.load(Ordering::Relaxed)) }
+    }
+}
+
+impl KillersTableResult {
+    /// Constructs a new instance of [KillersTableResult] with `r#move`.
+    pub fn new(r#move: Move) -> Self {
+        Self { r#move }
     }
 }

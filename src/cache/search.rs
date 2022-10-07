@@ -203,14 +203,15 @@ impl TranspositionTableEntry {
     /// Loads and parses atomic value into a [TranspositionTableResult] struct.
     pub fn get_data(&self) -> TranspositionTableResult {
         let key_data = self.key_data.load(Ordering::Relaxed);
-        TranspositionTableResult {
-            key: key_data as u16,
-            score: (key_data >> 16) as i16,
-            best_move: Move::new_from_raw((key_data >> 32) as u16),
-            depth: (key_data >> 48) as i8,
-            r#type: ((key_data >> 56) & 0x7) as u8,
-            age: (key_data >> 59) as u8,
-        }
+
+        let key = key_data as u16;
+        let score = (key_data >> 16) as i16;
+        let best_move = Move::new_from_raw((key_data >> 32) as u16);
+        let depth = (key_data >> 48) as i8;
+        let r#type = ((key_data >> 56) & 0x7) as u8;
+        let age = (key_data >> 59) as u8;
+
+        TranspositionTableResult::new(key, score, best_move, depth, r#type, age)
     }
 }
 
@@ -225,5 +226,12 @@ impl Clone for TranspositionTableEntry {
     /// Clones [TranspositionTableEntry] by creating a new atomics (with the original values).
     fn clone(&self) -> Self {
         Self { key_data: AtomicU64::new(self.key_data.load(Ordering::Relaxed)) }
+    }
+}
+
+impl TranspositionTableResult {
+    /// Constructs a new instance of [TranspositionTableResult] with stored `key`, `score`, `best_move`, `depth`, `r#type` and `age`.
+    pub fn new(key: u16, score: i16, best_move: Move, depth: i8, r#type: u8, age: u8) -> Self {
+        Self { key, score, best_move, depth, r#type, age }
     }
 }
