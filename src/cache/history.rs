@@ -1,3 +1,4 @@
+use crate::utils::divceil::DivCeil;
 use std::cmp;
 use std::sync::atomic::AtomicU32;
 use std::sync::atomic::Ordering;
@@ -36,8 +37,7 @@ impl HistoryTable {
         let entry_data = entry.get_data();
         let max_value = self.max.load(Ordering::Relaxed);
 
-        // Integer ceiling: https://stackoverflow.com/a/2745086
-        ((entry_data.value * (max as u32) + max_value - 1) / max_value) as u8
+        (entry_data.value * (max as u32)).div_ceil_stable(max_value) as u8
     }
 
     /// Ages all values in the history table by performing a square root operation and ceiling.
@@ -58,8 +58,7 @@ impl HistoryTable {
 
     /// Ages a single value by performing a square root operation and ceiling.
     fn age_value(&self, value: u32) -> u32 {
-        // Integer ceiling: https://stackoverflow.com/a/2745086
-        (value + AGING_DIVISOR - 1) / AGING_DIVISOR
+        value.div_ceil_stable(AGING_DIVISOR)
     }
 }
 
