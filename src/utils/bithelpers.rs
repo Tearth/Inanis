@@ -1,6 +1,8 @@
 pub trait BitHelpers {
-    fn get_lsb(&self) -> u64;
-    fn pop_lsb(&self) -> u64;
+    type Item;
+
+    fn get_lsb(&self) -> Self::Item;
+    fn pop_lsb(&self) -> Self::Item;
     fn bit_count(&self) -> u8;
     fn bit_scan(&self) -> u8;
 }
@@ -8,20 +10,22 @@ pub trait BitHelpers {
 macro_rules! bit_helpers_implementation {
     ($type:ident) => {
         impl BitHelpers for $type {
+            type Item = $type;
+
             /// Extracts the lowest set isolated bit.
             ///
             /// More about asm instruction: <https://www.felixcloutier.com/x86/blsi>
             #[inline(always)]
-            fn get_lsb(&self) -> u64 {
-                (self & self.wrapping_neg()) as u64
+            fn get_lsb(&self) -> Self::Item {
+                self & self.wrapping_neg()
             }
 
             /// Resets the lowest set bit.
             ///
             /// More about asm instruction: <https://www.felixcloutier.com/x86/blsr>
             #[inline(always)]
-            fn pop_lsb(&self) -> u64 {
-                (self & (self - 1)) as u64
+            fn pop_lsb(&self) -> Self::Item {
+                self & (self - 1)
             }
 
             /// Counts the number of set bits.
