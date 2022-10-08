@@ -6,6 +6,7 @@ pub mod context;
 pub mod qsearch;
 pub mod search;
 pub mod see;
+pub mod statistics;
 
 pub const MAX_DEPTH: i8 = 64;
 pub const MIN_ALPHA: i16 = -CHECKMATE_SCORE;

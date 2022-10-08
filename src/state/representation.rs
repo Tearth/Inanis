@@ -7,8 +7,8 @@ use super::zobrist::ZobristContainer;
 use super::*;
 use crate::cache::pawns::PawnHashTable;
 use crate::engine;
-use crate::engine::context::SearchStatistics;
 use crate::engine::see::SEEContainer;
+use crate::engine::statistics::SearchStatistics;
 use crate::evaluation::material;
 use crate::evaluation::mobility;
 use crate::evaluation::pawns;
@@ -48,7 +48,7 @@ pub struct Board {
     pub null_moves: u8,
     pub captured_piece: u8,
     pub game_phase: u8,
-    pub state_stack: Vec<BitboardState>,
+    pub state_stack: Vec<BoardState>,
     pub material_scores: [i16; 2],
     pub pst_scores: [[i16; 2]; 2],
     pub evaluation_parameters: Arc<EvaluationParameters>,
@@ -59,7 +59,7 @@ pub struct Board {
 }
 
 #[derive(Clone)]
-pub struct BitboardState {
+pub struct BoardState {
     pub halfmove_clock: u16,
     pub castling_rights: u8,
     pub en_passant: u64,
@@ -69,7 +69,7 @@ pub struct BitboardState {
 }
 
 impl Board {
-    /// Constructs a new instance of [Bitboard], using provided containers. If the parameter is [None], then the new container is created.
+    /// Constructs a new instance of [Board], using provided containers. If the parameter is [None], then the new container is created.
     pub fn new(
         evaluation_parameters: Option<Arc<EvaluationParameters>>,
         zobrist_container: Option<Arc<ZobristContainer>>,
@@ -108,7 +108,7 @@ impl Board {
         }
     }
 
-    /// Constructs a new instance of [Bitboard] with initial position, using provided containers. If the parameter is [None], then the new container is created.
+    /// Constructs a new instance of [Board] with initial position, using provided containers. If the parameter is [None], then the new container is created.
     pub fn new_initial_position(
         evaluation_parameters: Option<Arc<EvaluationParameters>>,
         zobrist_container: Option<Arc<ZobristContainer>>,
@@ -436,7 +436,7 @@ impl Board {
 
     /// Preserves halfmove clock, castling rights, en passant bitboard, board hash, pawn hash and captured piece on the stack
     pub fn push_state(&mut self) {
-        self.state_stack.push(BitboardState::new(self.halfmove_clock, self.castling_rights, self.en_passant, self.hash, self.pawn_hash, self.captured_piece));
+        self.state_stack.push(BoardState::new(self.halfmove_clock, self.castling_rights, self.en_passant, self.hash, self.pawn_hash, self.captured_piece));
     }
 
     /// Restores halfmove clock, castling rights, en passant bitboard, board hash, pawn hash and captured piece from the stack
@@ -824,9 +824,9 @@ impl Board {
     }
 }
 
-impl BitboardState {
-    /// Constructs a new instance of [BitboardState] with stored `halfmove_clock`, `castling_rights`, `en_passant`, `hash`, `pawn_hash` and `captured_piece`.
-    pub fn new(halfmove_clock: u16, castling_rights: u8, en_passant: u64, hash: u64, pawn_hash: u64, captured_piece: u8) -> BitboardState {
-        BitboardState { halfmove_clock, castling_rights, en_passant, hash, pawn_hash, captured_piece }
+impl BoardState {
+    /// Constructs a new instance of [BoardState] with stored `halfmove_clock`, `castling_rights`, `en_passant`, `hash`, `pawn_hash` and `captured_piece`.
+    pub fn new(halfmove_clock: u16, castling_rights: u8, en_passant: u64, hash: u64, pawn_hash: u64, captured_piece: u8) -> BoardState {
+        BoardState { halfmove_clock, castling_rights, en_passant, hash, pawn_hash, captured_piece }
     }
 }

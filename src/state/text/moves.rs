@@ -13,7 +13,7 @@ use std::mem::MaybeUninit;
 use std::sync::Arc;
 
 impl Board {
-    /// Constructs a new instance of [Bitboard] with position specified by list of `moves`, using provided containers. If the parameter is [None],
+    /// Constructs a new instance of [Board] with position specified by list of `moves`, using provided containers. If the parameter is [None],
     /// then the new container is created. Returns [Err] with proper error message is `moves` couldn't be parsed correctly.
     pub fn new_from_moves(
         moves: &[&str],

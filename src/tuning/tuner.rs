@@ -19,18 +19,18 @@ use std::sync::Arc;
 use std::thread;
 use std::time::SystemTime;
 
-struct TunerContext {
+pub struct TunerContext {
     positions: Vec<TunerPosition>,
     parameters: EvaluationParameters,
 }
 
-struct TunerPosition {
+pub struct TunerPosition {
     board: Board,
     result: f64,
 }
 
 #[derive(Clone, Copy)]
-struct TunerParameter {
+pub struct TunerParameter {
     value: i16,
     min: i16,
     min_init: i16,

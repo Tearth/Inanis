@@ -197,15 +197,11 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
                 if entry.depth >= depth as i8 {
                     tt_entry_found = true;
                     match entry.r#type {
-                        TranspositionTableScoreType::ALPHA_SCORE => {
-                            if entry.score < beta {
-                                beta = entry.score;
-                            }
+                        TranspositionTableScoreType::UPPER_BOUND => {
+                            beta = cmp::min(beta, entry.score);
                         }
-                        TranspositionTableScoreType::BETA_SCORE => {
-                            if entry.score > alpha {
-                                alpha = entry.score;
-                            }
+                        TranspositionTableScoreType::LOWER_BOUND => {
+                            alpha = cmp::max(alpha, entry.score);
                         }
                         _ => {
                             if !PV || entry.age == 0 {
@@ -224,7 +220,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
                     }
                 } else {
                     match entry.r#type {
-                        TranspositionTableScoreType::ALPHA_SCORE | TranspositionTableScoreType::EXACT_SCORE => {
+                        TranspositionTableScoreType::UPPER_BOUND | TranspositionTableScoreType::EXACT_SCORE => {
                             if entry.score < beta {
                                 allow_null_move = false;
                             }
@@ -405,15 +401,14 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
         }
 
         if ROOT && context.multipv {
-            let mut board = context.board.clone();
-            board.make_move(best_move);
-
-            if !board.is_king_checked(board.active_color ^ 1) {
-                let mut pv_line = context.get_pv_line(&mut board, 0);
+            context.board.make_move(best_move);
+            if !context.board.is_king_checked(context.board.active_color ^ 1) {
+                let mut pv_line = context.get_pv_line(&mut context.board.clone(), 0);
                 pv_line.insert(0, best_move);
 
                 context.multipv_lines.push(SearchResultLine::new(best_score, pv_line));
             }
+            context.board.undo_move(best_move);
 
             alpha = original_alpha;
             best_score = -CHECKMATE_SCORE;
@@ -426,9 +421,9 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
 
     if !tt_entry_found || alpha != original_alpha {
         let score_type = if alpha <= original_alpha {
-            TranspositionTableScoreType::ALPHA_SCORE
+            TranspositionTableScoreType::UPPER_BOUND
         } else if alpha >= beta {
-            TranspositionTableScoreType::BETA_SCORE
+            TranspositionTableScoreType::LOWER_BOUND
         } else {
             TranspositionTableScoreType::EXACT_SCORE
         };

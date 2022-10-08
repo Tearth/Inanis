@@ -1,6 +1,6 @@
 use super::*;
 use crate::cache::pawns::PawnHashTable;
-use crate::engine::context::SearchStatistics;
+use crate::engine::statistics::SearchStatistics;
 use crate::state::representation::Board;
 use crate::utils::bithelpers::BitHelpers;
 use crate::utils::conditional_expression;

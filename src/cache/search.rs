@@ -11,8 +11,8 @@ const BUCKET_SLOTS: usize = 8;
 pub mod TranspositionTableScoreType {
     pub const INVALID: u8 = 0;
     pub const EXACT_SCORE: u8 = 1;
-    pub const ALPHA_SCORE: u8 = 2;
-    pub const BETA_SCORE: u8 = 4;
+    pub const UPPER_BOUND: u8 = 2;
+    pub const LOWER_BOUND: u8 = 4;
 }
 
 pub struct TranspositionTable {
@@ -21,7 +21,7 @@ pub struct TranspositionTable {
 
 #[derive(Clone)]
 #[repr(align(64))]
-struct TranspositionTableBucket {
+pub struct TranspositionTableBucket {
     pub entries: [TranspositionTableEntry; BUCKET_SLOTS],
 }
 

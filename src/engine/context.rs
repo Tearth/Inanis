@@ -1,3 +1,4 @@
+use super::statistics::SearchStatistics;
 use super::*;
 use crate::cache::history::HistoryTable;
 use crate::cache::killers::KillersTable;
@@ -16,7 +17,6 @@ use crate::tablebases::syzygy;
 use crate::tablebases::WdlResult;
 use std::cmp;
 use std::mem::MaybeUninit;
-use std::ops;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
@@ -25,7 +25,6 @@ use std::time::SystemTime;
 
 pub struct SearchContext {
     pub board: Board,
-    pub statistics: SearchStatistics,
     pub search_id: u8,
     pub time: u32,
     pub inc_time: u32,
@@ -54,6 +53,7 @@ pub struct SearchContext {
     pub helper_contexts: Vec<HelperThreadContext>,
     pub abort_flag: Arc<AtomicBool>,
     pub ponder_flag: Arc<AtomicBool>,
+    pub statistics: SearchStatistics,
 }
 
 pub struct HelperThreadContext {
@@ -76,66 +76,6 @@ pub struct SearchResult {
 pub struct SearchResultLine {
     pub score: i16,
     pub pv_line: Vec<Move>,
-}
-
-#[derive(Default, Copy, Clone)]
-pub struct SearchStatistics {
-    pub nodes_count: u64,
-    pub q_nodes_count: u64,
-    pub leafs_count: u64,
-    pub q_leafs_count: u64,
-    pub beta_cutoffs: u64,
-    pub q_beta_cutoffs: u64,
-
-    pub tb_hits: u64,
-
-    pub perfect_cutoffs: u64,
-    pub q_perfect_cutoffs: u64,
-    pub non_perfect_cutoffs: u64,
-    pub q_non_perfect_cutoffs: u64,
-
-    pub pvs_full_window_searches: u64,
-    pub pvs_zero_window_searches: u64,
-    pub pvs_rejected_searches: u64,
-
-    pub static_null_move_pruning_attempts: u64,
-    pub static_null_move_pruning_accepted: u64,
-    pub static_null_move_pruning_rejected: u64,
-
-    pub null_move_pruning_attempts: u64,
-    pub null_move_pruning_accepted: u64,
-    pub null_move_pruning_rejected: u64,
-
-    pub late_move_pruning_accepted: u64,
-    pub late_move_pruning_rejected: u64,
-
-    pub razoring_attempts: u64,
-    pub razoring_accepted: u64,
-    pub razoring_rejected: u64,
-
-    pub q_score_pruning_accepted: u64,
-    pub q_score_pruning_rejected: u64,
-
-    pub q_futility_pruning_accepted: u64,
-    pub q_futility_pruning_rejected: u64,
-
-    pub tt_added: u64,
-    pub tt_hits: u64,
-    pub tt_misses: u64,
-
-    pub tt_legal_hashmoves: u64,
-    pub tt_illegal_hashmoves: u64,
-
-    pub pawn_hashtable_added: u64,
-    pub pawn_hashtable_hits: u64,
-    pub pawn_hashtable_misses: u64,
-
-    pub move_generator_hash_move_stages: u64,
-    pub move_generator_captures_stages: u64,
-    pub move_generator_killers_stages: u64,
-    pub move_generator_quiet_moves_stages: u64,
-
-    pub max_ply: u16,
 }
 
 impl SearchContext {
@@ -188,7 +128,6 @@ impl SearchContext {
     ) -> Self {
         Self {
             board,
-            statistics: Default::default(),
             search_id,
             time,
             inc_time,
@@ -217,6 +156,7 @@ impl SearchContext {
             helper_contexts: Vec::new(),
             abort_flag,
             ponder_flag,
+            statistics: Default::default(),
         }
     }
 
@@ -233,10 +173,7 @@ impl SearchContext {
                     return Vec::new();
                 }
 
-                let mut moves: [MaybeUninit<Move>; MAX_MOVES_COUNT] = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
-                let moves_count = board.get_all_moves(&mut moves, u64::MAX);
-
-                if moves.iter().take(moves_count).any(|r#move| unsafe { r#move.assume_init() } == entry.best_move) {
+                if entry.best_move.is_legal(board) {
                     board.make_move(entry.best_move);
                     if !board.is_king_checked(board.active_color ^ 1) {
                         pv_line.push(entry.best_move);
@@ -298,12 +235,11 @@ impl SearchContext {
 
     /// Checks if there's a Syzygy tablebase move and returns it as [Some], otherwise [None].
     fn get_syzygy_move(&mut self) -> Option<(Move, i16)> {
-        let board = self.board.clone();
-        if board.get_pieces_count() > cmp::min(self.syzygy_probe_limit as u8, syzygy::probe::get_max_pieces_count()) {
+        if self.board.get_pieces_count() > cmp::min(self.syzygy_probe_limit as u8, syzygy::probe::get_max_pieces_count()) {
             return None;
         }
 
-        let (success_root, wdl_root, _dtz_root, r#move) = syzygy::probe::get_root_wdl_dtz(&board);
+        let (success_root, wdl_root, _dtz_root, r#move) = syzygy::probe::get_root_wdl_dtz(&self.board);
         if !success_root {
             return None;
         }
@@ -321,9 +257,9 @@ impl SearchContext {
 impl Iterator for SearchContext {
     type Item = SearchResult;
 
-    /// Performs the next iteration of the search, using data stored withing the context. Returns [None] if any of the following conditions is true:
-    ///  - `self.forced_depth` is not 0 and the current depth is about to exceed this value
+    /// Performs the next iteration of the search, using data stored in the context. Returns [None] if any of the following conditions is true:
     ///  - the search has been done in the previous iteration or the current depth is about to exceed [MAX_DEPTH] value
+    ///  - `self.forced_depth` is not 0 and the current depth is about to exceed this value
     ///  - instant move is possible
     ///  - Syzygy tablebase move is possible
     ///  - time allocated for the current search has expired
@@ -332,6 +268,10 @@ impl Iterator for SearchContext {
     fn next(&mut self) -> Option<Self::Item> {
         // This loop works here as goto, which allows restarting search when switching from pondering mode to regular search within the same iteration
         loop {
+            if self.search_done || self.current_depth >= MAX_DEPTH {
+                return None;
+            }
+
             if self.forced_depth != 0 && self.current_depth == self.forced_depth + 1 {
                 return None;
             }
@@ -345,10 +285,7 @@ impl Iterator for SearchContext {
                 }
             }
 
-            if self.search_done || self.current_depth >= MAX_DEPTH {
-                return None;
-            }
-
+            // Check instant move and Syzygy tablebase move only if there's no forced depth to reach
             if self.forced_depth == 0 && self.current_depth == 1 {
                 if let Some(r#move) = self.get_instant_move() {
                     self.search_done = true;
@@ -380,23 +317,19 @@ impl Iterator for SearchContext {
             let desired_time = if self.max_move_time != 0 {
                 self.max_move_time
             } else {
-                let mut desired_time = clock::get_time_for_move(self.board.fullmove_number, self.time, self.inc_time, self.moves_to_go);
-                if desired_time > self.time {
-                    desired_time = self.time;
-                }
+                let desired_time = clock::get_time_for_move(self.board.fullmove_number, self.time, self.inc_time, self.moves_to_go);
 
-                desired_time
+                // Desider time can't exceed the whole available time
+                cmp::min(desired_time, self.time)
             };
 
             self.deadline = if self.max_move_time != 0 {
                 self.max_move_time
             } else if self.current_depth > 1 {
-                let mut deadline = ((desired_time as f32) * DEADLINE_MULTIPLIER) as u32;
-                if deadline > self.time {
-                    deadline = desired_time;
-                }
+                let deadline = ((desired_time as f32) * DEADLINE_MULTIPLIER) as u32;
 
-                deadline
+                // Deadline can't exceed the whole available time
+                cmp::min(deadline, self.time)
             } else {
                 u32::MAX
             };
@@ -455,15 +388,14 @@ impl Iterator for SearchContext {
             }
 
             if self.abort_flag.load(Ordering::Relaxed) {
+                // If ponder flag is set, the search is completly restarted within the same iteration
                 if self.ponder_flag.load(Ordering::Relaxed) {
                     self.current_depth = 1;
-                    self.forced_depth = 0;
                     self.search_time_start = SystemTime::now();
                     self.statistics = Default::default();
 
                     for helper_context in &mut self.helper_contexts {
                         helper_context.context.current_depth = 1;
-                        helper_context.context.forced_depth = 0;
                         helper_context.context.search_time_start = SystemTime::now();
                         helper_context.context.statistics = Default::default();
                     }
@@ -491,20 +423,16 @@ impl Iterator for SearchContext {
                     self.search_done = true;
                 }
 
+                // Checkmate score must indicate that the depth it was found is equal or smaller than the current one, to prevent endless move sequences
                 if is_score_near_checkmate(self.multipv_lines[0].score) && self.current_depth >= (CHECKMATE_SCORE - self.multipv_lines[0].score.abs()) as i8 {
                     self.search_done = true;
                 }
             }
 
-            if !self.multipv {
-                let pv_line = self.get_pv_line(&mut self.board.clone(), 0);
-                self.multipv_lines.push(SearchResultLine::new(self.multipv_lines[0].score, pv_line));
-            }
+            self.current_depth += 1;
 
             let mut multipv_result = self.multipv_lines.clone();
             multipv_result.sort_by(|a, b| a.score.cmp(&b.score).reverse());
-
-            self.current_depth += 1;
 
             return Some(SearchResult::new(search_time, self.current_depth - 1, self.transposition_table.get_usage(1000), multipv_result, self.statistics));
         }
@@ -535,66 +463,5 @@ impl SearchResultLine {
     /// Constructs a new instance of [SearchResultLine] with stored `score` and `pv_line`.
     pub fn new(score: i16, pv_line: Vec<Move>) -> Self {
         Self { score, pv_line }
-    }
-}
-
-impl ops::AddAssign<SearchStatistics> for SearchStatistics {
-    /// Implements `+=` operator for [SearchStatistics] by adding all corresponding squares together (except `max_ply`, where the highest value is taken).
-    fn add_assign(&mut self, rhs: SearchStatistics) {
-        self.nodes_count += rhs.nodes_count;
-        self.q_nodes_count += rhs.q_nodes_count;
-        self.leafs_count += rhs.leafs_count;
-        self.q_leafs_count += rhs.q_leafs_count;
-        self.beta_cutoffs += rhs.beta_cutoffs;
-        self.q_beta_cutoffs += rhs.q_beta_cutoffs;
-
-        self.tb_hits += rhs.tb_hits;
-
-        self.perfect_cutoffs += rhs.perfect_cutoffs;
-        self.q_perfect_cutoffs += rhs.q_perfect_cutoffs;
-        self.non_perfect_cutoffs += rhs.non_perfect_cutoffs;
-        self.q_non_perfect_cutoffs += rhs.q_non_perfect_cutoffs;
-
-        self.pvs_full_window_searches += rhs.pvs_full_window_searches;
-        self.pvs_zero_window_searches += rhs.pvs_zero_window_searches;
-        self.pvs_rejected_searches += rhs.pvs_rejected_searches;
-
-        self.static_null_move_pruning_attempts += rhs.static_null_move_pruning_attempts;
-        self.static_null_move_pruning_accepted += rhs.static_null_move_pruning_accepted;
-        self.static_null_move_pruning_rejected += rhs.static_null_move_pruning_rejected;
-
-        self.null_move_pruning_attempts += rhs.null_move_pruning_attempts;
-        self.null_move_pruning_accepted += rhs.null_move_pruning_accepted;
-        self.null_move_pruning_rejected += rhs.null_move_pruning_rejected;
-
-        self.late_move_pruning_accepted += rhs.late_move_pruning_accepted;
-        self.late_move_pruning_rejected += rhs.late_move_pruning_rejected;
-
-        self.razoring_attempts += rhs.razoring_attempts;
-        self.razoring_accepted += rhs.razoring_accepted;
-        self.razoring_rejected += rhs.razoring_rejected;
-
-        self.q_score_pruning_accepted += rhs.q_score_pruning_accepted;
-        self.q_score_pruning_rejected += rhs.q_score_pruning_rejected;
-
-        self.q_futility_pruning_accepted += rhs.q_futility_pruning_accepted;
-        self.q_futility_pruning_rejected += rhs.q_futility_pruning_rejected;
-
-        self.tt_added += rhs.tt_added;
-        self.tt_hits += rhs.tt_hits;
-        self.tt_misses += rhs.tt_misses;
-
-        self.tt_legal_hashmoves += rhs.tt_legal_hashmoves;
-        self.tt_illegal_hashmoves += rhs.tt_illegal_hashmoves;
-
-        self.pawn_hashtable_added += rhs.pawn_hashtable_added;
-        self.pawn_hashtable_hits += rhs.pawn_hashtable_hits;
-        self.pawn_hashtable_misses += rhs.pawn_hashtable_misses;
-
-        self.move_generator_hash_move_stages += rhs.move_generator_hash_move_stages;
-        self.move_generator_captures_stages += rhs.move_generator_captures_stages;
-        self.move_generator_quiet_moves_stages += rhs.move_generator_quiet_moves_stages;
-
-        self.max_ply = cmp::max(self.max_ply, rhs.max_ply);
     }
 }

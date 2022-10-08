@@ -28,7 +28,7 @@ use std::thread;
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
 
-struct UciState {
+pub struct UciState {
     board: Board,
     options: HashMap<String, String>,
     transposition_table: Arc<TranspositionTable>,

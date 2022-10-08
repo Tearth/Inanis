@@ -21,11 +21,11 @@ use std::sync::Arc;
 use std::thread;
 use std::time::SystemTime;
 
-struct TestContext {
+pub struct TestContext {
     positions: Vec<TestPosition>,
 }
 
-struct TestPosition {
+pub struct TestPosition {
     id: String,
     board: Board,
     best_move: Move,

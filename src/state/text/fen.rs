@@ -25,7 +25,7 @@ impl ParsedEPD {
 }
 
 impl Board {
-    /// Constructs a new instance of [Bitboard] with position specified by `fen`, using provided containers. If the parameter is [None],
+    /// Constructs a new instance of [Board] with position specified by `fen`, using provided containers. If the parameter is [None],
     /// then the new container is created. Returns [Err] with proper error message if `fen` couldn't be parsed correctly.
     pub fn new_from_fen(
         fen: &str,
@@ -49,7 +49,7 @@ impl Board {
     }
 }
 
-/// Converts `fen` into the [Bitboard], using provided containers. If the parameter is [None], then the new container is created.
+/// Converts `fen` into the [Board], using provided containers. If the parameter is [None], then the new container is created.
 /// Returns [Err] with proper error message if `fen` couldn't be parsed correctly.
 pub fn fen_to_board(
     fen: &str,
@@ -63,7 +63,7 @@ pub fn fen_to_board(
     Ok(result.board)
 }
 
-/// Converts `epd` into the [Bitboard], using provided containers. If the parameter is [None], then the new container is created.
+/// Converts `epd` into the [Board], using provided containers. If the parameter is [None], then the new container is created.
 /// Returns [Err] with proper error message if `epd` couldn't be parsed correctly.
 pub fn epd_to_board(
     epd: &str,
@@ -106,7 +106,7 @@ pub fn epd_to_board(
     Ok(ParsedEPD::new(board))
 }
 
-/// Converts [Bitboard] into the FEN.
+/// Converts [Board] into the FEN.
 pub fn board_to_fen(board: &Board) -> String {
     let pieces = pieces_to_fen(board);
     let active_color = active_color_to_fen(board);
@@ -118,7 +118,7 @@ pub fn board_to_fen(board: &Board) -> String {
     format!("{} {} {} {} {} {}", pieces, active_color, castling, en_passant, halfmove_clock, fullmove_number)
 }
 
-/// Converts [Bitboard] into the EPD.
+/// Converts [Board] into the EPD.
 pub fn board_to_epd(board: &Board) -> String {
     let pieces = pieces_to_fen(board);
     let active_color = active_color_to_fen(board);

@@ -1,7 +1,7 @@
 use std::cell::Cell;
 use std::ops::RangeBounds;
 
-struct RandState {
+pub struct RandState {
     pub seed: Cell<u64>,
 }
 

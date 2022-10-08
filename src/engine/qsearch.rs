@@ -33,12 +33,10 @@ pub fn run<const DIAG: bool>(context: &mut SearchContext, depth: i8, ply: u16, m
     if stand_pat >= beta {
         conditional_expression!(DIAG, context.statistics.q_leafs_count += 1);
         conditional_expression!(DIAG, context.statistics.q_beta_cutoffs += 1);
-        return beta;
+        return stand_pat;
     }
 
-    if stand_pat > alpha {
-        alpha = stand_pat;
-    }
+    alpha = cmp::max(alpha, stand_pat);
 
     let mut moves: [MaybeUninit<Move>; MAX_MOVES_COUNT] = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
     let mut move_scores: [MaybeUninit<i16>; MAX_MOVES_COUNT] = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
@@ -110,41 +108,33 @@ fn assign_move_scores(
 
         if r#move.get_flags() == MoveFlags::EN_PASSANT {
             move_scores[move_index].write(0);
-            continue;
-        }
-
-        if r#move.is_promotion() {
+        } else if r#move.is_promotion() {
             if r#move.get_promotion_piece() == QUEEN {
                 move_scores[move_index].write(context.board.evaluation_parameters.piece_value[r#move.get_promotion_piece() as usize]);
             } else {
                 move_scores[move_index].write(-9999);
             }
+        } else {
+            let square = r#move.get_to();
+            let attacking_piece = context.board.get_piece(r#move.get_from());
+            let captured_piece = context.board.get_piece(r#move.get_to());
 
-            continue;
+            let attackers = if attackers_cache[square as usize] != 0 {
+                attackers_cache[square as usize]
+            } else {
+                attackers_cache[square as usize] = context.board.get_attacking_pieces(context.board.active_color ^ 1, square);
+                attackers_cache[square as usize]
+            };
+
+            let defenders = if defenders_cache[square as usize] != 0 {
+                defenders_cache[square as usize]
+            } else {
+                defenders_cache[square as usize] = context.board.get_attacking_pieces(context.board.active_color, square);
+                defenders_cache[square as usize]
+            };
+
+            move_scores[move_index].write(context.board.see.get(attacking_piece, captured_piece, attackers, defenders, &context.board.evaluation_parameters));
         }
-
-        let square = r#move.get_to();
-        let attacking_piece = context.board.get_piece(r#move.get_from());
-        let captured_piece = context.board.get_piece(r#move.get_to());
-
-        let attackers = if attackers_cache[square as usize] != 0 {
-            attackers_cache[square as usize]
-        } else {
-            attackers_cache[square as usize] = context.board.get_attacking_pieces(context.board.active_color ^ 1, square);
-            attackers_cache[square as usize]
-        };
-
-        let defenders = if defenders_cache[square as usize] != 0 {
-            defenders_cache[square as usize]
-        } else {
-            defenders_cache[square as usize] = context.board.get_attacking_pieces(context.board.active_color, square);
-            defenders_cache[square as usize]
-        };
-
-        let see_container = &context.board.see;
-        let see = see_container.get(attacking_piece, captured_piece, attackers, defenders, &context.board.evaluation_parameters);
-
-        move_scores[move_index].write(see);
     }
 }
 
