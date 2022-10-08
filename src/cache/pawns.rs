@@ -22,7 +22,6 @@ impl PawnHashTable {
     pub fn new(size: usize) -> Self {
         let bucket_size = mem::size_of::<PawnHashTableEntry>();
         let aligned_size = if size != 0 { 1 << (63 - size.leading_zeros()) } else { 0 };
-
         let mut hashtable = Self { table: Vec::with_capacity(aligned_size / bucket_size) };
 
         if aligned_size != 0 {
@@ -71,6 +70,7 @@ impl PawnHashTable {
         (hash >> 48) as u16
     }
 
+    /// Calculates an index for the `hash`.
     fn get_index(&self, hash: u64) -> usize {
         (hash as usize) & (self.table.len() - 1)
     }
@@ -109,7 +109,7 @@ impl Clone for PawnHashTableEntry {
 }
 
 impl PawnHashTableResult {
-    /// Constructs a new instance of [PawnHashTableResult] with `leafs_count`.
+    /// Constructs a new instance of [PawnHashTableResult] with stored `key` and `score`.
     pub fn new(key: u16, score: i16) -> Self {
         Self { key, score }
     }

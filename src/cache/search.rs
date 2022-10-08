@@ -43,7 +43,6 @@ impl TranspositionTable {
     pub fn new(size: usize) -> Self {
         let bucket_size = mem::size_of::<TranspositionTableBucket>();
         let aligned_size = if size != 0 { 1 << (63 - size.leading_zeros()) } else { 0 };
-
         let mut hashtable = Self { table: Vec::with_capacity(aligned_size / bucket_size) };
 
         if aligned_size != 0 {
@@ -129,14 +128,14 @@ impl TranspositionTable {
                     entry_data.score
                 };
 
-                return Some(TranspositionTableResult {
-                    key: entry_data.key,
-                    score: entry_score,
-                    best_move: entry_data.best_move,
-                    depth: entry_data.depth,
-                    r#type: entry_data.r#type,
-                    age: entry_data.age,
-                });
+                return Some(TranspositionTableResult::new(
+                    entry_data.key,
+                    entry_score,
+                    entry_data.best_move,
+                    entry_data.depth,
+                    entry_data.r#type,
+                    entry_data.age,
+                ));
             }
         }
 
@@ -174,6 +173,7 @@ impl TranspositionTable {
         (hash >> 48) as u16
     }
 
+    /// Calculates an index for the `hash`.
     fn get_index(&self, hash: u64) -> usize {
         (hash as usize) & (self.table.len() - 1)
     }

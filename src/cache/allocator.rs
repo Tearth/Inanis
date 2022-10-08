@@ -8,7 +8,7 @@ pub struct AllocationResult {
 }
 
 impl AllocationResult {
-    /// Constructs a new instance of [AllocationResult] with stored `id`, `board` and `best_move`.
+    /// Constructs a new instance of [AllocationResult] with stored `transposition_table_size` and `pawn_hashtable_size`.
     pub fn new(transposition_table_size: usize, pawn_hashtable_size: usize) -> Self {
         Self { transposition_table_size, pawn_hashtable_size }
     }

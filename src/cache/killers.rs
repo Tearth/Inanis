@@ -20,7 +20,8 @@ pub struct KillersTableResult {
 
 impl KillersTable {
     /// Adds a new killer `r#move` at the level specified by `ply` value. Maximal amount of slots for each of them is set by
-    /// [KILLER_SLOTS] constant, and newer entries have always a priority over old ones.
+    /// [KILLER_SLOTS] constant, and newer entries have always a priority over old ones. If there's already exactly the same
+    /// move in the slot 0, the table is not changed.
     pub fn add(&self, ply: u16, r#move: Move) {
         if self.table[ply as usize][0].get_data().r#move == r#move {
             return;
@@ -107,7 +108,7 @@ impl Clone for KillersTableEntry {
 }
 
 impl KillersTableResult {
-    /// Constructs a new instance of [KillersTableResult] with `r#move`.
+    /// Constructs a new instance of [KillersTableResult] with stored `r#move`.
     pub fn new(r#move: Move) -> Self {
         Self { r#move }
     }

@@ -40,7 +40,7 @@ impl HistoryTable {
         (entry_data.value * (max as u32)).div_ceil_stable(max_value) as u8
     }
 
-    /// Ages all values in the history table by performing a square root operation and ceiling.
+    /// Ages all values in the history table by dividing them by the [AGING_DIVISOR].
     pub fn age_values(&self) {
         for row in &self.table {
             for entry in row {
@@ -56,7 +56,7 @@ impl HistoryTable {
         self.max.store(max_aged, Ordering::Relaxed);
     }
 
-    /// Ages a single value by performing a square root operation and ceiling.
+    /// Ages a single value by dividing value by the [AGING_DIVISOR].
     fn age_value(&self, value: u32) -> u32 {
         value.div_ceil_stable(AGING_DIVISOR)
     }
@@ -111,8 +111,8 @@ impl Clone for HistoryTableEntry {
 }
 
 impl HistoryTableResult {
-    /// Constructs a new instance of [HistoryTableResult] with `value`.
+    /// Constructs a new instance of [HistoryTableResult] with stored `value`.
     pub fn new(value: u32) -> Self {
-        Self { r#value }
+        Self { value }
     }
 }

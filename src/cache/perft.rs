@@ -100,6 +100,7 @@ impl PerftHashTable {
         ((filled_entries as f32) / (resolution as f32)) * 100.0
     }
 
+    /// Calculates an index for the `hash`.
     fn get_index(&self, hash: u64) -> usize {
         (hash as usize) & (self.table.len() - 1)
     }
@@ -127,7 +128,7 @@ impl Clone for PerftHashTableEntry {
 }
 
 impl PerftHashTableResult {
-    /// Constructs a new instance of [PerftHashTableResult] with `leafs_count`.
+    /// Constructs a new instance of [PerftHashTableResult] with stored `leafs_count`.
     pub fn new(leafs_count: u64) -> Self {
         Self { leafs_count }
     }
