@@ -33,7 +33,7 @@ pub fn run<const DIAG: bool>(context: &mut SearchContext, depth: i8, ply: u16, m
     if stand_pat >= beta {
         conditional_expression!(DIAG, context.statistics.q_leafs_count += 1);
         conditional_expression!(DIAG, context.statistics.q_beta_cutoffs += 1);
-        return stand_pat;
+        return beta;
     }
 
     alpha = cmp::max(alpha, stand_pat);
