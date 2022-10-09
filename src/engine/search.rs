@@ -390,7 +390,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
                 }
 
                 conditional_expression!(DIAG, context.statistics.beta_cutoffs += 1);
-                if move_index == 0 {
+                if move_number == 0 {
                     conditional_expression!(DIAG, context.statistics.perfect_cutoffs += 1);
                 } else {
                     conditional_expression!(DIAG, context.statistics.non_perfect_cutoffs += 1);
