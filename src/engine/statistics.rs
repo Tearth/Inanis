@@ -48,6 +48,8 @@ pub struct SearchStatistics {
 
     pub tt_legal_hashmoves: u64,
     pub tt_illegal_hashmoves: u64,
+    pub killers_table_legal_moves: u64,
+    pub killers_table_illegal_moves: u64,
 
     pub pawn_hashtable_added: u64,
     pub pawn_hashtable_hits: u64,

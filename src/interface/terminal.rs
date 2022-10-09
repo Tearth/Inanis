@@ -302,6 +302,7 @@ fn handle_benchmark() {
     );
 
     println!("Transposition table move legality check: {} legal, {} illegal", result.tt_legal_hashmoves, result.tt_illegal_hashmoves);
+    println!("Killers table move legality check: {} legal, {} illegal", result.killers_table_legal_moves, result.killers_table_illegal_moves);
     println!("Result hash: {}", result.result_hash);
     println!();
 }

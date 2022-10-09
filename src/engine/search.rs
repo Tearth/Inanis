@@ -666,11 +666,16 @@ fn get_next_move<const DIAG: bool>(
                 let killer_moves = context.killers_table.get(ply);
 
                 for (index, &killer_move) in killer_moves.iter().enumerate() {
-                    if killer_move != hash_move && ((1u64 << killer_move.get_to()) & *evasion_mask) != 0 && killer_move.is_legal(&context.board) {
-                        moves[*moves_count].write(killer_move);
-                        move_scores[*moves_count].write(MOVE_ORDERING_KILLER_MOVE_1 - (index as i16));
+                    if killer_move != hash_move {
+                        if ((1u64 << killer_move.get_to()) & *evasion_mask) != 0 && killer_move.is_legal(&context.board) {
+                            moves[*moves_count].write(killer_move);
+                            move_scores[*moves_count].write(MOVE_ORDERING_KILLER_MOVE_1 - (index as i16));
+                            *moves_count += 1;
 
-                        *moves_count += 1;
+                            conditional_expression!(DIAG, context.statistics.killers_table_legal_moves += 1);
+                        } else {
+                            conditional_expression!(DIAG, context.statistics.killers_table_illegal_moves += 1);
+                        }
                     }
                 }
 

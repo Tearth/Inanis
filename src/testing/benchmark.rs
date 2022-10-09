@@ -52,8 +52,11 @@ pub struct BenchmarkResult {
     pub tt_added: u64,
     pub tt_hits: u64,
     pub tt_misses: u64,
+
     pub tt_legal_hashmoves: u64,
     pub tt_illegal_hashmoves: u64,
+    pub killers_table_legal_moves: u64,
+    pub killers_table_illegal_moves: u64,
 
     pub pawn_hashtable_added: u64,
     pub pawn_hashtable_hits: u64,
@@ -187,8 +190,11 @@ pub fn run() -> BenchmarkResult {
         benchmark_result.tt_added += result.statistics.tt_added;
         benchmark_result.tt_hits += result.statistics.tt_hits;
         benchmark_result.tt_misses += result.statistics.tt_misses;
+
         benchmark_result.tt_legal_hashmoves += result.statistics.tt_legal_hashmoves;
         benchmark_result.tt_illegal_hashmoves += result.statistics.tt_illegal_hashmoves;
+        benchmark_result.killers_table_legal_moves += result.statistics.killers_table_legal_moves;
+        benchmark_result.killers_table_illegal_moves += result.statistics.killers_table_illegal_moves;
 
         benchmark_result.pawn_hashtable_added += result.statistics.pawn_hashtable_added;
         benchmark_result.pawn_hashtable_hits += result.statistics.pawn_hashtable_hits;
