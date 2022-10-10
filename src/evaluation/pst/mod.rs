@@ -1,5 +1,6 @@
 use super::*;
-use crate::{state::representation::Board, utils::bithelpers::BitHelpers};
+use crate::state::representation::Board;
+use crate::utils::bithelpers::BitHelpers;
 
 pub mod bishop;
 pub mod king;

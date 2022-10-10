@@ -1,8 +1,9 @@
 use super::bindings::*;
+use crate::engine;
 use crate::state::movescan::{Move, MoveFlags};
 use crate::state::representation::Board;
+use crate::state::*;
 use crate::tablebases::WdlResult;
-use crate::{engine, state::*};
 use std::ffi::CString;
 use std::mem::MaybeUninit;
 use std::ptr;

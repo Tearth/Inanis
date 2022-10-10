@@ -307,8 +307,8 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
 
     let mut best_score = -CHECKMATE_SCORE;
     let mut best_move = Default::default();
-    let mut moves: [MaybeUninit<Move>; MAX_MOVES_COUNT] = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
-    let mut move_scores: [MaybeUninit<i16>; MAX_MOVES_COUNT] = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
+    let mut moves = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
+    let mut move_scores = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
     let mut move_generator_stage = MoveGeneratorStage::ReadyToCheckHashMove;
 
     let mut move_index = 0;
@@ -324,8 +324,8 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
         &mut move_index,
         &mut move_number,
         &mut moves_count,
-        hash_move,
         &mut evasion_mask,
+        hash_move,
         ply,
         friendly_king_checked,
     ) {
@@ -415,6 +415,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
         }
     }
 
+    // When no legal move is possible, but king is not checked, it's stalemate
     if best_score == -CHECKMATE_SCORE + (ply as i16) + 1 && !friendly_king_checked {
         return DRAW_SCORE;
     }
@@ -541,8 +542,7 @@ fn assign_quiet_scores(
 
             continue;
         } else if r#move.is_promotion() {
-            let promotion_piece = r#move.get_promotion_piece();
-            move_scores[move_index].write(match promotion_piece {
+            move_scores[move_index].write(match r#move.get_promotion_piece() {
                 QUEEN => MOVE_ORDERING_QUEEN_PROMOTION,
                 ROOK => MOVE_ORDERING_ROOK_PROMOTION,
                 BISHOP => MOVE_ORDERING_BISHOP_PROMOTION,
@@ -578,16 +578,12 @@ fn get_next_move<const DIAG: bool>(
     move_index: &mut usize,
     move_number: &mut usize,
     moves_count: &mut usize,
-    hash_move: Move,
     evasion_mask: &mut u64,
+    hash_move: Move,
     ply: u16,
     friendly_king_checked: bool,
 ) -> Option<(Move, i16)> {
-    if *stage == MoveGeneratorStage::HashMove
-        || *stage == MoveGeneratorStage::Captures
-        || *stage == MoveGeneratorStage::KillerMoves
-        || *stage == MoveGeneratorStage::AllGenerated
-    {
+    if matches!(*stage, MoveGeneratorStage::HashMove | MoveGeneratorStage::Captures | MoveGeneratorStage::KillerMoves | MoveGeneratorStage::AllGenerated) {
         *move_index += 1;
         *move_number += 1;
     }
@@ -613,6 +609,8 @@ fn get_next_move<const DIAG: bool>(
                 return Some((hash_move, MOVE_ORDERING_HASH_MOVE));
             }
             MoveGeneratorStage::ReadyToGenerateCaptures => {
+                conditional_expression!(DIAG, context.statistics.move_generator_captures_stages += 1);
+
                 *evasion_mask = if friendly_king_checked {
                     if context.board.pieces[context.board.active_color as usize][KING as usize] == 0 {
                         u64::MAX
@@ -629,9 +627,8 @@ fn get_next_move<const DIAG: bool>(
                     u64::MAX
                 };
 
-                *move_index = 0;
                 *moves_count = context.board.get_moves::<true>(moves, 0, *evasion_mask);
-                conditional_expression!(DIAG, context.statistics.move_generator_captures_stages += 1);
+                *move_index = 0;
 
                 if *moves_count == 0 {
                     *stage = MoveGeneratorStage::ReadyToGenerateKillerMoves;
@@ -647,13 +644,13 @@ fn get_next_move<const DIAG: bool>(
                     continue;
                 }
 
-                let r#move = sort_next_move(moves, move_scores, *move_index, *moves_count);
+                let (r#move, score) = sort_next_move(moves, move_scores, *move_index, *moves_count);
+
                 if r#move == hash_move {
                     *move_index += 1;
                     continue;
                 }
 
-                let score = unsafe { move_scores[*move_index].assume_init() };
                 if score < MOVE_ORDERING_WINNING_CAPTURES_OFFSET {
                     *stage = MoveGeneratorStage::ReadyToGenerateKillerMoves;
                     continue;
@@ -662,6 +659,8 @@ fn get_next_move<const DIAG: bool>(
                 return Some((r#move, score));
             }
             MoveGeneratorStage::ReadyToGenerateKillerMoves => {
+                conditional_expression!(DIAG, context.statistics.move_generator_killers_stages += 1);
+
                 let original_moves_count = *moves_count;
                 let killer_moves = context.killers_table.get(ply);
 
@@ -679,13 +678,7 @@ fn get_next_move<const DIAG: bool>(
                     }
                 }
 
-                conditional_expression!(DIAG, context.statistics.move_generator_killers_stages += 1);
-
-                if original_moves_count != *moves_count {
-                    *stage = MoveGeneratorStage::KillerMoves;
-                } else {
-                    *stage = MoveGeneratorStage::ReadyToGenerateQuietMoves;
-                }
+                *stage = if original_moves_count != *moves_count { MoveGeneratorStage::KillerMoves } else { MoveGeneratorStage::ReadyToGenerateQuietMoves }
             }
             MoveGeneratorStage::KillerMoves => {
                 if move_index >= moves_count {
@@ -693,13 +686,13 @@ fn get_next_move<const DIAG: bool>(
                     continue;
                 }
 
-                let r#move = sort_next_move(moves, move_scores, *move_index, *moves_count);
+                let (r#move, score) = sort_next_move(moves, move_scores, *move_index, *moves_count);
+
                 if r#move == hash_move {
                     *move_index += 1;
                     continue;
                 }
 
-                let score = unsafe { move_scores[*move_index].assume_init() };
                 if score < MOVE_ORDERING_KILLER_MOVE_2 {
                     *stage = MoveGeneratorStage::ReadyToGenerateQuietMoves;
                     continue;
@@ -708,21 +701,20 @@ fn get_next_move<const DIAG: bool>(
                 return Some((r#move, score));
             }
             MoveGeneratorStage::ReadyToGenerateQuietMoves => {
-                let original_moves_count = *moves_count;
-                *moves_count = context.board.get_moves::<false>(moves, *moves_count, *evasion_mask);
                 conditional_expression!(DIAG, context.statistics.move_generator_quiet_moves_stages += 1);
+                let original_moves_count = *moves_count;
+
+                *moves_count = context.board.get_moves::<false>(moves, *moves_count, *evasion_mask);
+                *stage = MoveGeneratorStage::AllGenerated;
 
                 assign_quiet_scores(context, moves, move_scores, original_moves_count, *moves_count, hash_move, ply);
-
-                *stage = MoveGeneratorStage::AllGenerated;
             }
             MoveGeneratorStage::AllGenerated => {
                 if move_index >= moves_count {
                     return None;
                 }
 
-                let r#move = sort_next_move(moves, move_scores, *move_index, *moves_count);
-                let score = unsafe { move_scores[*move_index].assume_init() };
+                let (r#move, score) = sort_next_move(moves, move_scores, *move_index, *moves_count);
 
                 if r#move == hash_move {
                     *move_index += 1;

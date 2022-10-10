@@ -38,16 +38,15 @@ pub fn run<const DIAG: bool>(context: &mut SearchContext, depth: i8, ply: u16, m
 
     alpha = cmp::max(alpha, stand_pat);
 
-    let mut moves: [MaybeUninit<Move>; MAX_MOVES_COUNT] = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
-    let mut move_scores: [MaybeUninit<i16>; MAX_MOVES_COUNT] = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
+    let mut moves = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
+    let mut move_scores = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
     let moves_count = context.board.get_moves::<true>(&mut moves, 0, u64::MAX);
 
     assign_move_scores(context, &moves, &mut move_scores, moves_count);
 
     let mut found = false;
     for move_index in 0..moves_count {
-        let r#move = sort_next_move(&mut moves, &mut move_scores, move_index, moves_count);
-        let score = unsafe { move_scores[move_index].assume_init() };
+        let (r#move, score) = sort_next_move(&mut moves, &mut move_scores, move_index, moves_count);
 
         if score_pruning_can_be_applied(score) {
             conditional_expression!(DIAG, context.statistics.q_score_pruning_accepted += 1);
@@ -109,11 +108,11 @@ fn assign_move_scores(
         if r#move.get_flags() == MoveFlags::EN_PASSANT {
             move_scores[move_index].write(0);
         } else if r#move.is_promotion() {
-            if r#move.get_promotion_piece() == QUEEN {
-                move_scores[move_index].write(context.board.evaluation_parameters.piece_value[r#move.get_promotion_piece() as usize]);
+            move_scores[move_index].write(if r#move.get_promotion_piece() == QUEEN {
+                context.board.evaluation_parameters.piece_value[r#move.get_promotion_piece() as usize]
             } else {
-                move_scores[move_index].write(-9999);
-            }
+                -9999
+            });
         } else {
             let square = r#move.get_to();
             let attacking_piece = context.board.get_piece(r#move.get_from());
@@ -133,7 +132,8 @@ fn assign_move_scores(
                 defenders_cache[square as usize]
             };
 
-            move_scores[move_index].write(context.board.see.get(attacking_piece, captured_piece, attackers, defenders, &context.board.evaluation_parameters));
+            let see = context.board.see.get(attacking_piece, captured_piece, attackers, defenders, &context.board.evaluation_parameters);
+            move_scores[move_index].write(see);
         }
     }
 }

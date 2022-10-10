@@ -27,13 +27,13 @@ pub fn is_score_near_checkmate(score: i16) -> bool {
 }
 
 /// Performs a selection sort on `moves` and `move_scores` arrays with the length specified in `moves_count`, starting from `start_index`.
-/// When it completes, the move and corresponding score will be under `start_index`, and the function returns move itself.
+/// When it completes, the move and corresponding score will be under `start_index` - the function also explicitly returns both of them.
 pub fn sort_next_move(
     moves: &mut [MaybeUninit<Move>; MAX_MOVES_COUNT],
     move_scores: &mut [MaybeUninit<i16>; MAX_MOVES_COUNT],
     start_index: usize,
     moves_count: usize,
-) -> Move {
+) -> (Move, i16) {
     let mut best_score = unsafe { move_scores[start_index].assume_init() };
     let mut best_index = start_index;
 
@@ -50,5 +50,5 @@ pub fn sort_next_move(
         move_scores.swap(start_index, best_index);
     }
 
-    unsafe { moves[start_index].assume_init() }
+    unsafe { (moves[start_index].assume_init(), best_score) }
 }
