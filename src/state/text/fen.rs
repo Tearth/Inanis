@@ -179,7 +179,7 @@ fn pieces_to_fen(board: &Board) -> String {
     let mut result = String::new();
     let mut squares_without_piece = 0;
 
-    for square_index in (0..64).rev() {
+    for square_index in (A1..=H8).rev() {
         let piece = board.get_piece(square_index);
         if piece == u8::MAX {
             squares_without_piece += 1;

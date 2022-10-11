@@ -1,3 +1,4 @@
+use super::*;
 use crate::utils::bitflags::BitFlags;
 use crate::utils::bithelpers::BitHelpers;
 use crate::utils::rand;
@@ -42,10 +43,10 @@ impl Default for ZobristContainer {
 
         rand::seed(584578);
 
-        for color in 0..2 {
-            for piece in 0..6 {
-                for square_index in 0..64 {
-                    result.piece_hashes[color as usize][piece as usize][square_index] = rand::u64(..);
+        for color in WHITE..=BLACK {
+            for piece in PAWN..=KING {
+                for square_index in A1..=H8 {
+                    result.piece_hashes[color as usize][piece as usize][square_index as usize] = rand::u64(..);
                 }
             }
         }
@@ -54,7 +55,7 @@ impl Default for ZobristContainer {
             result.castling_hashes[castling_index as usize] = rand::u64(..);
         }
 
-        for en_passant_index in 0..8 {
+        for en_passant_index in FILE_A..=FILE_H {
             result.en_passant_hashes[en_passant_index as usize] = rand::u64(..);
         }
 

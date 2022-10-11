@@ -10,12 +10,13 @@ pub fn evaluate(board: &Board) -> i16 {
 
 /// Recalculates incremental counters on the `board`. This function should be called only once during board initialization, as it's too slow in regular search.
 pub fn recalculate_incremental_values(board: &mut Board) {
-    for color_index in 0..2 {
+    for color_index in WHITE..=BLACK {
         let mut score = 0;
-        for piece_index in 0..6 {
-            score += (board.pieces[color_index][piece_index].bit_count() as i16) * board.evaluation_parameters.piece_value[piece_index];
+        for piece_index in PAWN..=KING {
+            let pieces_count = board.pieces[color_index as usize][piece_index as usize].bit_count();
+            score += (pieces_count as i16) * board.evaluation_parameters.piece_value[piece_index as usize];
         }
 
-        board.material_scores[color_index] = score;
+        board.material_scores[color_index as usize] = score;
     }
 }

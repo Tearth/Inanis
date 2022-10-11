@@ -134,21 +134,21 @@ impl PatternsContainer {
 
     /// Generates file patterns for all squares.
     pub fn regenerate_files(&mut self) {
-        for square_index in 0..64 {
-            self.file_patterns[square_index] = (FILE_H << (square_index % 8)) & !(1u64 << square_index);
+        for square_index in A1..=H8 {
+            self.file_patterns[square_index as usize] = (FILE_H_BB << (square_index % 8)) & !(1u64 << square_index);
         }
     }
 
     /// Generates rank patterns for all squares.
     pub fn regenerate_ranks(&mut self) {
-        for square_index in 0..64 {
-            self.rank_patterns[square_index] = (RANK_1 << (8 * (square_index / 8))) & !(1u64 << square_index);
+        for square_index in A1..=H8 {
+            self.rank_patterns[square_index as usize] = (RANK_1_BB << (8 * (square_index / 8))) & !(1u64 << square_index);
         }
     }
 
     /// Generates diagonal patterns for all squares.
     pub fn regenerate_diagonals(&mut self) {
-        for square_index in 0..64 {
+        for square_index in A1..=H8 {
             let mut result = 0u64;
 
             for direction in [(1, 1), (-1, 1), (1, -1), (-1, -1)] {
@@ -160,79 +160,79 @@ impl PatternsContainer {
                 }
             }
 
-            self.diagonal_patterns[square_index] = result;
+            self.diagonal_patterns[square_index as usize] = result;
         }
     }
 
     /// Generates jump patterns for all fiellds.
     pub fn regenerate_jumps(&mut self) {
-        for square_index in 0..64 {
+        for square_index in A1..=H8 {
             let square = 1u64 << square_index;
 
-            self.jump_patterns[square_index] = 0
-                | ((square & !FILE_G & !FILE_H) << 6)
-                | ((square & !FILE_A & !FILE_B) >> 6)
-                | ((square & !FILE_A & !FILE_B) << 10)
-                | ((square & !FILE_G & !FILE_H) >> 10)
-                | ((square & !FILE_H) << 15)
-                | ((square & !FILE_A) >> 15)
-                | ((square & !FILE_A) << 17)
-                | ((square & !FILE_H) >> 17);
+            self.jump_patterns[square_index as usize] = 0
+                | ((square & !FILE_G_BB & !FILE_H_BB) << 6)
+                | ((square & !FILE_A_BB & !FILE_B_BB) >> 6)
+                | ((square & !FILE_A_BB & !FILE_B_BB) << 10)
+                | ((square & !FILE_G_BB & !FILE_H_BB) >> 10)
+                | ((square & !FILE_H_BB) << 15)
+                | ((square & !FILE_A_BB) >> 15)
+                | ((square & !FILE_A_BB) << 17)
+                | ((square & !FILE_H_BB) >> 17);
         }
     }
 
     /// Generates box patterns for all squares.
     pub fn regenerate_boxes(&mut self) {
-        for square_index in 0..64 {
+        for square_index in A1..=H8 {
             let square = 1u64 << square_index;
 
-            self.box_patterns[square_index] = 0
-                | ((square & !FILE_A) << 1)
-                | ((square & !FILE_H) >> 1)
-                | ((square & !FILE_H) << 7)
-                | ((square & !FILE_A) >> 7)
-                | ((square & !RANK_8) << 8)
-                | ((square & !RANK_1) >> 8)
-                | ((square & !FILE_A) << 9)
-                | ((square & !FILE_H) >> 9);
+            self.box_patterns[square_index as usize] = 0
+                | ((square & !FILE_A_BB) << 1)
+                | ((square & !FILE_H_BB) >> 1)
+                | ((square & !FILE_H_BB) << 7)
+                | ((square & !FILE_A_BB) >> 7)
+                | ((square & !RANK_8_BB) << 8)
+                | ((square & !RANK_1_BB) >> 8)
+                | ((square & !FILE_A_BB) << 9)
+                | ((square & !FILE_H_BB) >> 9);
         }
     }
 
     /// Generates rail patterns for all squares.
     pub fn regenerate_rails(&mut self) {
-        for file in 0..8 {
-            let left_file = if file > 0 { FILE_H << (file - 1) } else { 0 };
-            let right_file = if file < 7 { FILE_H << (file + 1) } else { 0 };
-            self.rail_patterns[file] = left_file | right_file;
+        for file in FILE_A..=FILE_H {
+            let left_file = if file > 0 { FILE_H_BB << (file - 1) } else { 0 };
+            let right_file = if file < 7 { FILE_H_BB << (file + 1) } else { 0 };
+            self.rail_patterns[file as usize] = left_file | right_file;
         }
     }
 
     /// Generates star patterns for all squares.
     pub fn regenerate_stars(&mut self) {
-        for square_index in 0..64 {
-            self.star_patterns[square_index] = self.diagonal_patterns[square_index] & self.box_patterns[square_index];
+        for square_index in A1..=H8 {
+            self.star_patterns[square_index as usize] = self.diagonal_patterns[square_index as usize] & self.box_patterns[square_index as usize];
         }
     }
 
     /// Generates front patterns for all squares.
     pub fn regenerate_fronts(&mut self) {
-        for color in 0..2 {
-            for square_index in 0..64 {
+        for color in OPENING..=ENDING {
+            for square_index in A1..=H8 {
                 let file = square_index % 8;
                 let rank = square_index / 8;
 
-                let center_file = FILE_H << file;
-                let left_file = if file > 0 { FILE_H << (file - 1) } else { 0 };
-                let right_file = if file < 7 { FILE_H << (file + 1) } else { 0 };
+                let center_file = FILE_H_BB << file;
+                let left_file = if file > 0 { FILE_H_BB << (file - 1) } else { 0 };
+                let right_file = if file < 7 { FILE_H_BB << (file + 1) } else { 0 };
 
-                let mut current_rank = rank;
+                let mut current_rank = rank as i8;
                 let mut forbidden_area = 0;
-                while (0..8).contains(&current_rank) {
+                while current_rank >= RANK_1 as i8 && current_rank <= RANK_8 as i8 {
                     forbidden_area |= 255 << (current_rank * 8);
                     current_rank += (color as i8) * 2 - 1;
                 }
 
-                self.front_patterns[color][square_index as usize] = (left_file | center_file | right_file) & !forbidden_area;
+                self.front_patterns[color as usize][square_index as usize] = (left_file | center_file | right_file) & !forbidden_area;
             }
         }
     }

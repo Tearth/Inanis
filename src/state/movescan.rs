@@ -51,8 +51,8 @@ impl Move {
 
     /// Constructs a new instance of [Move] with random values, not restricted by chess rules.
     pub fn new_random() -> Self {
-        let from = rand::u8(0..64);
-        let to = rand::u8(0..64);
+        let from = rand::u8(A1..=H8);
+        let to = rand::u8(A1..=H8);
         let mut flags = MoveFlags::UNDEFINED1;
 
         loop {
@@ -168,8 +168,8 @@ impl Move {
                 },
                 MoveFlags::EN_PASSANT => board.en_passant,
                 _ => match board.active_color {
-                    WHITE => ((from_square & !FILE_H) << 7) | ((from_square & !RANK_8) << 8) | ((from_square & !FILE_A) << 9),
-                    BLACK => ((from_square & !FILE_A) >> 7) | ((from_square & !RANK_1) >> 8) | ((from_square & !FILE_H) >> 9),
+                    WHITE => ((from_square & !FILE_H_BB) << 7) | ((from_square & !RANK_8_BB) << 8) | ((from_square & !FILE_A_BB) << 9),
+                    BLACK => ((from_square & !FILE_A_BB) >> 7) | ((from_square & !RANK_1_BB) >> 8) | ((from_square & !FILE_H_BB) >> 9),
                     _ => panic!("Invalid value: board.active_color={}", board.active_color),
                 },
             },
@@ -212,7 +212,7 @@ impl Move {
             }
 
             // Double push can be performed only from the specific ranks (2 for white, 7 for black)
-            if (board.active_color == WHITE && (from_square & RANK_2) == 0) || (board.active_color == BLACK && (from_square & RANK_7) == 0) {
+            if (board.active_color == WHITE && (from_square & RANK_2_BB) == 0) || (board.active_color == BLACK && (from_square & RANK_7_BB) == 0) {
                 return false;
             }
 
@@ -444,8 +444,8 @@ pub fn get_piece_mobility<const PIECE: u8>(board: &Board, color: u8, dangered_ki
         *dangered_king_squares += (enemy_king_box & (piece_moves | from_square)).bit_count() as u32;
         piece_moves &= !board.occupancy[color as usize];
 
-        let center_mobility = board.evaluation_parameters.mobility_center_multiplier[PIECE as usize] * (piece_moves & CENTER).bit_count() as i16;
-        let outside_mobility = (piece_moves & OUTSIDE).bit_count() as i16;
+        let center_mobility = board.evaluation_parameters.mobility_center_multiplier[PIECE as usize] * (piece_moves & CENTER_BB).bit_count() as i16;
+        let outside_mobility = (piece_moves & OUTSIDE_BB).bit_count() as i16;
 
         mobility += center_mobility + outside_mobility;
     }
@@ -481,7 +481,7 @@ fn scan_pawn_moves_single_push(board: &Board, moves: &mut [MaybeUninit<Move>; en
     let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
 
     let shift = 8 - 16 * (board.active_color as i8);
-    let promotion_line = RANK_8 >> (56 * (board.active_color as u8));
+    let promotion_line = RANK_8_BB >> (56 * (board.active_color as u8));
     let mut target_squares = match board.active_color {
         WHITE => pieces << 8,
         BLACK => pieces >> 8,
@@ -521,8 +521,8 @@ fn scan_pawn_moves_double_push(board: &Board, moves: &mut [MaybeUninit<Move>; en
 
     let shift = 16 - 32 * (board.active_color as i8);
     let mut target_squares = match board.active_color {
-        WHITE => (((pieces & RANK_2) << 8) & !occupancy) << 8,
-        BLACK => (((pieces & RANK_7) >> 8) & !occupancy) >> 8,
+        WHITE => (((pieces & RANK_2_BB) << 8) & !occupancy) << 8,
+        BLACK => (((pieces & RANK_7_BB) >> 8) & !occupancy) >> 8,
         _ => {
             panic!("Invalid value: board.active_color={}", board.active_color);
         }
@@ -554,10 +554,10 @@ fn scan_pawn_moves_diagonal_attacks<const DIR: u8>(
     let enemy_color = board.active_color ^ 1;
     let pieces = board.pieces[board.active_color as usize][PAWN as usize];
 
-    let forbidden_file = FILE_A >> (DIR * 7);
+    let forbidden_file = FILE_A_BB >> (DIR * 7);
     let shift = 9 - (board.active_color ^ DIR) * 2;
     let signed_shift = (shift as i8) - ((board.active_color as i8) * 2 * (shift as i8));
-    let promotion_line = RANK_8 >> (56 * (board.active_color as u8));
+    let promotion_line = RANK_8_BB >> (56 * (board.active_color as u8));
 
     let mut target_squares = match board.active_color {
         WHITE => (pieces & !forbidden_file) << shift,

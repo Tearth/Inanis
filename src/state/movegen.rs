@@ -371,12 +371,12 @@ impl MagicContainer {
 
     /// Gets a rook mask for the square specified by `square_index`, without considering occupancy.
     fn get_rook_mask(&self, square_index: usize, patterns: &PatternsContainer) -> u64 {
-        (patterns.get_file(square_index) & !RANK_1 & !RANK_8) | (patterns.get_rank(square_index) & !FILE_A & !FILE_H)
+        (patterns.get_file(square_index) & !RANK_1_BB & !RANK_8_BB) | (patterns.get_rank(square_index) & !FILE_A_BB & !FILE_H_BB)
     }
 
     /// Gets a bishop mask for the square specified by `square_index`, without considering occupancy.
     fn get_bishop_mask(&self, square_index: usize, patterns: &PatternsContainer) -> u64 {
-        patterns.get_diagonals(square_index) & !EDGE
+        patterns.get_diagonals(square_index) & !EDGE_BB
     }
 
     /// Gets a rook attacks for the square specified by `square_index`, considering `occupancy`.
@@ -426,9 +426,9 @@ impl Default for MagicContainer {
 
         let mut result = Self { rook_squares: [INIT; 64], bishop_squares: [INIT; 64] };
 
-        for index in 0..64 {
-            result.apply_rook_magic(index);
-            result.apply_bishop_magic(index);
+        for index in A1..=H8 {
+            result.apply_rook_magic(index as usize);
+            result.apply_bishop_magic(index as usize);
         }
 
         result
