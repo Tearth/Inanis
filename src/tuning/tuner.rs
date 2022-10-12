@@ -169,12 +169,12 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
         }
 
         write_evaluation_parameters(&mut context, output_directory, best_error);
-        write_piece_square_table(output_directory, best_error, "pawn", &context.parameters.pst_patterns[PAWN as usize]);
-        write_piece_square_table(output_directory, best_error, "knight", &context.parameters.pst_patterns[KNIGHT as usize]);
-        write_piece_square_table(output_directory, best_error, "bishop", &context.parameters.pst_patterns[BISHOP as usize]);
-        write_piece_square_table(output_directory, best_error, "rook", &context.parameters.pst_patterns[ROOK as usize]);
-        write_piece_square_table(output_directory, best_error, "queen", &context.parameters.pst_patterns[QUEEN as usize]);
-        write_piece_square_table(output_directory, best_error, "king", &context.parameters.pst_patterns[KING as usize]);
+        write_piece_square_table(output_directory, best_error, "pawn", &context.parameters.pst_patterns[PAWN]);
+        write_piece_square_table(output_directory, best_error, "knight", &context.parameters.pst_patterns[KNIGHT]);
+        write_piece_square_table(output_directory, best_error, "bishop", &context.parameters.pst_patterns[BISHOP]);
+        write_piece_square_table(output_directory, best_error, "rook", &context.parameters.pst_patterns[ROOK]);
+        write_piece_square_table(output_directory, best_error, "queen", &context.parameters.pst_patterns[QUEEN]);
+        write_piece_square_table(output_directory, best_error, "king", &context.parameters.pst_patterns[KING]);
 
         println!(
             "Iteration {} done in {} seconds, {} changes made, error reduced from {:.6} to {:.6} ({:.6})",
@@ -281,34 +281,34 @@ fn load_values(context: &TunerContext, lock_material: bool, random_values: bool)
     let mut parameters = Vec::new();
 
     if !lock_material {
-        parameters.push(TunerParameter::new(context.parameters.piece_value[PAWN as usize], 100, 100, 100, 100));
-        parameters.push(TunerParameter::new(context.parameters.piece_value[KNIGHT as usize], 0, 300, 400, 9999));
-        parameters.push(TunerParameter::new(context.parameters.piece_value[BISHOP as usize], 0, 300, 400, 9999));
-        parameters.push(TunerParameter::new(context.parameters.piece_value[ROOK as usize], 0, 400, 600, 9999));
-        parameters.push(TunerParameter::new(context.parameters.piece_value[QUEEN as usize], 0, 900, 1200, 9999));
-        parameters.push(TunerParameter::new(context.parameters.piece_value[KING as usize], 10000, 10000, 10000, 10000));
+        parameters.push(TunerParameter::new(context.parameters.piece_value[PAWN], 100, 100, 100, 100));
+        parameters.push(TunerParameter::new(context.parameters.piece_value[KNIGHT], 0, 300, 400, 9999));
+        parameters.push(TunerParameter::new(context.parameters.piece_value[BISHOP], 0, 300, 400, 9999));
+        parameters.push(TunerParameter::new(context.parameters.piece_value[ROOK], 0, 400, 600, 9999));
+        parameters.push(TunerParameter::new(context.parameters.piece_value[QUEEN], 0, 900, 1200, 9999));
+        parameters.push(TunerParameter::new(context.parameters.piece_value[KING], 10000, 10000, 10000, 10000));
     }
 
-    parameters.push(TunerParameter::new(context.parameters.mobility_opening[PAWN as usize], 0, 3, 6, 8));
-    parameters.push(TunerParameter::new(context.parameters.mobility_opening[KNIGHT as usize], 0, 3, 6, 8));
-    parameters.push(TunerParameter::new(context.parameters.mobility_opening[BISHOP as usize], 0, 3, 6, 8));
-    parameters.push(TunerParameter::new(context.parameters.mobility_opening[ROOK as usize], 0, 3, 6, 8));
-    parameters.push(TunerParameter::new(context.parameters.mobility_opening[QUEEN as usize], 0, 3, 6, 8));
-    parameters.push(TunerParameter::new(context.parameters.mobility_opening[KING as usize], 0, 3, 6, 8));
+    parameters.push(TunerParameter::new(context.parameters.mobility_opening[PAWN], 0, 3, 6, 8));
+    parameters.push(TunerParameter::new(context.parameters.mobility_opening[KNIGHT], 0, 3, 6, 8));
+    parameters.push(TunerParameter::new(context.parameters.mobility_opening[BISHOP], 0, 3, 6, 8));
+    parameters.push(TunerParameter::new(context.parameters.mobility_opening[ROOK], 0, 3, 6, 8));
+    parameters.push(TunerParameter::new(context.parameters.mobility_opening[QUEEN], 0, 3, 6, 8));
+    parameters.push(TunerParameter::new(context.parameters.mobility_opening[KING], 0, 3, 6, 8));
 
-    parameters.push(TunerParameter::new(context.parameters.mobility_ending[PAWN as usize], 0, 2, 6, 10));
-    parameters.push(TunerParameter::new(context.parameters.mobility_ending[KNIGHT as usize], 0, 2, 6, 10));
-    parameters.push(TunerParameter::new(context.parameters.mobility_ending[BISHOP as usize], 0, 2, 6, 10));
-    parameters.push(TunerParameter::new(context.parameters.mobility_ending[ROOK as usize], 0, 2, 6, 10));
-    parameters.push(TunerParameter::new(context.parameters.mobility_ending[QUEEN as usize], 0, 2, 6, 10));
-    parameters.push(TunerParameter::new(context.parameters.mobility_ending[KING as usize], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_ending[PAWN], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_ending[KNIGHT], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_ending[BISHOP], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_ending[ROOK], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_ending[QUEEN], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_ending[KING], 0, 2, 6, 10));
 
-    parameters.push(TunerParameter::new(context.parameters.mobility_center_multiplier[PAWN as usize], 0, 2, 6, 10));
-    parameters.push(TunerParameter::new(context.parameters.mobility_center_multiplier[KNIGHT as usize], 0, 2, 6, 10));
-    parameters.push(TunerParameter::new(context.parameters.mobility_center_multiplier[BISHOP as usize], 0, 2, 6, 10));
-    parameters.push(TunerParameter::new(context.parameters.mobility_center_multiplier[ROOK as usize], 0, 2, 6, 10));
-    parameters.push(TunerParameter::new(context.parameters.mobility_center_multiplier[QUEEN as usize], 0, 2, 6, 10));
-    parameters.push(TunerParameter::new(context.parameters.mobility_center_multiplier[KING as usize], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_center_multiplier[PAWN], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_center_multiplier[KNIGHT], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_center_multiplier[BISHOP], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_center_multiplier[ROOK], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_center_multiplier[QUEEN], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_center_multiplier[KING], 0, 2, 6, 10));
 
     parameters.push(TunerParameter::new(context.parameters.doubled_pawn_opening, -999, -40, -10, 999));
     parameters.push(TunerParameter::new(context.parameters.doubled_pawn_ending, -999, -40, -10, 999));
@@ -331,27 +331,27 @@ fn load_values(context: &TunerContext, lock_material: bool, random_values: bool)
     parameters.push(TunerParameter::new(context.parameters.king_attacked_squares_opening, -999, -40, -10, 999));
     parameters.push(TunerParameter::new(context.parameters.king_attacked_squares_ending, -999, -40, -10, 999));
 
-    let pawn_pst = &context.parameters.pst_patterns[PAWN as usize];
+    let pawn_pst = &context.parameters.pst_patterns[PAWN];
     parameters.append(&mut pawn_pst[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
     parameters.append(&mut pawn_pst[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
 
-    let knight_pst = &context.parameters.pst_patterns[KNIGHT as usize];
+    let knight_pst = &context.parameters.pst_patterns[KNIGHT];
     parameters.append(&mut knight_pst[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
     parameters.append(&mut knight_pst[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
 
-    let bishop_pst = &context.parameters.pst_patterns[BISHOP as usize];
+    let bishop_pst = &context.parameters.pst_patterns[BISHOP];
     parameters.append(&mut bishop_pst[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
     parameters.append(&mut bishop_pst[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
 
-    let rook_pst = &context.parameters.pst_patterns[ROOK as usize];
+    let rook_pst = &context.parameters.pst_patterns[ROOK];
     parameters.append(&mut rook_pst[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
     parameters.append(&mut rook_pst[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
 
-    let queen_pst = &context.parameters.pst_patterns[QUEEN as usize];
+    let queen_pst = &context.parameters.pst_patterns[QUEEN];
     parameters.append(&mut queen_pst[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
     parameters.append(&mut queen_pst[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
 
-    let king_pst = &context.parameters.pst_patterns[KING as usize];
+    let king_pst = &context.parameters.pst_patterns[KING];
     parameters.append(&mut king_pst[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
     parameters.append(&mut king_pst[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
 
@@ -403,27 +403,27 @@ fn save_values(context: &mut TunerContext, values: &mut [TunerParameter], lock_m
     save_values_internal(values, &mut context.parameters.king_attacked_squares_opening, &mut index);
     save_values_internal(values, &mut context.parameters.king_attacked_squares_ending, &mut index);
 
-    let pawn_pst = &mut context.parameters.pst_patterns[PAWN as usize];
+    let pawn_pst = &mut context.parameters.pst_patterns[PAWN];
     save_values_to_i8_array_internal(values, &mut pawn_pst[0], &mut index);
     save_values_to_i8_array_internal(values, &mut pawn_pst[1], &mut index);
 
-    let knight_pst = &mut context.parameters.pst_patterns[KNIGHT as usize];
+    let knight_pst = &mut context.parameters.pst_patterns[KNIGHT];
     save_values_to_i8_array_internal(values, &mut knight_pst[0], &mut index);
     save_values_to_i8_array_internal(values, &mut knight_pst[1], &mut index);
 
-    let bishop_pst = &mut context.parameters.pst_patterns[BISHOP as usize];
+    let bishop_pst = &mut context.parameters.pst_patterns[BISHOP];
     save_values_to_i8_array_internal(values, &mut bishop_pst[0], &mut index);
     save_values_to_i8_array_internal(values, &mut bishop_pst[1], &mut index);
 
-    let rook_pst = &mut context.parameters.pst_patterns[ROOK as usize];
+    let rook_pst = &mut context.parameters.pst_patterns[ROOK];
     save_values_to_i8_array_internal(values, &mut rook_pst[0], &mut index);
     save_values_to_i8_array_internal(values, &mut rook_pst[1], &mut index);
 
-    let queen_pst = &mut context.parameters.pst_patterns[QUEEN as usize];
+    let queen_pst = &mut context.parameters.pst_patterns[QUEEN];
     save_values_to_i8_array_internal(values, &mut queen_pst[0], &mut index);
     save_values_to_i8_array_internal(values, &mut queen_pst[1], &mut index);
 
-    let king_pst = &mut context.parameters.pst_patterns[KING as usize];
+    let king_pst = &mut context.parameters.pst_patterns[KING];
     save_values_to_i8_array_internal(values, &mut king_pst[0], &mut index);
     save_values_to_i8_array_internal(values, &mut king_pst[1], &mut index);
 
@@ -571,7 +571,7 @@ fn get_piece_square_table(values: &[i16]) -> String {
 
     output.push_str("                ");
     for index in A1..=H8 {
-        output.push_str(format!("{:4}", values[index as usize]).as_str());
+        output.push_str(format!("{:4}", values[index]).as_str());
         if index % 8 == 7 {
             output.push_str(",\n");
             if index != 63 {

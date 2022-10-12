@@ -5,25 +5,25 @@ pub mod representation;
 pub mod text;
 pub mod zobrist;
 
-pub const WHITE: u8 = 0;
-pub const BLACK: u8 = 1;
+pub const WHITE: usize = 0;
+pub const BLACK: usize = 1;
 
-pub const OPENING: u8 = 0;
-pub const ENDING: u8 = 1;
+pub const OPENING: usize = 0;
+pub const ENDING: usize = 1;
 
-pub const PAWN: u8 = 0;
-pub const KNIGHT: u8 = 1;
-pub const BISHOP: u8 = 2;
-pub const ROOK: u8 = 3;
-pub const QUEEN: u8 = 4;
-pub const KING: u8 = 5;
+pub const PAWN: usize = 0;
+pub const KNIGHT: usize = 1;
+pub const BISHOP: usize = 2;
+pub const ROOK: usize = 3;
+pub const QUEEN: usize = 4;
+pub const KING: usize = 5;
 
-pub const LEFT: u8 = 0;
-pub const RIGHT: u8 = 1;
+pub const LEFT: usize = 0;
+pub const RIGHT: usize = 1;
 
 // Used only in iterators, doesn't relate to the bitboard layout
-pub const FILE_A: u8 = 0;
-pub const FILE_H: u8 = 7;
+pub const FILE_A: usize = 0;
+pub const FILE_H: usize = 7;
 
 pub const FILE_A_BB: u64 = 0x0101010101010101 << 7;
 pub const FILE_B_BB: u64 = 0x0101010101010101 << 6;
@@ -35,8 +35,8 @@ pub const FILE_G_BB: u64 = 0x0101010101010101 << 1;
 pub const FILE_H_BB: u64 = 0x0101010101010101 << 0;
 
 // Used only in iterators, doesn't relate to the bitboard layout
-pub const RANK_1: u8 = 0;
-pub const RANK_8: u8 = 7;
+pub const RANK_1: usize = 0;
+pub const RANK_8: usize = 7;
 
 pub const RANK_1_BB: u64 = 0x00000000000000ff << 0;
 pub const RANK_2_BB: u64 = 0x00000000000000ff << 8;
@@ -48,8 +48,8 @@ pub const RANK_7_BB: u64 = 0x00000000000000ff << 48;
 pub const RANK_8_BB: u64 = 0x00000000000000ff << 56;
 
 // Used only in iterators, doesn't relate to the bitboard layout
-pub const A1: u8 = 0;
-pub const H8: u8 = 63;
+pub const A1: usize = 0;
+pub const H8: usize = 63;
 
 pub const CENTER_BB: u64 = 0x3c3c3c3c0000;
 pub const OUTSIDE_BB: u64 = 0xffffc3c3c3c3ffff;

@@ -180,8 +180,8 @@ fn pieces_to_fen(board: &Board) -> String {
     let mut squares_without_piece = 0;
 
     for square_index in (A1..=H8).rev() {
-        let piece = board.get_piece(square_index);
-        if piece == u8::MAX {
+        let piece = board.get_piece(square_index as u8);
+        if piece == usize::MAX {
             squares_without_piece += 1;
         } else {
             if squares_without_piece != 0 {
@@ -190,7 +190,7 @@ fn pieces_to_fen(board: &Board) -> String {
             }
 
             let mut piece_symbol = text::piece_to_symbol(piece).unwrap();
-            if (board.pieces[WHITE as usize][piece as usize] & (1u64 << square_index)) == 0 {
+            if (board.pieces[WHITE][piece] & (1u64 << square_index)) == 0 {
                 piece_symbol = piece_symbol.to_lowercase().collect::<Vec<char>>()[0];
             }
 

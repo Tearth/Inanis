@@ -51,8 +51,8 @@ impl Move {
 
     /// Constructs a new instance of [Move] with random values, not restricted by chess rules.
     pub fn new_random() -> Self {
-        let from = rand::u8(A1..=H8);
-        let to = rand::u8(A1..=H8);
+        let from = rand::usize(A1..=H8) as u8;
+        let to = rand::usize(A1..=H8) as u8;
         let mut flags = MoveFlags::UNDEFINED1;
 
         loop {
@@ -82,7 +82,7 @@ impl Move {
     }
 
     /// Gets promotion piece based on the flags saved in the internal data.
-    pub fn get_promotion_piece(&self) -> u8 {
+    pub fn get_promotion_piece(&self) -> usize {
         let flags = self.get_flags();
         match self.get_flags() {
             MoveFlags::KNIGHT_PROMOTION | MoveFlags::KNIGHT_PROMOTION_CAPTURE => KNIGHT,
@@ -138,7 +138,7 @@ impl Move {
         let piece_color = board.get_piece_color(from);
 
         // Fast check: source square must contain a piece with the proper color
-        if piece == u8::MAX || piece_color != board.active_color {
+        if piece == usize::MAX || piece_color != board.active_color {
             return false;
         }
 
@@ -146,17 +146,17 @@ impl Move {
         let target_piece_color = board.get_piece_color(to);
 
         // Fast check: for promotions with captures, there must be some victim with opposite color
-        if self.is_capture() && !self.is_en_passant() && (target_piece == u8::MAX || piece_color == target_piece_color) {
+        if self.is_capture() && !self.is_en_passant() && (target_piece == usize::MAX || piece_color == target_piece_color) {
             return false;
         }
 
         // Fast check: target square must be empty for non-capture moves
-        if !self.is_capture() && target_piece != u8::MAX {
+        if !self.is_capture() && target_piece != usize::MAX {
             return false;
         }
 
         let flags = self.get_flags();
-        let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
+        let occupancy = board.occupancy[WHITE] | board.occupancy[BLACK];
 
         // Checking what squares are reachable for the piece
         let moves = match piece {
@@ -217,7 +217,7 @@ impl Move {
             }
 
             // The square between source and target ones must be empty
-            if board.get_piece((cmp::max(from, to) + cmp::min(from, to)) / 2) != u8::MAX {
+            if board.get_piece((cmp::max(from, to) + cmp::min(from, to)) / 2) != usize::MAX {
                 return false;
             }
 
@@ -314,21 +314,21 @@ impl Default for Move {
 /// Generates all possible non-captures (if `CAPTURES` is false) or all possible captures (if `CAPTURES` is true) for the `PIECE` at
 /// the position specified by `board`, stores them into `moves` list (starting from `index`) and returns index of the first free slot.
 /// Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the specified squares (useful during checks).
-pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(
+pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(
     board: &Board,
     moves: &mut [MaybeUninit<Move>; engine::MAX_MOVES_COUNT],
     mut index: usize,
     evasion_mask: u64,
 ) -> usize {
     let enemy_color = board.active_color ^ 1;
-    let mut pieces = board.pieces[board.active_color as usize][PIECE as usize];
+    let mut pieces = board.pieces[board.active_color][PIECE];
 
     while pieces != 0 {
         let from_square = pieces.get_lsb();
         let from_square_index = from_square.bit_scan();
         pieces = pieces.pop_lsb();
 
-        let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
+        let occupancy = board.occupancy[WHITE] | board.occupancy[BLACK];
         let mut piece_moves = match PIECE {
             KNIGHT => board.magic.get_knight_moves(from_square_index as usize, &board.patterns),
             BISHOP => board.magic.get_bishop_moves(occupancy, from_square_index as usize),
@@ -337,12 +337,12 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(
             KING => board.magic.get_king_moves(from_square_index as usize, &board.patterns),
             _ => panic!("Invalid parameter: fen={}, PIECE={}", board.to_fen(), PIECE),
         };
-        piece_moves &= !board.occupancy[board.active_color as usize] & evasion_mask;
+        piece_moves &= !board.occupancy[board.active_color] & evasion_mask;
 
         if CAPTURES {
-            piece_moves &= board.occupancy[enemy_color as usize];
+            piece_moves &= board.occupancy[enemy_color];
         } else {
-            piece_moves &= !board.occupancy[enemy_color as usize];
+            piece_moves &= !board.occupancy[enemy_color];
         }
 
         while piece_moves != 0 {
@@ -350,7 +350,7 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(
             let to_square_index = to_square.bit_scan();
             piece_moves = piece_moves.pop_lsb();
 
-            let capture = (to_square & board.occupancy[enemy_color as usize]) != 0;
+            let capture = (to_square & board.occupancy[enemy_color]) != 0;
             let flags = if CAPTURES || capture { MoveFlags::CAPTURE } else { MoveFlags::SINGLE_PUSH };
 
             moves[index].write(Move::new(from_square_index, to_square_index, flags));
@@ -361,7 +361,7 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(
             match board.active_color {
                 WHITE => {
                     let king_side_castling_rights = board.castling_rights.contains(CastlingRights::WHITE_SHORT_CASTLING);
-                    let king_side_rook_present = (board.pieces[board.active_color as usize][ROOK as usize] & 0x1) != 0;
+                    let king_side_rook_present = (board.pieces[board.active_color][ROOK] & 0x1) != 0;
 
                     if king_side_castling_rights && king_side_rook_present && (occupancy & 0x6) == 0 {
                         if !board.are_squares_attacked(board.active_color, &[3, 2, 1]) {
@@ -371,7 +371,7 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(
                     }
 
                     let queen_side_castling_rights = board.castling_rights.contains(CastlingRights::WHITE_LONG_CASTLING);
-                    let queen_side_rook_present = (board.pieces[board.active_color as usize][ROOK as usize] & 0x80) != 0;
+                    let queen_side_rook_present = (board.pieces[board.active_color][ROOK] & 0x80) != 0;
 
                     if queen_side_castling_rights && queen_side_rook_present && (occupancy & 0x70) == 0 {
                         if !board.are_squares_attacked(board.active_color, &[3, 4, 5]) {
@@ -382,7 +382,7 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(
                 }
                 BLACK => {
                     let king_side_castling_rights = board.castling_rights.contains(CastlingRights::BLACK_SHORT_CASTLING);
-                    let king_side_rook_present = (board.pieces[board.active_color as usize][ROOK as usize] & 0x100000000000000) != 0;
+                    let king_side_rook_present = (board.pieces[board.active_color][ROOK] & 0x100000000000000) != 0;
 
                     if king_side_castling_rights && king_side_rook_present && (occupancy & 0x600000000000000) == 0 {
                         if !board.are_squares_attacked(board.active_color, &[59, 58, 57]) {
@@ -392,7 +392,7 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(
                     }
 
                     let queen_side_castling_rights = board.castling_rights.contains(CastlingRights::BLACK_LONG_CASTLING);
-                    let queen_side_rook_present = (board.pieces[board.active_color as usize][ROOK as usize] & 0x8000000000000000) != 0;
+                    let queen_side_rook_present = (board.pieces[board.active_color][ROOK] & 0x8000000000000000) != 0;
 
                     if queen_side_castling_rights && queen_side_rook_present && (occupancy & 0x7000000000000000) == 0 {
                         if !board.are_squares_attacked(board.active_color, &[59, 60, 61]) {
@@ -411,12 +411,12 @@ pub fn scan_piece_moves<const PIECE: u8, const CAPTURES: bool>(
 
 /// Gets `PIECE` mobility (by counting all possible moves at the position specified by `board`) with `color` and increases `dangered_king_squares` if the enemy
 /// king is near to the squares included in the mobility.
-pub fn get_piece_mobility<const PIECE: u8>(board: &Board, color: u8, dangered_king_squares: &mut u32) -> i16 {
-    let mut pieces = board.pieces[color as usize][PIECE as usize];
+pub fn get_piece_mobility<const PIECE: usize>(board: &Board, color: usize, dangered_king_squares: &mut u32) -> i16 {
+    let mut pieces = board.pieces[color][PIECE];
     let mut mobility = 0;
 
     let enemy_color = color ^ 1;
-    let enemy_king_square = (board.pieces[enemy_color as usize][KING as usize]).bit_scan();
+    let enemy_king_square = (board.pieces[enemy_color][KING]).bit_scan();
     let enemy_king_box = board.patterns.get_box(enemy_king_square as usize);
 
     while pieces != 0 {
@@ -424,11 +424,11 @@ pub fn get_piece_mobility<const PIECE: u8>(board: &Board, color: u8, dangered_ki
         let from_square_index = from_square.bit_scan();
         pieces = pieces.pop_lsb();
 
-        let mut occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
+        let mut occupancy = board.occupancy[WHITE] | board.occupancy[BLACK];
         occupancy &= !match PIECE {
-            BISHOP => board.pieces[color as usize][BISHOP as usize] | board.pieces[color as usize][QUEEN as usize],
-            ROOK => board.pieces[color as usize][ROOK as usize] | board.pieces[color as usize][QUEEN as usize],
-            QUEEN => board.pieces[color as usize][BISHOP as usize] | board.pieces[color as usize][ROOK as usize] | board.pieces[color as usize][QUEEN as usize],
+            BISHOP => board.pieces[color][BISHOP] | board.pieces[color][QUEEN],
+            ROOK => board.pieces[color][ROOK] | board.pieces[color][QUEEN],
+            QUEEN => board.pieces[color][BISHOP] | board.pieces[color][ROOK] | board.pieces[color][QUEEN],
             _ => 0,
         };
 
@@ -442,9 +442,9 @@ pub fn get_piece_mobility<const PIECE: u8>(board: &Board, color: u8, dangered_ki
         };
 
         *dangered_king_squares += (enemy_king_box & (piece_moves | from_square)).bit_count() as u32;
-        piece_moves &= !board.occupancy[color as usize];
+        piece_moves &= !board.occupancy[color];
 
-        let center_mobility = board.evaluation_parameters.mobility_center_multiplier[PIECE as usize] * (piece_moves & CENTER_BB).bit_count() as i16;
+        let center_mobility = board.evaluation_parameters.mobility_center_multiplier[PIECE] * (piece_moves & CENTER_BB).bit_count() as i16;
         let outside_mobility = (piece_moves & OUTSIDE_BB).bit_count() as i16;
 
         mobility += center_mobility + outside_mobility;
@@ -477,8 +477,8 @@ pub fn scan_pawn_moves<const CAPTURES: bool>(
 /// and returns index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the
 /// specified squares (useful during checks).
 fn scan_pawn_moves_single_push(board: &Board, moves: &mut [MaybeUninit<Move>; engine::MAX_MOVES_COUNT], mut index: usize, evasion_mask: u64) -> usize {
-    let pieces = board.pieces[board.active_color as usize][PAWN as usize];
-    let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
+    let pieces = board.pieces[board.active_color][PAWN];
+    let occupancy = board.occupancy[WHITE] | board.occupancy[BLACK];
 
     let shift = 8 - 16 * (board.active_color as i8);
     let promotion_line = RANK_8_BB >> (56 * (board.active_color as u8));
@@ -516,8 +516,8 @@ fn scan_pawn_moves_single_push(board: &Board, moves: &mut [MaybeUninit<Move>; en
 /// and returns index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the
 /// specified squares (useful during checks).
 fn scan_pawn_moves_double_push(board: &Board, moves: &mut [MaybeUninit<Move>; engine::MAX_MOVES_COUNT], mut index: usize, evasion_mask: u64) -> usize {
-    let pieces = board.pieces[board.active_color as usize][PAWN as usize];
-    let occupancy = board.occupancy[WHITE as usize] | board.occupancy[BLACK as usize];
+    let pieces = board.pieces[board.active_color][PAWN];
+    let occupancy = board.occupancy[WHITE] | board.occupancy[BLACK];
 
     let shift = 16 - 32 * (board.active_color as i8);
     let mut target_squares = match board.active_color {
@@ -545,14 +545,14 @@ fn scan_pawn_moves_double_push(board: &Board, moves: &mut [MaybeUninit<Move>; en
 /// Generates all possible captures for the pawns toward the direction specified by `DIR` and at the position specified by `board`,
 /// stores them into `moves` list (starting from `index`) and returns index of the first free slot. Use `evasion_mask` with value
 /// different than `u64::MAX` to restrict generator to the specified squares (useful during checks).
-fn scan_pawn_moves_diagonal_attacks<const DIR: u8>(
+fn scan_pawn_moves_diagonal_attacks<const DIR: usize>(
     board: &Board,
     moves: &mut [MaybeUninit<Move>; engine::MAX_MOVES_COUNT],
     mut index: usize,
     evasion_mask: u64,
 ) -> usize {
     let enemy_color = board.active_color ^ 1;
-    let pieces = board.pieces[board.active_color as usize][PAWN as usize];
+    let pieces = board.pieces[board.active_color][PAWN];
 
     let forbidden_file = FILE_A_BB >> (DIR * 7);
     let shift = 9 - (board.active_color ^ DIR) * 2;
@@ -566,7 +566,7 @@ fn scan_pawn_moves_diagonal_attacks<const DIR: u8>(
             panic!("Invalid value: board.active_color={}", board.active_color);
         }
     };
-    target_squares &= (board.occupancy[enemy_color as usize] | board.en_passant) & evasion_mask;
+    target_squares &= (board.occupancy[enemy_color] | board.en_passant) & evasion_mask;
 
     while target_squares != 0 {
         let to_square = target_squares.get_lsb();

@@ -43,10 +43,10 @@ impl Move {
         let mut desired_to: Option<u8> = None;
         let mut desired_file: Option<u8> = None;
         let mut desired_rank: Option<u8> = None;
-        let mut desired_piece: Option<u8> = None;
+        let mut desired_piece: Option<usize> = None;
         let mut desired_flags: Option<u8> = None;
         let mut desired_capture: Option<bool> = None;
-        let mut desired_promotion: Option<u8> = None;
+        let mut desired_promotion: Option<usize> = None;
 
         let original_text = text;
         text = text.trim_matches('#');

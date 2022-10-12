@@ -11,23 +11,23 @@ pub fn evaluate(board: &Board, dangered_white_king_squares: &mut u32, dangered_b
 }
 
 /// Evaluates mobility and `dangered_king_squares` on the `board` for the specified `color`.
-fn evaluate_color(board: &Board, color: u8, dangered_king_squares: &mut u32) -> EvaluationResult {
+fn evaluate_color(board: &Board, color: usize, dangered_king_squares: &mut u32) -> EvaluationResult {
     let knight_mobility = movescan::get_piece_mobility::<KNIGHT>(board, color, dangered_king_squares);
     let bishop_mobility = movescan::get_piece_mobility::<BISHOP>(board, color, dangered_king_squares);
     let rook_mobility = movescan::get_piece_mobility::<ROOK>(board, color, dangered_king_squares);
     let queen_mobility = movescan::get_piece_mobility::<QUEEN>(board, color, dangered_king_squares);
 
-    let knight_mobility_opening_score = knight_mobility * board.evaluation_parameters.mobility_opening[KNIGHT as usize];
-    let knight_mobility_ending_score = knight_mobility * board.evaluation_parameters.mobility_ending[KNIGHT as usize];
+    let knight_mobility_opening_score = knight_mobility * board.evaluation_parameters.mobility_opening[KNIGHT];
+    let knight_mobility_ending_score = knight_mobility * board.evaluation_parameters.mobility_ending[KNIGHT];
 
-    let bishop_mobility_opening_score = bishop_mobility * board.evaluation_parameters.mobility_opening[BISHOP as usize];
-    let bishop_mobility_ending_score = bishop_mobility * board.evaluation_parameters.mobility_ending[BISHOP as usize];
+    let bishop_mobility_opening_score = bishop_mobility * board.evaluation_parameters.mobility_opening[BISHOP];
+    let bishop_mobility_ending_score = bishop_mobility * board.evaluation_parameters.mobility_ending[BISHOP];
 
-    let rook_mobility_opening_score = rook_mobility * board.evaluation_parameters.mobility_opening[ROOK as usize];
-    let rook_mobility_ending_score = rook_mobility * board.evaluation_parameters.mobility_ending[ROOK as usize];
+    let rook_mobility_opening_score = rook_mobility * board.evaluation_parameters.mobility_opening[ROOK];
+    let rook_mobility_ending_score = rook_mobility * board.evaluation_parameters.mobility_ending[ROOK];
 
-    let queen_mobility_opening_score = queen_mobility * board.evaluation_parameters.mobility_opening[QUEEN as usize];
-    let queen_mobility_ending_score = queen_mobility * board.evaluation_parameters.mobility_ending[QUEEN as usize];
+    let queen_mobility_opening_score = queen_mobility * board.evaluation_parameters.mobility_opening[QUEEN];
+    let queen_mobility_ending_score = queen_mobility * board.evaluation_parameters.mobility_ending[QUEEN];
 
     let opening_score = knight_mobility_opening_score + bishop_mobility_opening_score + rook_mobility_opening_score + queen_mobility_opening_score;
     let ending_score = knight_mobility_ending_score + bishop_mobility_ending_score + rook_mobility_ending_score + queen_mobility_ending_score;

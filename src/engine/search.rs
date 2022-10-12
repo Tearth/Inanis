@@ -470,22 +470,22 @@ fn assign_capture_scores(
             continue;
         }
 
-        let square = r#move.get_to();
+        let square = r#move.get_to() as usize;
         let attacking_piece = context.board.get_piece(r#move.get_from());
         let captured_piece = context.board.get_piece(r#move.get_to());
 
-        let attackers = if attackers_cache[square as usize] != 0 {
-            attackers_cache[square as usize]
+        let attackers = if attackers_cache[square] != 0 {
+            attackers_cache[square]
         } else {
-            attackers_cache[square as usize] = context.board.get_attacking_pieces(context.board.active_color ^ 1, square);
-            attackers_cache[square as usize]
+            attackers_cache[square] = context.board.get_attacking_pieces(context.board.active_color ^ 1, square);
+            attackers_cache[square]
         };
 
-        let defenders = if defenders_cache[square as usize] != 0 {
-            defenders_cache[square as usize]
+        let defenders = if defenders_cache[square] != 0 {
+            defenders_cache[square]
         } else {
-            defenders_cache[square as usize] = context.board.get_attacking_pieces(context.board.active_color, square);
-            defenders_cache[square as usize]
+            defenders_cache[square] = context.board.get_attacking_pieces(context.board.active_color, square);
+            defenders_cache[square]
         };
 
         let see = context.board.see.get(attacking_piece, captured_piece, attackers, defenders, &context.board.evaluation_parameters);
@@ -612,11 +612,11 @@ fn get_next_move<const DIAG: bool>(
                 conditional_expression!(DIAG, context.statistics.move_generator_captures_stages += 1);
 
                 *evasion_mask = if friendly_king_checked {
-                    if context.board.pieces[context.board.active_color as usize][KING as usize] == 0 {
+                    if context.board.pieces[context.board.active_color][KING] == 0 {
                         u64::MAX
                     } else {
-                        let king_square_index = (context.board.pieces[context.board.active_color as usize][KING as usize]).bit_scan();
-                        let occupancy = context.board.occupancy[WHITE as usize] | context.board.occupancy[BLACK as usize];
+                        let king_square_index = (context.board.pieces[context.board.active_color][KING]).bit_scan();
+                        let occupancy = context.board.occupancy[WHITE] | context.board.occupancy[BLACK];
 
                         let queen_moves = context.board.magic.get_queen_moves(occupancy, king_square_index as usize);
                         let knight_moves = context.board.magic.get_knight_moves(king_square_index as usize, &context.board.patterns);

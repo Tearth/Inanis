@@ -42,11 +42,11 @@ pub struct Board {
     pub en_passant: u64,
     pub halfmove_clock: u16,
     pub fullmove_number: u16,
-    pub active_color: u8,
+    pub active_color: usize,
     pub hash: u64,
     pub pawn_hash: u64,
     pub null_moves: u8,
-    pub captured_piece: u8,
+    pub captured_piece: usize,
     pub game_phase: u8,
     pub state_stack: Vec<BoardState>,
     pub material_scores: [i16; 2],
@@ -65,7 +65,7 @@ pub struct BoardState {
     pub en_passant: u64,
     pub hash: u64,
     pub pawn_hash: u64,
-    pub captured_piece: u8,
+    pub captured_piece: usize,
 }
 
 impl Board {
@@ -218,30 +218,30 @@ impl Board {
                 }
             }
             MoveFlags::SHORT_CASTLING => {
-                let king_from = 3 + 56 * color;
-                let king_to = 1 + 56 * color;
+                let king_from = 3 + 56 * (color as u8);
+                let king_to = 1 + 56 * (color as u8);
 
                 self.move_piece(color, KING, king_from, king_to);
                 self.hash ^= self.zobrist.get_piece_hash(color, KING, king_from);
                 self.hash ^= self.zobrist.get_piece_hash(color, KING, king_to);
 
-                let rook_from = 0 + 56 * color;
-                let rook_to = 2 + 56 * color;
+                let rook_from = 0 + 56 * (color as u8);
+                let rook_to = 2 + 56 * (color as u8);
 
                 self.move_piece(color, ROOK, rook_from, rook_to);
                 self.hash ^= self.zobrist.get_piece_hash(color, ROOK, rook_from);
                 self.hash ^= self.zobrist.get_piece_hash(color, ROOK, rook_to);
             }
             MoveFlags::LONG_CASTLING => {
-                let king_from = 3 + 56 * color;
-                let king_to = 5 + 56 * color;
+                let king_from = 3 + 56 * (color as u8);
+                let king_to = 5 + 56 * (color as u8);
 
                 self.move_piece(color, KING, king_from, king_to);
                 self.hash ^= self.zobrist.get_piece_hash(color, KING, king_from);
                 self.hash ^= self.zobrist.get_piece_hash(color, KING, king_to);
 
-                let rook_from = 7 + 56 * color;
-                let rook_to = 4 + 56 * color;
+                let rook_from = 7 + 56 * (color as u8);
+                let rook_to = 4 + 56 * (color as u8);
 
                 self.move_piece(color, ROOK, rook_from, rook_to);
                 self.hash ^= self.zobrist.get_piece_hash(color, ROOK, rook_from);
@@ -363,12 +363,12 @@ impl Board {
                 self.add_piece(enemy_color, self.captured_piece, to);
             }
             MoveFlags::SHORT_CASTLING => {
-                self.move_piece(color, KING, 1 + 56 * color, 3 + 56 * color);
-                self.move_piece(color, ROOK, 2 + 56 * color, 0 + 56 * color);
+                self.move_piece(color, KING, 1 + 56 * (color as u8), 3 + 56 * (color as u8));
+                self.move_piece(color, ROOK, 2 + 56 * (color as u8), 0 + 56 * (color as u8));
             }
             MoveFlags::LONG_CASTLING => {
-                self.move_piece(color, KING, 5 + 56 * color, 3 + 56 * color);
-                self.move_piece(color, ROOK, 4 + 56 * color, 7 + 56 * color);
+                self.move_piece(color, KING, 5 + 56 * (color as u8), 3 + 56 * (color as u8));
+                self.move_piece(color, ROOK, 4 + 56 * (color as u8), 7 + 56 * (color as u8));
             }
             MoveFlags::EN_PASSANT => {
                 self.move_piece(color, piece, to, from);
@@ -451,36 +451,36 @@ impl Board {
     }
 
     /// Checks if the square specified by `square_index` is attacked by enemy, from the `color` perspective.
-    pub fn is_square_attacked(&self, color: u8, square_index: u8) -> bool {
+    pub fn is_square_attacked(&self, color: usize, square_index: u8) -> bool {
         let enemy_color = color ^ 1;
-        let occupancy = self.occupancy[WHITE as usize] | self.occupancy[BLACK as usize];
+        let occupancy = self.occupancy[WHITE] | self.occupancy[BLACK];
 
         let rook_queen_attacks = self.magic.get_rook_moves(occupancy, square_index as usize);
-        let enemy_rooks_queens = self.pieces[enemy_color as usize][ROOK as usize] | self.pieces[enemy_color as usize][QUEEN as usize];
+        let enemy_rooks_queens = self.pieces[enemy_color][ROOK] | self.pieces[enemy_color][QUEEN];
         if (rook_queen_attacks & enemy_rooks_queens) != 0 {
             return true;
         }
 
         let bishop_queen_attacks = self.magic.get_bishop_moves(occupancy, square_index as usize);
-        let enemy_bishops_queens = self.pieces[enemy_color as usize][BISHOP as usize] | self.pieces[enemy_color as usize][QUEEN as usize];
+        let enemy_bishops_queens = self.pieces[enemy_color][BISHOP] | self.pieces[enemy_color][QUEEN];
         if (bishop_queen_attacks & enemy_bishops_queens) != 0 {
             return true;
         }
 
         let knight_attacks = self.magic.get_knight_moves(square_index as usize, &self.patterns);
-        let enemy_knights = self.pieces[enemy_color as usize][KNIGHT as usize];
+        let enemy_knights = self.pieces[enemy_color][KNIGHT];
         if (knight_attacks & enemy_knights) != 0 {
             return true;
         }
 
         let king_attacks = self.magic.get_king_moves(square_index as usize, &self.patterns);
-        let enemy_kings = self.pieces[enemy_color as usize][KING as usize];
+        let enemy_kings = self.pieces[enemy_color][KING];
         if (king_attacks & enemy_kings) != 0 {
             return true;
         }
 
         let square = 1u64 << square_index;
-        let potential_enemy_pawns = king_attacks & self.pieces[enemy_color as usize][PAWN as usize];
+        let potential_enemy_pawns = king_attacks & self.pieces[enemy_color][PAWN];
         let attacking_enemy_pawns = match color {
             WHITE => square & ((potential_enemy_pawns >> 7) | (potential_enemy_pawns >> 9)),
             BLACK => square & ((potential_enemy_pawns << 7) | (potential_enemy_pawns << 9)),
@@ -495,7 +495,7 @@ impl Board {
     }
 
     /// Checks if any of the square specified by `square_indexes` list is attacked by enemy, from the `color` perspective.
-    pub fn are_squares_attacked(&self, color: u8, square_indexes: &[u8]) -> bool {
+    pub fn are_squares_attacked(&self, color: usize, square_indexes: &[u8]) -> bool {
         square_indexes.iter().any(|square_index| self.is_square_attacked(color, *square_index))
     }
 
@@ -505,25 +505,25 @@ impl Board {
     ///  - bit 4, 5 - Rook
     ///  - bit 6 - Queen
     ///  - bit 7 - King
-    pub fn get_attacking_pieces(&self, color: u8, square_index: u8) -> u8 {
+    pub fn get_attacking_pieces(&self, color: usize, square_index: usize) -> u8 {
         let mut result = 0;
         let enemy_color = color ^ 1;
-        let occupancy = self.occupancy[WHITE as usize] | self.occupancy[BLACK as usize];
+        let occupancy = self.occupancy[WHITE] | self.occupancy[BLACK];
 
-        let bishops_rooks = self.pieces[enemy_color as usize][BISHOP as usize] | self.pieces[enemy_color as usize][ROOK as usize];
-        let rooks_queens = self.pieces[enemy_color as usize][ROOK as usize] | self.pieces[enemy_color as usize][QUEEN as usize];
-        let bishops_queens = self.pieces[enemy_color as usize][BISHOP as usize] | self.pieces[enemy_color as usize][QUEEN as usize];
+        let bishops_rooks = self.pieces[enemy_color][BISHOP] | self.pieces[enemy_color][ROOK];
+        let rooks_queens = self.pieces[enemy_color][ROOK] | self.pieces[enemy_color][QUEEN];
+        let bishops_queens = self.pieces[enemy_color][BISHOP] | self.pieces[enemy_color][QUEEN];
 
-        let king_attacks = self.magic.get_king_moves(square_index as usize, &self.patterns);
-        let attacking_kings_count = ((king_attacks & self.pieces[enemy_color as usize][KING as usize]) != 0) as u8;
+        let king_attacks = self.magic.get_king_moves(square_index, &self.patterns);
+        let attacking_kings_count = ((king_attacks & self.pieces[enemy_color][KING]) != 0) as u8;
         result |= attacking_kings_count << 7;
 
-        let queen_attacks = self.magic.get_queen_moves(occupancy & !bishops_rooks, square_index as usize);
-        let attacking_queens_count = ((queen_attacks & self.pieces[enemy_color as usize][QUEEN as usize]) != 0) as u8;
+        let queen_attacks = self.magic.get_queen_moves(occupancy & !bishops_rooks, square_index);
+        let attacking_queens_count = ((queen_attacks & self.pieces[enemy_color][QUEEN]) != 0) as u8;
         result |= attacking_queens_count << 6;
 
-        let rook_attacks = self.magic.get_rook_moves(occupancy & !rooks_queens, square_index as usize);
-        let attacking_rooks_count = (rook_attacks & self.pieces[enemy_color as usize][ROOK as usize]).bit_count();
+        let rook_attacks = self.magic.get_rook_moves(occupancy & !rooks_queens, square_index);
+        let attacking_rooks_count = (rook_attacks & self.pieces[enemy_color][ROOK]).bit_count();
 
         result |= match attacking_rooks_count {
             0 => 0,
@@ -531,10 +531,10 @@ impl Board {
             _ => 3 << 4,
         };
 
-        let knight_attacks = self.magic.get_knight_moves(square_index as usize, &self.patterns);
-        let attacking_knights_count = (knight_attacks & self.pieces[enemy_color as usize][KNIGHT as usize]).bit_count();
-        let bishop_attacks = self.magic.get_bishop_moves(occupancy & !bishops_queens, square_index as usize);
-        let attacking_bishops_count = (bishop_attacks & self.pieces[enemy_color as usize][BISHOP as usize]).bit_count();
+        let knight_attacks = self.magic.get_knight_moves(square_index, &self.patterns);
+        let attacking_knights_count = (knight_attacks & self.pieces[enemy_color][KNIGHT]).bit_count();
+        let bishop_attacks = self.magic.get_bishop_moves(occupancy & !bishops_queens, square_index);
+        let attacking_bishops_count = (bishop_attacks & self.pieces[enemy_color][BISHOP]).bit_count();
         let attacking_knights_bishops_count = attacking_knights_count + attacking_bishops_count;
 
         result |= match attacking_knights_bishops_count {
@@ -545,7 +545,7 @@ impl Board {
         };
 
         let square = 1u64 << square_index;
-        let potential_enemy_pawns = king_attacks & self.pieces[enemy_color as usize][PAWN as usize];
+        let potential_enemy_pawns = king_attacks & self.pieces[enemy_color][PAWN];
         let attacking_pawns_count = (match color {
             WHITE => square & ((potential_enemy_pawns >> 7) | (potential_enemy_pawns >> 9)),
             BLACK => square & ((potential_enemy_pawns << 7) | (potential_enemy_pawns << 9)),
@@ -557,27 +557,32 @@ impl Board {
     }
 
     /// Check if the king of the `color` side is checked.
-    pub fn is_king_checked(&self, color: u8) -> bool {
-        if self.pieces[color as usize][KING as usize] == 0 {
+    pub fn is_king_checked(&self, color: usize) -> bool {
+        if self.pieces[color][KING] == 0 {
             return false;
         }
 
-        self.is_square_attacked(color, (self.pieces[color as usize][KING as usize]).bit_scan())
+        self.is_square_attacked(color, (self.pieces[color][KING]).bit_scan())
     }
 
     /// Gets piece on the square specified by `square_index`.
-    pub fn get_piece(&self, square_index: u8) -> u8 {
-        self.piece_table[square_index as usize]
+    pub fn get_piece(&self, square_index: u8) -> usize {
+        let piece = self.piece_table[square_index as usize];
+        if piece == u8::MAX {
+            return usize::MAX;
+        }
+
+        piece as usize
     }
 
     /// Gets piece's color on the square specified by `square_index`. Returns `u8::MAX` if there is no piece there.
-    pub fn get_piece_color(&self, square_index: u8) -> u8 {
+    pub fn get_piece_color(&self, square_index: u8) -> usize {
         let piece = self.piece_table[square_index as usize];
         if piece == u8::MAX {
-            return u8::MAX;
+            return usize::MAX;
         }
 
-        if ((1u64 << square_index) & self.occupancy[WHITE as usize]) != 0 {
+        if ((1u64 << square_index) & self.occupancy[WHITE]) != 0 {
             WHITE
         } else {
             BLACK
@@ -585,41 +590,41 @@ impl Board {
     }
 
     /// Adds `piece` on the `square` with the specified `color`, also updates occupancy and incremental values.
-    pub fn add_piece(&mut self, color: u8, piece: u8, square: u8) {
-        self.pieces[color as usize][piece as usize] |= 1u64 << square;
-        self.occupancy[color as usize] |= 1u64 << square;
-        self.piece_table[square as usize] = piece;
-        self.material_scores[color as usize] += self.evaluation_parameters.piece_value[piece as usize];
-        self.game_phase += self.evaluation_parameters.piece_phase_value[piece as usize];
+    pub fn add_piece(&mut self, color: usize, piece: usize, square: u8) {
+        self.pieces[color][piece] |= 1u64 << square;
+        self.occupancy[color] |= 1u64 << square;
+        self.piece_table[square as usize] = piece as u8;
+        self.material_scores[color] += self.evaluation_parameters.piece_value[piece];
+        self.game_phase += self.evaluation_parameters.piece_phase_value[piece];
 
-        self.pst_scores[color as usize][OPENING as usize] += self.evaluation_parameters.get_pst_value(color, piece, OPENING, square);
-        self.pst_scores[color as usize][ENDING as usize] += self.evaluation_parameters.get_pst_value(color, piece, ENDING, square);
+        self.pst_scores[color][OPENING] += self.evaluation_parameters.get_pst_value(color, piece, OPENING, square);
+        self.pst_scores[color][ENDING] += self.evaluation_parameters.get_pst_value(color, piece, ENDING, square);
     }
 
     /// Removes `piece` on the `square` with the specified `color`, also updates occupancy and incremental values.
-    pub fn remove_piece(&mut self, color: u8, piece: u8, square: u8) {
-        self.pieces[color as usize][piece as usize] &= !(1u64 << square);
-        self.occupancy[color as usize] &= !(1u64 << square);
+    pub fn remove_piece(&mut self, color: usize, piece: usize, square: u8) {
+        self.pieces[color][piece] &= !(1u64 << square);
+        self.occupancy[color] &= !(1u64 << square);
         self.piece_table[square as usize] = u8::MAX;
-        self.material_scores[color as usize] -= self.evaluation_parameters.piece_value[piece as usize];
-        self.game_phase -= self.evaluation_parameters.piece_phase_value[piece as usize];
+        self.material_scores[color] -= self.evaluation_parameters.piece_value[piece];
+        self.game_phase -= self.evaluation_parameters.piece_phase_value[piece];
 
-        self.pst_scores[color as usize][OPENING as usize] -= self.evaluation_parameters.get_pst_value(color, piece, OPENING, square);
-        self.pst_scores[color as usize][ENDING as usize] -= self.evaluation_parameters.get_pst_value(color, piece, ENDING, square);
+        self.pst_scores[color][OPENING] -= self.evaluation_parameters.get_pst_value(color, piece, OPENING, square);
+        self.pst_scores[color][ENDING] -= self.evaluation_parameters.get_pst_value(color, piece, ENDING, square);
     }
 
     /// Moves `piece` from the square specified by `from` to the square specified by `to` with the specified `color`, also updates occupancy and incremental values.
-    pub fn move_piece(&mut self, color: u8, piece: u8, from: u8, to: u8) {
-        self.pieces[color as usize][piece as usize] ^= (1u64 << from) | (1u64 << to);
-        self.occupancy[color as usize] ^= (1u64 << from) | (1u64 << to);
+    pub fn move_piece(&mut self, color: usize, piece: usize, from: u8, to: u8) {
+        self.pieces[color][piece] ^= (1u64 << from) | (1u64 << to);
+        self.occupancy[color] ^= (1u64 << from) | (1u64 << to);
 
         self.piece_table[to as usize] = self.piece_table[from as usize];
         self.piece_table[from as usize] = u8::MAX;
 
-        self.pst_scores[color as usize][OPENING as usize] -= self.evaluation_parameters.get_pst_value(color, piece, OPENING, from);
-        self.pst_scores[color as usize][ENDING as usize] -= self.evaluation_parameters.get_pst_value(color, piece, ENDING, from);
-        self.pst_scores[color as usize][OPENING as usize] += self.evaluation_parameters.get_pst_value(color, piece, OPENING, to);
-        self.pst_scores[color as usize][ENDING as usize] += self.evaluation_parameters.get_pst_value(color, piece, ENDING, to);
+        self.pst_scores[color][OPENING] -= self.evaluation_parameters.get_pst_value(color, piece, OPENING, from);
+        self.pst_scores[color][ENDING] -= self.evaluation_parameters.get_pst_value(color, piece, ENDING, from);
+        self.pst_scores[color][OPENING] += self.evaluation_parameters.get_pst_value(color, piece, OPENING, to);
+        self.pst_scores[color][ENDING] += self.evaluation_parameters.get_pst_value(color, piece, ENDING, to);
     }
 
     /// Recalculates board's hash entirely.
@@ -628,7 +633,7 @@ impl Board {
 
         for color in WHITE..=BLACK {
             for piece_index in PAWN..=KING {
-                let mut pieces = self.pieces[color as usize][piece_index as usize];
+                let mut pieces = self.pieces[color][piece_index];
                 while pieces != 0 {
                     let square = pieces.get_lsb();
                     let square_index = square.bit_scan();
@@ -669,7 +674,7 @@ impl Board {
 
         for color in WHITE..=BLACK {
             for piece in [PAWN, KING] {
-                let mut pieces = self.pieces[color as usize][piece as usize];
+                let mut pieces = self.pieces[color][piece];
                 while pieces != 0 {
                     let square = pieces.get_lsb();
                     let square_index = square.bit_scan();
@@ -685,7 +690,7 @@ impl Board {
 
     /// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position, using `pawn_hashtable` to store pawn
     /// evaluations and `statistics` to gather diagnostic data. Returns score from the `color` perspective (more than 0 when advantage, less than 0 when disadvantage).
-    pub fn evaluate<const DIAG: bool>(&self, color: u8, pawn_hashtable: &PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
+    pub fn evaluate<const DIAG: bool>(&self, color: usize, pawn_hashtable: &PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
         let mut white_attack_mask = 0;
         let mut black_attack_mask = 0;
         let mobility_score = mobility::evaluate(self, &mut white_attack_mask, &mut black_attack_mask);
@@ -705,7 +710,7 @@ impl Board {
 
     /// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position.
     /// Returns score from the `color` perspective (more than 0 when advantage, less than 0 when disadvantage).
-    pub fn evaluate_without_cache(&self, color: u8) -> i16 {
+    pub fn evaluate_without_cache(&self, color: usize) -> i16 {
         let mut white_attack_mask = 0;
         let mut black_attack_mask = 0;
         let mobility_score = mobility::evaluate(self, &mut white_attack_mask, &mut black_attack_mask);
@@ -725,7 +730,7 @@ impl Board {
 
     /// Runs lazy (fast) evaluations, considering only material and piece-square tables. Returns score from the `color` perspective (more than 0 when
     /// advantage, less than 0 when disadvantage).
-    pub fn evaluate_lazy(&self, color: u8) -> i16 {
+    pub fn evaluate_lazy(&self, color: usize) -> i16 {
         let game_phase = self.game_phase;
         let initial_game_phase = self.evaluation_parameters.initial_game_phase;
 
@@ -779,10 +784,10 @@ impl Board {
     ///  - King + Knight/Bishop vs King
     ///  - King + Bishop (same color) vs King + Bishop (same color)
     pub fn is_insufficient_material_draw(&self) -> bool {
-        let white_material = self.material_scores[WHITE as usize] - self.evaluation_parameters.piece_value[KING as usize];
-        let black_material = self.material_scores[BLACK as usize] - self.evaluation_parameters.piece_value[KING as usize];
-        let bishop_value = self.evaluation_parameters.piece_value[BISHOP as usize];
-        let pawns_count = (self.pieces[WHITE as usize][PAWN as usize]).bit_count() + (self.pieces[BLACK as usize][PAWN as usize]).bit_count();
+        let white_material = self.material_scores[WHITE] - self.evaluation_parameters.piece_value[KING];
+        let black_material = self.material_scores[BLACK] - self.evaluation_parameters.piece_value[KING];
+        let bishop_value = self.evaluation_parameters.piece_value[BISHOP];
+        let pawns_count = (self.pieces[WHITE][PAWN]).bit_count() + (self.pieces[BLACK][PAWN]).bit_count();
 
         if white_material <= bishop_value && black_material <= bishop_value && pawns_count == 0 {
             // King vs King
@@ -791,10 +796,10 @@ impl Board {
             }
 
             let light_pieces_count = 0
-                + (self.pieces[WHITE as usize][KNIGHT as usize]).bit_count()
-                + (self.pieces[WHITE as usize][BISHOP as usize]).bit_count()
-                + (self.pieces[BLACK as usize][KNIGHT as usize]).bit_count()
-                + (self.pieces[BLACK as usize][BISHOP as usize]).bit_count();
+                + (self.pieces[WHITE][KNIGHT]).bit_count()
+                + (self.pieces[WHITE][BISHOP]).bit_count()
+                + (self.pieces[BLACK][KNIGHT]).bit_count()
+                + (self.pieces[BLACK][BISHOP]).bit_count();
 
             // King + Knight/Bishop vs King
             if light_pieces_count == 1 {
@@ -803,8 +808,8 @@ impl Board {
 
             // King + Bishop (same color) vs King + Bishop (same color)
             if light_pieces_count == 2 {
-                let white_bishops = self.pieces[WHITE as usize][BISHOP as usize];
-                let black_bishops = self.pieces[BLACK as usize][BISHOP as usize];
+                let white_bishops = self.pieces[WHITE][BISHOP];
+                let black_bishops = self.pieces[BLACK][BISHOP];
 
                 if white_bishops != 0 && black_bishops != 0 {
                     let all_bishops = white_bishops | black_bishops;
@@ -820,13 +825,13 @@ impl Board {
 
     /// Gets pieces count by counting set bits in occupancy.
     pub fn get_pieces_count(&self) -> u8 {
-        (self.occupancy[WHITE as usize] | self.occupancy[BLACK as usize]).bit_count()
+        (self.occupancy[WHITE] | self.occupancy[BLACK]).bit_count()
     }
 }
 
 impl BoardState {
     /// Constructs a new instance of [BoardState] with stored `halfmove_clock`, `castling_rights`, `en_passant`, `hash`, `pawn_hash` and `captured_piece`.
-    pub fn new(halfmove_clock: u16, castling_rights: u8, en_passant: u64, hash: u64, pawn_hash: u64, captured_piece: u8) -> BoardState {
+    pub fn new(halfmove_clock: u16, castling_rights: u8, en_passant: u64, hash: u64, pawn_hash: u64, captured_piece: usize) -> BoardState {
         BoardState { halfmove_clock, castling_rights, en_passant, hash, pawn_hash, captured_piece }
     }
 }

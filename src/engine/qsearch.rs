@@ -24,7 +24,7 @@ pub fn run<const DIAG: bool>(context: &mut SearchContext, depth: i8, ply: u16, m
     context.statistics.q_nodes_count += 1;
     context.statistics.max_ply = cmp::max(ply, context.statistics.max_ply);
 
-    if context.board.pieces[context.board.active_color as usize][KING as usize] == 0 {
+    if context.board.pieces[context.board.active_color][KING] == 0 {
         conditional_expression!(DIAG, context.statistics.q_leafs_count += 1);
         return -CHECKMATE_SCORE + (ply as i16);
     }
@@ -109,27 +109,27 @@ fn assign_move_scores(
             move_scores[move_index].write(0);
         } else if r#move.is_promotion() {
             move_scores[move_index].write(if r#move.get_promotion_piece() == QUEEN {
-                context.board.evaluation_parameters.piece_value[r#move.get_promotion_piece() as usize]
+                context.board.evaluation_parameters.piece_value[r#move.get_promotion_piece()]
             } else {
                 -9999
             });
         } else {
-            let square = r#move.get_to();
+            let square = r#move.get_to() as usize;
             let attacking_piece = context.board.get_piece(r#move.get_from());
             let captured_piece = context.board.get_piece(r#move.get_to());
 
-            let attackers = if attackers_cache[square as usize] != 0 {
-                attackers_cache[square as usize]
+            let attackers = if attackers_cache[square] != 0 {
+                attackers_cache[square]
             } else {
-                attackers_cache[square as usize] = context.board.get_attacking_pieces(context.board.active_color ^ 1, square);
-                attackers_cache[square as usize]
+                attackers_cache[square] = context.board.get_attacking_pieces(context.board.active_color ^ 1, square);
+                attackers_cache[square]
             };
 
-            let defenders = if defenders_cache[square as usize] != 0 {
-                defenders_cache[square as usize]
+            let defenders = if defenders_cache[square] != 0 {
+                defenders_cache[square]
             } else {
-                defenders_cache[square as usize] = context.board.get_attacking_pieces(context.board.active_color, square);
-                defenders_cache[square as usize]
+                defenders_cache[square] = context.board.get_attacking_pieces(context.board.active_color, square);
+                defenders_cache[square]
             };
 
             let see = context.board.see.get(attacking_piece, captured_piece, attackers, defenders, &context.board.evaluation_parameters);

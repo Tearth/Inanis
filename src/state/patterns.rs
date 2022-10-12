@@ -135,14 +135,14 @@ impl PatternsContainer {
     /// Generates file patterns for all squares.
     pub fn regenerate_files(&mut self) {
         for square_index in A1..=H8 {
-            self.file_patterns[square_index as usize] = (FILE_H_BB << (square_index % 8)) & !(1u64 << square_index);
+            self.file_patterns[square_index] = (FILE_H_BB << (square_index % 8)) & !(1u64 << square_index);
         }
     }
 
     /// Generates rank patterns for all squares.
     pub fn regenerate_ranks(&mut self) {
         for square_index in A1..=H8 {
-            self.rank_patterns[square_index as usize] = (RANK_1_BB << (8 * (square_index / 8))) & !(1u64 << square_index);
+            self.rank_patterns[square_index] = (RANK_1_BB << (8 * (square_index / 8))) & !(1u64 << square_index);
         }
     }
 
@@ -160,7 +160,7 @@ impl PatternsContainer {
                 }
             }
 
-            self.diagonal_patterns[square_index as usize] = result;
+            self.diagonal_patterns[square_index] = result;
         }
     }
 
@@ -169,7 +169,7 @@ impl PatternsContainer {
         for square_index in A1..=H8 {
             let square = 1u64 << square_index;
 
-            self.jump_patterns[square_index as usize] = 0
+            self.jump_patterns[square_index] = 0
                 | ((square & !FILE_G_BB & !FILE_H_BB) << 6)
                 | ((square & !FILE_A_BB & !FILE_B_BB) >> 6)
                 | ((square & !FILE_A_BB & !FILE_B_BB) << 10)
@@ -186,7 +186,7 @@ impl PatternsContainer {
         for square_index in A1..=H8 {
             let square = 1u64 << square_index;
 
-            self.box_patterns[square_index as usize] = 0
+            self.box_patterns[square_index] = 0
                 | ((square & !FILE_A_BB) << 1)
                 | ((square & !FILE_H_BB) >> 1)
                 | ((square & !FILE_H_BB) << 7)
@@ -203,14 +203,14 @@ impl PatternsContainer {
         for file in FILE_A..=FILE_H {
             let left_file = if file > 0 { FILE_H_BB << (file - 1) } else { 0 };
             let right_file = if file < 7 { FILE_H_BB << (file + 1) } else { 0 };
-            self.rail_patterns[file as usize] = left_file | right_file;
+            self.rail_patterns[file] = left_file | right_file;
         }
     }
 
     /// Generates star patterns for all squares.
     pub fn regenerate_stars(&mut self) {
         for square_index in A1..=H8 {
-            self.star_patterns[square_index as usize] = self.diagonal_patterns[square_index as usize] & self.box_patterns[square_index as usize];
+            self.star_patterns[square_index] = self.diagonal_patterns[square_index] & self.box_patterns[square_index];
         }
     }
 
@@ -232,7 +232,7 @@ impl PatternsContainer {
                     current_rank += (color as i8) * 2 - 1;
                 }
 
-                self.front_patterns[color as usize][square_index as usize] = (left_file | center_file | right_file) & !forbidden_area;
+                self.front_patterns[color][square_index] = (left_file | center_file | right_file) & !forbidden_area;
             }
         }
     }
