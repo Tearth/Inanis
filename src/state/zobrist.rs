@@ -43,9 +43,9 @@ impl Default for ZobristContainer {
 
         rand::seed(584578);
 
-        for color in WHITE..=BLACK {
-            for piece in PAWN..=KING {
-                for square_index in A1..=H8 {
+        for color in ALL_COLORS {
+            for piece in ALL_PIECES {
+                for square_index in ALL_FIELDS {
                     result.piece_hashes[color][piece][square_index] = rand::u64(..);
                 }
             }
@@ -55,7 +55,7 @@ impl Default for ZobristContainer {
             result.castling_hashes[castling_index] = rand::u64(..);
         }
 
-        for en_passant_index in FILE_A..=FILE_H {
+        for en_passant_index in ALL_FILES {
             result.en_passant_hashes[en_passant_index] = rand::u64(..);
         }
 

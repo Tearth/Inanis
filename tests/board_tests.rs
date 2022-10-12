@@ -10,9 +10,9 @@ mod board_tests {
                 fn $name() {
                     let board = Board::new_from_fen($fen, None, None, None, None, None).unwrap();
 
-                    for color in WHITE..=BLACK {
+                    for color in ALL_COLORS {
                         let mut result = 0u64;
-                        for square_index in A1..=H8 {
+                        for square_index in ALL_FIELDS {
                             if board.is_square_attacked(color, square_index) {
                                 result |= 1u64 << square_index;
                             }

@@ -14,7 +14,7 @@ impl SEEContainer {
         let evaluation_parameters = evaluation_parameters.unwrap_or_else(|| Arc::new(Default::default()));
         let mut result = Self { table: Box::new([[[0; 256]; 256]; 6]) };
 
-        for target_piece in PAWN..=KING {
+        for target_piece in ALL_PIECES {
             for attackers in 0..256 {
                 for defenders in 0..256 {
                     let see = result.evaluate(target_piece, attackers as u8, defenders as u8, &evaluation_parameters);

@@ -134,21 +134,21 @@ impl PatternsContainer {
 
     /// Generates file patterns for all squares.
     pub fn regenerate_files(&mut self) {
-        for square_index in A1..=H8 {
+        for square_index in ALL_FIELDS {
             self.file_patterns[square_index] = (FILE_H_BB << (square_index % 8)) & !(1u64 << square_index);
         }
     }
 
     /// Generates rank patterns for all squares.
     pub fn regenerate_ranks(&mut self) {
-        for square_index in A1..=H8 {
+        for square_index in ALL_FIELDS {
             self.rank_patterns[square_index] = (RANK_1_BB << (8 * (square_index / 8))) & !(1u64 << square_index);
         }
     }
 
     /// Generates diagonal patterns for all squares.
     pub fn regenerate_diagonals(&mut self) {
-        for square_index in A1..=H8 {
+        for square_index in ALL_FIELDS {
             let mut result = 0u64;
 
             for direction in [(1, 1), (-1, 1), (1, -1), (-1, -1)] {
@@ -166,7 +166,7 @@ impl PatternsContainer {
 
     /// Generates jump patterns for all fiellds.
     pub fn regenerate_jumps(&mut self) {
-        for square_index in A1..=H8 {
+        for square_index in ALL_FIELDS {
             let square = 1u64 << square_index;
 
             self.jump_patterns[square_index] = 0
@@ -183,7 +183,7 @@ impl PatternsContainer {
 
     /// Generates box patterns for all squares.
     pub fn regenerate_boxes(&mut self) {
-        for square_index in A1..=H8 {
+        for square_index in ALL_FIELDS {
             let square = 1u64 << square_index;
 
             self.box_patterns[square_index] = 0
@@ -200,7 +200,7 @@ impl PatternsContainer {
 
     /// Generates rail patterns for all squares.
     pub fn regenerate_rails(&mut self) {
-        for file in FILE_A..=FILE_H {
+        for file in ALL_FILES {
             let left_file = if file > 0 { FILE_H_BB << (file - 1) } else { 0 };
             let right_file = if file < 7 { FILE_H_BB << (file + 1) } else { 0 };
             self.rail_patterns[file] = left_file | right_file;
@@ -209,15 +209,15 @@ impl PatternsContainer {
 
     /// Generates star patterns for all squares.
     pub fn regenerate_stars(&mut self) {
-        for square_index in A1..=H8 {
+        for square_index in ALL_FIELDS {
             self.star_patterns[square_index] = self.diagonal_patterns[square_index] & self.box_patterns[square_index];
         }
     }
 
     /// Generates front patterns for all squares.
     pub fn regenerate_fronts(&mut self) {
-        for color in OPENING..=ENDING {
-            for square_index in A1..=H8 {
+        for color in ALL_PHASES {
+            for square_index in ALL_FIELDS {
                 let file = square_index % 8;
                 let rank = square_index / 8;
 
@@ -227,7 +227,7 @@ impl PatternsContainer {
 
                 let mut current_rank = rank as i8;
                 let mut forbidden_area = 0;
-                while current_rank >= RANK_1 as i8 && current_rank <= RANK_8 as i8 {
+                while ALL_RANKS.contains(&(current_rank as usize)) {
                     forbidden_area |= 255 << (current_rank * 8);
                     current_rank += (color as i8) * 2 - 1;
                 }

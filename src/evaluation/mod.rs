@@ -61,9 +61,9 @@ impl EvaluationParameters {
 
     /// Recalculates initial material and PST tables.
     pub fn recalculate(&mut self) {
-        for color in WHITE..=BLACK {
-            for piece in PAWN..=KING {
-                for phase in OPENING..=ENDING {
+        for color in ALL_COLORS {
+            for piece in ALL_PIECES {
+                for phase in ALL_PHASES {
                     self.pst[color][piece][phase] = self.calculate_pst(color, &self.pst_patterns[piece][phase]);
                 }
             }
@@ -76,13 +76,13 @@ impl EvaluationParameters {
 
         match color {
             WHITE => {
-                for square_index in A1..=H8 {
+                for square_index in ALL_FIELDS {
                     array[square_index as usize] = pattern[(63 - square_index) as usize];
                 }
             }
             BLACK => {
-                for file in FILE_A..=FILE_H {
-                    for rank in RANK_1..=RANK_8 {
+                for file in ALL_FILES {
+                    for rank in ALL_RANKS {
                         array[(file + rank * 8) as usize] = pattern[((7 - file) + rank * 8) as usize];
                     }
                 }

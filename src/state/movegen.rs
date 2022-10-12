@@ -426,7 +426,7 @@ impl Default for MagicContainer {
 
         let mut result = Self { rook_squares: [INIT; 64], bishop_squares: [INIT; 64] };
 
-        for index in A1..=H8 {
+        for index in ALL_FIELDS {
             result.apply_rook_magic(index as usize);
             result.apply_bishop_magic(index as usize);
         }

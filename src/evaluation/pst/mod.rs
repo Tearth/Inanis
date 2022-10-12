@@ -20,10 +20,10 @@ pub fn evaluate(board: &Board) -> EvaluationResult {
 
 /// Recalculates incremental counters on the `board`. This function should be called only once during board initialization, as it's too slow in regular search.
 pub fn recalculate_incremental_values(board: &mut Board) {
-    for color_index in WHITE..=BLACK {
-        for phase in OPENING..=ENDING {
+    for color_index in ALL_COLORS {
+        for phase in ALL_PHASES {
             let mut score = 0;
-            for piece_index in PAWN..=KING {
+            for piece_index in ALL_PIECES {
                 let mut pieces = board.pieces[color_index][piece_index];
                 while pieces != 0 {
                     let square = pieces.get_lsb();

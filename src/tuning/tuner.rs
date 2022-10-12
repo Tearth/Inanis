@@ -570,7 +570,7 @@ fn get_piece_square_table(values: &[i16]) -> String {
     let mut output = String::new();
 
     output.push_str("                ");
-    for index in A1..=H8 {
+    for index in ALL_FIELDS {
         output.push_str(format!("{:4}", values[index]).as_str());
         if index % 8 == 7 {
             output.push_str(",\n");

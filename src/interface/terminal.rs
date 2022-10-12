@@ -352,14 +352,14 @@ fn handle_magic() {
     let magic = MagicContainer::default();
     println!("Generating magic numbers for rook...");
 
-    for index in A1..=H8 {
+    for index in ALL_FIELDS {
         println!("{},", magic.generate_rook_magic_number(index as usize));
     }
 
     println!();
     println!("Generating magic numbers for bishop...");
 
-    for index in A1..=H8 {
+    for index in ALL_FIELDS {
         println!("{},", magic.generate_bishop_magic_number(index as usize));
     }
 

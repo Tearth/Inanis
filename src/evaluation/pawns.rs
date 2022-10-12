@@ -52,7 +52,7 @@ fn evaluate_color(board: &Board, color: usize) -> EvaluationResult {
     let mut passed_pawns = 0;
     let mut opened_files = 0;
 
-    for file in FILE_A..=FILE_H {
+    for file in ALL_FILES {
         let pawns_on_file_count = (board.patterns.get_file(file as usize) & board.pieces[color][PAWN]).bit_count();
         if pawns_on_file_count > 1 {
             doubled_pawns += pawns_on_file_count;

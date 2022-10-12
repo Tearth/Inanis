@@ -631,8 +631,8 @@ impl Board {
     pub fn recalculate_hash(&mut self) {
         let mut hash = 0u64;
 
-        for color in WHITE..=BLACK {
-            for piece_index in PAWN..=KING {
+        for color in ALL_COLORS {
+            for piece_index in ALL_PIECES {
                 let mut pieces = self.pieces[color][piece_index];
                 while pieces != 0 {
                     let square = pieces.get_lsb();
@@ -672,7 +672,7 @@ impl Board {
     pub fn recalculate_pawn_hash(&mut self) {
         let mut hash = 0u64;
 
-        for color in WHITE..=BLACK {
+        for color in ALL_COLORS {
             for piece in [PAWN, KING] {
                 let mut pieces = self.pieces[color][piece];
                 while pieces != 0 {

@@ -21,10 +21,6 @@ pub const KING: usize = 5;
 pub const LEFT: usize = 0;
 pub const RIGHT: usize = 1;
 
-// Used only in iterators, doesn't relate to the bitboard layout
-pub const FILE_A: usize = 0;
-pub const FILE_H: usize = 7;
-
 pub const FILE_A_BB: u64 = 0x0101010101010101 << 7;
 pub const FILE_B_BB: u64 = 0x0101010101010101 << 6;
 pub const FILE_C_BB: u64 = 0x0101010101010101 << 5;
@@ -33,10 +29,6 @@ pub const FILE_E_BB: u64 = 0x0101010101010101 << 3;
 pub const FILE_F_BB: u64 = 0x0101010101010101 << 2;
 pub const FILE_G_BB: u64 = 0x0101010101010101 << 1;
 pub const FILE_H_BB: u64 = 0x0101010101010101 << 0;
-
-// Used only in iterators, doesn't relate to the bitboard layout
-pub const RANK_1: usize = 0;
-pub const RANK_8: usize = 7;
 
 pub const RANK_1_BB: u64 = 0x00000000000000ff << 0;
 pub const RANK_2_BB: u64 = 0x00000000000000ff << 8;
@@ -47,9 +39,12 @@ pub const RANK_6_BB: u64 = 0x00000000000000ff << 40;
 pub const RANK_7_BB: u64 = 0x00000000000000ff << 48;
 pub const RANK_8_BB: u64 = 0x00000000000000ff << 56;
 
-// Used only in iterators, doesn't relate to the bitboard layout
-pub const A1: usize = 0;
-pub const H8: usize = 63;
+pub const ALL_COLORS: std::ops::RangeInclusive<usize> = 0..=1;
+pub const ALL_PHASES: std::ops::RangeInclusive<usize> = 0..=1;
+pub const ALL_PIECES: std::ops::RangeInclusive<usize> = 0..=5;
+pub const ALL_FILES: std::ops::RangeInclusive<usize> = 0..=7;
+pub const ALL_RANKS: std::ops::RangeInclusive<usize> = 0..=7;
+pub const ALL_FIELDS: std::ops::RangeInclusive<usize> = 0..=63;
 
 pub const CENTER_BB: u64 = 0x3c3c3c3c0000;
 pub const OUTSIDE_BB: u64 = 0xffffc3c3c3c3ffff;

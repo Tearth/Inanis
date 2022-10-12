@@ -51,8 +51,8 @@ impl Move {
 
     /// Constructs a new instance of [Move] with random values, not restricted by chess rules.
     pub fn new_random() -> Self {
-        let from = rand::usize(A1..=H8) as u8;
-        let to = rand::usize(A1..=H8) as u8;
+        let from = rand::usize(ALL_FIELDS) as u8;
+        let to = rand::usize(ALL_FIELDS) as u8;
         let mut flags = MoveFlags::UNDEFINED1;
 
         loop {
