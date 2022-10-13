@@ -299,24 +299,44 @@ impl Board {
             self.pawn_hash ^= self.zobrist.get_piece_hash(color, KING, to);
         } else if piece == ROOK {
             match color {
-                WHITE => {
-                    if from == 0 {
-                        self.hash ^= self.zobrist.get_castling_right_hash(self.castling_rights, CastlingRights::WHITE_SHORT_CASTLING);
-                        self.castling_rights &= !CastlingRights::WHITE_SHORT_CASTLING;
-                    } else if from == 7 {
+                WHITE => match from as usize {
+                    A1 => {
                         self.hash ^= self.zobrist.get_castling_right_hash(self.castling_rights, CastlingRights::WHITE_LONG_CASTLING);
                         self.castling_rights &= !CastlingRights::WHITE_LONG_CASTLING;
                     }
-                }
-                BLACK => {
-                    if from == 56 {
-                        self.hash ^= self.zobrist.get_castling_right_hash(self.castling_rights, CastlingRights::BLACK_SHORT_CASTLING);
-                        self.castling_rights &= !CastlingRights::BLACK_SHORT_CASTLING;
-                    } else if from == 63 {
+                    H1 => {
+                        self.hash ^= self.zobrist.get_castling_right_hash(self.castling_rights, CastlingRights::WHITE_SHORT_CASTLING);
+                        self.castling_rights &= !CastlingRights::WHITE_SHORT_CASTLING;
+                    }
+                    _ => {}
+                },
+                BLACK => match from as usize {
+                    A8 => {
                         self.hash ^= self.zobrist.get_castling_right_hash(self.castling_rights, CastlingRights::BLACK_LONG_CASTLING);
                         self.castling_rights &= !CastlingRights::BLACK_LONG_CASTLING;
                     }
-                }
+                    H8 => {
+                        self.hash ^= self.zobrist.get_castling_right_hash(self.castling_rights, CastlingRights::BLACK_SHORT_CASTLING);
+                        self.castling_rights &= !CastlingRights::BLACK_SHORT_CASTLING;
+                    }
+                    _ => {}
+                },
+                _ => panic!("Invalid parameter: fen={}, color={}", self.to_fen(), color),
+            }
+        }
+
+        if self.captured_piece == ROOK {
+            match enemy_color {
+                WHITE => match to as usize {
+                    A1 => self.castling_rights &= !CastlingRights::WHITE_LONG_CASTLING,
+                    H1 => self.castling_rights &= !CastlingRights::WHITE_SHORT_CASTLING,
+                    _ => {}
+                },
+                BLACK => match to as usize {
+                    A8 => self.castling_rights &= !CastlingRights::BLACK_LONG_CASTLING,
+                    H8 => self.castling_rights &= !CastlingRights::BLACK_SHORT_CASTLING,
+                    _ => {}
+                },
                 _ => panic!("Invalid parameter: fen={}, color={}", self.to_fen(), color),
             }
         }
@@ -451,29 +471,29 @@ impl Board {
     }
 
     /// Checks if the square specified by `square_index` is attacked by enemy, from the `color` perspective.
-    pub fn is_square_attacked(&self, color: usize, square_index: u8) -> bool {
+    pub fn is_square_attacked(&self, color: usize, square_index: usize) -> bool {
         let enemy_color = color ^ 1;
         let occupancy = self.occupancy[WHITE] | self.occupancy[BLACK];
 
-        let rook_queen_attacks = self.magic.get_rook_moves(occupancy, square_index as usize);
+        let rook_queen_attacks = self.magic.get_rook_moves(occupancy, square_index);
         let enemy_rooks_queens = self.pieces[enemy_color][ROOK] | self.pieces[enemy_color][QUEEN];
         if (rook_queen_attacks & enemy_rooks_queens) != 0 {
             return true;
         }
 
-        let bishop_queen_attacks = self.magic.get_bishop_moves(occupancy, square_index as usize);
+        let bishop_queen_attacks = self.magic.get_bishop_moves(occupancy, square_index);
         let enemy_bishops_queens = self.pieces[enemy_color][BISHOP] | self.pieces[enemy_color][QUEEN];
         if (bishop_queen_attacks & enemy_bishops_queens) != 0 {
             return true;
         }
 
-        let knight_attacks = self.magic.get_knight_moves(square_index as usize, &self.patterns);
+        let knight_attacks = self.magic.get_knight_moves(square_index, &self.patterns);
         let enemy_knights = self.pieces[enemy_color][KNIGHT];
         if (knight_attacks & enemy_knights) != 0 {
             return true;
         }
 
-        let king_attacks = self.magic.get_king_moves(square_index as usize, &self.patterns);
+        let king_attacks = self.magic.get_king_moves(square_index, &self.patterns);
         let enemy_kings = self.pieces[enemy_color][KING];
         if (king_attacks & enemy_kings) != 0 {
             return true;
@@ -495,7 +515,7 @@ impl Board {
     }
 
     /// Checks if any of the square specified by `square_indexes` list is attacked by enemy, from the `color` perspective.
-    pub fn are_squares_attacked(&self, color: usize, square_indexes: &[u8]) -> bool {
+    pub fn are_squares_attacked(&self, color: usize, square_indexes: &[usize]) -> bool {
         square_indexes.iter().any(|square_index| self.is_square_attacked(color, *square_index))
     }
 
@@ -562,7 +582,7 @@ impl Board {
             return false;
         }
 
-        self.is_square_attacked(color, (self.pieces[color][KING]).bit_scan())
+        self.is_square_attacked(color, (self.pieces[color][KING]).bit_scan() as usize)
     }
 
     /// Gets piece on the square specified by `square_index`.

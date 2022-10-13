@@ -267,6 +267,44 @@ impl Move {
                 return false;
             }
 
+            let castling_right = match flags {
+                MoveFlags::SHORT_CASTLING => match piece_color {
+                    WHITE => CastlingRights::WHITE_SHORT_CASTLING,
+                    BLACK => CastlingRights::BLACK_SHORT_CASTLING,
+                    _ => panic!("Invalid value: fen={}, piece_color={}", board.to_fen(), piece_color),
+                },
+                MoveFlags::LONG_CASTLING => match piece_color {
+                    WHITE => CastlingRights::WHITE_LONG_CASTLING,
+                    BLACK => CastlingRights::BLACK_LONG_CASTLING,
+                    _ => panic!("Invalid value: fen={}, piece_color={}", board.to_fen(), piece_color),
+                },
+                _ => panic!("Invalid value: fen={}, flags={:?}", board.to_fen(), flags),
+            };
+
+            // There must be a proper castling right to perform it
+            if !board.castling_rights.contains(castling_right) {
+                return false;
+            }
+
+            let rook_field = match flags {
+                MoveFlags::SHORT_CASTLING => match piece_color {
+                    WHITE => H1_BB,
+                    BLACK => H8_BB,
+                    _ => panic!("Invalid value: fen={}, piece_color={}", board.to_fen(), piece_color),
+                },
+                MoveFlags::LONG_CASTLING => match piece_color {
+                    WHITE => A1_BB,
+                    BLACK => A8_BB,
+                    _ => panic!("Invalid value: fen={}, piece_color={}", board.to_fen(), piece_color),
+                },
+                _ => panic!("Invalid value: fen={}, flags={:?}", board.to_fen(), flags),
+            };
+
+            // There must be a rook on the specific field
+            if (board.pieces[board.active_color][ROOK] & rook_field) == 0 {
+                return false;
+            }
+
             let castling_area = match flags {
                 MoveFlags::SHORT_CASTLING => match piece_color {
                     WHITE => 6,
@@ -283,17 +321,6 @@ impl Move {
 
             // There must be a free space for castling
             if (castling_area & occupancy) != 0 {
-                return false;
-            }
-
-            let rook_square = match flags {
-                MoveFlags::SHORT_CASTLING => from - 3,
-                MoveFlags::LONG_CASTLING => from + 4,
-                _ => panic!("Invalid value: fen={}, flags={:?}", board.to_fen(), flags),
-            };
-
-            // There must be a valid rook to perform castling
-            if board.get_piece(rook_square) != ROOK || board.get_piece_color(rook_square) != board.active_color {
                 return false;
             }
 
@@ -361,42 +388,34 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(
             match board.active_color {
                 WHITE => {
                     let king_side_castling_rights = board.castling_rights.contains(CastlingRights::WHITE_SHORT_CASTLING);
-                    let king_side_rook_present = (board.pieces[board.active_color][ROOK] & 0x1) != 0;
-
-                    if king_side_castling_rights && king_side_rook_present && (occupancy & 0x6) == 0 {
-                        if !board.are_squares_attacked(board.active_color, &[3, 2, 1]) {
-                            moves[index].write(Move::new(3, 1, MoveFlags::SHORT_CASTLING));
+                    if king_side_castling_rights && (occupancy & (F1_BB | G1_BB)) == 0 {
+                        if !board.are_squares_attacked(board.active_color, &[E1, F1, G1]) {
+                            moves[index].write(Move::new(E1 as u8, G1 as u8, MoveFlags::SHORT_CASTLING));
                             index += 1;
                         }
                     }
 
                     let queen_side_castling_rights = board.castling_rights.contains(CastlingRights::WHITE_LONG_CASTLING);
-                    let queen_side_rook_present = (board.pieces[board.active_color][ROOK] & 0x80) != 0;
-
-                    if queen_side_castling_rights && queen_side_rook_present && (occupancy & 0x70) == 0 {
-                        if !board.are_squares_attacked(board.active_color, &[3, 4, 5]) {
-                            moves[index].write(Move::new(3, 5, MoveFlags::LONG_CASTLING));
+                    if queen_side_castling_rights && (occupancy & (B1_BB | C1_BB | D1_BB)) == 0 {
+                        if !board.are_squares_attacked(board.active_color, &[C1, D1, E1]) {
+                            moves[index].write(Move::new(E1 as u8, C1 as u8, MoveFlags::LONG_CASTLING));
                             index += 1;
                         }
                     }
                 }
                 BLACK => {
                     let king_side_castling_rights = board.castling_rights.contains(CastlingRights::BLACK_SHORT_CASTLING);
-                    let king_side_rook_present = (board.pieces[board.active_color][ROOK] & 0x100000000000000) != 0;
-
-                    if king_side_castling_rights && king_side_rook_present && (occupancy & 0x600000000000000) == 0 {
-                        if !board.are_squares_attacked(board.active_color, &[59, 58, 57]) {
-                            moves[index].write(Move::new(59, 57, MoveFlags::SHORT_CASTLING));
+                    if king_side_castling_rights && (occupancy & (F8_BB | G8_BB)) == 0 {
+                        if !board.are_squares_attacked(board.active_color, &[E8, F8, G8]) {
+                            moves[index].write(Move::new(E8 as u8, G8 as u8, MoveFlags::SHORT_CASTLING));
                             index += 1;
                         }
                     }
 
                     let queen_side_castling_rights = board.castling_rights.contains(CastlingRights::BLACK_LONG_CASTLING);
-                    let queen_side_rook_present = (board.pieces[board.active_color][ROOK] & 0x8000000000000000) != 0;
-
-                    if queen_side_castling_rights && queen_side_rook_present && (occupancy & 0x7000000000000000) == 0 {
-                        if !board.are_squares_attacked(board.active_color, &[59, 60, 61]) {
-                            moves[index].write(Move::new(59, 61, MoveFlags::LONG_CASTLING));
+                    if queen_side_castling_rights && (occupancy & (B8_BB | C8_BB | D8_BB)) == 0 {
+                        if !board.are_squares_attacked(board.active_color, &[C8, D8, E8]) {
+                            moves[index].write(Move::new(E8 as u8, C8 as u8, MoveFlags::LONG_CASTLING));
                             index += 1;
                         }
                     }
