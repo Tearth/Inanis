@@ -3,8 +3,8 @@ pub trait BitHelpers {
 
     fn get_lsb(&self) -> Self::Item;
     fn pop_lsb(&self) -> Self::Item;
-    fn bit_count(&self) -> u8;
-    fn bit_scan(&self) -> u8;
+    fn bit_count(&self) -> usize;
+    fn bit_scan(&self) -> usize;
 }
 
 macro_rules! bit_helpers_implementation {
@@ -32,16 +32,16 @@ macro_rules! bit_helpers_implementation {
             ///
             /// More about asm instruction: <https://www.felixcloutier.com/x86/popcnt>
             #[inline(always)]
-            fn bit_count(&self) -> u8 {
-                self.count_ones() as u8
+            fn bit_count(&self) -> usize {
+                self.count_ones() as usize
             }
 
             /// Gets an index of the first set bit by counting trailing zero bits.
             ///
             /// More about asm instruction: <https://www.felixcloutier.com/x86/tzcnt>
             #[inline(always)]
-            fn bit_scan(&self) -> u8 {
-                self.trailing_zeros() as u8
+            fn bit_scan(&self) -> usize {
+                self.trailing_zeros() as usize
             }
         }
     };

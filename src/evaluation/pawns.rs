@@ -53,13 +53,13 @@ fn evaluate_color(board: &Board, color: usize) -> EvaluationResult {
     let mut opened_files = 0;
 
     for file in ALL_FILES {
-        let pawns_on_file_count = (board.patterns.get_file(file as usize) & board.pieces[color][PAWN]).bit_count();
+        let pawns_on_file_count = (board.patterns.get_file(file) & board.pieces[color][PAWN]).bit_count();
         if pawns_on_file_count > 1 {
             doubled_pawns += pawns_on_file_count;
         }
 
         if pawns_on_file_count > 0 {
-            let pawns_on_rail_count = (board.patterns.get_rail(file as usize) & board.pieces[color][PAWN]).bit_count();
+            let pawns_on_rail_count = (board.patterns.get_rail(file) & board.pieces[color][PAWN]).bit_count();
             if pawns_on_rail_count == 0 {
                 isolated_pawns += 1;
             }
@@ -72,11 +72,11 @@ fn evaluate_color(board: &Board, color: usize) -> EvaluationResult {
         let square_index = square.bit_scan();
         pawns = pawns.pop_lsb();
 
-        chained_pawns += (board.patterns.get_star(square_index as usize) & board.pieces[color][PAWN]).bit_count();
+        chained_pawns += (board.patterns.get_star(square_index) & board.pieces[color][PAWN]).bit_count();
 
-        let front = board.patterns.get_front(color, square_index as usize);
-        let enemy_pawns_ahead_count = (front & board.pieces[(color ^ 1) as usize][PAWN]).bit_count();
-        let friendly_pawns_ahead_count = (front & board.patterns.get_file(square_index as usize) & board.pieces[color][PAWN]).bit_count();
+        let front = board.patterns.get_front(color, square_index);
+        let enemy_pawns_ahead_count = (front & board.pieces[color ^ 1][PAWN]).bit_count();
+        let friendly_pawns_ahead_count = (front & board.patterns.get_file(square_index) & board.pieces[color][PAWN]).bit_count();
 
         if enemy_pawns_ahead_count == 0 && friendly_pawns_ahead_count == 0 {
             passed_pawns += 1;
@@ -86,7 +86,7 @@ fn evaluate_color(board: &Board, color: usize) -> EvaluationResult {
     let king = board.pieces[color][KING];
     let king_square = king.bit_scan();
     let king_square_file = (king_square & 7) as i8;
-    let pawn_shield = (board.patterns.get_box(king_square as usize) & board.pieces[color][PAWN]).bit_count();
+    let pawn_shield = (board.patterns.get_box(king_square) & board.pieces[color][PAWN]).bit_count();
 
     for file in cmp::max(0, king_square_file - 1)..=(cmp::min(7, king_square_file + 1)) {
         if (board.patterns.get_file(file as usize) & board.pieces[color][PAWN]) == 0 {

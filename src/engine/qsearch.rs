@@ -114,7 +114,7 @@ fn assign_move_scores(
                 -9999
             });
         } else {
-            let square = r#move.get_to() as usize;
+            let square = r#move.get_to();
             let attacking_piece = context.board.get_piece(r#move.get_from());
             let captured_piece = context.board.get_piece(r#move.get_to());
 

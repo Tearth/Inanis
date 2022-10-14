@@ -218,30 +218,30 @@ impl Board {
                 }
             }
             MoveFlags::SHORT_CASTLING => {
-                let king_from = 3 + 56 * (color as u8);
-                let king_to = 1 + 56 * (color as u8);
+                let king_from = 3 + 56 * color;
+                let king_to = 1 + 56 * color;
 
                 self.move_piece(color, KING, king_from, king_to);
                 self.hash ^= self.zobrist.get_piece_hash(color, KING, king_from);
                 self.hash ^= self.zobrist.get_piece_hash(color, KING, king_to);
 
-                let rook_from = 0 + 56 * (color as u8);
-                let rook_to = 2 + 56 * (color as u8);
+                let rook_from = 0 + 56 * color;
+                let rook_to = 2 + 56 * color;
 
                 self.move_piece(color, ROOK, rook_from, rook_to);
                 self.hash ^= self.zobrist.get_piece_hash(color, ROOK, rook_from);
                 self.hash ^= self.zobrist.get_piece_hash(color, ROOK, rook_to);
             }
             MoveFlags::LONG_CASTLING => {
-                let king_from = 3 + 56 * (color as u8);
-                let king_to = 5 + 56 * (color as u8);
+                let king_from = 3 + 56 * color;
+                let king_to = 5 + 56 * color;
 
                 self.move_piece(color, KING, king_from, king_to);
                 self.hash ^= self.zobrist.get_piece_hash(color, KING, king_from);
                 self.hash ^= self.zobrist.get_piece_hash(color, KING, king_to);
 
-                let rook_from = 7 + 56 * (color as u8);
-                let rook_to = 4 + 56 * (color as u8);
+                let rook_from = 7 + 56 * color;
+                let rook_to = 4 + 56 * color;
 
                 self.move_piece(color, ROOK, rook_from, rook_to);
                 self.hash ^= self.zobrist.get_piece_hash(color, ROOK, rook_from);
@@ -255,7 +255,7 @@ impl Board {
                 self.pawn_hash ^= self.zobrist.get_piece_hash(color, piece, from);
                 self.pawn_hash ^= self.zobrist.get_piece_hash(color, piece, to);
 
-                let enemy_pawn_square_index = ((to as i8) + 8 * ((color as i8) * 2 - 1)) as u8;
+                let enemy_pawn_square_index = to + 8 * (color * 2 - 1);
 
                 self.remove_piece(enemy_color, PAWN, enemy_pawn_square_index);
                 self.hash ^= self.zobrist.get_piece_hash(enemy_color, piece, enemy_pawn_square_index);
@@ -299,7 +299,7 @@ impl Board {
             self.pawn_hash ^= self.zobrist.get_piece_hash(color, KING, to);
         } else if piece == ROOK {
             match color {
-                WHITE => match from as usize {
+                WHITE => match from {
                     A1 => {
                         self.hash ^= self.zobrist.get_castling_right_hash(self.castling_rights, CastlingRights::WHITE_LONG_CASTLING);
                         self.castling_rights &= !CastlingRights::WHITE_LONG_CASTLING;
@@ -310,7 +310,7 @@ impl Board {
                     }
                     _ => {}
                 },
-                BLACK => match from as usize {
+                BLACK => match from {
                     A8 => {
                         self.hash ^= self.zobrist.get_castling_right_hash(self.castling_rights, CastlingRights::BLACK_LONG_CASTLING);
                         self.castling_rights &= !CastlingRights::BLACK_LONG_CASTLING;
@@ -327,12 +327,12 @@ impl Board {
 
         if self.captured_piece == ROOK {
             match enemy_color {
-                WHITE => match to as usize {
+                WHITE => match to {
                     A1 => self.castling_rights &= !CastlingRights::WHITE_LONG_CASTLING,
                     H1 => self.castling_rights &= !CastlingRights::WHITE_SHORT_CASTLING,
                     _ => {}
                 },
-                BLACK => match to as usize {
+                BLACK => match to {
                     A8 => self.castling_rights &= !CastlingRights::BLACK_LONG_CASTLING,
                     H8 => self.castling_rights &= !CastlingRights::BLACK_SHORT_CASTLING,
                     _ => {}
@@ -383,16 +383,16 @@ impl Board {
                 self.add_piece(enemy_color, self.captured_piece, to);
             }
             MoveFlags::SHORT_CASTLING => {
-                self.move_piece(color, KING, 1 + 56 * (color as u8), 3 + 56 * (color as u8));
-                self.move_piece(color, ROOK, 2 + 56 * (color as u8), 0 + 56 * (color as u8));
+                self.move_piece(color, KING, 1 + 56 * color, 3 + 56 * color);
+                self.move_piece(color, ROOK, 2 + 56 * color, 0 + 56 * color);
             }
             MoveFlags::LONG_CASTLING => {
-                self.move_piece(color, KING, 5 + 56 * (color as u8), 3 + 56 * (color as u8));
-                self.move_piece(color, ROOK, 4 + 56 * (color as u8), 7 + 56 * (color as u8));
+                self.move_piece(color, KING, 5 + 56 * color, 3 + 56 * color);
+                self.move_piece(color, ROOK, 4 + 56 * color, 7 + 56 * color);
             }
             MoveFlags::EN_PASSANT => {
                 self.move_piece(color, piece, to, from);
-                self.add_piece(enemy_color, PAWN, ((to as i8) + 8 * ((color as i8) * 2 - 1)) as u8);
+                self.add_piece(enemy_color, PAWN, to + 8 * (color * 2 - 1));
             }
             _ => {
                 self.add_piece(color, PAWN, from);
@@ -582,12 +582,12 @@ impl Board {
             return false;
         }
 
-        self.is_square_attacked(color, (self.pieces[color][KING]).bit_scan() as usize)
+        self.is_square_attacked(color, (self.pieces[color][KING]).bit_scan())
     }
 
     /// Gets piece on the square specified by `square_index`.
-    pub fn get_piece(&self, square_index: u8) -> usize {
-        let piece = self.piece_table[square_index as usize];
+    pub fn get_piece(&self, square_index: usize) -> usize {
+        let piece = self.piece_table[square_index];
         if piece == u8::MAX {
             return usize::MAX;
         }
@@ -596,8 +596,8 @@ impl Board {
     }
 
     /// Gets piece's color on the square specified by `square_index`. Returns `u8::MAX` if there is no piece there.
-    pub fn get_piece_color(&self, square_index: u8) -> usize {
-        let piece = self.piece_table[square_index as usize];
+    pub fn get_piece_color(&self, square_index: usize) -> usize {
+        let piece = self.piece_table[square_index];
         if piece == u8::MAX {
             return usize::MAX;
         }
@@ -610,10 +610,10 @@ impl Board {
     }
 
     /// Adds `piece` on the `square` with the specified `color`, also updates occupancy and incremental values.
-    pub fn add_piece(&mut self, color: usize, piece: usize, square: u8) {
+    pub fn add_piece(&mut self, color: usize, piece: usize, square: usize) {
         self.pieces[color][piece] |= 1u64 << square;
         self.occupancy[color] |= 1u64 << square;
-        self.piece_table[square as usize] = piece as u8;
+        self.piece_table[square] = piece as u8;
         self.material_scores[color] += self.evaluation_parameters.piece_value[piece];
         self.game_phase += self.evaluation_parameters.piece_phase_value[piece];
 
@@ -622,10 +622,10 @@ impl Board {
     }
 
     /// Removes `piece` on the `square` with the specified `color`, also updates occupancy and incremental values.
-    pub fn remove_piece(&mut self, color: usize, piece: usize, square: u8) {
+    pub fn remove_piece(&mut self, color: usize, piece: usize, square: usize) {
         self.pieces[color][piece] &= !(1u64 << square);
         self.occupancy[color] &= !(1u64 << square);
-        self.piece_table[square as usize] = u8::MAX;
+        self.piece_table[square] = u8::MAX;
         self.material_scores[color] -= self.evaluation_parameters.piece_value[piece];
         self.game_phase -= self.evaluation_parameters.piece_phase_value[piece];
 
@@ -634,12 +634,12 @@ impl Board {
     }
 
     /// Moves `piece` from the square specified by `from` to the square specified by `to` with the specified `color`, also updates occupancy and incremental values.
-    pub fn move_piece(&mut self, color: usize, piece: usize, from: u8, to: u8) {
+    pub fn move_piece(&mut self, color: usize, piece: usize, from: usize, to: usize) {
         self.pieces[color][piece] ^= (1u64 << from) | (1u64 << to);
         self.occupancy[color] ^= (1u64 << from) | (1u64 << to);
 
-        self.piece_table[to as usize] = self.piece_table[from as usize];
-        self.piece_table[from as usize] = u8::MAX;
+        self.piece_table[to] = self.piece_table[from];
+        self.piece_table[from] = u8::MAX;
 
         self.pst_scores[color][OPENING] -= self.evaluation_parameters.get_pst_value(color, piece, OPENING, from);
         self.pst_scores[color][ENDING] -= self.evaluation_parameters.get_pst_value(color, piece, ENDING, from);
@@ -845,7 +845,7 @@ impl Board {
 
     /// Gets pieces count by counting set bits in occupancy.
     pub fn get_pieces_count(&self) -> u8 {
-        (self.occupancy[WHITE] | self.occupancy[BLACK]).bit_count()
+        (self.occupancy[WHITE] | self.occupancy[BLACK]).bit_count() as u8
     }
 }
 

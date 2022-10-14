@@ -12,8 +12,8 @@ pub struct ZobristContainer {
 
 impl ZobristContainer {
     /// Gets `piece` hash with the `color` for the square specified by `square_index`.
-    pub fn get_piece_hash(&self, color: usize, piece: usize, square_index: u8) -> u64 {
-        self.piece_hashes[color][piece][square_index as usize]
+    pub fn get_piece_hash(&self, color: usize, piece: usize, square_index: usize) -> u64 {
+        self.piece_hashes[color][piece][square_index]
     }
 
     /// Gets castling right hash based on the `current` ones and the desired change specified by `right`.
@@ -22,12 +22,12 @@ impl ZobristContainer {
             return 0;
         }
 
-        self.castling_hashes[right.bit_scan() as usize]
+        self.castling_hashes[right.bit_scan()]
     }
 
     /// Gets en passant hash for the `file`.
-    pub fn get_en_passant_hash(&self, file: u8) -> u64 {
-        self.en_passant_hashes[file as usize]
+    pub fn get_en_passant_hash(&self, file: usize) -> u64 {
+        self.en_passant_hashes[file]
     }
 
     /// Gets active color hash.

@@ -42,7 +42,7 @@ impl SEEContainer {
             return 0;
         }
 
-        let attacking_piece_index = attackers.get_lsb().bit_scan() as usize;
+        let attacking_piece_index = attackers.get_lsb().bit_scan();
         let target_piece_index = self.get_see_piece_index(target_piece) as usize;
 
         self.evaluate_internal(attacking_piece_index, target_piece_index, attackers, defenders, evaluation_parameters)

@@ -470,7 +470,7 @@ fn assign_capture_scores(
             continue;
         }
 
-        let square = r#move.get_to() as usize;
+        let square = r#move.get_to();
         let attacking_piece = context.board.get_piece(r#move.get_from());
         let captured_piece = context.board.get_piece(r#move.get_to());
 
@@ -618,8 +618,8 @@ fn get_next_move<const DIAG: bool>(
                         let king_square_index = (context.board.pieces[context.board.active_color][KING]).bit_scan();
                         let occupancy = context.board.occupancy[WHITE] | context.board.occupancy[BLACK];
 
-                        let queen_moves = context.board.magic.get_queen_moves(occupancy, king_square_index as usize);
-                        let knight_moves = context.board.magic.get_knight_moves(king_square_index as usize, &context.board.patterns);
+                        let queen_moves = context.board.magic.get_queen_moves(occupancy, king_square_index);
+                        let knight_moves = context.board.magic.get_knight_moves(king_square_index, &context.board.patterns);
 
                         queen_moves | knight_moves
                     }

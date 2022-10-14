@@ -353,14 +353,14 @@ fn handle_magic() {
     println!("Generating magic numbers for rook...");
 
     for index in ALL_FIELDS {
-        println!("{},", magic.generate_rook_magic_number(index as usize));
+        println!("{},", magic.generate_rook_magic_number(index));
     }
 
     println!();
     println!("Generating magic numbers for bishop...");
 
     for index in ALL_FIELDS {
-        println!("{},", magic.generate_bishop_magic_number(index as usize));
+        println!("{},", magic.generate_bishop_magic_number(index));
     }
 
     let diff = now.elapsed().unwrap().as_millis();

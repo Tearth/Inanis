@@ -40,7 +40,7 @@ pub struct Move {
 
 impl Move {
     /// Constructs a new instance of [Move] with stored `from`, `to` and `flags`.
-    pub fn new(from: u8, to: u8, flags: u8) -> Self {
+    pub fn new(from: usize, to: usize, flags: u8) -> Self {
         Self { data: ((flags as u16) << 12) | ((to as u16) << 6) | (from as u16) }
     }
 
@@ -51,8 +51,8 @@ impl Move {
 
     /// Constructs a new instance of [Move] with random values, not restricted by chess rules.
     pub fn new_random() -> Self {
-        let from = rand::usize(ALL_FIELDS) as u8;
-        let to = rand::usize(ALL_FIELDS) as u8;
+        let from = rand::usize(ALL_FIELDS);
+        let to = rand::usize(ALL_FIELDS);
         let mut flags = MoveFlags::UNDEFINED1;
 
         loop {
@@ -67,13 +67,13 @@ impl Move {
     }
 
     /// Gets source square from the internal data.
-    pub fn get_from(&self) -> u8 {
-        (self.data & 0x3f) as u8
+    pub fn get_from(&self) -> usize {
+        (self.data & 0x3f) as usize
     }
 
     /// Gets destination square from the internal data.
-    pub fn get_to(&self) -> u8 {
-        ((self.data >> 6) & 0x3f) as u8
+    pub fn get_to(&self) -> usize {
+        ((self.data >> 6) & 0x3f) as usize
     }
 
     /// Gets flags from the internal data.
@@ -173,14 +173,14 @@ impl Move {
                     _ => panic!("Invalid value: board.active_color={}", board.active_color),
                 },
             },
-            KNIGHT => board.magic.get_knight_moves(from as usize, &board.patterns),
-            BISHOP => board.magic.get_bishop_moves(occupancy, from as usize),
-            ROOK => board.magic.get_rook_moves(occupancy, from as usize),
-            QUEEN => board.magic.get_queen_moves(occupancy, from as usize),
+            KNIGHT => board.magic.get_knight_moves(from, &board.patterns),
+            BISHOP => board.magic.get_bishop_moves(occupancy, from),
+            ROOK => board.magic.get_rook_moves(occupancy, from),
+            QUEEN => board.magic.get_queen_moves(occupancy, from),
             KING => match flags {
                 MoveFlags::SHORT_CASTLING => 1u64 << (from - 2),
                 MoveFlags::LONG_CASTLING => 1u64 << (from + 2),
-                _ => board.magic.get_king_moves(from as usize, &board.patterns),
+                _ => board.magic.get_king_moves(from, &board.patterns),
             },
             _ => panic!("Invalid value: fen={}, piece={}", board.to_fen(), piece),
         };
@@ -357,11 +357,11 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(
 
         let occupancy = board.occupancy[WHITE] | board.occupancy[BLACK];
         let mut piece_moves = match PIECE {
-            KNIGHT => board.magic.get_knight_moves(from_square_index as usize, &board.patterns),
-            BISHOP => board.magic.get_bishop_moves(occupancy, from_square_index as usize),
-            ROOK => board.magic.get_rook_moves(occupancy, from_square_index as usize),
-            QUEEN => board.magic.get_queen_moves(occupancy, from_square_index as usize),
-            KING => board.magic.get_king_moves(from_square_index as usize, &board.patterns),
+            KNIGHT => board.magic.get_knight_moves(from_square_index, &board.patterns),
+            BISHOP => board.magic.get_bishop_moves(occupancy, from_square_index),
+            ROOK => board.magic.get_rook_moves(occupancy, from_square_index),
+            QUEEN => board.magic.get_queen_moves(occupancy, from_square_index),
+            KING => board.magic.get_king_moves(from_square_index, &board.patterns),
             _ => panic!("Invalid parameter: fen={}, PIECE={}", board.to_fen(), PIECE),
         };
         piece_moves &= !board.occupancy[board.active_color] & evasion_mask;
@@ -390,7 +390,7 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(
                     let king_side_castling_rights = board.castling_rights.contains(CastlingRights::WHITE_SHORT_CASTLING);
                     if king_side_castling_rights && (occupancy & (F1_BB | G1_BB)) == 0 {
                         if !board.are_squares_attacked(board.active_color, &[E1, F1, G1]) {
-                            moves[index].write(Move::new(E1 as u8, G1 as u8, MoveFlags::SHORT_CASTLING));
+                            moves[index].write(Move::new(E1, G1, MoveFlags::SHORT_CASTLING));
                             index += 1;
                         }
                     }
@@ -398,7 +398,7 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(
                     let queen_side_castling_rights = board.castling_rights.contains(CastlingRights::WHITE_LONG_CASTLING);
                     if queen_side_castling_rights && (occupancy & (B1_BB | C1_BB | D1_BB)) == 0 {
                         if !board.are_squares_attacked(board.active_color, &[C1, D1, E1]) {
-                            moves[index].write(Move::new(E1 as u8, C1 as u8, MoveFlags::LONG_CASTLING));
+                            moves[index].write(Move::new(E1, C1, MoveFlags::LONG_CASTLING));
                             index += 1;
                         }
                     }
@@ -407,7 +407,7 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(
                     let king_side_castling_rights = board.castling_rights.contains(CastlingRights::BLACK_SHORT_CASTLING);
                     if king_side_castling_rights && (occupancy & (F8_BB | G8_BB)) == 0 {
                         if !board.are_squares_attacked(board.active_color, &[E8, F8, G8]) {
-                            moves[index].write(Move::new(E8 as u8, G8 as u8, MoveFlags::SHORT_CASTLING));
+                            moves[index].write(Move::new(E8, G8, MoveFlags::SHORT_CASTLING));
                             index += 1;
                         }
                     }
@@ -415,7 +415,7 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(
                     let queen_side_castling_rights = board.castling_rights.contains(CastlingRights::BLACK_LONG_CASTLING);
                     if queen_side_castling_rights && (occupancy & (B8_BB | C8_BB | D8_BB)) == 0 {
                         if !board.are_squares_attacked(board.active_color, &[C8, D8, E8]) {
-                            moves[index].write(Move::new(E8 as u8, C8 as u8, MoveFlags::LONG_CASTLING));
+                            moves[index].write(Move::new(E8, C8, MoveFlags::LONG_CASTLING));
                             index += 1;
                         }
                     }
@@ -436,7 +436,7 @@ pub fn get_piece_mobility<const PIECE: usize>(board: &Board, color: usize, dange
 
     let enemy_color = color ^ 1;
     let enemy_king_square = (board.pieces[enemy_color][KING]).bit_scan();
-    let enemy_king_box = board.patterns.get_box(enemy_king_square as usize);
+    let enemy_king_box = board.patterns.get_box(enemy_king_square);
 
     while pieces != 0 {
         let from_square = pieces.get_lsb();
@@ -452,11 +452,11 @@ pub fn get_piece_mobility<const PIECE: usize>(board: &Board, color: usize, dange
         };
 
         let mut piece_moves = match PIECE {
-            KNIGHT => board.magic.get_knight_moves(from_square_index as usize, &board.patterns),
-            BISHOP => board.magic.get_bishop_moves(occupancy, from_square_index as usize),
-            ROOK => board.magic.get_rook_moves(occupancy, from_square_index as usize),
-            QUEEN => board.magic.get_queen_moves(occupancy, from_square_index as usize),
-            KING => board.magic.get_king_moves(from_square_index as usize, &board.patterns),
+            KNIGHT => board.magic.get_knight_moves(from_square_index, &board.patterns),
+            BISHOP => board.magic.get_bishop_moves(occupancy, from_square_index),
+            ROOK => board.magic.get_rook_moves(occupancy, from_square_index),
+            QUEEN => board.magic.get_queen_moves(occupancy, from_square_index),
+            KING => board.magic.get_king_moves(from_square_index, &board.patterns),
             _ => panic!("Invalid parameter: fen={}, PIECE={}", board.to_fen(), PIECE),
         };
 
@@ -513,7 +513,7 @@ fn scan_pawn_moves_single_push(board: &Board, moves: &mut [MaybeUninit<Move>; en
     while target_squares != 0 {
         let to_square = target_squares.get_lsb();
         let to_square_index = to_square.bit_scan();
-        let from_square_index = ((to_square_index as i8) - shift) as u8;
+        let from_square_index = ((to_square_index as i8) - shift) as usize;
         target_squares = target_squares.pop_lsb();
 
         if (to_square & promotion_line) != 0 {
@@ -551,7 +551,7 @@ fn scan_pawn_moves_double_push(board: &Board, moves: &mut [MaybeUninit<Move>; en
     while target_squares != 0 {
         let to_square = target_squares.get_lsb();
         let to_square_index = to_square.bit_scan();
-        let from_square_index = ((to_square_index as i8) - shift) as u8;
+        let from_square_index = ((to_square_index as i8) - shift) as usize;
         target_squares = target_squares.pop_lsb();
 
         moves[index].write(Move::new(from_square_index, to_square_index, MoveFlags::DOUBLE_PUSH));
@@ -590,7 +590,7 @@ fn scan_pawn_moves_diagonal_attacks<const DIR: usize>(
     while target_squares != 0 {
         let to_square = target_squares.get_lsb();
         let to_square_index = to_square.bit_scan();
-        let from_square_index = ((to_square_index as i8) - signed_shift) as u8;
+        let from_square_index = ((to_square_index as i8) - signed_shift) as usize;
         target_squares = target_squares.pop_lsb();
 
         if (to_square & promotion_line) != 0 {

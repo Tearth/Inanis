@@ -77,13 +77,13 @@ impl EvaluationParameters {
         match color {
             WHITE => {
                 for square_index in ALL_FIELDS {
-                    array[square_index as usize] = pattern[(63 - square_index) as usize];
+                    array[square_index] = pattern[63 - square_index];
                 }
             }
             BLACK => {
                 for file in ALL_FILES {
                     for rank in ALL_RANKS {
-                        array[(file + rank * 8) as usize] = pattern[((7 - file) + rank * 8) as usize];
+                        array[file + rank * 8] = pattern[(7 - file) + rank * 8];
                     }
                 }
             }
@@ -94,8 +94,8 @@ impl EvaluationParameters {
     }
 
     /// Gets a PST value for the specified `color`, `piece`, `phase` and `square`.
-    pub fn get_pst_value(&self, color: usize, piece: usize, phase: usize, square: u8) -> i16 {
-        self.pst[color][piece][phase][square as usize] as i16
+    pub fn get_pst_value(&self, color: usize, piece: usize, phase: usize, square: usize) -> i16 {
+        self.pst[color][piece][phase][square] as i16
     }
 }
 

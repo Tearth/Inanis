@@ -264,7 +264,7 @@ impl MagicContainer {
             magic_number = rand::u64(..) & rand::u64(..) & rand::u64(..);
 
             for index in 0..count {
-                let hash = (permutations[index as usize].wrapping_mul(magic_number) >> (64 - shift)) as usize;
+                let hash = (permutations[index].wrapping_mul(magic_number) >> (64 - shift)) as usize;
 
                 if hashed_attacks[hash] == 0 || hashed_attacks[hash] == attacks[index] {
                     hashed_attacks[hash] = attacks[index];
@@ -427,8 +427,8 @@ impl Default for MagicContainer {
         let mut result = Self { rook_squares: [INIT; 64], bishop_squares: [INIT; 64] };
 
         for index in ALL_FIELDS {
-            result.apply_rook_magic(index as usize);
-            result.apply_bishop_magic(index as usize);
+            result.apply_rook_magic(index);
+            result.apply_bishop_magic(index);
         }
 
         result

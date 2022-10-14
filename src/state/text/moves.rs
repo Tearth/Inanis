@@ -40,9 +40,9 @@ impl Move {
         let mut moves: [MaybeUninit<Move>; engine::MAX_MOVES_COUNT] = [MaybeUninit::uninit(); engine::MAX_MOVES_COUNT];
         let moves_count = board.get_all_moves(&mut moves, u64::MAX);
 
-        let mut desired_to: Option<u8> = None;
-        let mut desired_file: Option<u8> = None;
-        let mut desired_rank: Option<u8> = None;
+        let mut desired_to: Option<usize> = None;
+        let mut desired_file: Option<usize> = None;
+        let mut desired_rank: Option<usize> = None;
         let mut desired_piece: Option<usize> = None;
         let mut desired_flags: Option<u8> = None;
         let mut desired_capture: Option<bool> = None;
@@ -86,7 +86,7 @@ impl Move {
                     let rank = chars.next().ok_or(format!("Invalid move, bad source rank: text={}", text))? as u8;
                     let to = (7 - (file - b'a')) + 8 * (rank - b'1');
 
-                    desired_to = Some(to);
+                    desired_to = Some(to as usize);
                     desired_piece = Some(PAWN);
                 }
                 // Nd5
@@ -98,7 +98,7 @@ impl Move {
                     let to = (7 - (file - b'a')) + 8 * (rank - b'1');
                     let piece_type = text::symbol_to_piece(piece)?;
 
-                    desired_to = Some(to);
+                    desired_to = Some(to as usize);
                     desired_piece = Some(piece_type);
                 }
                 // exf5, Rxf5, N3e4, Nde4
@@ -115,15 +115,15 @@ impl Move {
                         if piece_or_file.is_lowercase() {
                             let file_from = 7 - ((piece_or_file as u8) - b'a');
 
-                            desired_to = Some(to);
-                            desired_file = Some(file_from);
+                            desired_to = Some(to as usize);
+                            desired_file = Some(file_from as usize);
                             desired_piece = Some(PAWN);
                             desired_capture = Some(true);
                         // Rxf5
                         } else {
                             let piece_type = text::symbol_to_piece(piece_or_file)?;
 
-                            desired_to = Some(to);
+                            desired_to = Some(to as usize);
                             desired_piece = Some(piece_type);
                             desired_capture = Some(true);
                         }
@@ -132,18 +132,18 @@ impl Move {
                         let piece_type = text::symbol_to_piece(piece_or_file)?;
                         let rank_from = (capture_or_file_rank as u8) - b'1';
 
-                        desired_to = Some(to);
+                        desired_to = Some(to as usize);
                         desired_piece = Some(piece_type);
-                        desired_rank = Some(rank_from);
+                        desired_rank = Some(rank_from as usize);
                     }
                     // Nde4
                     else {
                         let file_from = 7 - ((capture_or_file_rank as u8) - b'a');
                         let piece_type = text::symbol_to_piece(piece_or_file)?;
 
-                        desired_to = Some(to);
+                        desired_to = Some(to as usize);
                         desired_piece = Some(piece_type);
-                        desired_file = Some(file_from);
+                        desired_file = Some(file_from as usize);
                     }
                 }
                 // R2xc2, Rexc2, Qd3c2
@@ -161,16 +161,16 @@ impl Move {
                         if file_or_rank.is_ascii_digit() {
                             let rank_from = (file_or_rank as u8) - b'1';
 
-                            desired_to = Some(to);
-                            desired_rank = Some(rank_from);
+                            desired_to = Some(to as usize);
+                            desired_rank = Some(rank_from as usize);
                             desired_piece = Some(piece_type);
                             desired_capture = Some(true);
                         // Rexc2
                         } else {
                             let file_from = 7 - ((file_or_rank as u8) - b'a');
 
-                            desired_to = Some(to);
-                            desired_file = Some(file_from);
+                            desired_to = Some(to as usize);
+                            desired_file = Some(file_from as usize);
                             desired_piece = Some(piece_type);
                             desired_capture = Some(true);
                         }
@@ -179,9 +179,9 @@ impl Move {
                         let file_from = 7 - ((file_or_rank as u8) - b'a');
                         let rank_from = (capture_or_rank as u8) - b'1';
 
-                        desired_to = Some(to);
-                        desired_file = Some(file_from);
-                        desired_rank = Some(rank_from);
+                        desired_to = Some(to as usize);
+                        desired_file = Some(file_from as usize);
+                        desired_rank = Some(rank_from as usize);
                         desired_piece = Some(piece_type);
                     }
                 }
@@ -199,9 +199,9 @@ impl Move {
                     let file_from = 7 - ((source_file as u8) - b'a');
                     let rank_from = (source_rank as u8) - b'1';
 
-                    desired_to = Some(to);
-                    desired_file = Some(file_from);
-                    desired_rank = Some(rank_from);
+                    desired_to = Some(to as usize);
+                    desired_file = Some(file_from as usize);
+                    desired_rank = Some(rank_from as usize);
                     desired_piece = Some(piece_type);
                     desired_capture = Some(true);
                 }
@@ -266,8 +266,8 @@ impl Move {
             }
         }
 
-        let from = (7 - (from_file - b'a')) + 8 * (from_rank - b'1');
-        let to = (7 - (to_file - b'a')) + 8 * (to_rank - b'1');
+        let from = ((7 - (from_file - b'a')) + 8 * (from_rank - b'1')) as usize;
+        let to = ((7 - (to_file - b'a')) + 8 * (to_rank - b'1')) as usize;
         let promotion_flags = match promotion {
             Some(promotion_piece) => {
                 let mut flags = match promotion_piece {
@@ -308,7 +308,12 @@ impl Move {
         let from = self.get_from();
         let to = self.get_to();
 
-        let mut result = vec![char::from(b'a' + (7 - from % 8)), char::from(b'1' + from / 8), char::from(b'a' + (7 - to % 8)), char::from(b'1' + to / 8)];
+        let mut result = vec![
+            char::from(b'a' + (7 - from % 8) as u8),
+            char::from(b'1' + (from / 8) as u8),
+            char::from(b'a' + (7 - to % 8) as u8),
+            char::from(b'1' + (to / 8) as u8),
+        ];
 
         let flags = self.get_flags();
         if flags.contains(MoveFlags::KNIGHT_PROMOTION) {

@@ -20,8 +20,8 @@ pub struct HistoryTableResult {
 
 impl HistoryTable {
     /// Increases `[from][to]` history slot value based on `depth`.
-    pub fn add(&self, from: u8, to: u8, depth: u8) {
-        let entry = &self.table[from as usize][to as usize];
+    pub fn add(&self, from: usize, to: usize, depth: u8) {
+        let entry = &self.table[from][to];
         let entry_data = entry.get_data();
         let updated_value = entry_data.value + (depth as u32).pow(2);
 
@@ -32,8 +32,8 @@ impl HistoryTable {
     }
 
     /// Gets `[from][to]` history slot value, relative to `max`.
-    pub fn get(&self, from: u8, to: u8, max: u8) -> u8 {
-        let entry = &self.table[from as usize][to as usize];
+    pub fn get(&self, from: usize, to: usize, max: u8) -> u8 {
+        let entry = &self.table[from][to];
         let entry_data = entry.get_data();
         let max_value = self.max.load(Ordering::Relaxed);
 

@@ -88,8 +88,8 @@ pub fn get_root_wdl_dtz(board: &Board) -> (bool, WdlResult, u32, Move) {
         let mut moves: [MaybeUninit<Move>; engine::MAX_MOVES_COUNT] = [MaybeUninit::uninit(); engine::MAX_MOVES_COUNT];
         let moves_count = board.get_all_moves(&mut moves, u64::MAX);
 
-        let from = ((result & TB_RESULT_FROM_MASK) >> TB_RESULT_FROM_SHIFT) as u8;
-        let to = ((result & TB_RESULT_TO_MASK) >> TB_RESULT_TO_SHIFT) as u8;
+        let from = ((result & TB_RESULT_FROM_MASK) >> TB_RESULT_FROM_SHIFT) as usize;
+        let to = ((result & TB_RESULT_TO_MASK) >> TB_RESULT_TO_SHIFT) as usize;
         let promotion = ((result & TB_RESULT_PROMOTES_MASK) >> TB_RESULT_PROMOTES_SHIFT);
 
         let promotion_flags = match promotion {
