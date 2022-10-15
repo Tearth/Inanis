@@ -475,17 +475,17 @@ fn assign_capture_scores(
         let captured_piece = context.board.get_piece(r#move.get_to());
 
         let attackers = if attackers_cache[square] != 0 {
-            attackers_cache[square]
+            attackers_cache[square] as usize
         } else {
-            attackers_cache[square] = context.board.get_attacking_pieces(context.board.active_color ^ 1, square);
-            attackers_cache[square]
+            attackers_cache[square] = context.board.get_attacking_pieces(context.board.active_color ^ 1, square) as u8;
+            attackers_cache[square] as usize
         };
 
         let defenders = if defenders_cache[square] != 0 {
-            defenders_cache[square]
+            defenders_cache[square] as usize
         } else {
-            defenders_cache[square] = context.board.get_attacking_pieces(context.board.active_color, square);
-            defenders_cache[square]
+            defenders_cache[square] = context.board.get_attacking_pieces(context.board.active_color, square) as u8;
+            defenders_cache[square] as usize
         };
 
         let see = context.board.see.get(attacking_piece, captured_piece, attackers, defenders, &context.board.evaluation_parameters);

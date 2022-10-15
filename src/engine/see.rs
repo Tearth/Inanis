@@ -17,7 +17,7 @@ impl SEEContainer {
         for target_piece in ALL_PIECES {
             for attackers in 0..256 {
                 for defenders in 0..256 {
-                    let see = result.evaluate(target_piece, attackers as u8, defenders as u8, &evaluation_parameters);
+                    let see = result.evaluate(target_piece, attackers, defenders, &evaluation_parameters);
                     result.table[target_piece][attackers][defenders] = see;
                 }
             }
@@ -27,23 +27,23 @@ impl SEEContainer {
     }
 
     /// Gets a result of the static exchange evaluation, based on `attacking_piece`, `target_piece`, `attackers` and `defenders`.
-    pub fn get(&self, attacking_piece: usize, target_piece: usize, attackers: u8, defenders: u8, evaluation_parameters: &EvaluationParameters) -> i16 {
+    pub fn get(&self, attacking_piece: usize, target_piece: usize, attackers: usize, defenders: usize, evaluation_parameters: &EvaluationParameters) -> i16 {
         let attacking_piece_index = self.get_see_piece_index(attacking_piece);
-        let target_piece_index = self.get_see_piece_index(target_piece) as usize;
+        let target_piece_index = self.get_see_piece_index(target_piece);
         let updated_attackers = attackers & !(1 << attacking_piece_index);
 
-        let see = self.table[attacking_piece][defenders as usize][updated_attackers as usize];
+        let see = self.table[attacking_piece][defenders][updated_attackers];
         self.get_piece_value(target_piece_index, evaluation_parameters) - see
     }
 
     /// Evaluates a static exchange evaluation result, based on `target_piece`, `attackers`, `defenders`.
-    fn evaluate(&self, target_piece: usize, attackers: u8, defenders: u8, evaluation_parameters: &EvaluationParameters) -> i16 {
+    fn evaluate(&self, target_piece: usize, attackers: usize, defenders: usize, evaluation_parameters: &EvaluationParameters) -> i16 {
         if attackers == 0 {
             return 0;
         }
 
         let attacking_piece_index = attackers.get_lsb().bit_scan();
-        let target_piece_index = self.get_see_piece_index(target_piece) as usize;
+        let target_piece_index = self.get_see_piece_index(target_piece);
 
         self.evaluate_internal(attacking_piece_index, target_piece_index, attackers, defenders, evaluation_parameters)
     }
@@ -53,8 +53,8 @@ impl SEEContainer {
         &self,
         attacking_piece: usize,
         target_piece: usize,
-        attackers: u8,
-        defenders: u8,
+        attackers: usize,
+        defenders: usize,
         evaluation_parameters: &EvaluationParameters,
     ) -> i16 {
         if attackers == 0 {
@@ -66,7 +66,7 @@ impl SEEContainer {
         let new_attacking_piece = match defenders {
             0 => 0,
             _ => defenders.get_lsb().bit_scan(),
-        } as usize;
+        };
 
         let see = self.evaluate_internal(new_attacking_piece, attacking_piece, defenders, new_attackers, evaluation_parameters);
         cmp::max(0, target_piece_value - see)
@@ -78,7 +78,7 @@ impl SEEContainer {
     ///  - 2 rooks (index 4-5)
     ///  - 1 queen (index 6)
     ///  - 1 king (index 7)
-    fn get_see_piece_index(&self, piece: usize) -> u8 {
+    fn get_see_piece_index(&self, piece: usize) -> usize {
         match piece {
             PAWN => 0,
             KNIGHT => 1,

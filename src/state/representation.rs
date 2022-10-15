@@ -525,7 +525,7 @@ impl Board {
     ///  - bit 4, 5 - Rook
     ///  - bit 6 - Queen
     ///  - bit 7 - King
-    pub fn get_attacking_pieces(&self, color: usize, square_index: usize) -> u8 {
+    pub fn get_attacking_pieces(&self, color: usize, square_index: usize) -> usize {
         let mut result = 0;
         let enemy_color = color ^ 1;
         let occupancy = self.occupancy[WHITE] | self.occupancy[BLACK];
@@ -535,11 +535,11 @@ impl Board {
         let bishops_queens = self.pieces[enemy_color][BISHOP] | self.pieces[enemy_color][QUEEN];
 
         let king_attacks = self.magic.get_king_moves(square_index, &self.patterns);
-        let attacking_kings_count = ((king_attacks & self.pieces[enemy_color][KING]) != 0) as u8;
+        let attacking_kings_count = ((king_attacks & self.pieces[enemy_color][KING]) != 0) as usize;
         result |= attacking_kings_count << 7;
 
         let queen_attacks = self.magic.get_queen_moves(occupancy & !bishops_rooks, square_index);
-        let attacking_queens_count = ((queen_attacks & self.pieces[enemy_color][QUEEN]) != 0) as u8;
+        let attacking_queens_count = ((queen_attacks & self.pieces[enemy_color][QUEEN]) != 0) as usize;
         result |= attacking_queens_count << 6;
 
         let rook_attacks = self.magic.get_rook_moves(occupancy & !rooks_queens, square_index);
@@ -570,7 +570,7 @@ impl Board {
             WHITE => square & ((potential_enemy_pawns >> 7) | (potential_enemy_pawns >> 9)),
             BLACK => square & ((potential_enemy_pawns << 7) | (potential_enemy_pawns << 9)),
             _ => panic!("Invalid parameter: fen={}, color={}", self.to_fen(), color),
-        } != 0) as u8;
+        } != 0) as usize;
 
         result |= attacking_pawns_count;
         result
