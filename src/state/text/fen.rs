@@ -161,12 +161,12 @@ fn fen_to_pieces(board: &mut Board, pieces: &str) -> Result<(), String> {
     let mut current_square_index = 63;
     for char in pieces.chars().filter(|&x| x != '/') {
         if char.is_ascii_digit() {
-            current_square_index -= char.to_digit(10).ok_or(format!("Invalid FEN, bad symbol: pieces={}", pieces))? as usize;
+            current_square_index -= char.to_digit(10).ok_or(format!("Invalid FEN, bad symbol: pieces={}", pieces))? as i32;
         } else {
             let color = if char.is_uppercase() { WHITE } else { BLACK };
             let piece = text::symbol_to_piece(char)?;
 
-            board.add_piece(color, piece, current_square_index);
+            board.add_piece(color, piece, current_square_index as usize);
             current_square_index -= 1;
         }
     }
