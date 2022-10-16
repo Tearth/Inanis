@@ -194,7 +194,7 @@ impl Move {
         if self.is_single_push() {
             if piece == PAWN {
                 // Pawn at promotion rank, but without proper flags
-                if ((1u64 << to) & 18374686479671623935) != 0 {
+                if ((1u64 << to) & (RANK_1_BB | RANK_8_BB)) != 0 {
                     return false;
                 }
 
@@ -263,7 +263,7 @@ impl Move {
             }
 
             // Castling can be performed only from the specific squares (e1 for white, e8 for black)
-            if (board.active_color == WHITE && from != 3) || (board.active_color == BLACK && from != 59) {
+            if (board.active_color == WHITE && from != E1) || (board.active_color == BLACK && from != E8) {
                 return false;
             }
 
@@ -307,13 +307,13 @@ impl Move {
 
             let castling_area = match flags {
                 MoveFlags::SHORT_CASTLING => match piece_color {
-                    WHITE => 6,
-                    BLACK => 432345564227567616,
+                    WHITE => F1_BB | G1_BB,
+                    BLACK => F8_BB | G8_BB,
                     _ => panic!("Invalid value: fen={}, piece_color={}", board.to_fen(), piece_color),
                 },
                 MoveFlags::LONG_CASTLING => match piece_color {
-                    WHITE => 112,
-                    BLACK => 8070450532247928832,
+                    WHITE => B1_BB | C1_BB | D1_BB,
+                    BLACK => B8_BB | C8_BB | D8_BB,
                     _ => panic!("Invalid value: fen={}, piece_color={}", board.to_fen(), piece_color),
                 },
                 _ => panic!("Invalid value: fen={}, flags={:?}", board.to_fen(), flags),
