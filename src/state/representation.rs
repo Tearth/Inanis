@@ -329,13 +329,25 @@ impl Board {
         if self.captured_piece == ROOK {
             match enemy_color {
                 WHITE => match to {
-                    A1 => self.castling_rights &= !CastlingRights::WHITE_LONG_CASTLING,
-                    H1 => self.castling_rights &= !CastlingRights::WHITE_SHORT_CASTLING,
+                    A1 => {
+                        self.hash ^= self.zobrist.get_castling_right_hash(self.castling_rights, CastlingRights::WHITE_LONG_CASTLING);
+                        self.castling_rights &= !CastlingRights::WHITE_LONG_CASTLING;
+                    }
+                    H1 => {
+                        self.hash ^= self.zobrist.get_castling_right_hash(self.castling_rights, CastlingRights::WHITE_SHORT_CASTLING);
+                        self.castling_rights &= !CastlingRights::WHITE_SHORT_CASTLING;
+                    }
                     _ => {}
                 },
                 BLACK => match to {
-                    A8 => self.castling_rights &= !CastlingRights::BLACK_LONG_CASTLING,
-                    H8 => self.castling_rights &= !CastlingRights::BLACK_SHORT_CASTLING,
+                    A8 => {
+                        self.hash ^= self.zobrist.get_castling_right_hash(self.castling_rights, CastlingRights::BLACK_LONG_CASTLING);
+                        self.castling_rights &= !CastlingRights::BLACK_LONG_CASTLING;
+                    }
+                    H8 => {
+                        self.hash ^= self.zobrist.get_castling_right_hash(self.castling_rights, CastlingRights::BLACK_SHORT_CASTLING);
+                        self.castling_rights &= !CastlingRights::BLACK_SHORT_CASTLING;
+                    }
                     _ => {}
                 },
                 _ => panic!("Invalid parameter: fen={}, color={}", self.to_fen(), color),
