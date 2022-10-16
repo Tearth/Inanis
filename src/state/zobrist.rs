@@ -11,9 +11,9 @@ pub struct ZobristContainer {
 }
 
 impl ZobristContainer {
-    /// Gets `piece` hash with the `color` for the square specified by `square_index`.
-    pub fn get_piece_hash(&self, color: usize, piece: usize, square_index: usize) -> u64 {
-        self.piece_hashes[color][piece][square_index]
+    /// Gets `piece` hash with the `color` for the square specified by `square`.
+    pub fn get_piece_hash(&self, color: usize, piece: usize, square: usize) -> u64 {
+        self.piece_hashes[color][piece][square]
     }
 
     /// Gets castling right hash based on the `current` ones and the desired change specified by `right`.
@@ -45,8 +45,8 @@ impl Default for ZobristContainer {
 
         for color in ALL_COLORS {
             for piece in ALL_PIECES {
-                for square_index in ALL_FIELDS {
-                    result.piece_hashes[color][piece][square_index] = rand::u64(..);
+                for square in ALL_SQUARES {
+                    result.piece_hashes[color][piece][square] = rand::u64(..);
                 }
             }
         }

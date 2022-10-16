@@ -12,9 +12,9 @@ mod board_tests {
 
                     for color in ALL_COLORS {
                         let mut result = 0u64;
-                        for square_index in ALL_FIELDS {
-                            if board.is_square_attacked(color, square_index) {
-                                result |= 1u64 << square_index;
+                        for square in ALL_SQUARES {
+                            if board.is_square_attacked(color, square) {
+                                result |= 1u64 << square;
                             }
                         }
 
@@ -40,12 +40,12 @@ mod board_tests {
     }
 
     macro_rules! get_attacking_pieces_tests {
-        ($($name:ident: $fen:expr, $color:expr, $square_index:expr, $expected_result:expr,)*) => {
+        ($($name:ident: $fen:expr, $color:expr, $square:expr, $expected_result:expr,)*) => {
             $(
                 #[test]
                 fn $name() {
                     let board = Board::new_from_fen($fen, None, None, None, None, None).unwrap();
-                    assert_eq!($expected_result, board.get_attacking_pieces($color, $square_index));
+                    assert_eq!($expected_result, board.get_attacking_pieces($color, $square));
                 }
             )*
         }

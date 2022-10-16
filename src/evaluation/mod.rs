@@ -76,8 +76,8 @@ impl EvaluationParameters {
 
         match color {
             WHITE => {
-                for square_index in ALL_FIELDS {
-                    array[square_index] = pattern[63 - square_index];
+                for square in ALL_SQUARES {
+                    array[square] = pattern[63 - square];
                 }
             }
             BLACK => {

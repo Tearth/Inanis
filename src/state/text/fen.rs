@@ -158,16 +158,16 @@ fn get_epd_parameter(mut epd: &str, name: &[&str]) -> Option<String> {
 
 /// Parses FEN's pieces and stores them into the `board`. Returns [Err] with the proper error message if `pieces` couldn't be parsed.
 fn fen_to_pieces(board: &mut Board, pieces: &str) -> Result<(), String> {
-    let mut current_square_index = 63;
+    let mut current_square = 63;
     for char in pieces.chars().filter(|&x| x != '/') {
         if char.is_ascii_digit() {
-            current_square_index -= char.to_digit(10).ok_or(format!("Invalid FEN, bad symbol: pieces={}", pieces))? as i32;
+            current_square -= char.to_digit(10).ok_or(format!("Invalid FEN, bad symbol: pieces={}", pieces))? as i32;
         } else {
             let color = if char.is_uppercase() { WHITE } else { BLACK };
             let piece = text::symbol_to_piece(char)?;
 
-            board.add_piece(color, piece, current_square_index as usize);
-            current_square_index -= 1;
+            board.add_piece(color, piece, current_square as usize);
+            current_square -= 1;
         }
     }
 
@@ -179,8 +179,8 @@ fn pieces_to_fen(board: &Board) -> String {
     let mut result = String::new();
     let mut squares_without_piece = 0;
 
-    for square_index in (ALL_FIELDS).rev() {
-        let piece = board.get_piece(square_index);
+    for square in (ALL_SQUARES).rev() {
+        let piece = board.get_piece(square);
         if piece == usize::MAX {
             squares_without_piece += 1;
         } else {
@@ -190,20 +190,20 @@ fn pieces_to_fen(board: &Board) -> String {
             }
 
             let mut piece_symbol = text::piece_to_symbol(piece).unwrap();
-            if (board.pieces[WHITE][piece] & (1u64 << square_index)) == 0 {
+            if (board.pieces[WHITE][piece] & (1u64 << square)) == 0 {
                 piece_symbol = piece_symbol.to_lowercase().collect::<Vec<char>>()[0];
             }
 
             result.push(piece_symbol);
         }
 
-        if (square_index % 8) == 0 {
+        if (square % 8) == 0 {
             if squares_without_piece != 0 {
                 result.push(char::from_digit(squares_without_piece, 10).unwrap());
                 squares_without_piece = 0;
             }
 
-            if square_index != 0 {
+            if square != 0 {
                 result.push('/');
             }
         }
@@ -289,8 +289,8 @@ fn fen_to_en_passant(board: &mut Board, en_passant: &str) -> Result<(), String> 
     let file = chars.next().ok_or(format!("Invalid FEN, bad en passant file: en_passant={}", en_passant))? as u8;
     let rank = chars.next().ok_or(format!("Invalid FEN, bad en passant rank: en_passant={}", en_passant))? as u8;
 
-    let square_index = (7 - (file - b'a')) + 8 * (rank - b'1');
-    board.en_passant = 1u64 << square_index;
+    let square = (7 - (file - b'a')) + 8 * (rank - b'1');
+    board.en_passant = 1u64 << square;
 
     Ok(())
 }
@@ -301,9 +301,9 @@ fn en_passant_to_fen(board: &Board) -> String {
         return "-".to_string();
     }
 
-    let square_index = board.en_passant.bit_scan();
-    let file = square_index % 8;
-    let rank = square_index / 8;
+    let square = board.en_passant.bit_scan();
+    let file = square % 8;
+    let rank = square / 8;
 
     let result = vec![char::from(b'a' + (7 - file) as u8), char::from(b'1' + rank as u8)];
     result.into_iter().collect()

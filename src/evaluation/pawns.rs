@@ -69,15 +69,15 @@ fn evaluate_color(board: &Board, color: usize) -> EvaluationResult {
 
     let mut pawns = board.pieces[color][PAWN];
     while pawns != 0 {
-        let square = pawns.get_lsb();
-        let square_index = square.bit_scan();
+        let square_bb = pawns.get_lsb();
+        let square = square_bb.bit_scan();
         pawns = pawns.pop_lsb();
 
-        chained_pawns += (board.patterns.get_star(square_index) & board.pieces[color][PAWN]).bit_count() as i16;
+        chained_pawns += (board.patterns.get_star(square) & board.pieces[color][PAWN]).bit_count() as i16;
 
-        let front = board.patterns.get_front(color, square_index);
+        let front = board.patterns.get_front(color, square);
         let enemy_pawns_ahead_count = (front & board.pieces[color ^ 1][PAWN]).bit_count();
-        let friendly_pawns_ahead_count = (front & board.patterns.get_file(square_index) & board.pieces[color][PAWN]).bit_count();
+        let friendly_pawns_ahead_count = (front & board.patterns.get_file(square) & board.pieces[color][PAWN]).bit_count();
 
         if enemy_pawns_ahead_count == 0 && friendly_pawns_ahead_count == 0 {
             passed_pawns += 1;

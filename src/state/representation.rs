@@ -256,11 +256,11 @@ impl Board {
                 self.pawn_hash ^= self.zobrist.get_piece_hash(color, piece, to);
 
                 let color_sign = (color as isize) * 2 - 1;
-                let enemy_pawn_square_index = ((to as isize) + 8 * color_sign) as usize;
+                let enemy_pawn_square = ((to as isize) + 8 * color_sign) as usize;
 
-                self.remove_piece(enemy_color, PAWN, enemy_pawn_square_index);
-                self.hash ^= self.zobrist.get_piece_hash(enemy_color, piece, enemy_pawn_square_index);
-                self.pawn_hash ^= self.zobrist.get_piece_hash(enemy_color, piece, enemy_pawn_square_index);
+                self.remove_piece(enemy_color, PAWN, enemy_pawn_square);
+                self.hash ^= self.zobrist.get_piece_hash(enemy_color, piece, enemy_pawn_square);
+                self.pawn_hash ^= self.zobrist.get_piece_hash(enemy_color, piece, enemy_pawn_square);
             }
             _ => {
                 let promotion_piece = r#move.get_promotion_piece();
@@ -405,10 +405,10 @@ impl Board {
             }
             MoveFlags::EN_PASSANT => {
                 let color_sign = (color as isize) * 2 - 1;
-                let enemy_pawn_square_index = ((to as isize) + 8 * color_sign) as usize;
+                let enemy_pawn_square = ((to as isize) + 8 * color_sign) as usize;
 
                 self.move_piece(color, piece, to, from);
-                self.add_piece(enemy_color, PAWN, enemy_pawn_square_index);
+                self.add_piece(enemy_color, PAWN, enemy_pawn_square);
             }
             _ => {
                 self.add_piece(color, PAWN, from);
@@ -486,36 +486,36 @@ impl Board {
         self.captured_piece = state.captured_piece;
     }
 
-    /// Checks if the square specified by `square_index` is attacked by enemy, from the `color` perspective.
-    pub fn is_square_attacked(&self, color: usize, square_index: usize) -> bool {
+    /// Checks if the square specified by `square` is attacked by enemy, from the `color` perspective.
+    pub fn is_square_attacked(&self, color: usize, square: usize) -> bool {
         let enemy_color = color ^ 1;
         let occupancy = self.occupancy[WHITE] | self.occupancy[BLACK];
 
-        let rook_queen_attacks = self.magic.get_rook_moves(occupancy, square_index);
+        let rook_queen_attacks = self.magic.get_rook_moves(occupancy, square);
         let enemy_rooks_queens = self.pieces[enemy_color][ROOK] | self.pieces[enemy_color][QUEEN];
         if (rook_queen_attacks & enemy_rooks_queens) != 0 {
             return true;
         }
 
-        let bishop_queen_attacks = self.magic.get_bishop_moves(occupancy, square_index);
+        let bishop_queen_attacks = self.magic.get_bishop_moves(occupancy, square);
         let enemy_bishops_queens = self.pieces[enemy_color][BISHOP] | self.pieces[enemy_color][QUEEN];
         if (bishop_queen_attacks & enemy_bishops_queens) != 0 {
             return true;
         }
 
-        let knight_attacks = self.magic.get_knight_moves(square_index, &self.patterns);
+        let knight_attacks = self.magic.get_knight_moves(square, &self.patterns);
         let enemy_knights = self.pieces[enemy_color][KNIGHT];
         if (knight_attacks & enemy_knights) != 0 {
             return true;
         }
 
-        let king_attacks = self.magic.get_king_moves(square_index, &self.patterns);
+        let king_attacks = self.magic.get_king_moves(square, &self.patterns);
         let enemy_kings = self.pieces[enemy_color][KING];
         if (king_attacks & enemy_kings) != 0 {
             return true;
         }
 
-        let square = 1u64 << square_index;
+        let square = 1u64 << square;
         let potential_enemy_pawns = king_attacks & self.pieces[enemy_color][PAWN];
         let attacking_enemy_pawns = match color {
             WHITE => square & ((potential_enemy_pawns >> 7) | (potential_enemy_pawns >> 9)),
@@ -530,9 +530,9 @@ impl Board {
         false
     }
 
-    /// Checks if any of the square specified by `square_indexes` list is attacked by enemy, from the `color` perspective.
-    pub fn are_squares_attacked(&self, color: usize, square_indexes: &[usize]) -> bool {
-        square_indexes.iter().any(|square_index| self.is_square_attacked(color, *square_index))
+    /// Checks if any of the square specified by `squares` list is attacked by enemy, from the `color` perspective.
+    pub fn are_squares_attacked(&self, color: usize, squares: &[usize]) -> bool {
+        squares.iter().any(|square| self.is_square_attacked(color, *square))
     }
 
     /// Gets a list of enemy pieces attacking a square specified by `squares_index`, from the `color` perspective. The encoding looks as follows:
@@ -541,7 +541,7 @@ impl Board {
     ///  - bit 4, 5 - Rook
     ///  - bit 6 - Queen
     ///  - bit 7 - King
-    pub fn get_attacking_pieces(&self, color: usize, square_index: usize) -> usize {
+    pub fn get_attacking_pieces(&self, color: usize, square: usize) -> usize {
         let mut result = 0;
         let enemy_color = color ^ 1;
         let occupancy = self.occupancy[WHITE] | self.occupancy[BLACK];
@@ -550,15 +550,15 @@ impl Board {
         let rooks_queens = self.pieces[enemy_color][ROOK] | self.pieces[enemy_color][QUEEN];
         let bishops_queens = self.pieces[enemy_color][BISHOP] | self.pieces[enemy_color][QUEEN];
 
-        let king_attacks = self.magic.get_king_moves(square_index, &self.patterns);
+        let king_attacks = self.magic.get_king_moves(square, &self.patterns);
         let attacking_kings_count = ((king_attacks & self.pieces[enemy_color][KING]) != 0) as usize;
         result |= attacking_kings_count << 7;
 
-        let queen_attacks = self.magic.get_queen_moves(occupancy & !bishops_rooks, square_index);
+        let queen_attacks = self.magic.get_queen_moves(occupancy & !bishops_rooks, square);
         let attacking_queens_count = ((queen_attacks & self.pieces[enemy_color][QUEEN]) != 0) as usize;
         result |= attacking_queens_count << 6;
 
-        let rook_attacks = self.magic.get_rook_moves(occupancy & !rooks_queens, square_index);
+        let rook_attacks = self.magic.get_rook_moves(occupancy & !rooks_queens, square);
         let attacking_rooks_count = (rook_attacks & self.pieces[enemy_color][ROOK]).bit_count();
 
         result |= match attacking_rooks_count {
@@ -567,9 +567,9 @@ impl Board {
             _ => 3 << 4,
         };
 
-        let knight_attacks = self.magic.get_knight_moves(square_index, &self.patterns);
+        let knight_attacks = self.magic.get_knight_moves(square, &self.patterns);
         let attacking_knights_count = (knight_attacks & self.pieces[enemy_color][KNIGHT]).bit_count();
-        let bishop_attacks = self.magic.get_bishop_moves(occupancy & !bishops_queens, square_index);
+        let bishop_attacks = self.magic.get_bishop_moves(occupancy & !bishops_queens, square);
         let attacking_bishops_count = (bishop_attacks & self.pieces[enemy_color][BISHOP]).bit_count();
         let attacking_knights_bishops_count = attacking_knights_count + attacking_bishops_count;
 
@@ -580,7 +580,7 @@ impl Board {
             _ => 7 << 1,
         };
 
-        let square = 1u64 << square_index;
+        let square = 1u64 << square;
         let potential_enemy_pawns = king_attacks & self.pieces[enemy_color][PAWN];
         let attacking_pawns_count = (match color {
             WHITE => square & ((potential_enemy_pawns >> 7) | (potential_enemy_pawns >> 9)),
@@ -601,9 +601,9 @@ impl Board {
         self.is_square_attacked(color, (self.pieces[color][KING]).bit_scan())
     }
 
-    /// Gets piece on the square specified by `square_index`.
-    pub fn get_piece(&self, square_index: usize) -> usize {
-        let piece = self.piece_table[square_index];
+    /// Gets piece on the square specified by `square`.
+    pub fn get_piece(&self, square: usize) -> usize {
+        let piece = self.piece_table[square];
         if piece == u8::MAX {
             return usize::MAX;
         }
@@ -611,14 +611,14 @@ impl Board {
         piece as usize
     }
 
-    /// Gets piece's color on the square specified by `square_index`. Returns `u8::MAX` if there is no piece there.
-    pub fn get_piece_color(&self, square_index: usize) -> usize {
-        let piece = self.piece_table[square_index];
+    /// Gets piece's color on the square specified by `square`. Returns `u8::MAX` if there is no piece there.
+    pub fn get_piece_color(&self, square: usize) -> usize {
+        let piece = self.piece_table[square];
         if piece == u8::MAX {
             return usize::MAX;
         }
 
-        if ((1u64 << square_index) & self.occupancy[WHITE]) != 0 {
+        if ((1u64 << square) & self.occupancy[WHITE]) != 0 {
             WHITE
         } else {
             BLACK
@@ -671,11 +671,11 @@ impl Board {
             for piece_index in ALL_PIECES {
                 let mut pieces = self.pieces[color][piece_index];
                 while pieces != 0 {
-                    let square = pieces.get_lsb();
-                    let square_index = square.bit_scan();
+                    let square_bb = pieces.get_lsb();
+                    let square = square_bb.bit_scan();
                     pieces = pieces.pop_lsb();
 
-                    hash ^= self.zobrist.get_piece_hash(color, piece_index, square_index);
+                    hash ^= self.zobrist.get_piece_hash(color, piece_index, square);
                 }
             }
         }
@@ -712,11 +712,11 @@ impl Board {
             for piece in [PAWN, KING] {
                 let mut pieces = self.pieces[color][piece];
                 while pieces != 0 {
-                    let square = pieces.get_lsb();
-                    let square_index = square.bit_scan();
+                    let square_bb = pieces.get_lsb();
+                    let square = square_bb.bit_scan();
                     pieces = pieces.pop_lsb();
 
-                    hash ^= self.zobrist.get_piece_hash(color, piece, square_index);
+                    hash ^= self.zobrist.get_piece_hash(color, piece, square);
                 }
             }
         }
@@ -849,7 +849,7 @@ impl Board {
 
                 if white_bishops != 0 && black_bishops != 0 {
                     let all_bishops = white_bishops | black_bishops;
-                    if (all_bishops & WHITE_FIELDS_BB) == all_bishops || (all_bishops & BLACK_FIELDS_BB) == all_bishops {
+                    if (all_bishops & WHITE_SQUARES_BB) == all_bishops || (all_bishops & BLACK_SQUARES_BB) == all_bishops {
                         return true;
                     }
                 }

@@ -615,11 +615,11 @@ fn get_next_move<const DIAG: bool>(
                     if context.board.pieces[context.board.active_color][KING] == 0 {
                         u64::MAX
                     } else {
-                        let king_square_index = (context.board.pieces[context.board.active_color][KING]).bit_scan();
+                        let king_square = (context.board.pieces[context.board.active_color][KING]).bit_scan();
                         let occupancy = context.board.occupancy[WHITE] | context.board.occupancy[BLACK];
 
-                        let queen_moves = context.board.magic.get_queen_moves(occupancy, king_square_index);
-                        let knight_moves = context.board.magic.get_knight_moves(king_square_index, &context.board.patterns);
+                        let queen_moves = context.board.magic.get_queen_moves(occupancy, king_square);
+                        let knight_moves = context.board.magic.get_knight_moves(king_square, &context.board.patterns);
 
                         queen_moves | knight_moves
                     }

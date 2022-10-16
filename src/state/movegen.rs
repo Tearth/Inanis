@@ -177,45 +177,45 @@ pub struct MagicSquare {
 }
 
 impl MagicContainer {
-    /// Gets a rook moves for the square specified by `square_index`, considering `occupancy`.
-    pub fn get_rook_moves(&self, mut occupancy: u64, square_index: usize) -> u64 {
-        occupancy &= self.rook_squares[square_index].mask;
-        occupancy = occupancy.wrapping_mul(self.rook_squares[square_index].magic);
-        occupancy >>= 64 - self.rook_squares[square_index].shift;
+    /// Gets a rook moves for the square specified by `square`, considering `occupancy`.
+    pub fn get_rook_moves(&self, mut occupancy: u64, square: usize) -> u64 {
+        occupancy &= self.rook_squares[square].mask;
+        occupancy = occupancy.wrapping_mul(self.rook_squares[square].magic);
+        occupancy >>= 64 - self.rook_squares[square].shift;
 
-        self.rook_squares[square_index].attacks[occupancy as usize]
+        self.rook_squares[square].attacks[occupancy as usize]
     }
 
-    /// Gets a bishop moves for the square specified by `square_index`, considering `occupancy`.
-    pub fn get_bishop_moves(&self, mut occupancy: u64, square_index: usize) -> u64 {
-        occupancy &= self.bishop_squares[square_index].mask;
-        occupancy = occupancy.wrapping_mul(self.bishop_squares[square_index].magic);
-        occupancy >>= 64 - self.bishop_squares[square_index].shift;
+    /// Gets a bishop moves for the square specified by `square`, considering `occupancy`.
+    pub fn get_bishop_moves(&self, mut occupancy: u64, square: usize) -> u64 {
+        occupancy &= self.bishop_squares[square].mask;
+        occupancy = occupancy.wrapping_mul(self.bishop_squares[square].magic);
+        occupancy >>= 64 - self.bishop_squares[square].shift;
 
-        self.bishop_squares[square_index].attacks[occupancy as usize]
+        self.bishop_squares[square].attacks[occupancy as usize]
     }
 
-    /// Gets a queen moves for the square specified by `square_index`, considering `occupancy`.
-    pub fn get_queen_moves(&self, occupancy: u64, square_index: usize) -> u64 {
-        self.get_rook_moves(occupancy, square_index) | self.get_bishop_moves(occupancy, square_index)
+    /// Gets a queen moves for the square specified by `square`, considering `occupancy`.
+    pub fn get_queen_moves(&self, occupancy: u64, square: usize) -> u64 {
+        self.get_rook_moves(occupancy, square) | self.get_bishop_moves(occupancy, square)
     }
 
-    /// Gets a knight moves for the square specified by `square_index`, without considering an occupancy.
-    pub fn get_knight_moves(&self, square_index: usize, patterns: &PatternsContainer) -> u64 {
-        patterns.get_jumps(square_index)
+    /// Gets a knight moves for the square specified by `square`, without considering an occupancy.
+    pub fn get_knight_moves(&self, square: usize, patterns: &PatternsContainer) -> u64 {
+        patterns.get_jumps(square)
     }
 
-    /// Gets a king moves for the square specified by `square_index`, without considering an occupancy.
-    pub fn get_king_moves(&self, square_index: usize, patterns: &PatternsContainer) -> u64 {
-        patterns.get_box(square_index)
+    /// Gets a king moves for the square specified by `square`, without considering an occupancy.
+    pub fn get_king_moves(&self, square: usize, patterns: &PatternsContainer) -> u64 {
+        patterns.get_box(square)
     }
 
-    /// Generates a rook magic number for the square specified by `square_index`.
-    pub fn generate_rook_magic_number(&self, square_index: usize) -> u64 {
+    /// Generates a rook magic number for the square specified by `square`.
+    pub fn generate_rook_magic_number(&self, square: usize) -> u64 {
         let patterns = Arc::new(PatternsContainer::default());
 
-        let shift = ROOK_SHIFTS[square_index];
-        let mask = self.get_rook_mask(square_index, &patterns);
+        let shift = ROOK_SHIFTS[square];
+        let mask = self.get_rook_mask(square, &patterns);
         let count = 1 << shift;
 
         let mut permutations = Vec::with_capacity(count as usize);
@@ -223,7 +223,7 @@ impl MagicContainer {
 
         for index in 0..count {
             let permutation = self.get_permutation(mask, index as u64);
-            let permutation_attacks = self.get_rook_attacks(permutation, square_index);
+            let permutation_attacks = self.get_rook_attacks(permutation, square);
 
             permutations.push(permutation);
             attacks.push(permutation_attacks);
@@ -232,12 +232,12 @@ impl MagicContainer {
         self.generate_magic_number(shift, &permutations, &attacks)
     }
 
-    /// Generates a bishop magic number for the square specified by `square_index`.
-    pub fn generate_bishop_magic_number(&self, square_index: usize) -> u64 {
+    /// Generates a bishop magic number for the square specified by `square`.
+    pub fn generate_bishop_magic_number(&self, square: usize) -> u64 {
         let patterns = Arc::new(PatternsContainer::default());
 
-        let shift = BISHOP_SHIFTS[square_index];
-        let mask = self.get_bishop_mask(square_index, &patterns);
+        let shift = BISHOP_SHIFTS[square];
+        let mask = self.get_bishop_mask(square, &patterns);
         let count = 1 << shift;
 
         let mut permutations = Vec::with_capacity(count as usize);
@@ -245,7 +245,7 @@ impl MagicContainer {
 
         for index in 0..count {
             let permutation = self.get_permutation(mask, index as u64);
-            let permutation_attacks = self.get_bishop_attacks(permutation, square_index);
+            let permutation_attacks = self.get_bishop_attacks(permutation, square);
 
             permutations.push(permutation);
             attacks.push(permutation_attacks);
@@ -286,12 +286,12 @@ impl MagicContainer {
         magic_number
     }
 
-    /// Applies rook magic for the square specified by `square_index`, using built-in magic number from [ROOK_MAGIC_NUMBERS].
-    fn apply_rook_magic(&mut self, square_index: usize) {
+    /// Applies rook magic for the square specified by `square`, using built-in magic number from [ROOK_MAGIC_NUMBERS].
+    fn apply_rook_magic(&mut self, square: usize) {
         let patterns = Arc::new(PatternsContainer::default());
 
-        let shift = ROOK_SHIFTS[square_index];
-        let mask = self.get_rook_mask(square_index, &patterns);
+        let shift = ROOK_SHIFTS[square];
+        let mask = self.get_rook_mask(square, &patterns);
         let count = 1 << shift;
 
         let mut permutations = Vec::with_capacity(count as usize);
@@ -301,22 +301,22 @@ impl MagicContainer {
             let permutation = self.get_permutation(mask, index as u64);
 
             permutations.push(permutation);
-            attacks.push(self.get_rook_attacks(permutation, square_index));
+            attacks.push(self.get_rook_attacks(permutation, square));
         }
 
-        let magic = ROOK_MAGIC_NUMBERS[square_index];
-        self.rook_squares[square_index].shift = shift;
-        self.rook_squares[square_index].mask = mask;
-        self.rook_squares[square_index].magic = magic;
-        self.rook_squares[square_index].attacks = self.apply_magic_for_square(&permutations, &attacks, magic, shift);
+        let magic = ROOK_MAGIC_NUMBERS[square];
+        self.rook_squares[square].shift = shift;
+        self.rook_squares[square].mask = mask;
+        self.rook_squares[square].magic = magic;
+        self.rook_squares[square].attacks = self.apply_magic_for_square(&permutations, &attacks, magic, shift);
     }
 
-    /// Applies bishop magic for the square specified by `square_index`, using built-in magic number from [BISHOP_MAGIC_NUMBERS].
-    fn apply_bishop_magic(&mut self, square_index: usize) {
+    /// Applies bishop magic for the square specified by `square`, using built-in magic number from [BISHOP_MAGIC_NUMBERS].
+    fn apply_bishop_magic(&mut self, square: usize) {
         let patterns = Arc::new(PatternsContainer::default());
 
-        let shift = BISHOP_SHIFTS[square_index];
-        let mask = self.get_bishop_mask(square_index, &patterns);
+        let shift = BISHOP_SHIFTS[square];
+        let mask = self.get_bishop_mask(square, &patterns);
         let count = 1 << shift;
 
         let mut permutations = Vec::with_capacity(count as usize);
@@ -326,14 +326,14 @@ impl MagicContainer {
             let permutation = self.get_permutation(mask, index as u64);
 
             permutations.push(permutation);
-            attacks.push(self.get_bishop_attacks(permutation, square_index));
+            attacks.push(self.get_bishop_attacks(permutation, square));
         }
 
-        let magic = BISHOP_MAGIC_NUMBERS[square_index];
-        self.bishop_squares[square_index].shift = shift;
-        self.bishop_squares[square_index].mask = mask;
-        self.bishop_squares[square_index].magic = magic;
-        self.bishop_squares[square_index].attacks = self.apply_magic_for_square(&permutations, &attacks, magic, shift);
+        let magic = BISHOP_MAGIC_NUMBERS[square];
+        self.bishop_squares[square].shift = shift;
+        self.bishop_squares[square].mask = mask;
+        self.bishop_squares[square].magic = magic;
+        self.bishop_squares[square].attacks = self.apply_magic_for_square(&permutations, &attacks, magic, shift);
     }
 
     /// Applies a magic number for a set of `permutations`, `attacks` and `square`.
@@ -369,41 +369,41 @@ impl MagicContainer {
         result
     }
 
-    /// Gets a rook mask for the square specified by `square_index`, without considering occupancy.
-    fn get_rook_mask(&self, square_index: usize, patterns: &PatternsContainer) -> u64 {
-        (patterns.get_file(square_index) & !RANK_1_BB & !RANK_8_BB) | (patterns.get_rank(square_index) & !FILE_A_BB & !FILE_H_BB)
+    /// Gets a rook mask for the square specified by `square`, without considering occupancy.
+    fn get_rook_mask(&self, square: usize, patterns: &PatternsContainer) -> u64 {
+        (patterns.get_file(square) & !RANK_1_BB & !RANK_8_BB) | (patterns.get_rank(square) & !FILE_A_BB & !FILE_H_BB)
     }
 
-    /// Gets a bishop mask for the square specified by `square_index`, without considering occupancy.
-    fn get_bishop_mask(&self, square_index: usize, patterns: &PatternsContainer) -> u64 {
-        patterns.get_diagonals(square_index) & !EDGE_BB
+    /// Gets a bishop mask for the square specified by `square`, without considering occupancy.
+    fn get_bishop_mask(&self, square: usize, patterns: &PatternsContainer) -> u64 {
+        patterns.get_diagonals(square) & !EDGE_BB
     }
 
-    /// Gets a rook attacks for the square specified by `square_index`, considering `occupancy`.
-    fn get_rook_attacks(&self, occupancy: u64, square_index: usize) -> u64 {
-        let left = self.get_attacks(occupancy, square_index, (-1, 0));
-        let right = self.get_attacks(occupancy, square_index, (1, 0));
-        let top = self.get_attacks(occupancy, square_index, (0, 1));
-        let down = self.get_attacks(occupancy, square_index, (0, -1));
+    /// Gets a rook attacks for the square specified by `square`, considering `occupancy`.
+    fn get_rook_attacks(&self, occupancy: u64, square: usize) -> u64 {
+        let left = self.get_attacks(occupancy, square, (-1, 0));
+        let right = self.get_attacks(occupancy, square, (1, 0));
+        let top = self.get_attacks(occupancy, square, (0, 1));
+        let down = self.get_attacks(occupancy, square, (0, -1));
 
         left | right | top | down
     }
 
-    /// Gets a bishop attacks for the square specified by `square_index`, occupancy `occupancy`.
-    fn get_bishop_attacks(&self, occupancy: u64, square_index: usize) -> u64 {
-        let top_right = self.get_attacks(occupancy, square_index, (1, 1));
-        let top_left = self.get_attacks(occupancy, square_index, (1, -1));
-        let down_right = self.get_attacks(occupancy, square_index, (-1, 1));
-        let down_left = self.get_attacks(occupancy, square_index, (-1, -1));
+    /// Gets a bishop attacks for the square specified by `square`, occupancy `occupancy`.
+    fn get_bishop_attacks(&self, occupancy: u64, square: usize) -> u64 {
+        let top_right = self.get_attacks(occupancy, square, (1, 1));
+        let top_left = self.get_attacks(occupancy, square, (1, -1));
+        let down_right = self.get_attacks(occupancy, square, (-1, 1));
+        let down_left = self.get_attacks(occupancy, square, (-1, -1));
 
         top_right | top_left | down_right | down_left
     }
 
     /// Helper function to get all possible to move squares, considering `occupancy`, starting from the square
-    /// specified by `square_index` and going into the `direction`.
-    fn get_attacks(&self, occupancy: u64, square_index: usize, direction: (isize, isize)) -> u64 {
+    /// specified by `square` and going into the `direction`.
+    fn get_attacks(&self, occupancy: u64, square: usize, direction: (isize, isize)) -> u64 {
         let mut result = 0u64;
-        let mut current = ((square_index as isize) % 8 + direction.0, (square_index as isize) / 8 + direction.1);
+        let mut current = ((square as isize) % 8 + direction.0, (square as isize) / 8 + direction.1);
 
         while current.0 >= 0 && current.0 <= 7 && current.1 >= 0 && current.1 <= 7 {
             result |= 1u64 << (current.0 + current.1 * 8);
@@ -426,7 +426,7 @@ impl Default for MagicContainer {
 
         let mut result = Self { rook_squares: [INIT; 64], bishop_squares: [INIT; 64] };
 
-        for index in ALL_FIELDS {
+        for index in ALL_SQUARES {
             result.apply_rook_magic(index);
             result.apply_bishop_magic(index);
         }

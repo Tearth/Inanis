@@ -25,8 +25,8 @@ pub const CENTER_BB: u64 = 0x3c3c3c3c0000;
 pub const OUTSIDE_BB: u64 = 0xffffc3c3c3c3ffff;
 pub const EDGE_BB: u64 = 0xff818181818181ff;
 
-pub const WHITE_FIELDS_BB: u64 = 0xaa55aa55aa55aa55;
-pub const BLACK_FIELDS_BB: u64 = 0x55aa55aa55aa55aa;
+pub const WHITE_SQUARES_BB: u64 = 0xaa55aa55aa55aa55;
+pub const BLACK_SQUARES_BB: u64 = 0x55aa55aa55aa55aa;
 
 pub const FILE_A_BB: u64 = 0x0101010101010101 << 7;
 pub const FILE_B_BB: u64 = 0x0101010101010101 << 6;
@@ -187,4 +187,4 @@ pub const ALL_PHASES: std::ops::RangeInclusive<usize> = 0..=1;
 pub const ALL_PIECES: std::ops::RangeInclusive<usize> = 0..=5;
 pub const ALL_FILES: std::ops::RangeInclusive<usize> = 0..=7;
 pub const ALL_RANKS: std::ops::RangeInclusive<usize> = 0..=7;
-pub const ALL_FIELDS: std::ops::RangeInclusive<usize> = 0..=63;
+pub const ALL_SQUARES: std::ops::RangeInclusive<usize> = 0..=63;
