@@ -255,7 +255,8 @@ impl Board {
                 self.pawn_hash ^= self.zobrist.get_piece_hash(color, piece, from);
                 self.pawn_hash ^= self.zobrist.get_piece_hash(color, piece, to);
 
-                let enemy_pawn_square_index = to + 8 * (color * 2 - 1);
+                let color_sign = (color as isize) * 2 - 1;
+                let enemy_pawn_square_index = ((to as isize) + 8 * color_sign) as usize;
 
                 self.remove_piece(enemy_color, PAWN, enemy_pawn_square_index);
                 self.hash ^= self.zobrist.get_piece_hash(enemy_color, piece, enemy_pawn_square_index);
@@ -391,8 +392,11 @@ impl Board {
                 self.move_piece(color, ROOK, 4 + 56 * color, 7 + 56 * color);
             }
             MoveFlags::EN_PASSANT => {
+                let color_sign = (color as isize) * 2 - 1;
+                let enemy_pawn_square_index = ((to as isize) + 8 * color_sign) as usize;
+
                 self.move_piece(color, piece, to, from);
-                self.add_piece(enemy_color, PAWN, to + 8 * (color * 2 - 1));
+                self.add_piece(enemy_color, PAWN, enemy_pawn_square_index);
             }
             _ => {
                 self.add_piece(color, PAWN, from);
