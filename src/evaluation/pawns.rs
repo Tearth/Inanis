@@ -46,14 +46,15 @@ pub fn evaluate_without_cache(board: &Board) -> EvaluationResult {
 
 /// Evaluates pawn structure on the `board` for the specified `color`.
 fn evaluate_color(board: &Board, color: usize) -> EvaluationResult {
-    let mut doubled_pawns = 0;
-    let mut isolated_pawns = 0;
-    let mut chained_pawns = 0;
-    let mut passed_pawns = 0;
-    let mut opened_files = 0;
+    let mut doubled_pawns = 0i16;
+    let mut isolated_pawns = 0i16;
+    let mut chained_pawns = 0i16;
+    let mut passed_pawns = 0i16;
+    let mut opened_files = 0i16;
+    let mut pawn_shield = 0i16;
 
     for file in ALL_FILES {
-        let pawns_on_file_count = (board.patterns.get_file(file) & board.pieces[color][PAWN]).bit_count();
+        let pawns_on_file_count = (board.patterns.get_file(file) & board.pieces[color][PAWN]).bit_count() as i16;
         if pawns_on_file_count > 1 {
             doubled_pawns += pawns_on_file_count;
         }
@@ -72,7 +73,7 @@ fn evaluate_color(board: &Board, color: usize) -> EvaluationResult {
         let square_index = square.bit_scan();
         pawns = pawns.pop_lsb();
 
-        chained_pawns += (board.patterns.get_star(square_index) & board.pieces[color][PAWN]).bit_count();
+        chained_pawns += (board.patterns.get_star(square_index) & board.pieces[color][PAWN]).bit_count() as i16;
 
         let front = board.patterns.get_front(color, square_index);
         let enemy_pawns_ahead_count = (front & board.pieces[color ^ 1][PAWN]).bit_count();
@@ -86,7 +87,7 @@ fn evaluate_color(board: &Board, color: usize) -> EvaluationResult {
     let king = board.pieces[color][KING];
     let king_square = king.bit_scan();
     let king_square_file = (king_square & 7) as i8;
-    let pawn_shield = (board.patterns.get_box(king_square) & board.pieces[color][PAWN]).bit_count();
+    pawn_shield = (board.patterns.get_box(king_square) & board.pieces[color][PAWN]).bit_count() as i16;
 
     for file in cmp::max(0, king_square_file - 1)..=(cmp::min(7, king_square_file + 1)) {
         if (board.patterns.get_file(file as usize) & board.pieces[color][PAWN]) == 0 {
@@ -95,19 +96,19 @@ fn evaluate_color(board: &Board, color: usize) -> EvaluationResult {
     }
 
     let opening_score = 0
-        + (doubled_pawns as i16) * board.evaluation_parameters.doubled_pawn_opening
-        + (isolated_pawns as i16) * board.evaluation_parameters.isolated_pawn_opening
-        + (chained_pawns as i16) * board.evaluation_parameters.chained_pawn_opening
-        + (passed_pawns as i16) * board.evaluation_parameters.passed_pawn_opening
-        + (pawn_shield as i16) * board.evaluation_parameters.pawn_shield_opening
-        + (opened_files as i16) * board.evaluation_parameters.pawn_shield_open_file_opening;
+        + doubled_pawns * board.evaluation_parameters.doubled_pawn_opening
+        + isolated_pawns * board.evaluation_parameters.isolated_pawn_opening
+        + chained_pawns * board.evaluation_parameters.chained_pawn_opening
+        + passed_pawns * board.evaluation_parameters.passed_pawn_opening
+        + pawn_shield * board.evaluation_parameters.pawn_shield_opening
+        + opened_files * board.evaluation_parameters.pawn_shield_open_file_opening;
     let ending_score = 0
-        + (doubled_pawns as i16) * board.evaluation_parameters.doubled_pawn_ending
-        + (isolated_pawns as i16) * board.evaluation_parameters.isolated_pawn_ending
-        + (chained_pawns as i16) * board.evaluation_parameters.chained_pawn_ending
-        + (passed_pawns as i16) * board.evaluation_parameters.passed_pawn_ending
-        + (pawn_shield as i16) * board.evaluation_parameters.pawn_shield_ending
-        + (opened_files as i16) * board.evaluation_parameters.pawn_shield_open_file_ending;
+        + doubled_pawns * board.evaluation_parameters.doubled_pawn_ending
+        + isolated_pawns * board.evaluation_parameters.isolated_pawn_ending
+        + chained_pawns * board.evaluation_parameters.chained_pawn_ending
+        + passed_pawns * board.evaluation_parameters.passed_pawn_ending
+        + pawn_shield * board.evaluation_parameters.pawn_shield_ending
+        + opened_files * board.evaluation_parameters.pawn_shield_open_file_ending;
 
     EvaluationResult::new(opening_score, ending_score)
 }
