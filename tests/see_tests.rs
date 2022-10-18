@@ -40,7 +40,7 @@ mod see_tests {
                             let attackers = board.get_attacking_pieces(board.active_color ^ 1, r#move.get_to());
                             let defenders = board.get_attacking_pieces(board.active_color, r#move.get_to());
 
-                            assert_eq!($expected_result, see.get(attacking_piece, target_piece, attackers, defenders, &evaluation_parameters.clone()));
+                            assert_eq!($expected_result, see.get(attacking_piece, target_piece, attackers, defenders));
                             return;
                         }
                     }

@@ -21,7 +21,6 @@ fn see_benchmark(criterion: &mut Criterion) {
                 criterion::black_box(captured_piece),
                 criterion::black_box(attackers),
                 criterion::black_box(defenders),
-                criterion::black_box(&board.evaluation_parameters),
             );
         })
     });

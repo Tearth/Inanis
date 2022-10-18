@@ -132,8 +132,7 @@ fn assign_move_scores(
                 defenders_cache[square] as usize
             };
 
-            let see = context.board.see.get(attacking_piece, captured_piece, attackers, defenders, &context.board.evaluation_parameters);
-            move_scores[move_index].write(see);
+            move_scores[move_index].write(context.board.see.get(attacking_piece, captured_piece, attackers, defenders));
         }
     }
 }
