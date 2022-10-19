@@ -2,7 +2,6 @@ use super::*;
 use crate::cache::perft::PerftHashTable;
 use crate::engine;
 use crate::perft::context::PerftContext;
-use crate::state::movescan::Move;
 use crate::state::representation::Board;
 use std::mem::MaybeUninit;
 use std::sync::Arc;
@@ -17,7 +16,7 @@ pub fn run(depth: i32, board: &mut Board, hashtable_size: usize, threads_count: 
     let hashtable = Arc::new(PerftHashTable::new(hashtable_size));
     let mut threads = Vec::new();
 
-    let mut moves: [MaybeUninit<Move>; engine::MAX_MOVES_COUNT] = [MaybeUninit::uninit(); engine::MAX_MOVES_COUNT];
+    let mut moves = [MaybeUninit::uninit(); engine::MAX_MOVES_COUNT];
     let moves_count = board.get_all_moves(&mut moves, u64::MAX);
 
     for r#move in &moves[0..moves_count] {

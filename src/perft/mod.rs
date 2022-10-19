@@ -1,6 +1,5 @@
 use self::context::PerftContext;
 use crate::engine;
-use crate::state::movescan::Move;
 use crate::state::*;
 use std::mem::MaybeUninit;
 use std::u64;
@@ -60,7 +59,7 @@ pub fn run_internal(context: &mut PerftContext, depth: i32) -> u64 {
         }
     }
 
-    let mut moves: [MaybeUninit<Move>; engine::MAX_MOVES_COUNT] = [MaybeUninit::uninit(); engine::MAX_MOVES_COUNT];
+    let mut moves = [MaybeUninit::uninit(); engine::MAX_MOVES_COUNT];
     let moves_count = context.board.get_all_moves(&mut moves, u64::MAX);
 
     let mut count = 0;

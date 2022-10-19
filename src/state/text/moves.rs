@@ -37,7 +37,7 @@ impl Move {
     /// Converts short-notated move (e4, Rc8, Qxb6) in `text` into the [Move] instance, using the `board` as context.
     /// Returns [Err] with the proper message if `text` couldn't be parsed correctly.
     pub fn from_short_notation(mut text: &str, board: &mut Board) -> Result<Move, String> {
-        let mut moves: [MaybeUninit<Move>; engine::MAX_MOVES_COUNT] = [MaybeUninit::uninit(); engine::MAX_MOVES_COUNT];
+        let mut moves = [MaybeUninit::uninit(); engine::MAX_MOVES_COUNT];
         let moves_count = board.get_all_moves(&mut moves, u64::MAX);
 
         let mut desired_to: Option<usize> = None;
@@ -287,7 +287,7 @@ impl Move {
             None => MoveFlags::SINGLE_PUSH,
         };
 
-        let mut moves: [MaybeUninit<Move>; engine::MAX_MOVES_COUNT] = [MaybeUninit::uninit(); engine::MAX_MOVES_COUNT];
+        let mut moves = [MaybeUninit::uninit(); engine::MAX_MOVES_COUNT];
         let moves_count = board.get_all_moves(&mut moves, u64::MAX);
 
         for r#move in &moves[0..moves_count] {

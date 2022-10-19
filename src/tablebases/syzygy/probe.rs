@@ -85,7 +85,7 @@ pub fn get_root_wdl_dtz(board: &Board) -> (bool, WdlResult, u32, Move) {
             return (false, wdl, dtz, Default::default());
         }
 
-        let mut moves: [MaybeUninit<Move>; engine::MAX_MOVES_COUNT] = [MaybeUninit::uninit(); engine::MAX_MOVES_COUNT];
+        let mut moves = [MaybeUninit::uninit(); engine::MAX_MOVES_COUNT];
         let moves_count = board.get_all_moves(&mut moves, u64::MAX);
 
         let from = ((result & TB_RESULT_FROM_MASK) >> TB_RESULT_FROM_SHIFT) as usize;

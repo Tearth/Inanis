@@ -203,7 +203,7 @@ impl SearchContext {
             return None;
         }
 
-        let mut moves: [MaybeUninit<Move>; MAX_MOVES_COUNT] = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
+        let mut moves = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
         let moves_count = self.board.get_all_moves(&mut moves, u64::MAX);
 
         let mut evading_moves_count = 0;

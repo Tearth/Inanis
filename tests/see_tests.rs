@@ -3,9 +3,9 @@
 #[cfg(test)]
 mod see_tests {
     use crate::see_tests::see::SEEContainer;
+    use inanis::engine;
     use inanis::engine::see;
     use inanis::evaluation::EvaluationParameters;
-    use inanis::state::movescan::Move;
     use inanis::state::representation::Board;
     use std::mem::MaybeUninit;
     use std::sync::Arc;
@@ -28,7 +28,7 @@ mod see_tests {
                     let evaluation_parameters = Arc::new(evaluation_parameters);
                     let board = Board::new_from_fen($fen, Some(evaluation_parameters.clone()), None, None, None, None).unwrap();
 
-                    let mut moves: [MaybeUninit<Move>; 218] = [MaybeUninit::uninit(); 218];
+                    let mut moves = [MaybeUninit::uninit(); engine::MAX_MOVES_COUNT];
                     let moves_count = board.get_all_moves(&mut moves, u64::MAX);
 
                     let see = SEEContainer::new(Some(evaluation_parameters.clone()));
