@@ -6,6 +6,8 @@ use crate::utils::bitflags::BitFlags;
 use crate::utils::bithelpers::BitHelpers;
 use crate::utils::rand;
 use std::cmp;
+use std::fmt::Display;
+use std::fmt::Formatter;
 use std::mem::MaybeUninit;
 
 #[allow(non_snake_case)]
@@ -182,7 +184,7 @@ impl Move {
                 MoveFlags::LONG_CASTLING => 1u64 << (from + 2),
                 _ => board.magic.get_king_moves(from, &board.patterns),
             },
-            _ => panic!("Invalid value: fen={}, piece={}", board.to_fen(), piece),
+            _ => panic!("Invalid value: fen={}, piece={}", board, piece),
         };
 
         // Target square must be valid in this position
@@ -271,14 +273,14 @@ impl Move {
                 MoveFlags::SHORT_CASTLING => match piece_color {
                     WHITE => CastlingRights::WHITE_SHORT_CASTLING,
                     BLACK => CastlingRights::BLACK_SHORT_CASTLING,
-                    _ => panic!("Invalid value: fen={}, piece_color={}", board.to_fen(), piece_color),
+                    _ => panic!("Invalid value: fen={}, piece_color={}", board, piece_color),
                 },
                 MoveFlags::LONG_CASTLING => match piece_color {
                     WHITE => CastlingRights::WHITE_LONG_CASTLING,
                     BLACK => CastlingRights::BLACK_LONG_CASTLING,
-                    _ => panic!("Invalid value: fen={}, piece_color={}", board.to_fen(), piece_color),
+                    _ => panic!("Invalid value: fen={}, piece_color={}", board, piece_color),
                 },
-                _ => panic!("Invalid value: fen={}, flags={:?}", board.to_fen(), flags),
+                _ => panic!("Invalid value: fen={}, flags={:?}", board, flags),
             };
 
             // There must be a proper castling right to perform it
@@ -290,14 +292,14 @@ impl Move {
                 MoveFlags::SHORT_CASTLING => match piece_color {
                     WHITE => H1_BB,
                     BLACK => H8_BB,
-                    _ => panic!("Invalid value: fen={}, piece_color={}", board.to_fen(), piece_color),
+                    _ => panic!("Invalid value: fen={}, piece_color={}", board, piece_color),
                 },
                 MoveFlags::LONG_CASTLING => match piece_color {
                     WHITE => A1_BB,
                     BLACK => A8_BB,
-                    _ => panic!("Invalid value: fen={}, piece_color={}", board.to_fen(), piece_color),
+                    _ => panic!("Invalid value: fen={}, piece_color={}", board, piece_color),
                 },
-                _ => panic!("Invalid value: fen={}, flags={:?}", board.to_fen(), flags),
+                _ => panic!("Invalid value: fen={}, flags={:?}", board, flags),
             };
 
             // There must be a rook on the specific square
@@ -309,14 +311,14 @@ impl Move {
                 MoveFlags::SHORT_CASTLING => match piece_color {
                     WHITE => F1_BB | G1_BB,
                     BLACK => F8_BB | G8_BB,
-                    _ => panic!("Invalid value: fen={}, piece_color={}", board.to_fen(), piece_color),
+                    _ => panic!("Invalid value: fen={}, piece_color={}", board, piece_color),
                 },
                 MoveFlags::LONG_CASTLING => match piece_color {
                     WHITE => B1_BB | C1_BB | D1_BB,
                     BLACK => B8_BB | C8_BB | D8_BB,
-                    _ => panic!("Invalid value: fen={}, piece_color={}", board.to_fen(), piece_color),
+                    _ => panic!("Invalid value: fen={}, piece_color={}", board, piece_color),
                 },
-                _ => panic!("Invalid value: fen={}, flags={:?}", board.to_fen(), flags),
+                _ => panic!("Invalid value: fen={}, flags={:?}", board, flags),
             };
 
             // There must be a free space for castling
@@ -326,7 +328,7 @@ impl Move {
 
             true
         } else {
-            panic!("Move legality check failed: fen={}, self.data={}", board.to_fen(), self.data);
+            panic!("Move legality check failed: fen={}, self.data={}", board, self.data);
         }
     }
 }
@@ -335,6 +337,12 @@ impl Default for Move {
     /// Constructs a new instance of [Move] with zeroed values.
     fn default() -> Self {
         Move::new(0, 0, MoveFlags::SINGLE_PUSH)
+    }
+}
+
+impl Display for Move {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.to_long_notation())
     }
 }
 
@@ -362,7 +370,7 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(
             ROOK => board.magic.get_rook_moves(occupancy, from_square),
             QUEEN => board.magic.get_queen_moves(occupancy, from_square),
             KING => board.magic.get_king_moves(from_square, &board.patterns),
-            _ => panic!("Invalid parameter: fen={}, PIECE={}", board.to_fen(), PIECE),
+            _ => panic!("Invalid parameter: fen={}, PIECE={}", board, PIECE),
         };
         piece_moves &= !board.occupancy[board.active_color] & evasion_mask;
 
@@ -457,7 +465,7 @@ pub fn get_piece_mobility<const PIECE: usize>(board: &Board, color: usize, dange
             ROOK => board.magic.get_rook_moves(occupancy, from_square),
             QUEEN => board.magic.get_queen_moves(occupancy, from_square),
             KING => board.magic.get_king_moves(from_square, &board.patterns),
-            _ => panic!("Invalid parameter: fen={}, PIECE={}", board.to_fen(), PIECE),
+            _ => panic!("Invalid parameter: fen={}, PIECE={}", board, PIECE),
         };
 
         *dangered_king_squares += (enemy_king_box & (piece_moves | from_square_bb)).bit_count() as u32;

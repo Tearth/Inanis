@@ -547,7 +547,7 @@ fn assign_quiet_scores(
                 ROOK => MOVE_ORDERING_ROOK_PROMOTION,
                 BISHOP => MOVE_ORDERING_BISHOP_PROMOTION,
                 KNIGHT => MOVE_ORDERING_KNIGHT_PROMOTION,
-                _ => panic!("Invalid value: fen={}, r#move.data={}", context.board.to_fen(), r#move.data),
+                _ => panic!("Invalid value: fen={}, r#move.data={}", context.board, r#move.data),
             });
 
             continue;
@@ -556,7 +556,7 @@ fn assign_quiet_scores(
             continue;
         }
 
-        panic!("Sorting rule missing: fen={}, r#move.data={}", context.board.to_fen(), r#move.data);
+        panic!("Sorting rule missing: fen={}, r#move.data={}", context.board, r#move.data);
     }
 }
 

@@ -20,31 +20,19 @@ pub fn run_internal(context: &mut PerftContext, depth: i32) -> u64 {
         context.board.recalculate_incremental_values();
 
         if original_hash != context.board.hash {
-            panic!(
-                "Integrity check failed, invalid hash: fen={}, original_hash={}, context.board.hash={}",
-                context.board.to_fen(),
-                original_hash,
-                context.board.hash
-            );
+            panic!("Integrity check failed, invalid hash: fen={}, original_hash={}, context.board.hash={}", context.board, original_hash, context.board.hash);
         }
 
         if original_pawn_hash != context.board.pawn_hash {
             panic!(
                 "Integrity check failed, invalid pawn hash: fen={}, original_pawn_hash={}, context.board.pawn_hash={}",
-                context.board.to_fen(),
-                original_pawn_hash,
-                context.board.pawn_hash
+                context.board, original_pawn_hash, context.board.pawn_hash
             );
         }
 
         let evaluation = context.board.evaluate_without_cache(WHITE);
         if original_evaluation != evaluation {
-            panic!(
-                "Integrity check failed, invalid evaluation: fen={}, original_evaluation={}, evaluation={}",
-                context.board.to_fen(),
-                original_evaluation,
-                evaluation
-            )
+            panic!("Integrity check failed, invalid evaluation: fen={}, original_evaluation={}, evaluation={}", context.board, original_evaluation, evaluation)
         }
     }
 
@@ -65,7 +53,7 @@ pub fn run_internal(context: &mut PerftContext, depth: i32) -> u64 {
     for r#move in &moves[0..moves_count] {
         let r#move = unsafe { r#move.assume_init() };
         if context.check_integrity && !r#move.is_legal(context.board) {
-            panic!("Integrity check failed, illegal move: fen={}, r#move.data={}", context.board.to_fen(), r#move.data);
+            panic!("Integrity check failed, illegal move: fen={}, r#move.data={}", context.board, r#move.data);
         }
 
         context.board.make_move(r#move);

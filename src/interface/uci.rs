@@ -395,9 +395,9 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
         }
 
         if ponder && ponder_move != Default::default() {
-            println!("bestmove {} ponder {}", best_move.to_long_notation(), ponder_move.to_long_notation());
+            println!("bestmove {} ponder {}", best_move, ponder_move);
         } else {
-            println!("bestmove {}", best_move.to_long_notation());
+            println!("bestmove {}", best_move);
         }
 
         let state_lock = state_arc.lock().unwrap();

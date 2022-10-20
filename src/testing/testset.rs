@@ -143,8 +143,8 @@ fn run_internal(context: &mut TestContext, depth: i8, transposition_table_size: 
                             index_to_display + 1,
                             positions_count,
                             position.id,
-                            position.best_move.to_long_notation(),
-                            last_best_move.to_long_notation()
+                            position.best_move,
+                            last_best_move
                         );
                         failed_tests_arc.fetch_add(1, Ordering::Relaxed);
                     }

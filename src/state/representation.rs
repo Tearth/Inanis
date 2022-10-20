@@ -19,6 +19,8 @@ use crate::evaluation::EvaluationParameters;
 use crate::tablebases;
 use crate::utils::bitflags::BitFlags;
 use crate::utils::bithelpers::BitHelpers;
+use std::fmt::Display;
+use std::fmt::Formatter;
 use std::mem::MaybeUninit;
 use std::sync::Arc;
 
@@ -327,7 +329,7 @@ impl Board {
 
                     !CastlingRights::BLACK_CASTLING
                 }
-                _ => panic!("Invalid parameter: fen={}, color={}", self.to_fen(), color),
+                _ => panic!("Invalid parameter: fen={}, color={}", self, color),
             };
 
             self.pawn_hash ^= self.zobrist.get_piece_hash(color, KING, from);
@@ -356,7 +358,7 @@ impl Board {
                     }
                     _ => {}
                 },
-                _ => panic!("Invalid parameter: fen={}, color={}", self.to_fen(), color),
+                _ => panic!("Invalid parameter: fen={}, color={}", self, color),
             }
         }
 
@@ -384,7 +386,7 @@ impl Board {
                     }
                     _ => {}
                 },
-                _ => panic!("Invalid parameter: fen={}, color={}", self.to_fen(), color),
+                _ => panic!("Invalid parameter: fen={}, color={}", self, color),
             }
         }
 
@@ -554,7 +556,7 @@ impl Board {
         let attacking_enemy_pawns = match color {
             WHITE => square & ((potential_enemy_pawns >> 7) | (potential_enemy_pawns >> 9)),
             BLACK => square & ((potential_enemy_pawns << 7) | (potential_enemy_pawns << 9)),
-            _ => panic!("Invalid parameter: fen={}, color={}", self.to_fen(), color),
+            _ => panic!("Invalid parameter: fen={}, color={}", self, color),
         };
 
         if attacking_enemy_pawns != 0 {
@@ -619,7 +621,7 @@ impl Board {
         let attacking_pawns_count = (match color {
             WHITE => square & ((potential_enemy_pawns >> 7) | (potential_enemy_pawns >> 9)),
             BLACK => square & ((potential_enemy_pawns << 7) | (potential_enemy_pawns << 9)),
-            _ => panic!("Invalid parameter: fen={}, color={}", self.to_fen(), color),
+            _ => panic!("Invalid parameter: fen={}, color={}", self, color),
         } != 0) as usize;
 
         result |= attacking_pawns_count;
@@ -892,6 +894,12 @@ impl Board {
     /// Converts the board`s state into EPD.
     pub fn to_epd(&self) -> String {
         fen::board_to_epd(self)
+    }
+}
+
+impl Display for Board {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.to_fen())
     }
 }
 

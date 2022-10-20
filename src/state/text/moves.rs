@@ -35,7 +35,7 @@ impl Move {
                 "=R" => Some(ROOK),
                 "=B" => Some(BISHOP),
                 "=N" => Some(KNIGHT),
-                _ => return Err(format!("Invalid promotion: fen={}, promotion={}", board.to_fen(), promotion)),
+                _ => return Err(format!("Invalid promotion: fen={}, promotion={}", board, promotion)),
             }
         }
 
@@ -178,7 +178,7 @@ impl Move {
                     desired_piece = Some(piece_type);
                     desired_capture = Some(true);
                 }
-                _ => return Err(format!("Invalid move: fen={}, original_text={}", board.to_fen(), original_text)),
+                _ => return Err(format!("Invalid move: fen={}, original_text={}", board, original_text)),
             }
         }
 
@@ -198,7 +198,7 @@ impl Move {
         }
 
         match valid_moves.len() {
-            0 => Err(format!("Invalid move: fen={}, original_text={}", board.to_fen(), original_text)),
+            0 => Err(format!("Invalid move: fen={}, original_text={}", board, original_text)),
             1 => Ok(valid_moves[0]),
             _ => {
                 for r#move in valid_moves {
@@ -210,7 +210,7 @@ impl Move {
                     board.undo_move(r#move);
                 }
 
-                Err(format!("Invalid move: fen={}, original_text={}", board.to_fen(), original_text))
+                Err(format!("Invalid move: fen={}, original_text={}", board, original_text))
             }
         }
     }
@@ -226,16 +226,16 @@ impl Move {
         let promotion = chars.next();
 
         if !(b'a'..=b'h').contains(&from_file) || !(b'a'..=b'h').contains(&to_file) {
-            return Err(format!("Invalid move, bad source square: fen={}, text={}", board.to_fen(), text));
+            return Err(format!("Invalid move, bad source square: fen={}, text={}", board, text));
         }
 
         if !(b'1'..=b'8').contains(&from_rank) || !(b'1'..=b'8').contains(&to_rank) {
-            return Err(format!("Invalid move, bad destination square: fen={}, text={}", board.to_fen(), text));
+            return Err(format!("Invalid move, bad destination square: fen={}, text={}", board, text));
         }
 
         if let Some(promotion_piece) = promotion {
             if !['n', 'b', 'r', 'q'].contains(&promotion_piece) {
-                return Err(format!("Invalid move, bad promotion piece: fen={}, text={}", board.to_fen(), text));
+                return Err(format!("Invalid move, bad promotion piece: fen={}, text={}", board, text));
             }
         }
 
@@ -248,7 +248,7 @@ impl Move {
                     'b' => MoveFlags::BISHOP_PROMOTION,
                     'r' => MoveFlags::ROOK_PROMOTION,
                     'q' => MoveFlags::QUEEN_PROMOTION,
-                    _ => return Err(format!("Invalid move, bad promotion piece: fen={}, text={}", board.to_fen(), text)),
+                    _ => return Err(format!("Invalid move, bad promotion piece: fen={}, text={}", board, text)),
                 };
 
                 if ((from as i8) - (to as i8)).abs() != 8 {
@@ -273,7 +273,7 @@ impl Move {
             }
         }
 
-        Err(format!("Invalid move: fen={}, text={}", board.to_fen(), text))
+        Err(format!("Invalid move: fen={}, text={}", board, text))
     }
 
     /// Converts move into the long notation (e2e4, a1a8).
