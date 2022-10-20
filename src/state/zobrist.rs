@@ -1,3 +1,5 @@
+use super::representation::Board;
+use super::representation::CastlingRights;
 use super::*;
 use crate::utils::bitflags::BitFlags;
 use crate::utils::bithelpers::BitHelpers;
@@ -62,4 +64,65 @@ impl Default for ZobristContainer {
         result.active_color_hash = rand::u64(..);
         result
     }
+}
+
+/// Recalculates board's hash entirely.
+pub fn recalculate_hash(board: &mut Board) {
+    let mut hash = 0u64;
+
+    for color in ALL_COLORS {
+        for piece_index in ALL_PIECES {
+            let mut pieces = board.pieces[color][piece_index];
+            while pieces != 0 {
+                let square_bb = pieces.get_lsb();
+                let square = square_bb.bit_scan();
+                pieces = pieces.pop_lsb();
+
+                hash ^= board.zobrist.get_piece_hash(color, piece_index, square);
+            }
+        }
+    }
+
+    if board.castling_rights.contains(CastlingRights::WHITE_SHORT_CASTLING) {
+        hash ^= board.zobrist.get_castling_right_hash(board.castling_rights, CastlingRights::WHITE_SHORT_CASTLING);
+    }
+    if board.castling_rights.contains(CastlingRights::WHITE_LONG_CASTLING) {
+        hash ^= board.zobrist.get_castling_right_hash(board.castling_rights, CastlingRights::WHITE_LONG_CASTLING);
+    }
+    if board.castling_rights.contains(CastlingRights::BLACK_SHORT_CASTLING) {
+        hash ^= board.zobrist.get_castling_right_hash(board.castling_rights, CastlingRights::BLACK_SHORT_CASTLING);
+    }
+    if board.castling_rights.contains(CastlingRights::BLACK_LONG_CASTLING) {
+        hash ^= board.zobrist.get_castling_right_hash(board.castling_rights, CastlingRights::BLACK_LONG_CASTLING);
+    }
+
+    if board.en_passant != 0 {
+        hash ^= board.zobrist.get_en_passant_hash(board.en_passant.bit_scan() & 7);
+    }
+
+    if board.active_color == BLACK {
+        hash ^= board.zobrist.get_active_color_hash();
+    }
+
+    board.hash = hash;
+}
+
+/// Recalculates board's pawn hash entirely.
+pub fn recalculate_pawn_hash(board: &mut Board) {
+    let mut hash = 0u64;
+
+    for color in ALL_COLORS {
+        for piece in [PAWN, KING] {
+            let mut pieces = board.pieces[color][piece];
+            while pieces != 0 {
+                let square_bb = pieces.get_lsb();
+                let square = square_bb.bit_scan();
+                pieces = pieces.pop_lsb();
+
+                hash ^= board.zobrist.get_piece_hash(color, piece, square);
+            }
+        }
+    }
+
+    board.pawn_hash = hash;
 }

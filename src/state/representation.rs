@@ -3,6 +3,7 @@ use super::movescan;
 use super::movescan::Move;
 use super::movescan::MoveFlags;
 use super::patterns::PatternsContainer;
+use super::text::fen;
 use super::zobrist::ZobristContainer;
 use super::*;
 use crate::cache::pawns::PawnHashTable;
@@ -15,6 +16,7 @@ use crate::evaluation::pawns;
 use crate::evaluation::pst;
 use crate::evaluation::safety;
 use crate::evaluation::EvaluationParameters;
+use crate::tablebases;
 use crate::utils::bitflags::BitFlags;
 use crate::utils::bithelpers::BitHelpers;
 use std::mem::MaybeUninit;
@@ -125,6 +127,38 @@ impl Board {
             magic_container,
         )
         .unwrap()
+    }
+
+    /// Constructs a new instance of [Board] with position specified by `fen`, using provided containers. If the parameter is [None],
+    /// then the new container is created. Returns [Err] with proper error message if `fen` couldn't be parsed correctly.
+    pub fn new_from_fen(
+        fen: &str,
+        evaluation_parameters: Option<Arc<EvaluationParameters>>,
+        zobrist_container: Option<Arc<ZobristContainer>>,
+        patterns_container: Option<Arc<PatternsContainer>>,
+        see_container: Option<Arc<SEEContainer>>,
+        magic_container: Option<Arc<MagicContainer>>,
+    ) -> Result<Self, String> {
+        fen::fen_to_board(fen, evaluation_parameters, zobrist_container, patterns_container, see_container, magic_container)
+    }
+
+    /// Constructs a new instance of [Board] with position specified by list of `moves`, using provided containers. If the parameter is [None],
+    /// then the new container is created. Returns [Err] with proper error message is `moves` couldn't be parsed correctly.
+    pub fn new_from_moves(
+        moves: &[&str],
+        evaluation_parameters: Option<Arc<EvaluationParameters>>,
+        zobrist_container: Option<Arc<ZobristContainer>>,
+        patterns_container: Option<Arc<PatternsContainer>>,
+        see_container: Option<Arc<SEEContainer>>,
+        magic_container: Option<Arc<MagicContainer>>,
+    ) -> Result<Self, String> {
+        let mut board = Board::new_initial_position(evaluation_parameters, zobrist_container, patterns_container, see_container, magic_container);
+        for premade_move in moves {
+            let parsed_move = Move::from_long_notation(premade_move, &board)?;
+            board.make_move(parsed_move);
+        }
+
+        Ok(board)
     }
 
     /// Generates all possible non-captures (if `CAPTURES` is false) or all possible captures (if `CAPTURES` is true) at the current position, stores
@@ -663,65 +697,10 @@ impl Board {
         self.pst_scores[color][ENDING] += self.evaluation_parameters.get_pst_value(color, piece, ENDING, to);
     }
 
-    /// Recalculates board's hash entirely.
-    pub fn recalculate_hash(&mut self) {
-        let mut hash = 0u64;
-
-        for color in ALL_COLORS {
-            for piece_index in ALL_PIECES {
-                let mut pieces = self.pieces[color][piece_index];
-                while pieces != 0 {
-                    let square_bb = pieces.get_lsb();
-                    let square = square_bb.bit_scan();
-                    pieces = pieces.pop_lsb();
-
-                    hash ^= self.zobrist.get_piece_hash(color, piece_index, square);
-                }
-            }
-        }
-
-        if self.castling_rights.contains(CastlingRights::WHITE_SHORT_CASTLING) {
-            hash ^= self.zobrist.get_castling_right_hash(self.castling_rights, CastlingRights::WHITE_SHORT_CASTLING);
-        }
-        if self.castling_rights.contains(CastlingRights::WHITE_LONG_CASTLING) {
-            hash ^= self.zobrist.get_castling_right_hash(self.castling_rights, CastlingRights::WHITE_LONG_CASTLING);
-        }
-        if self.castling_rights.contains(CastlingRights::BLACK_SHORT_CASTLING) {
-            hash ^= self.zobrist.get_castling_right_hash(self.castling_rights, CastlingRights::BLACK_SHORT_CASTLING);
-        }
-        if self.castling_rights.contains(CastlingRights::BLACK_LONG_CASTLING) {
-            hash ^= self.zobrist.get_castling_right_hash(self.castling_rights, CastlingRights::BLACK_LONG_CASTLING);
-        }
-
-        if self.en_passant != 0 {
-            hash ^= self.zobrist.get_en_passant_hash(self.en_passant.bit_scan() & 7);
-        }
-
-        if self.active_color == BLACK {
-            hash ^= self.zobrist.get_active_color_hash();
-        }
-
-        self.hash = hash;
-    }
-
-    /// Recalculates board's pawn hash entirely.
-    pub fn recalculate_pawn_hash(&mut self) {
-        let mut hash = 0u64;
-
-        for color in ALL_COLORS {
-            for piece in [PAWN, KING] {
-                let mut pieces = self.pieces[color][piece];
-                while pieces != 0 {
-                    let square_bb = pieces.get_lsb();
-                    let square = square_bb.bit_scan();
-                    pieces = pieces.pop_lsb();
-
-                    hash ^= self.zobrist.get_piece_hash(color, piece, square);
-                }
-            }
-        }
-
-        self.pawn_hash = hash;
+    /// Recalculates board's hashes entirely.
+    pub fn recalculate_hashes(&mut self) {
+        zobrist::recalculate_hash(self);
+        zobrist::recalculate_pawn_hash(self);
     }
 
     /// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position, using `pawn_hashtable` to store pawn
@@ -898,6 +877,21 @@ impl Board {
         }
 
         None
+    }
+
+    /// Checks if there's a tablebase move (only Syzygy supported for now) and returns it as [Some], otherwise [None].
+    pub fn get_tablebase_move(&self, probe_limit: u32) -> Option<(Move, i16)> {
+        tablebases::get_tablebase_move(self, probe_limit)
+    }
+
+    /// Converts the board's state into FEN.
+    pub fn to_fen(&self) -> String {
+        fen::board_to_fen(self)
+    }
+
+    /// Converts the board`s state into EPD.
+    pub fn to_epd(&self) -> String {
+        fen::board_to_epd(self)
     }
 }
 

@@ -1,37 +1,10 @@
 use crate::engine;
-use crate::engine::see::SEEContainer;
-use crate::evaluation::EvaluationParameters;
-use crate::state::movegen::MagicContainer;
 use crate::state::movescan::Move;
 use crate::state::movescan::MoveFlags;
-use crate::state::patterns::PatternsContainer;
 use crate::state::representation::Board;
-use crate::state::zobrist::ZobristContainer;
 use crate::state::*;
 use crate::utils::bitflags::BitFlags;
 use std::mem::MaybeUninit;
-use std::sync::Arc;
-
-impl Board {
-    /// Constructs a new instance of [Board] with position specified by list of `moves`, using provided containers. If the parameter is [None],
-    /// then the new container is created. Returns [Err] with proper error message is `moves` couldn't be parsed correctly.
-    pub fn new_from_moves(
-        moves: &[&str],
-        evaluation_parameters: Option<Arc<EvaluationParameters>>,
-        zobrist_container: Option<Arc<ZobristContainer>>,
-        patterns_container: Option<Arc<PatternsContainer>>,
-        see_container: Option<Arc<SEEContainer>>,
-        magic_container: Option<Arc<MagicContainer>>,
-    ) -> Result<Self, String> {
-        let mut board = Board::new_initial_position(evaluation_parameters, zobrist_container, patterns_container, see_container, magic_container);
-        for premade_move in moves {
-            let parsed_move = Move::from_long_notation(premade_move, &board)?;
-            board.make_move(parsed_move);
-        }
-
-        Ok(board)
-    }
-}
 
 impl Move {
     /// Converts short-notated move (e4, Rc8, Qxb6) in `text` into the [Move] instance, using the `board` as context.

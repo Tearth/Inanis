@@ -24,31 +24,6 @@ impl ParsedEPD {
     }
 }
 
-impl Board {
-    /// Constructs a new instance of [Board] with position specified by `fen`, using provided containers. If the parameter is [None],
-    /// then the new container is created. Returns [Err] with proper error message if `fen` couldn't be parsed correctly.
-    pub fn new_from_fen(
-        fen: &str,
-        evaluation_parameters: Option<Arc<EvaluationParameters>>,
-        zobrist_container: Option<Arc<ZobristContainer>>,
-        patterns_container: Option<Arc<PatternsContainer>>,
-        see_container: Option<Arc<SEEContainer>>,
-        magic_container: Option<Arc<MagicContainer>>,
-    ) -> Result<Self, String> {
-        fen_to_board(fen, evaluation_parameters, zobrist_container, patterns_container, see_container, magic_container)
-    }
-
-    /// Converts the board's state into FEN.
-    pub fn to_fen(&self) -> String {
-        board_to_fen(self)
-    }
-
-    /// Converts the board`s state into EPD.
-    pub fn to_epd(&self) -> String {
-        board_to_epd(self)
-    }
-}
-
 /// Converts `fen` into the [Board], using provided containers. If the parameter is [None], then the new container is created.
 /// Returns [Err] with proper error message if `fen` couldn't be parsed correctly.
 pub fn fen_to_board(
@@ -84,8 +59,7 @@ pub fn epd_to_board(
     fen_to_castling(&mut board, tokens[2])?;
     fen_to_en_passant(&mut board, tokens[3])?;
 
-    board.recalculate_hash();
-    board.recalculate_pawn_hash();
+    board.recalculate_hashes();
     board.recalculate_incremental_values();
 
     if tokens.len() > 4 {

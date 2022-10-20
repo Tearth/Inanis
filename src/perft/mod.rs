@@ -16,8 +16,7 @@ pub fn run_internal(context: &mut PerftContext, depth: i32) -> u64 {
         let original_pawn_hash = context.board.pawn_hash;
         let original_evaluation = context.board.evaluate_without_cache(WHITE);
 
-        context.board.recalculate_hash();
-        context.board.recalculate_pawn_hash();
+        context.board.recalculate_hashes();
         context.board.recalculate_incremental_values();
 
         if original_hash != context.board.hash {

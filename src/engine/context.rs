@@ -12,7 +12,6 @@ use crate::evaluation::pst;
 use crate::evaluation::safety;
 use crate::state::movescan::Move;
 use crate::state::representation::Board;
-use crate::tablebases;
 use std::cmp;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
@@ -203,7 +202,7 @@ impl Iterator for SearchContext {
                 }
 
                 if self.syzygy_enabled {
-                    if let Some((r#move, score)) = tablebases::get_tablebase_move(&self.board, self.syzygy_probe_limit) {
+                    if let Some((r#move, score)) = self.board.get_tablebase_move(self.syzygy_probe_limit) {
                         self.search_done = true;
                         self.statistics.tb_hits = 1;
 
