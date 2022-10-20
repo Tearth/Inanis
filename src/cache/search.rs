@@ -1,5 +1,6 @@
 use crate::engine;
 use crate::state::movescan::Move;
+use crate::state::representation::Board;
 use std::mem;
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering;
@@ -147,6 +148,43 @@ impl TranspositionTable {
     pub fn get_best_move(&self, hash: u64) -> Option<Move> {
         let entry = self.get(hash, 0);
         entry.map(|entry| entry.best_move)
+    }
+
+    /// Retrieves PV line from the transposition table, using `board` position and the current `ply`.
+    pub fn get_pv_line(&self, board: &mut Board, ply: i8) -> Vec<Move> {
+        if ply >= engine::MAX_DEPTH {
+            return Vec::new();
+        }
+
+        let mut pv_line = Vec::new();
+        match self.get(board.hash, 0) {
+            Some(entry) => {
+                if entry.r#type != TranspositionTableScoreType::EXACT_SCORE {
+                    return Vec::new();
+                }
+
+                if entry.best_move.is_legal(board) {
+                    board.make_move(entry.best_move);
+                    if !board.is_king_checked(board.active_color ^ 1) {
+                        pv_line.push(entry.best_move);
+                        pv_line.append(&mut self.get_pv_line(board, ply + 1));
+                    }
+                    board.undo_move(entry.best_move);
+                }
+            }
+            None => {
+                return Vec::new();
+            }
+        }
+
+        // Remove endless repetitions from PV line
+        if pv_line.len() > 8 {
+            if pv_line[0] == pv_line[4] && pv_line[4] == pv_line[8] {
+                pv_line = pv_line[0..1].to_vec();
+            }
+        }
+
+        pv_line
     }
 
     /// Calculates an approximate percentage usage of the table, based on the first `resolution` entries.

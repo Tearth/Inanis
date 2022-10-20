@@ -403,7 +403,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
         if ROOT && context.multipv {
             context.board.make_move(best_move);
             if !context.board.is_king_checked(context.board.active_color ^ 1) {
-                let mut pv_line = context.get_pv_line(&mut context.board.clone(), 0);
+                let mut pv_line = context.transposition_table.get_pv_line(&mut context.board.clone(), 0);
                 pv_line.insert(0, best_move);
 
                 context.multipv_lines.push(SearchResultLine::new(best_score, pv_line));
@@ -434,7 +434,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
     }
 
     if ROOT && !context.multipv {
-        let pv_line = context.get_pv_line(&mut context.board.clone(), 0);
+        let pv_line = context.transposition_table.get_pv_line(&mut context.board.clone(), 0);
         context.multipv_lines.push(SearchResultLine::new(best_score, pv_line));
     }
 

@@ -4,7 +4,6 @@ use crate::cache::history::HistoryTable;
 use crate::cache::killers::KillersTable;
 use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
-use crate::cache::search::TranspositionTableScoreType;
 use crate::engine::clock;
 use crate::evaluation::material;
 use crate::evaluation::mobility;
@@ -13,10 +12,8 @@ use crate::evaluation::pst;
 use crate::evaluation::safety;
 use crate::state::movescan::Move;
 use crate::state::representation::Board;
-use crate::tablebases::syzygy;
-use crate::tablebases::WdlResult;
+use crate::tablebases;
 use std::cmp;
-use std::mem::MaybeUninit;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
@@ -159,98 +156,6 @@ impl SearchContext {
             statistics: Default::default(),
         }
     }
-
-    /// Retrieves PV line from the transposition table, using `board` position and the current `ply`.
-    pub fn get_pv_line(&self, board: &mut Board, ply: i8) -> Vec<Move> {
-        if ply >= MAX_DEPTH {
-            return Vec::new();
-        }
-
-        let mut pv_line = Vec::new();
-        match self.transposition_table.get(board.hash, 0) {
-            Some(entry) => {
-                if entry.r#type != TranspositionTableScoreType::EXACT_SCORE {
-                    return Vec::new();
-                }
-
-                if entry.best_move.is_legal(board) {
-                    board.make_move(entry.best_move);
-                    if !board.is_king_checked(board.active_color ^ 1) {
-                        pv_line.push(entry.best_move);
-                        pv_line.append(&mut self.get_pv_line(board, ply + 1));
-                    }
-                    board.undo_move(entry.best_move);
-                }
-            }
-            None => {
-                return Vec::new();
-            }
-        }
-
-        // Remove endless repetitions from PV line
-        if pv_line.len() > 8 {
-            if pv_line[0] == pv_line[4] && pv_line[4] == pv_line[8] {
-                pv_line = pv_line[0..1].to_vec();
-            }
-        }
-
-        pv_line
-    }
-
-    /// Checks if there's an instant move possible and returns it as [Some], otherwise [None].
-    fn get_instant_move(&mut self) -> Option<Move> {
-        if !self.board.is_king_checked(self.board.active_color) {
-            return None;
-        }
-
-        let mut moves = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
-        let moves_count = self.board.get_all_moves(&mut moves, u64::MAX);
-
-        let mut evading_moves_count = 0;
-        let mut evading_move = Default::default();
-
-        for r#move in &moves[0..moves_count] {
-            let r#move = unsafe { r#move.assume_init() };
-            self.board.make_move(r#move);
-
-            if !self.board.is_king_checked(self.board.active_color ^ 1) {
-                evading_moves_count += 1;
-                evading_move = r#move;
-
-                if evading_moves_count > 1 {
-                    self.board.undo_move(r#move);
-                    return None;
-                }
-            }
-
-            self.board.undo_move(r#move);
-        }
-
-        if evading_moves_count == 1 {
-            return Some(evading_move);
-        }
-
-        None
-    }
-
-    /// Checks if there's a Syzygy tablebase move and returns it as [Some], otherwise [None].
-    fn get_syzygy_move(&mut self) -> Option<(Move, i16)> {
-        if self.board.get_pieces_count() > cmp::min(self.syzygy_probe_limit as u8, syzygy::probe::get_max_pieces_count()) {
-            return None;
-        }
-
-        if let Some(result) = syzygy::probe::get_root_wdl_dtz(&self.board) {
-            let score = match result.wdl {
-                WdlResult::Win => TBMATE_SCORE,
-                WdlResult::Draw => 0,
-                WdlResult::Loss => -TBMATE_SCORE,
-            };
-
-            return Some((result.r#move, score));
-        }
-
-        None
-    }
 }
 
 impl Iterator for SearchContext {
@@ -286,7 +191,7 @@ impl Iterator for SearchContext {
 
             // Check instant move and Syzygy tablebase move only if there's no forced depth to reach
             if self.forced_depth == 0 && self.current_depth == 1 {
-                if let Some(r#move) = self.get_instant_move() {
+                if let Some(r#move) = self.board.get_instant_move() {
                     self.search_done = true;
                     return Some(SearchResult::new(
                         0,
@@ -298,7 +203,7 @@ impl Iterator for SearchContext {
                 }
 
                 if self.syzygy_enabled {
-                    if let Some((r#move, score)) = self.get_syzygy_move() {
+                    if let Some((r#move, score)) = tablebases::get_tablebase_move(&self.board, self.syzygy_probe_limit) {
                         self.search_done = true;
                         self.statistics.tb_hits = 1;
 

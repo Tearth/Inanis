@@ -863,6 +863,42 @@ impl Board {
     pub fn get_pieces_count(&self) -> u8 {
         (self.occupancy[WHITE] | self.occupancy[BLACK]).bit_count() as u8
     }
+
+    /// Checks if there's an instant move possible and returns it as [Some], otherwise [None].
+    pub fn get_instant_move(&mut self) -> Option<Move> {
+        if !self.is_king_checked(self.active_color) {
+            return None;
+        }
+
+        let mut moves = [MaybeUninit::uninit(); engine::MAX_MOVES_COUNT];
+        let moves_count = self.get_all_moves(&mut moves, u64::MAX);
+
+        let mut evading_moves_count = 0;
+        let mut evading_move = Default::default();
+
+        for r#move in &moves[0..moves_count] {
+            let r#move = unsafe { r#move.assume_init() };
+            self.make_move(r#move);
+
+            if !self.is_king_checked(self.active_color ^ 1) {
+                evading_moves_count += 1;
+                evading_move = r#move;
+
+                if evading_moves_count > 1 {
+                    self.undo_move(r#move);
+                    return None;
+                }
+            }
+
+            self.undo_move(r#move);
+        }
+
+        if evading_moves_count == 1 {
+            return Some(evading_move);
+        }
+
+        None
+    }
 }
 
 impl BoardState {
