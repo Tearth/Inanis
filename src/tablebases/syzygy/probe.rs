@@ -1,13 +1,16 @@
 use super::bindings::*;
 use crate::engine;
-use crate::state::movescan::{Move, MoveFlags};
+use crate::state::movescan::Move;
+use crate::state::movescan::MoveFlags;
 use crate::state::representation::Board;
 use crate::state::*;
+use crate::tablebases::WdlDtzResult;
 use crate::tablebases::WdlResult;
 use std::ffi::CString;
 use std::mem::MaybeUninit;
 use std::ptr;
 
+/// Loads Syzygy tablebases stored in `syzygy_path` location.
 pub fn init(syzygy_path: &str) {
     #[cfg(feature = "syzygy")]
     unsafe {
@@ -15,6 +18,7 @@ pub fn init(syzygy_path: &str) {
     }
 }
 
+/// Gets maximal pieces count supported by loaded Syzygy tablebases. Returns 0 if the feature is disabled.
 pub fn get_max_pieces_count() -> u8 {
     #[cfg(feature = "syzygy")]
     unsafe {
@@ -24,6 +28,7 @@ pub fn get_max_pieces_count() -> u8 {
     0
 }
 
+/// Gets WDL (Win-Draw-Loss) for the position specified in `board`. Returns [None] if data couldn't be obtained or the feature is disabled.
 pub fn get_wdl(board: &Board) -> Option<WdlResult> {
     #[cfg(feature = "syzygy")]
     unsafe {
@@ -53,7 +58,9 @@ pub fn get_wdl(board: &Board) -> Option<WdlResult> {
     None
 }
 
-pub fn get_root_wdl_dtz(board: &Board) -> (bool, WdlResult, u32, Move) {
+/// Gets WDL (Win-Draw-Loss), DTZ (Distance To Zeroing) and the best move for the position specified in `board`.
+/// Returns [None] if data couldn't be obtained or the feature is disabled.
+pub fn get_root_wdl_dtz(board: &Board) -> Option<WdlDtzResult> {
     #[cfg(feature = "syzygy")]
     unsafe {
         let result = tb_probe_root(
@@ -82,7 +89,7 @@ pub fn get_root_wdl_dtz(board: &Board) -> (bool, WdlResult, u32, Move) {
         let success = result != TB_RESULT_FAILED;
 
         if !success {
-            return (false, wdl, dtz, Default::default());
+            return None;
         }
 
         let mut moves = [MaybeUninit::uninit(); engine::MAX_MOVES_COUNT];
@@ -105,13 +112,13 @@ pub fn get_root_wdl_dtz(board: &Board) -> (bool, WdlResult, u32, Move) {
             if r#move.get_from() == from && r#move.get_to() == to {
                 let flags = r#move.get_flags();
                 if promotion == 0 || (flags & promotion_flags) == flags {
-                    return (success, wdl, dtz, r#move);
+                    return Some(WdlDtzResult::new(wdl, dtz, r#move));
                 }
             }
         }
 
-        return (false, wdl, dtz, Default::default());
+        return None;
     }
 
-    (false, WdlResult::Draw, 0, Default::default())
+    None
 }

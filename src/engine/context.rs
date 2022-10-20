@@ -239,18 +239,17 @@ impl SearchContext {
             return None;
         }
 
-        let (success_root, wdl_root, _dtz_root, r#move) = syzygy::probe::get_root_wdl_dtz(&self.board);
-        if !success_root {
-            return None;
+        if let Some(result) = syzygy::probe::get_root_wdl_dtz(&self.board) {
+            let score = match result.wdl {
+                WdlResult::Win => TBMATE_SCORE,
+                WdlResult::Draw => 0,
+                WdlResult::Loss => -TBMATE_SCORE,
+            };
+
+            return Some((result.r#move, score));
         }
 
-        let score = match wdl_root {
-            WdlResult::Win => TBMATE_SCORE,
-            WdlResult::Draw => 0,
-            WdlResult::Loss => -TBMATE_SCORE,
-        };
-
-        Some((r#move, score))
+        None
     }
 }
 
