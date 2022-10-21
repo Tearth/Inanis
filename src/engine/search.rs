@@ -24,11 +24,10 @@ pub const STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_BASE: i16 = 150;
 pub const STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_MULTIPLIER: i16 = 150;
 
 pub const NULL_MOVE_PRUNING_MIN_DEPTH: i8 = 2;
-pub const NULL_MOVE_PRUNING_R_CHANGE_DEPTH: i8 = 5;
 pub const NULL_MOVE_PRUNING_MIN_GAME_PHASE: u8 = 3;
 pub const NULL_MOVE_PRUNING_MARGIN: i16 = 50;
-pub const NULL_MOVE_PRUNING_SMALL_R: i8 = 2;
-pub const NULL_MOVE_PRUNING_BIG_R: i8 = 3;
+pub const NULL_MOVE_PRUNING_BASE_DEPTH: i8 = 2;
+pub const NULL_MOVE_PRUNING_DEPTH_DIVIDER: i8 = 5;
 
 pub const LATE_MOVE_PRUNING_MIN_DEPTH: i8 = 1;
 pub const LATE_MOVE_PRUNING_MAX_DEPTH: i8 = 4;
@@ -799,14 +798,9 @@ fn null_move_pruning_can_be_applied<const PV: bool>(
         && allow_null_move
 }
 
-/// Gets the null move pruning depth reduction, called R, based on `depth`. It returns [NULL_MOVE_PRUNING_SMALL_R] if `depth` is less or equal
-/// to [NULL_MOVE_PRUNING_R_CHANGE_DEPTH], otherwise [NULL_MOVE_PRUNING_BIG_R].
+/// Gets the null move pruning depth reduction, called R, based on `depth`. The further from the horizon we are, the more reduction will be applied.
 fn null_move_pruning_get_r(depth: i8) -> i8 {
-    if depth <= NULL_MOVE_PRUNING_R_CHANGE_DEPTH {
-        NULL_MOVE_PRUNING_SMALL_R
-    } else {
-        NULL_MOVE_PRUNING_BIG_R
-    }
+    NULL_MOVE_PRUNING_BASE_DEPTH + depth / NULL_MOVE_PRUNING_DEPTH_DIVIDER
 }
 
 /// The main idea of the late move pruning is to prune all nodes, which are near the horizon and were scored low by the history table.
