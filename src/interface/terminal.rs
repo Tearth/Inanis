@@ -12,6 +12,7 @@ use crate::testing::benchmark;
 use crate::testing::testset;
 use crate::tuning::tuner;
 use crate::tuning::tunerset;
+use crate::utils::percent;
 use std::io;
 use std::process;
 use std::time::SystemTime;
@@ -110,8 +111,8 @@ fn handle_benchmark() {
     let t_nodes_count = result.nodes_count + result.q_nodes_count;
     let t_leafs_count = result.leafs_count + result.q_leafs_count;
 
-    let nodes_count_percent = percent(result.nodes_count, t_nodes_count);
-    let q_nodes_count_percent = percent(result.q_nodes_count, t_nodes_count);
+    let nodes_count_percent = percent!(result.nodes_count, t_nodes_count);
+    let q_nodes_count_percent = percent!(result.q_nodes_count, t_nodes_count);
     let t_mnps = (((result.nodes_count + result.q_nodes_count) as f32) / 1000000.0) / result.time;
     println!(
         "{: <H$} {: <V$} {: <V$} {: <V$}",
@@ -123,9 +124,9 @@ fn handle_benchmark() {
         V = value_intendation
     );
 
-    let leafs_count_percent = percent(result.leafs_count, t_leafs_count);
-    let q_leafs_count_percent = percent(result.q_leafs_count, t_leafs_count);
-    let t_leafs_count_percent = percent(result.leafs_count + result.q_leafs_count, t_nodes_count);
+    let leafs_count_percent = percent!(result.leafs_count, t_leafs_count);
+    let q_leafs_count_percent = percent!(result.q_leafs_count, t_leafs_count);
+    let t_leafs_count_percent = percent!(result.leafs_count + result.q_leafs_count, t_nodes_count);
     println!(
         "{: <H$} {: <V$} {: <V$} {: <V$}",
         "Leafs count",
@@ -136,9 +137,9 @@ fn handle_benchmark() {
         V = value_intendation
     );
 
-    let beta_cutoffs_percent = percent(result.beta_cutoffs, result.nodes_count);
-    let q_beta_cutoffs_percent = percent(result.q_beta_cutoffs, result.q_nodes_count);
-    let t_beta_cutoffs_percent = percent(result.beta_cutoffs + result.q_beta_cutoffs, t_nodes_count);
+    let beta_cutoffs_percent = percent!(result.beta_cutoffs, result.nodes_count);
+    let q_beta_cutoffs_percent = percent!(result.q_beta_cutoffs, result.q_nodes_count);
+    let t_beta_cutoffs_percent = percent!(result.beta_cutoffs + result.q_beta_cutoffs, t_nodes_count);
     println!(
         "{: <H$} {: <V$} {: <V$} {: <V$}",
         "Beta cutoffs",
@@ -153,9 +154,9 @@ fn handle_benchmark() {
     let q_ordering_hits = result.q_perfect_cutoffs + result.q_non_perfect_cutoffs;
     let t_ordering_hits = ordering_hits + q_ordering_hits;
 
-    let ordering_quality = percent(result.perfect_cutoffs, ordering_hits);
-    let q_ordering_quality = percent(result.q_perfect_cutoffs, q_ordering_hits);
-    let t_ordering_quality = percent(result.perfect_cutoffs + result.q_perfect_cutoffs, t_ordering_hits);
+    let ordering_quality = percent!(result.perfect_cutoffs, ordering_hits);
+    let q_ordering_quality = percent!(result.q_perfect_cutoffs, q_ordering_hits);
+    let t_ordering_quality = percent!(result.perfect_cutoffs + result.q_perfect_cutoffs, t_ordering_hits);
     println!(
         "{: <H$} {: <V$} {: <V$} {: <V$}",
         "Ordering quality",
@@ -183,8 +184,8 @@ fn handle_benchmark() {
     println!("{: <H$} {: <V$} {: <V$} {: <V$}", "", "Added", "Hits", "Misses", H = header_intendation, V = value_intendation);
 
     let tt_attempts = result.tt_hits + result.tt_misses;
-    let tt_hits_percent = percent(result.tt_hits, tt_attempts);
-    let tt_misses_percent = percent(result.tt_misses, tt_attempts);
+    let tt_hits_percent = percent!(result.tt_hits, tt_attempts);
+    let tt_misses_percent = percent!(result.tt_misses, tt_attempts);
     println!(
         "{: <H$} {: <V$} {: <V$} {: <V$}",
         "Transposition table",
@@ -196,8 +197,8 @@ fn handle_benchmark() {
     );
 
     let pawn_hashtable_attempts = result.pawn_hashtable_hits + result.pawn_hashtable_misses;
-    let pawn_hashtable_hits_percent = percent(result.pawn_hashtable_hits, pawn_hashtable_attempts);
-    let pawn_hashtable_misses_percent = percent(result.pawn_hashtable_misses, pawn_hashtable_attempts);
+    let pawn_hashtable_hits_percent = percent!(result.pawn_hashtable_hits, pawn_hashtable_attempts);
+    let pawn_hashtable_misses_percent = percent!(result.pawn_hashtable_misses, pawn_hashtable_attempts);
     println!(
         "{: <H$} {: <V$} {: <V$} {: <V$}",
         "Pawn hashtable",
@@ -211,8 +212,8 @@ fn handle_benchmark() {
     println!();
     println!("{: <H$} {: <V$} {: <V$} {: <V$}", "", "Attempts", "Accepted", "Rejected", H = header_intendation, V = value_intendation);
 
-    let static_null_move_pruning_accepted_percent = percent(result.static_null_move_pruning_accepted, result.static_null_move_pruning_attempts);
-    let static_null_move_pruning_rejected_percent = percent(result.static_null_move_pruning_rejected, result.static_null_move_pruning_attempts);
+    let static_null_move_pruning_accepted_percent = percent!(result.static_null_move_pruning_accepted, result.static_null_move_pruning_attempts);
+    let static_null_move_pruning_rejected_percent = percent!(result.static_null_move_pruning_rejected, result.static_null_move_pruning_attempts);
     println!(
         "{: <H$} {: <V$} {: <V$} {: <V$}",
         "Static null move pruning",
@@ -223,8 +224,8 @@ fn handle_benchmark() {
         V = value_intendation
     );
 
-    let null_move_pruning_accepted_percent = percent(result.null_move_pruning_accepted, result.null_move_pruning_attempts);
-    let null_move_pruning_rejected_percent = percent(result.null_move_pruning_rejected, result.null_move_pruning_attempts);
+    let null_move_pruning_accepted_percent = percent!(result.null_move_pruning_accepted, result.null_move_pruning_attempts);
+    let null_move_pruning_rejected_percent = percent!(result.null_move_pruning_rejected, result.null_move_pruning_attempts);
     println!(
         "{: <H$} {: <V$} {: <V$} {: <V$}",
         "Null move pruning",
@@ -236,8 +237,8 @@ fn handle_benchmark() {
     );
 
     let late_move_pruning_attempts = result.late_move_pruning_accepted + result.late_move_pruning_rejected;
-    let late_move_pruning_accepted_percent = percent(result.late_move_pruning_accepted, late_move_pruning_attempts);
-    let late_move_pruning_rejected_percent = percent(result.late_move_pruning_rejected, late_move_pruning_attempts);
+    let late_move_pruning_accepted_percent = percent!(result.late_move_pruning_accepted, late_move_pruning_attempts);
+    let late_move_pruning_rejected_percent = percent!(result.late_move_pruning_rejected, late_move_pruning_attempts);
     println!(
         "{: <H$} {: <V$} {: <V$} {: <V$}",
         "Late move pruning",
@@ -248,8 +249,8 @@ fn handle_benchmark() {
         V = value_intendation
     );
 
-    let razoring_accepted_percent = percent(result.razoring_accepted, result.razoring_attempts);
-    let razoring_rejected_percent = percent(result.razoring_rejected, result.razoring_attempts);
+    let razoring_accepted_percent = percent!(result.razoring_accepted, result.razoring_attempts);
+    let razoring_rejected_percent = percent!(result.razoring_rejected, result.razoring_attempts);
     println!(
         "{: <H$} {: <V$} {: <V$} {: <V$}",
         "Razoring",
@@ -261,8 +262,8 @@ fn handle_benchmark() {
     );
 
     let total_q_score_pruning_attempts = result.q_score_pruning_accepted + result.q_score_pruning_rejected;
-    let q_score_pruning_accepted_percent = percent(result.q_score_pruning_accepted, total_q_score_pruning_attempts);
-    let q_score_pruning_rejected_percent = percent(result.q_score_pruning_rejected, total_q_score_pruning_attempts);
+    let q_score_pruning_accepted_percent = percent!(result.q_score_pruning_accepted, total_q_score_pruning_attempts);
+    let q_score_pruning_rejected_percent = percent!(result.q_score_pruning_rejected, total_q_score_pruning_attempts);
     println!(
         "{: <H$} {: <V$} {: <V$} {: <V$}",
         "Q score pruning",
@@ -274,8 +275,8 @@ fn handle_benchmark() {
     );
 
     let total_q_futility_prunings_attempts = result.q_futility_pruning_accepted + result.q_futility_pruning_rejected;
-    let q_futility_pruning_accepted_percent = percent(result.q_futility_pruning_accepted, total_q_futility_prunings_attempts);
-    let q_futility_pruning_rejected_percent = percent(result.q_futility_pruning_rejected, total_q_futility_prunings_attempts);
+    let q_futility_pruning_accepted_percent = percent!(result.q_futility_pruning_accepted, total_q_futility_prunings_attempts);
+    let q_futility_pruning_rejected_percent = percent!(result.q_futility_pruning_rejected, total_q_futility_prunings_attempts);
     println!(
         "{: <H$} {: <V$} {: <V$} {: <V$}",
         "Q futility pruning",
@@ -288,7 +289,7 @@ fn handle_benchmark() {
 
     println!();
 
-    let pvs_rejected_searches_percent = percent(result.pvs_rejected_searches, result.pvs_zero_window_searches);
+    let pvs_rejected_searches_percent = percent!(result.pvs_rejected_searches, result.pvs_zero_window_searches);
     println!(
         "PVS: {} full-window searches, {} zero-window searches, {} rejected ({:.2}%)",
         result.pvs_full_window_searches, result.pvs_zero_window_searches, result.pvs_rejected_searches, pvs_rejected_searches_percent
@@ -324,16 +325,16 @@ fn handle_evaluate(input: Vec<&str>) {
         }
     };
 
-    let mut white_attack_mask = 0;
-    let mut black_attack_mask = 0;
+    let mut dangered_white_king_squares = 0;
+    let mut dangered_black_king_squares = 0;
 
     let game_phase = board.game_phase;
     let initial_game_phase = board.evaluation_parameters.initial_game_phase;
 
     let material_evaluation = material::evaluate(&board);
     let pst_evaluation = pst::evaluate(&board);
-    let mobility_evaluation = mobility::evaluate(&board, &mut white_attack_mask, &mut black_attack_mask);
-    let safety_evaluation = safety::evaluate(&board, white_attack_mask, black_attack_mask);
+    let mobility_evaluation = mobility::evaluate(&board, &mut dangered_white_king_squares, &mut dangered_black_king_squares);
+    let safety_evaluation = safety::evaluate(&board, dangered_white_king_squares, dangered_black_king_squares);
     let pawns_evaluation = pawns::evaluate_without_cache(&board);
 
     println!("Material: {}", material_evaluation);
@@ -749,9 +750,4 @@ fn prepare_board(parameters: &[&str]) -> Result<Board, String> {
         "moves" => Board::new_from_moves(&parameters[1..], None, None, None, None, None),
         _ => Err(format!("Invalid mode: parameter[0]={}", parameters[0])),
     }
-}
-
-/// Helper function to calculate percent of `from` within `all`.
-fn percent(from: u64, all: u64) -> f32 {
-    ((from as f32) / (all as f32)) * 100.0
 }

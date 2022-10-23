@@ -175,7 +175,7 @@ impl Iterator for SearchContext {
                 return None;
             }
 
-            if self.forced_depth != 0 && self.current_depth == self.forced_depth + 1 {
+            if self.forced_depth != 0 && self.current_depth > self.forced_depth {
                 return None;
             }
 
@@ -192,6 +192,7 @@ impl Iterator for SearchContext {
             if self.forced_depth == 0 && self.current_depth == 1 {
                 if let Some(r#move) = self.board.get_instant_move() {
                     self.search_done = true;
+
                     return Some(SearchResult::new(
                         0,
                         self.current_depth,
@@ -265,16 +266,16 @@ impl Iterator for SearchContext {
 
             let search_time = self.search_time_start.elapsed().unwrap().as_millis() as u32;
             if self.uci_debug {
-                let mut white_attack_mask = 0;
-                let mut black_attack_mask = 0;
+                let mut dangered_white_king_squares = 0;
+                let mut dangered_black_king_squares = 0;
 
                 let game_phase = self.board.game_phase;
                 let initial_game_phase = self.board.evaluation_parameters.initial_game_phase;
 
                 let material_evaluation = material::evaluate(&self.board);
                 let pst_evaluation = pst::evaluate(&self.board);
-                let mobility_evaluation = mobility::evaluate(&self.board, &mut white_attack_mask, &mut black_attack_mask);
-                let safety_evaluation = safety::evaluate(&self.board, white_attack_mask, black_attack_mask);
+                let mobility_evaluation = mobility::evaluate(&self.board, &mut dangered_white_king_squares, &mut dangered_black_king_squares);
+                let safety_evaluation = safety::evaluate(&self.board, dangered_white_king_squares, dangered_black_king_squares);
                 let pawns_evaluation = pawns::evaluate_without_cache(&self.board);
 
                 println!(

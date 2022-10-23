@@ -1,3 +1,4 @@
+use crate::utils::percent;
 use std::mem;
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering;
@@ -29,7 +30,6 @@ impl PerftHashTable {
     pub fn new(size: usize) -> Self {
         let bucket_size = mem::size_of::<PerftHashTableBucket>();
         let aligned_size = if size != 0 { 1 << (63 - size.leading_zeros()) } else { 0 };
-
         let mut hashtable = Self { table: Vec::with_capacity(aligned_size / bucket_size) };
 
         if aligned_size != 0 {
@@ -97,7 +97,7 @@ impl PerftHashTable {
             }
         }
 
-        ((filled_entries as f32) / (resolution as f32)) * 100.0
+        percent!(filled_entries, resolution)
     }
 
     /// Calculates an index for the `hash`.

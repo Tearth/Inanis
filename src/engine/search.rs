@@ -26,7 +26,7 @@ pub const STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_MULTIPLIER: i16 = 150;
 pub const NULL_MOVE_PRUNING_MIN_DEPTH: i8 = 2;
 pub const NULL_MOVE_PRUNING_MIN_GAME_PHASE: u8 = 3;
 pub const NULL_MOVE_PRUNING_MARGIN: i16 = 50;
-pub const NULL_MOVE_PRUNING_BASE_DEPTH: i8 = 2;
+pub const NULL_MOVE_PRUNING_DEPTH_BASE: i8 = 2;
 pub const NULL_MOVE_PRUNING_DEPTH_DIVIDER: i8 = 5;
 
 pub const LATE_MOVE_PRUNING_MIN_DEPTH: i8 = 1;
@@ -81,7 +81,7 @@ pub fn run<const DIAG: bool>(context: &mut SearchContext, depth: i8) {
 
 /// Entry point of the regular search, with generic `ROOT` parameter indicating if this is the root node where the moves filterigh might happen, and `PV` parameter
 /// determining if the current node is a PV (principal variation) node in the PVS framework. The implementation contains a typical alpha-beta approach, together with
-/// a bunch of reduction and prunings to optimize search. The most important parameter here, `context` contains the current state of the search, board state,
+/// a bunch of reductions and prunings to optimize search. The most important parameter here, `context`, contains the current state of the search, board state,
 /// statistics, and is passed by reference to all nodes. Besides obvious parameters like `depth`, `ply`, `alpha` and `beta`, there's also `allow_null_move`
 /// which prevents two null move checks in a row, and `friendly_king_checked` which is used to share friendly king check status between nodes (it's always
 /// calculated one depth earlier, as it's used as one of the LMR constraints). If `DIAG` is set to true, additional statistics will be gathered (with a small
@@ -94,7 +94,6 @@ pub fn run<const DIAG: bool>(context: &mut SearchContext, depth: i8) {
 ///  - test if there's threefold repetition draw, fifty move rule draw or insufficient material draw
 ///  - switch to the quiescence search if the depth is equal to zero
 ///  - read from the transposition table, return score if possible or update alpha/beta (<https://www.chessprogramming.org/Transposition_Table>)
-///  - generate evasion mask if the friendly king is checked
 ///  - main loop:
 ///     - filter moves (if `ROOT` is set)
 ///     - late move reduction (<https://www.chessprogramming.org/Late_Move_Reductions>)
@@ -112,7 +111,6 @@ pub fn run<const DIAG: bool>(context: &mut SearchContext, depth: i8) {
 ///  - razoring (<https://www.chessprogramming.org/Razoring>)
 ///  - static null move pruning (<https://www.chessprogramming.org/Reverse_Futility_Pruning>)
 ///  - null move pruning (<https://www.chessprogramming.org/Null_Move_Pruning>)
-///  - generate evasion mask if the friendly king is checked
 ///  - main loop:
 ///     - filter moves (if `ROOT` is set)
 ///     - late move pruning (<https://www.chessprogramming.org/Futility_Pruning#MoveCountBasedPruning>)
@@ -414,7 +412,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
         }
     }
 
-    // When no legal move is possible, but king is not checked, it's stalemate
+    // When no legal move is possible, but king is not checked, it's a stalemate
     if best_score == -CHECKMATE_SCORE + (ply as i16) + 1 && !friendly_king_checked {
         return DRAW_SCORE;
     }
@@ -497,9 +495,9 @@ fn assign_capture_scores(
 ///  - for transposition table move, assign [MOVE_ORDERING_HASH_MOVE]
 ///  - for every promotion (excluding these with capture), assign [MOVE_ORDERING_QUEEN_PROMOTION], [MOVE_ORDERING_ROOK_PROMOTION],
 ///    [MOVE_ORDERING_BISHOP_PROMOTION] or [MOVE_ORDERING_KNIGHT_PROMOTION]
-///  - for every move found in killer table, assign [MOVE_ORDERING_KILLER_MOVE]
+///  - for every move found in killer table, assign [MOVE_ORDERING_KILLER_MOVE_1] or [MOVE_ORDERING_KILLER_MOVE_2]
 ///  - for every castling, assign [MOVE_ORDERING_CASTLING]
-///  - for every quiet move which wasn't categoried in other categories, assign score from history table + [MOVE_ORDERING_HISTORY_MOVE_OFFSET] + random noise
+///  - for every quiet move which didn't fit in other categories, assign score from history table + [MOVE_ORDERING_HISTORY_MOVE_OFFSET] + random noise
 ///    defined by [LAZY_SMP_NOISE] if Lazy SMP is enabled
 fn assign_quiet_scores(
     context: &SearchContext,
@@ -561,7 +559,8 @@ fn assign_quiet_scores(
 
 /// Gets a next move to analyze. This function acts as pseudo-iterator and takes care about managing move generator stages, which is basically
 /// a state machine (<https://en.wikipedia.org/wiki/Finite-state_machine>) with following rules:
-///  - [MoveGeneratorStage::ReadyToCheckHashMove] - default state, returns transposition table move if possible
+///  - [MoveGeneratorStage::ReadyToCheckHashMove] - default state, prepares hash move if possible
+///  - [MoveGeneratorStage::HashMove] - returns hashmove if possible
 ///  - [MoveGeneratorStage::ReadyToGenerateCaptures] - generates all captures in the position
 ///  - [MoveGeneratorStage::Captures] - returns subsequent elements until the end or score is less than [MOVE_ORDERING_WINNING_CAPTURES_OFFSET]
 ///  - [MoveGeneratorStage::ReadyToGenerateQuietMoves] - generates all quiet moves in the position
@@ -615,12 +614,12 @@ fn get_next_move<const DIAG: bool>(
                         u64::MAX
                     } else {
                         let king_square = (context.board.pieces[context.board.active_color][KING]).bit_scan();
-                        let occupancy = context.board.occupancy[WHITE] | context.board.occupancy[BLACK];
+                        let occupancy_bb = context.board.occupancy[WHITE] | context.board.occupancy[BLACK];
 
-                        let queen_moves = context.board.magic.get_queen_moves(occupancy, king_square);
-                        let knight_moves = context.board.magic.get_knight_moves(king_square, &context.board.patterns);
+                        let queen_moves_bb = context.board.magic.get_queen_moves(occupancy_bb, king_square);
+                        let knight_moves_bb = context.board.magic.get_knight_moves(king_square, &context.board.patterns);
 
-                        queen_moves | knight_moves
+                        queen_moves_bb | knight_moves_bb
                     }
                 } else {
                     u64::MAX
@@ -800,7 +799,7 @@ fn null_move_pruning_can_be_applied<const PV: bool>(
 
 /// Gets the null move pruning depth reduction, called R, based on `depth`. The further from the horizon we are, the more reduction will be applied.
 fn null_move_pruning_get_r(depth: i8) -> i8 {
-    NULL_MOVE_PRUNING_BASE_DEPTH + depth / NULL_MOVE_PRUNING_DEPTH_DIVIDER
+    NULL_MOVE_PRUNING_DEPTH_BASE + depth / NULL_MOVE_PRUNING_DEPTH_DIVIDER
 }
 
 /// The main idea of the late move pruning is to prune all nodes, which are near the horizon and were scored low by the history table.

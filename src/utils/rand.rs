@@ -1,4 +1,5 @@
 use std::cell::Cell;
+use std::ops::Bound;
 use std::ops::RangeBounds;
 
 pub struct RandState {
@@ -18,17 +19,18 @@ thread_local! {
 
 macro_rules! rand_definition {
     ($type:ident, $min_value:expr, $max_value:expr) => {
+        /// Gets a random number within `range`.
         pub fn $type(range: impl RangeBounds<$type>) -> $type {
             let from = match range.start_bound() {
-                std::ops::Bound::Included(v) => *v,
-                std::ops::Bound::Excluded(v) => *v + 1,
-                std::ops::Bound::Unbounded => $min_value,
+                Bound::Included(v) => *v,
+                Bound::Excluded(v) => *v + 1,
+                Bound::Unbounded => $min_value,
             };
 
             let to = match range.end_bound() {
-                std::ops::Bound::Included(v) => *v,
-                std::ops::Bound::Excluded(v) => *v - 1,
-                std::ops::Bound::Unbounded => $max_value,
+                Bound::Included(v) => *v,
+                Bound::Excluded(v) => *v - 1,
+                Bound::Unbounded => $max_value,
             };
 
             if from == $min_value && to == $max_value {
@@ -38,12 +40,6 @@ macro_rules! rand_definition {
             }
         }
     };
-}
-
-pub fn seed(seed: u64) {
-    SEED.with(|state| {
-        state.seed.set(seed);
-    });
 }
 
 rand_definition!(i8, i8::MIN, i8::MAX);
@@ -56,6 +52,13 @@ rand_definition!(i64, i64::MIN, i64::MAX);
 rand_definition!(u64, u64::MIN, u64::MAX);
 rand_definition!(isize, isize::MIN, isize::MAX);
 rand_definition!(usize, usize::MIN, usize::MAX);
+
+/// Sets an initial seed for LCG.
+pub fn seed(seed: u64) {
+    SEED.with(|state| {
+        state.seed.set(seed);
+    });
+}
 
 fn rand_internal() -> u64 {
     SEED.with(|state| {

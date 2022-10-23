@@ -1,3 +1,4 @@
+use crate::utils::percent;
 use std::mem;
 use std::sync::atomic::AtomicU32;
 use std::sync::atomic::Ordering;
@@ -62,7 +63,7 @@ impl PawnHashTable {
             }
         }
 
-        ((filled_entries as f32) / (resolution as f32)) * 100.0
+        percent!(filled_entries, resolution)
     }
 
     /// Calculates a key for the `hash` by taking the last 16 bits of it.

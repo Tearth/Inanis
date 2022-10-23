@@ -72,11 +72,11 @@ pub fn recalculate_hash(board: &mut Board) {
 
     for color in ALL_COLORS {
         for piece_index in ALL_PIECES {
-            let mut pieces = board.pieces[color][piece_index];
-            while pieces != 0 {
-                let square_bb = pieces.get_lsb();
+            let mut pieces_bb = board.pieces[color][piece_index];
+            while pieces_bb != 0 {
+                let square_bb = pieces_bb.get_lsb();
                 let square = square_bb.bit_scan();
-                pieces = pieces.pop_lsb();
+                pieces_bb = pieces_bb.pop_lsb();
 
                 hash ^= board.zobrist.get_piece_hash(color, piece_index, square);
             }
@@ -113,11 +113,11 @@ pub fn recalculate_pawn_hash(board: &mut Board) {
 
     for color in ALL_COLORS {
         for piece in [PAWN, KING] {
-            let mut pieces = board.pieces[color][piece];
-            while pieces != 0 {
-                let square_bb = pieces.get_lsb();
+            let mut pieces_bb = board.pieces[color][piece];
+            while pieces_bb != 0 {
+                let square_bb = pieces_bb.get_lsb();
                 let square = square_bb.bit_scan();
-                pieces = pieces.pop_lsb();
+                pieces_bb = pieces_bb.pop_lsb();
 
                 hash ^= board.zobrist.get_piece_hash(color, piece, square);
             }

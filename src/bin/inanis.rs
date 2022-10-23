@@ -5,7 +5,7 @@ pub fn main() {
     terminal::run(get_target_features());
 }
 
-/// Gets a list of target features (POPCNT, BMI1, BMI2) with which an executable was built.
+/// Gets a list of target features (POPCNT, BMI1, BMI2) with which the executable was built.
 fn get_target_features() -> Vec<&'static str> {
     let mut target_features = Vec::new();
 

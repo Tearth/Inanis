@@ -63,7 +63,7 @@ impl HistoryTable {
 }
 
 impl Default for HistoryTable {
-    /// Constructs a default instance of [HistoryTable] with zeroed elements.
+    /// Constructs a default instance of [HistoryTable] with zeroed elements (except `max`).
     fn default() -> Self {
         const INIT_1: HistoryTableEntry = HistoryTableEntry::new_const();
         const INIT_2: [HistoryTableEntry; 64] = [INIT_1; 64];
@@ -73,7 +73,7 @@ impl Default for HistoryTable {
 }
 
 impl Clone for HistoryTable {
-    /// Clones [HistoryTable] by creating a new atomics (with the original values).
+    /// Clones [HistoryTable] by creating new atomics (with the original values).
     fn clone(&self) -> Self {
         Self { table: self.table.clone(), max: AtomicU32::new(self.max.load(Ordering::Relaxed)) }
     }

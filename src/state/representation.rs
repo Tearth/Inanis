@@ -232,7 +232,8 @@ impl Board {
                 self.pawn_hash ^= self.zobrist.get_piece_hash(color, piece, from);
                 self.pawn_hash ^= self.zobrist.get_piece_hash(color, piece, to);
 
-                self.en_passant = 1u64 << ((to as i8) + 8 * ((color as i8) * 2 - 1));
+                let sign = (color as i8) * 2 - 1;
+                self.en_passant = 1u64 << ((to as i8) + sign * 8);
                 self.hash ^= self.zobrist.get_en_passant_hash(self.en_passant.bit_scan() & 7);
             }
             MoveFlags::CAPTURE => {
@@ -291,8 +292,8 @@ impl Board {
                 self.pawn_hash ^= self.zobrist.get_piece_hash(color, piece, from);
                 self.pawn_hash ^= self.zobrist.get_piece_hash(color, piece, to);
 
-                let color_sign = (color as isize) * 2 - 1;
-                let enemy_pawn_square = ((to as isize) + 8 * color_sign) as usize;
+                let sign = (color as isize) * 2 - 1;
+                let enemy_pawn_square = ((to as isize) + sign * 8) as usize;
 
                 self.remove_piece(enemy_color, PAWN, enemy_pawn_square);
                 self.hash ^= self.zobrist.get_piece_hash(enemy_color, piece, enemy_pawn_square);
@@ -440,8 +441,8 @@ impl Board {
                 self.move_piece(color, ROOK, 4 + 56 * color, 7 + 56 * color);
             }
             MoveFlags::EN_PASSANT => {
-                let color_sign = (color as isize) * 2 - 1;
-                let enemy_pawn_square = ((to as isize) + 8 * color_sign) as usize;
+                let sign = (color as isize) * 2 - 1;
+                let enemy_pawn_square = ((to as isize) + sign * 8) as usize;
 
                 self.move_piece(color, piece, to, from);
                 self.add_piece(enemy_color, PAWN, enemy_pawn_square);
@@ -525,41 +526,41 @@ impl Board {
     /// Checks if the square specified by `square` is attacked by enemy, from the `color` perspective.
     pub fn is_square_attacked(&self, color: usize, square: usize) -> bool {
         let enemy_color = color ^ 1;
-        let occupancy = self.occupancy[WHITE] | self.occupancy[BLACK];
+        let occupancy_bb = self.occupancy[WHITE] | self.occupancy[BLACK];
 
-        let rook_queen_attacks = self.magic.get_rook_moves(occupancy, square);
-        let enemy_rooks_queens = self.pieces[enemy_color][ROOK] | self.pieces[enemy_color][QUEEN];
-        if (rook_queen_attacks & enemy_rooks_queens) != 0 {
+        let rook_queen_attacks_bb = self.magic.get_rook_moves(occupancy_bb, square);
+        let enemy_rooks_queens_bb = self.pieces[enemy_color][ROOK] | self.pieces[enemy_color][QUEEN];
+        if (rook_queen_attacks_bb & enemy_rooks_queens_bb) != 0 {
             return true;
         }
 
-        let bishop_queen_attacks = self.magic.get_bishop_moves(occupancy, square);
-        let enemy_bishops_queens = self.pieces[enemy_color][BISHOP] | self.pieces[enemy_color][QUEEN];
-        if (bishop_queen_attacks & enemy_bishops_queens) != 0 {
+        let bishop_queen_attacks_bb = self.magic.get_bishop_moves(occupancy_bb, square);
+        let enemy_bishops_queens_bb = self.pieces[enemy_color][BISHOP] | self.pieces[enemy_color][QUEEN];
+        if (bishop_queen_attacks_bb & enemy_bishops_queens_bb) != 0 {
             return true;
         }
 
-        let knight_attacks = self.magic.get_knight_moves(square, &self.patterns);
-        let enemy_knights = self.pieces[enemy_color][KNIGHT];
-        if (knight_attacks & enemy_knights) != 0 {
+        let knight_attacks_bb = self.magic.get_knight_moves(square, &self.patterns);
+        let enemy_knights_bb = self.pieces[enemy_color][KNIGHT];
+        if (knight_attacks_bb & enemy_knights_bb) != 0 {
             return true;
         }
 
-        let king_attacks = self.magic.get_king_moves(square, &self.patterns);
-        let enemy_kings = self.pieces[enemy_color][KING];
-        if (king_attacks & enemy_kings) != 0 {
+        let king_attacks_bb = self.magic.get_king_moves(square, &self.patterns);
+        let enemy_kings_bb = self.pieces[enemy_color][KING];
+        if (king_attacks_bb & enemy_kings_bb) != 0 {
             return true;
         }
 
-        let square = 1u64 << square;
-        let potential_enemy_pawns = king_attacks & self.pieces[enemy_color][PAWN];
-        let attacking_enemy_pawns = match color {
-            WHITE => square & ((potential_enemy_pawns >> 7) | (potential_enemy_pawns >> 9)),
-            BLACK => square & ((potential_enemy_pawns << 7) | (potential_enemy_pawns << 9)),
+        let square_bb = 1u64 << square;
+        let potential_enemy_pawns_bb = king_attacks_bb & self.pieces[enemy_color][PAWN];
+        let attacking_enemy_pawns_bb = match color {
+            WHITE => square_bb & ((potential_enemy_pawns_bb >> 7) | (potential_enemy_pawns_bb >> 9)),
+            BLACK => square_bb & ((potential_enemy_pawns_bb << 7) | (potential_enemy_pawns_bb << 9)),
             _ => panic!("Invalid parameter: fen={}, color={}", self, color),
         };
 
-        if attacking_enemy_pawns != 0 {
+        if attacking_enemy_pawns_bb != 0 {
             return true;
         }
 
@@ -580,22 +581,22 @@ impl Board {
     pub fn get_attacking_pieces(&self, color: usize, square: usize) -> usize {
         let mut result = 0;
         let enemy_color = color ^ 1;
-        let occupancy = self.occupancy[WHITE] | self.occupancy[BLACK];
+        let occupancy_bb = self.occupancy[WHITE] | self.occupancy[BLACK];
 
-        let bishops_rooks = self.pieces[enemy_color][BISHOP] | self.pieces[enemy_color][ROOK];
-        let rooks_queens = self.pieces[enemy_color][ROOK] | self.pieces[enemy_color][QUEEN];
-        let bishops_queens = self.pieces[enemy_color][BISHOP] | self.pieces[enemy_color][QUEEN];
+        let bishops_rooks_bb = self.pieces[enemy_color][BISHOP] | self.pieces[enemy_color][ROOK];
+        let rooks_queens_bb = self.pieces[enemy_color][ROOK] | self.pieces[enemy_color][QUEEN];
+        let bishops_queens_bb = self.pieces[enemy_color][BISHOP] | self.pieces[enemy_color][QUEEN];
 
-        let king_attacks = self.magic.get_king_moves(square, &self.patterns);
-        let attacking_kings_count = ((king_attacks & self.pieces[enemy_color][KING]) != 0) as usize;
+        let king_attacks_bb = self.magic.get_king_moves(square, &self.patterns);
+        let attacking_kings_count = ((king_attacks_bb & self.pieces[enemy_color][KING]) != 0) as usize;
         result |= attacking_kings_count << 7;
 
-        let queen_attacks = self.magic.get_queen_moves(occupancy & !bishops_rooks, square);
-        let attacking_queens_count = ((queen_attacks & self.pieces[enemy_color][QUEEN]) != 0) as usize;
+        let queen_attacks_bb = self.magic.get_queen_moves(occupancy_bb & !bishops_rooks_bb, square);
+        let attacking_queens_count = ((queen_attacks_bb & self.pieces[enemy_color][QUEEN]) != 0) as usize;
         result |= attacking_queens_count << 6;
 
-        let rook_attacks = self.magic.get_rook_moves(occupancy & !rooks_queens, square);
-        let attacking_rooks_count = (rook_attacks & self.pieces[enemy_color][ROOK]).bit_count();
+        let rook_attacks_bb = self.magic.get_rook_moves(occupancy_bb & !rooks_queens_bb, square);
+        let attacking_rooks_count = (rook_attacks_bb & self.pieces[enemy_color][ROOK]).bit_count();
 
         result |= match attacking_rooks_count {
             0 => 0,
@@ -603,10 +604,10 @@ impl Board {
             _ => 3 << 4,
         };
 
-        let knight_attacks = self.magic.get_knight_moves(square, &self.patterns);
-        let attacking_knights_count = (knight_attacks & self.pieces[enemy_color][KNIGHT]).bit_count();
-        let bishop_attacks = self.magic.get_bishop_moves(occupancy & !bishops_queens, square);
-        let attacking_bishops_count = (bishop_attacks & self.pieces[enemy_color][BISHOP]).bit_count();
+        let knight_attacks_bb = self.magic.get_knight_moves(square, &self.patterns);
+        let attacking_knights_count = (knight_attacks_bb & self.pieces[enemy_color][KNIGHT]).bit_count();
+        let bishop_attacks_bb = self.magic.get_bishop_moves(occupancy_bb & !bishops_queens_bb, square);
+        let attacking_bishops_count = (bishop_attacks_bb & self.pieces[enemy_color][BISHOP]).bit_count();
         let attacking_knights_bishops_count = attacking_knights_count + attacking_bishops_count;
 
         result |= match attacking_knights_bishops_count {
@@ -616,11 +617,11 @@ impl Board {
             _ => 7 << 1,
         };
 
-        let square = 1u64 << square;
-        let potential_enemy_pawns = king_attacks & self.pieces[enemy_color][PAWN];
+        let square_bb = 1u64 << square;
+        let potential_enemy_pawns_bb = king_attacks_bb & self.pieces[enemy_color][PAWN];
         let attacking_pawns_count = (match color {
-            WHITE => square & ((potential_enemy_pawns >> 7) | (potential_enemy_pawns >> 9)),
-            BLACK => square & ((potential_enemy_pawns << 7) | (potential_enemy_pawns << 9)),
+            WHITE => square_bb & ((potential_enemy_pawns_bb >> 7) | (potential_enemy_pawns_bb >> 9)),
+            BLACK => square_bb & ((potential_enemy_pawns_bb << 7) | (potential_enemy_pawns_bb << 9)),
             _ => panic!("Invalid parameter: fen={}, color={}", self, color),
         } != 0) as usize;
 
@@ -654,11 +655,7 @@ impl Board {
             return usize::MAX;
         }
 
-        if ((1u64 << square) & self.occupancy[WHITE]) != 0 {
-            WHITE
-        } else {
-            BLACK
-        }
+        (((1u64 << square) & self.occupancy[WHITE]) == 0) as usize
     }
 
     /// Adds `piece` on the `square` with the specified `color`, also updates occupancy and incremental values.
@@ -708,41 +705,41 @@ impl Board {
     /// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position, using `pawn_hashtable` to store pawn
     /// evaluations and `statistics` to gather diagnostic data. Returns score from the `color` perspective (more than 0 when advantage, less than 0 when disadvantage).
     pub fn evaluate<const DIAG: bool>(&self, color: usize, pawn_hashtable: &PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
-        let mut white_attack_mask = 0;
-        let mut black_attack_mask = 0;
-        let mobility_score = mobility::evaluate(self, &mut white_attack_mask, &mut black_attack_mask);
+        let mut dangered_white_king_squares = 0;
+        let mut dangered_black_king_squares = 0;
+        let mobility_score = mobility::evaluate(self, &mut dangered_white_king_squares, &mut dangered_black_king_squares);
 
         let game_phase = self.game_phase;
         let initial_game_phase = self.evaluation_parameters.initial_game_phase;
-
         let evaluation = 0
             + material::evaluate(self)
             + pst::evaluate(self)
             + pawns::evaluate::<DIAG>(self, pawn_hashtable, statistics)
-            + safety::evaluate(self, white_attack_mask, black_attack_mask)
+            + safety::evaluate(self, dangered_white_king_squares, dangered_black_king_squares)
             + mobility_score;
+        let sign = -((color as i16) * 2 - 1);
 
-        -((color as i16) * 2 - 1) * evaluation.taper_score(game_phase, initial_game_phase)
+        sign * evaluation.taper_score(game_phase, initial_game_phase)
     }
 
     /// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position.
     /// Returns score from the `color` perspective (more than 0 when advantage, less than 0 when disadvantage).
     pub fn evaluate_without_cache(&self, color: usize) -> i16 {
-        let mut white_attack_mask = 0;
-        let mut black_attack_mask = 0;
-        let mobility_score = mobility::evaluate(self, &mut white_attack_mask, &mut black_attack_mask);
+        let mut dangered_white_king_squares = 0;
+        let mut dangered_black_king_squares = 0;
+        let mobility_score = mobility::evaluate(self, &mut dangered_white_king_squares, &mut dangered_black_king_squares);
 
         let game_phase = self.game_phase;
         let initial_game_phase = self.evaluation_parameters.initial_game_phase;
-
         let evaluation = 0
             + material::evaluate(self)
             + pst::evaluate(self)
             + pawns::evaluate_without_cache(self)
-            + safety::evaluate(self, white_attack_mask, black_attack_mask)
+            + safety::evaluate(self, dangered_white_king_squares, dangered_black_king_squares)
             + mobility_score;
+        let sign = -((color as i16) * 2 - 1);
 
-        -((color as i16) * 2 - 1) * evaluation.taper_score(game_phase, initial_game_phase)
+        sign * evaluation.taper_score(game_phase, initial_game_phase)
     }
 
     /// Runs lazy (fast) evaluations, considering only material and piece-square tables. Returns score from the `color` perspective (more than 0 when
@@ -750,8 +747,10 @@ impl Board {
     pub fn evaluate_lazy(&self, color: usize) -> i16 {
         let game_phase = self.game_phase;
         let initial_game_phase = self.evaluation_parameters.initial_game_phase;
+        let evaluation = material::evaluate(self) + pst::evaluate(self);
+        let sign = -((color as i16) * 2 - 1);
 
-        -((color as i16) * 2 - 1) * (material::evaluate(self) + pst::evaluate(self)).taper_score(game_phase, initial_game_phase)
+        sign * evaluation.taper_score(game_phase, initial_game_phase)
     }
 
     /// Recalculates incremental values (material and piece-square tables) entirely.
@@ -767,12 +766,8 @@ impl Board {
         }
 
         let mut repetitions_count = 1;
-        let mut from = self.state_stack.len().wrapping_sub(self.halfmove_clock as usize);
+        let from = self.state_stack.len().saturating_sub(self.halfmove_clock as usize);
         let to = self.state_stack.len() - 1;
-
-        if from > 1024 {
-            from = 0;
-        }
 
         for hash_index in (from..to).rev().step_by(2) {
             if self.state_stack[hash_index].hash == self.hash {
@@ -804,7 +799,9 @@ impl Board {
         let white_material = self.material_scores[WHITE] - self.evaluation_parameters.piece_value[KING];
         let black_material = self.material_scores[BLACK] - self.evaluation_parameters.piece_value[KING];
         let bishop_value = self.evaluation_parameters.piece_value[BISHOP];
-        let pawns_count = (self.pieces[WHITE][PAWN]).bit_count() + (self.pieces[BLACK][PAWN]).bit_count();
+
+        let pawns_bb = self.pieces[WHITE][PAWN] | self.pieces[BLACK][PAWN];
+        let pawns_count = pawns_bb.bit_count();
 
         if white_material <= bishop_value && black_material <= bishop_value && pawns_count == 0 {
             // King vs King
@@ -812,11 +809,8 @@ impl Board {
                 return true;
             }
 
-            let light_pieces_count = 0
-                + (self.pieces[WHITE][KNIGHT]).bit_count()
-                + (self.pieces[WHITE][BISHOP]).bit_count()
-                + (self.pieces[BLACK][KNIGHT]).bit_count()
-                + (self.pieces[BLACK][BISHOP]).bit_count();
+            let light_pieces_bb = self.pieces[WHITE][KNIGHT] | self.pieces[WHITE][BISHOP] | self.pieces[BLACK][KNIGHT] | self.pieces[BLACK][BISHOP];
+            let light_pieces_count = light_pieces_bb.bit_count();
 
             // King + Knight/Bishop vs King
             if light_pieces_count == 1 {
@@ -825,12 +819,12 @@ impl Board {
 
             // King + Bishop (same color) vs King + Bishop (same color)
             if light_pieces_count == 2 {
-                let white_bishops = self.pieces[WHITE][BISHOP];
-                let black_bishops = self.pieces[BLACK][BISHOP];
+                let white_bishops_bb = self.pieces[WHITE][BISHOP];
+                let black_bishops_bb = self.pieces[BLACK][BISHOP];
 
-                if white_bishops != 0 && black_bishops != 0 {
-                    let all_bishops = white_bishops | black_bishops;
-                    if (all_bishops & WHITE_SQUARES_BB) == all_bishops || (all_bishops & BLACK_SQUARES_BB) == all_bishops {
+                if white_bishops_bb != 0 && black_bishops_bb != 0 {
+                    let all_bishops_bb = white_bishops_bb | black_bishops_bb;
+                    if (all_bishops_bb & WHITE_SQUARES_BB) == all_bishops_bb || (all_bishops_bb & BLACK_SQUARES_BB) == all_bishops_bb {
                         return true;
                     }
                 }

@@ -177,27 +177,27 @@ pub struct MagicSquare {
 }
 
 impl MagicContainer {
-    /// Gets a rook moves for the square specified by `square`, considering `occupancy`.
-    pub fn get_rook_moves(&self, mut occupancy: u64, square: usize) -> u64 {
-        occupancy &= self.rook_squares[square].mask;
-        occupancy = occupancy.wrapping_mul(self.rook_squares[square].magic);
-        occupancy >>= 64 - self.rook_squares[square].shift;
+    /// Gets a rook moves for the square specified by `square`, considering `occupancy_bb`.
+    pub fn get_rook_moves(&self, mut occupancy_bb: u64, square: usize) -> u64 {
+        occupancy_bb &= self.rook_squares[square].mask;
+        occupancy_bb = occupancy_bb.wrapping_mul(self.rook_squares[square].magic);
+        occupancy_bb >>= 64 - self.rook_squares[square].shift;
 
-        self.rook_squares[square].attacks[occupancy as usize]
+        self.rook_squares[square].attacks[occupancy_bb as usize]
     }
 
-    /// Gets a bishop moves for the square specified by `square`, considering `occupancy`.
-    pub fn get_bishop_moves(&self, mut occupancy: u64, square: usize) -> u64 {
-        occupancy &= self.bishop_squares[square].mask;
-        occupancy = occupancy.wrapping_mul(self.bishop_squares[square].magic);
-        occupancy >>= 64 - self.bishop_squares[square].shift;
+    /// Gets a bishop moves for the square specified by `square`, considering `occupancy_bb`.
+    pub fn get_bishop_moves(&self, mut occupancy_bb: u64, square: usize) -> u64 {
+        occupancy_bb &= self.bishop_squares[square].mask;
+        occupancy_bb = occupancy_bb.wrapping_mul(self.bishop_squares[square].magic);
+        occupancy_bb >>= 64 - self.bishop_squares[square].shift;
 
-        self.bishop_squares[square].attacks[occupancy as usize]
+        self.bishop_squares[square].attacks[occupancy_bb as usize]
     }
 
-    /// Gets a queen moves for the square specified by `square`, considering `occupancy`.
-    pub fn get_queen_moves(&self, occupancy: u64, square: usize) -> u64 {
-        self.get_rook_moves(occupancy, square) | self.get_bishop_moves(occupancy, square)
+    /// Gets a queen moves for the square specified by `square`, considering `occupancy_bb`.
+    pub fn get_queen_moves(&self, occupancy_bb: u64, square: usize) -> u64 {
+        self.get_rook_moves(occupancy_bb, square) | self.get_bishop_moves(occupancy_bb, square)
     }
 
     /// Gets a knight moves for the square specified by `square`, without considering an occupancy.
@@ -379,36 +379,36 @@ impl MagicContainer {
         patterns.get_diagonals(square) & !EDGE_BB
     }
 
-    /// Gets a rook attacks for the square specified by `square`, considering `occupancy`.
-    fn get_rook_attacks(&self, occupancy: u64, square: usize) -> u64 {
-        let left = self.get_attacks(occupancy, square, (-1, 0));
-        let right = self.get_attacks(occupancy, square, (1, 0));
-        let top = self.get_attacks(occupancy, square, (0, 1));
-        let down = self.get_attacks(occupancy, square, (0, -1));
+    /// Gets a rook attacks for the square specified by `square`, considering `occupancy_bb`.
+    fn get_rook_attacks(&self, occupancy_bb: u64, square: usize) -> u64 {
+        let left = self.get_attacks(occupancy_bb, square, (-1, 0));
+        let right = self.get_attacks(occupancy_bb, square, (1, 0));
+        let top = self.get_attacks(occupancy_bb, square, (0, 1));
+        let down = self.get_attacks(occupancy_bb, square, (0, -1));
 
         left | right | top | down
     }
 
-    /// Gets a bishop attacks for the square specified by `square`, occupancy `occupancy`.
-    fn get_bishop_attacks(&self, occupancy: u64, square: usize) -> u64 {
-        let top_right = self.get_attacks(occupancy, square, (1, 1));
-        let top_left = self.get_attacks(occupancy, square, (1, -1));
-        let down_right = self.get_attacks(occupancy, square, (-1, 1));
-        let down_left = self.get_attacks(occupancy, square, (-1, -1));
+    /// Gets a bishop attacks for the square specified by `square`, occupancy `occupancy_bb`.
+    fn get_bishop_attacks(&self, occupancy_bb: u64, square: usize) -> u64 {
+        let top_right = self.get_attacks(occupancy_bb, square, (1, 1));
+        let top_left = self.get_attacks(occupancy_bb, square, (1, -1));
+        let down_right = self.get_attacks(occupancy_bb, square, (-1, 1));
+        let down_left = self.get_attacks(occupancy_bb, square, (-1, -1));
 
         top_right | top_left | down_right | down_left
     }
 
-    /// Helper function to get all possible to move squares, considering `occupancy`, starting from the square
+    /// Helper function to get all possible to move squares, considering `occupancy_bb`, starting from the square
     /// specified by `square` and going into the `direction`.
-    fn get_attacks(&self, occupancy: u64, square: usize, direction: (isize, isize)) -> u64 {
+    fn get_attacks(&self, occupancy_bb: u64, square: usize, direction: (isize, isize)) -> u64 {
         let mut result = 0u64;
         let mut current = ((square as isize) % 8 + direction.0, (square as isize) / 8 + direction.1);
 
         while current.0 >= 0 && current.0 <= 7 && current.1 >= 0 && current.1 <= 7 {
             result |= 1u64 << (current.0 + current.1 * 8);
 
-            if (occupancy & result) != 0 {
+            if (occupancy_bb & result) != 0 {
                 break;
             }
 

@@ -12,7 +12,7 @@ use std::cmp;
 ///  - isolated pawns (negative score)
 ///  - chained pawns (positive score)
 ///  - passed pawns (positive score)
-///  - opened files next to the king (negative score)
+///  - open files next to the king (negative score)
 ///
 /// To improve performance (using the fact that structure of pawns changes relatively rare), each evaluation is saved in the pawn hashtable,
 /// and used again if possible.
@@ -67,25 +67,25 @@ fn evaluate_color(board: &Board, color: usize) -> EvaluationResult {
         }
     }
 
-    let mut pawns = board.pieces[color][PAWN];
-    while pawns != 0 {
-        let square_bb = pawns.get_lsb();
+    let mut pawns_bb = board.pieces[color][PAWN];
+    while pawns_bb != 0 {
+        let square_bb = pawns_bb.get_lsb();
         let square = square_bb.bit_scan();
-        pawns = pawns.pop_lsb();
+        pawns_bb = pawns_bb.pop_lsb();
 
         chained_pawns += (board.patterns.get_star(square) & board.pieces[color][PAWN]).bit_count() as i16;
 
-        let front = board.patterns.get_front(color, square);
-        let enemy_pawns_ahead_count = (front & board.pieces[color ^ 1][PAWN]).bit_count();
-        let friendly_pawns_ahead_count = (front & board.patterns.get_file(square) & board.pieces[color][PAWN]).bit_count();
+        let front_bb = board.patterns.get_front(color, square);
+        let enemy_pawns_ahead_count = (front_bb & board.pieces[color ^ 1][PAWN]).bit_count();
+        let friendly_pawns_ahead_count = (front_bb & board.patterns.get_file(square) & board.pieces[color][PAWN]).bit_count();
 
         if enemy_pawns_ahead_count == 0 && friendly_pawns_ahead_count == 0 {
             passed_pawns += 1;
         }
     }
 
-    let king = board.pieces[color][KING];
-    let king_square = king.bit_scan();
+    let king_bb = board.pieces[color][KING];
+    let king_square = king_bb.bit_scan();
     let king_square_file = (king_square & 7) as i8;
     pawn_shield = (board.patterns.get_box(king_square) & board.pieces[color][PAWN]).bit_count() as i16;
 

@@ -9,6 +9,7 @@ macro_rules! div_ceil_implementation {
         impl DivCeil for $type {
             type Item = $type;
 
+            /// Stable implementation of div_ceil.
             #[inline(always)]
             fn div_ceil_stable(&self, divider: $type) -> Self::Item {
                 // Integer ceiling: https://stackoverflow.com/a/2745086

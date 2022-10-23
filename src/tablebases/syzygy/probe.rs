@@ -86,9 +86,8 @@ pub fn get_root_wdl_dtz(board: &Board) -> Option<WdlDtzResult> {
             _ => WdlResult::Draw,
         };
         let dtz = ((result & TB_RESULT_DTZ_MASK) >> TB_RESULT_DTZ_SHIFT);
-        let success = result != TB_RESULT_FAILED;
 
-        if !success {
+        if result == TB_RESULT_FAILED {
             return None;
         }
 

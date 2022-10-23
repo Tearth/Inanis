@@ -201,9 +201,9 @@ impl PatternsContainer {
     /// Generates rail patterns for all squares.
     pub fn regenerate_rails(&mut self) {
         for file in ALL_FILES {
-            let left_file = if file > 0 { FILE_H_BB << (file - 1) } else { 0 };
-            let right_file = if file < 7 { FILE_H_BB << (file + 1) } else { 0 };
-            self.rail_patterns[file] = left_file | right_file;
+            let left_file_bb = if file > 0 { FILE_H_BB << (file - 1) } else { 0 };
+            let right_file_bb = if file < 7 { FILE_H_BB << (file + 1) } else { 0 };
+            self.rail_patterns[file] = left_file_bb | right_file_bb;
         }
     }
 
@@ -221,9 +221,9 @@ impl PatternsContainer {
                 let file = square % 8;
                 let rank = square / 8;
 
-                let center_file = FILE_H_BB << file;
-                let left_file = if file > 0 { FILE_H_BB << (file - 1) } else { 0 };
-                let right_file = if file < 7 { FILE_H_BB << (file + 1) } else { 0 };
+                let center_file_bb = FILE_H_BB << file;
+                let left_file_bb = if file > 0 { FILE_H_BB << (file - 1) } else { 0 };
+                let right_file_bb = if file < 7 { FILE_H_BB << (file + 1) } else { 0 };
 
                 let mut current_rank = rank as i8;
                 let mut forbidden_area = 0;
@@ -232,7 +232,7 @@ impl PatternsContainer {
                     current_rank += (color as i8) * 2 - 1;
                 }
 
-                self.front_patterns[color][square] = (left_file | center_file | right_file) & !forbidden_area;
+                self.front_patterns[color][square] = (left_file_bb | center_file_bb | right_file_bb) & !forbidden_area;
             }
         }
     }

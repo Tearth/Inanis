@@ -187,13 +187,13 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
                 continue;
             }
 
-            let current_average_game_phase = sum_of_game_phases / (output_positions.len() as f32);
-            if tries < 10
-                && ((current_average_game_phase < avg_game_phase && game_phase < avg_game_phase)
-                    || (current_average_game_phase > avg_game_phase && game_phase > avg_game_phase))
-            {
-                tries += 1;
-                continue;
+            let avg_game_phase_now = sum_of_game_phases / (output_positions.len() as f32);
+            if tries < 10 {
+                if (avg_game_phase_now < avg_game_phase && game_phase < avg_game_phase) || (avg_game_phase_now > avg_game_phase && game_phase > avg_game_phase)
+                {
+                    tries += 1;
+                    continue;
+                }
             }
 
             output_positions.insert(position);
@@ -203,6 +203,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
         }
 
         parsed_pgns += 1;
+
         if parsed_pgns % 1000 == 0 {
             println!(
                 "Parsed PGNs: {} ({} viable positions, {} ignored positions, {} output positions, {} duplicates)",

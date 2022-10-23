@@ -24,11 +24,11 @@ pub fn recalculate_incremental_values(board: &mut Board) {
         for phase in ALL_PHASES {
             let mut score = 0;
             for piece_index in ALL_PIECES {
-                let mut pieces = board.pieces[color_index][piece_index];
-                while pieces != 0 {
-                    let square_bb = pieces.get_lsb();
+                let mut pieces_bb = board.pieces[color_index][piece_index];
+                while pieces_bb != 0 {
+                    let square_bb = pieces_bb.get_lsb();
                     let square = square_bb.bit_scan();
-                    pieces = pieces.pop_lsb();
+                    pieces_bb = pieces_bb.pop_lsb();
 
                     score += board.evaluation_parameters.pst[color_index][piece_index][phase][square] as i16;
                 }

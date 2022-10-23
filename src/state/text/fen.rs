@@ -34,8 +34,7 @@ pub fn fen_to_board(
     see_container: Option<Arc<SEEContainer>>,
     magic_container: Option<Arc<MagicContainer>>,
 ) -> Result<Board, String> {
-    let result = epd_to_board(fen, evaluation_parameters, zobrist_container, patterns_container, see_container, magic_container)?;
-    Ok(result.board)
+    Ok(epd_to_board(fen, evaluation_parameters, zobrist_container, patterns_container, see_container, magic_container)?.board)
 }
 
 /// Converts `epd` into the [Board], using provided containers. If the parameter is [None], then the new container is created.
@@ -237,15 +236,12 @@ fn castling_to_fen(board: &Board) -> String {
     if board.castling_rights.contains(CastlingRights::WHITE_SHORT_CASTLING) {
         result.push('K');
     }
-
     if board.castling_rights.contains(CastlingRights::WHITE_LONG_CASTLING) {
         result.push('Q');
     }
-
     if board.castling_rights.contains(CastlingRights::BLACK_SHORT_CASTLING) {
         result.push('k');
     }
-
     if board.castling_rights.contains(CastlingRights::BLACK_LONG_CASTLING) {
         result.push('q');
     }
