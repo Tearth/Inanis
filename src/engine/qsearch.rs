@@ -11,7 +11,7 @@ pub const SCORE_PRUNING_THRESHOLD: i16 = 0;
 pub const FUTILITY_PRUNING_MARGIN: i16 = 100;
 
 /// Entry point of the quiescence search. The main idea here is to reduce the horizon effect by processing capture sequences and eventually
-/// make a quiet position suitable for final evaluation. `context`, `depth`, `ply`, `alpha` and `beta` are provided by the leaf of the regular search.
+/// make a quiet position suitable for final evaluation. `context`, `ply`, `alpha` and `beta` are provided by the leaf of the regular search.
 /// If `DIAG` is set to true, additional statistics will be gathered (with a small performance penalty).
 ///
 /// Search steps:
@@ -20,7 +20,7 @@ pub const FUTILITY_PRUNING_MARGIN: i16 = 100;
 ///  - main loop:
 ///     - score pruning
 ///     - futility pruning (<https://www.chessprogramming.org/Delta_Pruning>)
-pub fn run<const DIAG: bool>(context: &mut SearchContext, depth: i8, ply: u16, mut alpha: i16, beta: i16) -> i16 {
+pub fn run<const DIAG: bool>(context: &mut SearchContext, ply: u16, mut alpha: i16, beta: i16) -> i16 {
     context.statistics.q_nodes_count += 1;
     context.statistics.max_ply = cmp::max(ply, context.statistics.max_ply);
 
@@ -65,7 +65,7 @@ pub fn run<const DIAG: bool>(context: &mut SearchContext, depth: i8, ply: u16, m
         found = true;
 
         context.board.make_move(r#move);
-        let score = -run::<DIAG>(context, depth - 1, ply + 1, -beta, -alpha);
+        let score = -run::<DIAG>(context, ply + 1, -beta, -alpha);
         context.board.undo_move(r#move);
 
         alpha = cmp::max(alpha, score);

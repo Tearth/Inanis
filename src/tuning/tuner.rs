@@ -224,7 +224,7 @@ fn load_positions(epd_filename: &str) -> Result<Vec<TunerPosition>, String> {
             Some(magic_container.clone()),
         )?;
 
-        if parsed_epd.comment == None {
+        if parsed_epd.comment.is_none() {
             return Err("Game result not found".to_string());
         }
 
@@ -332,38 +332,38 @@ fn load_values(context: &TunerContext, lock_material: bool, random_values: bool)
     parameters.push(TunerParameter::new(context.parameters.king_attacked_squares_ending, -999, -40, -10, 999));
 
     let pawn_pst = &context.parameters.pst_patterns[PAWN];
-    parameters.append(&mut pawn_pst[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
-    parameters.append(&mut pawn_pst[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
+    parameters.append(&mut pawn_pst[0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+    parameters.append(&mut pawn_pst[1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
 
     let knight_pst = &context.parameters.pst_patterns[KNIGHT];
-    parameters.append(&mut knight_pst[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
-    parameters.append(&mut knight_pst[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
+    parameters.append(&mut knight_pst[0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+    parameters.append(&mut knight_pst[1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
 
     let bishop_pst = &context.parameters.pst_patterns[BISHOP];
-    parameters.append(&mut bishop_pst[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
-    parameters.append(&mut bishop_pst[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
+    parameters.append(&mut bishop_pst[0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+    parameters.append(&mut bishop_pst[1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
 
     let rook_pst = &context.parameters.pst_patterns[ROOK];
-    parameters.append(&mut rook_pst[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
-    parameters.append(&mut rook_pst[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
+    parameters.append(&mut rook_pst[0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+    parameters.append(&mut rook_pst[1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
 
     let queen_pst = &context.parameters.pst_patterns[QUEEN];
-    parameters.append(&mut queen_pst[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
-    parameters.append(&mut queen_pst[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
+    parameters.append(&mut queen_pst[0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+    parameters.append(&mut queen_pst[1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
 
     let king_pst = &context.parameters.pst_patterns[KING];
-    parameters.append(&mut king_pst[0].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
-    parameters.append(&mut king_pst[1].iter().map(|v| TunerParameter::new(*v as i16, -999, -40, 40, 999)).collect());
+    parameters.append(&mut king_pst[0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+    parameters.append(&mut king_pst[1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
 
     if random_values {
         rand::seed(common::time::get_unix_timestamp());
         for parameter in &mut parameters {
-            (*parameter).value = rand::i16(parameter.min_init..=parameter.max_init);
+            parameter.value = rand::i16(parameter.min_init..=parameter.max_init);
         }
     }
 
     for parameter in &mut parameters {
-        (*parameter).value = (*parameter).value.clamp(parameter.min, parameter.max);
+        parameter.value = parameter.value.clamp(parameter.min, parameter.max);
     }
 
     parameters
@@ -438,13 +438,13 @@ fn save_values_internal(values: &mut [TunerParameter], destination: &mut i16, in
 
 /// Saves [i8] array starting at the `index` of `values` in the `array`.
 fn save_values_to_i8_array_internal(values: &mut [TunerParameter], array: &mut [i16], index: &mut usize) {
-    array.copy_from_slice(&values[*index..(*index + array.len())].iter().map(|v| (*v).value).collect::<Vec<i16>>());
+    array.copy_from_slice(&values[*index..(*index + array.len())].iter().map(|v| v.value).collect::<Vec<i16>>());
     *index += array.len();
 }
 
 /// Saves [i16] array starting at the `index` of `values` in the `array`.
 fn save_values_to_i16_array_internal(values: &mut [TunerParameter], array: &mut [i16], index: &mut usize) {
-    array.copy_from_slice(&values[*index..(*index + array.len())].iter().map(|v| (*v).value).collect::<Vec<i16>>());
+    array.copy_from_slice(&values[*index..(*index + array.len())].iter().map(|v| v.value).collect::<Vec<i16>>());
     *index += array.len();
 }
 

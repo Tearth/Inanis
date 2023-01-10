@@ -170,7 +170,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
 
     if depth <= 0 {
         conditional_expression!(DIAG, context.statistics.leafs_count += 1);
-        return qsearch::run::<DIAG>(context, depth, ply, alpha, beta);
+        return qsearch::run::<DIAG>(context, ply, alpha, beta);
     }
 
     let original_alpha = alpha;
@@ -191,7 +191,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
             }
 
             if !ROOT {
-                if entry.depth >= depth as i8 {
+                if entry.depth >= depth {
                     tt_entry_found = true;
                     match entry.r#type {
                         TranspositionTableScoreType::UPPER_BOUND => {
@@ -243,7 +243,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
 
         conditional_expression!(DIAG, context.statistics.razoring_attempts += 1);
         if lazy_evaluation_value + margin <= alpha {
-            let score = qsearch::run::<DIAG>(context, depth, ply, alpha, beta);
+            let score = qsearch::run::<DIAG>(context, ply, alpha, beta);
             if score <= alpha {
                 conditional_expression!(DIAG, context.statistics.leafs_count += 1);
                 conditional_expression!(DIAG, context.statistics.razoring_accepted += 1);
@@ -426,7 +426,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
             TranspositionTableScoreType::EXACT_SCORE
         };
 
-        context.transposition_table.add(context.board.hash, alpha, best_move, depth as i8, ply, score_type, context.search_id);
+        context.transposition_table.add(context.board.hash, alpha, best_move, depth, ply, score_type, context.search_id);
         conditional_expression!(DIAG, context.statistics.tt_added += 1);
     }
 

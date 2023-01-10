@@ -7,7 +7,8 @@
     clippy::if_same_then_else,
     clippy::declare_interior_mutable_const,
     clippy::manual_range_contains,
-    clippy::format_in_format_args
+    clippy::format_in_format_args,
+    clippy::question_mark
 )]
 
 //! The main page of the Inanis documentation. Feel free to explore it by going into the specific module below,

@@ -95,7 +95,7 @@ impl EvaluationParameters {
 
     /// Gets a PST value for the specified `color`, `piece`, `phase` and `square`.
     pub fn get_pst_value(&self, color: usize, piece: usize, phase: usize, square: usize) -> i16 {
-        self.pst[color][piece][phase][square] as i16
+        self.pst[color][piece][phase][square]
     }
 }
 

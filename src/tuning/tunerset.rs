@@ -155,7 +155,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
                 continue;
             }
 
-            let q_score = qsearch::run::<false>(&mut context, 0, 0, MIN_ALPHA, MIN_BETA);
+            let q_score = qsearch::run::<false>(&mut context, 0, MIN_ALPHA, MIN_BETA);
             let evaluation = context.board.evaluate_without_cache(context.board.active_color);
             if evaluation.abs_diff(q_score) > max_diff {
                 ignored_positions += 1;

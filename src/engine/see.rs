@@ -86,11 +86,11 @@ impl SEEContainer {
     /// Gets a piece value based on `piece_index` saved in SEE format (look `get_see_piece_index`).
     fn get_piece_value(&self, piece_index: usize) -> i16 {
         match piece_index {
-            0 => self.evaluation_parameters.piece_value[PAWN] as i16,           // Pawn
-            1 | 2 | 3 => self.evaluation_parameters.piece_value[BISHOP] as i16, // 3x Knight/bishop
-            4 | 5 => self.evaluation_parameters.piece_value[ROOK] as i16,       // 2x Rook
-            6 => self.evaluation_parameters.piece_value[QUEEN] as i16,          // Queen
-            7 => self.evaluation_parameters.piece_value[KING] as i16,           // King
+            0 => self.evaluation_parameters.piece_value[PAWN],           // Pawn
+            1 | 2 | 3 => self.evaluation_parameters.piece_value[BISHOP], // 3x Knight/bishop
+            4 | 5 => self.evaluation_parameters.piece_value[ROOK],       // 2x Rook
+            6 => self.evaluation_parameters.piece_value[QUEEN],          // Queen
+            7 => self.evaluation_parameters.piece_value[KING],           // King
             _ => panic!("Invalid value: piece_index={}", piece_index),
         }
     }
