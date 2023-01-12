@@ -102,7 +102,7 @@ impl PGNLoader {
                     ),
                 };
 
-                for token in line.split_ascii_whitespace() {
+                for token in line.replace('.', ". ").split_ascii_whitespace() {
                     if token.as_bytes()[0].is_ascii_digit() {
                         continue;
                     }

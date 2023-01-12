@@ -59,7 +59,6 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
     let mut ignored_positions = 0;
     let mut duplicates = 0;
     let mut sum_of_game_phases = 0.0;
-    let avg_game_phase = avg_game_phase * (evaluation_parameters.initial_game_phase as f32);
 
     for pgn in pgn_loader {
         let pgn = match pgn {
@@ -193,7 +192,11 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
                 {
                     tries += 1;
                     continue;
+                } else {
+                    tries = 0;
                 }
+            } else {
+                break;
             }
 
             output_positions.insert(position);
