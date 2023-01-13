@@ -1,3 +1,35 @@
+# Version 1.2.0 (-- -- ----)
+ADDED
+ - Added integration with Fathom library to better support Syzygy tablebases
+ - Added "tbhits" to the search output
+ - Added "avg_game_phase" parameter to "tunerset" command
+ - Added "syzygy" and "bindgen" as switchable Cargo features
+ - Added information about captures, en passants, castles, promotions and checks in perft's output
+ - Added attackers/defenders cache
+ - Added killer moves as separate move generator phase
+ - Removed unnecessary check detection in null move pruning
+ - Removed redundant abort flag check
+ - Removed underpromotions in qsearch
+ - Reduced binary size by removing dependencies and replacing them with custom implementation
+ - Renamed "test" command to "testset"
+ - Simplified evaluation by reducing the amount of score taperings 
+ - Improved build process
+ - Improved benchmark output
+ - Improved allocation of all hashtables, now their size will be always a power of 2 for better performance
+ - Improved king safety evaluation by taking a number of attacked adjacent fields more serious
+ - Improved overall performance by a lot of minor refactors and adjustments
+ - Improved game phase evaluation
+ - Improved killer heuristic
+ - Improved history table aging
+ - Improved reduction formula in null move pruning
+ - Fixed a few "tunerset" command bugs related to the game phase
+ - Fixed PGN parser when there were no spaces between dots and moves
+ - Fixed invalid evaluation of doubled passed pawns
+ - Fixed invalid cut-offs statistics
+ - Fixed qsearch failing hard instead of failing soft
+
+**Strength**: 2850 Elo
+
 # Version 1.1.1 (14-08-2022)
  - Added support for FEN property in PGN parser and "tunerset" command
  - Replaced crossbeam package with native scoped threads

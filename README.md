@@ -1,13 +1,14 @@
 # Inanis
 UCI chess engine written in Rust, the successor of [Proxima b](https://github.com/Tearth/Proxima-b), [Proxima b 2.0](https://github.com/Tearth/Proxima-b-2.0) and [Cosette](https://github.com/Tearth/Cosette). The project is written after hours, with the goal to reach a strength of 3000 Elo. Perfect as a sparring partner for other chess engines, since it was heavily tested using very fast games. Supports Syzygy tablebases, MultiPV, pondering and multithreading.
 
-**Current strength**: 2800 Elo (14-08-2022)
+**Current strength**: 2850 Elo (-- -- ----)
 
 **Documentation**: https://tearth.dev/Inanis/
 
 ## Releases
 | Version                                                       | Release date | Elo  | Main changes |
 |---------------------------------------------------------------|--------------|------|--------------|
+| [1.2.0](https://github.com/Tearth/Inanis/releases/tag/v1.2.0) | -- -- ----   | 2850 | Improved support for Syzygy tablebases, general performance and stability improvement |
 | [1.1.1](https://github.com/Tearth/Inanis/releases/tag/v1.1.1) | 14-08-2022   | 2800 | A bunch of fixes for reported issues, stability improvement |
 | [1.1.0](https://github.com/Tearth/Inanis/releases/tag/v1.1.0) | 31-07-2022   | 2800 | Syzygy tablebases, MultiPV, adjusted evaluation |
 | [1.0.1](https://github.com/Tearth/Inanis/releases/tag/v1.0.1) | 05-04-2022   | 2750 | A bunch of fixes for reported issues, stability improvement |
@@ -93,7 +94,7 @@ Examples of running the tests:
 **Dev dependencies**
  - [criterion](https://github.com/bheisler/criterion.rs) - statistics-driven benchmarking framework
 
- **External libraries**
+**External libraries**
  - [Fathom](https://github.com/jdart1/Fathom) - support for Syzygy tablebases
 
 ## Contributing
