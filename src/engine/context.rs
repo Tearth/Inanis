@@ -295,11 +295,13 @@ impl Iterator for SearchContext {
                 // If ponder flag is set, the search is completly restarted within the same iteration
                 if self.ponder_flag.load(Ordering::Relaxed) {
                     self.current_depth = 1;
+                    self.forced_depth = 0;
                     self.search_time_start = SystemTime::now();
                     self.statistics = Default::default();
 
                     for helper_context in &mut self.helper_contexts {
                         helper_context.context.current_depth = 1;
+                        helper_context.context.forced_depth = 0;
                         helper_context.context.search_time_start = SystemTime::now();
                         helper_context.context.statistics = Default::default();
                     }
