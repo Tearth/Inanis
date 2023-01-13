@@ -69,7 +69,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: rustc
-          args: --release --bin inanis --target=${{ matrix.target }} -- -C target-feature=${{ matrix.features }}
+          args: --release --bin inanis --target=${{ matrix.target }} --features syzygy -- -C target-feature=${{ matrix.features }}
           use-cross: true
       - uses: thebongy/version-check@v1
         with:
