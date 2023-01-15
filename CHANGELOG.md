@@ -1,5 +1,4 @@
 # Version 1.2.0 (15-01-2023)
-ADDED
  - Added integration with Fathom library to better support Syzygy tablebases
  - Added "tbhits" to the search output
  - Added "avg_game_phase" parameter to "tunerset" command
