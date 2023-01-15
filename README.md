@@ -1,14 +1,14 @@
 # Inanis
 UCI chess engine written in Rust, the successor of [Proxima b](https://github.com/Tearth/Proxima-b), [Proxima b 2.0](https://github.com/Tearth/Proxima-b-2.0) and [Cosette](https://github.com/Tearth/Cosette). The project is written after hours, with the goal to reach a strength of 3000 Elo. Perfect as a sparring partner for other chess engines, since it was heavily tested using very fast games. Supports Syzygy tablebases, MultiPV, pondering and multithreading.
 
-**Current strength**: 2850 Elo (-- -- ----)
+**Current strength**: 2850 Elo (15-01-2023)
 
 **Documentation**: https://tearth.dev/Inanis/
 
 ## Releases
 | Version                                                       | Release date | Elo  | Main changes |
 |---------------------------------------------------------------|--------------|------|--------------|
-| [1.2.0](https://github.com/Tearth/Inanis/releases/tag/v1.2.0) | -- -- ----   | 2850 | Improved support for Syzygy tablebases, general performance and stability improvement |
+| [1.2.0](https://github.com/Tearth/Inanis/releases/tag/v1.2.0) | 15-01-2023   | 2850 | Improved Syzygy support, general performance and stability improvement |
 | [1.1.1](https://github.com/Tearth/Inanis/releases/tag/v1.1.1) | 14-08-2022   | 2800 | A bunch of fixes for reported issues, stability improvement |
 | [1.1.0](https://github.com/Tearth/Inanis/releases/tag/v1.1.0) | 31-07-2022   | 2800 | Syzygy tablebases, MultiPV, adjusted evaluation |
 | [1.0.1](https://github.com/Tearth/Inanis/releases/tag/v1.0.1) | 05-04-2022   | 2750 | A bunch of fixes for reported issues, stability improvement |
@@ -28,8 +28,8 @@ Big thanks to all testers and their effort! Please note that Elo on the lists ab
 Inanis has an official lichess account, where you can try to challenge the engine: https://lichess.org/@/InanisBot. Please note that ratings there are very understated and not comparable to CCRL ones. Accepts standard chess with a bullet, blitz, rapid and classic time control (up to 3 games at a time).
 
 ## UCI options
- - `Hash` *(default: 2 MB)* - a total size (in megabytes) for transposition table and pawn hashtable
- - `Move Overhead` *(default: 10 ms)* - amount of time (in milliseconds) that should be reserved during a search for some unexpected delays (like the slowness of GUI or network lags)
+ - `Hash` *(default: 2 MB)* - a total size (in megabytes) for the transposition table and pawn hashtable
+ - `Move Overhead` *(default: 10 ms)* - the amount of time (in milliseconds) that should be reserved during a search for some unexpected delays (like the slowness of GUI or network lags)
  - `MultiPV` *(default: 1 PV line)* - number of PV lines which should be displayed during search
  - `Threads` *(default: 1 thread)* - number of threads to use during search (should be less than a number of processor cores to get the best performance)
  - `SyzygyPath` *(default: &lt;empty&gt;)* - location of the optional Syzygy tablebases
@@ -50,7 +50,7 @@ By default, calling `cargo build` or `cargo build --release` will build the engi
  - **Evaluation**: material, piece-square tables, pawn structure, mobility, king safety
 
 ## Tuner
-Inanis has a built-in tuner, which allows optimizing all evaluation parameters using a well-known [Texel's tuning method](https://www.chessprogramming.org/Texel%27s_Tuning_Method). As an output, there are Rust source files generated in a way that allows them to be directly pasted into the engine's source code. 
+Inanis has a built-in tuner, which allows for optimizing all evaluation parameters using a well-known [Texel's tuning method](https://www.chessprogramming.org/Texel%27s_Tuning_Method). As an output, there are Rust source files generated in a way that allows them to be directly pasted into the engine's source code. 
 
 Example input file:
 ```
@@ -66,7 +66,7 @@ Examples of running the tuner:
 
  - `tuner ./input/quiet.epd ./output/ true true 4` - run tuning with 4 threads (excluding piece values) for positions stored in `quiet.epd`, starting from the values already set in the engine, and saving the result in the `output` directory
 
-Since version 1.1.0, Inanis has also a command to generate epd files with quiet positions, based on provided PGN input:
+Since version 1.1.0, Inanis also has a command to generate epd files with quiet positions, based on provided PGN input:
  - `tunerset ./input/games.pgn ./output/quiet.epd 16 250 50 3 0.5` -  generate a new `quiet.epd` file, by parsing `games.pgn` and taking 3 random positions from each of the game, ignoring these with a ply less than 16, evaluation score bigger than 250, and the difference between evaluation score and quiescence search score bigger than 50. The average game phase 0.5 means that the positions will be balanced (> 0.5 = near opening, < 0.5 = near ending)
 
 ## Test suites 
@@ -88,7 +88,7 @@ Examples of running the tests:
 
 ## Dependencies
 **Build dependencies**
- - [cc](https://github.com/rust-lang/cc-rs) - compilation of C sources into a Rust application
+ - [cc](https://github.com/rust-lang/cc-rs) - a compilation of C sources into a Rust application
  - [bindgen](https://github.com/rust-lang/rust-bindgen) - generation of Rust FFI bindings to C libraries
  
 **Dev dependencies**

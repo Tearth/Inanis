@@ -1,4 +1,4 @@
-# Version 1.2.0 (-- -- ----)
+# Version 1.2.0 (15-01-2023)
 ADDED
  - Added integration with Fathom library to better support Syzygy tablebases
  - Added "tbhits" to the search output
@@ -24,7 +24,7 @@ ADDED
  - Improved reduction formula in null move pruning
  - Fixed a few "tunerset" command bugs related to the game phase
  - Fixed PGN parser when there were no spaces between dots and moves
- - Fixed invalid evaluation of doubled passed pawns
+ - Fixed invalid evaluation of doubled passing pawns
  - Fixed invalid cut-offs statistics
  - Fixed qsearch failing hard instead of failing soft
 
