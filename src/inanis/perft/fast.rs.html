@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/perft/fast.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>fast.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../inanis/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../inanis/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../inanis/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/perft/fast.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>fast.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../inanis/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -72,76 +66,73 @@
 <span id="66">66</span>
 <span id="67">67</span>
 <span id="68">68</span>
-<span id="69">69</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cache::perft::PerftHashTable</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::engine</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::perft::context::PerftContext</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::state::board::Bitboard</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::state::movescan::Move</span>;
-<span class="kw">use</span> <span class="ident">std::mem::MaybeUninit</span>;
-<span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
-<span class="kw">use</span> <span class="ident">std::sync::Mutex</span>;
-<span class="kw">use</span> <span class="ident">std::thread</span>;
-<span class="kw">use</span> <span class="ident">std::u64</span>;
+</pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::cache::perft::PerftHashTable;
+<span class="kw">use </span><span class="kw">crate</span>::engine;
+<span class="kw">use </span><span class="kw">crate</span>::perft::context::PerftContext;
+<span class="kw">use </span><span class="kw">crate</span>::state::representation::Board;
+<span class="kw">use </span>std::mem::MaybeUninit;
+<span class="kw">use </span>std::sync::Arc;
+<span class="kw">use </span>std::sync::Mutex;
+<span class="kw">use </span>std::thread;
+<span class="kw">use </span>std::u64;
 
-<span class="doccomment">/// Entry point of the fixed-`depth` fast perft, which uses both hashtable (with size specified in `hashtable_size`) and multithreading (with `threads_count` threads).</span>
-<span class="doccomment">/// Returns calculated nodes count as the first value, and approximated hashtable usage as the second value.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(<span class="ident">depth</span>: <span class="ident">i32</span>, <span class="ident">board</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Bitboard</span>, <span class="ident">hashtable_size</span>: <span class="ident">usize</span>, <span class="ident">threads_count</span>: <span class="ident">usize</span>) -&gt; (<span class="ident">u64</span>, <span class="ident">f32</span>) {
-    <span class="kw">let</span> <span class="ident">queue</span> <span class="op">=</span> <span class="ident">Arc::new</span>(<span class="ident">Mutex::new</span>(<span class="ident">Vec::new</span>()));
-    <span class="kw">let</span> <span class="ident">hashtable</span> <span class="op">=</span> <span class="ident">Arc::new</span>(<span class="ident">PerftHashTable::new</span>(<span class="ident">hashtable_size</span>));
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">threads</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+<span class="doccomment">/// Entry point of the fixed-`depth` fast perft, which uses both hashtable (with size specified in `hashtable_size`) and multithreading (with `threads_count` threads).
+/// Returns calculated nodes count as the first value, and approximated hashtable usage as the second value.
+</span><span class="kw">pub fn </span>run(depth: i32, board: <span class="kw-2">&amp;mut </span>Board, hashtable_size: usize, threads_count: usize) -&gt; (u64, f32) {
+    <span class="kw">let </span>queue = Arc::new(Mutex::new(Vec::new()));
+    <span class="kw">let </span>hashtable = Arc::new(PerftHashTable::new(hashtable_size));
+    <span class="kw">let </span><span class="kw-2">mut </span>threads = Vec::new();
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">moves</span>: [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Move</span><span class="op">&gt;</span>; <span class="ident">engine::MAX_MOVES_COUNT</span>] <span class="op">=</span> [<span class="ident">MaybeUninit::uninit</span>(); <span class="ident">engine::MAX_MOVES_COUNT</span>];
-    <span class="kw">let</span> <span class="ident">moves_count</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">get_all_moves</span>(<span class="kw-2">&amp;mut</span> <span class="ident">moves</span>, <span class="ident">u64::MAX</span>);
+    <span class="kw">let </span><span class="kw-2">mut </span>moves = [MaybeUninit::uninit(); engine::MAX_MOVES_COUNT];
+    <span class="kw">let </span>moves_count = board.get_all_moves(<span class="kw-2">&amp;mut </span>moves, u64::MAX);
 
-    <span class="kw">for</span> <span class="ident">r#move</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">moves</span>[<span class="number">0</span>..<span class="ident">moves_count</span>] {
-        <span class="kw">let</span> <span class="ident">r#move</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">r#move</span>.<span class="ident">assume_init</span>() };
+    <span class="kw">for </span>r#move <span class="kw">in </span><span class="kw-2">&amp;</span>moves[<span class="number">0</span>..moves_count] {
+        <span class="kw">let </span>r#move = <span class="kw">unsafe </span>{ r#move.assume_init() };
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cloned_board</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">clone</span>();
-        <span class="ident">cloned_board</span>.<span class="ident">make_move</span>(<span class="ident">r#move</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>cloned_board = board.clone();
+        cloned_board.make_move(r#move);
 
-        <span class="ident">queue</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>().<span class="ident">push</span>(<span class="ident">cloned_board</span>);
+        queue.lock().unwrap().push(cloned_board);
     }
 
-    <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">threads_count</span> {
-        <span class="kw">let</span> <span class="ident">queue_arc</span> <span class="op">=</span> <span class="ident">queue</span>.<span class="ident">clone</span>();
-        <span class="kw">let</span> <span class="ident">hashtable_arc</span> <span class="op">=</span> <span class="ident">hashtable</span>.<span class="ident">clone</span>();
+    <span class="kw">for _ in </span><span class="number">0</span>..threads_count {
+        <span class="kw">let </span>queue_arc = queue.clone();
+        <span class="kw">let </span>hashtable_arc = hashtable.clone();
 
-        <span class="ident">threads</span>.<span class="ident">push</span>(<span class="ident">thread::spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">count</span> <span class="op">=</span> <span class="number">0</span>;
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hashtable_usage</span> <span class="op">=</span> <span class="number">0.0</span>;
+        threads.push(thread::spawn(<span class="kw">move </span>|| {
+            <span class="kw">let </span><span class="kw-2">mut </span>count = <span class="number">0</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>hashtable_usage = <span class="number">0.0</span>;
 
-            <span class="kw">loop</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">board</span> <span class="op">=</span> {
-                    <span class="kw">match</span> <span class="ident">queue_arc</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>().<span class="ident">pop</span>() {
-                        <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>,
-                        <span class="prelude-val">None</span> =&gt; <span class="kw">break</span>,
+            <span class="kw">loop </span>{
+                <span class="kw">let </span><span class="kw-2">mut </span>board = {
+                    <span class="kw">match </span>queue_arc.lock().unwrap().pop() {
+                        <span class="prelude-val">Some</span>(value) =&gt; value,
+                        <span class="prelude-val">None </span>=&gt; <span class="kw">break</span>,
                     }
                 };
 
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">context</span> <span class="op">=</span> <span class="ident">PerftContext::new</span>(<span class="kw-2">&amp;mut</span> <span class="ident">board</span>, <span class="kw-2">&amp;</span><span class="ident">hashtable_arc</span>, <span class="bool-val">false</span>, <span class="bool-val">true</span>);
-                <span class="ident">count</span> <span class="op">+</span><span class="op">=</span> <span class="ident">run_internal</span>(<span class="kw-2">&amp;mut</span> <span class="ident">context</span>, <span class="ident">depth</span> <span class="op">-</span> <span class="number">1</span>);
+                <span class="kw">let </span><span class="kw-2">mut </span>context = PerftContext::new(<span class="kw-2">&amp;mut </span>board, <span class="kw-2">&amp;</span>hashtable_arc, <span class="bool-val">false</span>, <span class="bool-val">true</span>);
+                count += run_internal(<span class="kw-2">&amp;mut </span>context, depth - <span class="number">1</span>);
 
-                <span class="ident">hashtable_usage</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">hashtable</span>.<span class="ident">get_usage</span>(<span class="number">10000</span>);
+                hashtable_usage = context.hashtable.get_usage(<span class="number">10000</span>);
             }
 
-            (<span class="ident">count</span>, <span class="ident">hashtable_usage</span>)
+            (count, hashtable_usage)
         }));
     }
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total_count</span> <span class="op">=</span> <span class="number">0</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hashtable_usage_accumulator</span> <span class="op">=</span> <span class="number">0.0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>total_count = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>hashtable_usage_accumulator = <span class="number">0.0</span>;
 
-    <span class="kw">for</span> <span class="ident">thread</span> <span class="kw">in</span> <span class="ident">threads</span> {
-        <span class="kw">let</span> (<span class="ident">count</span>, <span class="ident">hashtable_usage</span>) <span class="op">=</span> <span class="ident">thread</span>.<span class="ident">join</span>().<span class="ident">unwrap</span>();
+    <span class="kw">for </span>thread <span class="kw">in </span>threads {
+        <span class="kw">let </span>(count, hashtable_usage) = thread.join().unwrap();
 
-        <span class="ident">total_count</span> <span class="op">+</span><span class="op">=</span> <span class="ident">count</span>;
-        <span class="ident">hashtable_usage_accumulator</span> <span class="op">+</span><span class="op">=</span> <span class="ident">hashtable_usage</span>;
+        total_count += count;
+        hashtable_usage_accumulator += hashtable_usage;
     }
 
-    (<span class="ident">total_count</span>, <span class="ident">hashtable_usage_accumulator</span> <span class="op">/</span> (<span class="ident">threads_count</span> <span class="kw">as</span> <span class="ident">f32</span>))
+    (total_count, hashtable_usage_accumulator / (threads_count <span class="kw">as </span>f32))
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="inanis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="inanis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.1 (90743e729 2023-01-10)" ></div></body></html>

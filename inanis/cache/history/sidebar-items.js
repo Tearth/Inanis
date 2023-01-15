@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["HistoryTable",""],["HistoryTableEntry",""],["HistoryTableResult",""]]};
+window.SIDEBAR_ITEMS = {"constant":[["AGING_DIVISOR",""]],"struct":[["HistoryTable",""],["HistoryTableEntry",""],["HistoryTableResult",""]]};

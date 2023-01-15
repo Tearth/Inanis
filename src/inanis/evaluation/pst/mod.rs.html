@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/evaluation/pst/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../inanis/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../../inanis/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../inanis/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
-                                <a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/evaluation/pst/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../../inanis/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -44,46 +38,45 @@
 <span id="38">38</span>
 <span id="39">39</span>
 <span id="40">40</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::state::board::Bitboard</span>;
+</pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::state::representation::Board;
+<span class="kw">use </span><span class="kw">crate</span>::utils::bithelpers::BitHelpers;
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">bishop</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">king</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">knight</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">pawn</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">queen</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">rook</span>;
+<span class="kw">pub mod </span>bishop;
+<span class="kw">pub mod </span>king;
+<span class="kw">pub mod </span>knight;
+<span class="kw">pub mod </span>pawn;
+<span class="kw">pub mod </span>queen;
+<span class="kw">pub mod </span>rook;
 
-<span class="doccomment">/// Evaluates piece-square table value on the `board` and returns score from the white color perspective (more than 0 when advantage, less than 0 when disadvantage).</span>
-<span class="doccomment">/// This evaluator sums all values of the pieces for the specified fields, using incremental counters in `board`.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">evaluate</span>(<span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>) -&gt; <span class="ident">i16</span> {
-    <span class="kw">let</span> <span class="ident">game_phase</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">get_game_phase</span>();
-    <span class="kw">let</span> <span class="ident">opening_score</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">pst_scores</span>[<span class="ident">WHITE</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">OPENING</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">-</span> <span class="ident">board</span>.<span class="ident">pst_scores</span>[<span class="ident">BLACK</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">OPENING</span> <span class="kw">as</span> <span class="ident">usize</span>];
-    <span class="kw">let</span> <span class="ident">ending_score</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">pst_scores</span>[<span class="ident">WHITE</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">ENDING</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">-</span> <span class="ident">board</span>.<span class="ident">pst_scores</span>[<span class="ident">BLACK</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">ENDING</span> <span class="kw">as</span> <span class="ident">usize</span>];
+<span class="doccomment">/// Evaluates piece-square table value on the `board` and returns score from the white color perspective (more than 0 when advantage, less than 0 when disadvantage).
+/// This evaluator sums all values of the pieces for the specified squares, using incremental counters in `board`.
+</span><span class="kw">pub fn </span>evaluate(board: <span class="kw-2">&amp;</span>Board) -&gt; EvaluationResult {
+    <span class="kw">let </span>opening_score = board.pst_scores[WHITE][OPENING] - board.pst_scores[BLACK][OPENING];
+    <span class="kw">let </span>ending_score = board.pst_scores[WHITE][ENDING] - board.pst_scores[BLACK][ENDING];
 
-    <span class="ident">taper_score</span>(<span class="ident">game_phase</span>, <span class="ident">opening_score</span>, <span class="ident">ending_score</span>)
+    EvaluationResult::new(opening_score, ending_score)
 }
 
-<span class="doccomment">/// Recalculates incremental counters on the `board`. This function should be called only once during board initialization, as it&#39;s too slow in regular search.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">recalculate_incremental_values</span>(<span class="ident">board</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Bitboard</span>) {
-    <span class="kw">for</span> <span class="ident">color_index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">2</span> {
-        <span class="kw">for</span> <span class="ident">phase</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">2</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">score</span> <span class="op">=</span> <span class="number">0</span>;
-            <span class="kw">for</span> <span class="ident">piece_index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">6</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pieces</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">pieces</span>[<span class="ident">color_index</span>][<span class="ident">piece_index</span>];
-                <span class="kw">while</span> <span class="ident">pieces</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                    <span class="kw">let</span> <span class="ident">field</span> <span class="op">=</span> <span class="ident">get_lsb</span>(<span class="ident">pieces</span>);
-                    <span class="kw">let</span> <span class="ident">field_index</span> <span class="op">=</span> <span class="ident">bit_scan</span>(<span class="ident">field</span>);
-                    <span class="ident">pieces</span> <span class="op">=</span> <span class="ident">pop_lsb</span>(<span class="ident">pieces</span>);
+<span class="doccomment">/// Recalculates incremental counters on the `board`. This function should be called only once during board initialization, as it&#39;s too slow in regular search.
+</span><span class="kw">pub fn </span>recalculate_incremental_values(board: <span class="kw-2">&amp;mut </span>Board) {
+    <span class="kw">for </span>color_index <span class="kw">in </span>ALL_COLORS {
+        <span class="kw">for </span>phase <span class="kw">in </span>ALL_PHASES {
+            <span class="kw">let </span><span class="kw-2">mut </span>score = <span class="number">0</span>;
+            <span class="kw">for </span>piece_index <span class="kw">in </span>ALL_PIECES {
+                <span class="kw">let </span><span class="kw-2">mut </span>pieces_bb = board.pieces[color_index][piece_index];
+                <span class="kw">while </span>pieces_bb != <span class="number">0 </span>{
+                    <span class="kw">let </span>square_bb = pieces_bb.get_lsb();
+                    <span class="kw">let </span>square = square_bb.bit_scan();
+                    pieces_bb = pieces_bb.pop_lsb();
 
-                    <span class="ident">score</span> <span class="op">+</span><span class="op">=</span> <span class="ident">board</span>.<span class="ident">evaluation_parameters</span>.<span class="ident">pst</span>[<span class="ident">color_index</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">piece_index</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">phase</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">field_index</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="kw">as</span> <span class="ident">i16</span>;
+                    score += board.evaluation_parameters.pst[color_index][piece_index][phase][square];
                 }
             }
 
-            <span class="ident">board</span>.<span class="ident">pst_scores</span>[<span class="ident">color_index</span>][<span class="ident">phase</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">=</span> <span class="ident">score</span>;
+            board.pst_scores[color_index][phase] = score;
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="inanis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="inanis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.1 (90743e729 2023-01-10)" ></div></body></html>

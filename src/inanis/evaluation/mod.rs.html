@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/evaluation/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../inanis/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../inanis/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../inanis/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/evaluation/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../inanis/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -112,114 +106,195 @@
 <span id="106">106</span>
 <span id="107">107</span>
 <span id="108">108</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::state</span>::<span class="kw-2">*</span>;
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::state::<span class="kw-2">*</span>;
+<span class="kw">use </span>std::ops;
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">material</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">mobility</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">parameters</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">pawns</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">pst</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">safety</span>;
+<span class="kw">pub mod </span>material;
+<span class="kw">pub mod </span>mobility;
+<span class="kw">pub mod </span>parameters;
+<span class="kw">pub mod </span>pawns;
+<span class="kw">pub mod </span>pst;
+<span class="kw">pub mod </span>safety;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">EvaluationParameters</span> {
-    <span class="kw">pub</span> <span class="ident">piece_value</span>: [<span class="ident">i16</span>; <span class="number">6</span>],
-    <span class="kw">pub</span> <span class="ident">initial_material</span>: <span class="ident">i16</span>,
+<span class="attribute">#[derive(Clone)]
+</span><span class="kw">pub struct </span>EvaluationParameters {
+    <span class="kw">pub </span>piece_value: [i16; <span class="number">6</span>],
+    <span class="kw">pub </span>piece_phase_value: [u8; <span class="number">6</span>],
+    <span class="kw">pub </span>initial_game_phase: u8,
 
-    <span class="kw">pub</span> <span class="ident">mobility_opening</span>: [<span class="ident">i16</span>; <span class="number">6</span>],
-    <span class="kw">pub</span> <span class="ident">mobility_ending</span>: [<span class="ident">i16</span>; <span class="number">6</span>],
-    <span class="kw">pub</span> <span class="ident">mobility_center_multiplier</span>: [<span class="ident">i16</span>; <span class="number">6</span>],
+    <span class="kw">pub </span>mobility_opening: [i16; <span class="number">6</span>],
+    <span class="kw">pub </span>mobility_ending: [i16; <span class="number">6</span>],
+    <span class="kw">pub </span>mobility_center_multiplier: [i16; <span class="number">6</span>],
 
-    <span class="kw">pub</span> <span class="ident">doubled_pawn_opening</span>: <span class="ident">i16</span>,
-    <span class="kw">pub</span> <span class="ident">doubled_pawn_ending</span>: <span class="ident">i16</span>,
+    <span class="kw">pub </span>doubled_pawn_opening: i16,
+    <span class="kw">pub </span>doubled_pawn_ending: i16,
 
-    <span class="kw">pub</span> <span class="ident">isolated_pawn_opening</span>: <span class="ident">i16</span>,
-    <span class="kw">pub</span> <span class="ident">isolated_pawn_ending</span>: <span class="ident">i16</span>,
+    <span class="kw">pub </span>isolated_pawn_opening: i16,
+    <span class="kw">pub </span>isolated_pawn_ending: i16,
 
-    <span class="kw">pub</span> <span class="ident">chained_pawn_opening</span>: <span class="ident">i16</span>,
-    <span class="kw">pub</span> <span class="ident">chained_pawn_ending</span>: <span class="ident">i16</span>,
+    <span class="kw">pub </span>chained_pawn_opening: i16,
+    <span class="kw">pub </span>chained_pawn_ending: i16,
 
-    <span class="kw">pub</span> <span class="ident">passing_pawn_opening</span>: <span class="ident">i16</span>,
-    <span class="kw">pub</span> <span class="ident">passing_pawn_ending</span>: <span class="ident">i16</span>,
+    <span class="kw">pub </span>passed_pawn_opening: i16,
+    <span class="kw">pub </span>passed_pawn_ending: i16,
 
-    <span class="kw">pub</span> <span class="ident">pawn_shield_opening</span>: <span class="ident">i16</span>,
-    <span class="kw">pub</span> <span class="ident">pawn_shield_ending</span>: <span class="ident">i16</span>,
+    <span class="kw">pub </span>pawn_shield_opening: i16,
+    <span class="kw">pub </span>pawn_shield_ending: i16,
 
-    <span class="kw">pub</span> <span class="ident">pawn_shield_open_file_opening</span>: <span class="ident">i16</span>,
-    <span class="kw">pub</span> <span class="ident">pawn_shield_open_file_ending</span>: <span class="ident">i16</span>,
+    <span class="kw">pub </span>pawn_shield_open_file_opening: i16,
+    <span class="kw">pub </span>pawn_shield_open_file_ending: i16,
 
-    <span class="kw">pub</span> <span class="ident">king_attacked_fields_opening</span>: <span class="ident">i16</span>,
-    <span class="kw">pub</span> <span class="ident">king_attacked_fields_ending</span>: <span class="ident">i16</span>,
+    <span class="kw">pub </span>king_attacked_squares_opening: i16,
+    <span class="kw">pub </span>king_attacked_squares_ending: i16,
 
-    <span class="kw">pub</span> <span class="ident">pst</span>: [[[[<span class="ident">i16</span>; <span class="number">64</span>]; <span class="number">2</span>]; <span class="number">6</span>]; <span class="number">2</span>],
-    <span class="kw">pub</span> <span class="ident">pst_patterns</span>: [[[<span class="ident">i16</span>; <span class="number">64</span>]; <span class="number">2</span>]; <span class="number">6</span>],
+    <span class="kw">pub </span>pst: [[[[i16; <span class="number">64</span>]; <span class="number">2</span>]; <span class="number">6</span>]; <span class="number">2</span>],
+    <span class="kw">pub </span>pst_patterns: [[[i16; <span class="number">64</span>]; <span class="number">2</span>]; <span class="number">6</span>],
 }
 
-<span class="kw">impl</span> <span class="ident">EvaluationParameters</span> {
-    <span class="doccomment">/// Initializes PST patterns with used by default during search.</span>
-    <span class="kw">fn</span> <span class="ident">set_default_pst_patterns</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">pst_patterns</span>[<span class="ident">PAWN</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_pawn_pst_pattern</span>();
-        <span class="self">self</span>.<span class="ident">pst_patterns</span>[<span class="ident">KNIGHT</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_knight_pst_pattern</span>();
-        <span class="self">self</span>.<span class="ident">pst_patterns</span>[<span class="ident">BISHOP</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_bishop_pst_pattern</span>();
-        <span class="self">self</span>.<span class="ident">pst_patterns</span>[<span class="ident">ROOK</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_rook_pst_pattern</span>();
-        <span class="self">self</span>.<span class="ident">pst_patterns</span>[<span class="ident">QUEEN</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_queen_pst_pattern</span>();
-        <span class="self">self</span>.<span class="ident">pst_patterns</span>[<span class="ident">KING</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_king_pst_pattern</span>();
+<span class="kw">pub struct </span>EvaluationResult {
+    <span class="kw">pub </span>opening_score: i16,
+    <span class="kw">pub </span>ending_score: i16,
+}
+
+<span class="kw">impl </span>EvaluationParameters {
+    <span class="doccomment">/// Initializes PST patterns with used by default during search.
+    </span><span class="kw">fn </span>set_default_pst_patterns(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.pst_patterns[PAWN] = <span class="self">self</span>.get_pawn_pst_pattern();
+        <span class="self">self</span>.pst_patterns[KNIGHT] = <span class="self">self</span>.get_knight_pst_pattern();
+        <span class="self">self</span>.pst_patterns[BISHOP] = <span class="self">self</span>.get_bishop_pst_pattern();
+        <span class="self">self</span>.pst_patterns[ROOK] = <span class="self">self</span>.get_rook_pst_pattern();
+        <span class="self">self</span>.pst_patterns[QUEEN] = <span class="self">self</span>.get_queen_pst_pattern();
+        <span class="self">self</span>.pst_patterns[KING] = <span class="self">self</span>.get_king_pst_pattern();
     }
 
-    <span class="doccomment">/// Recalculates initial material and PST tables.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">recalculate</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">initial_material</span> <span class="op">=</span> <span class="number">0</span>
-            <span class="op">+</span> <span class="number">16</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">piece_value</span>[<span class="ident">PAWN</span> <span class="kw">as</span> <span class="ident">usize</span>]
-            <span class="op">+</span> <span class="number">4</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">piece_value</span>[<span class="ident">KNIGHT</span> <span class="kw">as</span> <span class="ident">usize</span>]
-            <span class="op">+</span> <span class="number">4</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">piece_value</span>[<span class="ident">BISHOP</span> <span class="kw">as</span> <span class="ident">usize</span>]
-            <span class="op">+</span> <span class="number">4</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">piece_value</span>[<span class="ident">ROOK</span> <span class="kw">as</span> <span class="ident">usize</span>]
-            <span class="op">+</span> <span class="number">2</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">piece_value</span>[<span class="ident">QUEEN</span> <span class="kw">as</span> <span class="ident">usize</span>];
-
-        <span class="kw">for</span> <span class="ident">color</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">2</span> {
-            <span class="kw">for</span> <span class="ident">piece</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">6</span> {
-                <span class="kw">for</span> <span class="ident">phase</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">2</span> {
-                    <span class="self">self</span>.<span class="ident">pst</span>[<span class="ident">color</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">piece</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">phase</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">=</span> <span class="self">self</span>.<span class="ident">calculate_pst</span>(<span class="ident">color</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">pst_patterns</span>[<span class="ident">piece</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">phase</span> <span class="kw">as</span> <span class="ident">usize</span>]);
+    <span class="doccomment">/// Recalculates initial material and PST tables.
+    </span><span class="kw">pub fn </span>recalculate(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">for </span>color <span class="kw">in </span>ALL_COLORS {
+            <span class="kw">for </span>piece <span class="kw">in </span>ALL_PIECES {
+                <span class="kw">for </span>phase <span class="kw">in </span>ALL_PHASES {
+                    <span class="self">self</span>.pst[color][piece][phase] = <span class="self">self</span>.calculate_pst(color, <span class="kw-2">&amp;</span><span class="self">self</span>.pst_patterns[piece][phase]);
                 }
             }
         }
     }
 
-    <span class="doccomment">/// Calculates PST table for the specified `color` and `pattern`.</span>
-    <span class="kw">fn</span> <span class="ident">calculate_pst</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">color</span>: <span class="ident">u8</span>, <span class="ident">pattern</span>: <span class="kw-2">&amp;</span>[<span class="ident">i16</span>; <span class="number">64</span>]) -&gt; [<span class="ident">i16</span>; <span class="number">64</span>] {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">array</span> <span class="op">=</span> [<span class="number">0</span>; <span class="number">64</span>];
+    <span class="doccomment">/// Calculates PST table for the specified `color` and `pattern`.
+    </span><span class="kw">fn </span>calculate_pst(<span class="kw-2">&amp;</span><span class="self">self</span>, color: usize, pattern: <span class="kw-2">&amp;</span>[i16; <span class="number">64</span>]) -&gt; [i16; <span class="number">64</span>] {
+        <span class="kw">let </span><span class="kw-2">mut </span>array = [<span class="number">0</span>; <span class="number">64</span>];
 
-        <span class="kw">match</span> <span class="ident">color</span> {
-            <span class="ident">WHITE</span> =&gt; {
-                <span class="kw">for</span> <span class="ident">field_index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">64</span> {
-                    <span class="ident">array</span>[<span class="ident">field_index</span>] <span class="op">=</span> <span class="ident">pattern</span>[<span class="number">63</span> <span class="op">-</span> <span class="ident">field_index</span>];
+        <span class="kw">match </span>color {
+            WHITE =&gt; {
+                <span class="kw">for </span>square <span class="kw">in </span>ALL_SQUARES {
+                    array[square] = pattern[<span class="number">63 </span>- square];
                 }
             }
-            <span class="ident">BLACK</span> =&gt; {
-                <span class="kw">for</span> <span class="ident">file</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">8</span> {
-                    <span class="kw">for</span> <span class="ident">rank</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">8</span> {
-                        <span class="ident">array</span>[<span class="ident">file</span> <span class="op">+</span> <span class="ident">rank</span> <span class="op">*</span> <span class="number">8</span>] <span class="op">=</span> <span class="ident">pattern</span>[(<span class="number">7</span> <span class="op">-</span> <span class="ident">file</span>) <span class="op">+</span> <span class="ident">rank</span> <span class="op">*</span> <span class="number">8</span>];
+            BLACK =&gt; {
+                <span class="kw">for </span>file <span class="kw">in </span>ALL_FILES {
+                    <span class="kw">for </span>rank <span class="kw">in </span>ALL_RANKS {
+                        array[file + rank * <span class="number">8</span>] = pattern[(<span class="number">7 </span>- file) + rank * <span class="number">8</span>];
                     }
                 }
             }
-            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid parameter: color={}&quot;</span>, <span class="ident">color</span>),
+            <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid parameter: color={}&quot;</span>, color),
         }
 
-        <span class="ident">array</span>
+        array
     }
 
-    <span class="doccomment">/// Gets a PST value for the specified `color`, `piece`, `phase` and `field`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_pst_value</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">color</span>: <span class="ident">u8</span>, <span class="ident">piece</span>: <span class="ident">u8</span>, <span class="ident">phase</span>: <span class="ident">u8</span>, <span class="ident">field</span>: <span class="ident">u8</span>) -&gt; <span class="ident">i16</span> {
-        <span class="self">self</span>.<span class="ident">pst</span>[<span class="ident">color</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">piece</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">phase</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">field</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="kw">as</span> <span class="ident">i16</span>
+    <span class="doccomment">/// Gets a PST value for the specified `color`, `piece`, `phase` and `square`.
+    </span><span class="kw">pub fn </span>get_pst_value(<span class="kw-2">&amp;</span><span class="self">self</span>, color: usize, piece: usize, phase: usize, square: usize) -&gt; i16 {
+        <span class="self">self</span>.pst[color][piece][phase][square]
     }
 }
 
-<span class="doccomment">/// Blends `opening_score` and `ending_score` with the ratio passed in `game_phase`. The ratio is a number from 0.0 to 1.0, where:</span>
-<span class="doccomment">///  - 1.0 represents a board with the initial state set (opening phase)</span>
-<span class="doccomment">///  - 0.0 represents a board without any piece (ending phase)</span>
-<span class="doccomment">///  - every value between them represents a board state somewhere in the middle game</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">taper_score</span>(<span class="ident">game_phase</span>: <span class="ident">f32</span>, <span class="ident">opening_score</span>: <span class="ident">i16</span>, <span class="ident">ending_score</span>: <span class="ident">i16</span>) -&gt; <span class="ident">i16</span> {
-    ((<span class="ident">game_phase</span> <span class="op">*</span> (<span class="ident">opening_score</span> <span class="kw">as</span> <span class="ident">f32</span>)) <span class="op">+</span> ((<span class="number">1.0</span> <span class="op">-</span> <span class="ident">game_phase</span>) <span class="op">*</span> (<span class="ident">ending_score</span> <span class="kw">as</span> <span class="ident">f32</span>))) <span class="kw">as</span> <span class="ident">i16</span>
+<span class="kw">impl </span>EvaluationResult {
+    <span class="kw">pub fn </span>new(opening_score: i16, ending_score: i16) -&gt; EvaluationResult {
+        EvaluationResult { opening_score, ending_score }
+    }
+
+    <span class="doccomment">/// Blends `opening_score` and `ending_score` with the ratio passed in `game_phase`. The ratio is a number from 0 to `max_game_phase`, where:
+    ///  - `max_game_phase` represents a board with the initial state set (opening phase)
+    ///  - 0 represents a board without any piece (ending phase)
+    ///  - every value between them represents a board state somewhere in the middle game
+    </span><span class="kw">pub fn </span>taper_score(<span class="kw-2">&amp;</span><span class="self">self</span>, game_phase: u8, max_game_phase: u8) -&gt; i16 {
+        <span class="kw">let </span>opening_score = (<span class="self">self</span>.opening_score <span class="kw">as </span>i32) * (game_phase <span class="kw">as </span>i32);
+        <span class="kw">let </span>ending_score = (<span class="self">self</span>.ending_score <span class="kw">as </span>i32) * ((max_game_phase <span class="kw">as </span>i32) - (game_phase <span class="kw">as </span>i32));
+
+        ((opening_score + ending_score) / (max_game_phase <span class="kw">as </span>i32)) <span class="kw">as </span>i16
+    }
+}
+
+<span class="kw">impl </span>ops::Add&lt;i16&gt; <span class="kw">for </span>EvaluationResult {
+    <span class="kw">type </span>Output = EvaluationResult;
+
+    <span class="kw">fn </span>add(<span class="self">self</span>, rhs: i16) -&gt; EvaluationResult {
+        EvaluationResult::new(<span class="self">self</span>.opening_score + rhs, <span class="self">self</span>.ending_score + rhs)
+    }
+}
+
+<span class="kw">impl </span>ops::Add&lt;EvaluationResult&gt; <span class="kw">for </span>i16 {
+    <span class="kw">type </span>Output = EvaluationResult;
+
+    <span class="kw">fn </span>add(<span class="self">self</span>, rhs: EvaluationResult) -&gt; EvaluationResult {
+        EvaluationResult::new(<span class="self">self </span>+ rhs.opening_score, <span class="self">self </span>+ rhs.ending_score)
+    }
+}
+
+<span class="kw">impl </span>ops::Add&lt;EvaluationResult&gt; <span class="kw">for </span>EvaluationResult {
+    <span class="kw">type </span>Output = EvaluationResult;
+
+    <span class="kw">fn </span>add(<span class="self">self</span>, rhs: EvaluationResult) -&gt; EvaluationResult {
+        EvaluationResult::new(<span class="self">self</span>.opening_score + rhs.opening_score, <span class="self">self</span>.ending_score + rhs.ending_score)
+    }
+}
+
+<span class="kw">impl </span>ops::Sub&lt;EvaluationResult&gt; <span class="kw">for </span>EvaluationResult {
+    <span class="kw">type </span>Output = EvaluationResult;
+
+    <span class="kw">fn </span>sub(<span class="self">self</span>, rhs: EvaluationResult) -&gt; EvaluationResult {
+        EvaluationResult::new(<span class="self">self</span>.opening_score - rhs.opening_score, <span class="self">self</span>.ending_score - rhs.ending_score)
+    }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="inanis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="inanis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.1 (90743e729 2023-01-10)" ></div></body></html>

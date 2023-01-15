@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/engine/search.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>search.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../inanis/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../inanis/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../inanis/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/engine/search.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>search.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../inanis/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -783,785 +777,952 @@
 <span id="777">777</span>
 <span id="778">778</span>
 <span id="779">779</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::context::SearchContext</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::context::SearchResultLine</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::qsearch</span>;
-<span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cache::search::TranspositionTableScoreType</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::state</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::conditional_expression</span>;
-<span class="kw">use</span> <span class="ident">chrono::Utc</span>;
-<span class="kw">use</span> <span class="ident">std::cmp</span>;
-<span class="kw">use</span> <span class="ident">std::mem::MaybeUninit</span>;
-<span class="kw">use</span> <span class="ident">std::sync::atomic::Ordering</span>;
+<span id="780">780</span>
+<span id="781">781</span>
+<span id="782">782</span>
+<span id="783">783</span>
+<span id="784">784</span>
+<span id="785">785</span>
+<span id="786">786</span>
+<span id="787">787</span>
+<span id="788">788</span>
+<span id="789">789</span>
+<span id="790">790</span>
+<span id="791">791</span>
+<span id="792">792</span>
+<span id="793">793</span>
+<span id="794">794</span>
+<span id="795">795</span>
+<span id="796">796</span>
+<span id="797">797</span>
+<span id="798">798</span>
+<span id="799">799</span>
+<span id="800">800</span>
+<span id="801">801</span>
+<span id="802">802</span>
+<span id="803">803</span>
+<span id="804">804</span>
+<span id="805">805</span>
+<span id="806">806</span>
+<span id="807">807</span>
+<span id="808">808</span>
+<span id="809">809</span>
+<span id="810">810</span>
+<span id="811">811</span>
+<span id="812">812</span>
+<span id="813">813</span>
+<span id="814">814</span>
+<span id="815">815</span>
+<span id="816">816</span>
+<span id="817">817</span>
+<span id="818">818</span>
+<span id="819">819</span>
+<span id="820">820</span>
+<span id="821">821</span>
+<span id="822">822</span>
+<span id="823">823</span>
+<span id="824">824</span>
+<span id="825">825</span>
+<span id="826">826</span>
+<span id="827">827</span>
+<span id="828">828</span>
+<span id="829">829</span>
+<span id="830">830</span>
+<span id="831">831</span>
+<span id="832">832</span>
+<span id="833">833</span>
+<span id="834">834</span>
+<span id="835">835</span>
+<span id="836">836</span>
+<span id="837">837</span>
+<span id="838">838</span>
+<span id="839">839</span>
+<span id="840">840</span>
+<span id="841">841</span>
+<span id="842">842</span>
+<span id="843">843</span>
+<span id="844">844</span>
+<span id="845">845</span>
+<span id="846">846</span>
+<span id="847">847</span>
+<span id="848">848</span>
+<span id="849">849</span>
+<span id="850">850</span>
+<span id="851">851</span>
+<span id="852">852</span>
+<span id="853">853</span>
+<span id="854">854</span>
+<span id="855">855</span>
+<span id="856">856</span>
+<span id="857">857</span>
+<span id="858">858</span>
+<span id="859">859</span>
+<span id="860">860</span>
+<span id="861">861</span>
+<span id="862">862</span>
+<span id="863">863</span>
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::context::SearchContext;
+<span class="kw">use </span><span class="kw">super</span>::context::SearchResultLine;
+<span class="kw">use </span><span class="kw">super</span>::qsearch;
+<span class="kw">use super</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::cache::search::TranspositionTableScoreType;
+<span class="kw">use </span><span class="kw">crate</span>::state::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::tablebases::syzygy;
+<span class="kw">use </span><span class="kw">crate</span>::tablebases::WdlResult;
+<span class="kw">use </span><span class="kw">crate</span>::utils::bithelpers::BitHelpers;
+<span class="kw">use </span><span class="kw">crate</span>::utils::conditional_expression;
+<span class="kw">use </span><span class="kw">crate</span>::utils::rand;
+<span class="kw">use </span>std::cmp;
+<span class="kw">use </span>std::mem::MaybeUninit;
+<span class="kw">use </span>std::sync::atomic::Ordering;
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RAZORING_MIN_DEPTH</span>: <span class="ident">i8</span> <span class="op">=</span> <span class="number">1</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RAZORING_MAX_DEPTH</span>: <span class="ident">i8</span> <span class="op">=</span> <span class="number">4</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RAZORING_DEPTH_MARGIN_BASE</span>: <span class="ident">i16</span> <span class="op">=</span> <span class="number">300</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">RAZORING_DEPTH_MARGIN_MULTIPLIER</span>: <span class="ident">i16</span> <span class="op">=</span> <span class="number">300</span>;
+<span class="kw">pub const </span>RAZORING_MIN_DEPTH: i8 = <span class="number">1</span>;
+<span class="kw">pub const </span>RAZORING_MAX_DEPTH: i8 = <span class="number">4</span>;
+<span class="kw">pub const </span>RAZORING_DEPTH_MARGIN_BASE: i16 = <span class="number">300</span>;
+<span class="kw">pub const </span>RAZORING_DEPTH_MARGIN_MULTIPLIER: i16 = <span class="number">300</span>;
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">STATIC_NULL_MOVE_PRUNING_MIN_DEPTH</span>: <span class="ident">i8</span> <span class="op">=</span> <span class="number">1</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">STATIC_NULL_MOVE_PRUNING_MAX_DEPTH</span>: <span class="ident">i8</span> <span class="op">=</span> <span class="number">8</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_BASE</span>: <span class="ident">i16</span> <span class="op">=</span> <span class="number">150</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_MULTIPLIER</span>: <span class="ident">i16</span> <span class="op">=</span> <span class="number">150</span>;
+<span class="kw">pub const </span>STATIC_NULL_MOVE_PRUNING_MIN_DEPTH: i8 = <span class="number">1</span>;
+<span class="kw">pub const </span>STATIC_NULL_MOVE_PRUNING_MAX_DEPTH: i8 = <span class="number">8</span>;
+<span class="kw">pub const </span>STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_BASE: i16 = <span class="number">150</span>;
+<span class="kw">pub const </span>STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_MULTIPLIER: i16 = <span class="number">150</span>;
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">NULL_MOVE_PRUNING_MIN_DEPTH</span>: <span class="ident">i8</span> <span class="op">=</span> <span class="number">2</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">NULL_MOVE_PRUNING_R_CHANGE_DEPTH</span>: <span class="ident">i8</span> <span class="op">=</span> <span class="number">5</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">NULL_MOVE_PRUNING_MIN_GAME_PHASE</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">0.15</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">NULL_MOVE_PRUNING_MARGIN</span>: <span class="ident">i16</span> <span class="op">=</span> <span class="number">50</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">NULL_MOVE_PRUNING_SMALL_R</span>: <span class="ident">i8</span> <span class="op">=</span> <span class="number">2</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">NULL_MOVE_PRUNING_BIG_R</span>: <span class="ident">i8</span> <span class="op">=</span> <span class="number">3</span>;
+<span class="kw">pub const </span>NULL_MOVE_PRUNING_MIN_DEPTH: i8 = <span class="number">2</span>;
+<span class="kw">pub const </span>NULL_MOVE_PRUNING_MIN_GAME_PHASE: u8 = <span class="number">3</span>;
+<span class="kw">pub const </span>NULL_MOVE_PRUNING_MARGIN: i16 = <span class="number">50</span>;
+<span class="kw">pub const </span>NULL_MOVE_PRUNING_DEPTH_BASE: i8 = <span class="number">2</span>;
+<span class="kw">pub const </span>NULL_MOVE_PRUNING_DEPTH_DIVIDER: i8 = <span class="number">5</span>;
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LATE_MOVE_PRUNING_MIN_DEPTH</span>: <span class="ident">i8</span> <span class="op">=</span> <span class="number">1</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LATE_MOVE_PRUNING_MAX_DEPTH</span>: <span class="ident">i8</span> <span class="op">=</span> <span class="number">4</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_BASE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">2</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_MULTIPLIER</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">4</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LATE_MOVE_PRUNING_MAX_SCORE</span>: <span class="ident">i16</span> <span class="op">=</span> <span class="number">0</span>;
+<span class="kw">pub const </span>LATE_MOVE_PRUNING_MIN_DEPTH: i8 = <span class="number">1</span>;
+<span class="kw">pub const </span>LATE_MOVE_PRUNING_MAX_DEPTH: i8 = <span class="number">4</span>;
+<span class="kw">pub const </span>LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_BASE: usize = <span class="number">2</span>;
+<span class="kw">pub const </span>LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_MULTIPLIER: usize = <span class="number">4</span>;
+<span class="kw">pub const </span>LATE_MOVE_PRUNING_MAX_SCORE: i16 = <span class="number">0</span>;
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LATE_MOVE_REDUCTION_MIN_DEPTH</span>: <span class="ident">i8</span> <span class="op">=</span> <span class="number">2</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LATE_MOVE_REDUCTION_MAX_SCORE</span>: <span class="ident">i16</span> <span class="op">=</span> <span class="number">90</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LATE_MOVE_REDUCTION_MIN_MOVE_INDEX</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">2</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LATE_MOVE_REDUCTION_REDUCTION_BASE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">1</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LATE_MOVE_REDUCTION_REDUCTION_STEP</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">4</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LATE_MOVE_REDUCTION_MAX_REDUCTION</span>: <span class="ident">i8</span> <span class="op">=</span> <span class="number">3</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LATE_MOVE_REDUCTION_PV_MIN_MOVE_INDEX</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">2</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LATE_MOVE_REDUCTION_PV_REDUCTION_BASE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">1</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LATE_MOVE_REDUCTION_PV_REDUCTION_STEP</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">8</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LATE_MOVE_REDUCTION_PV_MAX_REDUCTION</span>: <span class="ident">i8</span> <span class="op">=</span> <span class="number">2</span>;
+<span class="kw">pub const </span>LATE_MOVE_REDUCTION_MIN_DEPTH: i8 = <span class="number">2</span>;
+<span class="kw">pub const </span>LATE_MOVE_REDUCTION_MAX_SCORE: i16 = <span class="number">90</span>;
+<span class="kw">pub const </span>LATE_MOVE_REDUCTION_MIN_MOVE_INDEX: usize = <span class="number">2</span>;
+<span class="kw">pub const </span>LATE_MOVE_REDUCTION_REDUCTION_BASE: usize = <span class="number">1</span>;
+<span class="kw">pub const </span>LATE_MOVE_REDUCTION_REDUCTION_STEP: usize = <span class="number">4</span>;
+<span class="kw">pub const </span>LATE_MOVE_REDUCTION_MAX_REDUCTION: i8 = <span class="number">3</span>;
+<span class="kw">pub const </span>LATE_MOVE_REDUCTION_PV_MIN_MOVE_INDEX: usize = <span class="number">2</span>;
+<span class="kw">pub const </span>LATE_MOVE_REDUCTION_PV_REDUCTION_BASE: usize = <span class="number">1</span>;
+<span class="kw">pub const </span>LATE_MOVE_REDUCTION_PV_REDUCTION_STEP: usize = <span class="number">8</span>;
+<span class="kw">pub const </span>LATE_MOVE_REDUCTION_PV_MAX_REDUCTION: i8 = <span class="number">2</span>;
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MOVE_ORDERING_HASH_MOVE</span>: <span class="ident">i16</span> <span class="op">=</span> <span class="number">10000</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MOVE_ORDERING_WINNING_CAPTURES_OFFSET</span>: <span class="ident">i16</span> <span class="op">=</span> <span class="number">100</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MOVE_ORDERING_QUEEN_PROMOTION</span>: <span class="ident">i16</span> <span class="op">=</span> <span class="number">99</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MOVE_ORDERING_ROOK_PROMOTION</span>: <span class="ident">i16</span> <span class="op">=</span> <span class="number">98</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MOVE_ORDERING_BISHOP_PROMOTION</span>: <span class="ident">i16</span> <span class="op">=</span> <span class="number">97</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MOVE_ORDERING_KNIGHT_PROMOTION</span>: <span class="ident">i16</span> <span class="op">=</span> <span class="number">96</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MOVE_ORDERING_KILLER_MOVE</span>: <span class="ident">i16</span> <span class="op">=</span> <span class="number">95</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MOVE_ORDERING_CASTLING</span>: <span class="ident">i16</span> <span class="op">=</span> <span class="number">94</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MOVE_ORDERING_HISTORY_MOVE</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="number">180</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MOVE_ORDERING_HISTORY_MOVE_OFFSET</span>: <span class="ident">i16</span> <span class="op">=</span> <span class="op">-</span><span class="number">90</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MOVE_ORDERING_LOSING_CAPTURES_OFFSET</span>: <span class="ident">i16</span> <span class="op">=</span> <span class="op">-</span><span class="number">100</span>;
+<span class="kw">pub const </span>MOVE_ORDERING_HASH_MOVE: i16 = <span class="number">10000</span>;
+<span class="kw">pub const </span>MOVE_ORDERING_WINNING_CAPTURES_OFFSET: i16 = <span class="number">100</span>;
+<span class="kw">pub const </span>MOVE_ORDERING_KILLER_MOVE_1: i16 = <span class="number">99</span>;
+<span class="kw">pub const </span>MOVE_ORDERING_KILLER_MOVE_2: i16 = <span class="number">98</span>;
+<span class="kw">pub const </span>MOVE_ORDERING_QUEEN_PROMOTION: i16 = <span class="number">95</span>;
+<span class="kw">pub const </span>MOVE_ORDERING_ROOK_PROMOTION: i16 = <span class="number">94</span>;
+<span class="kw">pub const </span>MOVE_ORDERING_BISHOP_PROMOTION: i16 = <span class="number">93</span>;
+<span class="kw">pub const </span>MOVE_ORDERING_KNIGHT_PROMOTION: i16 = <span class="number">92</span>;
+<span class="kw">pub const </span>MOVE_ORDERING_CASTLING: i16 = <span class="number">91</span>;
+<span class="kw">pub const </span>MOVE_ORDERING_HISTORY_MOVE: u8 = <span class="number">180</span>;
+<span class="kw">pub const </span>MOVE_ORDERING_HISTORY_MOVE_OFFSET: i16 = -<span class="number">90</span>;
+<span class="kw">pub const </span>MOVE_ORDERING_LOSING_CAPTURES_OFFSET: i16 = -<span class="number">100</span>;
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">LAZY_SMP_NOISE</span>: <span class="ident">i16</span> <span class="op">=</span> <span class="number">10</span>;
+<span class="kw">pub const </span>LAZY_SMP_NOISE: i16 = <span class="number">10</span>;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">std::cmp::PartialEq</span>)]</span>
-<span class="kw">enum</span> <span class="ident">MoveGeneratorStage</span> {
-    <span class="ident">ReadyToCheckHashMove</span>,
-    <span class="ident">ReadyToGenerateCaptures</span>,
-    <span class="ident">Captures</span>,
-    <span class="ident">ReadyToGenerateQuietMoves</span>,
-    <span class="ident">AllGenerated</span>,
+<span class="attribute">#[derive(std::cmp::PartialEq)]
+</span><span class="kw">enum </span>MoveGeneratorStage {
+    ReadyToCheckHashMove,
+    HashMove,
+    ReadyToGenerateCaptures,
+    Captures,
+    ReadyToGenerateKillerMoves,
+    KillerMoves,
+    ReadyToGenerateQuietMoves,
+    AllGenerated,
 }
 
-<span class="doccomment">/// Wrapper for the entry point of the regular search, look at `run_internal` for more information.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span><span class="op">&lt;</span><span class="kw">const</span> <span class="ident">DIAG</span>: <span class="ident">bool</span><span class="op">&gt;</span>(<span class="ident">context</span>: <span class="kw-2">&amp;mut</span> <span class="ident">SearchContext</span>, <span class="ident">depth</span>: <span class="ident">i8</span>) {
-    <span class="kw">let</span> <span class="ident">king_checked</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">is_king_checked</span>(<span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">active_color</span>);
-    <span class="ident">run_internal</span>::<span class="op">&lt;</span><span class="bool-val">true</span>, <span class="bool-val">true</span>, <span class="ident">DIAG</span><span class="op">&gt;</span>(<span class="ident">context</span>, <span class="ident">depth</span>, <span class="number">0</span>, <span class="ident">MIN_ALPHA</span>, <span class="ident">MIN_BETA</span>, <span class="bool-val">true</span>, <span class="ident">king_checked</span>);
+<span class="doccomment">/// Wrapper for the entry point of the regular search, look at `run_internal` for more information.
+</span><span class="kw">pub fn </span>run&lt;<span class="kw">const </span>DIAG: bool&gt;(context: <span class="kw-2">&amp;mut </span>SearchContext, depth: i8) {
+    <span class="kw">let </span>king_checked = context.board.is_king_checked(context.board.active_color);
+    run_internal::&lt;<span class="bool-val">true</span>, <span class="bool-val">true</span>, DIAG&gt;(context, depth, <span class="number">0</span>, MIN_ALPHA, MIN_BETA, <span class="bool-val">true</span>, king_checked);
 }
 
-<span class="doccomment">/// Entry point of the regular search, with generic `ROOT` parameter indicating if this is the root node where the moves filterigh might happen, and `PV` parameter</span>
-<span class="doccomment">/// determining if the current node is a PV (principal variation) node in the PVS framework. The implementation contains a typical alpha-beta approach, together with</span>
-<span class="doccomment">/// a bunch of reduction and prunings to optimize search. The most important parameter here, `context` contains the current state of the search, board state,</span>
-<span class="doccomment">/// statistics, and is passed by reference to all nodes. Besides obvious parameters like `depth`, `ply`, `alpha` and `beta`, there&#39;s also `allow_null_move`</span>
-<span class="doccomment">/// which prevents two null move checks in a row, and `friendly_king_checked` which is used to share friendly king check status between nodes (it&#39;s always</span>
-<span class="doccomment">/// calculated one depth earlier, as it&#39;s used as one of the LMR constraints). If `DIAG` is set to true, additional statistics will be gathered (with a small</span>
-<span class="doccomment">/// performance penalty).</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Search steps for PV node:</span>
-<span class="doccomment">///  - test of initial constraints: abort flag, forced depth</span>
-<span class="doccomment">///  - test if the enemy king is checked</span>
-<span class="doccomment">///  - test if there&#39;s threefold repetition draw, fifty move rule draw or insufficient material draw</span>
-<span class="doccomment">///  - switch to the quiescence search if the depth is equal to zero</span>
-<span class="doccomment">///  - read from the transposition table, return score if possible or update alpha/beta (&lt;https://www.chessprogramming.org/Transposition_Table&gt;)</span>
-<span class="doccomment">///  - generate evasion mask if the friendly king is checked</span>
-<span class="doccomment">///  - main loop:</span>
-<span class="doccomment">///     - filter moves (if `ROOT` is set)</span>
-<span class="doccomment">///     - late move reduction (&lt;https://www.chessprogramming.org/Late_Move_Reductions&gt;)</span>
-<span class="doccomment">///     - PVS framework (&lt;https://www.chessprogramming.org/Principal_Variation_Search&gt;)</span>
-<span class="doccomment">///  - test of abort flag</span>
-<span class="doccomment">///  - test if stalemate draw is detected</span>
-<span class="doccomment">///  - update transposition table</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Search steps for non-PV node:</span>
-<span class="doccomment">///  - test of initial constraints: abort flag, forced depth, max nodes count</span>
-<span class="doccomment">///  - test if the enemy king is checked</span>
-<span class="doccomment">///  - test if there&#39;s threefold repetition draw, fifty move rule draw or insufficient material draw</span>
-<span class="doccomment">///  - switch to the quiescence search if the depth is equal to zero</span>
-<span class="doccomment">///  - read from the transposition table, return score if possible or update alpha/beta (&lt;https://www.chessprogramming.org/Transposition_Table&gt;)</span>
-<span class="doccomment">///  - razoring (&lt;https://www.chessprogramming.org/Razoring&gt;)</span>
-<span class="doccomment">///  - static null move pruning (&lt;https://www.chessprogramming.org/Reverse_Futility_Pruning&gt;)</span>
-<span class="doccomment">///  - null move pruning (&lt;https://www.chessprogramming.org/Null_Move_Pruning&gt;)</span>
-<span class="doccomment">///  - generate evasion mask if the friendly king is checked</span>
-<span class="doccomment">///  - main loop:</span>
-<span class="doccomment">///     - filter moves (if `ROOT` is set)</span>
-<span class="doccomment">///     - late move pruning (&lt;https://www.chessprogramming.org/Futility_Pruning#MoveCountBasedPruning&gt;)</span>
-<span class="doccomment">///     - late move reduction (&lt;https://www.chessprogramming.org/Late_Move_Reductions&gt;)</span>
-<span class="doccomment">///     - PVS framework (&lt;https://www.chessprogramming.org/Principal_Variation_Search&gt;)</span>
-<span class="doccomment">///  - test of abort flag</span>
-<span class="doccomment">///  - test if stalemate draw is detected</span>
-<span class="doccomment">///  - update transposition table</span>
-<span class="kw">fn</span> <span class="ident">run_internal</span><span class="op">&lt;</span><span class="kw">const</span> <span class="ident">ROOT</span>: <span class="ident">bool</span>, <span class="kw">const</span> <span class="ident">PV</span>: <span class="ident">bool</span>, <span class="kw">const</span> <span class="ident">DIAG</span>: <span class="ident">bool</span><span class="op">&gt;</span>(
-    <span class="ident">context</span>: <span class="kw-2">&amp;mut</span> <span class="ident">SearchContext</span>,
-    <span class="ident">depth</span>: <span class="ident">i8</span>,
-    <span class="ident">ply</span>: <span class="ident">u16</span>,
-    <span class="kw-2">mut</span> <span class="ident">alpha</span>: <span class="ident">i16</span>,
-    <span class="kw-2">mut</span> <span class="ident">beta</span>: <span class="ident">i16</span>,
-    <span class="kw-2">mut</span> <span class="ident">allow_null_move</span>: <span class="ident">bool</span>,
-    <span class="ident">friendly_king_checked</span>: <span class="ident">bool</span>,
-) -&gt; <span class="ident">i16</span> {
-    <span class="kw">if</span> <span class="ident">context</span>.<span class="ident">abort_token</span>.<span class="ident">load</span>(<span class="ident">Ordering::Relaxed</span>) {
-        <span class="kw">return</span> <span class="ident">INVALID_SCORE</span>;
+<span class="doccomment">/// Entry point of the regular search, with generic `ROOT` parameter indicating if this is the root node where the moves filterigh might happen, and `PV` parameter
+/// determining if the current node is a PV (principal variation) node in the PVS framework. The implementation contains a typical alpha-beta approach, together with
+/// a bunch of reductions and prunings to optimize search. The most important parameter here, `context`, contains the current state of the search, board state,
+/// statistics, and is passed by reference to all nodes. Besides obvious parameters like `depth`, `ply`, `alpha` and `beta`, there&#39;s also `allow_null_move`
+/// which prevents two null move checks in a row, and `friendly_king_checked` which is used to share friendly king check status between nodes (it&#39;s always
+/// calculated one depth earlier, as it&#39;s used as one of the LMR constraints). If `DIAG` is set to true, additional statistics will be gathered (with a small
+/// performance penalty).
+///
+/// Search steps for PV node:
+///  - test of abort flag
+///  - test of initial constraints: abort flag, forced depth
+///  - test if the enemy king is checked
+///  - test if there&#39;s threefold repetition draw, fifty move rule draw or insufficient material draw
+///  - switch to the quiescence search if the depth is equal to zero
+///  - read from the transposition table, return score if possible or update alpha/beta (&lt;https://www.chessprogramming.org/Transposition_Table&gt;)
+///  - main loop:
+///     - filter moves (if `ROOT` is set)
+///     - late move reduction (&lt;https://www.chessprogramming.org/Late_Move_Reductions&gt;)
+///     - PVS framework (&lt;https://www.chessprogramming.org/Principal_Variation_Search&gt;)
+///  - test if stalemate draw is detected
+///  - update transposition table
+///
+/// Search steps for non-PV node:
+///  - test of abort flag
+///  - test of initial constraints: abort flag, forced depth, max nodes count
+///  - test if the enemy king is checked
+///  - test if there&#39;s threefold repetition draw, fifty move rule draw or insufficient material draw
+///  - switch to the quiescence search if the depth is equal to zero
+///  - read from the transposition table, return score if possible or update alpha/beta (&lt;https://www.chessprogramming.org/Transposition_Table&gt;)
+///  - razoring (&lt;https://www.chessprogramming.org/Razoring&gt;)
+///  - static null move pruning (&lt;https://www.chessprogramming.org/Reverse_Futility_Pruning&gt;)
+///  - null move pruning (&lt;https://www.chessprogramming.org/Null_Move_Pruning&gt;)
+///  - main loop:
+///     - filter moves (if `ROOT` is set)
+///     - late move pruning (&lt;https://www.chessprogramming.org/Futility_Pruning#MoveCountBasedPruning&gt;)
+///     - late move reduction (&lt;https://www.chessprogramming.org/Late_Move_Reductions&gt;)
+///     - PVS framework (&lt;https://www.chessprogramming.org/Principal_Variation_Search&gt;)
+///  - test if stalemate draw is detected
+///  - update transposition table
+</span><span class="kw">fn </span>run_internal&lt;<span class="kw">const </span>ROOT: bool, <span class="kw">const </span>PV: bool, <span class="kw">const </span>DIAG: bool&gt;(
+    context: <span class="kw-2">&amp;mut </span>SearchContext,
+    depth: i8,
+    ply: u16,
+    <span class="kw-2">mut </span>alpha: i16,
+    <span class="kw-2">mut </span>beta: i16,
+    <span class="kw-2">mut </span>allow_null_move: bool,
+    friendly_king_checked: bool,
+) -&gt; i16 {
+    <span class="kw">if </span>context.abort_flag.load(Ordering::Relaxed) {
+        <span class="kw">return </span>INVALID_SCORE;
     }
 
-    <span class="kw">if</span> <span class="ident">context</span>.<span class="ident">forced_depth</span> <span class="op">==</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">context</span>.<span class="ident">max_nodes_count</span> <span class="op">==</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> (<span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">nodes_count</span> <span class="op">&amp;</span> <span class="number">8191</span>) <span class="op">==</span> <span class="number">0</span> {
-        <span class="kw">if</span> (<span class="ident">Utc::now</span>() <span class="op">-</span> <span class="ident">context</span>.<span class="ident">search_time_start</span>).<span class="ident">num_milliseconds</span>() <span class="op">&gt;</span> <span class="ident">context</span>.<span class="ident">deadline</span> <span class="kw">as</span> <span class="ident">i64</span> {
-            <span class="ident">context</span>.<span class="ident">abort_token</span>.<span class="ident">store</span>(<span class="bool-val">true</span>, <span class="ident">Ordering::Relaxed</span>);
-            <span class="kw">return</span> <span class="ident">INVALID_SCORE</span>;
+    <span class="kw">if </span>context.forced_depth == <span class="number">0 </span>&amp;&amp; context.max_nodes_count == <span class="number">0 </span>&amp;&amp; (context.statistics.nodes_count &amp; <span class="number">8191</span>) == <span class="number">0 </span>{
+        <span class="kw">if </span>context.search_time_start.elapsed().unwrap().as_millis() &gt; context.deadline <span class="kw">as </span>u128 {
+            context.abort_flag.store(<span class="bool-val">true</span>, Ordering::Relaxed);
+            <span class="kw">return </span>INVALID_SCORE;
         }
     }
 
-    <span class="kw">if</span> <span class="ident">PV</span> <span class="op">&amp;&amp;</span> <span class="ident">context</span>.<span class="ident">max_nodes_count</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="kw">if</span> <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">nodes_count</span> <span class="op">+</span> <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">q_nodes_count</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">context</span>.<span class="ident">max_nodes_count</span> {
-            <span class="ident">context</span>.<span class="ident">abort_token</span>.<span class="ident">store</span>(<span class="bool-val">true</span>, <span class="ident">Ordering::Relaxed</span>);
-            <span class="kw">return</span> <span class="ident">INVALID_SCORE</span>;
+    <span class="kw">if </span>PV &amp;&amp; context.max_nodes_count != <span class="number">0 </span>{
+        <span class="kw">if </span>context.statistics.nodes_count + context.statistics.q_nodes_count &gt;= context.max_nodes_count {
+            context.abort_flag.store(<span class="bool-val">true</span>, Ordering::Relaxed);
+            <span class="kw">return </span>INVALID_SCORE;
         }
     }
 
-    <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">nodes_count</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+    context.statistics.nodes_count += <span class="number">1</span>;
 
-    <span class="kw">if</span> <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">is_king_checked</span>(<span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">active_color</span> <span class="op">^</span> <span class="number">1</span>) {
-        <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">leafs_count</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
-        <span class="kw">return</span> <span class="ident">CHECKMATE_SCORE</span> <span class="op">-</span> (<span class="ident">ply</span> <span class="kw">as</span> <span class="ident">i16</span>);
+    <span class="kw">if </span>context.board.is_king_checked(context.board.active_color ^ <span class="number">1</span>) {
+        <span class="macro">conditional_expression!</span>(DIAG, context.statistics.leafs_count += <span class="number">1</span>);
+        <span class="kw">return </span>CHECKMATE_SCORE - (ply <span class="kw">as </span>i16);
     }
 
-    <span class="kw">if</span> <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">is_repetition_draw</span>(<span class="kw">if</span> <span class="ident">ROOT</span> { <span class="number">3</span> } <span class="kw">else</span> { <span class="number">2</span> }) <span class="op">|</span><span class="op">|</span> <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">is_fifty_move_rule_draw</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">is_insufficient_material_draw</span>() {
-        <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">leafs_count</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
-        <span class="kw">return</span> <span class="ident">DRAW_SCORE</span>;
+    <span class="kw">if </span>context.board.is_repetition_draw(<span class="kw">if </span>ROOT { <span class="number">3 </span>} <span class="kw">else </span>{ <span class="number">2 </span>}) || context.board.is_fifty_move_rule_draw() || context.board.is_insufficient_material_draw() {
+        <span class="macro">conditional_expression!</span>(DIAG, context.statistics.leafs_count += <span class="number">1</span>);
+        <span class="kw">return </span>DRAW_SCORE;
     }
 
-    <span class="kw">if</span> <span class="ident">depth</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">leafs_count</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
-        <span class="kw">return</span> <span class="ident">qsearch::run</span>::<span class="op">&lt;</span><span class="ident">DIAG</span><span class="op">&gt;</span>(<span class="ident">context</span>, <span class="ident">depth</span>, <span class="ident">ply</span>, <span class="ident">alpha</span>, <span class="ident">beta</span>);
+    <span class="kw">if </span>context.syzygy_enabled &amp;&amp; depth &gt;= context.syzygy_probe_depth &amp;&amp; context.board.get_pieces_count() &lt;= syzygy::probe::get_max_pieces_count() {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(wdl) = syzygy::probe::get_wdl(<span class="kw-2">&amp;</span>context.board) {
+            context.statistics.tb_hits += <span class="number">1</span>;
+            <span class="kw">return match </span>wdl {
+                WdlResult::Win =&gt; TBMATE_SCORE - (ply <span class="kw">as </span>i16),
+                WdlResult::Loss =&gt; -TBMATE_SCORE + (ply <span class="kw">as </span>i16),
+                WdlResult::Draw =&gt; DRAW_SCORE,
+            };
+        }
     }
 
-    <span class="kw">let</span> <span class="ident">original_alpha</span> <span class="op">=</span> <span class="ident">alpha</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tt_entry_found</span> <span class="op">=</span> <span class="bool-val">false</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hash_move</span> <span class="op">=</span> <span class="ident">Default::default</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">collision</span> <span class="op">=</span> <span class="bool-val">false</span>;
+    <span class="kw">if </span>depth &lt;= <span class="number">0 </span>{
+        <span class="macro">conditional_expression!</span>(DIAG, context.statistics.leafs_count += <span class="number">1</span>);
+        <span class="kw">return </span>qsearch::run::&lt;DIAG&gt;(context, ply, alpha, beta);
+    }
 
-    <span class="kw">match</span> <span class="ident">context</span>.<span class="ident">transposition_table</span>.<span class="ident">get</span>(<span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">hash</span>, <span class="ident">ply</span>, <span class="kw-2">&amp;mut</span> <span class="ident">collision</span>) {
-        <span class="prelude-val">Some</span>(<span class="ident">entry</span>) =&gt; {
-            <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">tt_hits</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
+    <span class="kw">let </span>original_alpha = alpha;
+    <span class="kw">let </span><span class="kw-2">mut </span>tt_entry_found = <span class="bool-val">false</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>hash_move = Default::default();
 
-            <span class="kw">if</span> <span class="ident">entry</span>.<span class="ident">best_move</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Default::default</span>() {
-                <span class="kw">if</span> <span class="ident">entry</span>.<span class="ident">best_move</span>.<span class="ident">is_legal</span>(<span class="kw-2">&amp;</span><span class="ident">context</span>.<span class="ident">board</span>) {
-                    <span class="ident">hash_move</span> <span class="op">=</span> <span class="ident">entry</span>.<span class="ident">best_move</span>;
-                    <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">tt_legal_hashmoves</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
-                } <span class="kw">else</span> {
-                    <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">tt_illegal_hashmoves</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
+    <span class="kw">match </span>context.transposition_table.get(context.board.hash, ply) {
+        <span class="prelude-val">Some</span>(entry) =&gt; {
+            <span class="macro">conditional_expression!</span>(DIAG, context.statistics.tt_hits += <span class="number">1</span>);
+
+            <span class="kw">if </span>entry.best_move != Default::default() {
+                <span class="kw">if </span>entry.best_move.is_legal(<span class="kw-2">&amp;</span>context.board) {
+                    hash_move = entry.best_move;
+                    <span class="macro">conditional_expression!</span>(DIAG, context.statistics.tt_legal_hashmoves += <span class="number">1</span>);
+                } <span class="kw">else </span>{
+                    <span class="macro">conditional_expression!</span>(DIAG, context.statistics.tt_illegal_hashmoves += <span class="number">1</span>);
                 }
             }
 
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">ROOT</span> {
-                <span class="kw">if</span> <span class="ident">entry</span>.<span class="ident">depth</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">depth</span> <span class="kw">as</span> <span class="ident">i8</span> {
-                    <span class="ident">tt_entry_found</span> <span class="op">=</span> <span class="bool-val">true</span>;
-                    <span class="kw">match</span> <span class="ident">entry</span>.<span class="ident">r#type</span> {
-                        <span class="ident">TranspositionTableScoreType::ALPHA_SCORE</span> =&gt; {
-                            <span class="kw">if</span> <span class="ident">entry</span>.<span class="ident">score</span> <span class="op">&lt;</span> <span class="ident">beta</span> {
-                                <span class="ident">beta</span> <span class="op">=</span> <span class="ident">entry</span>.<span class="ident">score</span>;
-                            }
+            <span class="kw">if </span>!ROOT {
+                <span class="kw">if </span>entry.depth &gt;= depth {
+                    tt_entry_found = <span class="bool-val">true</span>;
+                    <span class="kw">match </span>entry.r#type {
+                        TranspositionTableScoreType::UPPER_BOUND =&gt; {
+                            beta = cmp::min(beta, entry.score);
                         }
-                        <span class="ident">TranspositionTableScoreType::BETA_SCORE</span> =&gt; {
-                            <span class="kw">if</span> <span class="ident">entry</span>.<span class="ident">score</span> <span class="op">&gt;</span> <span class="ident">alpha</span> {
-                                <span class="ident">alpha</span> <span class="op">=</span> <span class="ident">entry</span>.<span class="ident">score</span>;
-                            }
+                        TranspositionTableScoreType::LOWER_BOUND =&gt; {
+                            alpha = cmp::max(alpha, entry.score);
                         }
-                        <span class="kw">_</span> =&gt; {
-                            <span class="kw">if</span> <span class="op">!</span><span class="ident">PV</span> <span class="op">|</span><span class="op">|</span> <span class="ident">entry</span>.<span class="ident">age</span> <span class="op">==</span> <span class="number">0</span> {
-                                <span class="kw">if</span> <span class="op">!</span><span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">is_repetition_draw</span>(<span class="number">2</span>) {
-                                    <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">leafs_count</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
-                                    <span class="kw">return</span> <span class="ident">entry</span>.<span class="ident">score</span>;
+                        <span class="kw">_ </span>=&gt; {
+                            <span class="kw">if </span>!PV || entry.age == <span class="number">0 </span>{
+                                <span class="kw">if </span>!context.board.is_repetition_draw(<span class="number">2</span>) {
+                                    <span class="macro">conditional_expression!</span>(DIAG, context.statistics.leafs_count += <span class="number">1</span>);
+                                    <span class="kw">return </span>entry.score;
                                 }
                             }
                         }
                     }
 
-                    <span class="kw">if</span> <span class="ident">alpha</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">beta</span> {
-                        <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">leafs_count</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
-                        <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">beta_cutoffs</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
-                        <span class="kw">return</span> <span class="ident">entry</span>.<span class="ident">score</span>;
+                    <span class="kw">if </span>alpha &gt;= beta {
+                        <span class="macro">conditional_expression!</span>(DIAG, context.statistics.leafs_count += <span class="number">1</span>);
+                        <span class="macro">conditional_expression!</span>(DIAG, context.statistics.beta_cutoffs += <span class="number">1</span>);
+                        <span class="kw">return </span>entry.score;
                     }
-                } <span class="kw">else</span> {
-                    <span class="kw">match</span> <span class="ident">entry</span>.<span class="ident">r#type</span> {
-                        <span class="ident">TranspositionTableScoreType::ALPHA_SCORE</span> <span class="op">|</span> <span class="ident">TranspositionTableScoreType::EXACT_SCORE</span> =&gt; {
-                            <span class="kw">if</span> <span class="ident">entry</span>.<span class="ident">score</span> <span class="op">&lt;</span> <span class="ident">beta</span> {
-                                <span class="ident">allow_null_move</span> <span class="op">=</span> <span class="bool-val">false</span>;
+                } <span class="kw">else </span>{
+                    <span class="kw">match </span>entry.r#type {
+                        TranspositionTableScoreType::UPPER_BOUND | TranspositionTableScoreType::EXACT_SCORE =&gt; {
+                            <span class="kw">if </span>entry.score &lt; beta {
+                                allow_null_move = <span class="bool-val">false</span>;
                             }
                         }
-                        <span class="kw">_</span> =&gt; {}
+                        <span class="kw">_ </span>=&gt; {}
                     }
                 }
             }
         }
-        <span class="prelude-val">None</span> =&gt; {
-            <span class="kw">if</span> <span class="ident">collision</span> {
-                <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">tt_collisions</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
-            }
-
-            <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">tt_misses</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
+        <span class="prelude-val">None </span>=&gt; {
+            <span class="macro">conditional_expression!</span>(DIAG, context.statistics.tt_misses += <span class="number">1</span>);
         }
     };
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lazy_evaluation</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>lazy_evaluation = <span class="prelude-val">None</span>;
 
-    <span class="kw">if</span> <span class="ident">razoring_can_be_applied</span>::<span class="op">&lt;</span><span class="ident">PV</span><span class="op">&gt;</span>(<span class="ident">depth</span>, <span class="ident">alpha</span>, <span class="ident">friendly_king_checked</span>) {
-        <span class="kw">let</span> <span class="ident">margin</span> <span class="op">=</span> <span class="ident">razoring_get_margin</span>(<span class="ident">depth</span>);
-        <span class="kw">let</span> <span class="ident">lazy_evaluation_value</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">lazy_evaluation</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>,
-            <span class="prelude-val">None</span> =&gt; <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">evaluate_lazy</span>(<span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">active_color</span>),
+    <span class="kw">if </span>razoring_can_be_applied::&lt;PV&gt;(depth, alpha, friendly_king_checked) {
+        <span class="kw">let </span>margin = razoring_get_margin(depth);
+        <span class="kw">let </span>lazy_evaluation_value = <span class="kw">match </span>lazy_evaluation {
+            <span class="prelude-val">Some</span>(value) =&gt; value,
+            <span class="prelude-val">None </span>=&gt; context.board.evaluate_lazy(context.board.active_color),
         };
 
-        <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">razoring_attempts</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
-        <span class="kw">if</span> <span class="ident">lazy_evaluation_value</span> <span class="op">+</span> <span class="ident">margin</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">alpha</span> {
-            <span class="kw">let</span> <span class="ident">score</span> <span class="op">=</span> <span class="ident">qsearch::run</span>::<span class="op">&lt;</span><span class="ident">DIAG</span><span class="op">&gt;</span>(<span class="ident">context</span>, <span class="ident">depth</span>, <span class="ident">ply</span>, <span class="ident">alpha</span>, <span class="ident">beta</span>);
-            <span class="kw">if</span> <span class="ident">score</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">alpha</span> {
-                <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">leafs_count</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
-                <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">razoring_accepted</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
-                <span class="kw">return</span> <span class="ident">score</span>;
-            } <span class="kw">else</span> {
-                <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">razoring_rejected</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
+        <span class="macro">conditional_expression!</span>(DIAG, context.statistics.razoring_attempts += <span class="number">1</span>);
+        <span class="kw">if </span>lazy_evaluation_value + margin &lt;= alpha {
+            <span class="kw">let </span>score = qsearch::run::&lt;DIAG&gt;(context, ply, alpha, beta);
+            <span class="kw">if </span>score &lt;= alpha {
+                <span class="macro">conditional_expression!</span>(DIAG, context.statistics.leafs_count += <span class="number">1</span>);
+                <span class="macro">conditional_expression!</span>(DIAG, context.statistics.razoring_accepted += <span class="number">1</span>);
+                <span class="kw">return </span>score;
+            } <span class="kw">else </span>{
+                <span class="macro">conditional_expression!</span>(DIAG, context.statistics.razoring_rejected += <span class="number">1</span>);
             }
         }
 
-        <span class="ident">lazy_evaluation</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">lazy_evaluation_value</span>);
+        lazy_evaluation = <span class="prelude-val">Some</span>(lazy_evaluation_value);
     }
 
-    <span class="kw">if</span> <span class="ident">static_null_move_pruning_can_be_applied</span>::<span class="op">&lt;</span><span class="ident">PV</span><span class="op">&gt;</span>(<span class="ident">depth</span>, <span class="ident">beta</span>, <span class="ident">friendly_king_checked</span>) {
-        <span class="kw">let</span> <span class="ident">margin</span> <span class="op">=</span> <span class="ident">static_null_move_pruning_get_margin</span>(<span class="ident">depth</span>);
-        <span class="kw">let</span> <span class="ident">lazy_evaluation_value</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">lazy_evaluation</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>,
-            <span class="prelude-val">None</span> =&gt; <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">evaluate_lazy</span>(<span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">active_color</span>),
+    <span class="kw">if </span>static_null_move_pruning_can_be_applied::&lt;PV&gt;(depth, beta, friendly_king_checked) {
+        <span class="kw">let </span>margin = static_null_move_pruning_get_margin(depth);
+        <span class="kw">let </span>lazy_evaluation_value = <span class="kw">match </span>lazy_evaluation {
+            <span class="prelude-val">Some</span>(value) =&gt; value,
+            <span class="prelude-val">None </span>=&gt; context.board.evaluate_lazy(context.board.active_color),
         };
 
-        <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">static_null_move_pruning_attempts</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
-        <span class="kw">if</span> <span class="ident">lazy_evaluation_value</span> <span class="op">-</span> <span class="ident">margin</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">beta</span> {
-            <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">leafs_count</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
-            <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">static_null_move_pruning_accepted</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
-            <span class="kw">return</span> <span class="ident">lazy_evaluation_value</span> <span class="op">-</span> <span class="ident">margin</span>;
-        } <span class="kw">else</span> {
-            <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">static_null_move_pruning_rejected</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
+        <span class="macro">conditional_expression!</span>(DIAG, context.statistics.static_null_move_pruning_attempts += <span class="number">1</span>);
+        <span class="kw">if </span>lazy_evaluation_value - margin &gt;= beta {
+            <span class="macro">conditional_expression!</span>(DIAG, context.statistics.leafs_count += <span class="number">1</span>);
+            <span class="macro">conditional_expression!</span>(DIAG, context.statistics.static_null_move_pruning_accepted += <span class="number">1</span>);
+            <span class="kw">return </span>lazy_evaluation_value - margin;
+        } <span class="kw">else </span>{
+            <span class="macro">conditional_expression!</span>(DIAG, context.statistics.static_null_move_pruning_rejected += <span class="number">1</span>);
         }
 
-        <span class="ident">lazy_evaluation</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">lazy_evaluation_value</span>);
+        lazy_evaluation = <span class="prelude-val">Some</span>(lazy_evaluation_value);
     }
 
-    <span class="kw">if</span> <span class="ident">null_move_pruning_can_be_applied</span>::<span class="op">&lt;</span><span class="ident">PV</span><span class="op">&gt;</span>(<span class="ident">context</span>, <span class="ident">depth</span>, <span class="ident">beta</span>, <span class="ident">allow_null_move</span>, <span class="ident">friendly_king_checked</span>) {
-        <span class="kw">let</span> <span class="ident">margin</span> <span class="op">=</span> <span class="ident">NULL_MOVE_PRUNING_MARGIN</span>;
-        <span class="kw">let</span> <span class="ident">lazy_evaluation_value</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">lazy_evaluation</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>,
-            <span class="prelude-val">None</span> =&gt; <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">evaluate_lazy</span>(<span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">active_color</span>),
+    <span class="kw">if </span>null_move_pruning_can_be_applied::&lt;PV&gt;(context, depth, beta, allow_null_move, friendly_king_checked) {
+        <span class="kw">let </span>margin = NULL_MOVE_PRUNING_MARGIN;
+        <span class="kw">let </span>lazy_evaluation_value = <span class="kw">match </span>lazy_evaluation {
+            <span class="prelude-val">Some</span>(value) =&gt; value,
+            <span class="prelude-val">None </span>=&gt; context.board.evaluate_lazy(context.board.active_color),
         };
 
-        <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">null_move_pruning_attempts</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
-        <span class="kw">if</span> <span class="ident">lazy_evaluation_value</span> <span class="op">+</span> <span class="ident">margin</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">beta</span> {
-            <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">null_move_pruning_get_r</span>(<span class="ident">depth</span>);
+        <span class="macro">conditional_expression!</span>(DIAG, context.statistics.null_move_pruning_attempts += <span class="number">1</span>);
+        <span class="kw">if </span>lazy_evaluation_value + margin &gt;= beta {
+            <span class="kw">let </span>r = null_move_pruning_get_r(depth);
 
-            <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">make_null_move</span>();
-            <span class="kw">let</span> <span class="ident">king_checked</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">is_king_checked</span>(<span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">active_color</span>);
-            <span class="kw">let</span> <span class="ident">score</span> <span class="op">=</span> <span class="op">-</span><span class="ident">run_internal</span>::<span class="op">&lt;</span><span class="bool-val">false</span>, <span class="bool-val">false</span>, <span class="ident">DIAG</span><span class="op">&gt;</span>(<span class="ident">context</span>, <span class="ident">depth</span> <span class="op">-</span> <span class="ident">r</span> <span class="op">-</span> <span class="number">1</span>, <span class="ident">ply</span> <span class="op">+</span> <span class="number">1</span>, <span class="op">-</span><span class="ident">beta</span>, <span class="op">-</span><span class="ident">beta</span> <span class="op">+</span> <span class="number">1</span>, <span class="bool-val">false</span>, <span class="ident">king_checked</span>);
-            <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">undo_null_move</span>();
+            context.board.make_null_move();
+            <span class="kw">let </span>score = -run_internal::&lt;<span class="bool-val">false</span>, <span class="bool-val">false</span>, DIAG&gt;(context, depth - r - <span class="number">1</span>, ply + <span class="number">1</span>, -beta, -beta + <span class="number">1</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>);
+            context.board.undo_null_move();
 
-            <span class="kw">if</span> <span class="ident">score</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">beta</span> {
-                <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">leafs_count</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
-                <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">null_move_pruning_accepted</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
-                <span class="kw">return</span> <span class="ident">score</span>;
-            } <span class="kw">else</span> {
-                <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">null_move_pruning_rejected</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
+            <span class="kw">if </span>score &gt;= beta {
+                <span class="macro">conditional_expression!</span>(DIAG, context.statistics.leafs_count += <span class="number">1</span>);
+                <span class="macro">conditional_expression!</span>(DIAG, context.statistics.null_move_pruning_accepted += <span class="number">1</span>);
+                <span class="kw">return </span>score;
+            } <span class="kw">else </span>{
+                <span class="macro">conditional_expression!</span>(DIAG, context.statistics.null_move_pruning_rejected += <span class="number">1</span>);
             }
         }
 
-        <span class="ident">lazy_evaluation</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">lazy_evaluation_value</span>);
+        lazy_evaluation = <span class="prelude-val">Some</span>(lazy_evaluation_value);
     }
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">best_score</span> <span class="op">=</span> <span class="op">-</span><span class="ident">CHECKMATE_SCORE</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">best_move</span> <span class="op">=</span> <span class="ident">Default::default</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">moves</span>: [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Move</span><span class="op">&gt;</span>; <span class="ident">MAX_MOVES_COUNT</span>] <span class="op">=</span> [<span class="ident">MaybeUninit::uninit</span>(); <span class="ident">MAX_MOVES_COUNT</span>];
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">move_scores</span>: [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">i16</span><span class="op">&gt;</span>; <span class="ident">MAX_MOVES_COUNT</span>] <span class="op">=</span> [<span class="ident">MaybeUninit::uninit</span>(); <span class="ident">MAX_MOVES_COUNT</span>];
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">move_generator_stage</span> <span class="op">=</span> <span class="ident">MoveGeneratorStage::ReadyToCheckHashMove</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>best_score = -CHECKMATE_SCORE;
+    <span class="kw">let </span><span class="kw-2">mut </span>best_move = Default::default();
+    <span class="kw">let </span><span class="kw-2">mut </span>moves = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
+    <span class="kw">let </span><span class="kw-2">mut </span>move_scores = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
+    <span class="kw">let </span><span class="kw-2">mut </span>move_generator_stage = MoveGeneratorStage::ReadyToCheckHashMove;
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">move_index</span> <span class="op">=</span> <span class="number">0</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">moves_count</span> <span class="op">=</span> <span class="number">0</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">evasion_mask</span> <span class="op">=</span> <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>move_index = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>move_number = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>moves_count = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>evasion_mask = <span class="number">0</span>;
 
-    <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">r#move</span>, <span class="ident">score</span>)) <span class="op">=</span> <span class="ident">get_next_move</span>::<span class="op">&lt;</span><span class="ident">DIAG</span><span class="op">&gt;</span>(
-        <span class="ident">context</span>,
-        <span class="kw-2">&amp;mut</span> <span class="ident">move_generator_stage</span>,
-        <span class="kw-2">&amp;mut</span> <span class="ident">moves</span>,
-        <span class="kw-2">&amp;mut</span> <span class="ident">move_scores</span>,
-        <span class="kw-2">&amp;mut</span> <span class="ident">move_index</span>,
-        <span class="kw-2">&amp;mut</span> <span class="ident">moves_count</span>,
-        <span class="ident">hash_move</span>,
-        <span class="kw-2">&amp;mut</span> <span class="ident">evasion_mask</span>,
-        <span class="ident">ply</span>,
-        <span class="ident">friendly_king_checked</span>,
+    <span class="kw">while let </span><span class="prelude-val">Some</span>((r#move, score)) = get_next_move::&lt;DIAG&gt;(
+        context,
+        <span class="kw-2">&amp;mut </span>move_generator_stage,
+        <span class="kw-2">&amp;mut </span>moves,
+        <span class="kw-2">&amp;mut </span>move_scores,
+        <span class="kw-2">&amp;mut </span>move_index,
+        <span class="kw-2">&amp;mut </span>move_number,
+        <span class="kw-2">&amp;mut </span>moves_count,
+        <span class="kw-2">&amp;mut </span>evasion_mask,
+        hash_move,
+        ply,
+        friendly_king_checked,
     ) {
-        <span class="kw">if</span> <span class="ident">ROOT</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">context</span>.<span class="ident">moves_to_search</span>.<span class="ident">is_empty</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">context</span>.<span class="ident">moves_to_search</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">r#move</span>) {
+        <span class="kw">if </span>ROOT &amp;&amp; !context.moves_to_search.is_empty() &amp;&amp; !context.moves_to_search.contains(<span class="kw-2">&amp;</span>r#move) {
             <span class="kw">continue</span>;
         }
 
-        <span class="kw">if</span> <span class="ident">late_move_pruning_can_be_applied</span>::<span class="op">&lt;</span><span class="ident">PV</span><span class="op">&gt;</span>(<span class="ident">depth</span>, <span class="ident">move_index</span>, <span class="ident">score</span>, <span class="ident">friendly_king_checked</span>) {
-            <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">late_move_pruning_accepted</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
+        <span class="kw">if </span>late_move_pruning_can_be_applied::&lt;PV&gt;(depth, move_number, score, friendly_king_checked) {
+            <span class="macro">conditional_expression!</span>(DIAG, context.statistics.late_move_pruning_accepted += <span class="number">1</span>);
             <span class="kw">break</span>;
-        } <span class="kw">else</span> {
-            <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">late_move_pruning_rejected</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
+        } <span class="kw">else </span>{
+            <span class="macro">conditional_expression!</span>(DIAG, context.statistics.late_move_pruning_rejected += <span class="number">1</span>);
         }
 
-        <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">make_move</span>(<span class="ident">r#move</span>);
+        context.board.make_move(r#move);
 
-        <span class="kw">let</span> <span class="ident">king_checked</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">is_king_checked</span>(<span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">active_color</span>);
-        <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">late_move_reduction_can_be_applied</span>(<span class="ident">depth</span>, <span class="ident">r#move</span>, <span class="ident">move_index</span>, <span class="ident">score</span>, <span class="ident">friendly_king_checked</span>, <span class="ident">king_checked</span>) {
-            <span class="ident">late_move_reduction_get_r</span>::<span class="op">&lt;</span><span class="ident">PV</span><span class="op">&gt;</span>(<span class="ident">move_index</span>)
-        } <span class="kw">else</span> {
-            <span class="number">0</span>
-        };
+        <span class="kw">let </span>king_checked = context.board.is_king_checked(context.board.active_color);
+        <span class="kw">let </span>r = <span class="kw">if </span>late_move_reduction_can_be_applied(depth, r#move, move_number, score, friendly_king_checked, king_checked) {
+            late_move_reduction_get_r::&lt;PV&gt;(move_number)
+        } <span class="kw">else </span>{
+            <span class="number">0
+        </span>};
 
-        <span class="kw">let</span> <span class="ident">score</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">PV</span> {
-            <span class="kw">if</span> <span class="ident">move_index</span> <span class="op">==</span> <span class="number">0</span> {
-                <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">pvs_full_window_searches</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
-                <span class="op">-</span><span class="ident">run_internal</span>::<span class="op">&lt;</span><span class="bool-val">false</span>, <span class="bool-val">true</span>, <span class="ident">DIAG</span><span class="op">&gt;</span>(<span class="ident">context</span>, <span class="ident">depth</span> <span class="op">-</span> <span class="number">1</span>, <span class="ident">ply</span> <span class="op">+</span> <span class="number">1</span>, <span class="op">-</span><span class="ident">beta</span>, <span class="op">-</span><span class="ident">alpha</span>, <span class="bool-val">true</span>, <span class="ident">king_checked</span>)
-            } <span class="kw">else</span> {
-                <span class="kw">let</span> <span class="ident">zero_window_score</span> <span class="op">=</span> <span class="op">-</span><span class="ident">run_internal</span>::<span class="op">&lt;</span><span class="bool-val">false</span>, <span class="bool-val">false</span>, <span class="ident">DIAG</span><span class="op">&gt;</span>(<span class="ident">context</span>, <span class="ident">depth</span> <span class="op">-</span> <span class="ident">r</span> <span class="op">-</span> <span class="number">1</span>, <span class="ident">ply</span> <span class="op">+</span> <span class="number">1</span>, <span class="op">-</span><span class="ident">alpha</span> <span class="op">-</span> <span class="number">1</span>, <span class="op">-</span><span class="ident">alpha</span>, <span class="bool-val">true</span>, <span class="ident">king_checked</span>);
-                <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">pvs_zero_window_searches</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
+        <span class="kw">let </span>score = <span class="kw">if </span>PV {
+            <span class="kw">if </span>move_index == <span class="number">0 </span>{
+                <span class="macro">conditional_expression!</span>(DIAG, context.statistics.pvs_full_window_searches += <span class="number">1</span>);
+                -run_internal::&lt;<span class="bool-val">false</span>, <span class="bool-val">true</span>, DIAG&gt;(context, depth - <span class="number">1</span>, ply + <span class="number">1</span>, -beta, -alpha, <span class="bool-val">true</span>, king_checked)
+            } <span class="kw">else </span>{
+                <span class="kw">let </span>zero_window_score = -run_internal::&lt;<span class="bool-val">false</span>, <span class="bool-val">false</span>, DIAG&gt;(context, depth - r - <span class="number">1</span>, ply + <span class="number">1</span>, -alpha - <span class="number">1</span>, -alpha, <span class="bool-val">true</span>, king_checked);
+                <span class="macro">conditional_expression!</span>(DIAG, context.statistics.pvs_zero_window_searches += <span class="number">1</span>);
 
-                <span class="kw">if</span> <span class="ident">zero_window_score</span> <span class="op">&gt;</span> <span class="ident">alpha</span> <span class="op">&amp;&amp;</span> (<span class="ident">alpha</span> <span class="op">!</span><span class="op">=</span> <span class="ident">beta</span> <span class="op">-</span> <span class="number">1</span> <span class="op">|</span><span class="op">|</span> <span class="ident">r</span> <span class="op">&gt;</span> <span class="number">0</span>) {
-                    <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">pvs_rejected_searches</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
-                    <span class="op">-</span><span class="ident">run_internal</span>::<span class="op">&lt;</span><span class="bool-val">false</span>, <span class="bool-val">true</span>, <span class="ident">DIAG</span><span class="op">&gt;</span>(<span class="ident">context</span>, <span class="ident">depth</span> <span class="op">-</span> <span class="number">1</span>, <span class="ident">ply</span> <span class="op">+</span> <span class="number">1</span>, <span class="op">-</span><span class="ident">beta</span>, <span class="op">-</span><span class="ident">alpha</span>, <span class="bool-val">true</span>, <span class="ident">king_checked</span>)
-                } <span class="kw">else</span> {
-                    <span class="ident">zero_window_score</span>
+                <span class="kw">if </span>zero_window_score &gt; alpha &amp;&amp; (alpha != beta - <span class="number">1 </span>|| r &gt; <span class="number">0</span>) {
+                    <span class="macro">conditional_expression!</span>(DIAG, context.statistics.pvs_rejected_searches += <span class="number">1</span>);
+                    -run_internal::&lt;<span class="bool-val">false</span>, <span class="bool-val">true</span>, DIAG&gt;(context, depth - <span class="number">1</span>, ply + <span class="number">1</span>, -beta, -alpha, <span class="bool-val">true</span>, king_checked)
+                } <span class="kw">else </span>{
+                    zero_window_score
                 }
             }
-        } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="ident">zero_window_score</span> <span class="op">=</span> <span class="op">-</span><span class="ident">run_internal</span>::<span class="op">&lt;</span><span class="bool-val">false</span>, <span class="bool-val">false</span>, <span class="ident">DIAG</span><span class="op">&gt;</span>(<span class="ident">context</span>, <span class="ident">depth</span> <span class="op">-</span> <span class="ident">r</span> <span class="op">-</span> <span class="number">1</span>, <span class="ident">ply</span> <span class="op">+</span> <span class="number">1</span>, <span class="op">-</span><span class="ident">beta</span>, <span class="op">-</span><span class="ident">alpha</span>, <span class="bool-val">true</span>, <span class="ident">king_checked</span>);
-            <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">pvs_zero_window_searches</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>zero_window_score = -run_internal::&lt;<span class="bool-val">false</span>, <span class="bool-val">false</span>, DIAG&gt;(context, depth - r - <span class="number">1</span>, ply + <span class="number">1</span>, -beta, -alpha, <span class="bool-val">true</span>, king_checked);
+            <span class="macro">conditional_expression!</span>(DIAG, context.statistics.pvs_zero_window_searches += <span class="number">1</span>);
 
-            <span class="kw">if</span> <span class="ident">zero_window_score</span> <span class="op">&gt;</span> <span class="ident">alpha</span> <span class="op">&amp;&amp;</span> <span class="ident">r</span> <span class="op">&gt;</span> <span class="number">0</span> {
-                <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">pvs_rejected_searches</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
-                <span class="op">-</span><span class="ident">run_internal</span>::<span class="op">&lt;</span><span class="bool-val">false</span>, <span class="bool-val">false</span>, <span class="ident">DIAG</span><span class="op">&gt;</span>(<span class="ident">context</span>, <span class="ident">depth</span> <span class="op">-</span> <span class="number">1</span>, <span class="ident">ply</span> <span class="op">+</span> <span class="number">1</span>, <span class="op">-</span><span class="ident">beta</span>, <span class="op">-</span><span class="ident">alpha</span>, <span class="bool-val">true</span>, <span class="ident">king_checked</span>)
-            } <span class="kw">else</span> {
-                <span class="ident">zero_window_score</span>
+            <span class="kw">if </span>zero_window_score &gt; alpha &amp;&amp; r &gt; <span class="number">0 </span>{
+                <span class="macro">conditional_expression!</span>(DIAG, context.statistics.pvs_rejected_searches += <span class="number">1</span>);
+                -run_internal::&lt;<span class="bool-val">false</span>, <span class="bool-val">false</span>, DIAG&gt;(context, depth - <span class="number">1</span>, ply + <span class="number">1</span>, -beta, -alpha, <span class="bool-val">true</span>, king_checked)
+            } <span class="kw">else </span>{
+                zero_window_score
             }
         };
 
-        <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">undo_move</span>(<span class="ident">r#move</span>);
+        context.board.undo_move(r#move);
 
-        <span class="kw">if</span> <span class="ident">score</span> <span class="op">&gt;</span> <span class="ident">best_score</span> {
-            <span class="ident">best_score</span> <span class="op">=</span> <span class="ident">score</span>;
-            <span class="ident">best_move</span> <span class="op">=</span> <span class="ident">r#move</span>;
-        }
+        <span class="kw">if </span>score &gt; best_score {
+            best_score = cmp::max(best_score, score);
+            alpha = cmp::max(alpha, best_score);
+            best_move = r#move;
 
-        <span class="kw">if</span> <span class="ident">best_score</span> <span class="op">&gt;</span> <span class="ident">alpha</span> {
-            <span class="ident">alpha</span> <span class="op">=</span> <span class="ident">best_score</span>;
-
-            <span class="kw">if</span> <span class="ident">alpha</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">beta</span> {
-                <span class="kw">if</span> <span class="ident">r#move</span>.<span class="ident">is_quiet</span>() {
-                    <span class="ident">context</span>.<span class="ident">killers_table</span>.<span class="ident">add</span>(<span class="ident">ply</span>, <span class="ident">r#move</span>);
-                    <span class="ident">context</span>.<span class="ident">history_table</span>.<span class="ident">add</span>(<span class="ident">r#move</span>.<span class="ident">get_from</span>(), <span class="ident">r#move</span>.<span class="ident">get_to</span>(), <span class="ident">depth</span> <span class="kw">as</span> <span class="ident">u8</span>);
+            <span class="kw">if </span>alpha &gt;= beta {
+                <span class="kw">if </span>r#move.is_quiet() {
+                    context.killers_table.add(ply, r#move);
+                    context.history_table.add(r#move.get_from(), r#move.get_to(), depth <span class="kw">as </span>u8);
                 }
 
-                <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">beta_cutoffs</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
-                <span class="kw">if</span> <span class="ident">move_index</span> <span class="op">==</span> <span class="number">0</span> {
-                    <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">perfect_cutoffs</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
-                } <span class="kw">else</span> {
-                    <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">non_perfect_cutoffs</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
+                <span class="macro">conditional_expression!</span>(DIAG, context.statistics.beta_cutoffs += <span class="number">1</span>);
+                <span class="kw">if </span>move_number == <span class="number">0 </span>{
+                    <span class="macro">conditional_expression!</span>(DIAG, context.statistics.perfect_cutoffs += <span class="number">1</span>);
+                } <span class="kw">else </span>{
+                    <span class="macro">conditional_expression!</span>(DIAG, context.statistics.non_perfect_cutoffs += <span class="number">1</span>);
                 }
 
                 <span class="kw">break</span>;
             }
         }
 
-        <span class="kw">if</span> <span class="ident">ROOT</span> <span class="op">&amp;&amp;</span> <span class="ident">context</span>.<span class="ident">multipv</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">board</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">clone</span>();
-            <span class="ident">board</span>.<span class="ident">make_move</span>(<span class="ident">best_move</span>);
+        <span class="kw">if </span>ROOT &amp;&amp; context.multipv {
+            context.board.make_move(best_move);
+            <span class="kw">if </span>!context.board.is_king_checked(context.board.active_color ^ <span class="number">1</span>) {
+                <span class="kw">let </span><span class="kw-2">mut </span>pv_line = context.transposition_table.get_pv_line(<span class="kw-2">&amp;mut </span>context.board.clone(), <span class="number">0</span>);
+                pv_line.insert(<span class="number">0</span>, best_move);
 
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">board</span>.<span class="ident">is_king_checked</span>(<span class="ident">board</span>.<span class="ident">active_color</span> <span class="op">^</span> <span class="number">1</span>) {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pv_line</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">get_pv_line</span>(<span class="kw-2">&amp;mut</span> <span class="ident">board</span>, <span class="number">0</span>);
-                <span class="ident">pv_line</span>.<span class="ident">insert</span>(<span class="number">0</span>, <span class="ident">best_move</span>);
-
-                <span class="ident">context</span>.<span class="ident">multipv_lines</span>.<span class="ident">push</span>(<span class="ident">SearchResultLine::new</span>(<span class="ident">best_score</span>, <span class="ident">pv_line</span>));
+                context.multipv_lines.push(SearchResultLine::new(best_score, pv_line));
             }
+            context.board.undo_move(best_move);
 
-            <span class="ident">alpha</span> <span class="op">=</span> <span class="ident">original_alpha</span>;
-            <span class="ident">best_score</span> <span class="op">=</span> <span class="op">-</span><span class="ident">CHECKMATE_SCORE</span>;
+            alpha = original_alpha;
+            best_score = -CHECKMATE_SCORE;
         }
     }
 
-    <span class="kw">if</span> <span class="ident">context</span>.<span class="ident">abort_token</span>.<span class="ident">load</span>(<span class="ident">Ordering::Relaxed</span>) {
-        <span class="kw">return</span> <span class="ident">INVALID_SCORE</span>;
+    <span class="comment">// When no legal move is possible, but king is not checked, it&#39;s a stalemate
+    </span><span class="kw">if </span>best_score == -CHECKMATE_SCORE + (ply <span class="kw">as </span>i16) + <span class="number">1 </span>&amp;&amp; !friendly_king_checked {
+        <span class="kw">return </span>DRAW_SCORE;
     }
 
-    <span class="kw">if</span> <span class="ident">best_score</span> <span class="op">==</span> <span class="op">-</span><span class="ident">CHECKMATE_SCORE</span> <span class="op">+</span> (<span class="ident">ply</span> <span class="kw">as</span> <span class="ident">i16</span>) <span class="op">+</span> <span class="number">1</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">friendly_king_checked</span> {
-        <span class="kw">return</span> <span class="ident">DRAW_SCORE</span>;
-    }
-
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">tt_entry_found</span> <span class="op">|</span><span class="op">|</span> <span class="ident">alpha</span> <span class="op">!</span><span class="op">=</span> <span class="ident">original_alpha</span> {
-        <span class="kw">let</span> <span class="ident">score_type</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">alpha</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">original_alpha</span> {
-            <span class="ident">TranspositionTableScoreType::ALPHA_SCORE</span>
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">alpha</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">beta</span> {
-            <span class="ident">TranspositionTableScoreType::BETA_SCORE</span>
-        } <span class="kw">else</span> {
-            <span class="ident">TranspositionTableScoreType::EXACT_SCORE</span>
+    <span class="kw">if </span>!tt_entry_found || alpha != original_alpha {
+        <span class="kw">let </span>score_type = <span class="kw">if </span>alpha &lt;= original_alpha {
+            TranspositionTableScoreType::UPPER_BOUND
+        } <span class="kw">else if </span>alpha &gt;= beta {
+            TranspositionTableScoreType::LOWER_BOUND
+        } <span class="kw">else </span>{
+            TranspositionTableScoreType::EXACT_SCORE
         };
 
-        <span class="ident">context</span>
-            .<span class="ident">transposition_table</span>
-            .<span class="ident">add</span>(<span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">hash</span>, <span class="ident">alpha</span>, <span class="ident">best_move</span>, <span class="ident">depth</span> <span class="kw">as</span> <span class="ident">i8</span>, <span class="ident">ply</span>, <span class="ident">score_type</span>, <span class="ident">context</span>.<span class="ident">search_id</span>);
-        <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">tt_added</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
+        context.transposition_table.add(context.board.hash, alpha, best_move, depth, ply, score_type, context.search_id);
+        <span class="macro">conditional_expression!</span>(DIAG, context.statistics.tt_added += <span class="number">1</span>);
     }
 
-    <span class="kw">if</span> <span class="ident">ROOT</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">context</span>.<span class="ident">multipv</span> {
-        <span class="kw">let</span> <span class="ident">pv_line</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">get_pv_line</span>(<span class="kw-2">&amp;mut</span> <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">clone</span>(), <span class="number">0</span>);
-        <span class="ident">context</span>.<span class="ident">multipv_lines</span>.<span class="ident">push</span>(<span class="ident">SearchResultLine::new</span>(<span class="ident">best_score</span>, <span class="ident">pv_line</span>));
+    <span class="kw">if </span>ROOT &amp;&amp; !context.multipv {
+        <span class="kw">let </span>pv_line = context.transposition_table.get_pv_line(<span class="kw-2">&amp;mut </span>context.board.clone(), <span class="number">0</span>);
+        context.multipv_lines.push(SearchResultLine::new(best_score, pv_line));
     }
 
-    <span class="ident">best_score</span>
+    best_score
 }
 
-<span class="doccomment">/// Assigns scores for `moves` by filling `move_scores` array with `moves_count` length (starting from `start_index`), based on current `context`.</span>
-<span class="doccomment">/// If transposition table move is available, it&#39;s passed as `tt_move` too. Moves are prioritized as follows (from most important to the less ones):</span>
-<span class="doccomment">///  - for transposition table move, assign [MOVE_ORDERING_HASH_MOVE]</span>
-<span class="doccomment">///  - for every positive capture, assign SEE score + [MOVE_ORDERING_WINNING_CAPTURES_OFFSET]</span>
-<span class="doccomment">///  - for every promotion (excluding these with capture), assign [MOVE_ORDERING_QUEEN_PROMOTION], [MOVE_ORDERING_ROOK_PROMOTION],</span>
-<span class="doccomment">///    [MOVE_ORDERING_BISHOP_PROMOTION] or [MOVE_ORDERING_KNIGHT_PROMOTION]</span>
-<span class="doccomment">///  - for every move found in killer table, assign [MOVE_ORDERING_KILLER_MOVE]</span>
-<span class="doccomment">///  - for every castling, assign [MOVE_ORDERING_CASTLING]</span>
-<span class="doccomment">///  - for every quiet move which wasn&#39;t categoried in other categories, assign score from history table + [MOVE_ORDERING_HISTORY_MOVE_OFFSET] + random noise</span>
-<span class="doccomment">///    defined by [LAZY_SMP_NOISE] if Lazy SMP is enabled</span>
-<span class="doccomment">///  - for every negative capture, assign SEE score + [MOVE_ORDERING_LOSING_CAPTURES_OFFSET]</span>
-<span class="kw">fn</span> <span class="ident">assign_move_scores</span>(
-    <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="ident">SearchContext</span>,
-    <span class="ident">moves</span>: <span class="kw-2">&amp;</span>[<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Move</span><span class="op">&gt;</span>],
-    <span class="ident">move_scores</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">i16</span><span class="op">&gt;</span>],
-    <span class="ident">start_index</span>: <span class="ident">usize</span>,
-    <span class="ident">moves_count</span>: <span class="ident">usize</span>,
-    <span class="ident">tt_move</span>: <span class="ident">Move</span>,
-    <span class="ident">ply</span>: <span class="ident">u16</span>,
+<span class="doccomment">/// Assigns capture scores for `moves` by filling `move_scores` array with `moves_count` length (starting from `start_index`), based on current `context`.
+/// If transposition table move is available, it&#39;s passed as `tt_move` too. Moves are prioritized as follows (from most important to the less ones):
+///  - for transposition table move, assign [MOVE_ORDERING_HASH_MOVE]
+///  - for every positive capture, assign SEE score + [MOVE_ORDERING_WINNING_CAPTURES_OFFSET]
+///  - for every negative capture, assign SEE score + [MOVE_ORDERING_LOSING_CAPTURES_OFFSET]
+</span><span class="kw">fn </span>assign_capture_scores(
+    context: <span class="kw-2">&amp;</span>SearchContext,
+    moves: <span class="kw-2">&amp;</span>[MaybeUninit&lt;Move&gt;; MAX_MOVES_COUNT],
+    move_scores: <span class="kw-2">&amp;mut </span>[MaybeUninit&lt;i16&gt;; MAX_MOVES_COUNT],
+    start_index: usize,
+    moves_count: usize,
+    tt_move: Move,
 ) {
-    <span class="kw">for</span> <span class="ident">move_index</span> <span class="kw">in</span> <span class="ident">start_index</span>..<span class="ident">moves_count</span> {
-        <span class="kw">let</span> <span class="ident">r#move</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">moves</span>[<span class="ident">move_index</span>].<span class="ident">assume_init</span>() };
+    <span class="kw">let </span><span class="kw-2">mut </span>attackers_cache = [<span class="number">0</span>; <span class="number">64</span>];
+    <span class="kw">let </span><span class="kw-2">mut </span>defenders_cache = [<span class="number">0</span>; <span class="number">64</span>];
 
-        <span class="kw">if</span> <span class="ident">r#move</span> <span class="op">==</span> <span class="ident">tt_move</span> {
-            <span class="ident">move_scores</span>[<span class="ident">move_index</span>].<span class="ident">write</span>(<span class="ident">MOVE_ORDERING_HASH_MOVE</span>);
+    <span class="kw">for </span>move_index <span class="kw">in </span>start_index..moves_count {
+        <span class="kw">let </span>r#move = <span class="kw">unsafe </span>{ moves[move_index].assume_init() };
+
+        <span class="kw">if </span>r#move == tt_move {
+            move_scores[move_index].write(MOVE_ORDERING_HASH_MOVE);
             <span class="kw">continue</span>;
         }
 
-        <span class="kw">if</span> <span class="ident">r#move</span>.<span class="ident">is_quiet</span>() {
-            <span class="kw">if</span> <span class="ident">context</span>.<span class="ident">killers_table</span>.<span class="ident">exists</span>(<span class="ident">ply</span>, <span class="ident">r#move</span>) {
-                <span class="ident">move_scores</span>[<span class="ident">move_index</span>].<span class="ident">write</span>(<span class="ident">MOVE_ORDERING_KILLER_MOVE</span>);
-                <span class="kw">continue</span>;
-            }
-
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">history_table</span>.<span class="ident">get</span>(<span class="ident">r#move</span>.<span class="ident">get_from</span>(), <span class="ident">r#move</span>.<span class="ident">get_to</span>(), <span class="ident">MOVE_ORDERING_HISTORY_MOVE</span>) <span class="kw">as</span> <span class="ident">i16</span>;
-            <span class="kw">if</span> <span class="ident">context</span>.<span class="ident">helper_thread</span> <span class="op">&amp;&amp;</span> <span class="ident">value</span> <span class="op">+</span> <span class="ident">LAZY_SMP_NOISE</span> <span class="op">&lt;</span> <span class="ident">MOVE_ORDERING_HISTORY_MOVE</span> <span class="kw">as</span> <span class="ident">i16</span> {
-                <span class="ident">value</span> <span class="op">+</span><span class="op">=</span> <span class="ident">fastrand::i16</span>(<span class="number">0</span>..<span class="op">=</span><span class="ident">LAZY_SMP_NOISE</span>);
-            }
-
-            <span class="ident">value</span> <span class="op">+</span><span class="op">=</span> <span class="ident">MOVE_ORDERING_HISTORY_MOVE_OFFSET</span>;
-            <span class="ident">move_scores</span>[<span class="ident">move_index</span>].<span class="ident">write</span>(<span class="ident">value</span>);
-
-            <span class="kw">continue</span>;
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">r#move</span>.<span class="ident">is_capture</span>() {
-            <span class="kw">if</span> <span class="ident">r#move</span>.<span class="ident">is_en_passant</span>() {
-                <span class="ident">move_scores</span>[<span class="ident">move_index</span>].<span class="ident">write</span>(<span class="ident">MOVE_ORDERING_WINNING_CAPTURES_OFFSET</span>);
-                <span class="kw">continue</span>;
-            }
-
-            <span class="kw">let</span> <span class="ident">field</span> <span class="op">=</span> <span class="ident">r#move</span>.<span class="ident">get_to</span>();
-            <span class="kw">let</span> <span class="ident">attacking_piece</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">get_piece</span>(<span class="ident">r#move</span>.<span class="ident">get_from</span>());
-            <span class="kw">let</span> <span class="ident">captured_piece</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">get_piece</span>(<span class="ident">r#move</span>.<span class="ident">get_to</span>());
-            <span class="kw">let</span> <span class="ident">attackers</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">get_attacking_pieces</span>(<span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">active_color</span> <span class="op">^</span> <span class="number">1</span>, <span class="ident">field</span>);
-            <span class="kw">let</span> <span class="ident">defenders</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">get_attacking_pieces</span>(<span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">active_color</span>, <span class="ident">field</span>);
-
-            <span class="kw">let</span> <span class="ident">see_container</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">see</span>;
-            <span class="kw">let</span> <span class="ident">see</span> <span class="op">=</span> <span class="ident">see_container</span>.<span class="ident">get</span>(<span class="ident">attacking_piece</span>, <span class="ident">captured_piece</span>, <span class="ident">attackers</span>, <span class="ident">defenders</span>, <span class="kw-2">&amp;</span><span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">evaluation_parameters</span>);
-
-            <span class="ident">move_scores</span>[<span class="ident">move_index</span>].<span class="ident">write</span>(<span class="kw">if</span> <span class="ident">see</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="ident">see</span> <span class="op">+</span> <span class="ident">MOVE_ORDERING_WINNING_CAPTURES_OFFSET</span>
-            } <span class="kw">else</span> {
-                <span class="ident">see</span> <span class="op">+</span> <span class="ident">MOVE_ORDERING_LOSING_CAPTURES_OFFSET</span>
-            });
-
-            <span class="kw">continue</span>;
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">r#move</span>.<span class="ident">is_promotion</span>() {
-            <span class="kw">let</span> <span class="ident">promotion_piece</span> <span class="op">=</span> <span class="ident">r#move</span>.<span class="ident">get_promotion_piece</span>();
-            <span class="ident">move_scores</span>[<span class="ident">move_index</span>].<span class="ident">write</span>(<span class="kw">match</span> <span class="ident">promotion_piece</span> {
-                <span class="ident">QUEEN</span> =&gt; <span class="ident">MOVE_ORDERING_QUEEN_PROMOTION</span>,
-                <span class="ident">ROOK</span> =&gt; <span class="ident">MOVE_ORDERING_ROOK_PROMOTION</span>,
-                <span class="ident">BISHOP</span> =&gt; <span class="ident">MOVE_ORDERING_BISHOP_PROMOTION</span>,
-                <span class="ident">KNIGHT</span> =&gt; <span class="ident">MOVE_ORDERING_KNIGHT_PROMOTION</span>,
-                <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: fen={}, r#move.data={}&quot;</span>, <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="ident">r#move</span>.<span class="ident">data</span>),
-            });
-
-            <span class="kw">continue</span>;
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">r#move</span>.<span class="ident">is_castling</span>() {
-            <span class="ident">move_scores</span>[<span class="ident">move_index</span>].<span class="ident">write</span>(<span class="ident">MOVE_ORDERING_CASTLING</span>);
+        <span class="kw">if </span>r#move.is_en_passant() {
+            move_scores[move_index].write(MOVE_ORDERING_WINNING_CAPTURES_OFFSET);
             <span class="kw">continue</span>;
         }
 
-        <span class="macro">panic!</span>(<span class="string">&quot;Sorting rule missing: fen={}, r#move.data={}&quot;</span>, <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="ident">r#move</span>.<span class="ident">data</span>);
+        <span class="kw">let </span>square = r#move.get_to();
+        <span class="kw">let </span>attacking_piece = context.board.get_piece(r#move.get_from());
+        <span class="kw">let </span>captured_piece = context.board.get_piece(r#move.get_to());
+
+        <span class="kw">let </span>attackers = <span class="kw">if </span>attackers_cache[square] != <span class="number">0 </span>{
+            attackers_cache[square] <span class="kw">as </span>usize
+        } <span class="kw">else </span>{
+            attackers_cache[square] = context.board.get_attacking_pieces(context.board.active_color ^ <span class="number">1</span>, square) <span class="kw">as </span>u8;
+            attackers_cache[square] <span class="kw">as </span>usize
+        };
+
+        <span class="kw">let </span>defenders = <span class="kw">if </span>defenders_cache[square] != <span class="number">0 </span>{
+            defenders_cache[square] <span class="kw">as </span>usize
+        } <span class="kw">else </span>{
+            defenders_cache[square] = context.board.get_attacking_pieces(context.board.active_color, square) <span class="kw">as </span>u8;
+            defenders_cache[square] <span class="kw">as </span>usize
+        };
+
+        <span class="kw">let </span>see = context.board.see.get(attacking_piece, captured_piece, attackers, defenders);
+        move_scores[move_index].write(<span class="kw">if </span>see &gt;= <span class="number">0 </span>{ see + MOVE_ORDERING_WINNING_CAPTURES_OFFSET } <span class="kw">else </span>{ see + MOVE_ORDERING_LOSING_CAPTURES_OFFSET });
     }
 }
 
-<span class="doccomment">/// Gets a next move to analyze. This function acts as pseudo-iterator and takes care about managing move generator stages, which is basically</span>
-<span class="doccomment">/// a state machine (&lt;https://en.wikipedia.org/wiki/Finite-state_machine&gt;) with following rules:</span>
-<span class="doccomment">///  - [MoveGeneratorStage::ReadyToCheckHashMove] - default state, returns transposition table move if possible</span>
-<span class="doccomment">///  - [MoveGeneratorStage::ReadyToGenerateCaptures] - generates all captures in the position</span>
-<span class="doccomment">///  - [MoveGeneratorStage::Captures] - returns subsequent elements until the end or score is less than [MOVE_ORDERING_WINNING_CAPTURES_OFFSET]</span>
-<span class="doccomment">///  - [MoveGeneratorStage::ReadyToGenerateQuietMoves] - generates all quiet moves in the position</span>
-<span class="doccomment">///  - [MoveGeneratorStage::AllGenerated] - returns subsequent elements until the end</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Both [MoveGeneratorStage::ReadyToGenerateCaptures] and [MoveGeneratorStage::ReadyToGenerateQuietMoves] are generating moves and assigning scores</span>
-<span class="doccomment">/// for move ordering purposes. If the last stage is set and there are no more moves, [None] is returned.</span>
-<span class="kw">fn</span> <span class="ident">get_next_move</span><span class="op">&lt;</span><span class="kw">const</span> <span class="ident">DIAG</span>: <span class="ident">bool</span><span class="op">&gt;</span>(
-    <span class="ident">context</span>: <span class="kw-2">&amp;mut</span> <span class="ident">SearchContext</span>,
-    <span class="ident">stage</span>: <span class="kw-2">&amp;mut</span> <span class="ident">MoveGeneratorStage</span>,
-    <span class="ident">moves</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Move</span><span class="op">&gt;</span>],
-    <span class="ident">move_scores</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">i16</span><span class="op">&gt;</span>],
-    <span class="ident">move_index</span>: <span class="kw-2">&amp;mut</span> <span class="ident">usize</span>,
-    <span class="ident">moves_count</span>: <span class="kw-2">&amp;mut</span> <span class="ident">usize</span>,
-    <span class="ident">hash_move</span>: <span class="ident">Move</span>,
-    <span class="ident">evasion_mask</span>: <span class="kw-2">&amp;mut</span> <span class="ident">u64</span>,
-    <span class="ident">ply</span>: <span class="ident">u16</span>,
-    <span class="ident">friendly_king_checked</span>: <span class="ident">bool</span>,
-) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">Move</span>, <span class="ident">i16</span>)<span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">stage</span> <span class="op">==</span> <span class="ident">MoveGeneratorStage::Captures</span> <span class="op">|</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">stage</span> <span class="op">==</span> <span class="ident">MoveGeneratorStage::AllGenerated</span> {
-        <span class="kw-2">*</span><span class="ident">move_index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-    }
+<span class="doccomment">/// Assigns quiet scores for `moves` by filling `move_scores` array with `moves_count` length (starting from `start_index`), based on current `context`.
+/// If transposition table move is available, it&#39;s passed as `tt_move` too. Moves are prioritized as follows (from most important to the less ones):
+///  - for transposition table move, assign [MOVE_ORDERING_HASH_MOVE]
+///  - for every promotion (excluding these with capture), assign [MOVE_ORDERING_QUEEN_PROMOTION], [MOVE_ORDERING_ROOK_PROMOTION],
+///    [MOVE_ORDERING_BISHOP_PROMOTION] or [MOVE_ORDERING_KNIGHT_PROMOTION]
+///  - for every move found in killer table, assign [MOVE_ORDERING_KILLER_MOVE_1] or [MOVE_ORDERING_KILLER_MOVE_2]
+///  - for every castling, assign [MOVE_ORDERING_CASTLING]
+///  - for every quiet move which didn&#39;t fit in other categories, assign score from history table + [MOVE_ORDERING_HISTORY_MOVE_OFFSET] + random noise
+///    defined by [LAZY_SMP_NOISE] if Lazy SMP is enabled
+</span><span class="kw">fn </span>assign_quiet_scores(
+    context: <span class="kw-2">&amp;</span>SearchContext,
+    moves: <span class="kw-2">&amp;</span>[MaybeUninit&lt;Move&gt;; MAX_MOVES_COUNT],
+    move_scores: <span class="kw-2">&amp;mut </span>[MaybeUninit&lt;i16&gt;; MAX_MOVES_COUNT],
+    start_index: usize,
+    moves_count: usize,
+    tt_move: Move,
+    ply: u16,
+) {
+    <span class="kw">let </span>killer_moves = context.killers_table.get(ply);
+    <span class="kw">for </span>move_index <span class="kw">in </span>start_index..moves_count {
+        <span class="kw">let </span>r#move = <span class="kw">unsafe </span>{ moves[move_index].assume_init() };
 
-    <span class="kw">loop</span> {
-        <span class="kw">match</span> <span class="ident">stage</span> {
-            <span class="ident">MoveGeneratorStage::ReadyToCheckHashMove</span> =&gt; {
-                <span class="kw-2">*</span><span class="ident">stage</span> <span class="op">=</span> <span class="ident">MoveGeneratorStage::ReadyToGenerateCaptures</span>;
-
-                <span class="kw">if</span> <span class="ident">hash_move</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Default::default</span>() {
-                    <span class="ident">moves</span>[<span class="number">0</span>].<span class="ident">write</span>(<span class="ident">hash_move</span>);
-                    <span class="ident">move_scores</span>[<span class="number">0</span>].<span class="ident">write</span>(<span class="ident">MOVE_ORDERING_HASH_MOVE</span>);
-                    <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">move_generator_hash_move_stages</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
-                    <span class="kw-2">*</span><span class="ident">moves_count</span> <span class="op">=</span> <span class="number">1</span>;
-
-                    <span class="kw">return</span> <span class="prelude-val">Some</span>((<span class="ident">hash_move</span>, <span class="ident">MOVE_ORDERING_HASH_MOVE</span>));
+        <span class="kw">if </span>r#move == tt_move {
+            move_scores[move_index].write(MOVE_ORDERING_HASH_MOVE);
+            <span class="kw">continue</span>;
+        } <span class="kw">else if </span>r#move.is_quiet() {
+            <span class="kw">let </span><span class="kw-2">mut </span>killer_move_found = <span class="bool-val">false</span>;
+            <span class="kw">for </span>(index, <span class="kw-2">&amp;</span>killer_move) <span class="kw">in </span>killer_moves.iter().enumerate() {
+                <span class="kw">if </span>killer_move == r#move {
+                    move_scores[move_index].write(MOVE_ORDERING_KILLER_MOVE_1 - (index <span class="kw">as </span>i16));
+                    killer_move_found = <span class="bool-val">true</span>;
+                    <span class="kw">break</span>;
                 }
             }
-            <span class="ident">MoveGeneratorStage::ReadyToGenerateCaptures</span> =&gt; {
-                <span class="kw-2">*</span><span class="ident">evasion_mask</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">friendly_king_checked</span> {
-                    <span class="kw">if</span> <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">pieces</span>[<span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">active_color</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">KING</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">==</span> <span class="number">0</span> {
-                        <span class="ident">u64::MAX</span>
-                    } <span class="kw">else</span> {
-                        <span class="kw">let</span> <span class="ident">king_field_index</span> <span class="op">=</span> <span class="ident">bit_scan</span>(<span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">pieces</span>[<span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">active_color</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">KING</span> <span class="kw">as</span> <span class="ident">usize</span>]);
-                        <span class="kw">let</span> <span class="ident">occupancy</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">WHITE</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">|</span> <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">BLACK</span> <span class="kw">as</span> <span class="ident">usize</span>];
 
-                        <span class="kw">let</span> <span class="ident">queen_moves</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_queen_moves</span>(<span class="ident">occupancy</span>, <span class="ident">king_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>);
-                        <span class="kw">let</span> <span class="ident">knight_moves</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_knight_moves</span>(<span class="ident">king_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="kw-2">&amp;</span><span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">patterns</span>);
+            <span class="kw">if </span>killer_move_found {
+                <span class="kw">continue</span>;
+            }
 
-                        <span class="ident">queen_moves</span> <span class="op">|</span> <span class="ident">knight_moves</span>
+            <span class="kw">let </span><span class="kw-2">mut </span>value = context.history_table.get(r#move.get_from(), r#move.get_to(), MOVE_ORDERING_HISTORY_MOVE) <span class="kw">as </span>i16;
+            <span class="kw">if </span>context.helper_thread &amp;&amp; value + LAZY_SMP_NOISE &lt; MOVE_ORDERING_HISTORY_MOVE <span class="kw">as </span>i16 {
+                value += rand::i16(<span class="number">0</span>..=LAZY_SMP_NOISE);
+            }
+
+            value += MOVE_ORDERING_HISTORY_MOVE_OFFSET;
+            move_scores[move_index].write(value);
+
+            <span class="kw">continue</span>;
+        } <span class="kw">else if </span>r#move.is_promotion() {
+            move_scores[move_index].write(<span class="kw">match </span>r#move.get_promotion_piece() {
+                QUEEN =&gt; MOVE_ORDERING_QUEEN_PROMOTION,
+                ROOK =&gt; MOVE_ORDERING_ROOK_PROMOTION,
+                BISHOP =&gt; MOVE_ORDERING_BISHOP_PROMOTION,
+                KNIGHT =&gt; MOVE_ORDERING_KNIGHT_PROMOTION,
+                <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: fen={}, r#move.data={}&quot;</span>, context.board, r#move.data),
+            });
+
+            <span class="kw">continue</span>;
+        } <span class="kw">else if </span>r#move.is_castling() {
+            move_scores[move_index].write(MOVE_ORDERING_CASTLING);
+            <span class="kw">continue</span>;
+        }
+
+        <span class="macro">panic!</span>(<span class="string">&quot;Sorting rule missing: fen={}, r#move.data={}&quot;</span>, context.board, r#move.data);
+    }
+}
+
+<span class="doccomment">/// Gets a next move to analyze. This function acts as pseudo-iterator and takes care about managing move generator stages, which is basically
+/// a state machine (&lt;https://en.wikipedia.org/wiki/Finite-state_machine&gt;) with following rules:
+///  - [MoveGeneratorStage::ReadyToCheckHashMove] - default state, prepares hash move if possible
+///  - [MoveGeneratorStage::HashMove] - returns hashmove if possible
+///  - [MoveGeneratorStage::ReadyToGenerateCaptures] - generates all captures in the position
+///  - [MoveGeneratorStage::Captures] - returns subsequent elements until the end or score is less than [MOVE_ORDERING_WINNING_CAPTURES_OFFSET]
+///  - [MoveGeneratorStage::ReadyToGenerateQuietMoves] - generates all quiet moves in the position
+///  - [MoveGeneratorStage::AllGenerated] - returns subsequent elements until the end
+///
+/// Both [MoveGeneratorStage::ReadyToGenerateCaptures] and [MoveGeneratorStage::ReadyToGenerateQuietMoves] are generating moves and assigning scores
+/// for move ordering purposes. If the last stage is set and there are no more moves, [None] is returned.
+</span><span class="kw">fn </span>get_next_move&lt;<span class="kw">const </span>DIAG: bool&gt;(
+    context: <span class="kw-2">&amp;mut </span>SearchContext,
+    stage: <span class="kw-2">&amp;mut </span>MoveGeneratorStage,
+    moves: <span class="kw-2">&amp;mut </span>[MaybeUninit&lt;Move&gt;; MAX_MOVES_COUNT],
+    move_scores: <span class="kw-2">&amp;mut </span>[MaybeUninit&lt;i16&gt;; MAX_MOVES_COUNT],
+    move_index: <span class="kw-2">&amp;mut </span>usize,
+    move_number: <span class="kw-2">&amp;mut </span>usize,
+    moves_count: <span class="kw-2">&amp;mut </span>usize,
+    evasion_mask: <span class="kw-2">&amp;mut </span>u64,
+    hash_move: Move,
+    ply: u16,
+    friendly_king_checked: bool,
+) -&gt; <span class="prelude-ty">Option</span>&lt;(Move, i16)&gt; {
+    <span class="kw">if </span><span class="macro">matches!</span>(<span class="kw-2">*</span>stage, MoveGeneratorStage::HashMove | MoveGeneratorStage::Captures | MoveGeneratorStage::KillerMoves | MoveGeneratorStage::AllGenerated) {
+        <span class="kw-2">*</span>move_index += <span class="number">1</span>;
+        <span class="kw-2">*</span>move_number += <span class="number">1</span>;
+    }
+
+    <span class="kw">loop </span>{
+        <span class="kw">match </span>stage {
+            MoveGeneratorStage::ReadyToCheckHashMove =&gt; {
+                <span class="macro">conditional_expression!</span>(DIAG, context.statistics.move_generator_hash_move_stages += <span class="number">1</span>);
+
+                <span class="kw">if </span>hash_move != Default::default() {
+                    <span class="kw-2">*</span>stage = MoveGeneratorStage::HashMove;
+                    <span class="kw-2">*</span>moves_count = <span class="number">1</span>;
+                } <span class="kw">else </span>{
+                    <span class="kw-2">*</span>stage = MoveGeneratorStage::ReadyToGenerateCaptures;
+                }
+            }
+            MoveGeneratorStage::HashMove =&gt; {
+                <span class="kw">if </span>move_index &gt;= moves_count {
+                    <span class="kw-2">*</span>stage = MoveGeneratorStage::ReadyToGenerateCaptures;
+                    <span class="kw">continue</span>;
+                }
+
+                <span class="kw">return </span><span class="prelude-val">Some</span>((hash_move, MOVE_ORDERING_HASH_MOVE));
+            }
+            MoveGeneratorStage::ReadyToGenerateCaptures =&gt; {
+                <span class="macro">conditional_expression!</span>(DIAG, context.statistics.move_generator_captures_stages += <span class="number">1</span>);
+
+                <span class="kw-2">*</span>evasion_mask = <span class="kw">if </span>friendly_king_checked {
+                    <span class="kw">if </span>context.board.pieces[context.board.active_color][KING] == <span class="number">0 </span>{
+                        u64::MAX
+                    } <span class="kw">else </span>{
+                        <span class="kw">let </span>king_square = (context.board.pieces[context.board.active_color][KING]).bit_scan();
+                        <span class="kw">let </span>occupancy_bb = context.board.occupancy[WHITE] | context.board.occupancy[BLACK];
+
+                        <span class="kw">let </span>queen_moves_bb = context.board.magic.get_queen_moves(occupancy_bb, king_square);
+                        <span class="kw">let </span>knight_moves_bb = context.board.magic.get_knight_moves(king_square, <span class="kw-2">&amp;</span>context.board.patterns);
+
+                        queen_moves_bb | knight_moves_bb
                     }
-                } <span class="kw">else</span> {
-                    <span class="ident">u64::MAX</span>
+                } <span class="kw">else </span>{
+                    u64::MAX
                 };
 
-                <span class="kw-2">*</span><span class="ident">moves_count</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">get_moves</span>::<span class="op">&lt;</span><span class="bool-val">true</span><span class="op">&gt;</span>(<span class="ident">moves</span>, <span class="number">0</span>, <span class="kw-2">*</span><span class="ident">evasion_mask</span>);
-                <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">move_generator_captures_stages</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
+                <span class="kw-2">*</span>moves_count = context.board.get_moves::&lt;<span class="bool-val">true</span>&gt;(moves, <span class="number">0</span>, <span class="kw-2">*</span>evasion_mask);
+                <span class="kw-2">*</span>move_index = <span class="number">0</span>;
 
-                <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">moves_count</span> <span class="op">==</span> <span class="number">0</span> {
-                    <span class="kw-2">*</span><span class="ident">stage</span> <span class="op">=</span> <span class="ident">MoveGeneratorStage::ReadyToGenerateQuietMoves</span>;
+                <span class="kw">if </span><span class="kw-2">*</span>moves_count == <span class="number">0 </span>{
+                    <span class="kw-2">*</span>stage = MoveGeneratorStage::ReadyToGenerateKillerMoves;
                     <span class="kw">continue</span>;
                 }
 
-                <span class="ident">assign_move_scores</span>(<span class="ident">context</span>, <span class="ident">moves</span>, <span class="ident">move_scores</span>, <span class="number">0</span>, <span class="kw-2">*</span><span class="ident">moves_count</span>, <span class="ident">hash_move</span>, <span class="ident">ply</span>);
-                <span class="kw-2">*</span><span class="ident">stage</span> <span class="op">=</span> <span class="ident">MoveGeneratorStage::Captures</span>;
+                assign_capture_scores(context, moves, move_scores, <span class="number">0</span>, <span class="kw-2">*</span>moves_count, hash_move);
+                <span class="kw-2">*</span>stage = MoveGeneratorStage::Captures;
             }
-            <span class="ident">MoveGeneratorStage::Captures</span> =&gt; {
-                <span class="kw">if</span> <span class="ident">move_index</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">moves_count</span> {
-                    <span class="kw-2">*</span><span class="ident">stage</span> <span class="op">=</span> <span class="ident">MoveGeneratorStage::ReadyToGenerateQuietMoves</span>;
+            MoveGeneratorStage::Captures =&gt; {
+                <span class="kw">if </span>move_index &gt;= moves_count {
+                    <span class="kw-2">*</span>stage = MoveGeneratorStage::ReadyToGenerateKillerMoves;
                     <span class="kw">continue</span>;
                 }
 
-                <span class="kw">let</span> <span class="ident">r#move</span> <span class="op">=</span> <span class="ident">sort_next_move</span>(<span class="ident">moves</span>, <span class="ident">move_scores</span>, <span class="kw-2">*</span><span class="ident">move_index</span>, <span class="kw-2">*</span><span class="ident">moves_count</span>);
-                <span class="kw">if</span> <span class="ident">r#move</span> <span class="op">==</span> <span class="ident">hash_move</span> {
-                    <span class="kw-2">*</span><span class="ident">move_index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+                <span class="kw">let </span>(r#move, score) = sort_next_move(moves, move_scores, <span class="kw-2">*</span>move_index, <span class="kw-2">*</span>moves_count);
+
+                <span class="kw">if </span>r#move == hash_move {
+                    <span class="kw-2">*</span>move_index += <span class="number">1</span>;
                     <span class="kw">continue</span>;
                 }
 
-                <span class="kw">let</span> <span class="ident">score</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">move_scores</span>[<span class="kw-2">*</span><span class="ident">move_index</span>].<span class="ident">assume_init</span>() };
-                <span class="kw">if</span> <span class="ident">score</span> <span class="op">&lt;</span> <span class="ident">MOVE_ORDERING_WINNING_CAPTURES_OFFSET</span> {
-                    <span class="kw-2">*</span><span class="ident">stage</span> <span class="op">=</span> <span class="ident">MoveGeneratorStage::ReadyToGenerateQuietMoves</span>;
+                <span class="kw">if </span>score &lt; MOVE_ORDERING_WINNING_CAPTURES_OFFSET {
+                    <span class="kw-2">*</span>stage = MoveGeneratorStage::ReadyToGenerateKillerMoves;
                     <span class="kw">continue</span>;
                 }
 
-                <span class="kw">return</span> <span class="prelude-val">Some</span>((<span class="ident">r#move</span>, <span class="ident">score</span>));
+                <span class="kw">return </span><span class="prelude-val">Some</span>((r#move, score));
             }
-            <span class="ident">MoveGeneratorStage::ReadyToGenerateQuietMoves</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">original_moves_count</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">moves_count</span>;
-                <span class="kw-2">*</span><span class="ident">moves_count</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">get_moves</span>::<span class="op">&lt;</span><span class="bool-val">false</span><span class="op">&gt;</span>(<span class="ident">moves</span>, <span class="kw-2">*</span><span class="ident">moves_count</span>, <span class="kw-2">*</span><span class="ident">evasion_mask</span>);
-                <span class="macro">conditional_expression!</span>(<span class="ident">DIAG</span>, <span class="ident">context</span>.<span class="ident">statistics</span>.<span class="ident">move_generator_quiet_moves_stages</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>);
+            MoveGeneratorStage::ReadyToGenerateKillerMoves =&gt; {
+                <span class="macro">conditional_expression!</span>(DIAG, context.statistics.move_generator_killers_stages += <span class="number">1</span>);
 
-                <span class="ident">assign_move_scores</span>(<span class="ident">context</span>, <span class="ident">moves</span>, <span class="ident">move_scores</span>, <span class="ident">original_moves_count</span>, <span class="kw-2">*</span><span class="ident">moves_count</span>, <span class="ident">hash_move</span>, <span class="ident">ply</span>);
+                <span class="kw">let </span>original_moves_count = <span class="kw-2">*</span>moves_count;
+                <span class="kw">let </span>killer_moves = context.killers_table.get(ply);
 
-                <span class="kw-2">*</span><span class="ident">stage</span> <span class="op">=</span> <span class="ident">MoveGeneratorStage::AllGenerated</span>;
-            }
-            <span class="ident">MoveGeneratorStage::AllGenerated</span> =&gt; {
-                <span class="kw">if</span> <span class="ident">move_index</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">moves_count</span> {
-                    <span class="kw">return</span> <span class="prelude-val">None</span>;
+                <span class="kw">for </span>(index, <span class="kw-2">&amp;</span>killer_move) <span class="kw">in </span>killer_moves.iter().enumerate() {
+                    <span class="kw">if </span>killer_move != hash_move {
+                        <span class="kw">if </span>((<span class="number">1u64 </span>&lt;&lt; killer_move.get_to()) &amp; <span class="kw-2">*</span>evasion_mask) != <span class="number">0 </span>&amp;&amp; killer_move.is_legal(<span class="kw-2">&amp;</span>context.board) {
+                            moves[<span class="kw-2">*</span>moves_count].write(killer_move);
+                            move_scores[<span class="kw-2">*</span>moves_count].write(MOVE_ORDERING_KILLER_MOVE_1 - (index <span class="kw">as </span>i16));
+                            <span class="kw-2">*</span>moves_count += <span class="number">1</span>;
+
+                            <span class="macro">conditional_expression!</span>(DIAG, context.statistics.killers_table_legal_moves += <span class="number">1</span>);
+                        } <span class="kw">else </span>{
+                            <span class="macro">conditional_expression!</span>(DIAG, context.statistics.killers_table_illegal_moves += <span class="number">1</span>);
+                        }
+                    }
                 }
 
-                <span class="kw">let</span> <span class="ident">r#move</span> <span class="op">=</span> <span class="ident">sort_next_move</span>(<span class="ident">moves</span>, <span class="ident">move_scores</span>, <span class="kw-2">*</span><span class="ident">move_index</span>, <span class="kw-2">*</span><span class="ident">moves_count</span>);
-                <span class="kw">let</span> <span class="ident">score</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">move_scores</span>[<span class="kw-2">*</span><span class="ident">move_index</span>].<span class="ident">assume_init</span>() };
-
-                <span class="kw">if</span> <span class="ident">r#move</span> <span class="op">==</span> <span class="ident">hash_move</span> {
-                    <span class="kw-2">*</span><span class="ident">move_index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+                <span class="kw-2">*</span>stage = <span class="kw">if </span>original_moves_count != <span class="kw-2">*</span>moves_count { MoveGeneratorStage::KillerMoves } <span class="kw">else </span>{ MoveGeneratorStage::ReadyToGenerateQuietMoves }
+            }
+            MoveGeneratorStage::KillerMoves =&gt; {
+                <span class="kw">if </span>move_index &gt;= moves_count {
+                    <span class="kw-2">*</span>stage = MoveGeneratorStage::ReadyToGenerateQuietMoves;
                     <span class="kw">continue</span>;
                 }
 
-                <span class="kw">return</span> <span class="prelude-val">Some</span>((<span class="ident">r#move</span>, <span class="ident">score</span>));
+                <span class="kw">let </span>(r#move, score) = sort_next_move(moves, move_scores, <span class="kw-2">*</span>move_index, <span class="kw-2">*</span>moves_count);
+
+                <span class="kw">if </span>r#move == hash_move {
+                    <span class="kw-2">*</span>move_index += <span class="number">1</span>;
+                    <span class="kw">continue</span>;
+                }
+
+                <span class="kw">if </span>score &lt; MOVE_ORDERING_KILLER_MOVE_2 {
+                    <span class="kw-2">*</span>stage = MoveGeneratorStage::ReadyToGenerateQuietMoves;
+                    <span class="kw">continue</span>;
+                }
+
+                <span class="kw">return </span><span class="prelude-val">Some</span>((r#move, score));
+            }
+            MoveGeneratorStage::ReadyToGenerateQuietMoves =&gt; {
+                <span class="macro">conditional_expression!</span>(DIAG, context.statistics.move_generator_quiet_moves_stages += <span class="number">1</span>);
+                <span class="kw">let </span>original_moves_count = <span class="kw-2">*</span>moves_count;
+
+                <span class="kw-2">*</span>moves_count = context.board.get_moves::&lt;<span class="bool-val">false</span>&gt;(moves, <span class="kw-2">*</span>moves_count, <span class="kw-2">*</span>evasion_mask);
+                <span class="kw-2">*</span>stage = MoveGeneratorStage::AllGenerated;
+
+                assign_quiet_scores(context, moves, move_scores, original_moves_count, <span class="kw-2">*</span>moves_count, hash_move, ply);
+            }
+            MoveGeneratorStage::AllGenerated =&gt; {
+                <span class="kw">if </span>move_index &gt;= moves_count {
+                    <span class="kw">return </span><span class="prelude-val">None</span>;
+                }
+
+                <span class="kw">let </span>(r#move, score) = sort_next_move(moves, move_scores, <span class="kw-2">*</span>move_index, <span class="kw-2">*</span>moves_count);
+
+                <span class="kw">if </span>r#move == hash_move {
+                    <span class="kw-2">*</span>move_index += <span class="number">1</span>;
+                    <span class="kw">continue</span>;
+                }
+
+                <span class="kw">if </span>score == MOVE_ORDERING_KILLER_MOVE_1 || score == MOVE_ORDERING_KILLER_MOVE_2 {
+                    <span class="kw-2">*</span>move_index += <span class="number">1</span>;
+                    <span class="kw">continue</span>;
+                }
+
+                <span class="kw">return </span><span class="prelude-val">Some</span>((r#move, score));
             }
         }
     }
 }
 
-<span class="doccomment">/// The main idea of the razoring is to detect and prune all nodes, which (based on lazy evaluation) are hopeless compared to the current alpha and</span>
-<span class="doccomment">/// the chance to improve the score is too small to spend time here. To make it more safe and not to skip positions where we&#39;re somewhere in the</span>
-<span class="doccomment">/// middle of capture sequence, there&#39;s the quiescence search performed to verify if the final score is still below alpha - margin.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Conditions:</span>
-<span class="doccomment">///  - only non-PV nodes</span>
-<span class="doccomment">///  - depth &gt;= [RAZORING_MIN_DEPTH]</span>
-<span class="doccomment">///  - depth &lt;= [RAZORING_MAX_DEPTH]</span>
-<span class="doccomment">///  - alpha is not a mate score</span>
-<span class="doccomment">///  - friendly king is not checked</span>
-<span class="kw">fn</span> <span class="ident">razoring_can_be_applied</span><span class="op">&lt;</span><span class="kw">const</span> <span class="ident">PV</span>: <span class="ident">bool</span><span class="op">&gt;</span>(<span class="ident">depth</span>: <span class="ident">i8</span>, <span class="ident">alpha</span>: <span class="ident">i16</span>, <span class="ident">friendly_king_checked</span>: <span class="ident">bool</span>) -&gt; <span class="ident">bool</span> {
-    <span class="op">!</span><span class="ident">PV</span> <span class="op">&amp;&amp;</span> <span class="ident">depth</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">RAZORING_MIN_DEPTH</span> <span class="op">&amp;&amp;</span> <span class="ident">depth</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">RAZORING_MAX_DEPTH</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">is_score_near_checkmate</span>(<span class="ident">alpha</span>) <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">friendly_king_checked</span>
+<span class="doccomment">/// The main idea of the razoring is to detect and prune all nodes, which (based on lazy evaluation) are hopeless compared to the current alpha and
+/// the chance to improve the score is too small to spend time here. To make it more safe and not to skip positions where we&#39;re somewhere in the
+/// middle of capture sequence, there&#39;s the quiescence search performed to verify if the final score is still below alpha - margin.
+///
+/// Conditions:
+///  - only non-PV nodes
+///  - depth &gt;= [RAZORING_MIN_DEPTH]
+///  - depth &lt;= [RAZORING_MAX_DEPTH]
+///  - alpha is not a mate score
+///  - friendly king is not checked
+</span><span class="kw">fn </span>razoring_can_be_applied&lt;<span class="kw">const </span>PV: bool&gt;(depth: i8, alpha: i16, friendly_king_checked: bool) -&gt; bool {
+    !PV &amp;&amp; depth &gt;= RAZORING_MIN_DEPTH &amp;&amp; depth &lt;= RAZORING_MAX_DEPTH &amp;&amp; !is_score_near_checkmate(alpha) &amp;&amp; !friendly_king_checked
 }
 
-<span class="doccomment">/// Gets the razoring margin, based on `depth`. The further from the horizon we are, the more margin we should take to determine if node can be pruned.</span>
-<span class="kw">fn</span> <span class="ident">razoring_get_margin</span>(<span class="ident">depth</span>: <span class="ident">i8</span>) -&gt; <span class="ident">i16</span> {
-    <span class="ident">RAZORING_DEPTH_MARGIN_BASE</span> <span class="op">+</span> ((<span class="ident">depth</span> <span class="op">-</span> <span class="ident">RAZORING_MIN_DEPTH</span>) <span class="kw">as</span> <span class="ident">i16</span>) <span class="op">*</span> <span class="ident">RAZORING_DEPTH_MARGIN_MULTIPLIER</span>
+<span class="doccomment">/// Gets the razoring margin, based on `depth`. The further from the horizon we are, the more margin we should take to determine if node can be pruned.
+</span><span class="kw">fn </span>razoring_get_margin(depth: i8) -&gt; i16 {
+    RAZORING_DEPTH_MARGIN_BASE + ((depth - RAZORING_MIN_DEPTH) <span class="kw">as </span>i16) * RAZORING_DEPTH_MARGIN_MULTIPLIER
 }
 
-<span class="doccomment">/// The main idea of the static null move pruning (also called as reverse futility pruning) is to prune all nodes, which (based on lazy evaluation) are too</span>
-<span class="doccomment">/// good compared to the current beta, and will very likely be a cut-node. To save time, we skip move loop entirely and return beta + some margin score.</span>
-<span class="doccomment">/// The concept is very similar to null move pruning, but without performing any search.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Conditions:</span>
-<span class="doccomment">///  - only non-PV nodes</span>
-<span class="doccomment">///  - depth &gt;= [STATIC_NULL_MOVE_PRUNING_MIN_DEPTH]</span>
-<span class="doccomment">///  - depth &lt;= [STATIC_NULL_MOVE_PRUNING_MAX_DEPTH]</span>
-<span class="doccomment">///  - beta is not a mate score</span>
-<span class="doccomment">///  - friendly king is not checked</span>
-<span class="kw">fn</span> <span class="ident">static_null_move_pruning_can_be_applied</span><span class="op">&lt;</span><span class="kw">const</span> <span class="ident">PV</span>: <span class="ident">bool</span><span class="op">&gt;</span>(<span class="ident">depth</span>: <span class="ident">i8</span>, <span class="ident">beta</span>: <span class="ident">i16</span>, <span class="ident">friendly_king_checked</span>: <span class="ident">bool</span>) -&gt; <span class="ident">bool</span> {
-    <span class="op">!</span><span class="ident">PV</span> <span class="op">&amp;&amp;</span> <span class="ident">depth</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">STATIC_NULL_MOVE_PRUNING_MIN_DEPTH</span>
-        <span class="op">&amp;&amp;</span> <span class="ident">depth</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">STATIC_NULL_MOVE_PRUNING_MAX_DEPTH</span>
-        <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">is_score_near_checkmate</span>(<span class="ident">beta</span>)
-        <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">friendly_king_checked</span>
+<span class="doccomment">/// The main idea of the static null move pruning (also called as reverse futility pruning) is to prune all nodes, which (based on lazy evaluation) are too
+/// good compared to the current beta, and will very likely be a cut-node. To save time, we skip move loop entirely and return beta + some margin score.
+/// The concept is very similar to null move pruning, but without performing any search.
+///
+/// Conditions:
+///  - only non-PV nodes
+///  - depth &gt;= [STATIC_NULL_MOVE_PRUNING_MIN_DEPTH]
+///  - depth &lt;= [STATIC_NULL_MOVE_PRUNING_MAX_DEPTH]
+///  - beta is not a mate score
+///  - friendly king is not checked
+</span><span class="kw">fn </span>static_null_move_pruning_can_be_applied&lt;<span class="kw">const </span>PV: bool&gt;(depth: i8, beta: i16, friendly_king_checked: bool) -&gt; bool {
+    !PV &amp;&amp; depth &gt;= STATIC_NULL_MOVE_PRUNING_MIN_DEPTH
+        &amp;&amp; depth &lt;= STATIC_NULL_MOVE_PRUNING_MAX_DEPTH
+        &amp;&amp; !is_score_near_checkmate(beta)
+        &amp;&amp; !friendly_king_checked
 }
 
-<span class="doccomment">/// Gets the static null move pruning margin, based on `depth`. The further from the horizon we are, the more margin should we take to determine</span>
-<span class="doccomment">/// if node can be pruned.</span>
-<span class="kw">fn</span> <span class="ident">static_null_move_pruning_get_margin</span>(<span class="ident">depth</span>: <span class="ident">i8</span>) -&gt; <span class="ident">i16</span> {
-    <span class="ident">STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_BASE</span> <span class="op">+</span> ((<span class="ident">depth</span> <span class="op">-</span> <span class="ident">STATIC_NULL_MOVE_PRUNING_MIN_DEPTH</span>) <span class="kw">as</span> <span class="ident">i16</span>) <span class="op">*</span> <span class="ident">STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_MULTIPLIER</span>
+<span class="doccomment">/// Gets the static null move pruning margin, based on `depth`. The further from the horizon we are, the more margin should we take to determine
+/// if node can be pruned.
+</span><span class="kw">fn </span>static_null_move_pruning_get_margin(depth: i8) -&gt; i16 {
+    STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_BASE + ((depth - STATIC_NULL_MOVE_PRUNING_MIN_DEPTH) <span class="kw">as </span>i16) * STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_MULTIPLIER
 }
 
-<span class="doccomment">/// The main idea of the null move pruning is to prune all nodes, for which the search gives us score above beta even if we skip a move (which allows</span>
-<span class="doccomment">/// the opposite color to make two of them in a row). This is based on the null move observation, which says that there&#39;s always a better alternative than</span>
-<span class="doccomment">/// doing nothing (except zugzwang).</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Conditions:</span>
-<span class="doccomment">///  - only non-PV nodes</span>
-<span class="doccomment">///  - depth &gt;= [NULL_MOVE_PRUNING_MIN_DEPTH]</span>
-<span class="doccomment">///  - game phase is not indicating endgame</span>
-<span class="doccomment">///  - beta score is not a mate score</span>
-<span class="doccomment">///  - friendly king is not checked</span>
-<span class="doccomment">///  - this is not the second null move in a row</span>
-<span class="kw">fn</span> <span class="ident">null_move_pruning_can_be_applied</span><span class="op">&lt;</span><span class="kw">const</span> <span class="ident">PV</span>: <span class="ident">bool</span><span class="op">&gt;</span>(
-    <span class="ident">context</span>: <span class="kw-2">&amp;mut</span> <span class="ident">SearchContext</span>,
-    <span class="ident">depth</span>: <span class="ident">i8</span>,
-    <span class="ident">beta</span>: <span class="ident">i16</span>,
-    <span class="ident">allow_null_move</span>: <span class="ident">bool</span>,
-    <span class="ident">friendly_king_checked</span>: <span class="ident">bool</span>,
-) -&gt; <span class="ident">bool</span> {
-    <span class="op">!</span><span class="ident">PV</span> <span class="op">&amp;&amp;</span> <span class="ident">depth</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">NULL_MOVE_PRUNING_MIN_DEPTH</span>
-        <span class="op">&amp;&amp;</span> <span class="ident">context</span>.<span class="ident">board</span>.<span class="ident">get_game_phase</span>() <span class="op">&gt;</span> <span class="ident">NULL_MOVE_PRUNING_MIN_GAME_PHASE</span>
-        <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">is_score_near_checkmate</span>(<span class="ident">beta</span>)
-        <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">friendly_king_checked</span>
-        <span class="op">&amp;&amp;</span> <span class="ident">allow_null_move</span>
+<span class="doccomment">/// The main idea of the null move pruning is to prune all nodes, for which the search gives us score above beta even if we skip a move (which allows
+/// the opposite color to make two of them in a row). This is based on the null move observation, which says that there&#39;s always a better alternative than
+/// doing nothing (except zugzwang).
+///
+/// Conditions:
+///  - only non-PV nodes
+///  - depth &gt;= [NULL_MOVE_PRUNING_MIN_DEPTH]
+///  - game phase is not indicating endgame
+///  - beta score is not a mate score
+///  - friendly king is not checked
+///  - this is not the second null move in a row
+</span><span class="kw">fn </span>null_move_pruning_can_be_applied&lt;<span class="kw">const </span>PV: bool&gt;(
+    context: <span class="kw-2">&amp;mut </span>SearchContext,
+    depth: i8,
+    beta: i16,
+    allow_null_move: bool,
+    friendly_king_checked: bool,
+) -&gt; bool {
+    !PV &amp;&amp; depth &gt;= NULL_MOVE_PRUNING_MIN_DEPTH
+        &amp;&amp; context.board.game_phase &gt; NULL_MOVE_PRUNING_MIN_GAME_PHASE
+        &amp;&amp; !is_score_near_checkmate(beta)
+        &amp;&amp; !friendly_king_checked
+        &amp;&amp; allow_null_move
 }
 
-<span class="doccomment">/// Gets the null move pruning depth reduction, called R, based on `depth`. It returns [NULL_MOVE_PRUNING_SMALL_R] if `depth` is less or equal</span>
-<span class="doccomment">/// to [NULL_MOVE_PRUNING_R_CHANGE_DEPTH], otherwise [NULL_MOVE_PRUNING_BIG_R].</span>
-<span class="kw">fn</span> <span class="ident">null_move_pruning_get_r</span>(<span class="ident">depth</span>: <span class="ident">i8</span>) -&gt; <span class="ident">i8</span> {
-    <span class="kw">if</span> <span class="ident">depth</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">NULL_MOVE_PRUNING_R_CHANGE_DEPTH</span> {
-        <span class="ident">NULL_MOVE_PRUNING_SMALL_R</span>
-    } <span class="kw">else</span> {
-        <span class="ident">NULL_MOVE_PRUNING_BIG_R</span>
-    }
+<span class="doccomment">/// Gets the null move pruning depth reduction, called R, based on `depth`. The further from the horizon we are, the more reduction will be applied.
+</span><span class="kw">fn </span>null_move_pruning_get_r(depth: i8) -&gt; i8 {
+    NULL_MOVE_PRUNING_DEPTH_BASE + depth / NULL_MOVE_PRUNING_DEPTH_DIVIDER
 }
 
-<span class="doccomment">/// The main idea of the late move pruning is to prune all nodes, which are near the horizon and were scored low by the history table.</span>
-<span class="doccomment">/// We assume here, that there&#39;s a little chance that move being near the end of the list will improve score, so there&#39;s no point of spending time here.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Conditions:</span>
-<span class="doccomment">///  - only non-PV nodes</span>
-<span class="doccomment">///  - depth &gt;= [LATE_MOVE_PRUNING_MIN_DEPTH]</span>
-<span class="doccomment">///  - depth &lt;= [LATE_MOVE_PRUNING_MAX_DEPTH]</span>
-<span class="doccomment">///  - move index &gt;= [LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_BASE] + some margin depending on `depth`</span>
-<span class="doccomment">///  - move score &lt;= [LATE_MOVE_PRUNING_MAX_SCORE]</span>
-<span class="doccomment">///  - friendly king is not checked</span>
-<span class="kw">fn</span> <span class="ident">late_move_pruning_can_be_applied</span><span class="op">&lt;</span><span class="kw">const</span> <span class="ident">PV</span>: <span class="ident">bool</span><span class="op">&gt;</span>(<span class="ident">depth</span>: <span class="ident">i8</span>, <span class="ident">move_index</span>: <span class="ident">usize</span>, <span class="ident">move_score</span>: <span class="ident">i16</span>, <span class="ident">friendly_king_checked</span>: <span class="ident">bool</span>) -&gt; <span class="ident">bool</span> {
-    <span class="op">!</span><span class="ident">PV</span> <span class="op">&amp;&amp;</span> <span class="ident">depth</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">LATE_MOVE_PRUNING_MIN_DEPTH</span>
-        <span class="op">&amp;&amp;</span> <span class="ident">depth</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">LATE_MOVE_PRUNING_MAX_DEPTH</span>
-        <span class="op">&amp;&amp;</span> <span class="ident">move_index</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_BASE</span> <span class="op">+</span> (<span class="ident">depth</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">-</span> <span class="number">1</span>) <span class="op">*</span> <span class="ident">LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_MULTIPLIER</span>
-        <span class="op">&amp;&amp;</span> <span class="ident">move_score</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">LATE_MOVE_PRUNING_MAX_SCORE</span>
-        <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">friendly_king_checked</span>
+<span class="doccomment">/// The main idea of the late move pruning is to prune all nodes, which are near the horizon and were scored low by the history table.
+/// We assume here, that there&#39;s a little chance that move being near the end of the list will improve score, so there&#39;s no point of spending time here.
+///
+/// Conditions:
+///  - only non-PV nodes
+///  - depth &gt;= [LATE_MOVE_PRUNING_MIN_DEPTH]
+///  - depth &lt;= [LATE_MOVE_PRUNING_MAX_DEPTH]
+///  - move index &gt;= [LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_BASE] + some margin depending on `depth`
+///  - move score &lt;= [LATE_MOVE_PRUNING_MAX_SCORE]
+///  - friendly king is not checked
+</span><span class="kw">fn </span>late_move_pruning_can_be_applied&lt;<span class="kw">const </span>PV: bool&gt;(depth: i8, move_index: usize, move_score: i16, friendly_king_checked: bool) -&gt; bool {
+    !PV &amp;&amp; depth &gt;= LATE_MOVE_PRUNING_MIN_DEPTH
+        &amp;&amp; depth &lt;= LATE_MOVE_PRUNING_MAX_DEPTH
+        &amp;&amp; move_index &gt;= LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_BASE + (depth <span class="kw">as </span>usize - <span class="number">1</span>) * LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_MULTIPLIER
+        &amp;&amp; move_score &lt;= LATE_MOVE_PRUNING_MAX_SCORE
+        &amp;&amp; !friendly_king_checked
 }
 
-<span class="doccomment">/// The main idea of the late move reduction is to reduce search depth of all quiet moves, which aren&#39;t promising and with high chance won&#39;t improve score.</span>
-<span class="doccomment">/// This is the least risky type of pruning (used inside PVS framework which cares about re-search when the move is better than expected),</span>
-<span class="doccomment">/// so it&#39;s also applied in PV nodes.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Conditions:</span>
-<span class="doccomment">///  - depth &gt;= [LATE_MOVE_REDUCTION_MIN_DEPTH]</span>
-<span class="doccomment">///  - move index &gt;= [LATE_MOVE_REDUCTION_MIN_MOVE_INDEX]</span>
-<span class="doccomment">///  - move score &lt;= [LATE_MOVE_REDUCTION_MAX_SCORE]</span>
-<span class="doccomment">///  - move is quiet</span>
-<span class="doccomment">///  - friendly king is not checked</span>
-<span class="doccomment">///  - enemy king is not checked</span>
-<span class="kw">fn</span> <span class="ident">late_move_reduction_can_be_applied</span>(
-    <span class="ident">depth</span>: <span class="ident">i8</span>,
-    <span class="ident">r#move</span>: <span class="ident">Move</span>,
-    <span class="ident">move_index</span>: <span class="ident">usize</span>,
-    <span class="ident">move_score</span>: <span class="ident">i16</span>,
-    <span class="ident">friendly_king_checked</span>: <span class="ident">bool</span>,
-    <span class="ident">enemy_king_checked</span>: <span class="ident">bool</span>,
-) -&gt; <span class="ident">bool</span> {
-    <span class="ident">depth</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">LATE_MOVE_REDUCTION_MIN_DEPTH</span>
-        <span class="op">&amp;&amp;</span> <span class="ident">move_index</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">LATE_MOVE_REDUCTION_MIN_MOVE_INDEX</span>
-        <span class="op">&amp;&amp;</span> <span class="ident">move_score</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">LATE_MOVE_REDUCTION_MAX_SCORE</span>
-        <span class="op">&amp;&amp;</span> <span class="ident">r#move</span>.<span class="ident">is_quiet</span>()
-        <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">friendly_king_checked</span>
-        <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">enemy_king_checked</span>
+<span class="doccomment">/// The main idea of the late move reduction is to reduce search depth of all quiet moves, which aren&#39;t promising and with high chance won&#39;t improve score.
+/// This is the least risky type of pruning (used inside PVS framework which cares about re-search when the move is better than expected),
+/// so it&#39;s also applied in PV nodes.
+///
+/// Conditions:
+///  - depth &gt;= [LATE_MOVE_REDUCTION_MIN_DEPTH]
+///  - move index &gt;= [LATE_MOVE_REDUCTION_MIN_MOVE_INDEX]
+///  - move score &lt;= [LATE_MOVE_REDUCTION_MAX_SCORE]
+///  - move is quiet
+///  - friendly king is not checked
+///  - enemy king is not checked
+</span><span class="kw">fn </span>late_move_reduction_can_be_applied(
+    depth: i8,
+    r#move: Move,
+    move_index: usize,
+    move_score: i16,
+    friendly_king_checked: bool,
+    enemy_king_checked: bool,
+) -&gt; bool {
+    depth &gt;= LATE_MOVE_REDUCTION_MIN_DEPTH
+        &amp;&amp; move_index &gt;= LATE_MOVE_REDUCTION_MIN_MOVE_INDEX
+        &amp;&amp; move_score &lt;= LATE_MOVE_REDUCTION_MAX_SCORE
+        &amp;&amp; r#move.is_quiet()
+        &amp;&amp; !friendly_king_checked
+        &amp;&amp; !enemy_king_checked
 }
 
-<span class="doccomment">/// Gets the late move depth reduction, called R, based on `move_index`. The lower the move was scored, the larger reduction will be returned.</span>
-<span class="kw">fn</span> <span class="ident">late_move_reduction_get_r</span><span class="op">&lt;</span><span class="kw">const</span> <span class="ident">PV</span>: <span class="ident">bool</span><span class="op">&gt;</span>(<span class="ident">move_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">i8</span> {
-    <span class="kw">if</span> <span class="ident">PV</span> {
-        <span class="ident">cmp::min</span>(
-            <span class="ident">LATE_MOVE_REDUCTION_PV_MAX_REDUCTION</span>,
-            (<span class="ident">LATE_MOVE_REDUCTION_PV_REDUCTION_BASE</span> <span class="op">+</span> (<span class="ident">move_index</span> <span class="op">-</span> <span class="ident">LATE_MOVE_REDUCTION_PV_MIN_MOVE_INDEX</span>) <span class="op">/</span> <span class="ident">LATE_MOVE_REDUCTION_PV_REDUCTION_STEP</span>) <span class="kw">as</span> <span class="ident">i8</span>,
+<span class="doccomment">/// Gets the late move depth reduction, called R, based on `move_index`. The lower the move was scored, the larger reduction will be returned.
+</span><span class="kw">fn </span>late_move_reduction_get_r&lt;<span class="kw">const </span>PV: bool&gt;(move_index: usize) -&gt; i8 {
+    <span class="kw">if </span>PV {
+        cmp::min(
+            LATE_MOVE_REDUCTION_PV_MAX_REDUCTION,
+            (LATE_MOVE_REDUCTION_PV_REDUCTION_BASE + (move_index - LATE_MOVE_REDUCTION_PV_MIN_MOVE_INDEX) / LATE_MOVE_REDUCTION_PV_REDUCTION_STEP) <span class="kw">as </span>i8,
         )
-    } <span class="kw">else</span> {
-        <span class="ident">cmp::min</span>(
-            <span class="ident">LATE_MOVE_REDUCTION_MAX_REDUCTION</span>,
-            (<span class="ident">LATE_MOVE_REDUCTION_REDUCTION_BASE</span> <span class="op">+</span> (<span class="ident">move_index</span> <span class="op">-</span> <span class="ident">LATE_MOVE_REDUCTION_MIN_MOVE_INDEX</span>) <span class="op">/</span> <span class="ident">LATE_MOVE_REDUCTION_REDUCTION_STEP</span>) <span class="kw">as</span> <span class="ident">i8</span>,
+    } <span class="kw">else </span>{
+        cmp::min(
+            LATE_MOVE_REDUCTION_MAX_REDUCTION,
+            (LATE_MOVE_REDUCTION_REDUCTION_BASE + (move_index - LATE_MOVE_REDUCTION_MIN_MOVE_INDEX) / LATE_MOVE_REDUCTION_REDUCTION_STEP) <span class="kw">as </span>i8,
         )
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="inanis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="inanis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.1 (90743e729 2023-01-10)" ></div></body></html>

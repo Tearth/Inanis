@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/state/movescan.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>movescan.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../inanis/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../inanis/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../inanis/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/state/movescan.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>movescan.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../inanis/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -624,1058 +618,625 @@
 <span id="618">618</span>
 <span id="619">619</span>
 <span id="620">620</span>
-<span id="621">621</span>
-<span id="622">622</span>
-<span id="623">623</span>
-<span id="624">624</span>
-<span id="625">625</span>
-<span id="626">626</span>
-<span id="627">627</span>
-<span id="628">628</span>
-<span id="629">629</span>
-<span id="630">630</span>
-<span id="631">631</span>
-<span id="632">632</span>
-<span id="633">633</span>
-<span id="634">634</span>
-<span id="635">635</span>
-<span id="636">636</span>
-<span id="637">637</span>
-<span id="638">638</span>
-<span id="639">639</span>
-<span id="640">640</span>
-<span id="641">641</span>
-<span id="642">642</span>
-<span id="643">643</span>
-<span id="644">644</span>
-<span id="645">645</span>
-<span id="646">646</span>
-<span id="647">647</span>
-<span id="648">648</span>
-<span id="649">649</span>
-<span id="650">650</span>
-<span id="651">651</span>
-<span id="652">652</span>
-<span id="653">653</span>
-<span id="654">654</span>
-<span id="655">655</span>
-<span id="656">656</span>
-<span id="657">657</span>
-<span id="658">658</span>
-<span id="659">659</span>
-<span id="660">660</span>
-<span id="661">661</span>
-<span id="662">662</span>
-<span id="663">663</span>
-<span id="664">664</span>
-<span id="665">665</span>
-<span id="666">666</span>
-<span id="667">667</span>
-<span id="668">668</span>
-<span id="669">669</span>
-<span id="670">670</span>
-<span id="671">671</span>
-<span id="672">672</span>
-<span id="673">673</span>
-<span id="674">674</span>
-<span id="675">675</span>
-<span id="676">676</span>
-<span id="677">677</span>
-<span id="678">678</span>
-<span id="679">679</span>
-<span id="680">680</span>
-<span id="681">681</span>
-<span id="682">682</span>
-<span id="683">683</span>
-<span id="684">684</span>
-<span id="685">685</span>
-<span id="686">686</span>
-<span id="687">687</span>
-<span id="688">688</span>
-<span id="689">689</span>
-<span id="690">690</span>
-<span id="691">691</span>
-<span id="692">692</span>
-<span id="693">693</span>
-<span id="694">694</span>
-<span id="695">695</span>
-<span id="696">696</span>
-<span id="697">697</span>
-<span id="698">698</span>
-<span id="699">699</span>
-<span id="700">700</span>
-<span id="701">701</span>
-<span id="702">702</span>
-<span id="703">703</span>
-<span id="704">704</span>
-<span id="705">705</span>
-<span id="706">706</span>
-<span id="707">707</span>
-<span id="708">708</span>
-<span id="709">709</span>
-<span id="710">710</span>
-<span id="711">711</span>
-<span id="712">712</span>
-<span id="713">713</span>
-<span id="714">714</span>
-<span id="715">715</span>
-<span id="716">716</span>
-<span id="717">717</span>
-<span id="718">718</span>
-<span id="719">719</span>
-<span id="720">720</span>
-<span id="721">721</span>
-<span id="722">722</span>
-<span id="723">723</span>
-<span id="724">724</span>
-<span id="725">725</span>
-<span id="726">726</span>
-<span id="727">727</span>
-<span id="728">728</span>
-<span id="729">729</span>
-<span id="730">730</span>
-<span id="731">731</span>
-<span id="732">732</span>
-<span id="733">733</span>
-<span id="734">734</span>
-<span id="735">735</span>
-<span id="736">736</span>
-<span id="737">737</span>
-<span id="738">738</span>
-<span id="739">739</span>
-<span id="740">740</span>
-<span id="741">741</span>
-<span id="742">742</span>
-<span id="743">743</span>
-<span id="744">744</span>
-<span id="745">745</span>
-<span id="746">746</span>
-<span id="747">747</span>
-<span id="748">748</span>
-<span id="749">749</span>
-<span id="750">750</span>
-<span id="751">751</span>
-<span id="752">752</span>
-<span id="753">753</span>
-<span id="754">754</span>
-<span id="755">755</span>
-<span id="756">756</span>
-<span id="757">757</span>
-<span id="758">758</span>
-<span id="759">759</span>
-<span id="760">760</span>
-<span id="761">761</span>
-<span id="762">762</span>
-<span id="763">763</span>
-<span id="764">764</span>
-<span id="765">765</span>
-<span id="766">766</span>
-<span id="767">767</span>
-<span id="768">768</span>
-<span id="769">769</span>
-<span id="770">770</span>
-<span id="771">771</span>
-<span id="772">772</span>
-<span id="773">773</span>
-<span id="774">774</span>
-<span id="775">775</span>
-<span id="776">776</span>
-<span id="777">777</span>
-<span id="778">778</span>
-<span id="779">779</span>
-<span id="780">780</span>
-<span id="781">781</span>
-<span id="782">782</span>
-<span id="783">783</span>
-<span id="784">784</span>
-<span id="785">785</span>
-<span id="786">786</span>
-<span id="787">787</span>
-<span id="788">788</span>
-<span id="789">789</span>
-<span id="790">790</span>
-<span id="791">791</span>
-<span id="792">792</span>
-<span id="793">793</span>
-<span id="794">794</span>
-<span id="795">795</span>
-<span id="796">796</span>
-<span id="797">797</span>
-<span id="798">798</span>
-<span id="799">799</span>
-<span id="800">800</span>
-<span id="801">801</span>
-<span id="802">802</span>
-<span id="803">803</span>
-<span id="804">804</span>
-<span id="805">805</span>
-<span id="806">806</span>
-<span id="807">807</span>
-<span id="808">808</span>
-<span id="809">809</span>
-<span id="810">810</span>
-<span id="811">811</span>
-<span id="812">812</span>
-<span id="813">813</span>
-<span id="814">814</span>
-<span id="815">815</span>
-<span id="816">816</span>
-<span id="817">817</span>
-<span id="818">818</span>
-<span id="819">819</span>
-<span id="820">820</span>
-<span id="821">821</span>
-<span id="822">822</span>
-<span id="823">823</span>
-<span id="824">824</span>
-<span id="825">825</span>
-<span id="826">826</span>
-<span id="827">827</span>
-<span id="828">828</span>
-<span id="829">829</span>
-<span id="830">830</span>
-<span id="831">831</span>
-<span id="832">832</span>
-<span id="833">833</span>
-<span id="834">834</span>
-<span id="835">835</span>
-<span id="836">836</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::board::Bitboard</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::board::CastlingRights</span>;
-<span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::engine</span>;
-<span class="kw">use</span> <span class="ident">std::cmp</span>;
-<span class="kw">use</span> <span class="ident">std::mem::MaybeUninit</span>;
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::representation::Board;
+<span class="kw">use </span><span class="kw">super</span>::representation::CastlingRights;
+<span class="kw">use super</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::engine;
+<span class="kw">use </span><span class="kw">crate</span>::utils::bitflags::BitFlags;
+<span class="kw">use </span><span class="kw">crate</span>::utils::bithelpers::BitHelpers;
+<span class="kw">use </span><span class="kw">crate</span>::utils::rand;
+<span class="kw">use </span>std::cmp;
+<span class="kw">use </span>std::fmt::Display;
+<span class="kw">use </span>std::fmt::Formatter;
+<span class="kw">use </span>std::mem::MaybeUninit;
 
-<span class="macro">bitflags!</span> {
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MoveFlags</span>: <span class="ident">u8</span> {
-        <span class="kw">const</span> <span class="ident">QUIET</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">const</span> <span class="ident">DOUBLE_PUSH</span> <span class="op">=</span> <span class="number">1</span>;
-        <span class="kw">const</span> <span class="ident">SHORT_CASTLING</span> <span class="op">=</span> <span class="number">2</span>;
-        <span class="kw">const</span> <span class="ident">LONG_CASTLING</span> <span class="op">=</span> <span class="number">3</span>;
-        <span class="kw">const</span> <span class="ident">CAPTURE</span> <span class="op">=</span> <span class="number">4</span>;
-        <span class="kw">const</span> <span class="ident">EN_PASSANT</span> <span class="op">=</span> <span class="number">5</span>;
-        <span class="kw">const</span> <span class="ident">UNDEFINED1</span> <span class="op">=</span> <span class="number">6</span>;
-        <span class="kw">const</span> <span class="ident">UNDEFINED2</span> <span class="op">=</span> <span class="number">7</span>;
-        <span class="kw">const</span> <span class="ident">KNIGHT_PROMOTION</span> <span class="op">=</span> <span class="number">8</span>;
-        <span class="kw">const</span> <span class="ident">BISHOP_PROMOTION</span> <span class="op">=</span> <span class="number">9</span>;
-        <span class="kw">const</span> <span class="ident">ROOK_PROMOTION</span> <span class="op">=</span> <span class="number">10</span>;
-        <span class="kw">const</span> <span class="ident">QUEEN_PROMOTION</span> <span class="op">=</span> <span class="number">11</span>;
-        <span class="kw">const</span> <span class="ident">KNIGHT_PROMOTION_CAPTURE</span> <span class="op">=</span> <span class="number">12</span>;
-        <span class="kw">const</span> <span class="ident">BISHOP_PROMOTION_CAPTURE</span> <span class="op">=</span> <span class="number">13</span>;
-        <span class="kw">const</span> <span class="ident">ROOK_PROMOTION_CAPTURE</span> <span class="op">=</span> <span class="number">14</span>;
-        <span class="kw">const</span> <span class="ident">QUEEN_PROMOTION_CAPTURE</span> <span class="op">=</span> <span class="number">15</span>;
+<span class="attribute">#[allow(non_snake_case)]
+</span><span class="kw">pub mod </span>MoveFlags {
+    <span class="kw">pub const </span>SINGLE_PUSH: u8 = <span class="number">0</span>;
+    <span class="kw">pub const </span>DOUBLE_PUSH: u8 = <span class="number">1</span>;
+    <span class="kw">pub const </span>SHORT_CASTLING: u8 = <span class="number">2</span>;
+    <span class="kw">pub const </span>LONG_CASTLING: u8 = <span class="number">3</span>;
+    <span class="kw">pub const </span>CAPTURE: u8 = <span class="number">4</span>;
+    <span class="kw">pub const </span>EN_PASSANT: u8 = <span class="number">5</span>;
+    <span class="kw">pub const </span>UNDEFINED1: u8 = <span class="number">6</span>;
+    <span class="kw">pub const </span>UNDEFINED2: u8 = <span class="number">7</span>;
+    <span class="kw">pub const </span>KNIGHT_PROMOTION: u8 = <span class="number">8</span>;
+    <span class="kw">pub const </span>BISHOP_PROMOTION: u8 = <span class="number">9</span>;
+    <span class="kw">pub const </span>ROOK_PROMOTION: u8 = <span class="number">10</span>;
+    <span class="kw">pub const </span>QUEEN_PROMOTION: u8 = <span class="number">11</span>;
+    <span class="kw">pub const </span>KNIGHT_PROMOTION_CAPTURE: u8 = <span class="number">12</span>;
+    <span class="kw">pub const </span>BISHOP_PROMOTION_CAPTURE: u8 = <span class="number">13</span>;
+    <span class="kw">pub const </span>ROOK_PROMOTION_CAPTURE: u8 = <span class="number">14</span>;
+    <span class="kw">pub const </span>QUEEN_PROMOTION_CAPTURE: u8 = <span class="number">15</span>;
 
-        <span class="kw">const</span> <span class="ident">FIELD_SPECIAL_0</span> <span class="op">=</span> <span class="number">1</span>;
-        <span class="kw">const</span> <span class="ident">FIELD_SPECIAL_1</span> <span class="op">=</span> <span class="number">2</span>;
-        <span class="kw">const</span> <span class="ident">FIELD_CAPTURE</span> <span class="op">=</span> <span class="number">4</span>;
-        <span class="kw">const</span> <span class="ident">FIELD_PROMOTION</span> <span class="op">=</span> <span class="number">8</span>;
-    }
+    <span class="kw">pub const </span>BIT_SPECIAL_0: u8 = <span class="number">1</span>;
+    <span class="kw">pub const </span>BIT_SPECIAL_1: u8 = <span class="number">2</span>;
+    <span class="kw">pub const </span>BIT_CAPTURE: u8 = <span class="number">4</span>;
+    <span class="kw">pub const </span>BIT_PROMOTION: u8 = <span class="number">8</span>;
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Move</span> {
-    <span class="kw">pub</span> <span class="ident">data</span>: <span class="ident">u16</span>,
+<span class="attribute">#[derive(Copy, Clone, PartialEq, Eq)]
+</span><span class="kw">pub struct </span>Move {
+    <span class="kw">pub </span>data: u16,
 }
 
-<span class="kw">impl</span> <span class="ident">Move</span> {
-    <span class="doccomment">/// Constructs a new instance of [Move] with stored `from`, `to` and `flags`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">from</span>: <span class="ident">u8</span>, <span class="ident">to</span>: <span class="ident">u8</span>, <span class="ident">flags</span>: <span class="ident">MoveFlags</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">data</span>: ((<span class="ident">flags</span>.<span class="ident">bits</span> <span class="kw">as</span> <span class="ident">u16</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">12</span>) <span class="op">|</span> ((<span class="ident">to</span> <span class="kw">as</span> <span class="ident">u16</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">6</span>) <span class="op">|</span> (<span class="ident">from</span> <span class="kw">as</span> <span class="ident">u16</span>),
-        }
+<span class="kw">impl </span>Move {
+    <span class="doccomment">/// Constructs a new instance of [Move] with stored `from`, `to` and `flags`.
+    </span><span class="kw">pub fn </span>new(from: usize, to: usize, flags: u8) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ data: ((flags <span class="kw">as </span>u16) &lt;&lt; <span class="number">12</span>) | ((to <span class="kw">as </span>u16) &lt;&lt; <span class="number">6</span>) | (from <span class="kw">as </span>u16) }
     }
 
-    <span class="doccomment">/// Constructs a new instance of [Move] using raw bits, which will be directly used as a data.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_from_raw</span>(<span class="ident">data</span>: <span class="ident">u16</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> { <span class="ident">data</span> }
+    <span class="doccomment">/// Constructs a new instance of [Move] using raw bits, which will be directly used as a data.
+    </span><span class="kw">pub fn </span>new_from_raw(data: u16) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ data }
     }
 
-    <span class="doccomment">/// Constructs a new instance of [Move] with random values, not restricted by chess rules.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_random</span>() -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">from</span> <span class="op">=</span> <span class="ident">fastrand::u8</span>(<span class="number">0</span>..<span class="number">64</span>);
-        <span class="kw">let</span> <span class="ident">to</span> <span class="op">=</span> <span class="ident">fastrand::u8</span>(<span class="number">0</span>..<span class="number">64</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">MoveFlags::UNDEFINED1</span>;
+    <span class="doccomment">/// Constructs a new instance of [Move] with random values, not restricted by chess rules.
+    </span><span class="kw">pub fn </span>new_random() -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>from = rand::usize(ALL_SQUARES);
+        <span class="kw">let </span>to = rand::usize(ALL_SQUARES);
+        <span class="kw">let </span><span class="kw-2">mut </span>flags = MoveFlags::UNDEFINED1;
 
-        <span class="kw">loop</span> {
-            <span class="kw">if</span> <span class="ident">flags</span> <span class="op">==</span> <span class="ident">MoveFlags::UNDEFINED1</span> <span class="op">|</span><span class="op">|</span> <span class="ident">flags</span> <span class="op">==</span> <span class="ident">MoveFlags::UNDEFINED2</span> {
-                <span class="ident">flags</span> <span class="op">=</span> <span class="ident">MoveFlags::from_bits</span>(<span class="ident">fastrand::u8</span>(<span class="number">0</span>..<span class="number">16</span>)).<span class="ident">unwrap</span>();
-            } <span class="kw">else</span> {
+        <span class="kw">loop </span>{
+            <span class="kw">if </span>flags == MoveFlags::UNDEFINED1 || flags == MoveFlags::UNDEFINED2 {
+                flags = rand::u8(<span class="number">0</span>..<span class="number">16</span>);
+            } <span class="kw">else </span>{
                 <span class="kw">break</span>;
             }
         }
 
-        <span class="ident">Move::new</span>(<span class="ident">from</span>, <span class="ident">to</span>, <span class="ident">flags</span>)
+        Move::new(from, to, flags)
     }
 
-    <span class="doccomment">/// Converts short-notated move (e4, Rc8, Qxb6) in `text` into the [Move] instance, using the `board` as context.</span>
-    <span class="doccomment">/// Returns [Err] with the proper message if `text` couldn&#39;t be parsed correctly.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_short_notation</span>(<span class="kw-2">mut</span> <span class="ident">text</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">board</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Bitboard</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Move</span>, <span class="ident">String</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">moves</span>: [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Move</span><span class="op">&gt;</span>; <span class="ident">engine::MAX_MOVES_COUNT</span>] <span class="op">=</span> [<span class="ident">MaybeUninit::uninit</span>(); <span class="ident">engine::MAX_MOVES_COUNT</span>];
-        <span class="kw">let</span> <span class="ident">moves_count</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">get_all_moves</span>(<span class="kw-2">&amp;mut</span> <span class="ident">moves</span>, <span class="ident">u64::MAX</span>);
+    <span class="doccomment">/// Gets source square from the internal data.
+    </span><span class="kw">pub fn </span>get_from(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        (<span class="self">self</span>.data &amp; <span class="number">0x3f</span>) <span class="kw">as </span>usize
+    }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">desired_to</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">desired_file</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">desired_rank</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">desired_piece</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">desired_flags</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MoveFlags</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">desired_capture</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">desired_promotion</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+    <span class="doccomment">/// Gets destination square from the internal data.
+    </span><span class="kw">pub fn </span>get_to(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        ((<span class="self">self</span>.data &gt;&gt; <span class="number">6</span>) &amp; <span class="number">0x3f</span>) <span class="kw">as </span>usize
+    }
 
-        <span class="kw">let</span> <span class="ident">original_text</span> <span class="op">=</span> <span class="ident">text</span>;
-        <span class="ident">text</span> <span class="op">=</span> <span class="ident">text</span>.<span class="ident">trim_matches</span>(<span class="string">&#39;#&#39;</span>);
-        <span class="ident">text</span> <span class="op">=</span> <span class="ident">text</span>.<span class="ident">trim_matches</span>(<span class="string">&#39;+&#39;</span>);
-        <span class="ident">text</span> <span class="op">=</span> <span class="ident">text</span>.<span class="ident">trim_matches</span>(<span class="string">&#39;=&#39;</span>);
-        <span class="ident">text</span> <span class="op">=</span> <span class="ident">text</span>.<span class="ident">trim_matches</span>(<span class="string">&#39;?&#39;</span>);
-        <span class="ident">text</span> <span class="op">=</span> <span class="ident">text</span>.<span class="ident">trim_matches</span>(<span class="string">&#39;!&#39;</span>);
+    <span class="doccomment">/// Gets flags from the internal data.
+    </span><span class="kw">pub fn </span>get_flags(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u8 {
+        (<span class="self">self</span>.data &gt;&gt; <span class="number">12</span>) <span class="kw">as </span>u8
+    }
 
-        <span class="kw">if</span> <span class="ident">text</span>.<span class="ident">contains</span>(<span class="string">&#39;=&#39;</span>) {
-            <span class="kw">let</span> <span class="ident">promotion</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">text</span>[<span class="ident">text</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">2</span>..];
-            <span class="ident">desired_promotion</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">promotion</span> {
-                <span class="string">&quot;=Q&quot;</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">QUEEN</span>),
-                <span class="string">&quot;=R&quot;</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">ROOK</span>),
-                <span class="string">&quot;=B&quot;</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">BISHOP</span>),
-                <span class="string">&quot;=N&quot;</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">KNIGHT</span>),
-                <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid promotion: fen={}, promotion={}&quot;</span>, <span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="ident">promotion</span>)),
-            }
-        }
-
-        <span class="ident">text</span> <span class="op">=</span> <span class="ident">text</span>.<span class="ident">trim_end_matches</span>(<span class="string">&quot;=Q&quot;</span>);
-        <span class="ident">text</span> <span class="op">=</span> <span class="ident">text</span>.<span class="ident">trim_end_matches</span>(<span class="string">&quot;=R&quot;</span>);
-        <span class="ident">text</span> <span class="op">=</span> <span class="ident">text</span>.<span class="ident">trim_end_matches</span>(<span class="string">&quot;=B&quot;</span>);
-        <span class="ident">text</span> <span class="op">=</span> <span class="ident">text</span>.<span class="ident">trim_end_matches</span>(<span class="string">&quot;=N&quot;</span>);
-
-        <span class="kw">if</span> <span class="ident">text</span> <span class="op">==</span> <span class="string">&quot;0-0&quot;</span> <span class="op">|</span><span class="op">|</span> <span class="ident">text</span> <span class="op">==</span> <span class="string">&quot;O-O&quot;</span> {
-            <span class="ident">desired_piece</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">KING</span>);
-            <span class="ident">desired_flags</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">MoveFlags::SHORT_CASTLING</span>);
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">text</span> <span class="op">==</span> <span class="string">&quot;0-0-0&quot;</span> <span class="op">|</span><span class="op">|</span> <span class="ident">text</span> <span class="op">==</span> <span class="string">&quot;O-O-O&quot;</span> {
-            <span class="ident">desired_piece</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">KING</span>);
-            <span class="ident">desired_flags</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">MoveFlags::LONG_CASTLING</span>);
-        } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">chars</span> <span class="op">=</span> <span class="ident">text</span>.<span class="ident">chars</span>();
-            <span class="kw">match</span> <span class="ident">text</span>.<span class="ident">len</span>() {
-                <span class="comment">// e4</span>
-                <span class="number">2</span> =&gt; {
-                    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination file: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
-                    <span class="kw">let</span> <span class="ident">rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad source rank: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
-                    <span class="kw">let</span> <span class="ident">to</span> <span class="op">=</span> (<span class="number">7</span> <span class="op">-</span> (<span class="ident">file</span> <span class="op">-</span> <span class="string">b&#39;a&#39;</span>)) <span class="op">+</span> <span class="number">8</span> <span class="op">*</span> (<span class="ident">rank</span> <span class="op">-</span> <span class="string">b&#39;1&#39;</span>);
-
-                    <span class="ident">desired_to</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">to</span>);
-                    <span class="ident">desired_piece</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">PAWN</span>);
-                }
-                <span class="comment">// Nd5</span>
-                <span class="number">3</span> =&gt; {
-                    <span class="kw">let</span> <span class="ident">piece</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad piece: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination file: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
-                    <span class="kw">let</span> <span class="ident">rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination rank: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
-
-                    <span class="kw">let</span> <span class="ident">to</span> <span class="op">=</span> (<span class="number">7</span> <span class="op">-</span> (<span class="ident">file</span> <span class="op">-</span> <span class="string">b&#39;a&#39;</span>)) <span class="op">+</span> <span class="number">8</span> <span class="op">*</span> (<span class="ident">rank</span> <span class="op">-</span> <span class="string">b&#39;1&#39;</span>);
-                    <span class="kw">let</span> <span class="ident">piece_type</span> <span class="op">=</span> <span class="ident">symbol_to_piece</span>(<span class="ident">piece</span>)<span class="question-mark">?</span>;
-
-                    <span class="ident">desired_to</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">to</span>);
-                    <span class="ident">desired_piece</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">piece_type</span>);
-                }
-                <span class="comment">// exf5, Rxf5, N3e4, Nde4</span>
-                <span class="number">4</span> =&gt; {
-                    <span class="kw">let</span> <span class="ident">piece_or_file</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad symbol: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">capture_or_file_rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad symbol: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination file: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
-                    <span class="kw">let</span> <span class="ident">rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination rank: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
-                    <span class="kw">let</span> <span class="ident">to</span> <span class="op">=</span> (<span class="number">7</span> <span class="op">-</span> (<span class="ident">file</span> <span class="op">-</span> <span class="string">b&#39;a&#39;</span>)) <span class="op">+</span> <span class="number">8</span> <span class="op">*</span> (<span class="ident">rank</span> <span class="op">-</span> <span class="string">b&#39;1&#39;</span>);
-
-                    <span class="comment">// exf5, Rxf5</span>
-                    <span class="kw">if</span> <span class="ident">capture_or_file_rank</span> <span class="op">==</span> <span class="string">&#39;x&#39;</span> {
-                        <span class="comment">// exf5</span>
-                        <span class="kw">if</span> <span class="ident">piece_or_file</span>.<span class="ident">is_lowercase</span>() {
-                            <span class="kw">let</span> <span class="ident">file_from</span> <span class="op">=</span> <span class="number">7</span> <span class="op">-</span> ((<span class="ident">piece_or_file</span> <span class="kw">as</span> <span class="ident">u8</span>) <span class="op">-</span> <span class="string">b&#39;a&#39;</span>);
-
-                            <span class="ident">desired_to</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">to</span>);
-                            <span class="ident">desired_file</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">file_from</span>);
-                            <span class="ident">desired_piece</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">PAWN</span>);
-                            <span class="ident">desired_capture</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="bool-val">true</span>);
-                        <span class="comment">// Rxf5</span>
-                        } <span class="kw">else</span> {
-                            <span class="kw">let</span> <span class="ident">piece_type</span> <span class="op">=</span> <span class="ident">symbol_to_piece</span>(<span class="ident">piece_or_file</span>)<span class="question-mark">?</span>;
-
-                            <span class="ident">desired_to</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">to</span>);
-                            <span class="ident">desired_piece</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">piece_type</span>);
-                            <span class="ident">desired_capture</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="bool-val">true</span>);
-                        }
-                    <span class="comment">// N3e4</span>
-                    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">capture_or_file_rank</span>.<span class="ident">is_ascii_digit</span>() {
-                        <span class="kw">let</span> <span class="ident">piece_type</span> <span class="op">=</span> <span class="ident">symbol_to_piece</span>(<span class="ident">piece_or_file</span>)<span class="question-mark">?</span>;
-                        <span class="kw">let</span> <span class="ident">rank_from</span> <span class="op">=</span> (<span class="ident">capture_or_file_rank</span> <span class="kw">as</span> <span class="ident">u8</span>) <span class="op">-</span> <span class="string">b&#39;1&#39;</span>;
-
-                        <span class="ident">desired_to</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">to</span>);
-                        <span class="ident">desired_piece</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">piece_type</span>);
-                        <span class="ident">desired_rank</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">rank_from</span>);
-                    }
-                    <span class="comment">// Nde4</span>
-                    <span class="kw">else</span> {
-                        <span class="kw">let</span> <span class="ident">file_from</span> <span class="op">=</span> <span class="number">7</span> <span class="op">-</span> ((<span class="ident">capture_or_file_rank</span> <span class="kw">as</span> <span class="ident">u8</span>) <span class="op">-</span> <span class="string">b&#39;a&#39;</span>);
-                        <span class="kw">let</span> <span class="ident">piece_type</span> <span class="op">=</span> <span class="ident">symbol_to_piece</span>(<span class="ident">piece_or_file</span>)<span class="question-mark">?</span>;
-
-                        <span class="ident">desired_to</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">to</span>);
-                        <span class="ident">desired_piece</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">piece_type</span>);
-                        <span class="ident">desired_file</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">file_from</span>);
-                    }
-                }
-                <span class="comment">// R2xc2, Rexc2, Qd3c2</span>
-                <span class="number">5</span> =&gt; {
-                    <span class="kw">let</span> <span class="ident">piece</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad piece: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">file_or_rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad symbol: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">capture_or_rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad symbol: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination file: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
-                    <span class="kw">let</span> <span class="ident">rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination rank: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
-                    <span class="kw">let</span> <span class="ident">to</span> <span class="op">=</span> (<span class="number">7</span> <span class="op">-</span> (<span class="ident">file</span> <span class="op">-</span> <span class="string">b&#39;a&#39;</span>)) <span class="op">+</span> <span class="number">8</span> <span class="op">*</span> (<span class="ident">rank</span> <span class="op">-</span> <span class="string">b&#39;1&#39;</span>);
-                    <span class="kw">let</span> <span class="ident">piece_type</span> <span class="op">=</span> <span class="ident">symbol_to_piece</span>(<span class="ident">piece</span>)<span class="question-mark">?</span>;
-
-                    <span class="kw">if</span> <span class="ident">capture_or_rank</span> <span class="op">==</span> <span class="string">&#39;x&#39;</span> {
-                        <span class="comment">// R2xc2</span>
-                        <span class="kw">if</span> <span class="ident">file_or_rank</span>.<span class="ident">is_ascii_digit</span>() {
-                            <span class="kw">let</span> <span class="ident">rank_from</span> <span class="op">=</span> (<span class="ident">file_or_rank</span> <span class="kw">as</span> <span class="ident">u8</span>) <span class="op">-</span> <span class="string">b&#39;1&#39;</span>;
-
-                            <span class="ident">desired_to</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">to</span>);
-                            <span class="ident">desired_rank</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">rank_from</span>);
-                            <span class="ident">desired_piece</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">piece_type</span>);
-                            <span class="ident">desired_capture</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="bool-val">true</span>);
-                        <span class="comment">// Rexc2</span>
-                        } <span class="kw">else</span> {
-                            <span class="kw">let</span> <span class="ident">file_from</span> <span class="op">=</span> <span class="number">7</span> <span class="op">-</span> ((<span class="ident">file_or_rank</span> <span class="kw">as</span> <span class="ident">u8</span>) <span class="op">-</span> <span class="string">b&#39;a&#39;</span>);
-
-                            <span class="ident">desired_to</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">to</span>);
-                            <span class="ident">desired_file</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">file_from</span>);
-                            <span class="ident">desired_piece</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">piece_type</span>);
-                            <span class="ident">desired_capture</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="bool-val">true</span>);
-                        }
-                    <span class="comment">// Qd3c2</span>
-                    } <span class="kw">else</span> {
-                        <span class="kw">let</span> <span class="ident">file_from</span> <span class="op">=</span> <span class="number">7</span> <span class="op">-</span> ((<span class="ident">file_or_rank</span> <span class="kw">as</span> <span class="ident">u8</span>) <span class="op">-</span> <span class="string">b&#39;a&#39;</span>);
-                        <span class="kw">let</span> <span class="ident">rank_from</span> <span class="op">=</span> (<span class="ident">capture_or_rank</span> <span class="kw">as</span> <span class="ident">u8</span>) <span class="op">-</span> <span class="string">b&#39;1&#39;</span>;
-
-                        <span class="ident">desired_to</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">to</span>);
-                        <span class="ident">desired_file</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">file_from</span>);
-                        <span class="ident">desired_rank</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">rank_from</span>);
-                        <span class="ident">desired_piece</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">piece_type</span>);
-                    }
-                }
-                <span class="comment">// Qa1xd4</span>
-                <span class="number">6</span> =&gt; {
-                    <span class="kw">let</span> <span class="ident">piece</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad piece: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">source_file</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad source file: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">source_rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad source rank: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad symbol: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination file: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
-                    <span class="kw">let</span> <span class="ident">rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination rank: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
-                    <span class="kw">let</span> <span class="ident">to</span> <span class="op">=</span> (<span class="number">7</span> <span class="op">-</span> (<span class="ident">file</span> <span class="op">-</span> <span class="string">b&#39;a&#39;</span>)) <span class="op">+</span> <span class="number">8</span> <span class="op">*</span> (<span class="ident">rank</span> <span class="op">-</span> <span class="string">b&#39;1&#39;</span>);
-                    <span class="kw">let</span> <span class="ident">piece_type</span> <span class="op">=</span> <span class="ident">symbol_to_piece</span>(<span class="ident">piece</span>)<span class="question-mark">?</span>;
-
-                    <span class="kw">let</span> <span class="ident">file_from</span> <span class="op">=</span> <span class="number">7</span> <span class="op">-</span> ((<span class="ident">source_file</span> <span class="kw">as</span> <span class="ident">u8</span>) <span class="op">-</span> <span class="string">b&#39;a&#39;</span>);
-                    <span class="kw">let</span> <span class="ident">rank_from</span> <span class="op">=</span> (<span class="ident">source_rank</span> <span class="kw">as</span> <span class="ident">u8</span>) <span class="op">-</span> <span class="string">b&#39;1&#39;</span>;
-
-                    <span class="ident">desired_to</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">to</span>);
-                    <span class="ident">desired_file</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">file_from</span>);
-                    <span class="ident">desired_rank</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">rank_from</span>);
-                    <span class="ident">desired_piece</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">piece_type</span>);
-                    <span class="ident">desired_capture</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="bool-val">true</span>);
-                }
-                <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move: fen={}, original_text={}&quot;</span>, <span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="ident">original_text</span>)),
-            }
-        }
-
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">valid_moves</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="kw">for</span> <span class="ident">move_index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">moves_count</span> {
-            <span class="kw">let</span> <span class="ident">r#move</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">moves</span>[<span class="ident">move_index</span>].<span class="ident">assume_init</span>() };
-            <span class="kw">if</span> (<span class="ident">desired_to</span>.<span class="ident">is_none</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">desired_to</span>.<span class="ident">unwrap</span>() <span class="op">==</span> <span class="ident">r#move</span>.<span class="ident">get_to</span>())
-                <span class="op">&amp;&amp;</span> (<span class="ident">desired_file</span>.<span class="ident">is_none</span>() <span class="op">|</span><span class="op">|</span> (<span class="ident">r#move</span>.<span class="ident">get_from</span>() <span class="op">%</span> <span class="number">8</span>) <span class="op">==</span> <span class="ident">desired_file</span>.<span class="ident">unwrap</span>())
-                <span class="op">&amp;&amp;</span> (<span class="ident">desired_rank</span>.<span class="ident">is_none</span>() <span class="op">|</span><span class="op">|</span> (<span class="ident">r#move</span>.<span class="ident">get_from</span>() <span class="op">/</span> <span class="number">8</span>) <span class="op">==</span> <span class="ident">desired_rank</span>.<span class="ident">unwrap</span>())
-                <span class="op">&amp;&amp;</span> (<span class="ident">desired_piece</span>.<span class="ident">is_none</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">board</span>.<span class="ident">get_piece</span>(<span class="ident">r#move</span>.<span class="ident">get_from</span>()) <span class="op">==</span> <span class="ident">desired_piece</span>.<span class="ident">unwrap</span>())
-                <span class="op">&amp;&amp;</span> (<span class="ident">desired_flags</span>.<span class="ident">is_none</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">r#move</span>.<span class="ident">get_flags</span>() <span class="op">==</span> <span class="ident">desired_flags</span>.<span class="ident">unwrap</span>())
-                <span class="op">&amp;&amp;</span> (<span class="ident">desired_capture</span>.<span class="ident">is_none</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">r#move</span>.<span class="ident">is_capture</span>() <span class="op">==</span> <span class="ident">desired_capture</span>.<span class="ident">unwrap</span>())
-                <span class="op">&amp;&amp;</span> (<span class="ident">desired_promotion</span>.<span class="ident">is_none</span>() <span class="op">|</span><span class="op">|</span> (<span class="ident">r#move</span>.<span class="ident">is_promotion</span>() <span class="op">&amp;&amp;</span> <span class="ident">r#move</span>.<span class="ident">get_promotion_piece</span>() <span class="op">==</span> <span class="ident">desired_promotion</span>.<span class="ident">unwrap</span>()))
-            {
-                <span class="ident">valid_moves</span>.<span class="ident">push</span>(<span class="ident">r#move</span>);
-            }
-        }
-
-        <span class="kw">match</span> <span class="ident">valid_moves</span>.<span class="ident">len</span>() {
-            <span class="number">0</span> =&gt; <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move: fen={}, original_text={}&quot;</span>, <span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="ident">original_text</span>)),
-            <span class="number">1</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">valid_moves</span>[<span class="number">0</span>]),
-            <span class="kw">_</span> =&gt; {
-                <span class="kw">for</span> <span class="ident">r#move</span> <span class="kw">in</span> <span class="ident">valid_moves</span> {
-                    <span class="ident">board</span>.<span class="ident">make_move</span>(<span class="ident">r#move</span>);
-                    <span class="kw">if</span> <span class="op">!</span><span class="ident">board</span>.<span class="ident">is_king_checked</span>(<span class="ident">board</span>.<span class="ident">active_color</span> <span class="op">^</span> <span class="number">1</span>) {
-                        <span class="ident">board</span>.<span class="ident">undo_move</span>(<span class="ident">r#move</span>);
-                        <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">r#move</span>);
-                    }
-                    <span class="ident">board</span>.<span class="ident">undo_move</span>(<span class="ident">r#move</span>);
-                }
-
-                <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move: fen={}, original_text={}&quot;</span>, <span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="ident">original_text</span>))
-            }
+    <span class="doccomment">/// Gets promotion piece based on the flags saved in the internal data.
+    </span><span class="kw">pub fn </span>get_promotion_piece(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="kw">let </span>flags = <span class="self">self</span>.get_flags();
+        <span class="kw">match </span><span class="self">self</span>.get_flags() {
+            MoveFlags::KNIGHT_PROMOTION | MoveFlags::KNIGHT_PROMOTION_CAPTURE =&gt; KNIGHT,
+            MoveFlags::BISHOP_PROMOTION | MoveFlags::BISHOP_PROMOTION_CAPTURE =&gt; BISHOP,
+            MoveFlags::ROOK_PROMOTION | MoveFlags::ROOK_PROMOTION_CAPTURE =&gt; ROOK,
+            MoveFlags::QUEEN_PROMOTION | MoveFlags::QUEEN_PROMOTION_CAPTURE =&gt; QUEEN,
+            <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: flags={:?}&quot;</span>, flags),
         }
     }
 
-    <span class="doccomment">/// Converts long-notated move (e2e4, a1a8) in `text` into the [Move] instance, using the `board` as context.</span>
-    <span class="doccomment">/// Returns [Err] with the proper message if `text` couldn&#39;t be parsed correctly.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_long_notation</span>(<span class="ident">text</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Move</span>, <span class="ident">String</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">chars</span> <span class="op">=</span> <span class="ident">text</span>.<span class="ident">chars</span>();
-        <span class="kw">let</span> <span class="ident">from_file</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad source file: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
-        <span class="kw">let</span> <span class="ident">from_rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad source rank: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
-        <span class="kw">let</span> <span class="ident">to_file</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination file: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
-        <span class="kw">let</span> <span class="ident">to_rank</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>().<span class="ident">ok_or</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination rank: text={}&quot;</span>, <span class="ident">text</span>))<span class="question-mark">?</span> <span class="kw">as</span> <span class="ident">u8</span>;
-        <span class="kw">let</span> <span class="ident">promotion</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>();
+    <span class="doccomment">/// Checks if the move is a single push.
+    </span><span class="kw">pub fn </span>is_single_push(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.get_flags() == MoveFlags::SINGLE_PUSH
+    }
 
-        <span class="kw">if</span> <span class="op">!</span>(<span class="string">b&#39;a&#39;</span>..<span class="op">=</span><span class="string">b&#39;h&#39;</span>).<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">from_file</span>) <span class="op">|</span><span class="op">|</span> <span class="op">!</span>(<span class="string">b&#39;a&#39;</span>..<span class="op">=</span><span class="string">b&#39;h&#39;</span>).<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">to_file</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad source field: fen={}, text={}&quot;</span>, <span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="ident">text</span>));
+    <span class="doccomment">/// Checks if the move is a double push.
+    </span><span class="kw">pub fn </span>is_double_push(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.get_flags() == MoveFlags::DOUBLE_PUSH
+    }
+
+    <span class="doccomment">/// Checks if the move is quiet (single or double pushes).
+    </span><span class="kw">pub fn </span>is_quiet(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.get_flags() == MoveFlags::SINGLE_PUSH || <span class="self">self</span>.get_flags() == MoveFlags::DOUBLE_PUSH
+    }
+
+    <span class="doccomment">/// Checks if the move is a capture (excluding en passant, but including promotions).
+    </span><span class="kw">pub fn </span>is_capture(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.get_flags().contains(MoveFlags::CAPTURE)
+    }
+
+    <span class="doccomment">/// Checks if the move is en passant.
+    </span><span class="kw">pub fn </span>is_en_passant(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.get_flags() == MoveFlags::EN_PASSANT
+    }
+
+    <span class="doccomment">/// Checks if the move is a promotion (including captures).
+    </span><span class="kw">pub fn </span>is_promotion(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.get_flags().contains(MoveFlags::BIT_PROMOTION)
+    }
+
+    <span class="doccomment">/// Checks if the move is a short or long castling.
+    </span><span class="kw">pub fn </span>is_castling(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.get_flags() == MoveFlags::SHORT_CASTLING || <span class="self">self</span>.get_flags() == MoveFlags::LONG_CASTLING
+    }
+
+    <span class="doccomment">/// Checks if the move is legal, using `board` as the context.
+    </span><span class="kw">pub fn </span>is_legal(<span class="kw-2">&amp;</span><span class="self">self</span>, board: <span class="kw-2">&amp;</span>Board) -&gt; bool {
+        <span class="kw">let </span>from = <span class="self">self</span>.get_from();
+        <span class="kw">let </span>from_bb = <span class="number">1u64 </span>&lt;&lt; from;
+        <span class="kw">let </span>to = <span class="self">self</span>.get_to();
+        <span class="kw">let </span>to_bb = <span class="number">1u64 </span>&lt;&lt; to;
+        <span class="kw">let </span>piece = board.get_piece(from);
+        <span class="kw">let </span>piece_color = board.get_piece_color(from);
+
+        <span class="comment">// Fast check: source square must contain a piece with the proper color
+        </span><span class="kw">if </span>piece == usize::MAX || piece_color != board.active_color {
+            <span class="kw">return </span><span class="bool-val">false</span>;
         }
 
-        <span class="kw">if</span> <span class="op">!</span>(<span class="string">b&#39;1&#39;</span>..<span class="op">=</span><span class="string">b&#39;8&#39;</span>).<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">from_rank</span>) <span class="op">|</span><span class="op">|</span> <span class="op">!</span>(<span class="string">b&#39;1&#39;</span>..<span class="op">=</span><span class="string">b&#39;8&#39;</span>).<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">to_rank</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination field: fen={}, text={}&quot;</span>, <span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="ident">text</span>));
+        <span class="kw">let </span>target_piece = board.get_piece(to);
+        <span class="kw">let </span>target_piece_color = board.get_piece_color(to);
+
+        <span class="comment">// Fast check: for promotions with captures, there must be some victim with opposite color
+        </span><span class="kw">if </span><span class="self">self</span>.is_capture() &amp;&amp; !<span class="self">self</span>.is_en_passant() &amp;&amp; (target_piece == usize::MAX || piece_color == target_piece_color) {
+            <span class="kw">return </span><span class="bool-val">false</span>;
         }
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">promotion_piece</span>) <span class="op">=</span> <span class="ident">promotion</span> {
-            <span class="kw">if</span> <span class="op">!</span>[<span class="string">&#39;n&#39;</span>, <span class="string">&#39;b&#39;</span>, <span class="string">&#39;r&#39;</span>, <span class="string">&#39;q&#39;</span>].<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">promotion_piece</span>) {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad promotion piece: fen={}, text={}&quot;</span>, <span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="ident">text</span>));
-            }
+        <span class="comment">// Fast check: target square must be empty for non-capture moves
+        </span><span class="kw">if </span>!<span class="self">self</span>.is_capture() &amp;&amp; target_piece != usize::MAX {
+            <span class="kw">return </span><span class="bool-val">false</span>;
         }
 
-        <span class="kw">let</span> <span class="ident">from</span> <span class="op">=</span> (<span class="number">7</span> <span class="op">-</span> (<span class="ident">from_file</span> <span class="op">-</span> <span class="string">b&#39;a&#39;</span>)) <span class="op">+</span> <span class="number">8</span> <span class="op">*</span> (<span class="ident">from_rank</span> <span class="op">-</span> <span class="string">b&#39;1&#39;</span>);
-        <span class="kw">let</span> <span class="ident">to</span> <span class="op">=</span> (<span class="number">7</span> <span class="op">-</span> (<span class="ident">to_file</span> <span class="op">-</span> <span class="string">b&#39;a&#39;</span>)) <span class="op">+</span> <span class="number">8</span> <span class="op">*</span> (<span class="ident">to_rank</span> <span class="op">-</span> <span class="string">b&#39;1&#39;</span>);
-        <span class="kw">let</span> <span class="ident">promotion_flags</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">promotion</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">promotion_piece</span>) =&gt; {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">flags</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">promotion_piece</span> {
-                    <span class="string">&#39;n&#39;</span> =&gt; <span class="ident">MoveFlags::KNIGHT_PROMOTION</span>,
-                    <span class="string">&#39;b&#39;</span> =&gt; <span class="ident">MoveFlags::BISHOP_PROMOTION</span>,
-                    <span class="string">&#39;r&#39;</span> =&gt; <span class="ident">MoveFlags::ROOK_PROMOTION</span>,
-                    <span class="string">&#39;q&#39;</span> =&gt; <span class="ident">MoveFlags::QUEEN_PROMOTION</span>,
-                    <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad promotion piece: fen={}, text={}&quot;</span>, <span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="ident">text</span>)),
-                };
+        <span class="kw">let </span>flags = <span class="self">self</span>.get_flags();
+        <span class="kw">let </span>occupancy_bb = board.occupancy[WHITE] | board.occupancy[BLACK];
 
-                <span class="kw">if</span> ((<span class="ident">from</span> <span class="kw">as</span> <span class="ident">i8</span>) <span class="op">-</span> (<span class="ident">to</span> <span class="kw">as</span> <span class="ident">i8</span>)).<span class="ident">abs</span>() <span class="op">!</span><span class="op">=</span> <span class="number">8</span> {
-                    <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">MoveFlags::CAPTURE</span>;
-                };
-
-                <span class="ident">flags</span>
-            }
-            <span class="prelude-val">None</span> =&gt; <span class="ident">MoveFlags::QUIET</span>,
-        };
-
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">moves</span>: [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Move</span><span class="op">&gt;</span>; <span class="ident">engine::MAX_MOVES_COUNT</span>] <span class="op">=</span> [<span class="ident">MaybeUninit::uninit</span>(); <span class="ident">engine::MAX_MOVES_COUNT</span>];
-        <span class="kw">let</span> <span class="ident">moves_count</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">get_all_moves</span>(<span class="kw-2">&amp;mut</span> <span class="ident">moves</span>, <span class="ident">u64::MAX</span>);
-
-        <span class="kw">for</span> <span class="ident">r#move</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">moves</span>[<span class="number">0</span>..<span class="ident">moves_count</span>] {
-            <span class="kw">let</span> <span class="ident">r#move</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">r#move</span>.<span class="ident">assume_init</span>() };
-            <span class="kw">if</span> <span class="ident">r#move</span>.<span class="ident">get_from</span>() <span class="op">==</span> <span class="ident">from</span> <span class="op">&amp;&amp;</span> <span class="ident">r#move</span>.<span class="ident">get_to</span>() <span class="op">==</span> <span class="ident">to</span> {
-                <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">r#move</span>.<span class="ident">get_flags</span>();
-                <span class="kw">if</span> <span class="ident">promotion_flags</span> <span class="op">==</span> <span class="ident">MoveFlags::QUIET</span> <span class="op">|</span><span class="op">|</span> (<span class="ident">flags</span> <span class="op">&amp;</span> <span class="ident">promotion_flags</span>).<span class="ident">bits</span> <span class="op">==</span> <span class="ident">flags</span>.<span class="ident">bits</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">r#move</span>);
-                }
-            }
-        }
-
-        <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move: fen={}, text={}&quot;</span>, <span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="ident">text</span>))
-    }
-
-    <span class="doccomment">/// Converts move into the long notation (e2e4, a1a8).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_long_notation</span>(<span class="self">self</span>) -&gt; <span class="ident">String</span> {
-        <span class="kw">let</span> <span class="ident">from</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_from</span>();
-        <span class="kw">let</span> <span class="ident">to</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_to</span>();
-
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="macro">vec!</span>[
-            <span class="ident">char::from</span>(<span class="string">b&#39;a&#39;</span> <span class="op">+</span> (<span class="number">7</span> <span class="op">-</span> <span class="ident">from</span> <span class="op">%</span> <span class="number">8</span>)),
-            <span class="ident">char::from</span>(<span class="string">b&#39;1&#39;</span> <span class="op">+</span> <span class="ident">from</span> <span class="op">/</span> <span class="number">8</span>),
-            <span class="ident">char::from</span>(<span class="string">b&#39;a&#39;</span> <span class="op">+</span> (<span class="number">7</span> <span class="op">-</span> <span class="ident">to</span> <span class="op">%</span> <span class="number">8</span>)),
-            <span class="ident">char::from</span>(<span class="string">b&#39;1&#39;</span> <span class="op">+</span> <span class="ident">to</span> <span class="op">/</span> <span class="number">8</span>),
-        ];
-
-        <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_flags</span>();
-        <span class="kw">if</span> <span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">MoveFlags::KNIGHT_PROMOTION</span>) {
-            <span class="ident">result</span>.<span class="ident">push</span>(<span class="kw">match</span> <span class="ident">flags</span> {
-                <span class="ident">MoveFlags::KNIGHT_PROMOTION</span> <span class="op">|</span> <span class="ident">MoveFlags::KNIGHT_PROMOTION_CAPTURE</span> =&gt; <span class="string">&#39;n&#39;</span>,
-                <span class="ident">MoveFlags::BISHOP_PROMOTION</span> <span class="op">|</span> <span class="ident">MoveFlags::BISHOP_PROMOTION_CAPTURE</span> =&gt; <span class="string">&#39;b&#39;</span>,
-                <span class="ident">MoveFlags::ROOK_PROMOTION</span> <span class="op">|</span> <span class="ident">MoveFlags::ROOK_PROMOTION_CAPTURE</span> =&gt; <span class="string">&#39;r&#39;</span>,
-                <span class="ident">MoveFlags::QUEEN_PROMOTION</span> <span class="op">|</span> <span class="ident">MoveFlags::QUEEN_PROMOTION_CAPTURE</span> =&gt; <span class="string">&#39;q&#39;</span>,
-                <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: flags={:?}&quot;</span>, <span class="ident">flags</span>),
-            });
-        }
-
-        <span class="ident">result</span>.<span class="ident">into_iter</span>().<span class="ident">collect</span>()
-    }
-
-    <span class="doccomment">/// Gets source field from the internal data.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_from</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u8</span> {
-        (<span class="self">self</span>.<span class="ident">data</span> <span class="op">&amp;</span> <span class="number">0x3f</span>) <span class="kw">as</span> <span class="ident">u8</span>
-    }
-
-    <span class="doccomment">/// Gets destination field from the internal data.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_to</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u8</span> {
-        ((<span class="self">self</span>.<span class="ident">data</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">6</span>) <span class="op">&amp;</span> <span class="number">0x3f</span>) <span class="kw">as</span> <span class="ident">u8</span>
-    }
-
-    <span class="doccomment">/// Gets flags from the internal data.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_flags</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">MoveFlags</span> {
-        <span class="kw">unsafe</span> { <span class="ident">MoveFlags::from_bits_unchecked</span>((<span class="self">self</span>.<span class="ident">data</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">12</span>) <span class="kw">as</span> <span class="ident">u8</span>) }
-    }
-
-    <span class="doccomment">/// Gets promotion piece based on the flags saved in the internal data.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_promotion_piece</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u8</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">get_flags</span>() {
-            <span class="ident">MoveFlags::KNIGHT_PROMOTION</span> <span class="op">|</span> <span class="ident">MoveFlags::KNIGHT_PROMOTION_CAPTURE</span> =&gt; <span class="ident">KNIGHT</span>,
-            <span class="ident">MoveFlags::BISHOP_PROMOTION</span> <span class="op">|</span> <span class="ident">MoveFlags::BISHOP_PROMOTION_CAPTURE</span> =&gt; <span class="ident">BISHOP</span>,
-            <span class="ident">MoveFlags::ROOK_PROMOTION</span> <span class="op">|</span> <span class="ident">MoveFlags::ROOK_PROMOTION_CAPTURE</span> =&gt; <span class="ident">ROOK</span>,
-            <span class="ident">MoveFlags::QUEEN_PROMOTION</span> <span class="op">|</span> <span class="ident">MoveFlags::QUEEN_PROMOTION_CAPTURE</span> =&gt; <span class="ident">QUEEN</span>,
-            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: self.get_flags()={:?}&quot;</span>, <span class="self">self</span>.<span class="ident">get_flags</span>()),
-        }
-    }
-
-    <span class="doccomment">/// Checks if the move is quiet (single or double pushes).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_quiet</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">get_flags</span>() <span class="op">==</span> <span class="ident">MoveFlags::QUIET</span> <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">get_flags</span>() <span class="op">==</span> <span class="ident">MoveFlags::DOUBLE_PUSH</span>
-    }
-
-    <span class="doccomment">/// Checks if the move is a double push.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_double_push</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">get_flags</span>() <span class="op">==</span> <span class="ident">MoveFlags::DOUBLE_PUSH</span>
-    }
-
-    <span class="doccomment">/// Checks if the move is a capture (excluding en passant, but including promotions).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_capture</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">get_flags</span>().<span class="ident">contains</span>(<span class="ident">MoveFlags::CAPTURE</span>)
-    }
-
-    <span class="doccomment">/// Checks if the move is en passant.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_en_passant</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">get_flags</span>() <span class="op">==</span> <span class="ident">MoveFlags::EN_PASSANT</span>
-    }
-
-    <span class="doccomment">/// Checks if the move is a promotion (including captures).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_promotion</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">get_flags</span>().<span class="ident">contains</span>(<span class="ident">MoveFlags::FIELD_PROMOTION</span>)
-    }
-
-    <span class="doccomment">/// Checks if the move is a short or long castling.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_castling</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">get_flags</span>() <span class="op">==</span> <span class="ident">MoveFlags::SHORT_CASTLING</span> <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">get_flags</span>() <span class="op">==</span> <span class="ident">MoveFlags::LONG_CASTLING</span>
-    }
-
-    <span class="doccomment">/// Checks if the move is legal, using `board` as the context.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_legal</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">from</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_from</span>();
-        <span class="kw">let</span> <span class="ident">from_field</span> <span class="op">=</span> <span class="number">1u64</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">from</span>;
-        <span class="kw">let</span> <span class="ident">to</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_to</span>();
-        <span class="kw">let</span> <span class="ident">to_field</span> <span class="op">=</span> <span class="number">1u64</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">to</span>;
-        <span class="kw">let</span> <span class="ident">piece</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">get_piece</span>(<span class="ident">from</span>);
-        <span class="kw">let</span> <span class="ident">piece_color</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">get_piece_color</span>(<span class="ident">from</span>);
-
-        <span class="kw">if</span> <span class="ident">piece</span> <span class="op">==</span> <span class="ident">u8::MAX</span> <span class="op">|</span><span class="op">|</span> <span class="ident">piece_color</span> <span class="op">!</span><span class="op">=</span> <span class="ident">board</span>.<span class="ident">active_color</span> {
-            <span class="kw">return</span> <span class="bool-val">false</span>;
-        }
-
-        <span class="kw">if</span> (<span class="self">self</span>.<span class="ident">is_double_push</span>() <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">is_en_passant</span>() <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">is_promotion</span>()) <span class="op">&amp;&amp;</span> <span class="ident">piece</span> <span class="op">!</span><span class="op">=</span> <span class="ident">PAWN</span> {
-            <span class="kw">return</span> <span class="bool-val">false</span>;
-        }
-
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_castling</span>() <span class="op">&amp;&amp;</span> <span class="ident">piece</span> <span class="op">!</span><span class="op">=</span> <span class="ident">KING</span> {
-            <span class="kw">return</span> <span class="bool-val">false</span>;
-        }
-
-        <span class="kw">let</span> <span class="ident">occupancy</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">WHITE</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">|</span> <span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">BLACK</span> <span class="kw">as</span> <span class="ident">usize</span>];
-        <span class="kw">let</span> <span class="ident">moves</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">piece</span> {
-            <span class="ident">PAWN</span> =&gt; <span class="kw">match</span> <span class="self">self</span>.<span class="ident">get_flags</span>() {
-                <span class="ident">MoveFlags::DOUBLE_PUSH</span> =&gt; {
-                    <span class="kw">if</span> (<span class="ident">board</span>.<span class="ident">active_color</span> <span class="op">==</span> <span class="ident">WHITE</span> <span class="op">&amp;&amp;</span> (<span class="ident">from_field</span> <span class="op">&amp;</span> <span class="number">65280</span>) <span class="op">==</span> <span class="number">0</span>) <span class="op">|</span><span class="op">|</span> (<span class="ident">board</span>.<span class="ident">active_color</span> <span class="op">==</span> <span class="ident">BLACK</span> <span class="op">&amp;&amp;</span> (<span class="ident">from_field</span> <span class="op">&amp;</span> <span class="number">71776119061217280</span>) <span class="op">==</span> <span class="number">0</span>) {
-                        <span class="kw">return</span> <span class="bool-val">false</span>;
-                    }
-
-                    <span class="kw">match</span> <span class="ident">board</span>.<span class="ident">active_color</span> {
-                        <span class="ident">WHITE</span> =&gt; <span class="number">1u64</span>.<span class="ident">checked_shl</span>(<span class="ident">from</span>.<span class="ident">wrapping_add</span>(<span class="number">16</span>) <span class="kw">as</span> <span class="ident">u32</span>).<span class="ident">unwrap_or</span>(<span class="number">0</span>),
-                        <span class="ident">BLACK</span> =&gt; <span class="number">1u64</span>.<span class="ident">checked_shl</span>(<span class="ident">from</span>.<span class="ident">wrapping_sub</span>(<span class="number">16</span>) <span class="kw">as</span> <span class="ident">u32</span>).<span class="ident">unwrap_or</span>(<span class="number">0</span>),
-                        <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: board.active_color={}&quot;</span>, <span class="ident">board</span>.<span class="ident">active_color</span>),
-                    }
-                }
-                <span class="ident">MoveFlags::EN_PASSANT</span> =&gt; <span class="ident">board</span>.<span class="ident">en_passant</span>,
-                <span class="kw">_</span> =&gt; {
-                    (<span class="kw">match</span> <span class="ident">board</span>.<span class="ident">active_color</span> {
-                        <span class="ident">WHITE</span> =&gt; {
-                            <span class="number">1u64</span>.<span class="ident">checked_shl</span>((<span class="ident">from</span>.<span class="ident">wrapping_add</span>(<span class="number">7</span>)) <span class="kw">as</span> <span class="ident">u32</span>).<span class="ident">unwrap_or</span>(<span class="number">0</span>)
-                                <span class="op">|</span> <span class="number">1u64</span>.<span class="ident">checked_shl</span>((<span class="ident">from</span>.<span class="ident">wrapping_add</span>(<span class="number">8</span>)) <span class="kw">as</span> <span class="ident">u32</span>).<span class="ident">unwrap_or</span>(<span class="number">0</span>)
-                                <span class="op">|</span> <span class="number">1u64</span>.<span class="ident">checked_shl</span>((<span class="ident">from</span>.<span class="ident">wrapping_add</span>(<span class="number">9</span>)) <span class="kw">as</span> <span class="ident">u32</span>).<span class="ident">unwrap_or</span>(<span class="number">0</span>)
-                        }
-                        <span class="ident">BLACK</span> =&gt; {
-                            <span class="number">1u64</span>.<span class="ident">checked_shl</span>((<span class="ident">from</span>.<span class="ident">wrapping_sub</span>(<span class="number">7</span>)) <span class="kw">as</span> <span class="ident">u32</span>).<span class="ident">unwrap_or</span>(<span class="number">0</span>)
-                                <span class="op">|</span> <span class="number">1u64</span>.<span class="ident">checked_shl</span>((<span class="ident">from</span>.<span class="ident">wrapping_sub</span>(<span class="number">8</span>)) <span class="kw">as</span> <span class="ident">u32</span>).<span class="ident">unwrap_or</span>(<span class="number">0</span>)
-                                <span class="op">|</span> <span class="number">1u64</span>.<span class="ident">checked_shl</span>((<span class="ident">from</span>.<span class="ident">wrapping_sub</span>(<span class="number">9</span>)) <span class="kw">as</span> <span class="ident">u32</span>).<span class="ident">unwrap_or</span>(<span class="number">0</span>)
-                        }
-                        <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: board.active_color={}&quot;</span>, <span class="ident">board</span>.<span class="ident">active_color</span>),
-                    }) <span class="op">&amp;</span> <span class="ident">board</span>.<span class="ident">patterns</span>.<span class="ident">get_box</span>(<span class="ident">from</span> <span class="kw">as</span> <span class="ident">usize</span>)
-                }
+        <span class="comment">// Checking what squares are reachable for the piece
+        </span><span class="kw">let </span>moves_bb = <span class="kw">match </span>piece {
+            PAWN =&gt; <span class="kw">match </span>flags {
+                MoveFlags::DOUBLE_PUSH =&gt; <span class="kw">match </span>board.active_color {
+                    WHITE =&gt; from_bb &lt;&lt; <span class="number">16</span>,
+                    BLACK =&gt; from_bb &gt;&gt; <span class="number">16</span>,
+                    <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: board.active_color={}&quot;</span>, board.active_color),
+                },
+                MoveFlags::EN_PASSANT =&gt; board.en_passant,
+                <span class="kw">_ </span>=&gt; <span class="kw">match </span>board.active_color {
+                    WHITE =&gt; ((from_bb &amp; !FILE_H_BB) &lt;&lt; <span class="number">7</span>) | ((from_bb &amp; !RANK_8_BB) &lt;&lt; <span class="number">8</span>) | ((from_bb &amp; !FILE_A_BB) &lt;&lt; <span class="number">9</span>),
+                    BLACK =&gt; ((from_bb &amp; !FILE_A_BB) &gt;&gt; <span class="number">7</span>) | ((from_bb &amp; !RANK_1_BB) &gt;&gt; <span class="number">8</span>) | ((from_bb &amp; !FILE_H_BB) &gt;&gt; <span class="number">9</span>),
+                    <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: board.active_color={}&quot;</span>, board.active_color),
+                },
             },
-            <span class="ident">KNIGHT</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_knight_moves</span>(<span class="ident">from</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="kw-2">&amp;</span><span class="ident">board</span>.<span class="ident">patterns</span>),
-            <span class="ident">BISHOP</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_bishop_moves</span>(<span class="ident">occupancy</span>, <span class="ident">from</span> <span class="kw">as</span> <span class="ident">usize</span>),
-            <span class="ident">ROOK</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_rook_moves</span>(<span class="ident">occupancy</span>, <span class="ident">from</span> <span class="kw">as</span> <span class="ident">usize</span>),
-            <span class="ident">QUEEN</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_queen_moves</span>(<span class="ident">occupancy</span>, <span class="ident">from</span> <span class="kw">as</span> <span class="ident">usize</span>),
-            <span class="ident">KING</span> =&gt; {
-                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_castling</span>() {
-                    <span class="kw">if</span> (<span class="ident">board</span>.<span class="ident">active_color</span> <span class="op">==</span> <span class="ident">WHITE</span> <span class="op">&amp;&amp;</span> <span class="ident">from</span> <span class="op">!</span><span class="op">=</span> <span class="number">3</span>) <span class="op">|</span><span class="op">|</span> (<span class="ident">board</span>.<span class="ident">active_color</span> <span class="op">==</span> <span class="ident">BLACK</span> <span class="op">&amp;&amp;</span> <span class="ident">from</span> <span class="op">!</span><span class="op">=</span> <span class="number">59</span>) {
-                        <span class="kw">return</span> <span class="bool-val">false</span>;
-                    }
-                }
-
-                <span class="kw">match</span> <span class="self">self</span>.<span class="ident">get_flags</span>() {
-                    <span class="ident">MoveFlags::SHORT_CASTLING</span> =&gt; <span class="number">1u64</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="ident">from</span> <span class="op">-</span> <span class="number">2</span>),
-                    <span class="ident">MoveFlags::LONG_CASTLING</span> =&gt; <span class="number">1u64</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="ident">from</span> <span class="op">+</span> <span class="number">2</span>),
-                    <span class="kw">_</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_king_moves</span>(<span class="ident">from</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="kw-2">&amp;</span><span class="ident">board</span>.<span class="ident">patterns</span>),
-                }
-            }
-            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: fen={}, piece={}&quot;</span>, <span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="ident">piece</span>),
+            KNIGHT =&gt; board.magic.get_knight_moves(from, <span class="kw-2">&amp;</span>board.patterns),
+            BISHOP =&gt; board.magic.get_bishop_moves(occupancy_bb, from),
+            ROOK =&gt; board.magic.get_rook_moves(occupancy_bb, from),
+            QUEEN =&gt; board.magic.get_queen_moves(occupancy_bb, from),
+            KING =&gt; <span class="kw">match </span>flags {
+                MoveFlags::SHORT_CASTLING =&gt; <span class="number">1u64 </span>&lt;&lt; (from - <span class="number">2</span>),
+                MoveFlags::LONG_CASTLING =&gt; <span class="number">1u64 </span>&lt;&lt; (from + <span class="number">2</span>),
+                <span class="kw">_ </span>=&gt; board.magic.get_king_moves(from, <span class="kw-2">&amp;</span>board.patterns),
+            },
+            <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: fen={}, piece={}&quot;</span>, board, piece),
         };
 
-        <span class="kw">if</span> (<span class="ident">moves</span> <span class="op">&amp;</span> <span class="ident">to_field</span>) <span class="op">==</span> <span class="number">0</span> {
-            <span class="kw">return</span> <span class="bool-val">false</span>;
+        <span class="comment">// Target square must be valid in this position
+        </span><span class="kw">if </span>(moves_bb &amp; to_bb) == <span class="number">0 </span>{
+            <span class="kw">return </span><span class="bool-val">false</span>;
         }
 
-        <span class="kw">let</span> <span class="ident">target_piece</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">get_piece</span>(<span class="ident">to</span>);
-        <span class="kw">let</span> <span class="ident">target_piece_color</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">get_piece_color</span>(<span class="ident">to</span>);
+        <span class="comment">// Special rules, not covered by fast checks
+        </span><span class="kw">if </span><span class="self">self</span>.is_single_push() {
+            <span class="kw">if </span>piece == PAWN {
+                <span class="comment">// Pawn at promotion rank, but without proper flags
+                </span><span class="kw">if </span>(to_bb &amp; (RANK_1_BB | RANK_8_BB)) != <span class="number">0 </span>{
+                    <span class="kw">return </span><span class="bool-val">false</span>;
+                }
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_quiet</span>() {
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_double_push</span>() {
-                <span class="kw">let</span> <span class="ident">middle_field_index</span> <span class="op">=</span> (<span class="ident">cmp::max</span>(<span class="ident">from</span>, <span class="ident">to</span>) <span class="op">+</span> <span class="ident">cmp::min</span>(<span class="ident">from</span>, <span class="ident">to</span>)) <span class="op">/</span> <span class="number">2</span>;
-                <span class="kw">if</span> <span class="ident">board</span>.<span class="ident">get_piece</span>(<span class="ident">middle_field_index</span>) <span class="op">!</span><span class="op">=</span> <span class="ident">u8::MAX</span> {
-                    <span class="kw">return</span> <span class="bool-val">false</span>;
+                <span class="comment">// Non-capture pawn move can only go straight by one rank
+                </span><span class="kw">if </span>((from <span class="kw">as </span>i8) - (to <span class="kw">as </span>i8)).abs() != <span class="number">8 </span>{
+                    <span class="kw">return </span><span class="bool-val">false</span>;
                 }
             }
 
-            <span class="kw">if</span> <span class="ident">target_piece</span> <span class="op">==</span> <span class="ident">u8::MAX</span> {
-                <span class="kw">return</span> <span class="bool-val">true</span>;
+            <span class="bool-val">true
+        </span>} <span class="kw">else if </span><span class="self">self</span>.is_double_push() {
+            <span class="comment">// Double push can be performed only by pawns
+            </span><span class="kw">if </span>piece != PAWN {
+                <span class="kw">return </span><span class="bool-val">false</span>;
             }
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_en_passant</span>() {
-            <span class="kw">if</span> <span class="ident">piece</span> <span class="op">==</span> <span class="ident">PAWN</span> <span class="op">&amp;&amp;</span> <span class="ident">target_piece</span> <span class="op">==</span> <span class="ident">u8::MAX</span> {
-                <span class="kw">return</span> <span class="bool-val">true</span>;
+
+            <span class="comment">// Double push can be performed only from the specific ranks (2 for white, 7 for black)
+            </span><span class="kw">if </span>(board.active_color == WHITE &amp;&amp; (from_bb &amp; RANK_2_BB) == <span class="number">0</span>) || (board.active_color == BLACK &amp;&amp; (from_bb &amp; RANK_7_BB) == <span class="number">0</span>) {
+                <span class="kw">return </span><span class="bool-val">false</span>;
             }
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_promotion</span>() {
-            <span class="kw">if</span> <span class="ident">piece</span> <span class="op">==</span> <span class="ident">PAWN</span> {
-                <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">is_capture</span>() <span class="op">&amp;&amp;</span> <span class="ident">target_piece</span> <span class="op">==</span> <span class="ident">u8::MAX</span> {
-                    <span class="kw">return</span> <span class="bool-val">true</span>;
-                } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_capture</span>() <span class="op">&amp;&amp;</span> <span class="ident">target_piece</span> <span class="op">!</span><span class="op">=</span> <span class="ident">u8::MAX</span> <span class="op">&amp;&amp;</span> <span class="ident">target_piece</span> <span class="op">!</span><span class="op">=</span> <span class="ident">KING</span> <span class="op">&amp;&amp;</span> <span class="ident">piece_color</span> <span class="op">!</span><span class="op">=</span> <span class="ident">target_piece_color</span> {
-                    <span class="kw">return</span> <span class="bool-val">true</span>;
+
+            <span class="comment">// The square between source and target ones must be empty
+            </span><span class="kw">if </span>board.get_piece((cmp::max(from, to) + cmp::min(from, to)) / <span class="number">2</span>) != usize::MAX {
+                <span class="kw">return </span><span class="bool-val">false</span>;
+            }
+
+            <span class="bool-val">true
+        </span>} <span class="kw">else if </span><span class="self">self</span>.is_en_passant() {
+            <span class="comment">// En passant can be performed only by pawns
+            </span><span class="kw">if </span>piece != PAWN {
+                <span class="kw">return </span><span class="bool-val">false</span>;
+            }
+
+            <span class="bool-val">true
+        </span>} <span class="kw">else if </span><span class="self">self</span>.is_promotion() {
+            <span class="comment">// Promotion can be performed only by pawns
+            </span><span class="kw">if </span>piece != PAWN {
+                <span class="kw">return </span><span class="bool-val">false</span>;
+            }
+
+            <span class="kw">if </span><span class="self">self</span>.is_capture() {
+                <span class="kw">let </span>direction = ((from <span class="kw">as </span>i8) - (to <span class="kw">as </span>i8)).abs();
+
+                <span class="comment">// Captures with pawns can go only diagonally
+                </span><span class="kw">if </span>direction != <span class="number">7 </span>&amp;&amp; direction != <span class="number">9 </span>{
+                    <span class="kw">return </span><span class="bool-val">false</span>;
                 }
             }
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_capture</span>() {
-            <span class="kw">if</span> <span class="ident">target_piece</span> <span class="op">!</span><span class="op">=</span> <span class="ident">u8::MAX</span> <span class="op">&amp;&amp;</span> <span class="ident">target_piece</span> <span class="op">!</span><span class="op">=</span> <span class="ident">KING</span> <span class="op">&amp;&amp;</span> <span class="ident">piece_color</span> <span class="op">!</span><span class="op">=</span> <span class="ident">target_piece_color</span> {
-                <span class="kw">return</span> <span class="bool-val">true</span>;
-            }
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_castling</span>() {
-            <span class="kw">if</span> <span class="ident">piece</span> <span class="op">==</span> <span class="ident">KING</span> <span class="op">&amp;&amp;</span> <span class="ident">target_piece</span> <span class="op">==</span> <span class="ident">u8::MAX</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rook_field</span> <span class="op">=</span> <span class="number">0</span>;
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rook_target_field</span> <span class="op">=</span> <span class="number">0</span>;
 
-                <span class="kw">if</span> (<span class="ident">board</span>.<span class="ident">active_color</span> <span class="op">==</span> <span class="ident">WHITE</span> <span class="op">&amp;&amp;</span> <span class="ident">from</span> <span class="op">!</span><span class="op">=</span> <span class="number">3</span>) <span class="op">|</span><span class="op">|</span> (<span class="ident">board</span>.<span class="ident">active_color</span> <span class="op">==</span> <span class="ident">BLACK</span> <span class="op">&amp;&amp;</span> <span class="ident">from</span> <span class="op">!</span><span class="op">=</span> <span class="number">59</span>) {
-                    <span class="kw">return</span> <span class="bool-val">false</span>;
-                }
+            <span class="bool-val">true
+        </span>} <span class="kw">else if </span><span class="self">self</span>.is_capture() {
+            <span class="kw">if </span>piece == PAWN {
+                <span class="kw">let </span>direction = ((from <span class="kw">as </span>i8) - (to <span class="kw">as </span>i8)).abs();
 
-                <span class="kw">match</span> <span class="self">self</span>.<span class="ident">get_flags</span>() {
-                    <span class="ident">MoveFlags::SHORT_CASTLING</span> =&gt; {
-                        <span class="ident">rook_field</span> <span class="op">=</span> <span class="ident">from</span> <span class="op">-</span> <span class="number">3</span>;
-                        <span class="ident">rook_target_field</span> <span class="op">=</span> <span class="ident">from</span> <span class="op">-</span> <span class="number">1</span>;
-                    }
-                    <span class="ident">MoveFlags::LONG_CASTLING</span> =&gt; {
-                        <span class="ident">rook_field</span> <span class="op">=</span> <span class="ident">from</span> <span class="op">+</span> <span class="number">4</span>;
-                        <span class="ident">rook_target_field</span> <span class="op">=</span> <span class="ident">from</span> <span class="op">+</span> <span class="number">1</span>;
-                    }
-                    <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: fen={}, self.get_flags()={:?}&quot;</span>, <span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="self">self</span>.<span class="ident">get_flags</span>()),
-                };
-
-                <span class="kw">if</span> <span class="ident">board</span>.<span class="ident">get_piece</span>(<span class="ident">rook_target_field</span>) <span class="op">==</span> <span class="ident">u8::MAX</span>
-                    <span class="op">&amp;&amp;</span> <span class="ident">board</span>.<span class="ident">get_piece</span>(<span class="ident">rook_field</span>) <span class="op">==</span> <span class="ident">ROOK</span>
-                    <span class="op">&amp;&amp;</span> <span class="ident">board</span>.<span class="ident">get_piece_color</span>(<span class="ident">rook_field</span>) <span class="op">==</span> <span class="ident">board</span>.<span class="ident">active_color</span>
-                {
-                    <span class="kw">return</span> <span class="bool-val">true</span>;
+                <span class="comment">// Captures with pawns can go only diagonally
+                </span><span class="kw">if </span>direction != <span class="number">7 </span>&amp;&amp; direction != <span class="number">9 </span>{
+                    <span class="kw">return </span><span class="bool-val">false</span>;
                 }
             }
-        } <span class="kw">else</span> {
-            <span class="macro">panic!</span>(<span class="string">&quot;Move legality check failed: fen={}, self.data={}&quot;</span>, <span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="self">self</span>.<span class="ident">data</span>);
+
+            <span class="bool-val">true
+        </span>} <span class="kw">else if </span><span class="self">self</span>.is_castling() {
+            <span class="comment">// Castling can be performed only by kings
+            </span><span class="kw">if </span>piece != KING {
+                <span class="kw">return </span><span class="bool-val">false</span>;
+            }
+
+            <span class="comment">// Castling can be performed only from the specific squares (e1 for white, e8 for black)
+            </span><span class="kw">if </span>(board.active_color == WHITE &amp;&amp; from != E1) || (board.active_color == BLACK &amp;&amp; from != E8) {
+                <span class="kw">return </span><span class="bool-val">false</span>;
+            }
+
+            <span class="kw">let </span>castling_right = <span class="kw">match </span>flags {
+                MoveFlags::SHORT_CASTLING =&gt; <span class="kw">match </span>piece_color {
+                    WHITE =&gt; CastlingRights::WHITE_SHORT_CASTLING,
+                    BLACK =&gt; CastlingRights::BLACK_SHORT_CASTLING,
+                    <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: fen={}, piece_color={}&quot;</span>, board, piece_color),
+                },
+                MoveFlags::LONG_CASTLING =&gt; <span class="kw">match </span>piece_color {
+                    WHITE =&gt; CastlingRights::WHITE_LONG_CASTLING,
+                    BLACK =&gt; CastlingRights::BLACK_LONG_CASTLING,
+                    <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: fen={}, piece_color={}&quot;</span>, board, piece_color),
+                },
+                <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: fen={}, flags={:?}&quot;</span>, board, flags),
+            };
+
+            <span class="comment">// There must be a proper castling right to perform it
+            </span><span class="kw">if </span>!board.castling_rights.contains(castling_right) {
+                <span class="kw">return </span><span class="bool-val">false</span>;
+            }
+
+            <span class="kw">let </span>rook_square_bb = <span class="kw">match </span>flags {
+                MoveFlags::SHORT_CASTLING =&gt; <span class="kw">match </span>piece_color {
+                    WHITE =&gt; H1_BB,
+                    BLACK =&gt; H8_BB,
+                    <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: fen={}, piece_color={}&quot;</span>, board, piece_color),
+                },
+                MoveFlags::LONG_CASTLING =&gt; <span class="kw">match </span>piece_color {
+                    WHITE =&gt; A1_BB,
+                    BLACK =&gt; A8_BB,
+                    <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: fen={}, piece_color={}&quot;</span>, board, piece_color),
+                },
+                <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: fen={}, flags={:?}&quot;</span>, board, flags),
+            };
+
+            <span class="comment">// There must be a rook on the specific square
+            </span><span class="kw">if </span>(board.pieces[board.active_color][ROOK] &amp; rook_square_bb) == <span class="number">0 </span>{
+                <span class="kw">return </span><span class="bool-val">false</span>;
+            }
+
+            <span class="kw">let </span>castling_area_bb = <span class="kw">match </span>flags {
+                MoveFlags::SHORT_CASTLING =&gt; <span class="kw">match </span>piece_color {
+                    WHITE =&gt; F1_BB | G1_BB,
+                    BLACK =&gt; F8_BB | G8_BB,
+                    <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: fen={}, piece_color={}&quot;</span>, board, piece_color),
+                },
+                MoveFlags::LONG_CASTLING =&gt; <span class="kw">match </span>piece_color {
+                    WHITE =&gt; B1_BB | C1_BB | D1_BB,
+                    BLACK =&gt; B8_BB | C8_BB | D8_BB,
+                    <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: fen={}, piece_color={}&quot;</span>, board, piece_color),
+                },
+                <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: fen={}, flags={:?}&quot;</span>, board, flags),
+            };
+
+            <span class="comment">// There must be a free space for castling
+            </span><span class="kw">if </span>(castling_area_bb &amp; occupancy_bb) != <span class="number">0 </span>{
+                <span class="kw">return </span><span class="bool-val">false</span>;
+            }
+
+            <span class="bool-val">true
+        </span>} <span class="kw">else </span>{
+            <span class="macro">panic!</span>(<span class="string">&quot;Move legality check failed: fen={}, self.data={}&quot;</span>, board, <span class="self">self</span>.data);
         }
-
-        <span class="bool-val">false</span>
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Move</span> {
-    <span class="doccomment">/// Constructs a new instance of [Move] with zeroed values.</span>
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident">Move::new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="ident">MoveFlags::QUIET</span>)
+<span class="kw">impl </span>Default <span class="kw">for </span>Move {
+    <span class="doccomment">/// Constructs a new instance of [Move] with zeroed values.
+    </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        Move::new(<span class="number">0</span>, <span class="number">0</span>, MoveFlags::SINGLE_PUSH)
     }
 }
 
-<span class="doccomment">/// Generates all possible non-captures (if `CAPTURES` is false) or all possible captures (if `CAPTURES` is true) for the `PIECE` at</span>
-<span class="doccomment">/// the position specified by `board`, stores them into `moves` list (starting from `index`) and returns index of the first free slot.</span>
-<span class="doccomment">/// Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the specified fields (useful during checks).</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">scan_piece_moves</span><span class="op">&lt;</span><span class="kw">const</span> <span class="ident">PIECE</span>: <span class="ident">u8</span>, <span class="kw">const</span> <span class="ident">CAPTURES</span>: <span class="ident">bool</span><span class="op">&gt;</span>(
-    <span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>,
-    <span class="ident">moves</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Move</span><span class="op">&gt;</span>],
-    <span class="kw-2">mut</span> <span class="ident">index</span>: <span class="ident">usize</span>,
-    <span class="ident">evasion_mask</span>: <span class="ident">u64</span>,
-) -&gt; <span class="ident">usize</span> {
-    <span class="kw">let</span> <span class="ident">enemy_color</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">active_color</span> <span class="op">^</span> <span class="number">1</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pieces</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">pieces</span>[<span class="ident">board</span>.<span class="ident">active_color</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">PIECE</span> <span class="kw">as</span> <span class="ident">usize</span>];
+<span class="kw">impl </span>Display <span class="kw">for </span>Move {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
+        <span class="macro">write!</span>(f, <span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.to_long_notation())
+    }
+}
 
-    <span class="kw">while</span> <span class="ident">pieces</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="kw">let</span> <span class="ident">from_field</span> <span class="op">=</span> <span class="ident">get_lsb</span>(<span class="ident">pieces</span>);
-        <span class="kw">let</span> <span class="ident">from_field_index</span> <span class="op">=</span> <span class="ident">bit_scan</span>(<span class="ident">from_field</span>);
-        <span class="ident">pieces</span> <span class="op">=</span> <span class="ident">pop_lsb</span>(<span class="ident">pieces</span>);
+<span class="doccomment">/// Generates all possible non-captures (if `CAPTURES` is false) or all possible captures (if `CAPTURES` is true) for the `PIECE` at
+/// the position specified by `board`, stores them into `moves` list (starting from `index`) and returns index of the first free slot.
+/// Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the specified squares (useful during checks).
+</span><span class="kw">pub fn </span>scan_piece_moves&lt;<span class="kw">const </span>PIECE: usize, <span class="kw">const </span>CAPTURES: bool&gt;(
+    board: <span class="kw-2">&amp;</span>Board,
+    moves: <span class="kw-2">&amp;mut </span>[MaybeUninit&lt;Move&gt;; engine::MAX_MOVES_COUNT],
+    <span class="kw-2">mut </span>index: usize,
+    evasion_mask: u64,
+) -&gt; usize {
+    <span class="kw">let </span>enemy_color = board.active_color ^ <span class="number">1</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>pieces_bb = board.pieces[board.active_color][PIECE];
 
-        <span class="kw">let</span> <span class="ident">occupancy</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">WHITE</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">|</span> <span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">BLACK</span> <span class="kw">as</span> <span class="ident">usize</span>];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">piece_moves</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">PIECE</span> {
-            <span class="ident">KNIGHT</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_knight_moves</span>(<span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="kw-2">&amp;</span><span class="ident">board</span>.<span class="ident">patterns</span>),
-            <span class="ident">BISHOP</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_bishop_moves</span>(<span class="ident">occupancy</span>, <span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>),
-            <span class="ident">ROOK</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_rook_moves</span>(<span class="ident">occupancy</span>, <span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>),
-            <span class="ident">QUEEN</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_queen_moves</span>(<span class="ident">occupancy</span>, <span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>),
-            <span class="ident">KING</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_king_moves</span>(<span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="kw-2">&amp;</span><span class="ident">board</span>.<span class="ident">patterns</span>),
-            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid parameter: fen={}, PIECE={}&quot;</span>, <span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="ident">PIECE</span>),
+    <span class="kw">while </span>pieces_bb != <span class="number">0 </span>{
+        <span class="kw">let </span>from_bb = pieces_bb.get_lsb();
+        <span class="kw">let </span>from = from_bb.bit_scan();
+        pieces_bb = pieces_bb.pop_lsb();
+
+        <span class="kw">let </span>occupancy_bb = board.occupancy[WHITE] | board.occupancy[BLACK];
+        <span class="kw">let </span><span class="kw-2">mut </span>piece_moves_bb = <span class="kw">match </span>PIECE {
+            KNIGHT =&gt; board.magic.get_knight_moves(from, <span class="kw-2">&amp;</span>board.patterns),
+            BISHOP =&gt; board.magic.get_bishop_moves(occupancy_bb, from),
+            ROOK =&gt; board.magic.get_rook_moves(occupancy_bb, from),
+            QUEEN =&gt; board.magic.get_queen_moves(occupancy_bb, from),
+            KING =&gt; board.magic.get_king_moves(from, <span class="kw-2">&amp;</span>board.patterns),
+            <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid parameter: fen={}, PIECE={}&quot;</span>, board, PIECE),
         };
-        <span class="ident">piece_moves</span> <span class="op">&amp;=</span> <span class="op">!</span><span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">board</span>.<span class="ident">active_color</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">&amp;</span> <span class="ident">evasion_mask</span>;
+        piece_moves_bb &amp;= !board.occupancy[board.active_color] &amp; evasion_mask;
 
-        <span class="kw">if</span> <span class="ident">CAPTURES</span> {
-            <span class="ident">piece_moves</span> <span class="op">&amp;=</span> <span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">enemy_color</span> <span class="kw">as</span> <span class="ident">usize</span>];
-        } <span class="kw">else</span> {
-            <span class="ident">piece_moves</span> <span class="op">&amp;=</span> <span class="op">!</span><span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">enemy_color</span> <span class="kw">as</span> <span class="ident">usize</span>];
+        <span class="kw">if </span>CAPTURES {
+            piece_moves_bb &amp;= board.occupancy[enemy_color];
+        } <span class="kw">else </span>{
+            piece_moves_bb &amp;= !board.occupancy[enemy_color];
         }
 
-        <span class="kw">while</span> <span class="ident">piece_moves</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="kw">let</span> <span class="ident">to_field</span> <span class="op">=</span> <span class="ident">get_lsb</span>(<span class="ident">piece_moves</span>);
-            <span class="kw">let</span> <span class="ident">to_field_index</span> <span class="op">=</span> <span class="ident">bit_scan</span>(<span class="ident">to_field</span>);
-            <span class="ident">piece_moves</span> <span class="op">=</span> <span class="ident">pop_lsb</span>(<span class="ident">piece_moves</span>);
+        <span class="kw">while </span>piece_moves_bb != <span class="number">0 </span>{
+            <span class="kw">let </span>to_bb = piece_moves_bb.get_lsb();
+            <span class="kw">let </span>to = to_bb.bit_scan();
+            piece_moves_bb = piece_moves_bb.pop_lsb();
 
-            <span class="kw">let</span> <span class="ident">capture</span> <span class="op">=</span> (<span class="ident">to_field</span> <span class="op">&amp;</span> <span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">enemy_color</span> <span class="kw">as</span> <span class="ident">usize</span>]) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>;
-            <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">CAPTURES</span> <span class="op">|</span><span class="op">|</span> <span class="ident">capture</span> { <span class="ident">MoveFlags::CAPTURE</span> } <span class="kw">else</span> { <span class="ident">MoveFlags::QUIET</span> };
+            <span class="kw">let </span>capture = (to_bb &amp; board.occupancy[enemy_color]) != <span class="number">0</span>;
+            <span class="kw">let </span>flags = <span class="kw">if </span>CAPTURES || capture { MoveFlags::CAPTURE } <span class="kw">else </span>{ MoveFlags::SINGLE_PUSH };
 
-            <span class="ident">moves</span>[<span class="ident">index</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">flags</span>));
-            <span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+            moves[index].write(Move::new(from, to, flags));
+            index += <span class="number">1</span>;
         }
 
-        <span class="kw">if</span> <span class="ident">PIECE</span> <span class="op">==</span> <span class="ident">KING</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">CAPTURES</span> {
-            <span class="kw">match</span> <span class="ident">board</span>.<span class="ident">active_color</span> {
-                <span class="ident">WHITE</span> =&gt; {
-                    <span class="kw">let</span> <span class="ident">king_side_castling_rights</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">castling_rights</span>.<span class="ident">contains</span>(<span class="ident">CastlingRights::WHITE_SHORT_CASTLING</span>);
-                    <span class="kw">let</span> <span class="ident">king_side_rook_present</span> <span class="op">=</span> (<span class="ident">board</span>.<span class="ident">pieces</span>[<span class="ident">board</span>.<span class="ident">active_color</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">ROOK</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">&amp;</span> <span class="number">0x1</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>;
-
-                    <span class="kw">if</span> <span class="ident">king_side_castling_rights</span> <span class="op">&amp;&amp;</span> <span class="ident">king_side_rook_present</span> <span class="op">&amp;&amp;</span> (<span class="ident">occupancy</span> <span class="op">&amp;</span> <span class="number">0x6</span>) <span class="op">==</span> <span class="number">0</span> {
-                        <span class="kw">if</span> <span class="op">!</span><span class="ident">board</span>.<span class="ident">are_fields_attacked</span>(<span class="ident">board</span>.<span class="ident">active_color</span>, <span class="kw-2">&amp;</span>[<span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>]) {
-                            <span class="ident">moves</span>[<span class="ident">index</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="number">3</span>, <span class="number">1</span>, <span class="ident">MoveFlags::SHORT_CASTLING</span>));
-                            <span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+        <span class="kw">if </span>PIECE == KING &amp;&amp; !CAPTURES {
+            <span class="kw">match </span>board.active_color {
+                WHITE =&gt; {
+                    <span class="kw">let </span>king_side_castling_rights = board.castling_rights.contains(CastlingRights::WHITE_SHORT_CASTLING);
+                    <span class="kw">if </span>king_side_castling_rights &amp;&amp; (occupancy_bb &amp; (F1_BB | G1_BB)) == <span class="number">0 </span>{
+                        <span class="kw">if </span>!board.are_squares_attacked(board.active_color, <span class="kw-2">&amp;</span>[E1, F1, G1]) {
+                            moves[index].write(Move::new(E1, G1, MoveFlags::SHORT_CASTLING));
+                            index += <span class="number">1</span>;
                         }
                     }
 
-                    <span class="kw">let</span> <span class="ident">queen_side_castling_rights</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">castling_rights</span>.<span class="ident">contains</span>(<span class="ident">CastlingRights::WHITE_LONG_CASTLING</span>);
-                    <span class="kw">let</span> <span class="ident">queen_side_rook_present</span> <span class="op">=</span> (<span class="ident">board</span>.<span class="ident">pieces</span>[<span class="ident">board</span>.<span class="ident">active_color</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">ROOK</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">&amp;</span> <span class="number">0x80</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>;
-
-                    <span class="kw">if</span> <span class="ident">queen_side_castling_rights</span> <span class="op">&amp;&amp;</span> <span class="ident">queen_side_rook_present</span> <span class="op">&amp;&amp;</span> (<span class="ident">occupancy</span> <span class="op">&amp;</span> <span class="number">0x70</span>) <span class="op">==</span> <span class="number">0</span> {
-                        <span class="kw">if</span> <span class="op">!</span><span class="ident">board</span>.<span class="ident">are_fields_attacked</span>(<span class="ident">board</span>.<span class="ident">active_color</span>, <span class="kw-2">&amp;</span>[<span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]) {
-                            <span class="ident">moves</span>[<span class="ident">index</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="number">3</span>, <span class="number">5</span>, <span class="ident">MoveFlags::LONG_CASTLING</span>));
-                            <span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+                    <span class="kw">let </span>queen_side_castling_rights = board.castling_rights.contains(CastlingRights::WHITE_LONG_CASTLING);
+                    <span class="kw">if </span>queen_side_castling_rights &amp;&amp; (occupancy_bb &amp; (B1_BB | C1_BB | D1_BB)) == <span class="number">0 </span>{
+                        <span class="kw">if </span>!board.are_squares_attacked(board.active_color, <span class="kw-2">&amp;</span>[C1, D1, E1]) {
+                            moves[index].write(Move::new(E1, C1, MoveFlags::LONG_CASTLING));
+                            index += <span class="number">1</span>;
                         }
                     }
                 }
-                <span class="ident">BLACK</span> =&gt; {
-                    <span class="kw">let</span> <span class="ident">king_side_castling_rights</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">castling_rights</span>.<span class="ident">contains</span>(<span class="ident">CastlingRights::BLACK_SHORT_CASTLING</span>);
-                    <span class="kw">let</span> <span class="ident">king_side_rook_present</span> <span class="op">=</span> (<span class="ident">board</span>.<span class="ident">pieces</span>[<span class="ident">board</span>.<span class="ident">active_color</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">ROOK</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">&amp;</span> <span class="number">0x100000000000000</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>;
-
-                    <span class="kw">if</span> <span class="ident">king_side_castling_rights</span> <span class="op">&amp;&amp;</span> <span class="ident">king_side_rook_present</span> <span class="op">&amp;&amp;</span> (<span class="ident">occupancy</span> <span class="op">&amp;</span> <span class="number">0x600000000000000</span>) <span class="op">==</span> <span class="number">0</span> {
-                        <span class="kw">if</span> <span class="op">!</span><span class="ident">board</span>.<span class="ident">are_fields_attacked</span>(<span class="ident">board</span>.<span class="ident">active_color</span>, <span class="kw-2">&amp;</span>[<span class="number">59</span>, <span class="number">58</span>, <span class="number">57</span>]) {
-                            <span class="ident">moves</span>[<span class="ident">index</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="number">59</span>, <span class="number">57</span>, <span class="ident">MoveFlags::SHORT_CASTLING</span>));
-                            <span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+                BLACK =&gt; {
+                    <span class="kw">let </span>king_side_castling_rights = board.castling_rights.contains(CastlingRights::BLACK_SHORT_CASTLING);
+                    <span class="kw">if </span>king_side_castling_rights &amp;&amp; (occupancy_bb &amp; (F8_BB | G8_BB)) == <span class="number">0 </span>{
+                        <span class="kw">if </span>!board.are_squares_attacked(board.active_color, <span class="kw-2">&amp;</span>[E8, F8, G8]) {
+                            moves[index].write(Move::new(E8, G8, MoveFlags::SHORT_CASTLING));
+                            index += <span class="number">1</span>;
                         }
                     }
 
-                    <span class="kw">let</span> <span class="ident">queen_side_castling_rights</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">castling_rights</span>.<span class="ident">contains</span>(<span class="ident">CastlingRights::BLACK_LONG_CASTLING</span>);
-                    <span class="kw">let</span> <span class="ident">queen_side_rook_present</span> <span class="op">=</span> (<span class="ident">board</span>.<span class="ident">pieces</span>[<span class="ident">board</span>.<span class="ident">active_color</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">ROOK</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">&amp;</span> <span class="number">0x8000000000000000</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>;
-
-                    <span class="kw">if</span> <span class="ident">queen_side_castling_rights</span> <span class="op">&amp;&amp;</span> <span class="ident">queen_side_rook_present</span> <span class="op">&amp;&amp;</span> (<span class="ident">occupancy</span> <span class="op">&amp;</span> <span class="number">0x7000000000000000</span>) <span class="op">==</span> <span class="number">0</span> {
-                        <span class="kw">if</span> <span class="op">!</span><span class="ident">board</span>.<span class="ident">are_fields_attacked</span>(<span class="ident">board</span>.<span class="ident">active_color</span>, <span class="kw-2">&amp;</span>[<span class="number">59</span>, <span class="number">60</span>, <span class="number">61</span>]) {
-                            <span class="ident">moves</span>[<span class="ident">index</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="number">59</span>, <span class="number">61</span>, <span class="ident">MoveFlags::LONG_CASTLING</span>));
-                            <span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+                    <span class="kw">let </span>queen_side_castling_rights = board.castling_rights.contains(CastlingRights::BLACK_LONG_CASTLING);
+                    <span class="kw">if </span>queen_side_castling_rights &amp;&amp; (occupancy_bb &amp; (B8_BB | C8_BB | D8_BB)) == <span class="number">0 </span>{
+                        <span class="kw">if </span>!board.are_squares_attacked(board.active_color, <span class="kw-2">&amp;</span>[C8, D8, E8]) {
+                            moves[index].write(Move::new(E8, C8, MoveFlags::LONG_CASTLING));
+                            index += <span class="number">1</span>;
                         }
                     }
                 }
-                <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: board.active_color={}&quot;</span>, <span class="ident">board</span>.<span class="ident">active_color</span>),
+                <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: board.active_color={}&quot;</span>, board.active_color),
             }
         }
     }
 
-    <span class="ident">index</span>
+    index
 }
 
-<span class="doccomment">/// Gets `PIECE` mobility (by counting all possible moves at the position specified by `board`) with `color` and increases `dangered_king_fields` if the enemy</span>
-<span class="doccomment">/// king is near to the fields included in the mobility.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_piece_mobility</span><span class="op">&lt;</span><span class="kw">const</span> <span class="ident">PIECE</span>: <span class="ident">u8</span><span class="op">&gt;</span>(<span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>, <span class="ident">color</span>: <span class="ident">u8</span>, <span class="ident">dangered_king_fields</span>: <span class="kw-2">&amp;mut</span> <span class="ident">u32</span>) -&gt; <span class="ident">i16</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pieces</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">pieces</span>[<span class="ident">color</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">PIECE</span> <span class="kw">as</span> <span class="ident">usize</span>];
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mobility</span> <span class="op">=</span> <span class="number">0</span>;
+<span class="doccomment">/// Gets `PIECE` mobility (by counting all possible moves at the position specified by `board`) with `color` and increases `dangered_king_squares` if the enemy
+/// king is near to the squares included in the mobility.
+</span><span class="kw">pub fn </span>get_piece_mobility&lt;<span class="kw">const </span>PIECE: usize&gt;(board: <span class="kw-2">&amp;</span>Board, color: usize, dangered_king_squares: <span class="kw-2">&amp;mut </span>u32) -&gt; i16 {
+    <span class="kw">let </span><span class="kw-2">mut </span>pieces_bb = board.pieces[color][PIECE];
+    <span class="kw">let </span><span class="kw-2">mut </span>mobility = <span class="number">0</span>;
 
-    <span class="kw">let</span> <span class="ident">enemy_color</span> <span class="op">=</span> <span class="ident">color</span> <span class="op">^</span> <span class="number">1</span>;
-    <span class="kw">let</span> <span class="ident">enemy_king_field</span> <span class="op">=</span> <span class="ident">bit_scan</span>(<span class="ident">board</span>.<span class="ident">pieces</span>[<span class="ident">enemy_color</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">KING</span> <span class="kw">as</span> <span class="ident">usize</span>]);
-    <span class="kw">let</span> <span class="ident">enemy_king_box</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">patterns</span>.<span class="ident">get_box</span>(<span class="ident">enemy_king_field</span> <span class="kw">as</span> <span class="ident">usize</span>);
+    <span class="kw">let </span>enemy_color = color ^ <span class="number">1</span>;
+    <span class="kw">let </span>enemy_king_square = (board.pieces[enemy_color][KING]).bit_scan();
+    <span class="kw">let </span>enemy_king_box_bb = board.patterns.get_box(enemy_king_square);
 
-    <span class="kw">while</span> <span class="ident">pieces</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="kw">let</span> <span class="ident">from_field</span> <span class="op">=</span> <span class="ident">get_lsb</span>(<span class="ident">pieces</span>);
-        <span class="kw">let</span> <span class="ident">from_field_index</span> <span class="op">=</span> <span class="ident">bit_scan</span>(<span class="ident">from_field</span>);
-        <span class="ident">pieces</span> <span class="op">=</span> <span class="ident">pop_lsb</span>(<span class="ident">pieces</span>);
+    <span class="kw">while </span>pieces_bb != <span class="number">0 </span>{
+        <span class="kw">let </span>from_bb = pieces_bb.get_lsb();
+        <span class="kw">let </span>from = from_bb.bit_scan();
+        pieces_bb = pieces_bb.pop_lsb();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">occupancy</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">WHITE</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">|</span> <span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">BLACK</span> <span class="kw">as</span> <span class="ident">usize</span>];
-        <span class="ident">occupancy</span> <span class="op">&amp;=</span> <span class="op">!</span><span class="kw">match</span> <span class="ident">PIECE</span> {
-            <span class="ident">BISHOP</span> =&gt; <span class="ident">board</span>.<span class="ident">pieces</span>[<span class="ident">color</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">BISHOP</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">|</span> <span class="ident">board</span>.<span class="ident">pieces</span>[<span class="ident">color</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">QUEEN</span> <span class="kw">as</span> <span class="ident">usize</span>],
-            <span class="ident">ROOK</span> =&gt; <span class="ident">board</span>.<span class="ident">pieces</span>[<span class="ident">color</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">ROOK</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">|</span> <span class="ident">board</span>.<span class="ident">pieces</span>[<span class="ident">color</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">QUEEN</span> <span class="kw">as</span> <span class="ident">usize</span>],
-            <span class="ident">QUEEN</span> =&gt; <span class="ident">board</span>.<span class="ident">pieces</span>[<span class="ident">color</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">BISHOP</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">|</span> <span class="ident">board</span>.<span class="ident">pieces</span>[<span class="ident">color</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">ROOK</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">|</span> <span class="ident">board</span>.<span class="ident">pieces</span>[<span class="ident">color</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">QUEEN</span> <span class="kw">as</span> <span class="ident">usize</span>],
-            <span class="kw">_</span> =&gt; <span class="number">0</span>,
+        <span class="kw">let </span><span class="kw-2">mut </span>occupancy_bb = board.occupancy[WHITE] | board.occupancy[BLACK];
+        occupancy_bb &amp;= !<span class="kw">match </span>PIECE {
+            BISHOP =&gt; board.pieces[color][BISHOP] | board.pieces[color][QUEEN],
+            ROOK =&gt; board.pieces[color][ROOK] | board.pieces[color][QUEEN],
+            QUEEN =&gt; board.pieces[color][BISHOP] | board.pieces[color][ROOK] | board.pieces[color][QUEEN],
+            <span class="kw">_ </span>=&gt; <span class="number">0</span>,
         };
 
-        <span class="kw">let</span> <span class="ident">piece_moves</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">PIECE</span> {
-            <span class="ident">KNIGHT</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_knight_moves</span>(<span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="kw-2">&amp;</span><span class="ident">board</span>.<span class="ident">patterns</span>),
-            <span class="ident">BISHOP</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_bishop_moves</span>(<span class="ident">occupancy</span>, <span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>),
-            <span class="ident">ROOK</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_rook_moves</span>(<span class="ident">occupancy</span>, <span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>),
-            <span class="ident">QUEEN</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_queen_moves</span>(<span class="ident">occupancy</span>, <span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>),
-            <span class="ident">KING</span> =&gt; <span class="ident">board</span>.<span class="ident">magic</span>.<span class="ident">get_king_moves</span>(<span class="ident">from_field_index</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="kw-2">&amp;</span><span class="ident">board</span>.<span class="ident">patterns</span>),
-            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid parameter: fen={}, PIECE={}&quot;</span>, <span class="ident">board</span>.<span class="ident">to_fen</span>(), <span class="ident">PIECE</span>),
-        } <span class="op">&amp;</span> <span class="op">!</span><span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">color</span> <span class="kw">as</span> <span class="ident">usize</span>];
+        <span class="kw">let </span><span class="kw-2">mut </span>piece_moves_bb = <span class="kw">match </span>PIECE {
+            KNIGHT =&gt; board.magic.get_knight_moves(from, <span class="kw-2">&amp;</span>board.patterns),
+            BISHOP =&gt; board.magic.get_bishop_moves(occupancy_bb, from),
+            ROOK =&gt; board.magic.get_rook_moves(occupancy_bb, from),
+            QUEEN =&gt; board.magic.get_queen_moves(occupancy_bb, from),
+            KING =&gt; board.magic.get_king_moves(from, <span class="kw-2">&amp;</span>board.patterns),
+            <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid parameter: fen={}, PIECE={}&quot;</span>, board, PIECE),
+        };
 
-        <span class="kw">let</span> <span class="ident">center_mobility</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">evaluation_parameters</span>.<span class="ident">mobility_center_multiplier</span>[<span class="ident">PIECE</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">*</span> <span class="ident">bit_count</span>(<span class="ident">piece_moves</span> <span class="op">&amp;</span> <span class="ident">CENTER</span>) <span class="kw">as</span> <span class="ident">i16</span>;
-        <span class="kw">let</span> <span class="ident">outside_mobility</span> <span class="op">=</span> <span class="ident">bit_count</span>(<span class="ident">piece_moves</span> <span class="op">&amp;</span> <span class="ident">OUTSIDE</span>) <span class="kw">as</span> <span class="ident">i16</span>;
+        <span class="kw-2">*</span>dangered_king_squares += (enemy_king_box_bb &amp; (piece_moves_bb | from_bb)).bit_count() <span class="kw">as </span>u32;
+        piece_moves_bb &amp;= !board.occupancy[color];
 
-        <span class="ident">mobility</span> <span class="op">+</span><span class="op">=</span> <span class="ident">center_mobility</span> <span class="op">+</span> <span class="ident">outside_mobility</span>;
-        <span class="kw-2">*</span><span class="ident">dangered_king_fields</span> <span class="op">+</span><span class="op">=</span> <span class="ident">bit_count</span>(<span class="ident">enemy_king_box</span> <span class="op">&amp;</span> <span class="ident">piece_moves</span>) <span class="kw">as</span> <span class="ident">u32</span>;
+        <span class="kw">let </span>center_mobility = board.evaluation_parameters.mobility_center_multiplier[PIECE] * (piece_moves_bb &amp; CENTER_BB).bit_count() <span class="kw">as </span>i16;
+        <span class="kw">let </span>outside_mobility = (piece_moves_bb &amp; OUTSIDE_BB).bit_count() <span class="kw">as </span>i16;
+
+        mobility += center_mobility + outside_mobility;
     }
 
-    <span class="ident">mobility</span>
+    mobility
 }
 
-<span class="doccomment">/// Generates all possible non-captures (if `CAPTURES` is false) or all possible captures (if `CAPTURES` is true) for the pawns at</span>
-<span class="doccomment">/// the position specified by `board`, stores them into `moves` list (starting from `index`) and returns index of the first free slot.</span>
-<span class="doccomment">/// Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the specified fields (useful during checks).</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">scan_pawn_moves</span><span class="op">&lt;</span><span class="kw">const</span> <span class="ident">CAPTURES</span>: <span class="ident">bool</span><span class="op">&gt;</span>(<span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>, <span class="ident">moves</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Move</span><span class="op">&gt;</span>], <span class="kw-2">mut</span> <span class="ident">index</span>: <span class="ident">usize</span>, <span class="ident">evasion_mask</span>: <span class="ident">u64</span>) -&gt; <span class="ident">usize</span> {
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">CAPTURES</span> {
-        <span class="ident">index</span> <span class="op">=</span> <span class="ident">scan_pawn_moves_single_push</span>(<span class="ident">board</span>, <span class="ident">moves</span>, <span class="ident">index</span>, <span class="ident">evasion_mask</span>);
-        <span class="ident">index</span> <span class="op">=</span> <span class="ident">scan_pawn_moves_double_push</span>(<span class="ident">board</span>, <span class="ident">moves</span>, <span class="ident">index</span>, <span class="ident">evasion_mask</span>);
-    } <span class="kw">else</span> {
-        <span class="ident">index</span> <span class="op">=</span> <span class="ident">scan_pawn_moves_diagonal_attacks</span>::<span class="op">&lt;</span><span class="ident">LEFT</span><span class="op">&gt;</span>(<span class="ident">board</span>, <span class="ident">moves</span>, <span class="ident">index</span>, <span class="ident">evasion_mask</span>);
-        <span class="ident">index</span> <span class="op">=</span> <span class="ident">scan_pawn_moves_diagonal_attacks</span>::<span class="op">&lt;</span><span class="ident">RIGHT</span><span class="op">&gt;</span>(<span class="ident">board</span>, <span class="ident">moves</span>, <span class="ident">index</span>, <span class="ident">evasion_mask</span>);
+<span class="doccomment">/// Generates all possible non-captures (if `CAPTURES` is false) or all possible captures (if `CAPTURES` is true) for the pawns at
+/// the position specified by `board`, stores them into `moves` list (starting from `index`) and returns index of the first free slot.
+/// Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the specified squares (useful during checks).
+</span><span class="kw">pub fn </span>scan_pawn_moves&lt;<span class="kw">const </span>CAPTURES: bool&gt;(
+    board: <span class="kw-2">&amp;</span>Board,
+    moves: <span class="kw-2">&amp;mut </span>[MaybeUninit&lt;Move&gt;; engine::MAX_MOVES_COUNT],
+    <span class="kw-2">mut </span>index: usize,
+    evasion_mask: u64,
+) -&gt; usize {
+    <span class="kw">if </span>!CAPTURES {
+        index = scan_pawn_moves_single_push(board, moves, index, evasion_mask);
+        index = scan_pawn_moves_double_push(board, moves, index, evasion_mask);
+    } <span class="kw">else </span>{
+        index = scan_pawn_moves_diagonal_attacks::&lt;LEFT&gt;(board, moves, index, evasion_mask);
+        index = scan_pawn_moves_diagonal_attacks::&lt;RIGHT&gt;(board, moves, index, evasion_mask);
     }
 
-    <span class="ident">index</span>
+    index
 }
 
-<span class="doccomment">/// Generates all possible single pushes for the pawns at the position specified by `board`, stores them into `moves` list (starting from `index`)</span>
-<span class="doccomment">/// and returns index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the</span>
-<span class="doccomment">/// specified fields (useful during checks).</span>
-<span class="kw">fn</span> <span class="ident">scan_pawn_moves_single_push</span>(<span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>, <span class="ident">moves</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Move</span><span class="op">&gt;</span>], <span class="kw-2">mut</span> <span class="ident">index</span>: <span class="ident">usize</span>, <span class="ident">evasion_mask</span>: <span class="ident">u64</span>) -&gt; <span class="ident">usize</span> {
-    <span class="kw">let</span> <span class="ident">pieces</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">pieces</span>[<span class="ident">board</span>.<span class="ident">active_color</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">PAWN</span> <span class="kw">as</span> <span class="ident">usize</span>];
-    <span class="kw">let</span> <span class="ident">occupancy</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">WHITE</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">|</span> <span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">BLACK</span> <span class="kw">as</span> <span class="ident">usize</span>];
+<span class="doccomment">/// Generates all possible single pushes for the pawns at the position specified by `board`, stores them into `moves` list (starting from `index`)
+/// and returns index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the
+/// specified squares (useful during checks).
+</span><span class="kw">fn </span>scan_pawn_moves_single_push(board: <span class="kw-2">&amp;</span>Board, moves: <span class="kw-2">&amp;mut </span>[MaybeUninit&lt;Move&gt;; engine::MAX_MOVES_COUNT], <span class="kw-2">mut </span>index: usize, evasion_mask: u64) -&gt; usize {
+    <span class="kw">let </span>pieces_bb = board.pieces[board.active_color][PAWN];
+    <span class="kw">let </span>occupancy_bb = board.occupancy[WHITE] | board.occupancy[BLACK];
 
-    <span class="kw">let</span> <span class="ident">shift</span> <span class="op">=</span> <span class="number">8</span> <span class="op">-</span> <span class="number">16</span> <span class="op">*</span> (<span class="ident">board</span>.<span class="ident">active_color</span> <span class="kw">as</span> <span class="ident">i8</span>);
-    <span class="kw">let</span> <span class="ident">promotion_line</span> <span class="op">=</span> <span class="ident">RANK_H</span> <span class="op">&gt;</span><span class="op">&gt;</span> (<span class="number">56</span> <span class="op">*</span> (<span class="ident">board</span>.<span class="ident">active_color</span> <span class="kw">as</span> <span class="ident">u8</span>));
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">target_fields</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">board</span>.<span class="ident">active_color</span> {
-        <span class="ident">WHITE</span> =&gt; (<span class="ident">pieces</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">8</span>),
-        <span class="ident">BLACK</span> =&gt; (<span class="ident">pieces</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">8</span>),
-        <span class="kw">_</span> =&gt; {
-            <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: board.active_color={}&quot;</span>, <span class="ident">board</span>.<span class="ident">active_color</span>);
+    <span class="kw">let </span>shift = <span class="number">8 </span>- <span class="number">16 </span>* (board.active_color <span class="kw">as </span>i8);
+    <span class="kw">let </span>promotion_rank_bb = RANK_8_BB &gt;&gt; (<span class="number">56 </span>* (board.active_color <span class="kw">as </span>u8));
+    <span class="kw">let </span><span class="kw-2">mut </span>target_squares_bb = <span class="kw">match </span>board.active_color {
+        WHITE =&gt; pieces_bb &lt;&lt; <span class="number">8</span>,
+        BLACK =&gt; pieces_bb &gt;&gt; <span class="number">8</span>,
+        <span class="kw">_ </span>=&gt; {
+            <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: board.active_color={}&quot;</span>, board.active_color);
         }
     };
-    <span class="ident">target_fields</span> <span class="op">&amp;=</span> <span class="op">!</span><span class="ident">occupancy</span> <span class="op">&amp;</span> <span class="ident">evasion_mask</span>;
+    target_squares_bb &amp;= !occupancy_bb &amp; evasion_mask;
 
-    <span class="kw">while</span> <span class="ident">target_fields</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="kw">let</span> <span class="ident">to_field</span> <span class="op">=</span> <span class="ident">get_lsb</span>(<span class="ident">target_fields</span>);
-        <span class="kw">let</span> <span class="ident">to_field_index</span> <span class="op">=</span> <span class="ident">bit_scan</span>(<span class="ident">to_field</span>);
-        <span class="kw">let</span> <span class="ident">from_field_index</span> <span class="op">=</span> ((<span class="ident">to_field_index</span> <span class="kw">as</span> <span class="ident">i8</span>) <span class="op">-</span> <span class="ident">shift</span>) <span class="kw">as</span> <span class="ident">u8</span>;
-        <span class="ident">target_fields</span> <span class="op">=</span> <span class="ident">pop_lsb</span>(<span class="ident">target_fields</span>);
+    <span class="kw">while </span>target_squares_bb != <span class="number">0 </span>{
+        <span class="kw">let </span>to_bb = target_squares_bb.get_lsb();
+        <span class="kw">let </span>to = to_bb.bit_scan();
+        <span class="kw">let </span>from = ((to <span class="kw">as </span>i8) - shift) <span class="kw">as </span>usize;
+        target_squares_bb = target_squares_bb.pop_lsb();
 
-        <span class="kw">if</span> (<span class="ident">to_field</span> <span class="op">&amp;</span> <span class="ident">promotion_line</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="ident">moves</span>[<span class="ident">index</span> <span class="op">+</span> <span class="number">0</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::QUEEN_PROMOTION</span>));
-            <span class="ident">moves</span>[<span class="ident">index</span> <span class="op">+</span> <span class="number">1</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::ROOK_PROMOTION</span>));
-            <span class="ident">moves</span>[<span class="ident">index</span> <span class="op">+</span> <span class="number">2</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::BISHOP_PROMOTION</span>));
-            <span class="ident">moves</span>[<span class="ident">index</span> <span class="op">+</span> <span class="number">3</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::KNIGHT_PROMOTION</span>));
-            <span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="number">4</span>;
-        } <span class="kw">else</span> {
-            <span class="ident">moves</span>[<span class="ident">index</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::QUIET</span>));
-            <span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+        <span class="kw">if </span>(to_bb &amp; promotion_rank_bb) != <span class="number">0 </span>{
+            moves[index + <span class="number">0</span>].write(Move::new(from, to, MoveFlags::QUEEN_PROMOTION));
+            moves[index + <span class="number">1</span>].write(Move::new(from, to, MoveFlags::ROOK_PROMOTION));
+            moves[index + <span class="number">2</span>].write(Move::new(from, to, MoveFlags::BISHOP_PROMOTION));
+            moves[index + <span class="number">3</span>].write(Move::new(from, to, MoveFlags::KNIGHT_PROMOTION));
+            index += <span class="number">4</span>;
+        } <span class="kw">else </span>{
+            moves[index].write(Move::new(from, to, MoveFlags::SINGLE_PUSH));
+            index += <span class="number">1</span>;
         }
     }
 
-    <span class="ident">index</span>
+    index
 }
 
-<span class="doccomment">/// Generates all possible double pushes for the pawns at the position specified by `board`, stores them into `moves` list (starting from `index`)</span>
-<span class="doccomment">/// and returns index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the</span>
-<span class="doccomment">/// specified fields (useful during checks).</span>
-<span class="kw">fn</span> <span class="ident">scan_pawn_moves_double_push</span>(<span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>, <span class="ident">moves</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Move</span><span class="op">&gt;</span>], <span class="kw-2">mut</span> <span class="ident">index</span>: <span class="ident">usize</span>, <span class="ident">evasion_mask</span>: <span class="ident">u64</span>) -&gt; <span class="ident">usize</span> {
-    <span class="kw">let</span> <span class="ident">pieces</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">pieces</span>[<span class="ident">board</span>.<span class="ident">active_color</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">PAWN</span> <span class="kw">as</span> <span class="ident">usize</span>];
-    <span class="kw">let</span> <span class="ident">occupancy</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">WHITE</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">|</span> <span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">BLACK</span> <span class="kw">as</span> <span class="ident">usize</span>];
+<span class="doccomment">/// Generates all possible double pushes for the pawns at the position specified by `board`, stores them into `moves` list (starting from `index`)
+/// and returns index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the
+/// specified squares (useful during checks).
+</span><span class="kw">fn </span>scan_pawn_moves_double_push(board: <span class="kw-2">&amp;</span>Board, moves: <span class="kw-2">&amp;mut </span>[MaybeUninit&lt;Move&gt;; engine::MAX_MOVES_COUNT], <span class="kw-2">mut </span>index: usize, evasion_mask: u64) -&gt; usize {
+    <span class="kw">let </span>pieces_bb = board.pieces[board.active_color][PAWN];
+    <span class="kw">let </span>occupancy_bb = board.occupancy[WHITE] | board.occupancy[BLACK];
 
-    <span class="kw">let</span> <span class="ident">shift</span> <span class="op">=</span> <span class="number">16</span> <span class="op">-</span> <span class="number">32</span> <span class="op">*</span> (<span class="ident">board</span>.<span class="ident">active_color</span> <span class="kw">as</span> <span class="ident">i8</span>);
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">target_fields</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">board</span>.<span class="ident">active_color</span> {
-        <span class="ident">WHITE</span> =&gt; ((((<span class="ident">pieces</span> <span class="op">&amp;</span> <span class="ident">RANK_B</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">8</span>) <span class="op">&amp;</span> <span class="op">!</span><span class="ident">occupancy</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">8</span>),
-        <span class="ident">BLACK</span> =&gt; ((((<span class="ident">pieces</span> <span class="op">&amp;</span> <span class="ident">RANK_G</span>) <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">8</span>) <span class="op">&amp;</span> <span class="op">!</span><span class="ident">occupancy</span>) <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">8</span>),
-        <span class="kw">_</span> =&gt; {
-            <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: board.active_color={}&quot;</span>, <span class="ident">board</span>.<span class="ident">active_color</span>);
+    <span class="kw">let </span>shift = <span class="number">16 </span>- <span class="number">32 </span>* (board.active_color <span class="kw">as </span>i8);
+    <span class="kw">let </span><span class="kw-2">mut </span>target_squares_bb = <span class="kw">match </span>board.active_color {
+        WHITE =&gt; (((pieces_bb &amp; RANK_2_BB) &lt;&lt; <span class="number">8</span>) &amp; !occupancy_bb) &lt;&lt; <span class="number">8</span>,
+        BLACK =&gt; (((pieces_bb &amp; RANK_7_BB) &gt;&gt; <span class="number">8</span>) &amp; !occupancy_bb) &gt;&gt; <span class="number">8</span>,
+        <span class="kw">_ </span>=&gt; {
+            <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: board.active_color={}&quot;</span>, board.active_color);
         }
     };
-    <span class="ident">target_fields</span> <span class="op">&amp;=</span> <span class="op">!</span><span class="ident">occupancy</span> <span class="op">&amp;</span> <span class="ident">evasion_mask</span>;
+    target_squares_bb &amp;= !occupancy_bb &amp; evasion_mask;
 
-    <span class="kw">while</span> <span class="ident">target_fields</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="kw">let</span> <span class="ident">to_field</span> <span class="op">=</span> <span class="ident">get_lsb</span>(<span class="ident">target_fields</span>);
-        <span class="kw">let</span> <span class="ident">to_field_index</span> <span class="op">=</span> <span class="ident">bit_scan</span>(<span class="ident">to_field</span>);
-        <span class="kw">let</span> <span class="ident">from_field_index</span> <span class="op">=</span> ((<span class="ident">to_field_index</span> <span class="kw">as</span> <span class="ident">i8</span>) <span class="op">-</span> <span class="ident">shift</span>) <span class="kw">as</span> <span class="ident">u8</span>;
-        <span class="ident">target_fields</span> <span class="op">=</span> <span class="ident">pop_lsb</span>(<span class="ident">target_fields</span>);
+    <span class="kw">while </span>target_squares_bb != <span class="number">0 </span>{
+        <span class="kw">let </span>to_bb = target_squares_bb.get_lsb();
+        <span class="kw">let </span>to = to_bb.bit_scan();
+        <span class="kw">let </span>from = ((to <span class="kw">as </span>i8) - shift) <span class="kw">as </span>usize;
+        target_squares_bb = target_squares_bb.pop_lsb();
 
-        <span class="ident">moves</span>[<span class="ident">index</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::DOUBLE_PUSH</span>));
-        <span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+        moves[index].write(Move::new(from, to, MoveFlags::DOUBLE_PUSH));
+        index += <span class="number">1</span>;
     }
 
-    <span class="ident">index</span>
+    index
 }
 
-<span class="doccomment">/// Generates all possible captures for the pawns toward the direction specified by `DIR` and at the position specified by `board`,</span>
-<span class="doccomment">/// stores them into `moves` list (starting from `index`) and returns index of the first free slot. Use `evasion_mask` with value</span>
-<span class="doccomment">/// different than `u64::MAX` to restrict generator to the specified fields (useful during checks).</span>
-<span class="kw">fn</span> <span class="ident">scan_pawn_moves_diagonal_attacks</span><span class="op">&lt;</span><span class="kw">const</span> <span class="ident">DIR</span>: <span class="ident">u8</span><span class="op">&gt;</span>(<span class="ident">board</span>: <span class="kw-2">&amp;</span><span class="ident">Bitboard</span>, <span class="ident">moves</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Move</span><span class="op">&gt;</span>], <span class="kw-2">mut</span> <span class="ident">index</span>: <span class="ident">usize</span>, <span class="ident">evasion_mask</span>: <span class="ident">u64</span>) -&gt; <span class="ident">usize</span> {
-    <span class="kw">let</span> <span class="ident">enemy_color</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">active_color</span> <span class="op">^</span> <span class="number">1</span>;
-    <span class="kw">let</span> <span class="ident">pieces</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">pieces</span>[<span class="ident">board</span>.<span class="ident">active_color</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">PAWN</span> <span class="kw">as</span> <span class="ident">usize</span>];
+<span class="doccomment">/// Generates all possible captures for the pawns toward the direction specified by `DIR` and at the position specified by `board`,
+/// stores them into `moves` list (starting from `index`) and returns index of the first free slot. Use `evasion_mask` with value
+/// different than `u64::MAX` to restrict generator to the specified squares (useful during checks).
+</span><span class="kw">fn </span>scan_pawn_moves_diagonal_attacks&lt;<span class="kw">const </span>DIR: usize&gt;(
+    board: <span class="kw-2">&amp;</span>Board,
+    moves: <span class="kw-2">&amp;mut </span>[MaybeUninit&lt;Move&gt;; engine::MAX_MOVES_COUNT],
+    <span class="kw-2">mut </span>index: usize,
+    evasion_mask: u64,
+) -&gt; usize {
+    <span class="kw">let </span>enemy_color = board.active_color ^ <span class="number">1</span>;
+    <span class="kw">let </span>pieces_bb = board.pieces[board.active_color][PAWN];
 
-    <span class="kw">let</span> <span class="ident">forbidden_file</span> <span class="op">=</span> <span class="ident">FILE_A</span> <span class="op">&gt;</span><span class="op">&gt;</span> (<span class="ident">DIR</span> <span class="op">*</span> <span class="number">7</span>);
-    <span class="kw">let</span> <span class="ident">shift</span> <span class="op">=</span> <span class="number">9</span> <span class="op">-</span> (<span class="ident">board</span>.<span class="ident">active_color</span> <span class="op">^</span> <span class="ident">DIR</span>) <span class="op">*</span> <span class="number">2</span>;
-    <span class="kw">let</span> <span class="ident">signed_shift</span> <span class="op">=</span> (<span class="ident">shift</span> <span class="kw">as</span> <span class="ident">i8</span>) <span class="op">-</span> ((<span class="ident">board</span>.<span class="ident">active_color</span> <span class="kw">as</span> <span class="ident">i8</span>) <span class="op">*</span> <span class="number">2</span> <span class="op">*</span> (<span class="ident">shift</span> <span class="kw">as</span> <span class="ident">i8</span>));
-    <span class="kw">let</span> <span class="ident">promotion_line</span> <span class="op">=</span> <span class="ident">RANK_H</span> <span class="op">&gt;</span><span class="op">&gt;</span> (<span class="number">56</span> <span class="op">*</span> (<span class="ident">board</span>.<span class="ident">active_color</span> <span class="kw">as</span> <span class="ident">u8</span>));
+    <span class="kw">let </span>forbidden_file_bb = FILE_A_BB &gt;&gt; (DIR * <span class="number">7</span>);
+    <span class="kw">let </span>shift = <span class="number">9 </span>- (board.active_color ^ DIR) * <span class="number">2</span>;
+    <span class="kw">let </span>signed_shift = (shift <span class="kw">as </span>i8) - ((board.active_color <span class="kw">as </span>i8) * <span class="number">2 </span>* (shift <span class="kw">as </span>i8));
+    <span class="kw">let </span>promotion_rank_bb = RANK_8_BB &gt;&gt; (<span class="number">56 </span>* (board.active_color <span class="kw">as </span>u8));
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">target_fields</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">board</span>.<span class="ident">active_color</span> {
-        <span class="ident">WHITE</span> =&gt; ((<span class="ident">pieces</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">forbidden_file</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">shift</span>),
-        <span class="ident">BLACK</span> =&gt; ((<span class="ident">pieces</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">forbidden_file</span>) <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">shift</span>),
-        <span class="kw">_</span> =&gt; {
-            <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: board.active_color={}&quot;</span>, <span class="ident">board</span>.<span class="ident">active_color</span>);
+    <span class="kw">let </span><span class="kw-2">mut </span>target_squares_bb = <span class="kw">match </span>board.active_color {
+        WHITE =&gt; (pieces_bb &amp; !forbidden_file_bb) &lt;&lt; shift,
+        BLACK =&gt; (pieces_bb &amp; !forbidden_file_bb) &gt;&gt; shift,
+        <span class="kw">_ </span>=&gt; {
+            <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: board.active_color={}&quot;</span>, board.active_color);
         }
     };
-    <span class="ident">target_fields</span> <span class="op">&amp;=</span> (<span class="ident">board</span>.<span class="ident">occupancy</span>[<span class="ident">enemy_color</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">|</span> <span class="ident">board</span>.<span class="ident">en_passant</span>) <span class="op">&amp;</span> <span class="ident">evasion_mask</span>;
+    target_squares_bb &amp;= (board.occupancy[enemy_color] | board.en_passant) &amp; evasion_mask;
 
-    <span class="kw">while</span> <span class="ident">target_fields</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="kw">let</span> <span class="ident">to_field</span> <span class="op">=</span> <span class="ident">get_lsb</span>(<span class="ident">target_fields</span>);
-        <span class="kw">let</span> <span class="ident">to_field_index</span> <span class="op">=</span> <span class="ident">bit_scan</span>(<span class="ident">to_field</span>);
-        <span class="kw">let</span> <span class="ident">from_field_index</span> <span class="op">=</span> ((<span class="ident">to_field_index</span> <span class="kw">as</span> <span class="ident">i8</span>) <span class="op">-</span> <span class="ident">signed_shift</span>) <span class="kw">as</span> <span class="ident">u8</span>;
-        <span class="ident">target_fields</span> <span class="op">=</span> <span class="ident">pop_lsb</span>(<span class="ident">target_fields</span>);
+    <span class="kw">while </span>target_squares_bb != <span class="number">0 </span>{
+        <span class="kw">let </span>to_bb = target_squares_bb.get_lsb();
+        <span class="kw">let </span>to = to_bb.bit_scan();
+        <span class="kw">let </span>from = ((to <span class="kw">as </span>i8) - signed_shift) <span class="kw">as </span>usize;
+        target_squares_bb = target_squares_bb.pop_lsb();
 
-        <span class="kw">if</span> (<span class="ident">to_field</span> <span class="op">&amp;</span> <span class="ident">promotion_line</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="ident">moves</span>[<span class="ident">index</span> <span class="op">+</span> <span class="number">0</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::QUEEN_PROMOTION_CAPTURE</span>));
-            <span class="ident">moves</span>[<span class="ident">index</span> <span class="op">+</span> <span class="number">1</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::ROOK_PROMOTION_CAPTURE</span>));
-            <span class="ident">moves</span>[<span class="ident">index</span> <span class="op">+</span> <span class="number">2</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::BISHOP_PROMOTION_CAPTURE</span>));
-            <span class="ident">moves</span>[<span class="ident">index</span> <span class="op">+</span> <span class="number">3</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">MoveFlags::KNIGHT_PROMOTION_CAPTURE</span>));
-            <span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="number">4</span>;
-        } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="ident">en_passant</span> <span class="op">=</span> (<span class="ident">to_field</span> <span class="op">&amp;</span> <span class="ident">board</span>.<span class="ident">en_passant</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>;
-            <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">en_passant</span> { <span class="ident">MoveFlags::EN_PASSANT</span> } <span class="kw">else</span> { <span class="ident">MoveFlags::CAPTURE</span> };
+        <span class="kw">if </span>(to_bb &amp; promotion_rank_bb) != <span class="number">0 </span>{
+            moves[index + <span class="number">0</span>].write(Move::new(from, to, MoveFlags::QUEEN_PROMOTION_CAPTURE));
+            moves[index + <span class="number">1</span>].write(Move::new(from, to, MoveFlags::ROOK_PROMOTION_CAPTURE));
+            moves[index + <span class="number">2</span>].write(Move::new(from, to, MoveFlags::BISHOP_PROMOTION_CAPTURE));
+            moves[index + <span class="number">3</span>].write(Move::new(from, to, MoveFlags::KNIGHT_PROMOTION_CAPTURE));
+            index += <span class="number">4</span>;
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>en_passant = (to_bb &amp; board.en_passant) != <span class="number">0</span>;
+            <span class="kw">let </span>flags = <span class="kw">if </span>en_passant { MoveFlags::EN_PASSANT } <span class="kw">else </span>{ MoveFlags::CAPTURE };
 
-            <span class="ident">moves</span>[<span class="ident">index</span>].<span class="ident">write</span>(<span class="ident">Move::new</span>(<span class="ident">from_field_index</span>, <span class="ident">to_field_index</span>, <span class="ident">flags</span>));
-            <span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+            moves[index].write(Move::new(from, to, flags));
+            index += <span class="number">1</span>;
         }
     }
 
-    <span class="ident">index</span>
+    index
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="inanis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="inanis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.1 (90743e729 2023-01-10)" ></div></body></html>

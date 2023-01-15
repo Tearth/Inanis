@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/interface/terminal.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>terminal.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../inanis/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../inanis/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../inanis/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/interface/terminal.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>terminal.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../inanis/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -716,87 +710,126 @@
 <span id="710">710</span>
 <span id="711">711</span>
 <span id="712">712</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::uci</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::evaluation::material</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::evaluation::mobility</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::evaluation::pawns</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::evaluation::pst</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::evaluation::safety</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::perft</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::state::board::Bitboard</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::state::movegen::MagicContainer</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::state</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::benchmark</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::test</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::tuner</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::tunerset</span>;
-<span class="kw">use</span> <span class="ident">chrono::Utc</span>;
-<span class="kw">use</span> <span class="ident">prettytable::cell</span>;
-<span class="kw">use</span> <span class="ident">prettytable::format</span>;
-<span class="kw">use</span> <span class="ident">prettytable::row</span>;
-<span class="kw">use</span> <span class="ident">prettytable::Table</span>;
-<span class="kw">use</span> <span class="ident">std::io</span>;
-<span class="kw">use</span> <span class="ident">std::process</span>;
+<span id="713">713</span>
+<span id="714">714</span>
+<span id="715">715</span>
+<span id="716">716</span>
+<span id="717">717</span>
+<span id="718">718</span>
+<span id="719">719</span>
+<span id="720">720</span>
+<span id="721">721</span>
+<span id="722">722</span>
+<span id="723">723</span>
+<span id="724">724</span>
+<span id="725">725</span>
+<span id="726">726</span>
+<span id="727">727</span>
+<span id="728">728</span>
+<span id="729">729</span>
+<span id="730">730</span>
+<span id="731">731</span>
+<span id="732">732</span>
+<span id="733">733</span>
+<span id="734">734</span>
+<span id="735">735</span>
+<span id="736">736</span>
+<span id="737">737</span>
+<span id="738">738</span>
+<span id="739">739</span>
+<span id="740">740</span>
+<span id="741">741</span>
+<span id="742">742</span>
+<span id="743">743</span>
+<span id="744">744</span>
+<span id="745">745</span>
+<span id="746">746</span>
+<span id="747">747</span>
+<span id="748">748</span>
+<span id="749">749</span>
+<span id="750">750</span>
+<span id="751">751</span>
+<span id="752">752</span>
+<span id="753">753</span>
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::uci;
+<span class="kw">use </span><span class="kw">crate</span>::evaluation::material;
+<span class="kw">use </span><span class="kw">crate</span>::evaluation::mobility;
+<span class="kw">use </span><span class="kw">crate</span>::evaluation::pawns;
+<span class="kw">use </span><span class="kw">crate</span>::evaluation::pst;
+<span class="kw">use </span><span class="kw">crate</span>::evaluation::safety;
+<span class="kw">use </span><span class="kw">crate</span>::perft;
+<span class="kw">use </span><span class="kw">crate</span>::state::movegen::MagicContainer;
+<span class="kw">use </span><span class="kw">crate</span>::state::representation::Board;
+<span class="kw">use </span><span class="kw">crate</span>::state::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::testing::benchmark;
+<span class="kw">use </span><span class="kw">crate</span>::testing::testset;
+<span class="kw">use </span><span class="kw">crate</span>::tuning::tuner;
+<span class="kw">use </span><span class="kw">crate</span>::tuning::tunerset;
+<span class="kw">use </span><span class="kw">crate</span>::utils::percent;
+<span class="kw">use </span>std::io;
+<span class="kw">use </span>std::process;
+<span class="kw">use </span>std::time::SystemTime;
 
-<span class="kw">const</span> <span class="ident">VERSION</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="macro">env!</span>(<span class="string">&quot;CARGO_PKG_VERSION&quot;</span>);
-<span class="kw">const</span> <span class="ident">AUTHOR</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="macro">env!</span>(<span class="string">&quot;CARGO_PKG_AUTHORS&quot;</span>);
-<span class="kw">const</span> <span class="ident">REPOSITORY</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="macro">env!</span>(<span class="string">&quot;CARGO_PKG_REPOSITORY&quot;</span>);
-<span class="kw">const</span> <span class="ident">DATE</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="macro">env!</span>(<span class="string">&quot;DATE&quot;</span>);
-<span class="kw">const</span> <span class="ident">HASH</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="macro">env!</span>(<span class="string">&quot;HASH&quot;</span>);
-<span class="kw">const</span> <span class="ident">COMPILER</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="macro">env!</span>(<span class="string">&quot;COMPILER&quot;</span>);
+<span class="kw">const </span>VERSION: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">&quot;CARGO_PKG_VERSION&quot;</span>);
+<span class="kw">const </span>AUTHOR: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">&quot;CARGO_PKG_AUTHORS&quot;</span>);
+<span class="kw">const </span>REPOSITORY: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">&quot;CARGO_PKG_REPOSITORY&quot;</span>);
+<span class="kw">const </span>DATE: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">&quot;DATE&quot;</span>);
+<span class="kw">const </span>HASH: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">&quot;HASH&quot;</span>);
+<span class="kw">const </span>COMPILER: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">&quot;COMPILER&quot;</span>);
 
-<span class="doccomment">/// Entry point of the terminal interface and command loop.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(<span class="ident">target_features</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) {
-    <span class="kw">let</span> <span class="ident">header</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">target_features</span>.<span class="ident">is_empty</span>() {
-        <span class="macro">format!</span>(<span class="string">&quot;Inanis {} ({}), created by {}&quot;</span>, <span class="ident">VERSION</span>, <span class="ident">DATE</span>, <span class="ident">AUTHOR</span>)
-    } <span class="kw">else</span> {
-        <span class="macro">format!</span>(<span class="string">&quot;Inanis {} {} ({}), created by {}&quot;</span>, <span class="ident">VERSION</span>, <span class="ident">target_features</span>.<span class="ident">join</span>(<span class="string">&quot; &quot;</span>), <span class="ident">DATE</span>, <span class="ident">AUTHOR</span>)
+<span class="doccomment">/// Entry point of the terminal interface and command loop.
+</span><span class="kw">pub fn </span>run(target_features: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str&gt;) {
+    <span class="kw">let </span>header = <span class="kw">if </span>target_features.is_empty() {
+        <span class="macro">format!</span>(<span class="string">&quot;Inanis {} ({}), created by {}&quot;</span>, VERSION, DATE, AUTHOR)
+    } <span class="kw">else </span>{
+        <span class="macro">format!</span>(<span class="string">&quot;Inanis {} {} ({}), created by {}&quot;</span>, VERSION, target_features.join(<span class="string">&quot; &quot;</span>), DATE, AUTHOR)
     };
 
-    <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">header</span>);
-    <span class="macro">println!</span>(<span class="string">&quot;Executable hash: {}&quot;</span>, <span class="ident">HASH</span>);
-    <span class="macro">println!</span>(<span class="string">&quot;Compiler: {}&quot;</span>, <span class="ident">COMPILER</span>);
-    <span class="macro">println!</span>(<span class="string">&quot;Homepage: {}&quot;</span>, <span class="ident">REPOSITORY</span>);
+    <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, header);
+    <span class="macro">println!</span>(<span class="string">&quot;Executable hash: {}&quot;</span>, HASH);
+    <span class="macro">println!</span>(<span class="string">&quot;Compiler: {}&quot;</span>, COMPILER);
+    <span class="macro">println!</span>(<span class="string">&quot;Homepage: {}&quot;</span>, REPOSITORY);
     <span class="macro">println!</span>();
     <span class="macro">println!</span>(<span class="string">&quot;Type \&quot;help\&quot; to get a list of available commands&quot;</span>);
 
-    <span class="kw">loop</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">input</span> <span class="op">=</span> <span class="ident">String::new</span>();
-        <span class="kw">let</span> <span class="ident">read_bytes</span> <span class="op">=</span> <span class="ident">io::stdin</span>().<span class="ident">read_line</span>(<span class="kw-2">&amp;mut</span> <span class="ident">input</span>).<span class="ident">unwrap</span>();
+    <span class="kw">loop </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>input = String::new();
+        <span class="kw">let </span>read_bytes = io::stdin().read_line(<span class="kw-2">&amp;mut </span>input).unwrap();
 
-        <span class="kw">if</span> <span class="ident">read_bytes</span> <span class="op">==</span> <span class="number">0</span> {
-            <span class="ident">process::exit</span>(<span class="number">0</span>);
+        <span class="comment">// Input stream has reached EOF, according to https://doc.rust-lang.org/stable/std/io/trait.BufRead.html#method.read_line
+        </span><span class="kw">if </span>read_bytes == <span class="number">0 </span>{
+            process::exit(<span class="number">0</span>);
         }
 
-        <span class="kw">let</span> <span class="ident">tokens</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">split</span>(<span class="string">&#39; &#39;</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span>.<span class="ident">trim</span>()).<span class="ident">collect</span>();
-        <span class="kw">match</span> <span class="ident">tokens</span>[<span class="number">0</span>] {
-            <span class="string">&quot;help&quot;</span> =&gt; <span class="ident">handle_help</span>(),
-            <span class="string">&quot;benchmark&quot;</span> =&gt; <span class="ident">handle_benchmark</span>(),
-            <span class="string">&quot;evaluate&quot;</span> =&gt; <span class="ident">handle_evaluate</span>(<span class="ident">tokens</span>),
-            <span class="string">&quot;magic&quot;</span> =&gt; <span class="ident">handle_magic</span>(),
-            <span class="string">&quot;perft&quot;</span> =&gt; <span class="ident">handle_perft</span>(<span class="ident">tokens</span>),
-            <span class="string">&quot;dperft&quot;</span> =&gt; <span class="ident">handle_dperft</span>(<span class="ident">tokens</span>),
-            <span class="string">&quot;qperft&quot;</span> =&gt; <span class="ident">handle_qperft</span>(<span class="ident">tokens</span>),
-            <span class="string">&quot;test&quot;</span> =&gt; <span class="ident">handle_test</span>(<span class="ident">tokens</span>),
-            <span class="string">&quot;tuner&quot;</span> =&gt; <span class="ident">handle_tuner</span>(<span class="ident">tokens</span>),
-            <span class="string">&quot;tunerset&quot;</span> =&gt; <span class="ident">handle_tunerset</span>(<span class="ident">tokens</span>),
-            <span class="string">&quot;uci&quot;</span> =&gt; <span class="ident">handle_uci</span>(),
-            <span class="string">&quot;wah&quot;</span> =&gt; <span class="ident">handle_wah</span>(),
-            <span class="string">&quot;quit&quot;</span> =&gt; <span class="ident">handle_quit</span>(),
-            <span class="kw">_</span> =&gt; <span class="ident">handle_unknown_command</span>(),
+        <span class="kw">let </span>tokens: Vec&lt;<span class="kw-2">&amp;</span>str&gt; = input.split(<span class="string">&#39; &#39;</span>).map(|v| v.trim()).collect();
+        <span class="kw">match </span>tokens[<span class="number">0</span>] {
+            <span class="string">&quot;help&quot; </span>=&gt; handle_help(),
+            <span class="string">&quot;benchmark&quot; </span>=&gt; handle_benchmark(),
+            <span class="string">&quot;evaluate&quot; </span>=&gt; handle_evaluate(tokens),
+            <span class="string">&quot;magic&quot; </span>=&gt; handle_magic(),
+            <span class="string">&quot;perft&quot; </span>=&gt; handle_perft(tokens),
+            <span class="string">&quot;dperft&quot; </span>=&gt; handle_dperft(tokens),
+            <span class="string">&quot;qperft&quot; </span>=&gt; handle_qperft(tokens),
+            <span class="string">&quot;testset&quot; </span>=&gt; handle_testset(tokens),
+            <span class="string">&quot;tuner&quot; </span>=&gt; handle_tuner(tokens),
+            <span class="string">&quot;tunerset&quot; </span>=&gt; handle_tunerset(tokens),
+            <span class="string">&quot;uci&quot; </span>=&gt; handle_uci(),
+            <span class="string">&quot;wah&quot; </span>=&gt; handle_wah(),
+            <span class="string">&quot;quit&quot; </span>=&gt; handle_quit(),
+            <span class="kw">_ </span>=&gt; handle_unknown_command(),
         }
     }
 }
 
-<span class="doccomment">/// Handles `help` command by printing all available ones.</span>
-<span class="kw">fn</span> <span class="ident">handle_help</span>() {
+<span class="doccomment">/// Handles `help` command by printing all available ones.
+</span><span class="kw">fn </span>handle_help() {
     <span class="macro">println!</span>(<span class="string">&quot;=== General ===&quot;</span>);
     <span class="macro">println!</span>(<span class="string">&quot; benchmark - run test for a set of positions&quot;</span>);
     <span class="macro">println!</span>(<span class="string">&quot; evaluate [fen] - show score for the position&quot;</span>);
     <span class="macro">println!</span>(<span class="string">&quot; magic - generate magic numbers&quot;</span>);
-    <span class="macro">println!</span>(<span class="string">&quot; test [epd] [depth] [transposition_table_size] [threads_count] - run test of positions&quot;</span>);
+    <span class="macro">println!</span>(<span class="string">&quot; testset [epd] [depth] [transposition_table_size] [threads_count] - run test of positions&quot;</span>);
     <span class="macro">println!</span>(<span class="string">&quot; tuner [epd] [output] [lock_material] [randomize] [threads_count] - run tuning&quot;</span>);
-    <span class="macro">println!</span>(<span class="string">&quot; tunerset [pgn] [output] [min_ply] [max_score] [max_diff] [density] - dataset generator&quot;</span>);
+    <span class="macro">println!</span>(<span class="string">&quot; tunerset [pgn] [output] [min_ply] [max_score] [max_diff] [density] [avg_game_phase] - dataset generator&quot;</span>);
     <span class="macro">println!</span>(<span class="string">&quot; uci - run Universal Chess Interface&quot;</span>);
     <span class="macro">println!</span>(<span class="string">&quot; quit - close the application&quot;</span>);
     <span class="macro">println!</span>();
@@ -816,618 +849,660 @@
     <span class="macro">println!</span>(<span class="string">&quot; qperft [depth] [threads_count] [hashtable_size_mb] moves [moves]&quot;</span>);
 }
 
-<span class="doccomment">/// Handles `benchmark` command by running a fixed-depth search for a set of static positions and printing diagnostic data.</span>
-<span class="kw">fn</span> <span class="ident">handle_benchmark</span>() {
+<span class="doccomment">/// Handles `benchmark` command by running a fixed-depth search for a set of static positions and printing diagnostic data.
+</span><span class="kw">fn </span>handle_benchmark() {
+    <span class="kw">let </span>header_intendation = <span class="number">25</span>;
+    <span class="kw">let </span>value_intendation = <span class="number">20</span>;
+
     <span class="macro">println!</span>(<span class="string">&quot;Starting benchmark...&quot;</span>);
-    <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">benchmark::run</span>();
-    <span class="macro">println!</span>(<span class="string">&quot;Benchmark done in {:.2} s&quot;</span>, <span class="ident">result</span>.<span class="ident">time</span>);
+    <span class="kw">let </span>result = benchmark::run();
+    <span class="macro">println!</span>();
+    <span class="macro">println!</span>(<span class="string">&quot;Benchmark done in {:.2} s&quot;</span>, result.time);
+    <span class="macro">println!</span>();
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">search_table</span> <span class="op">=</span> <span class="ident">Table::new</span>();
-    <span class="ident">search_table</span>.<span class="ident">set_format</span>(<span class="kw-2">*</span><span class="ident">format::consts::FORMAT_NO_LINESEP_WITH_TITLE</span>);
-    <span class="ident">search_table</span>.<span class="ident">set_titles</span>(<span class="macro">row!</span>[<span class="string">&quot;&quot;</span>, <span class="string">&quot;Normal&quot;</span>, <span class="string">&quot;Quiescence&quot;</span>, <span class="string">&quot;Total&quot;</span>]);
+    <span class="macro">println!</span>(<span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>, <span class="string">&quot;&quot;</span>, <span class="string">&quot;Normal&quot;</span>, <span class="string">&quot;Quiescence&quot;</span>, <span class="string">&quot;Total&quot;</span>, H = header_intendation, V = value_intendation);
+    <span class="kw">let </span>t_nodes_count = result.nodes_count + result.q_nodes_count;
+    <span class="kw">let </span>t_leafs_count = result.leafs_count + result.q_leafs_count;
 
-    <span class="kw">let</span> <span class="ident">t_nodes_count</span> <span class="op">=</span> <span class="ident">result</span>.<span class="ident">nodes_count</span> <span class="op">+</span> <span class="ident">result</span>.<span class="ident">q_nodes_count</span>;
-    <span class="kw">let</span> <span class="ident">t_leafs_count</span> <span class="op">=</span> <span class="ident">result</span>.<span class="ident">leafs_count</span> <span class="op">+</span> <span class="ident">result</span>.<span class="ident">q_leafs_count</span>;
-
-    <span class="kw">let</span> <span class="ident">nodes_count_percent</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">nodes_count</span>, <span class="ident">t_nodes_count</span>);
-    <span class="kw">let</span> <span class="ident">q_nodes_count_percent</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">q_nodes_count</span>, <span class="ident">t_nodes_count</span>);
-    <span class="kw">let</span> <span class="ident">t_mnps</span> <span class="op">=</span> (((<span class="ident">result</span>.<span class="ident">nodes_count</span> <span class="op">+</span> <span class="ident">result</span>.<span class="ident">q_nodes_count</span>) <span class="kw">as</span> <span class="ident">f32</span>) <span class="op">/</span> <span class="number">1000000.0</span>) <span class="op">/</span> <span class="ident">result</span>.<span class="ident">time</span>;
-    <span class="ident">search_table</span>.<span class="ident">add_row</span>(<span class="macro">row!</span>[
+    <span class="kw">let </span>nodes_count_percent = <span class="macro">percent!</span>(result.nodes_count, t_nodes_count);
+    <span class="kw">let </span>q_nodes_count_percent = <span class="macro">percent!</span>(result.q_nodes_count, t_nodes_count);
+    <span class="kw">let </span>t_mnps = (((result.nodes_count + result.q_nodes_count) <span class="kw">as </span>f32) / <span class="number">1000000.0</span>) / result.time;
+    <span class="macro">println!</span>(
+        <span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>,
         <span class="string">&quot;Nodes count&quot;</span>,
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, <span class="ident">result</span>.<span class="ident">nodes_count</span>, <span class="ident">nodes_count_percent</span>),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, <span class="ident">result</span>.<span class="ident">q_nodes_count</span>, <span class="ident">q_nodes_count_percent</span>),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2} MN/s)&quot;</span>, <span class="ident">t_nodes_count</span>, <span class="ident">t_mnps</span>)
-    ]);
+        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.nodes_count, nodes_count_percent),
+        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.q_nodes_count, q_nodes_count_percent),
+        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2} MN/s)&quot;</span>, t_nodes_count, t_mnps),
+        H = header_intendation,
+        V = value_intendation
+    );
 
-    <span class="kw">let</span> <span class="ident">leafs_count_percent</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">leafs_count</span>, <span class="ident">t_leafs_count</span>);
-    <span class="kw">let</span> <span class="ident">q_leafs_count_percent</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">q_leafs_count</span>, <span class="ident">t_leafs_count</span>);
-    <span class="kw">let</span> <span class="ident">t_leafs_count_percent</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">leafs_count</span> <span class="op">+</span> <span class="ident">result</span>.<span class="ident">q_leafs_count</span>, <span class="ident">t_nodes_count</span>);
-    <span class="ident">search_table</span>.<span class="ident">add_row</span>(<span class="macro">row!</span>[
+    <span class="kw">let </span>leafs_count_percent = <span class="macro">percent!</span>(result.leafs_count, t_leafs_count);
+    <span class="kw">let </span>q_leafs_count_percent = <span class="macro">percent!</span>(result.q_leafs_count, t_leafs_count);
+    <span class="kw">let </span>t_leafs_count_percent = <span class="macro">percent!</span>(result.leafs_count + result.q_leafs_count, t_nodes_count);
+    <span class="macro">println!</span>(
+        <span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>,
         <span class="string">&quot;Leafs count&quot;</span>,
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, <span class="ident">result</span>.<span class="ident">leafs_count</span>, <span class="ident">leafs_count_percent</span>),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, <span class="ident">result</span>.<span class="ident">q_leafs_count</span>, <span class="ident">q_leafs_count_percent</span>),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, <span class="ident">t_leafs_count</span>, <span class="ident">t_leafs_count_percent</span>)
-    ]);
+        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.leafs_count, leafs_count_percent),
+        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.q_leafs_count, q_leafs_count_percent),
+        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, t_leafs_count, t_leafs_count_percent),
+        H = header_intendation,
+        V = value_intendation
+    );
 
-    <span class="kw">let</span> <span class="ident">beta_cutoffs_percent</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">beta_cutoffs</span>, <span class="ident">result</span>.<span class="ident">nodes_count</span>);
-    <span class="kw">let</span> <span class="ident">q_beta_cutoffs_percent</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">q_beta_cutoffs</span>, <span class="ident">result</span>.<span class="ident">q_nodes_count</span>);
-    <span class="kw">let</span> <span class="ident">t_beta_cutoffs_percent</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">beta_cutoffs</span> <span class="op">+</span> <span class="ident">result</span>.<span class="ident">q_beta_cutoffs</span>, <span class="ident">t_nodes_count</span>);
-    <span class="ident">search_table</span>.<span class="ident">add_row</span>(<span class="macro">row!</span>[
+    <span class="kw">let </span>beta_cutoffs_percent = <span class="macro">percent!</span>(result.beta_cutoffs, result.nodes_count);
+    <span class="kw">let </span>q_beta_cutoffs_percent = <span class="macro">percent!</span>(result.q_beta_cutoffs, result.q_nodes_count);
+    <span class="kw">let </span>t_beta_cutoffs_percent = <span class="macro">percent!</span>(result.beta_cutoffs + result.q_beta_cutoffs, t_nodes_count);
+    <span class="macro">println!</span>(
+        <span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>,
         <span class="string">&quot;Beta cutoffs&quot;</span>,
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, <span class="ident">result</span>.<span class="ident">beta_cutoffs</span>, <span class="ident">beta_cutoffs_percent</span>),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, <span class="ident">result</span>.<span class="ident">q_beta_cutoffs</span>, <span class="ident">q_beta_cutoffs_percent</span>),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, <span class="ident">result</span>.<span class="ident">beta_cutoffs</span> <span class="op">+</span> <span class="ident">result</span>.<span class="ident">q_beta_cutoffs</span>, <span class="ident">t_beta_cutoffs_percent</span>)
-    ]);
+        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.beta_cutoffs, beta_cutoffs_percent),
+        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.q_beta_cutoffs, q_beta_cutoffs_percent),
+        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.beta_cutoffs + result.q_beta_cutoffs, t_beta_cutoffs_percent),
+        H = header_intendation,
+        V = value_intendation
+    );
 
-    <span class="kw">let</span> <span class="ident">ordering_hits</span> <span class="op">=</span> <span class="ident">result</span>.<span class="ident">perfect_cutoffs</span> <span class="op">+</span> <span class="ident">result</span>.<span class="ident">non_perfect_cutoffs</span>;
-    <span class="kw">let</span> <span class="ident">q_ordering_hits</span> <span class="op">=</span> <span class="ident">result</span>.<span class="ident">q_perfect_cutoffs</span> <span class="op">+</span> <span class="ident">result</span>.<span class="ident">q_non_perfect_cutoffs</span>;
-    <span class="kw">let</span> <span class="ident">t_ordering_hits</span> <span class="op">=</span> <span class="ident">ordering_hits</span> <span class="op">+</span> <span class="ident">q_ordering_hits</span>;
+    <span class="kw">let </span>ordering_hits = result.perfect_cutoffs + result.non_perfect_cutoffs;
+    <span class="kw">let </span>q_ordering_hits = result.q_perfect_cutoffs + result.q_non_perfect_cutoffs;
+    <span class="kw">let </span>t_ordering_hits = ordering_hits + q_ordering_hits;
 
-    <span class="kw">let</span> <span class="ident">ordering_quality</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">perfect_cutoffs</span>, <span class="ident">ordering_hits</span>);
-    <span class="kw">let</span> <span class="ident">q_ordering_quality</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">q_perfect_cutoffs</span>, <span class="ident">q_ordering_hits</span>);
-    <span class="kw">let</span> <span class="ident">t_ordering_quality</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">perfect_cutoffs</span> <span class="op">+</span> <span class="ident">result</span>.<span class="ident">q_perfect_cutoffs</span>, <span class="ident">t_ordering_hits</span>);
-    <span class="ident">search_table</span>.<span class="ident">add_row</span>(<span class="macro">row!</span>[
+    <span class="kw">let </span>ordering_quality = <span class="macro">percent!</span>(result.perfect_cutoffs, ordering_hits);
+    <span class="kw">let </span>q_ordering_quality = <span class="macro">percent!</span>(result.q_perfect_cutoffs, q_ordering_hits);
+    <span class="kw">let </span>t_ordering_quality = <span class="macro">percent!</span>(result.perfect_cutoffs + result.q_perfect_cutoffs, t_ordering_hits);
+    <span class="macro">println!</span>(
+        <span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>,
         <span class="string">&quot;Ordering quality&quot;</span>,
-        <span class="macro">format!</span>(<span class="string">&quot;{:.2}%&quot;</span>, <span class="ident">ordering_quality</span>),
-        <span class="macro">format!</span>(<span class="string">&quot;{:.2}%&quot;</span>, <span class="ident">q_ordering_quality</span>),
-        <span class="macro">format!</span>(<span class="string">&quot;{:.2}%&quot;</span>, <span class="ident">t_ordering_quality</span>)
-    ]);
+        <span class="macro">format!</span>(<span class="string">&quot;{:.2}%&quot;</span>, ordering_quality),
+        <span class="macro">format!</span>(<span class="string">&quot;{:.2}%&quot;</span>, q_ordering_quality),
+        <span class="macro">format!</span>(<span class="string">&quot;{:.2}%&quot;</span>, t_ordering_quality),
+        H = header_intendation,
+        V = value_intendation
+    );
 
-    <span class="kw">let</span> <span class="ident">branching_factor</span> <span class="op">=</span> (<span class="ident">result</span>.<span class="ident">nodes_count</span> <span class="kw">as</span> <span class="ident">f64</span>) <span class="op">/</span> ((<span class="ident">result</span>.<span class="ident">nodes_count</span> <span class="op">-</span> <span class="ident">result</span>.<span class="ident">leafs_count</span>) <span class="kw">as</span> <span class="ident">f64</span>);
-    <span class="kw">let</span> <span class="ident">q_branching_factor</span> <span class="op">=</span> (<span class="ident">result</span>.<span class="ident">q_nodes_count</span> <span class="kw">as</span> <span class="ident">f64</span>) <span class="op">/</span> ((<span class="ident">result</span>.<span class="ident">q_nodes_count</span> <span class="op">-</span> <span class="ident">result</span>.<span class="ident">q_leafs_count</span>) <span class="kw">as</span> <span class="ident">f64</span>);
-    <span class="kw">let</span> <span class="ident">t_branching_factor</span> <span class="op">=</span> (<span class="ident">t_nodes_count</span> <span class="kw">as</span> <span class="ident">f64</span>) <span class="op">/</span> ((<span class="ident">t_nodes_count</span> <span class="op">-</span> <span class="ident">t_leafs_count</span>) <span class="kw">as</span> <span class="ident">f64</span>);
-    <span class="ident">search_table</span>.<span class="ident">add_row</span>(<span class="macro">row!</span>[
+    <span class="kw">let </span>branching_factor = (result.nodes_count <span class="kw">as </span>f64) / ((result.nodes_count - result.leafs_count) <span class="kw">as </span>f64);
+    <span class="kw">let </span>q_branching_factor = (result.q_nodes_count <span class="kw">as </span>f64) / ((result.q_nodes_count - result.q_leafs_count) <span class="kw">as </span>f64);
+    <span class="kw">let </span>t_branching_factor = (t_nodes_count <span class="kw">as </span>f64) / ((t_nodes_count - t_leafs_count) <span class="kw">as </span>f64);
+    <span class="macro">println!</span>(
+        <span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>,
         <span class="string">&quot;Branching factor&quot;</span>,
-        <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, <span class="ident">branching_factor</span>),
-        <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, <span class="ident">q_branching_factor</span>),
-        <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, <span class="ident">t_branching_factor</span>)
-    ]);
+        <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, branching_factor),
+        <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, q_branching_factor),
+        <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, t_branching_factor),
+        H = header_intendation,
+        V = value_intendation
+    );
 
-    <span class="ident">search_table</span>.<span class="ident">printstd</span>();
+    <span class="macro">println!</span>();
+    <span class="macro">println!</span>(<span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>, <span class="string">&quot;&quot;</span>, <span class="string">&quot;Added&quot;</span>, <span class="string">&quot;Hits&quot;</span>, <span class="string">&quot;Misses&quot;</span>, H = header_intendation, V = value_intendation);
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cache_table</span> <span class="op">=</span> <span class="ident">Table::new</span>();
-    <span class="ident">cache_table</span>.<span class="ident">set_format</span>(<span class="kw-2">*</span><span class="ident">format::consts::FORMAT_NO_LINESEP_WITH_TITLE</span>);
-    <span class="ident">cache_table</span>.<span class="ident">set_titles</span>(<span class="macro">row!</span>[<span class="string">&quot;&quot;</span>, <span class="string">&quot;Added&quot;</span>, <span class="string">&quot;Hits&quot;</span>, <span class="string">&quot;Misses&quot;</span>, <span class="string">&quot;Collisions&quot;</span>]);
-
-    <span class="kw">let</span> <span class="ident">tt_misses_percent</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">tt_misses</span>, <span class="ident">result</span>.<span class="ident">tt_hits</span>);
-    <span class="kw">let</span> <span class="ident">tt_collisions_percent</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">tt_collisions</span>, <span class="ident">result</span>.<span class="ident">tt_hits</span>);
-    <span class="ident">cache_table</span>.<span class="ident">add_row</span>(<span class="macro">row!</span>[
+    <span class="kw">let </span>tt_attempts = result.tt_hits + result.tt_misses;
+    <span class="kw">let </span>tt_hits_percent = <span class="macro">percent!</span>(result.tt_hits, tt_attempts);
+    <span class="kw">let </span>tt_misses_percent = <span class="macro">percent!</span>(result.tt_misses, tt_attempts);
+    <span class="macro">println!</span>(
+        <span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>,
         <span class="string">&quot;Transposition table&quot;</span>,
-        <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">result</span>.<span class="ident">tt_added</span>),
-        <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">result</span>.<span class="ident">tt_hits</span>),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, <span class="ident">result</span>.<span class="ident">tt_misses</span>, <span class="ident">tt_misses_percent</span>),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, <span class="ident">result</span>.<span class="ident">tt_collisions</span>, <span class="ident">tt_collisions_percent</span>)
-    ]);
+        <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, result.tt_added),
+        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.tt_hits, tt_hits_percent),
+        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.tt_misses, tt_misses_percent),
+        H = header_intendation,
+        V = value_intendation
+    );
 
-    <span class="kw">let</span> <span class="ident">pawn_hashtable_misses_percent</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">pawn_hashtable_misses</span>, <span class="ident">result</span>.<span class="ident">pawn_hashtable_hits</span>);
-    <span class="kw">let</span> <span class="ident">pawn_hashtable_collisions_percent</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">pawn_hashtable_collisions</span>, <span class="ident">result</span>.<span class="ident">pawn_hashtable_hits</span>);
-    <span class="ident">cache_table</span>.<span class="ident">add_row</span>(<span class="macro">row!</span>[
+    <span class="kw">let </span>pawn_hashtable_attempts = result.pawn_hashtable_hits + result.pawn_hashtable_misses;
+    <span class="kw">let </span>pawn_hashtable_hits_percent = <span class="macro">percent!</span>(result.pawn_hashtable_hits, pawn_hashtable_attempts);
+    <span class="kw">let </span>pawn_hashtable_misses_percent = <span class="macro">percent!</span>(result.pawn_hashtable_misses, pawn_hashtable_attempts);
+    <span class="macro">println!</span>(
+        <span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>,
         <span class="string">&quot;Pawn hashtable&quot;</span>,
-        <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">result</span>.<span class="ident">pawn_hashtable_added</span>),
-        <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">result</span>.<span class="ident">pawn_hashtable_hits</span>),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, <span class="ident">result</span>.<span class="ident">pawn_hashtable_misses</span>, <span class="ident">pawn_hashtable_misses_percent</span>),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, <span class="ident">result</span>.<span class="ident">pawn_hashtable_collisions</span>, <span class="ident">pawn_hashtable_collisions_percent</span>)
-    ]);
+        <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, result.pawn_hashtable_added),
+        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.pawn_hashtable_hits, pawn_hashtable_hits_percent),
+        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.pawn_hashtable_misses, pawn_hashtable_misses_percent),
+        H = header_intendation,
+        V = value_intendation
+    );
 
-    <span class="ident">cache_table</span>.<span class="ident">printstd</span>();
+    <span class="macro">println!</span>();
+    <span class="macro">println!</span>(<span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>, <span class="string">&quot;&quot;</span>, <span class="string">&quot;Attempts&quot;</span>, <span class="string">&quot;Accepted&quot;</span>, <span class="string">&quot;Rejected&quot;</span>, H = header_intendation, V = value_intendation);
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">prunings_reductions_table</span> <span class="op">=</span> <span class="ident">Table::new</span>();
-    <span class="ident">prunings_reductions_table</span>.<span class="ident">set_format</span>(<span class="kw-2">*</span><span class="ident">format::consts::FORMAT_NO_LINESEP_WITH_TITLE</span>);
-    <span class="ident">prunings_reductions_table</span>.<span class="ident">set_titles</span>(<span class="macro">row!</span>[<span class="string">&quot;&quot;</span>, <span class="string">&quot;Attempts&quot;</span>, <span class="string">&quot;Accepted&quot;</span>, <span class="string">&quot;Rejected&quot;</span>]);
-
-    <span class="kw">let</span> <span class="ident">static_null_move_pruning_accepted_percent</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">static_null_move_pruning_accepted</span>, <span class="ident">result</span>.<span class="ident">static_null_move_pruning_attempts</span>);
-    <span class="kw">let</span> <span class="ident">static_null_move_pruning_rejected_percent</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">static_null_move_pruning_rejected</span>, <span class="ident">result</span>.<span class="ident">static_null_move_pruning_attempts</span>);
-    <span class="ident">prunings_reductions_table</span>.<span class="ident">add_row</span>(<span class="macro">row!</span>[
+    <span class="kw">let </span>static_null_move_pruning_accepted_percent = <span class="macro">percent!</span>(result.static_null_move_pruning_accepted, result.static_null_move_pruning_attempts);
+    <span class="kw">let </span>static_null_move_pruning_rejected_percent = <span class="macro">percent!</span>(result.static_null_move_pruning_rejected, result.static_null_move_pruning_attempts);
+    <span class="macro">println!</span>(
+        <span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>,
         <span class="string">&quot;Static null move pruning&quot;</span>,
-        <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, <span class="ident">result</span>.<span class="ident">static_null_move_pruning_attempts</span>),
-        <span class="macro">format!</span>(
-            <span class="string">&quot;{} ({:.2}%)&quot;</span>,
-            <span class="ident">result</span>.<span class="ident">static_null_move_pruning_accepted</span>, <span class="ident">static_null_move_pruning_accepted_percent</span>
-        ),
-        <span class="macro">format!</span>(
-            <span class="string">&quot;{} ({:.2}%)&quot;</span>,
-            <span class="ident">result</span>.<span class="ident">static_null_move_pruning_rejected</span>, <span class="ident">static_null_move_pruning_rejected_percent</span>
-        )
-    ]);
+        <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, result.static_null_move_pruning_attempts),
+        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.static_null_move_pruning_accepted, static_null_move_pruning_accepted_percent),
+        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.static_null_move_pruning_rejected, static_null_move_pruning_rejected_percent),
+        H = header_intendation,
+        V = value_intendation
+    );
 
-    <span class="kw">let</span> <span class="ident">null_move_pruning_accepted_percent</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">null_move_pruning_accepted</span>, <span class="ident">result</span>.<span class="ident">null_move_pruning_attempts</span>);
-    <span class="kw">let</span> <span class="ident">null_move_pruning_rejected_percent</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">null_move_pruning_rejected</span>, <span class="ident">result</span>.<span class="ident">null_move_pruning_attempts</span>);
-    <span class="ident">prunings_reductions_table</span>.<span class="ident">add_row</span>(<span class="macro">row!</span>[
+    <span class="kw">let </span>null_move_pruning_accepted_percent = <span class="macro">percent!</span>(result.null_move_pruning_accepted, result.null_move_pruning_attempts);
+    <span class="kw">let </span>null_move_pruning_rejected_percent = <span class="macro">percent!</span>(result.null_move_pruning_rejected, result.null_move_pruning_attempts);
+    <span class="macro">println!</span>(
+        <span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>,
         <span class="string">&quot;Null move pruning&quot;</span>,
-        <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, <span class="ident">result</span>.<span class="ident">null_move_pruning_attempts</span>),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, <span class="ident">result</span>.<span class="ident">null_move_pruning_accepted</span>, <span class="ident">null_move_pruning_accepted_percent</span>),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, <span class="ident">result</span>.<span class="ident">null_move_pruning_rejected</span>, <span class="ident">null_move_pruning_rejected_percent</span>)
-    ]);
+        <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, result.null_move_pruning_attempts),
+        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.null_move_pruning_accepted, null_move_pruning_accepted_percent),
+        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.null_move_pruning_rejected, null_move_pruning_rejected_percent),
+        H = header_intendation,
+        V = value_intendation
+    );
 
-    <span class="kw">let</span> <span class="ident">late_move_pruning_attempts</span> <span class="op">=</span> <span class="ident">result</span>.<span class="ident">late_move_pruning_accepted</span> <span class="op">+</span> <span class="ident">result</span>.<span class="ident">late_move_pruning_rejected</span>;
-    <span class="kw">let</span> <span class="ident">late_move_pruning_accepted_percent</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">late_move_pruning_accepted</span>, <span class="ident">late_move_pruning_attempts</span>);
-    <span class="kw">let</span> <span class="ident">late_move_pruning_rejected_percent</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">late_move_pruning_rejected</span>, <span class="ident">late_move_pruning_attempts</span>);
-    <span class="ident">prunings_reductions_table</span>.<span class="ident">add_row</span>(<span class="macro">row!</span>[
+    <span class="kw">let </span>late_move_pruning_attempts = result.late_move_pruning_accepted + result.late_move_pruning_rejected;
+    <span class="kw">let </span>late_move_pruning_accepted_percent = <span class="macro">percent!</span>(result.late_move_pruning_accepted, late_move_pruning_attempts);
+    <span class="kw">let </span>late_move_pruning_rejected_percent = <span class="macro">percent!</span>(result.late_move_pruning_rejected, late_move_pruning_attempts);
+    <span class="macro">println!</span>(
+        <span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>,
         <span class="string">&quot;Late move pruning&quot;</span>,
-        <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, <span class="ident">late_move_pruning_attempts</span>),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, <span class="ident">result</span>.<span class="ident">late_move_pruning_accepted</span>, <span class="ident">late_move_pruning_accepted_percent</span>),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, <span class="ident">result</span>.<span class="ident">late_move_pruning_rejected</span>, <span class="ident">late_move_pruning_rejected_percent</span>)
-    ]);
+        <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, late_move_pruning_attempts),
+        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.late_move_pruning_accepted, late_move_pruning_accepted_percent),
+        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.late_move_pruning_rejected, late_move_pruning_rejected_percent),
+        H = header_intendation,
+        V = value_intendation
+    );
 
-    <span class="kw">let</span> <span class="ident">razoring_accepted_percent</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">razoring_accepted</span>, <span class="ident">result</span>.<span class="ident">razoring_attempts</span>);
-    <span class="kw">let</span> <span class="ident">razoring_rejected_percent</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">razoring_rejected</span>, <span class="ident">result</span>.<span class="ident">razoring_attempts</span>);
-    <span class="ident">prunings_reductions_table</span>.<span class="ident">add_row</span>(<span class="macro">row!</span>[
+    <span class="kw">let </span>razoring_accepted_percent = <span class="macro">percent!</span>(result.razoring_accepted, result.razoring_attempts);
+    <span class="kw">let </span>razoring_rejected_percent = <span class="macro">percent!</span>(result.razoring_rejected, result.razoring_attempts);
+    <span class="macro">println!</span>(
+        <span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>,
         <span class="string">&quot;Razoring&quot;</span>,
-        <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, <span class="ident">result</span>.<span class="ident">razoring_attempts</span>),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, <span class="ident">result</span>.<span class="ident">razoring_accepted</span>, <span class="ident">razoring_accepted_percent</span>),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, <span class="ident">result</span>.<span class="ident">razoring_rejected</span>, <span class="ident">razoring_rejected_percent</span>)
-    ]);
+        <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, result.razoring_attempts),
+        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.razoring_accepted, razoring_accepted_percent),
+        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.razoring_rejected, razoring_rejected_percent),
+        H = header_intendation,
+        V = value_intendation
+    );
 
-    <span class="kw">let</span> <span class="ident">total_q_score_pruning_attempts</span> <span class="op">=</span> <span class="ident">result</span>.<span class="ident">q_score_pruning_accepted</span> <span class="op">+</span> <span class="ident">result</span>.<span class="ident">q_score_pruning_rejected</span>;
-    <span class="kw">let</span> <span class="ident">q_score_pruning_accepted_percent</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">q_score_pruning_accepted</span>, <span class="ident">total_q_score_pruning_attempts</span>);
-    <span class="kw">let</span> <span class="ident">q_score_pruning_rejected_percent</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">q_score_pruning_rejected</span>, <span class="ident">total_q_score_pruning_attempts</span>);
-    <span class="ident">prunings_reductions_table</span>.<span class="ident">add_row</span>(<span class="macro">row!</span>[
+    <span class="kw">let </span>total_q_score_pruning_attempts = result.q_score_pruning_accepted + result.q_score_pruning_rejected;
+    <span class="kw">let </span>q_score_pruning_accepted_percent = <span class="macro">percent!</span>(result.q_score_pruning_accepted, total_q_score_pruning_attempts);
+    <span class="kw">let </span>q_score_pruning_rejected_percent = <span class="macro">percent!</span>(result.q_score_pruning_rejected, total_q_score_pruning_attempts);
+    <span class="macro">println!</span>(
+        <span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>,
         <span class="string">&quot;Q score pruning&quot;</span>,
-        <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, <span class="ident">total_q_score_pruning_attempts</span>),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, <span class="ident">result</span>.<span class="ident">q_score_pruning_accepted</span>, <span class="ident">q_score_pruning_accepted_percent</span>),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, <span class="ident">result</span>.<span class="ident">q_score_pruning_rejected</span>, <span class="ident">q_score_pruning_rejected_percent</span>)
-    ]);
+        <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, total_q_score_pruning_attempts),
+        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.q_score_pruning_accepted, q_score_pruning_accepted_percent),
+        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.q_score_pruning_rejected, q_score_pruning_rejected_percent),
+        H = header_intendation,
+        V = value_intendation
+    );
 
-    <span class="kw">let</span> <span class="ident">total_q_futility_prunings_attempts</span> <span class="op">=</span> <span class="ident">result</span>.<span class="ident">q_futility_pruning_accepted</span> <span class="op">+</span> <span class="ident">result</span>.<span class="ident">q_futility_pruning_rejected</span>;
-    <span class="kw">let</span> <span class="ident">q_futility_pruning_accepted_percent</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">q_futility_pruning_accepted</span>, <span class="ident">total_q_futility_prunings_attempts</span>);
-    <span class="kw">let</span> <span class="ident">q_futility_pruning_rejected_percent</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">q_futility_pruning_rejected</span>, <span class="ident">total_q_futility_prunings_attempts</span>);
-    <span class="ident">prunings_reductions_table</span>.<span class="ident">add_row</span>(<span class="macro">row!</span>[
+    <span class="kw">let </span>total_q_futility_prunings_attempts = result.q_futility_pruning_accepted + result.q_futility_pruning_rejected;
+    <span class="kw">let </span>q_futility_pruning_accepted_percent = <span class="macro">percent!</span>(result.q_futility_pruning_accepted, total_q_futility_prunings_attempts);
+    <span class="kw">let </span>q_futility_pruning_rejected_percent = <span class="macro">percent!</span>(result.q_futility_pruning_rejected, total_q_futility_prunings_attempts);
+    <span class="macro">println!</span>(
+        <span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>,
         <span class="string">&quot;Q futility pruning&quot;</span>,
-        <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, <span class="ident">total_q_futility_prunings_attempts</span>),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, <span class="ident">result</span>.<span class="ident">q_futility_pruning_accepted</span>, <span class="ident">q_futility_pruning_accepted_percent</span>),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, <span class="ident">result</span>.<span class="ident">q_futility_pruning_rejected</span>, <span class="ident">q_futility_pruning_rejected_percent</span>)
-    ]);
+        <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, total_q_futility_prunings_attempts),
+        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.q_futility_pruning_accepted, q_futility_pruning_accepted_percent),
+        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.q_futility_pruning_rejected, q_futility_pruning_rejected_percent),
+        H = header_intendation,
+        V = value_intendation
+    );
 
-    <span class="ident">prunings_reductions_table</span>.<span class="ident">printstd</span>();
+    <span class="macro">println!</span>();
 
-    <span class="kw">let</span> <span class="ident">pvs_rejected_searches_percent</span> <span class="op">=</span> <span class="ident">percent</span>(<span class="ident">result</span>.<span class="ident">pvs_rejected_searches</span>, <span class="ident">result</span>.<span class="ident">pvs_zero_window_searches</span>);
+    <span class="kw">let </span>pvs_rejected_searches_percent = <span class="macro">percent!</span>(result.pvs_rejected_searches, result.pvs_zero_window_searches);
     <span class="macro">println!</span>(
         <span class="string">&quot;PVS: {} full-window searches, {} zero-window searches, {} rejected ({:.2}%)&quot;</span>,
-        <span class="ident">result</span>.<span class="ident">pvs_full_window_searches</span>, <span class="ident">result</span>.<span class="ident">pvs_zero_window_searches</span>, <span class="ident">result</span>.<span class="ident">pvs_rejected_searches</span>, <span class="ident">pvs_rejected_searches_percent</span>
+        result.pvs_full_window_searches, result.pvs_zero_window_searches, result.pvs_rejected_searches, pvs_rejected_searches_percent
     );
 
     <span class="macro">println!</span>(
-        <span class="string">&quot;Move generator stages: {} hash moves, {} captures, {} quiet&quot;</span>,
-        <span class="ident">result</span>.<span class="ident">move_generator_hash_move_stages</span>, <span class="ident">result</span>.<span class="ident">move_generator_captures_stages</span>, <span class="ident">result</span>.<span class="ident">move_generator_quiet_moves_stages</span>
+        <span class="string">&quot;Move generator stages: {} hash moves, {} captures, {} killers, {} quiet&quot;</span>,
+        result.move_generator_hash_move_stages,
+        result.move_generator_captures_stages,
+        result.move_generator_killers_stages,
+        result.move_generator_quiet_moves_stages
     );
 
-    <span class="macro">println!</span>(
-        <span class="string">&quot;Transposition table move legality check: {} legal, {} illegal&quot;</span>,
-        <span class="ident">result</span>.<span class="ident">tt_legal_hashmoves</span>, <span class="ident">result</span>.<span class="ident">tt_illegal_hashmoves</span>
-    );
-
-    <span class="macro">println!</span>(<span class="string">&quot;Result hash: {}&quot;</span>, <span class="ident">result</span>.<span class="ident">result_hash</span>);
+    <span class="macro">println!</span>(<span class="string">&quot;Transposition table move legality check: {} legal, {} illegal&quot;</span>, result.tt_legal_hashmoves, result.tt_illegal_hashmoves);
+    <span class="macro">println!</span>(<span class="string">&quot;Killers table move legality check: {} legal, {} illegal&quot;</span>, result.killers_table_legal_moves, result.killers_table_illegal_moves);
+    <span class="macro">println!</span>(<span class="string">&quot;Result hash: {}&quot;</span>, result.result_hash);
+    <span class="macro">println!</span>();
 }
 
-<span class="doccomment">/// Handles `evaluate [fen]` command by printing evaluation for the position specified by FEN.</span>
-<span class="kw">fn</span> <span class="ident">handle_evaluate</span>(<span class="ident">input</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>) {
-    <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">2</span> {
+<span class="doccomment">/// Handles `evaluate [fen]` command by printing evaluation for the position specified by FEN.
+</span><span class="kw">fn </span>handle_evaluate(input: Vec&lt;<span class="kw-2">&amp;</span>str&gt;) {
+    <span class="kw">if </span>input.len() &lt; <span class="number">2 </span>{
         <span class="macro">println!</span>(<span class="string">&quot;FEN parameter not found&quot;</span>);
         <span class="kw">return</span>;
     }
 
-    <span class="kw">let</span> <span class="ident">fen</span> <span class="op">=</span> <span class="ident">input</span>[<span class="number">1</span>..].<span class="ident">join</span>(<span class="string">&quot; &quot;</span>);
-    <span class="kw">let</span> <span class="ident">board</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">Bitboard::new_from_fen</span>(<span class="ident">fen</span>.<span class="ident">as_str</span>(), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>) {
-        <span class="prelude-val">Ok</span>(<span class="ident">board</span>) =&gt; <span class="ident">board</span>,
-        <span class="prelude-val">Err</span>(<span class="ident">error</span>) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid FEN parameter: {}&quot;</span>, <span class="ident">error</span>);
+    <span class="kw">let </span>fen = input[<span class="number">1</span>..].join(<span class="string">&quot; &quot;</span>);
+    <span class="kw">let </span>board = <span class="kw">match </span>Board::new_from_fen(fen.as_str(), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>) {
+        <span class="prelude-val">Ok</span>(board) =&gt; board,
+        <span class="prelude-val">Err</span>(error) =&gt; {
+            <span class="macro">println!</span>(<span class="string">&quot;Invalid FEN parameter: {}&quot;</span>, error);
             <span class="kw">return</span>;
         }
     };
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">white_attack_mask</span> <span class="op">=</span> <span class="number">0</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">black_attack_mask</span> <span class="op">=</span> <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>dangered_white_king_squares = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>dangered_black_king_squares = <span class="number">0</span>;
 
-    <span class="kw">let</span> <span class="ident">material_evaluation</span> <span class="op">=</span> <span class="ident">material::evaluate</span>(<span class="kw-2">&amp;</span><span class="ident">board</span>);
-    <span class="kw">let</span> <span class="ident">pst_evaluation</span> <span class="op">=</span> <span class="ident">pst::evaluate</span>(<span class="kw-2">&amp;</span><span class="ident">board</span>);
-    <span class="kw">let</span> <span class="ident">mobility_evaluation</span> <span class="op">=</span> <span class="ident">mobility::evaluate</span>(<span class="kw-2">&amp;</span><span class="ident">board</span>, <span class="kw-2">&amp;mut</span> <span class="ident">white_attack_mask</span>, <span class="kw-2">&amp;mut</span> <span class="ident">black_attack_mask</span>);
-    <span class="kw">let</span> <span class="ident">safety_evaluation</span> <span class="op">=</span> <span class="ident">safety::evaluate</span>(<span class="kw-2">&amp;</span><span class="ident">board</span>, <span class="ident">white_attack_mask</span>, <span class="ident">black_attack_mask</span>);
-    <span class="kw">let</span> <span class="ident">pawns_evaluation</span> <span class="op">=</span> <span class="ident">pawns::evaluate_without_cache</span>(<span class="kw-2">&amp;</span><span class="ident">board</span>);
+    <span class="kw">let </span>game_phase = board.game_phase;
+    <span class="kw">let </span>initial_game_phase = board.evaluation_parameters.initial_game_phase;
 
-    <span class="macro">println!</span>(<span class="string">&quot;Material: {}&quot;</span>, <span class="ident">material_evaluation</span>);
-    <span class="macro">println!</span>(<span class="string">&quot;Piece-square tables: {}&quot;</span>, <span class="ident">pst_evaluation</span>);
-    <span class="macro">println!</span>(<span class="string">&quot;Mobility: {}&quot;</span>, <span class="ident">mobility_evaluation</span>);
-    <span class="macro">println!</span>(<span class="string">&quot;Safety: {}&quot;</span>, <span class="ident">safety_evaluation</span>);
-    <span class="macro">println!</span>(<span class="string">&quot;Pawns: {}&quot;</span>, <span class="ident">pawns_evaluation</span>);
+    <span class="kw">let </span>material_evaluation = material::evaluate(<span class="kw-2">&amp;</span>board);
+    <span class="kw">let </span>pst_evaluation = pst::evaluate(<span class="kw-2">&amp;</span>board);
+    <span class="kw">let </span>mobility_evaluation = mobility::evaluate(<span class="kw-2">&amp;</span>board, <span class="kw-2">&amp;mut </span>dangered_white_king_squares, <span class="kw-2">&amp;mut </span>dangered_black_king_squares);
+    <span class="kw">let </span>safety_evaluation = safety::evaluate(<span class="kw-2">&amp;</span>board, dangered_white_king_squares, dangered_black_king_squares);
+    <span class="kw">let </span>pawns_evaluation = pawns::evaluate_without_cache(<span class="kw-2">&amp;</span>board);
 
-    <span class="kw">let</span> <span class="ident">sum</span> <span class="op">=</span> <span class="ident">material_evaluation</span> <span class="op">+</span> <span class="ident">pst_evaluation</span> <span class="op">+</span> <span class="ident">mobility_evaluation</span> <span class="op">+</span> <span class="ident">safety_evaluation</span> <span class="op">+</span> <span class="ident">pawns_evaluation</span>;
-    <span class="kw">let</span> <span class="ident">board_evaluation</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">evaluate_without_cache</span>(<span class="ident">WHITE</span>);
+    <span class="macro">println!</span>(<span class="string">&quot;Material: {}&quot;</span>, material_evaluation);
+    <span class="macro">println!</span>(<span class="string">&quot;Piece-square tables: {}&quot;</span>, pst_evaluation.taper_score(game_phase, initial_game_phase));
+    <span class="macro">println!</span>(<span class="string">&quot;Mobility: {}&quot;</span>, mobility_evaluation.taper_score(game_phase, initial_game_phase));
+    <span class="macro">println!</span>(<span class="string">&quot;Safety: {}&quot;</span>, safety_evaluation.taper_score(game_phase, initial_game_phase));
+    <span class="macro">println!</span>(<span class="string">&quot;Pawns: {}&quot;</span>, pawns_evaluation.taper_score(game_phase, initial_game_phase));
 
-    <span class="kw">if</span> <span class="ident">sum</span> <span class="op">!</span><span class="op">=</span> <span class="ident">board_evaluation</span> {
-        <span class="macro">println!</span>(<span class="string">&quot; --- Integration check failed --- &quot;</span>);
-    } <span class="kw">else</span> {
-        <span class="macro">println!</span>(<span class="string">&quot; --- Total: {} --- &quot;</span>, <span class="ident">sum</span>);
-    }
+    <span class="kw">let </span>sum = material_evaluation + pst_evaluation + mobility_evaluation + safety_evaluation + pawns_evaluation;
+    <span class="macro">println!</span>(<span class="string">&quot; --- Total: {} --- &quot;</span>, sum.taper_score(game_phase, initial_game_phase));
 }
 
-<span class="doccomment">/// Handles `magic` command by printing a fresh set of magic numbers.</span>
-<span class="kw">fn</span> <span class="ident">handle_magic</span>() {
-    <span class="kw">let</span> <span class="ident">now</span> <span class="op">=</span> <span class="ident">Utc::now</span>();
-    <span class="kw">let</span> <span class="ident">magic</span> <span class="op">=</span> <span class="ident">MagicContainer::default</span>();
+<span class="doccomment">/// Handles `magic` command by printing a fresh set of magic numbers.
+</span><span class="kw">fn </span>handle_magic() {
+    <span class="kw">let </span>now = SystemTime::now();
+    <span class="kw">let </span>magic = MagicContainer::default();
     <span class="macro">println!</span>(<span class="string">&quot;Generating magic numbers for rook...&quot;</span>);
 
-    <span class="kw">for</span> <span class="ident">index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">64</span> {
-        <span class="macro">println!</span>(<span class="string">&quot;{},&quot;</span>, <span class="ident">magic</span>.<span class="ident">generate_rook_magic_number</span>(<span class="ident">index</span>));
+    <span class="kw">for </span>index <span class="kw">in </span>ALL_SQUARES {
+        <span class="macro">println!</span>(<span class="string">&quot;{},&quot;</span>, magic.generate_rook_magic_number(index));
     }
 
     <span class="macro">println!</span>();
     <span class="macro">println!</span>(<span class="string">&quot;Generating magic numbers for bishop...&quot;</span>);
 
-    <span class="kw">for</span> <span class="ident">index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">64</span> {
-        <span class="macro">println!</span>(<span class="string">&quot;{},&quot;</span>, <span class="ident">magic</span>.<span class="ident">generate_bishop_magic_number</span>(<span class="ident">index</span>));
+    <span class="kw">for </span>index <span class="kw">in </span>ALL_SQUARES {
+        <span class="macro">println!</span>(<span class="string">&quot;{},&quot;</span>, magic.generate_bishop_magic_number(index));
     }
 
-    <span class="kw">let</span> <span class="ident">diff</span> <span class="op">=</span> (<span class="ident">Utc::now</span>() <span class="op">-</span> <span class="ident">now</span>).<span class="ident">num_milliseconds</span>();
-    <span class="macro">println!</span>(<span class="string">&quot;Done! Magic numbers generated in {} ms&quot;</span>, <span class="ident">diff</span>);
+    <span class="kw">let </span>diff = now.elapsed().unwrap().as_millis();
+    <span class="macro">println!</span>(<span class="string">&quot;Done! Magic numbers generated in {} ms&quot;</span>, diff);
 }
 
-<span class="doccomment">/// Handles `perft [depth]`, `perft [depth] fen [fen]` and `perft [depth] moves [moves]` commands by running a perft test to the depth specified</span>
-<span class="doccomment">/// by `depth` parameter. The initial position can be specified by FEN, a list of moves, or just omitted (so the default start position will be taken).</span>
-<span class="kw">fn</span> <span class="ident">handle_perft</span>(<span class="ident">input</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>) {
-    <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">2</span> {
+<span class="doccomment">/// Handles `perft [depth]`, `perft [depth] fen [fen]` and `perft [depth] moves [moves]` commands by running a perft test to the depth specified
+/// by `depth` parameter. The initial position can be specified by FEN, a list of moves, or just omitted (so the default start position will be taken).
+</span><span class="kw">fn </span>handle_perft(input: Vec&lt;<span class="kw-2">&amp;</span>str&gt;) {
+    <span class="kw">if </span>input.len() &lt; <span class="number">2 </span>{
         <span class="macro">println!</span>(<span class="string">&quot;Depth parameter not found&quot;</span>);
         <span class="kw">return</span>;
     }
 
-    <span class="kw">let</span> <span class="ident">max_depth</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">input</span>[<span class="number">1</span>].<span class="ident">parse</span>() {
-        <span class="prelude-val">Ok</span>(<span class="ident">result</span>) =&gt; <span class="ident">result</span>,
-        <span class="prelude-val">Err</span>(<span class="ident">error</span>) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid depth parameter: {}&quot;</span>, <span class="ident">error</span>);
+    <span class="kw">let </span>max_depth: i32 = <span class="kw">match </span>input[<span class="number">1</span>].parse() {
+        <span class="prelude-val">Ok</span>(result) =&gt; result,
+        <span class="prelude-val">Err</span>(error) =&gt; {
+            <span class="macro">println!</span>(<span class="string">&quot;Invalid depth parameter: {}&quot;</span>, error);
             <span class="kw">return</span>;
         }
     };
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">board</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">prepare_board</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>[<span class="number">2</span>..]) {
-        <span class="prelude-val">Ok</span>(<span class="ident">board</span>) =&gt; <span class="ident">board</span>,
-        <span class="prelude-val">Err</span>(<span class="ident">error</span>) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid FEN parameter: {}&quot;</span>, <span class="ident">error</span>);
+    <span class="kw">let </span><span class="kw-2">mut </span>board = <span class="kw">match </span>prepare_board(<span class="kw-2">&amp;</span>input[<span class="number">2</span>..]) {
+        <span class="prelude-val">Ok</span>(board) =&gt; board,
+        <span class="prelude-val">Err</span>(error) =&gt; {
+            <span class="macro">println!</span>(<span class="string">&quot;Invalid FEN parameter: {}&quot;</span>, error);
             <span class="kw">return</span>;
         }
     };
 
-    <span class="kw">for</span> <span class="ident">depth</span> <span class="kw">in</span> <span class="number">1</span>..<span class="ident">max_depth</span> <span class="op">+</span> <span class="number">1</span> {
-        <span class="kw">let</span> <span class="ident">now</span> <span class="op">=</span> <span class="ident">Utc::now</span>();
-        <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="ident">perft::normal::run</span>(<span class="ident">depth</span>, <span class="kw-2">&amp;mut</span> <span class="ident">board</span>, <span class="bool-val">false</span>);
+    <span class="kw">for </span>depth <span class="kw">in </span><span class="number">1</span>..=max_depth {
+        <span class="kw">let </span>now = SystemTime::now();
+        <span class="kw">let </span>result = perft::normal::run(depth, <span class="kw-2">&amp;mut </span>board, <span class="bool-val">false</span>);
 
-        <span class="kw">let</span> <span class="ident">diff</span> <span class="op">=</span> ((<span class="ident">Utc::now</span>() <span class="op">-</span> <span class="ident">now</span>).<span class="ident">num_milliseconds</span>() <span class="kw">as</span> <span class="ident">f64</span>) <span class="op">/</span> <span class="number">1000.0</span>;
-        <span class="kw">let</span> <span class="ident">mnps</span> <span class="op">=</span> ((<span class="ident">count</span> <span class="kw">as</span> <span class="ident">f64</span>) <span class="op">/</span> <span class="number">1000000.0</span>) <span class="op">/</span> <span class="ident">diff</span>;
-
-        <span class="macro">println!</span>(<span class="string">&quot;Depth {}: {} leafs in {:.2} s ({:.2} ML/s)&quot;</span>, <span class="ident">depth</span>, <span class="ident">count</span>, <span class="ident">diff</span>, <span class="ident">mnps</span>);
-    }
-
-    <span class="macro">println!</span>(<span class="string">&quot;Perft done!&quot;</span>);
-}
-
-<span class="doccomment">/// Handles `dperft [depth]`, `dperft [depth] fen [fen]` and `dperft [depth] moves [moves]` commands by running a divided perft test to the depth specified</span>
-<span class="doccomment">/// by `depth` parameter. The initial position can be specified by FEN, a list of moves, or just omitted (so the default start position will be taken).</span>
-<span class="kw">fn</span> <span class="ident">handle_dperft</span>(<span class="ident">input</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>) {
-    <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">2</span> {
-        <span class="macro">println!</span>(<span class="string">&quot;Depth parameter not found&quot;</span>);
-        <span class="kw">return</span>;
-    }
-
-    <span class="kw">let</span> <span class="ident">depth</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">input</span>[<span class="number">1</span>].<span class="ident">parse</span>() {
-        <span class="prelude-val">Ok</span>(<span class="ident">result</span>) =&gt; <span class="ident">result</span>,
-        <span class="prelude-val">Err</span>(<span class="ident">error</span>) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid depth parameter: {}&quot;</span>, <span class="ident">error</span>);
-            <span class="kw">return</span>;
-        }
-    };
-
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">board</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">prepare_board</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>[<span class="number">2</span>..]) {
-        <span class="prelude-val">Ok</span>(<span class="ident">board</span>) =&gt; <span class="ident">board</span>,
-        <span class="prelude-val">Err</span>(<span class="ident">error</span>) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid FEN parameter: {}&quot;</span>, <span class="ident">error</span>);
-            <span class="kw">return</span>;
-        }
-    };
-
-    <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">perft::divided::run</span>(<span class="ident">depth</span>, <span class="kw-2">&amp;mut</span> <span class="ident">board</span>);
-
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total_leafs</span> <span class="op">=</span> <span class="number">0</span>;
-    <span class="kw">for</span> <span class="ident">r#move</span> <span class="kw">in</span> <span class="ident">result</span> {
-        <span class="macro">println!</span>(<span class="string">&quot;{}: {} leafs&quot;</span>, <span class="ident">r#move</span>.<span class="number">0</span>, <span class="ident">r#move</span>.<span class="number">1</span>);
-        <span class="ident">total_leafs</span> <span class="op">+</span><span class="op">=</span> <span class="ident">r#move</span>.<span class="number">1</span>;
-    }
-
-    <span class="macro">println!</span>();
-    <span class="macro">println!</span>(<span class="string">&quot;{} leafs total&quot;</span>, <span class="ident">total_leafs</span>);
-    <span class="macro">println!</span>(<span class="string">&quot;Perft done!&quot;</span>);
-}
-
-<span class="doccomment">/// Handles `qperft [depth] [threads_count] [hashtable_size_mb]`, `qperft [depth] [threads_count] [hashtable_size_mb] fen [fen]` and</span>
-<span class="doccomment">/// `qperft [depth] [threads_count] [hashtable_size_mb] moves [moves]` commands by running a quick perft test to the depth specified by `depth` parameter.</span>
-<span class="doccomment">/// This kind of perft also supports multithreading (specified by `threads_count`) and caching results in the hashtable (with size specified by `hashtable_size_mb`).</span>
-<span class="doccomment">/// The initial position can be specified by FEN, a list of moves, or just omitted (so the default start position will be taken).</span>
-<span class="kw">fn</span> <span class="ident">handle_qperft</span>(<span class="ident">input</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>) {
-    <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">2</span> {
-        <span class="macro">println!</span>(<span class="string">&quot;Depth parameter not found&quot;</span>);
-        <span class="kw">return</span>;
-    }
-
-    <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">3</span> {
-        <span class="macro">println!</span>(<span class="string">&quot;Hashtable size parameter not found&quot;</span>);
-        <span class="kw">return</span>;
-    }
-
-    <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">4</span> {
-        <span class="macro">println!</span>(<span class="string">&quot;Threads count parameter not found&quot;</span>);
-        <span class="kw">return</span>;
-    }
-
-    <span class="kw">let</span> <span class="ident">max_depth</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">input</span>[<span class="number">1</span>].<span class="ident">parse</span>() {
-        <span class="prelude-val">Ok</span>(<span class="ident">result</span>) =&gt; <span class="ident">result</span>,
-        <span class="prelude-val">Err</span>(<span class="ident">error</span>) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid depth parameter: {}&quot;</span>, <span class="ident">error</span>);
-            <span class="kw">return</span>;
-        }
-    };
-
-    <span class="kw">let</span> <span class="ident">threads_count</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">input</span>[<span class="number">2</span>].<span class="ident">parse</span>() {
-        <span class="prelude-val">Ok</span>(<span class="ident">result</span>) =&gt; <span class="ident">result</span>,
-        <span class="prelude-val">Err</span>(<span class="ident">error</span>) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid threads count parameter: {}&quot;</span>, <span class="ident">error</span>);
-            <span class="kw">return</span>;
-        }
-    };
-
-    <span class="kw">let</span> <span class="ident">hashtable_size</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">input</span>[<span class="number">3</span>].<span class="ident">parse</span>() {
-        <span class="prelude-val">Ok</span>(<span class="ident">result</span>) =&gt; <span class="ident">result</span>,
-        <span class="prelude-val">Err</span>(<span class="ident">error</span>) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid hashtable size parameter: {}&quot;</span>, <span class="ident">error</span>);
-            <span class="kw">return</span>;
-        }
-    };
-
-    <span class="kw">if</span> <span class="ident">hashtable_size</span> <span class="op">==</span> <span class="number">0</span> {
-        <span class="macro">println!</span>(<span class="string">&quot;Hashtable size must be greater than zero&quot;</span>);
-        <span class="kw">return</span>;
-    }
-
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">board</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">prepare_board</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>[<span class="number">4</span>..]) {
-        <span class="prelude-val">Ok</span>(<span class="ident">board</span>) =&gt; <span class="ident">board</span>,
-        <span class="prelude-val">Err</span>(<span class="ident">error</span>) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid FEN parameter: {}&quot;</span>, <span class="ident">error</span>);
-            <span class="kw">return</span>;
-        }
-    };
-
-    <span class="kw">for</span> <span class="ident">depth</span> <span class="kw">in</span> <span class="number">1</span>..<span class="op">=</span><span class="ident">max_depth</span> {
-        <span class="kw">let</span> <span class="ident">now</span> <span class="op">=</span> <span class="ident">Utc::now</span>();
-        <span class="kw">let</span> (<span class="ident">count</span>, <span class="ident">hashtable_usage</span>) <span class="op">=</span> <span class="ident">perft::fast::run</span>(<span class="ident">depth</span>, <span class="kw-2">&amp;mut</span> <span class="ident">board</span>, <span class="ident">hashtable_size</span> <span class="op">*</span> <span class="number">1024</span> <span class="op">*</span> <span class="number">1024</span>, <span class="ident">threads_count</span>);
-
-        <span class="kw">let</span> <span class="ident">diff</span> <span class="op">=</span> ((<span class="ident">Utc::now</span>() <span class="op">-</span> <span class="ident">now</span>).<span class="ident">num_milliseconds</span>() <span class="kw">as</span> <span class="ident">f64</span>) <span class="op">/</span> <span class="number">1000.0</span>;
-        <span class="kw">let</span> <span class="ident">mnps</span> <span class="op">=</span> ((<span class="ident">count</span> <span class="kw">as</span> <span class="ident">f64</span>) <span class="op">/</span> <span class="number">1000000.0</span>) <span class="op">/</span> <span class="ident">diff</span>;
+        <span class="kw">let </span>diff = (now.elapsed().unwrap().as_millis() <span class="kw">as </span>f64) / <span class="number">1000.0</span>;
+        <span class="kw">let </span>mnps = ((result.nodes <span class="kw">as </span>f64) / <span class="number">1000000.0</span>) / diff;
 
         <span class="macro">println!</span>(
-            <span class="string">&quot;Depth {}: {} leafs in {:.2} s ({:.2} ML/s, {:.2}% of hashtable used)&quot;</span>,
-            <span class="ident">depth</span>, <span class="ident">count</span>, <span class="ident">diff</span>, <span class="ident">mnps</span>, <span class="ident">hashtable_usage</span>
+            <span class="string">&quot;Depth {}: {} leafs in {:.2} s ({:.2} ML/s), {} captures, {} en passants, {} castles, {} promotions, {} checks&quot;</span>,
+            depth,
+            result.nodes,
+            diff,
+            mnps,
+            result.statistics.captures,
+            result.statistics.en_passants,
+            result.statistics.castles,
+            result.statistics.promotions,
+            result.statistics.checks
         );
     }
 
     <span class="macro">println!</span>(<span class="string">&quot;Perft done!&quot;</span>);
 }
 
-<span class="doccomment">/// Handles `test [epd] [depth] [transposition_table_size] [threads_count]` command by running a fixed-`depth` search of positions stored in the `epd` file,</span>
-<span class="doccomment">/// using hashtable with size specified in `transposition_table_size`. To classify the test as successful, the last iteration has to return the correct best move.</span>
-<span class="kw">fn</span> <span class="ident">handle_test</span>(<span class="ident">input</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>) {
-    <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">2</span> {
-        <span class="macro">println!</span>(<span class="string">&quot;EPD filename parameter not found&quot;</span>);
-        <span class="kw">return</span>;
-    }
-
-    <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">3</span> {
+<span class="doccomment">/// Handles `dperft [depth]`, `dperft [depth] fen [fen]` and `dperft [depth] moves [moves]` commands by running a divided perft test to the depth specified
+/// by `depth` parameter. The initial position can be specified by FEN, a list of moves, or just omitted (so the default start position will be taken).
+</span><span class="kw">fn </span>handle_dperft(input: Vec&lt;<span class="kw-2">&amp;</span>str&gt;) {
+    <span class="kw">if </span>input.len() &lt; <span class="number">2 </span>{
         <span class="macro">println!</span>(<span class="string">&quot;Depth parameter not found&quot;</span>);
         <span class="kw">return</span>;
     }
 
-    <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">4</span> {
-        <span class="macro">println!</span>(<span class="string">&quot;Transposition table size parameter not found&quot;</span>);
+    <span class="kw">let </span>depth: i32 = <span class="kw">match </span>input[<span class="number">1</span>].parse() {
+        <span class="prelude-val">Ok</span>(result) =&gt; result,
+        <span class="prelude-val">Err</span>(error) =&gt; {
+            <span class="macro">println!</span>(<span class="string">&quot;Invalid depth parameter: {}&quot;</span>, error);
+            <span class="kw">return</span>;
+        }
+    };
+
+    <span class="kw">let </span><span class="kw-2">mut </span>board = <span class="kw">match </span>prepare_board(<span class="kw-2">&amp;</span>input[<span class="number">2</span>..]) {
+        <span class="prelude-val">Ok</span>(board) =&gt; board,
+        <span class="prelude-val">Err</span>(error) =&gt; {
+            <span class="macro">println!</span>(<span class="string">&quot;Invalid FEN parameter: {}&quot;</span>, error);
+            <span class="kw">return</span>;
+        }
+    };
+
+    <span class="kw">let </span>result = perft::divided::run(depth, <span class="kw-2">&amp;mut </span>board);
+
+    <span class="kw">let </span><span class="kw-2">mut </span>total_leafs = <span class="number">0</span>;
+    <span class="kw">for </span>r#move <span class="kw">in </span>result {
+        <span class="macro">println!</span>(<span class="string">&quot;{}: {} leafs&quot;</span>, r#move.<span class="number">0</span>, r#move.<span class="number">1</span>);
+        total_leafs += r#move.<span class="number">1</span>;
+    }
+
+    <span class="macro">println!</span>();
+    <span class="macro">println!</span>(<span class="string">&quot;{} leafs total&quot;</span>, total_leafs);
+    <span class="macro">println!</span>(<span class="string">&quot;Perft done!&quot;</span>);
+}
+
+<span class="doccomment">/// Handles `qperft [depth] [threads_count] [hashtable_size_mb]`, `qperft [depth] [threads_count] [hashtable_size_mb] fen [fen]` and
+/// `qperft [depth] [threads_count] [hashtable_size_mb] moves [moves]` commands by running a quick perft test to the depth specified by `depth` parameter.
+/// This kind of perft also supports multithreading (specified by `threads_count`) and caching results in the hashtable (with size specified by `hashtable_size_mb`).
+/// The initial position can be specified by FEN, a list of moves, or just omitted (so the default start position will be taken).
+</span><span class="kw">fn </span>handle_qperft(input: Vec&lt;<span class="kw-2">&amp;</span>str&gt;) {
+    <span class="kw">if </span>input.len() &lt; <span class="number">2 </span>{
+        <span class="macro">println!</span>(<span class="string">&quot;Depth parameter not found&quot;</span>);
         <span class="kw">return</span>;
     }
 
-    <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">5</span> {
+    <span class="kw">if </span>input.len() &lt; <span class="number">3 </span>{
+        <span class="macro">println!</span>(<span class="string">&quot;Hashtable size parameter not found&quot;</span>);
+        <span class="kw">return</span>;
+    }
+
+    <span class="kw">if </span>input.len() &lt; <span class="number">4 </span>{
         <span class="macro">println!</span>(<span class="string">&quot;Threads count parameter not found&quot;</span>);
         <span class="kw">return</span>;
     }
 
-    <span class="kw">let</span> <span class="ident">depth</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">input</span>[<span class="number">2</span>].<span class="ident">parse</span>() {
-        <span class="prelude-val">Ok</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>,
-        <span class="prelude-val">Err</span>(<span class="ident">error</span>) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid depth parameter: {}&quot;</span>, <span class="ident">error</span>);
+    <span class="kw">let </span>max_depth: i32 = <span class="kw">match </span>input[<span class="number">1</span>].parse() {
+        <span class="prelude-val">Ok</span>(result) =&gt; result,
+        <span class="prelude-val">Err</span>(error) =&gt; {
+            <span class="macro">println!</span>(<span class="string">&quot;Invalid depth parameter: {}&quot;</span>, error);
             <span class="kw">return</span>;
         }
     };
 
-    <span class="kw">let</span> <span class="ident">transposition_table_size</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">input</span>[<span class="number">3</span>].<span class="ident">parse</span>() {
-        <span class="prelude-val">Ok</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>,
-        <span class="prelude-val">Err</span>(<span class="ident">error</span>) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid transposition table size parameter: {}&quot;</span>, <span class="ident">error</span>);
+    <span class="kw">let </span>threads_count: usize = <span class="kw">match </span>input[<span class="number">2</span>].parse() {
+        <span class="prelude-val">Ok</span>(result) =&gt; result,
+        <span class="prelude-val">Err</span>(error) =&gt; {
+            <span class="macro">println!</span>(<span class="string">&quot;Invalid threads count parameter: {}&quot;</span>, error);
             <span class="kw">return</span>;
         }
     };
 
-    <span class="kw">if</span> <span class="ident">transposition_table_size</span> <span class="op">==</span> <span class="number">0</span> {
-        <span class="macro">println!</span>(<span class="string">&quot;Transposition table size must be greater than zero&quot;</span>);
+    <span class="kw">let </span>hashtable_size: usize = <span class="kw">match </span>input[<span class="number">3</span>].parse() {
+        <span class="prelude-val">Ok</span>(result) =&gt; result,
+        <span class="prelude-val">Err</span>(error) =&gt; {
+            <span class="macro">println!</span>(<span class="string">&quot;Invalid hashtable size parameter: {}&quot;</span>, error);
+            <span class="kw">return</span>;
+        }
+    };
+
+    <span class="kw">if </span>hashtable_size == <span class="number">0 </span>{
+        <span class="macro">println!</span>(<span class="string">&quot;Hashtable size must be greater than zero&quot;</span>);
         <span class="kw">return</span>;
     }
 
-    <span class="kw">let</span> <span class="ident">threads_count</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">input</span>[<span class="number">4</span>].<span class="ident">parse</span>() {
-        <span class="prelude-val">Ok</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>,
-        <span class="prelude-val">Err</span>(<span class="ident">error</span>) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid threads count parameter: {}&quot;</span>, <span class="ident">error</span>);
+    <span class="kw">let </span><span class="kw-2">mut </span>board = <span class="kw">match </span>prepare_board(<span class="kw-2">&amp;</span>input[<span class="number">4</span>..]) {
+        <span class="prelude-val">Ok</span>(board) =&gt; board,
+        <span class="prelude-val">Err</span>(error) =&gt; {
+            <span class="macro">println!</span>(<span class="string">&quot;Invalid FEN parameter: {}&quot;</span>, error);
             <span class="kw">return</span>;
         }
     };
 
-    <span class="ident">test::run</span>(<span class="ident">input</span>[<span class="number">1</span>], <span class="ident">depth</span>, <span class="ident">transposition_table_size</span> <span class="op">*</span> <span class="number">1024</span> <span class="op">*</span> <span class="number">1024</span>, <span class="ident">threads_count</span>);
+    <span class="kw">for </span>depth <span class="kw">in </span><span class="number">1</span>..=max_depth {
+        <span class="kw">let </span>now = SystemTime::now();
+        <span class="kw">let </span>(count, hashtable_usage) = perft::fast::run(depth, <span class="kw-2">&amp;mut </span>board, hashtable_size * <span class="number">1024 </span>* <span class="number">1024</span>, threads_count);
+
+        <span class="kw">let </span>diff = (now.elapsed().unwrap().as_millis() <span class="kw">as </span>f64) / <span class="number">1000.0</span>;
+        <span class="kw">let </span>mnps = ((count <span class="kw">as </span>f64) / <span class="number">1000000.0</span>) / diff;
+
+        <span class="macro">println!</span>(<span class="string">&quot;Depth {}: {} leafs in {:.2} s ({:.2} ML/s, {:.2}% of hashtable used)&quot;</span>, depth, count, diff, mnps, hashtable_usage);
+    }
+
+    <span class="macro">println!</span>(<span class="string">&quot;Perft done!&quot;</span>);
 }
 
-<span class="doccomment">/// Handles `tuner [epd] [output] [lock_material] [randomize] [threads_count]` command by running the evaluation parameters tuner. The input file is specified by `epd`</span>
-<span class="doccomment">/// file with a list of positions and their expected results, and the `output` directory is used to store generated Rust sources with the optimized values. Use</span>
-<span class="doccomment">/// `lock_material` to disable tuner for piece values, and `randomize` to initialize evaluation parameters with random values. Multithreading is supported by `threads_count`.</span>
-<span class="kw">fn</span> <span class="ident">handle_tuner</span>(<span class="ident">input</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>) {
-    <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">2</span> {
+<span class="doccomment">/// Handles `testset [epd] [depth] [transposition_table_size] [threads_count]` command by running a fixed-`depth` search of positions stored in the `epd` file,
+/// using hashtable with size specified in `transposition_table_size`. To classify the test as successful, the last iteration has to return the correct best move.
+</span><span class="kw">fn </span>handle_testset(input: Vec&lt;<span class="kw-2">&amp;</span>str&gt;) {
+    <span class="kw">if </span>input.len() &lt; <span class="number">2 </span>{
         <span class="macro">println!</span>(<span class="string">&quot;EPD filename parameter not found&quot;</span>);
         <span class="kw">return</span>;
     }
 
-    <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">3</span> {
-        <span class="macro">println!</span>(<span class="string">&quot;Output directory parameter not found&quot;</span>);
+    <span class="kw">if </span>input.len() &lt; <span class="number">3 </span>{
+        <span class="macro">println!</span>(<span class="string">&quot;Depth parameter not found&quot;</span>);
         <span class="kw">return</span>;
     }
 
-    <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">4</span> {
-        <span class="macro">println!</span>(<span class="string">&quot;Lock material parameter not found&quot;</span>);
+    <span class="kw">if </span>input.len() &lt; <span class="number">4 </span>{
+        <span class="macro">println!</span>(<span class="string">&quot;Transposition table size parameter not found&quot;</span>);
         <span class="kw">return</span>;
     }
 
-    <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">5</span> {
-        <span class="macro">println!</span>(<span class="string">&quot;Random values parameter not found&quot;</span>);
-        <span class="kw">return</span>;
-    }
-
-    <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">6</span> {
+    <span class="kw">if </span>input.len() &lt; <span class="number">5 </span>{
         <span class="macro">println!</span>(<span class="string">&quot;Threads count parameter not found&quot;</span>);
         <span class="kw">return</span>;
     }
 
-    <span class="kw">let</span> <span class="ident">lock_material</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">input</span>[<span class="number">3</span>].<span class="ident">parse</span>() {
-        <span class="prelude-val">Ok</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>,
-        <span class="prelude-val">Err</span>(<span class="ident">error</span>) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid lock material parameter: {}&quot;</span>, <span class="ident">error</span>);
+    <span class="kw">let </span>depth = <span class="kw">match </span>input[<span class="number">2</span>].parse() {
+        <span class="prelude-val">Ok</span>(value) =&gt; value,
+        <span class="prelude-val">Err</span>(error) =&gt; {
+            <span class="macro">println!</span>(<span class="string">&quot;Invalid depth parameter: {}&quot;</span>, error);
             <span class="kw">return</span>;
         }
     };
 
-    <span class="kw">let</span> <span class="ident">random_values</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">input</span>[<span class="number">4</span>].<span class="ident">parse</span>() {
-        <span class="prelude-val">Ok</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>,
-        <span class="prelude-val">Err</span>(<span class="ident">error</span>) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid random values parameter: {}&quot;</span>, <span class="ident">error</span>);
+    <span class="kw">let </span>transposition_table_size: usize = <span class="kw">match </span>input[<span class="number">3</span>].parse() {
+        <span class="prelude-val">Ok</span>(value) =&gt; value,
+        <span class="prelude-val">Err</span>(error) =&gt; {
+            <span class="macro">println!</span>(<span class="string">&quot;Invalid transposition table size parameter: {}&quot;</span>, error);
             <span class="kw">return</span>;
         }
     };
 
-    <span class="kw">let</span> <span class="ident">threads_count</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">input</span>[<span class="number">5</span>].<span class="ident">parse</span>() {
-        <span class="prelude-val">Ok</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>,
-        <span class="prelude-val">Err</span>(<span class="ident">error</span>) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid threads count parameter: {}&quot;</span>, <span class="ident">error</span>);
-            <span class="kw">return</span>;
-        }
-    };
-
-    <span class="ident">tuner::run</span>(<span class="ident">input</span>[<span class="number">1</span>], <span class="ident">input</span>[<span class="number">2</span>], <span class="ident">lock_material</span>, <span class="ident">random_values</span>, <span class="ident">threads_count</span>);
-}
-
-<span class="doccomment">/// Handles `tunerset [pgn] [output] [min_ply] [max_score] [max_diff] [density]` command by running generator of the dataset for the tuner.</span>
-<span class="doccomment">/// It works by parsing `pgn_filename`, and then picking random positions based on the provided restrictions like `min_ply`, `max_score`,</span>
-<span class="doccomment">/// `max_differ` and `density`. Output positions are then stored in the `output_file`.</span>
-<span class="kw">fn</span> <span class="ident">handle_tunerset</span>(<span class="ident">input</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>) {
-    <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">2</span> {
-        <span class="macro">println!</span>(<span class="string">&quot;PGN filename parameter not found&quot;</span>);
+    <span class="kw">if </span>transposition_table_size == <span class="number">0 </span>{
+        <span class="macro">println!</span>(<span class="string">&quot;Transposition table size must be greater than zero&quot;</span>);
         <span class="kw">return</span>;
     }
 
-    <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">3</span> {
+    <span class="kw">let </span>threads_count = <span class="kw">match </span>input[<span class="number">4</span>].parse() {
+        <span class="prelude-val">Ok</span>(value) =&gt; value,
+        <span class="prelude-val">Err</span>(error) =&gt; {
+            <span class="macro">println!</span>(<span class="string">&quot;Invalid threads count parameter: {}&quot;</span>, error);
+            <span class="kw">return</span>;
+        }
+    };
+
+    testset::run(input[<span class="number">1</span>], depth, transposition_table_size * <span class="number">1024 </span>* <span class="number">1024</span>, threads_count);
+}
+
+<span class="doccomment">/// Handles `tuner [epd] [output] [lock_material] [randomize] [threads_count]` command by running the evaluation parameters tuner. The input file is specified by `epd`
+/// file with a list of positions and their expected results, and the `output` directory is used to store generated Rust sources with the optimized values. Use
+/// `lock_material` to disable tuner for piece values, and `randomize` to initialize evaluation parameters with random values. Multithreading is supported by `threads_count`.
+</span><span class="kw">fn </span>handle_tuner(input: Vec&lt;<span class="kw-2">&amp;</span>str&gt;) {
+    <span class="kw">if </span>input.len() &lt; <span class="number">2 </span>{
+        <span class="macro">println!</span>(<span class="string">&quot;EPD filename parameter not found&quot;</span>);
+        <span class="kw">return</span>;
+    }
+
+    <span class="kw">if </span>input.len() &lt; <span class="number">3 </span>{
         <span class="macro">println!</span>(<span class="string">&quot;Output directory parameter not found&quot;</span>);
         <span class="kw">return</span>;
     }
 
-    <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">4</span> {
+    <span class="kw">if </span>input.len() &lt; <span class="number">4 </span>{
+        <span class="macro">println!</span>(<span class="string">&quot;Lock material parameter not found&quot;</span>);
+        <span class="kw">return</span>;
+    }
+
+    <span class="kw">if </span>input.len() &lt; <span class="number">5 </span>{
+        <span class="macro">println!</span>(<span class="string">&quot;Random values parameter not found&quot;</span>);
+        <span class="kw">return</span>;
+    }
+
+    <span class="kw">if </span>input.len() &lt; <span class="number">6 </span>{
+        <span class="macro">println!</span>(<span class="string">&quot;Threads count parameter not found&quot;</span>);
+        <span class="kw">return</span>;
+    }
+
+    <span class="kw">let </span>lock_material = <span class="kw">match </span>input[<span class="number">3</span>].parse() {
+        <span class="prelude-val">Ok</span>(value) =&gt; value,
+        <span class="prelude-val">Err</span>(error) =&gt; {
+            <span class="macro">println!</span>(<span class="string">&quot;Invalid lock material parameter: {}&quot;</span>, error);
+            <span class="kw">return</span>;
+        }
+    };
+
+    <span class="kw">let </span>random_values = <span class="kw">match </span>input[<span class="number">4</span>].parse() {
+        <span class="prelude-val">Ok</span>(value) =&gt; value,
+        <span class="prelude-val">Err</span>(error) =&gt; {
+            <span class="macro">println!</span>(<span class="string">&quot;Invalid random values parameter: {}&quot;</span>, error);
+            <span class="kw">return</span>;
+        }
+    };
+
+    <span class="kw">let </span>threads_count = <span class="kw">match </span>input[<span class="number">5</span>].parse() {
+        <span class="prelude-val">Ok</span>(value) =&gt; value,
+        <span class="prelude-val">Err</span>(error) =&gt; {
+            <span class="macro">println!</span>(<span class="string">&quot;Invalid threads count parameter: {}&quot;</span>, error);
+            <span class="kw">return</span>;
+        }
+    };
+
+    tuner::run(input[<span class="number">1</span>], input[<span class="number">2</span>], lock_material, random_values, threads_count);
+}
+
+<span class="doccomment">/// Handles `tunerset [pgn] [output] [min_ply] [max_score] [max_diff] [density]` command by running generator of the dataset for the tuner.
+/// It works by parsing `pgn_filename`, and then picking random positions based on the provided restrictions like `min_ply`, `max_score`,
+/// `max_differ`, `density` and `avg_game_phase`. Output positions are then stored in the `output_file`.
+</span><span class="kw">fn </span>handle_tunerset(input: Vec&lt;<span class="kw-2">&amp;</span>str&gt;) {
+    <span class="kw">if </span>input.len() &lt; <span class="number">2 </span>{
+        <span class="macro">println!</span>(<span class="string">&quot;PGN filename parameter not found&quot;</span>);
+        <span class="kw">return</span>;
+    }
+
+    <span class="kw">if </span>input.len() &lt; <span class="number">3 </span>{
+        <span class="macro">println!</span>(<span class="string">&quot;Output directory parameter not found&quot;</span>);
+        <span class="kw">return</span>;
+    }
+
+    <span class="kw">if </span>input.len() &lt; <span class="number">4 </span>{
         <span class="macro">println!</span>(<span class="string">&quot;Minimal ply parameter not found&quot;</span>);
         <span class="kw">return</span>;
     }
 
-    <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">5</span> {
+    <span class="kw">if </span>input.len() &lt; <span class="number">5 </span>{
         <span class="macro">println!</span>(<span class="string">&quot;Maximal score parameter not found&quot;</span>);
         <span class="kw">return</span>;
     }
 
-    <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">6</span> {
+    <span class="kw">if </span>input.len() &lt; <span class="number">6 </span>{
         <span class="macro">println!</span>(<span class="string">&quot;Maximal score difference parameter not found&quot;</span>);
         <span class="kw">return</span>;
     }
 
-    <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="number">7</span> {
+    <span class="kw">if </span>input.len() &lt; <span class="number">7 </span>{
         <span class="macro">println!</span>(<span class="string">&quot;Maximal density parameter not found&quot;</span>);
         <span class="kw">return</span>;
     }
 
-    <span class="kw">let</span> <span class="ident">min_ply</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">input</span>[<span class="number">3</span>].<span class="ident">parse</span>() {
-        <span class="prelude-val">Ok</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>,
-        <span class="prelude-val">Err</span>(<span class="ident">error</span>) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid minimal ply parameter: {}&quot;</span>, <span class="ident">error</span>);
+    <span class="kw">if </span>input.len() &lt; <span class="number">8 </span>{
+        <span class="macro">println!</span>(<span class="string">&quot;Average game phase parameter not found&quot;</span>);
+        <span class="kw">return</span>;
+    }
+
+    <span class="kw">let </span>min_ply = <span class="kw">match </span>input[<span class="number">3</span>].parse() {
+        <span class="prelude-val">Ok</span>(value) =&gt; value,
+        <span class="prelude-val">Err</span>(error) =&gt; {
+            <span class="macro">println!</span>(<span class="string">&quot;Invalid minimal ply parameter: {}&quot;</span>, error);
             <span class="kw">return</span>;
         }
     };
 
-    <span class="kw">let</span> <span class="ident">max_score</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">input</span>[<span class="number">4</span>].<span class="ident">parse</span>() {
-        <span class="prelude-val">Ok</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>,
-        <span class="prelude-val">Err</span>(<span class="ident">error</span>) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid maximal quiescence score parameter: {}&quot;</span>, <span class="ident">error</span>);
+    <span class="kw">let </span>max_score = <span class="kw">match </span>input[<span class="number">4</span>].parse() {
+        <span class="prelude-val">Ok</span>(value) =&gt; value,
+        <span class="prelude-val">Err</span>(error) =&gt; {
+            <span class="macro">println!</span>(<span class="string">&quot;Invalid maximal quiescence score parameter: {}&quot;</span>, error);
             <span class="kw">return</span>;
         }
     };
 
-    <span class="kw">let</span> <span class="ident">max_diff</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">input</span>[<span class="number">5</span>].<span class="ident">parse</span>() {
-        <span class="prelude-val">Ok</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>,
-        <span class="prelude-val">Err</span>(<span class="ident">error</span>) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid maximal score difference parameter: {}&quot;</span>, <span class="ident">error</span>);
+    <span class="kw">let </span>max_diff = <span class="kw">match </span>input[<span class="number">5</span>].parse() {
+        <span class="prelude-val">Ok</span>(value) =&gt; value,
+        <span class="prelude-val">Err</span>(error) =&gt; {
+            <span class="macro">println!</span>(<span class="string">&quot;Invalid maximal score difference parameter: {}&quot;</span>, error);
             <span class="kw">return</span>;
         }
     };
 
-    <span class="kw">let</span> <span class="ident">density</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">input</span>[<span class="number">6</span>].<span class="ident">parse</span>() {
-        <span class="prelude-val">Ok</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>,
-        <span class="prelude-val">Err</span>(<span class="ident">error</span>) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid density parameter: {}&quot;</span>, <span class="ident">error</span>);
+    <span class="kw">let </span>density = <span class="kw">match </span>input[<span class="number">6</span>].parse() {
+        <span class="prelude-val">Ok</span>(value) =&gt; value,
+        <span class="prelude-val">Err</span>(error) =&gt; {
+            <span class="macro">println!</span>(<span class="string">&quot;Invalid density parameter: {}&quot;</span>, error);
             <span class="kw">return</span>;
         }
     };
 
-    <span class="ident">tunerset::run</span>(<span class="ident">input</span>[<span class="number">1</span>], <span class="ident">input</span>[<span class="number">2</span>], <span class="ident">min_ply</span>, <span class="ident">max_score</span>, <span class="ident">max_diff</span>, <span class="ident">density</span>);
+    <span class="kw">let </span>avg_game_phase = <span class="kw">match </span>input[<span class="number">7</span>].parse() {
+        <span class="prelude-val">Ok</span>(value) =&gt; value,
+        <span class="prelude-val">Err</span>(error) =&gt; {
+            <span class="macro">println!</span>(<span class="string">&quot;Invalid average game phase parameter: {}&quot;</span>, error);
+            <span class="kw">return</span>;
+        }
+    };
+
+    tunerset::run(input[<span class="number">1</span>], input[<span class="number">2</span>], min_ply, max_score, max_diff, density, avg_game_phase);
 }
 
-<span class="doccomment">/// Handles `uci` command by entering into the UCI (Universal Chess Interface) mode.</span>
-<span class="kw">fn</span> <span class="ident">handle_uci</span>() {
-    <span class="ident">uci::run</span>();
+<span class="doccomment">/// Handles `uci` command by entering into the UCI (Universal Chess Interface) mode.
+</span><span class="kw">fn </span>handle_uci() {
+    uci::run();
 }
 
-<span class="doccomment">/// Handles `wah` command by printing WAH.                  </span>
-<span class="kw">fn</span> <span class="ident">handle_wah</span>() {
+<span class="doccomment">/// Handles `wah` command by printing WAH.                  
+</span><span class="kw">fn </span>handle_wah() {
     <span class="macro">println!</span>(<span class="string">&quot;WAH&quot;</span>);
 }
 
-<span class="doccomment">/// Handles `quit` command by exiting process.</span>
-<span class="kw">fn</span> <span class="ident">handle_quit</span>() {
-    <span class="ident">process::exit</span>(<span class="number">0</span>);
+<span class="doccomment">/// Handles `quit` command by exiting process.
+</span><span class="kw">fn </span>handle_quit() {
+    process::exit(<span class="number">0</span>);
 }
 
-<span class="doccomment">/// Handles unknown command by printing warning message.</span>
-<span class="kw">fn</span> <span class="ident">handle_unknown_command</span>() {
+<span class="doccomment">/// Handles unknown command by printing warning message.
+</span><span class="kw">fn </span>handle_unknown_command() {
     <span class="macro">println!</span>(<span class="string">&quot;Unknown command, type \&quot;help\&quot; to get a list of available ones&quot;</span>);
 }
 
-<span class="doccomment">/// Creates a new board based on the input with FEN or moves list - returns [Err] if internal parser failed.</span>
-<span class="kw">fn</span> <span class="ident">prepare_board</span>(<span class="ident">parameters</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">str</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Bitboard</span>, <span class="ident">String</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="ident">parameters</span>.<span class="ident">is_empty</span>() {
-        <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">Bitboard::new_initial_position</span>(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>));
+<span class="doccomment">/// Creates a new board based on the input with FEN or moves list - returns [Err] if internal parser failed.
+</span><span class="kw">fn </span>prepare_board(parameters: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str]) -&gt; <span class="prelude-ty">Result</span>&lt;Board, String&gt; {
+    <span class="kw">if </span>parameters.is_empty() {
+        <span class="kw">return </span><span class="prelude-val">Ok</span>(Board::new_initial_position(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>));
     }
 
-    <span class="kw">match</span> <span class="ident">parameters</span>[<span class="number">0</span>] {
-        <span class="string">&quot;fen&quot;</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">fen</span> <span class="op">=</span> <span class="ident">parameters</span>[<span class="number">1</span>..].<span class="ident">join</span>(<span class="string">&quot; &quot;</span>);
-            <span class="ident">Bitboard::new_from_fen</span>(<span class="ident">fen</span>.<span class="ident">as_str</span>(), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>)
+    <span class="kw">match </span>parameters[<span class="number">0</span>] {
+        <span class="string">&quot;fen&quot; </span>=&gt; {
+            <span class="kw">let </span>fen = parameters[<span class="number">1</span>..].join(<span class="string">&quot; &quot;</span>);
+            Board::new_from_fen(fen.as_str(), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>)
         }
-        <span class="string">&quot;moves&quot;</span> =&gt; <span class="ident">Bitboard::new_from_moves</span>(<span class="kw-2">&amp;</span><span class="ident">parameters</span>[<span class="number">1</span>..], <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
-        <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid mode: parameter[0]={}&quot;</span>, <span class="ident">parameters</span>[<span class="number">0</span>])),
+        <span class="string">&quot;moves&quot; </span>=&gt; Board::new_from_moves(<span class="kw-2">&amp;</span>parameters[<span class="number">1</span>..], <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
+        <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid mode: parameter[0]={}&quot;</span>, parameters[<span class="number">0</span>])),
     }
-}
-
-<span class="doccomment">/// Helper function to calculate percent of `from` within `all`.</span>
-<span class="kw">fn</span> <span class="ident">percent</span>(<span class="ident">from</span>: <span class="ident">u64</span>, <span class="ident">all</span>: <span class="ident">u64</span>) -&gt; <span class="ident">f32</span> {
-    ((<span class="ident">from</span> <span class="kw">as</span> <span class="ident">f32</span>) <span class="op">/</span> (<span class="ident">all</span> <span class="kw">as</span> <span class="ident">f32</span>)) <span class="op">*</span> <span class="number">100.0</span>
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="inanis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="inanis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.1 (90743e729 2023-01-10)" ></div></body></html>

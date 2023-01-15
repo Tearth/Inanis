@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["taper_score","Blends `opening_score` and `ending_score` with the ratio passed in `game_phase`. The ratio is a number from 0.0 to 1.0, where:"]],"mod":[["material",""],["mobility",""],["parameters",""],["pawns",""],["pst",""],["safety",""]],"struct":[["EvaluationParameters",""]]};
+window.SIDEBAR_ITEMS = {"mod":[["material",""],["mobility",""],["parameters",""],["pawns",""],["pst",""],["safety",""]],"struct":[["EvaluationParameters",""],["EvaluationResult",""]]};

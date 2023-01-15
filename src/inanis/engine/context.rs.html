@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/engine/context.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>context.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../inanis/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../inanis/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../inanis/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/engine/context.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>context.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../inanis/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -377,909 +371,378 @@
 <span id="371">371</span>
 <span id="372">372</span>
 <span id="373">373</span>
-<span id="374">374</span>
-<span id="375">375</span>
-<span id="376">376</span>
-<span id="377">377</span>
-<span id="378">378</span>
-<span id="379">379</span>
-<span id="380">380</span>
-<span id="381">381</span>
-<span id="382">382</span>
-<span id="383">383</span>
-<span id="384">384</span>
-<span id="385">385</span>
-<span id="386">386</span>
-<span id="387">387</span>
-<span id="388">388</span>
-<span id="389">389</span>
-<span id="390">390</span>
-<span id="391">391</span>
-<span id="392">392</span>
-<span id="393">393</span>
-<span id="394">394</span>
-<span id="395">395</span>
-<span id="396">396</span>
-<span id="397">397</span>
-<span id="398">398</span>
-<span id="399">399</span>
-<span id="400">400</span>
-<span id="401">401</span>
-<span id="402">402</span>
-<span id="403">403</span>
-<span id="404">404</span>
-<span id="405">405</span>
-<span id="406">406</span>
-<span id="407">407</span>
-<span id="408">408</span>
-<span id="409">409</span>
-<span id="410">410</span>
-<span id="411">411</span>
-<span id="412">412</span>
-<span id="413">413</span>
-<span id="414">414</span>
-<span id="415">415</span>
-<span id="416">416</span>
-<span id="417">417</span>
-<span id="418">418</span>
-<span id="419">419</span>
-<span id="420">420</span>
-<span id="421">421</span>
-<span id="422">422</span>
-<span id="423">423</span>
-<span id="424">424</span>
-<span id="425">425</span>
-<span id="426">426</span>
-<span id="427">427</span>
-<span id="428">428</span>
-<span id="429">429</span>
-<span id="430">430</span>
-<span id="431">431</span>
-<span id="432">432</span>
-<span id="433">433</span>
-<span id="434">434</span>
-<span id="435">435</span>
-<span id="436">436</span>
-<span id="437">437</span>
-<span id="438">438</span>
-<span id="439">439</span>
-<span id="440">440</span>
-<span id="441">441</span>
-<span id="442">442</span>
-<span id="443">443</span>
-<span id="444">444</span>
-<span id="445">445</span>
-<span id="446">446</span>
-<span id="447">447</span>
-<span id="448">448</span>
-<span id="449">449</span>
-<span id="450">450</span>
-<span id="451">451</span>
-<span id="452">452</span>
-<span id="453">453</span>
-<span id="454">454</span>
-<span id="455">455</span>
-<span id="456">456</span>
-<span id="457">457</span>
-<span id="458">458</span>
-<span id="459">459</span>
-<span id="460">460</span>
-<span id="461">461</span>
-<span id="462">462</span>
-<span id="463">463</span>
-<span id="464">464</span>
-<span id="465">465</span>
-<span id="466">466</span>
-<span id="467">467</span>
-<span id="468">468</span>
-<span id="469">469</span>
-<span id="470">470</span>
-<span id="471">471</span>
-<span id="472">472</span>
-<span id="473">473</span>
-<span id="474">474</span>
-<span id="475">475</span>
-<span id="476">476</span>
-<span id="477">477</span>
-<span id="478">478</span>
-<span id="479">479</span>
-<span id="480">480</span>
-<span id="481">481</span>
-<span id="482">482</span>
-<span id="483">483</span>
-<span id="484">484</span>
-<span id="485">485</span>
-<span id="486">486</span>
-<span id="487">487</span>
-<span id="488">488</span>
-<span id="489">489</span>
-<span id="490">490</span>
-<span id="491">491</span>
-<span id="492">492</span>
-<span id="493">493</span>
-<span id="494">494</span>
-<span id="495">495</span>
-<span id="496">496</span>
-<span id="497">497</span>
-<span id="498">498</span>
-<span id="499">499</span>
-<span id="500">500</span>
-<span id="501">501</span>
-<span id="502">502</span>
-<span id="503">503</span>
-<span id="504">504</span>
-<span id="505">505</span>
-<span id="506">506</span>
-<span id="507">507</span>
-<span id="508">508</span>
-<span id="509">509</span>
-<span id="510">510</span>
-<span id="511">511</span>
-<span id="512">512</span>
-<span id="513">513</span>
-<span id="514">514</span>
-<span id="515">515</span>
-<span id="516">516</span>
-<span id="517">517</span>
-<span id="518">518</span>
-<span id="519">519</span>
-<span id="520">520</span>
-<span id="521">521</span>
-<span id="522">522</span>
-<span id="523">523</span>
-<span id="524">524</span>
-<span id="525">525</span>
-<span id="526">526</span>
-<span id="527">527</span>
-<span id="528">528</span>
-<span id="529">529</span>
-<span id="530">530</span>
-<span id="531">531</span>
-<span id="532">532</span>
-<span id="533">533</span>
-<span id="534">534</span>
-<span id="535">535</span>
-<span id="536">536</span>
-<span id="537">537</span>
-<span id="538">538</span>
-<span id="539">539</span>
-<span id="540">540</span>
-<span id="541">541</span>
-<span id="542">542</span>
-<span id="543">543</span>
-<span id="544">544</span>
-<span id="545">545</span>
-<span id="546">546</span>
-<span id="547">547</span>
-<span id="548">548</span>
-<span id="549">549</span>
-<span id="550">550</span>
-<span id="551">551</span>
-<span id="552">552</span>
-<span id="553">553</span>
-<span id="554">554</span>
-<span id="555">555</span>
-<span id="556">556</span>
-<span id="557">557</span>
-<span id="558">558</span>
-<span id="559">559</span>
-<span id="560">560</span>
-<span id="561">561</span>
-<span id="562">562</span>
-<span id="563">563</span>
-<span id="564">564</span>
-<span id="565">565</span>
-<span id="566">566</span>
-<span id="567">567</span>
-<span id="568">568</span>
-<span id="569">569</span>
-<span id="570">570</span>
-<span id="571">571</span>
-<span id="572">572</span>
-<span id="573">573</span>
-<span id="574">574</span>
-<span id="575">575</span>
-<span id="576">576</span>
-<span id="577">577</span>
-<span id="578">578</span>
-<span id="579">579</span>
-<span id="580">580</span>
-<span id="581">581</span>
-<span id="582">582</span>
-<span id="583">583</span>
-<span id="584">584</span>
-<span id="585">585</span>
-<span id="586">586</span>
-<span id="587">587</span>
-<span id="588">588</span>
-<span id="589">589</span>
-<span id="590">590</span>
-<span id="591">591</span>
-<span id="592">592</span>
-<span id="593">593</span>
-<span id="594">594</span>
-<span id="595">595</span>
-<span id="596">596</span>
-<span id="597">597</span>
-<span id="598">598</span>
-<span id="599">599</span>
-<span id="600">600</span>
-<span id="601">601</span>
-<span id="602">602</span>
-<span id="603">603</span>
-<span id="604">604</span>
-<span id="605">605</span>
-<span id="606">606</span>
-<span id="607">607</span>
-<span id="608">608</span>
-<span id="609">609</span>
-<span id="610">610</span>
-<span id="611">611</span>
-<span id="612">612</span>
-<span id="613">613</span>
-<span id="614">614</span>
-<span id="615">615</span>
-<span id="616">616</span>
-<span id="617">617</span>
-<span id="618">618</span>
-<span id="619">619</span>
-<span id="620">620</span>
-<span id="621">621</span>
-<span id="622">622</span>
-<span id="623">623</span>
-<span id="624">624</span>
-<span id="625">625</span>
-<span id="626">626</span>
-<span id="627">627</span>
-<span id="628">628</span>
-<span id="629">629</span>
-<span id="630">630</span>
-<span id="631">631</span>
-<span id="632">632</span>
-<span id="633">633</span>
-<span id="634">634</span>
-<span id="635">635</span>
-<span id="636">636</span>
-<span id="637">637</span>
-<span id="638">638</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cache::history::HistoryTable</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cache::killers::KillersTable</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cache::pawns::PawnHashTable</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cache::search::TranspositionTable</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cache::search::TranspositionTableScoreType</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::engine::clock</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::evaluation::material</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::evaluation::mobility</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::evaluation::pawns</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::evaluation::pst</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::evaluation::safety</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::state::board::Bitboard</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::state::movescan::Move</span>;
-<span class="kw">use</span> <span class="ident">chrono::DateTime</span>;
-<span class="kw">use</span> <span class="ident">chrono::Utc</span>;
-<span class="kw">use</span> <span class="ident">shakmaty::fen::Fen</span>;
-<span class="kw">use</span> <span class="ident">shakmaty::CastlingMode</span>;
-<span class="kw">use</span> <span class="ident">shakmaty::Chess</span>;
-<span class="kw">use</span> <span class="ident">shakmaty_syzygy::Tablebase</span>;
-<span class="kw">use</span> <span class="ident">std::cmp</span>;
-<span class="kw">use</span> <span class="ident">std::mem::MaybeUninit</span>;
-<span class="kw">use</span> <span class="ident">std::ops</span>;
-<span class="kw">use</span> <span class="ident">std::sync::atomic::AtomicBool</span>;
-<span class="kw">use</span> <span class="ident">std::sync::atomic::Ordering</span>;
-<span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
-<span class="kw">use</span> <span class="ident">std::thread</span>;
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::statistics::SearchStatistics;
+<span class="kw">use super</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::cache::history::HistoryTable;
+<span class="kw">use </span><span class="kw">crate</span>::cache::killers::KillersTable;
+<span class="kw">use </span><span class="kw">crate</span>::cache::pawns::PawnHashTable;
+<span class="kw">use </span><span class="kw">crate</span>::cache::search::TranspositionTable;
+<span class="kw">use </span><span class="kw">crate</span>::engine::clock;
+<span class="kw">use </span><span class="kw">crate</span>::evaluation::material;
+<span class="kw">use </span><span class="kw">crate</span>::evaluation::mobility;
+<span class="kw">use </span><span class="kw">crate</span>::evaluation::pawns;
+<span class="kw">use </span><span class="kw">crate</span>::evaluation::pst;
+<span class="kw">use </span><span class="kw">crate</span>::evaluation::safety;
+<span class="kw">use </span><span class="kw">crate</span>::state::movescan::Move;
+<span class="kw">use </span><span class="kw">crate</span>::state::representation::Board;
+<span class="kw">use </span>std::cmp;
+<span class="kw">use </span>std::sync::atomic::AtomicBool;
+<span class="kw">use </span>std::sync::atomic::Ordering;
+<span class="kw">use </span>std::sync::Arc;
+<span class="kw">use </span>std::thread;
+<span class="kw">use </span>std::time::SystemTime;
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SearchContext</span> {
-    <span class="kw">pub</span> <span class="ident">board</span>: <span class="ident">Bitboard</span>,
-    <span class="kw">pub</span> <span class="ident">statistics</span>: <span class="ident">SearchStatistics</span>,
-    <span class="kw">pub</span> <span class="ident">search_id</span>: <span class="ident">u8</span>,
-    <span class="kw">pub</span> <span class="ident">time</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">inc_time</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">current_depth</span>: <span class="ident">i8</span>,
-    <span class="kw">pub</span> <span class="ident">forced_depth</span>: <span class="ident">i8</span>,
-    <span class="kw">pub</span> <span class="ident">max_nodes_count</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">max_move_time</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">moves_to_go</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">moves_to_search</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Move</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">search_time_start</span>: <span class="ident">DateTime</span><span class="op">&lt;</span><span class="ident">Utc</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">deadline</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">multipv</span>: <span class="ident">bool</span>,
-    <span class="kw">pub</span> <span class="ident">multipv_lines</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SearchResultLine</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">search_done</span>: <span class="ident">bool</span>,
-    <span class="kw">pub</span> <span class="ident">uci_debug</span>: <span class="ident">bool</span>,
-    <span class="kw">pub</span> <span class="ident">ponder_mode</span>: <span class="ident">bool</span>,
-    <span class="kw">pub</span> <span class="ident">diagnostic_mode</span>: <span class="ident">bool</span>,
-    <span class="kw">pub</span> <span class="ident">helper_thread</span>: <span class="ident">bool</span>,
-    <span class="kw">pub</span> <span class="ident">syzygy_path</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">syzygy_probe_limit</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">transposition_table</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">TranspositionTable</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">pawn_hashtable</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">PawnHashTable</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">killers_table</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">KillersTable</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">history_table</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">HistoryTable</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">helper_contexts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">HelperThreadContext</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">abort_token</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">AtomicBool</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">ponder_token</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">AtomicBool</span><span class="op">&gt;</span>,
+<span class="kw">pub struct </span>SearchContext {
+    <span class="kw">pub </span>board: Board,
+    <span class="kw">pub </span>search_id: u8,
+    <span class="kw">pub </span>time: u32,
+    <span class="kw">pub </span>inc_time: u32,
+    <span class="kw">pub </span>current_depth: i8,
+    <span class="kw">pub </span>forced_depth: i8,
+    <span class="kw">pub </span>max_nodes_count: u64,
+    <span class="kw">pub </span>max_move_time: u32,
+    <span class="kw">pub </span>moves_to_go: u32,
+    <span class="kw">pub </span>moves_to_search: Vec&lt;Move&gt;,
+    <span class="kw">pub </span>search_time_start: SystemTime,
+    <span class="kw">pub </span>deadline: u32,
+    <span class="kw">pub </span>multipv: bool,
+    <span class="kw">pub </span>multipv_lines: Vec&lt;SearchResultLine&gt;,
+    <span class="kw">pub </span>search_done: bool,
+    <span class="kw">pub </span>uci_debug: bool,
+    <span class="kw">pub </span>ponder_mode: bool,
+    <span class="kw">pub </span>diagnostic_mode: bool,
+    <span class="kw">pub </span>helper_thread: bool,
+    <span class="kw">pub </span>syzygy_enabled: bool,
+    <span class="kw">pub </span>syzygy_probe_limit: u32,
+    <span class="kw">pub </span>syzygy_probe_depth: i8,
+    <span class="kw">pub </span>transposition_table: Arc&lt;TranspositionTable&gt;,
+    <span class="kw">pub </span>pawn_hashtable: Arc&lt;PawnHashTable&gt;,
+    <span class="kw">pub </span>killers_table: Arc&lt;KillersTable&gt;,
+    <span class="kw">pub </span>history_table: Arc&lt;HistoryTable&gt;,
+    <span class="kw">pub </span>helper_contexts: Vec&lt;HelperThreadContext&gt;,
+    <span class="kw">pub </span>abort_flag: Arc&lt;AtomicBool&gt;,
+    <span class="kw">pub </span>ponder_flag: Arc&lt;AtomicBool&gt;,
+    <span class="kw">pub </span>statistics: SearchStatistics,
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">HelperThreadContext</span> {
-    <span class="kw">pub</span> <span class="ident">board</span>: <span class="ident">Bitboard</span>,
-    <span class="kw">pub</span> <span class="ident">pawn_hashtable</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">PawnHashTable</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">killers_table</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">KillersTable</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">history_table</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">HistoryTable</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">context</span>: <span class="ident">SearchContext</span>,
+<span class="kw">pub struct </span>HelperThreadContext {
+    <span class="kw">pub </span>board: Board,
+    <span class="kw">pub </span>pawn_hashtable: Arc&lt;PawnHashTable&gt;,
+    <span class="kw">pub </span>killers_table: Arc&lt;KillersTable&gt;,
+    <span class="kw">pub </span>history_table: Arc&lt;HistoryTable&gt;,
+    <span class="kw">pub </span>context: SearchContext,
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SearchResult</span> {
-    <span class="kw">pub</span> <span class="ident">time</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">depth</span>: <span class="ident">i8</span>,
-    <span class="kw">pub</span> <span class="ident">transposition_table_usage</span>: <span class="ident">f32</span>,
-    <span class="kw">pub</span> <span class="ident">lines</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SearchResultLine</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">statistics</span>: <span class="ident">SearchStatistics</span>,
+<span class="kw">pub struct </span>SearchResult {
+    <span class="kw">pub </span>time: u32,
+    <span class="kw">pub </span>depth: i8,
+    <span class="kw">pub </span>transposition_table_usage: f32,
+    <span class="kw">pub </span>lines: Vec&lt;SearchResultLine&gt;,
+    <span class="kw">pub </span>statistics: SearchStatistics,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SearchResultLine</span> {
-    <span class="kw">pub</span> <span class="ident">score</span>: <span class="ident">i16</span>,
-    <span class="kw">pub</span> <span class="ident">pv_line</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Move</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Clone)]
+</span><span class="kw">pub struct </span>SearchResultLine {
+    <span class="kw">pub </span>score: i16,
+    <span class="kw">pub </span>pv_line: Vec&lt;Move&gt;,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SearchStatistics</span> {
-    <span class="kw">pub</span> <span class="ident">nodes_count</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">q_nodes_count</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">leafs_count</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">q_leafs_count</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">beta_cutoffs</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">q_beta_cutoffs</span>: <span class="ident">u64</span>,
-
-    <span class="kw">pub</span> <span class="ident">perfect_cutoffs</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">q_perfect_cutoffs</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">non_perfect_cutoffs</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">q_non_perfect_cutoffs</span>: <span class="ident">u64</span>,
-
-    <span class="kw">pub</span> <span class="ident">pvs_full_window_searches</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">pvs_zero_window_searches</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">pvs_rejected_searches</span>: <span class="ident">u64</span>,
-
-    <span class="kw">pub</span> <span class="ident">static_null_move_pruning_attempts</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">static_null_move_pruning_accepted</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">static_null_move_pruning_rejected</span>: <span class="ident">u64</span>,
-
-    <span class="kw">pub</span> <span class="ident">null_move_pruning_attempts</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">null_move_pruning_accepted</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">null_move_pruning_rejected</span>: <span class="ident">u64</span>,
-
-    <span class="kw">pub</span> <span class="ident">late_move_pruning_accepted</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">late_move_pruning_rejected</span>: <span class="ident">u64</span>,
-
-    <span class="kw">pub</span> <span class="ident">razoring_attempts</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">razoring_accepted</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">razoring_rejected</span>: <span class="ident">u64</span>,
-
-    <span class="kw">pub</span> <span class="ident">q_score_pruning_accepted</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">q_score_pruning_rejected</span>: <span class="ident">u64</span>,
-
-    <span class="kw">pub</span> <span class="ident">q_futility_pruning_accepted</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">q_futility_pruning_rejected</span>: <span class="ident">u64</span>,
-
-    <span class="kw">pub</span> <span class="ident">tt_added</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">tt_hits</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">tt_misses</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">tt_collisions</span>: <span class="ident">u64</span>,
-
-    <span class="kw">pub</span> <span class="ident">tt_legal_hashmoves</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">tt_illegal_hashmoves</span>: <span class="ident">u64</span>,
-
-    <span class="kw">pub</span> <span class="ident">pawn_hashtable_added</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">pawn_hashtable_hits</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">pawn_hashtable_misses</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">pawn_hashtable_collisions</span>: <span class="ident">u64</span>,
-
-    <span class="kw">pub</span> <span class="ident">move_generator_hash_move_stages</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">move_generator_captures_stages</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">move_generator_quiet_moves_stages</span>: <span class="ident">u64</span>,
-
-    <span class="kw">pub</span> <span class="ident">max_ply</span>: <span class="ident">u16</span>,
-}
-
-<span class="kw">impl</span> <span class="ident">SearchContext</span> {
-    <span class="doccomment">/// Constructs a new instance of [SearchContext] with parameters as follows:</span>
-    <span class="doccomment">///  - `board` - initial position of the board</span>
-    <span class="doccomment">///  - `search_id` - search identificator used to recognize old transposition table entries</span>
-    <span class="doccomment">///  - `time` - total time for the color in a move (in milliseconds)</span>
-    <span class="doccomment">///  - `inc_time` - incremental time for the color in a move (in milliseconds)</span>
-    <span class="doccomment">///  - `forced_depth` - depth at which the search will stop (might happen earlier if mate is detected), 0 if there is no constraint</span>
-    <span class="doccomment">///  - `max_nodes_count` - total nodes count at which the search will top (might happen earlier if mate is detected), 0 if there is no constraint</span>
-    <span class="doccomment">/// This value can possibly not be strictly respected due to way of how the check is performed, so expect a bit more nodes count before stop</span>
-    <span class="doccomment">///  - `max_move_time` - allocated amount of time for the search (in milliseconds), 0 if we want to use default time allocator</span>
-    <span class="doccomment">///  - `moves_to_go` - moves count, after which the time will be increased</span>
-    <span class="doccomment">///  - `moves_to_search` - a list of moves to which the root node will be restricted</span>
-    <span class="doccomment">///  - `multipv` - enables or disables analyzing multiple PV lines (might slow down search)</span>
-    <span class="doccomment">///  - `uci_debug` - enables or disables additional debug info sent to GUI by `info string` command</span>
-    <span class="doccomment">///  - `ponder_mode` - prevents search from being stopped after detecting a checkmate (ponder mode requirement)</span>
-    <span class="doccomment">///  - `diagnostic_mode` - enables gathering of additional statistics, useful for benchmarks</span>
-    <span class="doccomment">///  - `helper_thread` - enables additional features when the thread is a helper in Lazy SMP (like random noise in move ordering)</span>
-    <span class="doccomment">///  - `syzygy_path` - path to the directory with Syzygy tablebases</span>
-    <span class="doccomment">///  - `syzygy_probe_limit` - number of pieces for which the probing should be started</span>
-    <span class="doccomment">///  - `transposition_table`, `pawn_hashtable`, `killers_table`, `history_table` - hashtables used during search</span>
-    <span class="doccomment">///  - `abort_token` - token used to abort search from the outside of the context</span>
-    <span class="doccomment">///  - `ponder_token` - token used to change a search mode from pondering to the regular one</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">board</span>: <span class="ident">Bitboard</span>,
-        <span class="ident">search_id</span>: <span class="ident">u8</span>,
-        <span class="ident">time</span>: <span class="ident">u32</span>,
-        <span class="ident">inc_time</span>: <span class="ident">u32</span>,
-        <span class="ident">forced_depth</span>: <span class="ident">i8</span>,
-        <span class="ident">max_nodes_count</span>: <span class="ident">u64</span>,
-        <span class="ident">max_move_time</span>: <span class="ident">u32</span>,
-        <span class="ident">moves_to_go</span>: <span class="ident">u32</span>,
-        <span class="ident">moves_to_search</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Move</span><span class="op">&gt;</span>,
-        <span class="ident">multipv</span>: <span class="ident">bool</span>,
-        <span class="ident">uci_debug</span>: <span class="ident">bool</span>,
-        <span class="ident">ponder_mode</span>: <span class="ident">bool</span>,
-        <span class="ident">diagnostic_mode</span>: <span class="ident">bool</span>,
-        <span class="ident">helper_thread</span>: <span class="ident">bool</span>,
-        <span class="ident">syzygy_path</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-        <span class="ident">syzygy_probe_limit</span>: <span class="ident">u32</span>,
-        <span class="ident">transposition_table</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">TranspositionTable</span><span class="op">&gt;</span>,
-        <span class="ident">pawn_hashtable</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">PawnHashTable</span><span class="op">&gt;</span>,
-        <span class="ident">killers_table</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">KillersTable</span><span class="op">&gt;</span>,
-        <span class="ident">history_table</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">HistoryTable</span><span class="op">&gt;</span>,
-        <span class="ident">abort_token</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">AtomicBool</span><span class="op">&gt;</span>,
-        <span class="ident">ponder_token</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">AtomicBool</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">board</span>,
-            <span class="ident">statistics</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">search_id</span>,
-            <span class="ident">time</span>,
-            <span class="ident">inc_time</span>,
-            <span class="ident">current_depth</span>: <span class="number">1</span>,
-            <span class="ident">forced_depth</span>,
-            <span class="ident">max_nodes_count</span>,
-            <span class="ident">max_move_time</span>,
-            <span class="ident">moves_to_go</span>,
-            <span class="ident">moves_to_search</span>,
-            <span class="ident">search_time_start</span>: <span class="ident">Utc::now</span>(),
-            <span class="ident">deadline</span>: <span class="number">0</span>,
-            <span class="ident">multipv</span>,
-            <span class="ident">multipv_lines</span>: <span class="ident">Vec::new</span>(),
-            <span class="ident">search_done</span>: <span class="bool-val">false</span>,
-            <span class="ident">uci_debug</span>,
-            <span class="ident">ponder_mode</span>,
-            <span class="ident">diagnostic_mode</span>,
-            <span class="ident">helper_thread</span>,
-            <span class="ident">syzygy_path</span>,
-            <span class="ident">syzygy_probe_limit</span>,
-            <span class="ident">transposition_table</span>,
-            <span class="ident">pawn_hashtable</span>,
-            <span class="ident">killers_table</span>,
-            <span class="ident">history_table</span>,
-            <span class="ident">helper_contexts</span>: <span class="ident">Vec::new</span>(),
-            <span class="ident">abort_token</span>,
-            <span class="ident">ponder_token</span>,
+<span class="kw">impl </span>SearchContext {
+    <span class="doccomment">/// Constructs a new instance of [SearchContext] with parameters as follows:
+    ///  - `board` - initial position of the board
+    ///  - `search_id` - search identificator used to recognize old transposition table entries
+    ///  - `time` - total time for the color in a move (in milliseconds)
+    ///  - `inc_time` - incremental time for the color in a move (in milliseconds)
+    ///  - `forced_depth` - depth at which the search will stop (might happen earlier if mate is detected), 0 if there is no constraint
+    ///  - `max_nodes_count` - total nodes count at which the search will top (might happen earlier if mate is detected), 0 if there is no constraint
+    /// This value can possibly not be strictly respected due to way of how the check is performed, so expect a bit more nodes count before stop
+    ///  - `max_move_time` - allocated amount of time for the search (in milliseconds), 0 if we want to use default time allocator
+    ///  - `moves_to_go` - moves count, after which the time will be increased
+    ///  - `moves_to_search` - a list of moves to which the root node will be restricted
+    ///  - `multipv` - enables or disables analyzing multiple PV lines (might slow down search)
+    ///  - `uci_debug` - enables or disables additional debug info sent to GUI by `info string` command
+    ///  - `ponder_mode` - prevents search from being stopped after detecting a checkmate (ponder mode requirement)
+    ///  - `diagnostic_mode` - enables gathering of additional statistics, useful for benchmarks
+    ///  - `helper_thread` - enables additional features when the thread is a helper in Lazy SMP (like random noise in move ordering)
+    ///  - `syzygy_enabled` - enables or disables Syzygy probing
+    ///  - `syzygy_probe_limit` - number of pieces for which the probing should be started
+    ///  - `syzygy_probe_depth` - minimal depth at which the probing will be started
+    ///  - `transposition_table`, `pawn_hashtable`, `killers_table`, `history_table` - hashtables used during search
+    ///  - `abort_flag` - flag used to abort search from the outside of the context
+    ///  - `ponder_flag` - flag used to change a search mode from pondering to the regular one
+    </span><span class="kw">pub fn </span>new(
+        board: Board,
+        search_id: u8,
+        time: u32,
+        inc_time: u32,
+        forced_depth: i8,
+        max_nodes_count: u64,
+        max_move_time: u32,
+        moves_to_go: u32,
+        moves_to_search: Vec&lt;Move&gt;,
+        multipv: bool,
+        uci_debug: bool,
+        ponder_mode: bool,
+        diagnostic_mode: bool,
+        helper_thread: bool,
+        syzygy_enabled: bool,
+        syzygy_probe_limit: u32,
+        syzygy_probe_depth: i8,
+        transposition_table: Arc&lt;TranspositionTable&gt;,
+        pawn_hashtable: Arc&lt;PawnHashTable&gt;,
+        killers_table: Arc&lt;KillersTable&gt;,
+        history_table: Arc&lt;HistoryTable&gt;,
+        abort_flag: Arc&lt;AtomicBool&gt;,
+        ponder_flag: Arc&lt;AtomicBool&gt;,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            board,
+            search_id,
+            time,
+            inc_time,
+            current_depth: <span class="number">1</span>,
+            forced_depth,
+            max_nodes_count,
+            max_move_time,
+            moves_to_go,
+            moves_to_search,
+            search_time_start: SystemTime::now(),
+            deadline: <span class="number">0</span>,
+            multipv,
+            multipv_lines: Vec::new(),
+            search_done: <span class="bool-val">false</span>,
+            uci_debug,
+            ponder_mode,
+            diagnostic_mode,
+            helper_thread,
+            syzygy_enabled,
+            syzygy_probe_limit,
+            syzygy_probe_depth,
+            transposition_table,
+            pawn_hashtable,
+            killers_table,
+            history_table,
+            helper_contexts: Vec::new(),
+            abort_flag,
+            ponder_flag,
+            statistics: Default::default(),
         }
-    }
-
-    <span class="doccomment">/// Retrieves PV line from the transposition table, using `board` position and the current `ply`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_pv_line</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">board</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Bitboard</span>, <span class="ident">ply</span>: <span class="ident">i8</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Move</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">ply</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">MAX_DEPTH</span> {
-            <span class="kw">return</span> <span class="ident">Vec::new</span>();
-        }
-
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pv_line</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">collision</span> <span class="op">=</span> <span class="bool-val">false</span>;
-
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">transposition_table</span>.<span class="ident">get</span>(<span class="ident">board</span>.<span class="ident">hash</span>, <span class="number">0</span>, <span class="kw-2">&amp;mut</span> <span class="ident">collision</span>) {
-            <span class="prelude-val">Some</span>(<span class="ident">entry</span>) =&gt; {
-                <span class="kw">if</span> <span class="ident">entry</span>.<span class="ident">r#type</span> <span class="op">!</span><span class="op">=</span> <span class="ident">TranspositionTableScoreType::EXACT_SCORE</span> {
-                    <span class="kw">return</span> <span class="ident">Vec::new</span>();
-                }
-
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">moves</span>: [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Move</span><span class="op">&gt;</span>; <span class="ident">MAX_MOVES_COUNT</span>] <span class="op">=</span> [<span class="ident">MaybeUninit::uninit</span>(); <span class="ident">MAX_MOVES_COUNT</span>];
-                <span class="kw">let</span> <span class="ident">moves_count</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">get_all_moves</span>(<span class="kw-2">&amp;mut</span> <span class="ident">moves</span>, <span class="ident">u64::MAX</span>);
-
-                <span class="kw">if</span> <span class="ident">moves</span>.<span class="ident">iter</span>().<span class="ident">take</span>(<span class="ident">moves_count</span>).<span class="ident">any</span>(<span class="op">|</span><span class="ident">r#move</span><span class="op">|</span> <span class="kw">unsafe</span> { <span class="ident">r#move</span>.<span class="ident">assume_init</span>() } <span class="op">==</span> <span class="ident">entry</span>.<span class="ident">best_move</span>) {
-                    <span class="ident">board</span>.<span class="ident">make_move</span>(<span class="ident">entry</span>.<span class="ident">best_move</span>);
-                    <span class="kw">if</span> <span class="op">!</span><span class="ident">board</span>.<span class="ident">is_king_checked</span>(<span class="ident">board</span>.<span class="ident">active_color</span> <span class="op">^</span> <span class="number">1</span>) {
-                        <span class="ident">pv_line</span>.<span class="ident">push</span>(<span class="ident">entry</span>.<span class="ident">best_move</span>);
-                        <span class="ident">pv_line</span>.<span class="ident">append</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">get_pv_line</span>(<span class="ident">board</span>, <span class="ident">ply</span> <span class="op">+</span> <span class="number">1</span>));
-                    }
-                    <span class="ident">board</span>.<span class="ident">undo_move</span>(<span class="ident">entry</span>.<span class="ident">best_move</span>);
-                }
-            }
-            <span class="prelude-val">None</span> =&gt; {
-                <span class="kw">return</span> <span class="ident">Vec::new</span>();
-            }
-        }
-
-        <span class="comment">// Remove endless repetitions from PV line</span>
-        <span class="kw">if</span> <span class="ident">pv_line</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">8</span> {
-            <span class="kw">if</span> <span class="ident">pv_line</span>[<span class="number">0</span>] <span class="op">==</span> <span class="ident">pv_line</span>[<span class="number">4</span>] <span class="op">&amp;&amp;</span> <span class="ident">pv_line</span>[<span class="number">4</span>] <span class="op">==</span> <span class="ident">pv_line</span>[<span class="number">8</span>] {
-                <span class="ident">pv_line</span> <span class="op">=</span> <span class="ident">pv_line</span>[<span class="number">0</span>..<span class="number">1</span>].<span class="ident">to_vec</span>();
-            }
-        }
-
-        <span class="ident">pv_line</span>
-    }
-
-    <span class="doccomment">/// Checks if there&#39;s an instant move possible and returns it as [Some], otherwise [None].</span>
-    <span class="kw">fn</span> <span class="ident">get_instant_move</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Move</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">board</span>.<span class="ident">is_king_checked</span>(<span class="self">self</span>.<span class="ident">board</span>.<span class="ident">active_color</span>) {
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
-        }
-
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">moves</span>: [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Move</span><span class="op">&gt;</span>; <span class="ident">MAX_MOVES_COUNT</span>] <span class="op">=</span> [<span class="ident">MaybeUninit::uninit</span>(); <span class="ident">MAX_MOVES_COUNT</span>];
-        <span class="kw">let</span> <span class="ident">moves_count</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">board</span>.<span class="ident">get_all_moves</span>(<span class="kw-2">&amp;mut</span> <span class="ident">moves</span>, <span class="ident">u64::MAX</span>);
-
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">evading_moves_count</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">evading_move</span> <span class="op">=</span> <span class="ident">Default::default</span>();
-
-        <span class="kw">for</span> <span class="ident">r#move</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">moves</span>[<span class="number">0</span>..<span class="ident">moves_count</span>] {
-            <span class="kw">let</span> <span class="ident">r#move</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">r#move</span>.<span class="ident">assume_init</span>() };
-            <span class="self">self</span>.<span class="ident">board</span>.<span class="ident">make_move</span>(<span class="ident">r#move</span>);
-
-            <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">board</span>.<span class="ident">is_king_checked</span>(<span class="self">self</span>.<span class="ident">board</span>.<span class="ident">active_color</span> <span class="op">^</span> <span class="number">1</span>) {
-                <span class="ident">evading_moves_count</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-                <span class="ident">evading_move</span> <span class="op">=</span> <span class="ident">r#move</span>;
-
-                <span class="kw">if</span> <span class="ident">evading_moves_count</span> <span class="op">&gt;</span> <span class="number">1</span> {
-                    <span class="self">self</span>.<span class="ident">board</span>.<span class="ident">undo_move</span>(<span class="ident">r#move</span>);
-                    <span class="kw">return</span> <span class="prelude-val">None</span>;
-                }
-            }
-
-            <span class="self">self</span>.<span class="ident">board</span>.<span class="ident">undo_move</span>(<span class="ident">r#move</span>);
-        }
-
-        <span class="kw">if</span> <span class="ident">evading_moves_count</span> <span class="op">==</span> <span class="number">1</span> {
-            <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">evading_move</span>);
-        }
-
-        <span class="prelude-val">None</span>
-    }
-
-    <span class="doccomment">/// Checks if there&#39;s a Syzygy tablebase move and returns it as [Some], otherwise [None].</span>
-    <span class="kw">fn</span> <span class="ident">get_syzygy_move</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">Move</span>, <span class="ident">i16</span>)<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tablebase</span> <span class="op">=</span> <span class="ident">Tablebase::new</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">board</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">board</span>.<span class="ident">clone</span>();
-
-        <span class="kw">let</span> <span class="ident">syzygy_path</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">syzygy_path</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>();
-        <span class="kw">if</span> <span class="ident">tablebase</span>.<span class="ident">add_directory</span>(<span class="ident">syzygy_path</span>).<span class="ident">is_err</span>() {
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
-        }
-
-        <span class="kw">if</span> <span class="ident">board</span>.<span class="ident">get_pieces_count</span>() <span class="op">&gt;</span> <span class="ident">cmp::min</span>(<span class="self">self</span>.<span class="ident">syzygy_probe_limit</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="ident">tablebase</span>.<span class="ident">max_pieces</span>()) <span class="kw">as</span> <span class="ident">u8</span> {
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
-        }
-
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">moves</span>: [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">Move</span><span class="op">&gt;</span>; <span class="ident">MAX_MOVES_COUNT</span>] <span class="op">=</span> [<span class="ident">MaybeUninit::uninit</span>(); <span class="ident">MAX_MOVES_COUNT</span>];
-        <span class="kw">let</span> <span class="ident">moves_count</span> <span class="op">=</span> <span class="ident">board</span>.<span class="ident">get_all_moves</span>(<span class="kw-2">&amp;mut</span> <span class="ident">moves</span>, <span class="ident">u64::MAX</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-
-        <span class="kw">for</span> <span class="ident">r#move</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">moves</span>[<span class="number">0</span>..<span class="ident">moves_count</span>] {
-            <span class="kw">let</span> <span class="ident">r#move</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">r#move</span>.<span class="ident">assume_init</span>() };
-            <span class="ident">board</span>.<span class="ident">make_move</span>(<span class="ident">r#move</span>);
-
-            <span class="kw">if</span> <span class="ident">board</span>.<span class="ident">is_king_checked</span>(<span class="ident">board</span>.<span class="ident">active_color</span> <span class="op">^</span> <span class="number">1</span>) {
-                <span class="ident">board</span>.<span class="ident">undo_move</span>(<span class="ident">r#move</span>);
-                <span class="kw">continue</span>;
-            }
-
-            <span class="kw">let</span> <span class="ident">shakmaty_fen</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">board</span>.<span class="ident">to_fen</span>().<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">Fen</span><span class="op">&gt;</span>() {
-                <span class="prelude-val">Ok</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">None</span>,
-            };
-
-            <span class="kw">let</span> <span class="ident">shakmaty_position</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">shakmaty_fen</span>.<span class="ident">into_position</span>::<span class="op">&lt;</span><span class="ident">Chess</span><span class="op">&gt;</span>(<span class="ident">CastlingMode::Standard</span>) {
-                <span class="prelude-val">Ok</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">None</span>,
-            };
-
-            <span class="kw">let</span> <span class="ident">wdl</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">tablebase</span>.<span class="ident">probe_wdl_after_zeroing</span>(<span class="kw-2">&amp;</span><span class="ident">shakmaty_position</span>) {
-                <span class="prelude-val">Ok</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">None</span>,
-            };
-
-            <span class="comment">// Instantly return 0 if the last move has reset halfmove clock, since probing DTZ would return value not in the context of the original position</span>
-            <span class="kw">let</span> <span class="ident">dtz</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">board</span>.<span class="ident">halfmove_clock</span> <span class="op">==</span> <span class="number">0</span> {
-                <span class="number">0</span>
-            } <span class="kw">else</span> {
-                <span class="kw">match</span> <span class="ident">tablebase</span>.<span class="ident">probe_dtz</span>(<span class="kw-2">&amp;</span><span class="ident">shakmaty_position</span>) {
-                    <span class="prelude-val">Ok</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>.<span class="ident">ignore_rounding</span>().<span class="number">0</span>,
-                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">None</span>,
-                }
-            };
-
-            <span class="ident">result</span>.<span class="ident">push</span>((<span class="ident">r#move</span>, <span class="op">-</span><span class="ident">wdl</span>.<span class="ident">signum</span>(), <span class="op">-</span><span class="ident">dtz</span>));
-            <span class="ident">board</span>.<span class="ident">undo_move</span>(<span class="ident">r#move</span>);
-        }
-
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">entry</span>) <span class="op">=</span> <span class="ident">result</span>.<span class="ident">iter</span>().<span class="ident">filter</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span>.<span class="number">1</span> <span class="op">==</span> <span class="number">1</span>).<span class="ident">min_by_key</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span>.<span class="number">2</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Some</span>((<span class="ident">entry</span>.<span class="number">0</span>, <span class="ident">TBMATE_SCORE</span>));
-        }
-
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">entry</span>) <span class="op">=</span> <span class="ident">result</span>.<span class="ident">iter</span>().<span class="ident">filter</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span>.<span class="number">1</span> <span class="op">==</span> <span class="number">0</span>).<span class="ident">min_by_key</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span>.<span class="number">2</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Some</span>((<span class="ident">entry</span>.<span class="number">0</span>, <span class="number">0</span>));
-        }
-
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">entry</span>) <span class="op">=</span> <span class="ident">result</span>.<span class="ident">iter</span>().<span class="ident">filter</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span>.<span class="number">1</span> <span class="op">==</span> <span class="op">-</span><span class="number">1</span>).<span class="ident">min_by_key</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span>.<span class="number">2</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Some</span>((<span class="ident">entry</span>.<span class="number">0</span>, <span class="op">-</span><span class="ident">TBMATE_SCORE</span>));
-        }
-
-        <span class="prelude-val">None</span>
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Iterator</span> <span class="kw">for</span> <span class="ident">SearchContext</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="ident">SearchResult</span>;
+<span class="kw">impl </span>Iterator <span class="kw">for </span>SearchContext {
+    <span class="kw">type </span>Item = SearchResult;
 
-    <span class="doccomment">/// Performs the next iteration of the search, using data stored withing the context. Returns [None] if any of the following conditions is true:</span>
-    <span class="doccomment">///  - `self.forced_depth` is not 0 and the current depth is about to exceed this value</span>
-    <span class="doccomment">///  - the search has been done in the previous iteration or the current depth is about to exceed [MAX_DEPTH] value</span>
-    <span class="doccomment">///  - instant move is possible</span>
-    <span class="doccomment">///  - Syzygy tablebase move is possible</span>
-    <span class="doccomment">///  - time allocated for the current search has expired</span>
-    <span class="doccomment">///  - mate score has detected and was recognized as reliable</span>
-    <span class="doccomment">///  - search was aborted</span>
-    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span> {
-        <span class="comment">// This loop works here as goto, which allows restarting search when switching from pondering mode to regular search within the same iteration</span>
-        <span class="kw">loop</span> {
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">forced_depth</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">current_depth</span> <span class="op">==</span> <span class="self">self</span>.<span class="ident">forced_depth</span> <span class="op">+</span> <span class="number">1</span> {
-                <span class="kw">return</span> <span class="prelude-val">None</span>;
+    <span class="doccomment">/// Performs the next iteration of the search, using data stored in the context. Returns [None] if any of the following conditions is true:
+    ///  - the search has been done in the previous iteration or the current depth is about to exceed [MAX_DEPTH] value
+    ///  - `self.forced_depth` is not 0 and the current depth is about to exceed this value
+    ///  - instant move is possible
+    ///  - Syzygy tablebase move is possible
+    ///  - time allocated for the current search has expired
+    ///  - mate score has detected and was recognized as reliable
+    ///  - search was aborted
+    </span><span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
+        <span class="comment">// This loop works here as goto, which allows restarting search when switching from pondering mode to regular search within the same iteration
+        </span><span class="kw">loop </span>{
+            <span class="kw">if </span><span class="self">self</span>.search_done || <span class="self">self</span>.current_depth &gt;= MAX_DEPTH {
+                <span class="kw">return </span><span class="prelude-val">None</span>;
             }
 
-            <span class="comment">// If the max depth was reached, but search is in ponder mode, wait for &quot;ponderhit&quot; or &quot;stop&quot; command before executing the last iteration</span>
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">ponder_mode</span> <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">forced_depth</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">current_depth</span> <span class="op">==</span> <span class="self">self</span>.<span class="ident">forced_depth</span> {
-                <span class="kw">loop</span> {
-                    <span class="kw">if</span> <span class="self">self</span>.<span class="ident">abort_token</span>.<span class="ident">load</span>(<span class="ident">Ordering::Relaxed</span>) {
+            <span class="kw">if </span><span class="self">self</span>.forced_depth != <span class="number">0 </span>&amp;&amp; <span class="self">self</span>.current_depth &gt; <span class="self">self</span>.forced_depth {
+                <span class="kw">return </span><span class="prelude-val">None</span>;
+            }
+
+            <span class="comment">// If the max depth was reached, but search is in ponder mode, wait for &quot;ponderhit&quot; or &quot;stop&quot; command before executing the last iteration
+            </span><span class="kw">if </span><span class="self">self</span>.ponder_mode &amp;&amp; <span class="self">self</span>.forced_depth != <span class="number">0 </span>&amp;&amp; <span class="self">self</span>.current_depth == <span class="self">self</span>.forced_depth {
+                <span class="kw">loop </span>{
+                    <span class="kw">if </span><span class="self">self</span>.abort_flag.load(Ordering::Relaxed) {
                         <span class="kw">break</span>;
                     }
                 }
             }
 
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">search_done</span> <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">current_depth</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">MAX_DEPTH</span> {
-                <span class="kw">return</span> <span class="prelude-val">None</span>;
-            }
+            <span class="comment">// Check instant move and Syzygy tablebase move only if there&#39;s no forced depth to reach
+            </span><span class="kw">if </span><span class="self">self</span>.forced_depth == <span class="number">0 </span>&amp;&amp; <span class="self">self</span>.current_depth == <span class="number">1 </span>{
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(r#move) = <span class="self">self</span>.board.get_instant_move() {
+                    <span class="self">self</span>.search_done = <span class="bool-val">true</span>;
 
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">forced_depth</span> <span class="op">==</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">current_depth</span> <span class="op">==</span> <span class="number">1</span> {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">r#move</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_instant_move</span>() {
-                    <span class="self">self</span>.<span class="ident">search_done</span> <span class="op">=</span> <span class="bool-val">true</span>;
-                    <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">SearchResult::new</span>(
+                    <span class="kw">return </span><span class="prelude-val">Some</span>(SearchResult::new(
                         <span class="number">0</span>,
-                        <span class="self">self</span>.<span class="ident">current_depth</span>,
-                        <span class="self">self</span>.<span class="ident">transposition_table</span>.<span class="ident">get_usage</span>(<span class="number">1000</span>),
-                        <span class="macro">vec!</span>[<span class="ident">SearchResultLine::new</span>(<span class="number">0</span>, <span class="macro">vec!</span>[<span class="ident">r#move</span>])],
-                        <span class="self">self</span>.<span class="ident">statistics</span>,
+                        <span class="self">self</span>.current_depth,
+                        <span class="self">self</span>.transposition_table.get_usage(<span class="number">1000</span>),
+                        <span class="macro">vec!</span>[SearchResultLine::new(<span class="number">0</span>, <span class="macro">vec!</span>[r#move])],
+                        <span class="self">self</span>.statistics,
                     ));
                 }
 
-                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">syzygy_path</span>.<span class="ident">is_some</span>() {
-                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">r#move</span>, <span class="ident">score</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_syzygy_move</span>() {
-                        <span class="self">self</span>.<span class="ident">search_done</span> <span class="op">=</span> <span class="bool-val">true</span>;
-                        <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">SearchResult::new</span>(
+                <span class="kw">if </span><span class="self">self</span>.syzygy_enabled {
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>((r#move, score)) = <span class="self">self</span>.board.get_tablebase_move(<span class="self">self</span>.syzygy_probe_limit) {
+                        <span class="self">self</span>.search_done = <span class="bool-val">true</span>;
+                        <span class="self">self</span>.statistics.tb_hits = <span class="number">1</span>;
+
+                        <span class="kw">return </span><span class="prelude-val">Some</span>(SearchResult::new(
                             <span class="number">0</span>,
-                            <span class="self">self</span>.<span class="ident">current_depth</span>,
-                            <span class="self">self</span>.<span class="ident">transposition_table</span>.<span class="ident">get_usage</span>(<span class="number">1000</span>),
-                            <span class="macro">vec!</span>[<span class="ident">SearchResultLine::new</span>(<span class="ident">score</span>, <span class="macro">vec!</span>[<span class="ident">r#move</span>])],
-                            <span class="self">self</span>.<span class="ident">statistics</span>,
+                            <span class="self">self</span>.current_depth,
+                            <span class="self">self</span>.transposition_table.get_usage(<span class="number">1000</span>),
+                            <span class="macro">vec!</span>[SearchResultLine::new(score, <span class="macro">vec!</span>[r#move])],
+                            <span class="self">self</span>.statistics,
                         ));
                     }
                 }
             }
 
-            <span class="kw">let</span> <span class="ident">desired_time</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">max_move_time</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="self">self</span>.<span class="ident">max_move_time</span>
-            } <span class="kw">else</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">desired_time</span> <span class="op">=</span> <span class="ident">clock::get_time_for_move</span>(<span class="self">self</span>.<span class="ident">board</span>.<span class="ident">fullmove_number</span>, <span class="self">self</span>.<span class="ident">time</span>, <span class="self">self</span>.<span class="ident">inc_time</span>, <span class="self">self</span>.<span class="ident">moves_to_go</span>);
-                <span class="kw">if</span> <span class="ident">desired_time</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">time</span> {
-                    <span class="ident">desired_time</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">time</span>;
-                }
+            <span class="kw">let </span>desired_time = <span class="kw">if </span><span class="self">self</span>.max_move_time != <span class="number">0 </span>{
+                <span class="self">self</span>.max_move_time
+            } <span class="kw">else </span>{
+                <span class="kw">let </span>desired_time = clock::get_time_for_move(<span class="self">self</span>.board.fullmove_number, <span class="self">self</span>.time, <span class="self">self</span>.inc_time, <span class="self">self</span>.moves_to_go);
 
-                <span class="ident">desired_time</span>
+                <span class="comment">// Desider time can&#39;t exceed the whole available time
+                </span>cmp::min(desired_time, <span class="self">self</span>.time)
             };
 
-            <span class="self">self</span>.<span class="ident">deadline</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">max_move_time</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="self">self</span>.<span class="ident">max_move_time</span>
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">current_depth</span> <span class="op">&gt;</span> <span class="number">1</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">deadline</span> <span class="op">=</span> ((<span class="ident">desired_time</span> <span class="kw">as</span> <span class="ident">f32</span>) <span class="op">*</span> <span class="ident">DEADLINE_MULTIPLIER</span>) <span class="kw">as</span> <span class="ident">u32</span>;
-                <span class="kw">if</span> <span class="ident">deadline</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">time</span> {
-                    <span class="ident">deadline</span> <span class="op">=</span> <span class="ident">desired_time</span>;
-                }
+            <span class="self">self</span>.deadline = <span class="kw">if </span><span class="self">self</span>.max_move_time != <span class="number">0 </span>{
+                <span class="self">self</span>.max_move_time
+            } <span class="kw">else if </span><span class="self">self</span>.current_depth &gt; <span class="number">1 </span>{
+                <span class="kw">let </span>deadline = ((desired_time <span class="kw">as </span>f32) * DEADLINE_MULTIPLIER) <span class="kw">as </span>u32;
 
-                <span class="ident">deadline</span>
-            } <span class="kw">else</span> {
-                <span class="ident">u32::MAX</span>
+                <span class="comment">// Deadline can&#39;t exceed the whole available time
+                </span>cmp::min(deadline, <span class="self">self</span>.time)
+            } <span class="kw">else </span>{
+                u32::MAX
             };
 
-            <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">helper_contexts</span>.<span class="ident">is_empty</span>() {
-                <span class="ident">thread::scope</span>(<span class="op">|</span><span class="ident">scope</span><span class="op">|</span> {
-                    <span class="kw">let</span> <span class="ident">depth</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">current_depth</span>;
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">threads</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+            <span class="kw">if </span>!<span class="self">self</span>.helper_contexts.is_empty() {
+                thread::scope(|scope| {
+                    <span class="kw">let </span>depth = <span class="self">self</span>.current_depth;
+                    <span class="kw">let </span><span class="kw-2">mut </span>threads = Vec::new();
 
-                    <span class="kw">for</span> <span class="ident">helper_context</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">helper_contexts</span> {
-                        <span class="ident">helper_context</span>.<span class="ident">context</span>.<span class="ident">deadline</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">deadline</span>;
-                        <span class="ident">threads</span>.<span class="ident">push</span>(<span class="ident">scope</span>.<span class="ident">spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
-                            <span class="ident">search::run</span>::<span class="op">&lt;</span><span class="bool-val">false</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="ident">helper_context</span>.<span class="ident">context</span>, <span class="ident">depth</span>);
-                            <span class="ident">helper_context</span>.<span class="ident">context</span>.<span class="ident">statistics</span>
+                    <span class="kw">for </span>helper_context <span class="kw">in </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.helper_contexts {
+                        helper_context.context.deadline = <span class="self">self</span>.deadline;
+                        threads.push(scope.spawn(<span class="kw">move </span>|| {
+                            search::run::&lt;<span class="bool-val">false</span>&gt;(<span class="kw-2">&amp;mut </span>helper_context.context, depth);
+                            helper_context.context.statistics
                         }));
                     }
 
-                    <span class="kw">for</span> <span class="ident">thread</span> <span class="kw">in</span> <span class="ident">threads</span> {
-                        <span class="self">self</span>.<span class="ident">statistics</span> <span class="op">+</span><span class="op">=</span> <span class="ident">thread</span>.<span class="ident">join</span>().<span class="ident">unwrap</span>();
+                    <span class="kw">for </span>thread <span class="kw">in </span>threads {
+                        <span class="self">self</span>.statistics += thread.join().unwrap();
                     }
                 });
             }
 
-            <span class="self">self</span>.<span class="ident">multipv_lines</span>.<span class="ident">clear</span>();
+            <span class="self">self</span>.multipv_lines.clear();
 
-            <span class="kw">match</span> <span class="self">self</span>.<span class="ident">diagnostic_mode</span> {
-                <span class="bool-val">true</span> =&gt; <span class="ident">search::run</span>::<span class="op">&lt;</span><span class="bool-val">true</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="self">self</span>.<span class="ident">current_depth</span>),
-                <span class="bool-val">false</span> =&gt; <span class="ident">search::run</span>::<span class="op">&lt;</span><span class="bool-val">false</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="self">self</span>.<span class="ident">current_depth</span>),
+            <span class="kw">match </span><span class="self">self</span>.diagnostic_mode {
+                <span class="bool-val">true </span>=&gt; search::run::&lt;<span class="bool-val">true</span>&gt;(<span class="self">self</span>, <span class="self">self</span>.current_depth),
+                <span class="bool-val">false </span>=&gt; search::run::&lt;<span class="bool-val">false</span>&gt;(<span class="self">self</span>, <span class="self">self</span>.current_depth),
             };
 
-            <span class="kw">let</span> <span class="ident">search_time</span> <span class="op">=</span> (<span class="ident">Utc::now</span>() <span class="op">-</span> <span class="self">self</span>.<span class="ident">search_time_start</span>).<span class="ident">num_milliseconds</span>() <span class="kw">as</span> <span class="ident">u32</span>;
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">uci_debug</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">white_attack_mask</span> <span class="op">=</span> <span class="number">0</span>;
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">black_attack_mask</span> <span class="op">=</span> <span class="number">0</span>;
+            <span class="kw">let </span>search_time = <span class="self">self</span>.search_time_start.elapsed().unwrap().as_millis() <span class="kw">as </span>u32;
+            <span class="kw">if </span><span class="self">self</span>.uci_debug {
+                <span class="kw">let </span><span class="kw-2">mut </span>dangered_white_king_squares = <span class="number">0</span>;
+                <span class="kw">let </span><span class="kw-2">mut </span>dangered_black_king_squares = <span class="number">0</span>;
 
-                <span class="kw">let</span> <span class="ident">material_evaluation</span> <span class="op">=</span> <span class="ident">material::evaluate</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">board</span>);
-                <span class="kw">let</span> <span class="ident">pst_evaluation</span> <span class="op">=</span> <span class="ident">pst::evaluate</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">board</span>);
-                <span class="kw">let</span> <span class="ident">mobility_evaluation</span> <span class="op">=</span> <span class="ident">mobility::evaluate</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">board</span>, <span class="kw-2">&amp;mut</span> <span class="ident">white_attack_mask</span>, <span class="kw-2">&amp;mut</span> <span class="ident">black_attack_mask</span>);
-                <span class="kw">let</span> <span class="ident">safety_evaluation</span> <span class="op">=</span> <span class="ident">safety::evaluate</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">board</span>, <span class="ident">white_attack_mask</span>, <span class="ident">black_attack_mask</span>);
-                <span class="kw">let</span> <span class="ident">pawns_evaluation</span> <span class="op">=</span> <span class="ident">pawns::evaluate_without_cache</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">board</span>);
+                <span class="kw">let </span>game_phase = <span class="self">self</span>.board.game_phase;
+                <span class="kw">let </span>initial_game_phase = <span class="self">self</span>.board.evaluation_parameters.initial_game_phase;
+
+                <span class="kw">let </span>material_evaluation = material::evaluate(<span class="kw-2">&amp;</span><span class="self">self</span>.board);
+                <span class="kw">let </span>pst_evaluation = pst::evaluate(<span class="kw-2">&amp;</span><span class="self">self</span>.board);
+                <span class="kw">let </span>mobility_evaluation = mobility::evaluate(<span class="kw-2">&amp;</span><span class="self">self</span>.board, <span class="kw-2">&amp;mut </span>dangered_white_king_squares, <span class="kw-2">&amp;mut </span>dangered_black_king_squares);
+                <span class="kw">let </span>safety_evaluation = safety::evaluate(<span class="kw-2">&amp;</span><span class="self">self</span>.board, dangered_white_king_squares, dangered_black_king_squares);
+                <span class="kw">let </span>pawns_evaluation = pawns::evaluate_without_cache(<span class="kw-2">&amp;</span><span class="self">self</span>.board);
 
                 <span class="macro">println!</span>(
-                    <span class="string">&quot;info string search_time={}, desired_time={}, material={}, pst={}, mobility={}, safety={}, pawns={}&quot;</span>,
-                    <span class="ident">search_time</span>, <span class="ident">desired_time</span>, <span class="ident">material_evaluation</span>, <span class="ident">pst_evaluation</span>, <span class="ident">mobility_evaluation</span>, <span class="ident">safety_evaluation</span>, <span class="ident">pawns_evaluation</span>
+                    <span class="string">&quot;info string search_time={}, desired_time={}, game_phase={}, material={}, pst={}, mobility={}, safety={}, pawns={}&quot;</span>,
+                    search_time,
+                    desired_time,
+                    game_phase,
+                    material_evaluation,
+                    pst_evaluation.taper_score(game_phase, initial_game_phase),
+                    mobility_evaluation.taper_score(game_phase, initial_game_phase),
+                    safety_evaluation.taper_score(game_phase, initial_game_phase),
+                    pawns_evaluation.taper_score(game_phase, initial_game_phase)
                 );
             }
 
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">abort_token</span>.<span class="ident">load</span>(<span class="ident">Ordering::Relaxed</span>) {
-                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">ponder_token</span>.<span class="ident">load</span>(<span class="ident">Ordering::Relaxed</span>) {
-                    <span class="self">self</span>.<span class="ident">current_depth</span> <span class="op">=</span> <span class="number">1</span>;
-                    <span class="self">self</span>.<span class="ident">forced_depth</span> <span class="op">=</span> <span class="number">0</span>;
-                    <span class="self">self</span>.<span class="ident">search_time_start</span> <span class="op">=</span> <span class="ident">Utc::now</span>();
-                    <span class="self">self</span>.<span class="ident">statistics</span> <span class="op">=</span> <span class="ident">Default::default</span>();
+            <span class="kw">if </span><span class="self">self</span>.abort_flag.load(Ordering::Relaxed) {
+                <span class="comment">// If ponder flag is set, the search is completly restarted within the same iteration
+                </span><span class="kw">if </span><span class="self">self</span>.ponder_flag.load(Ordering::Relaxed) {
+                    <span class="self">self</span>.current_depth = <span class="number">1</span>;
+                    <span class="self">self</span>.forced_depth = <span class="number">0</span>;
+                    <span class="self">self</span>.search_time_start = SystemTime::now();
+                    <span class="self">self</span>.statistics = Default::default();
 
-                    <span class="kw">for</span> <span class="ident">helper_context</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">helper_contexts</span> {
-                        <span class="ident">helper_context</span>.<span class="ident">context</span>.<span class="ident">current_depth</span> <span class="op">=</span> <span class="number">1</span>;
-                        <span class="ident">helper_context</span>.<span class="ident">context</span>.<span class="ident">forced_depth</span> <span class="op">=</span> <span class="number">0</span>;
-                        <span class="ident">helper_context</span>.<span class="ident">context</span>.<span class="ident">search_time_start</span> <span class="op">=</span> <span class="ident">Utc::now</span>();
-                        <span class="ident">helper_context</span>.<span class="ident">context</span>.<span class="ident">statistics</span> <span class="op">=</span> <span class="ident">Default::default</span>();
+                    <span class="kw">for </span>helper_context <span class="kw">in </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.helper_contexts {
+                        helper_context.context.current_depth = <span class="number">1</span>;
+                        helper_context.context.forced_depth = <span class="number">0</span>;
+                        helper_context.context.search_time_start = SystemTime::now();
+                        helper_context.context.statistics = Default::default();
                     }
 
-                    <span class="self">self</span>.<span class="ident">ponder_token</span>.<span class="ident">store</span>(<span class="bool-val">false</span>, <span class="ident">Ordering::Relaxed</span>);
-                    <span class="self">self</span>.<span class="ident">abort_token</span>.<span class="ident">store</span>(<span class="bool-val">false</span>, <span class="ident">Ordering::Relaxed</span>);
+                    <span class="self">self</span>.ponder_flag.store(<span class="bool-val">false</span>, Ordering::Relaxed);
+                    <span class="self">self</span>.abort_flag.store(<span class="bool-val">false</span>, Ordering::Relaxed);
 
                     <span class="kw">continue</span>;
-                } <span class="kw">else</span> {
-                    <span class="kw">if</span> <span class="self">self</span>.<span class="ident">uci_debug</span> {
+                } <span class="kw">else </span>{
+                    <span class="kw">if </span><span class="self">self</span>.uci_debug {
                         <span class="macro">println!</span>(<span class="string">&quot;info string Search aborted&quot;</span>);
                     }
 
-                    <span class="kw">return</span> <span class="prelude-val">None</span>;
+                    <span class="kw">return </span><span class="prelude-val">None</span>;
                 }
             }
 
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">multipv_lines</span>.<span class="ident">is_empty</span>() <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">multipv_lines</span>[<span class="number">0</span>].<span class="ident">pv_line</span>.<span class="ident">is_empty</span>() {
+            <span class="kw">if </span><span class="self">self</span>.multipv_lines.is_empty() || <span class="self">self</span>.multipv_lines[<span class="number">0</span>].pv_line.is_empty() {
                 <span class="macro">println!</span>(<span class="string">&quot;info string Invalid position&quot;</span>);
-                <span class="kw">return</span> <span class="prelude-val">None</span>;
+                <span class="kw">return </span><span class="prelude-val">None</span>;
             }
 
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">forced_depth</span> <span class="op">==</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">max_nodes_count</span> <span class="op">==</span> <span class="number">0</span> {
-                <span class="kw">if</span> <span class="ident">search_time</span> <span class="op">&gt;</span> ((<span class="ident">desired_time</span> <span class="kw">as</span> <span class="ident">f32</span>) <span class="op">*</span> <span class="ident">TIME_THRESHOLD_RATIO</span>) <span class="kw">as</span> <span class="ident">u32</span> {
-                    <span class="self">self</span>.<span class="ident">search_done</span> <span class="op">=</span> <span class="bool-val">true</span>;
+            <span class="kw">if </span><span class="self">self</span>.forced_depth == <span class="number">0 </span>&amp;&amp; <span class="self">self</span>.max_nodes_count == <span class="number">0 </span>{
+                <span class="kw">if </span>search_time &gt; ((desired_time <span class="kw">as </span>f32) * TIME_THRESHOLD_RATIO) <span class="kw">as </span>u32 {
+                    <span class="self">self</span>.search_done = <span class="bool-val">true</span>;
                 }
 
-                <span class="kw">if</span> <span class="ident">is_score_near_checkmate</span>(<span class="self">self</span>.<span class="ident">multipv_lines</span>[<span class="number">0</span>].<span class="ident">score</span>) <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">current_depth</span> <span class="op">&gt;</span><span class="op">=</span> (<span class="ident">CHECKMATE_SCORE</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">multipv_lines</span>[<span class="number">0</span>].<span class="ident">score</span>.<span class="ident">abs</span>()) <span class="kw">as</span> <span class="ident">i8</span> {
-                    <span class="self">self</span>.<span class="ident">search_done</span> <span class="op">=</span> <span class="bool-val">true</span>;
+                <span class="comment">// Checkmate score must indicate that the depth it was found is equal or smaller than the current one, to prevent endless move sequences
+                </span><span class="kw">if </span>is_score_near_checkmate(<span class="self">self</span>.multipv_lines[<span class="number">0</span>].score) &amp;&amp; <span class="self">self</span>.current_depth &gt;= (CHECKMATE_SCORE - <span class="self">self</span>.multipv_lines[<span class="number">0</span>].score.abs()) <span class="kw">as </span>i8 {
+                    <span class="self">self</span>.search_done = <span class="bool-val">true</span>;
                 }
             }
 
-            <span class="kw">let</span> <span class="ident">total_search_time</span> <span class="op">=</span> (<span class="ident">Utc::now</span>() <span class="op">-</span> <span class="self">self</span>.<span class="ident">search_time_start</span>).<span class="ident">num_milliseconds</span>() <span class="kw">as</span> <span class="ident">u64</span>;
-            <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">multipv</span> {
-                <span class="kw">let</span> <span class="ident">pv_line</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_pv_line</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">board</span>.<span class="ident">clone</span>(), <span class="number">0</span>);
-                <span class="self">self</span>.<span class="ident">multipv_lines</span>.<span class="ident">push</span>(<span class="ident">SearchResultLine::new</span>(<span class="self">self</span>.<span class="ident">multipv_lines</span>[<span class="number">0</span>].<span class="ident">score</span>, <span class="ident">pv_line</span>));
-            }
+            <span class="self">self</span>.current_depth += <span class="number">1</span>;
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">multipv_result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">multipv_lines</span>.<span class="ident">clone</span>();
-            <span class="ident">multipv_result</span>.<span class="ident">sort_by</span>(<span class="op">|</span><span class="ident">a</span>, <span class="ident">b</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">score</span>.<span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>.<span class="ident">score</span>).<span class="ident">reverse</span>());
+            <span class="kw">let </span><span class="kw-2">mut </span>multipv_result = <span class="self">self</span>.multipv_lines.clone();
+            multipv_result.sort_by(|a, b| a.score.cmp(<span class="kw-2">&amp;</span>b.score).reverse());
 
-            <span class="self">self</span>.<span class="ident">current_depth</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-
-            <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">SearchResult::new</span>(
-                <span class="ident">total_search_time</span>,
-                <span class="self">self</span>.<span class="ident">current_depth</span> <span class="op">-</span> <span class="number">1</span>,
-                <span class="self">self</span>.<span class="ident">transposition_table</span>.<span class="ident">get_usage</span>(<span class="number">1000</span>),
-                <span class="ident">multipv_result</span>,
-                <span class="self">self</span>.<span class="ident">statistics</span>,
-            ));
+            <span class="kw">return </span><span class="prelude-val">Some</span>(SearchResult::new(search_time, <span class="self">self</span>.current_depth - <span class="number">1</span>, <span class="self">self</span>.transposition_table.get_usage(<span class="number">1000</span>), multipv_result, <span class="self">self</span>.statistics));
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">SearchResult</span> {
-    <span class="doccomment">/// Constructs a new instance of [SearchResult] with stored `time`, `depth`, `lines` and `statistics`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">time</span>: <span class="ident">u64</span>, <span class="ident">depth</span>: <span class="ident">i8</span>, <span class="ident">transposition_table_usage</span>: <span class="ident">f32</span>, <span class="ident">lines</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SearchResultLine</span><span class="op">&gt;</span>, <span class="ident">statistics</span>: <span class="ident">SearchStatistics</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">time</span>,
-            <span class="ident">depth</span>,
-            <span class="ident">transposition_table_usage</span>,
-            <span class="ident">lines</span>,
-            <span class="ident">statistics</span>,
-        }
+<span class="kw">impl </span>HelperThreadContext {
+    <span class="doccomment">/// Constructs a new instance of [HelperThreadContext] with stored `board`, `pawn_hashtable`, `killers_table`, `history_table` and `context`.
+    </span><span class="kw">pub fn </span>new(
+        board: Board,
+        pawn_hashtable: Arc&lt;PawnHashTable&gt;,
+        killers_table: Arc&lt;KillersTable&gt;,
+        history_table: Arc&lt;HistoryTable&gt;,
+        context: SearchContext,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ board, pawn_hashtable, killers_table, history_table, context }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">SearchResultLine</span> {
-    <span class="doccomment">/// Constructs a new instance of [SearchResultLine] with stored `score` and `pv_line`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">score</span>: <span class="ident">i16</span>, <span class="ident">pv_line</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Move</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> { <span class="ident">score</span>, <span class="ident">pv_line</span> }
+<span class="kw">impl </span>SearchResult {
+    <span class="doccomment">/// Constructs a new instance of [SearchResult] with stored `time`, `depth`, `lines` and `statistics`.
+    </span><span class="kw">pub fn </span>new(time: u32, depth: i8, transposition_table_usage: f32, lines: Vec&lt;SearchResultLine&gt;, statistics: SearchStatistics) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ time, depth, transposition_table_usage, lines, statistics }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">ops::AddAssign</span><span class="op">&lt;</span><span class="ident">SearchStatistics</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">SearchStatistics</span> {
-    <span class="doccomment">/// Implements `+=` operator for [SearchStatistics] by adding all corresponding fields together (except `max_ply`, where the highest value is taken).</span>
-    <span class="kw">fn</span> <span class="ident">add_assign</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">SearchStatistics</span>) {
-        <span class="self">self</span>.<span class="ident">nodes_count</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">nodes_count</span>;
-        <span class="self">self</span>.<span class="ident">q_nodes_count</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">q_nodes_count</span>;
-        <span class="self">self</span>.<span class="ident">leafs_count</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">leafs_count</span>;
-        <span class="self">self</span>.<span class="ident">q_leafs_count</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">q_leafs_count</span>;
-        <span class="self">self</span>.<span class="ident">beta_cutoffs</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">beta_cutoffs</span>;
-        <span class="self">self</span>.<span class="ident">q_beta_cutoffs</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">q_beta_cutoffs</span>;
-
-        <span class="self">self</span>.<span class="ident">perfect_cutoffs</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">perfect_cutoffs</span>;
-        <span class="self">self</span>.<span class="ident">q_perfect_cutoffs</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">q_perfect_cutoffs</span>;
-        <span class="self">self</span>.<span class="ident">non_perfect_cutoffs</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">non_perfect_cutoffs</span>;
-        <span class="self">self</span>.<span class="ident">q_non_perfect_cutoffs</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">q_non_perfect_cutoffs</span>;
-
-        <span class="self">self</span>.<span class="ident">pvs_full_window_searches</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">pvs_full_window_searches</span>;
-        <span class="self">self</span>.<span class="ident">pvs_zero_window_searches</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">pvs_zero_window_searches</span>;
-        <span class="self">self</span>.<span class="ident">pvs_rejected_searches</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">pvs_rejected_searches</span>;
-
-        <span class="self">self</span>.<span class="ident">static_null_move_pruning_attempts</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">static_null_move_pruning_attempts</span>;
-        <span class="self">self</span>.<span class="ident">static_null_move_pruning_accepted</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">static_null_move_pruning_accepted</span>;
-        <span class="self">self</span>.<span class="ident">static_null_move_pruning_rejected</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">static_null_move_pruning_rejected</span>;
-
-        <span class="self">self</span>.<span class="ident">null_move_pruning_attempts</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">null_move_pruning_attempts</span>;
-        <span class="self">self</span>.<span class="ident">null_move_pruning_accepted</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">null_move_pruning_accepted</span>;
-        <span class="self">self</span>.<span class="ident">null_move_pruning_rejected</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">null_move_pruning_rejected</span>;
-
-        <span class="self">self</span>.<span class="ident">late_move_pruning_accepted</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">late_move_pruning_accepted</span>;
-        <span class="self">self</span>.<span class="ident">late_move_pruning_rejected</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">late_move_pruning_rejected</span>;
-
-        <span class="self">self</span>.<span class="ident">razoring_attempts</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">razoring_attempts</span>;
-        <span class="self">self</span>.<span class="ident">razoring_accepted</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">razoring_accepted</span>;
-        <span class="self">self</span>.<span class="ident">razoring_rejected</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">razoring_rejected</span>;
-
-        <span class="self">self</span>.<span class="ident">q_score_pruning_accepted</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">q_score_pruning_accepted</span>;
-        <span class="self">self</span>.<span class="ident">q_score_pruning_rejected</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">q_score_pruning_rejected</span>;
-
-        <span class="self">self</span>.<span class="ident">q_futility_pruning_accepted</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">q_futility_pruning_accepted</span>;
-        <span class="self">self</span>.<span class="ident">q_futility_pruning_rejected</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">q_futility_pruning_rejected</span>;
-
-        <span class="self">self</span>.<span class="ident">tt_added</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">tt_added</span>;
-        <span class="self">self</span>.<span class="ident">tt_hits</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">tt_hits</span>;
-        <span class="self">self</span>.<span class="ident">tt_misses</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">tt_misses</span>;
-        <span class="self">self</span>.<span class="ident">tt_collisions</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">tt_collisions</span>;
-
-        <span class="self">self</span>.<span class="ident">tt_legal_hashmoves</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">tt_legal_hashmoves</span>;
-        <span class="self">self</span>.<span class="ident">tt_illegal_hashmoves</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">tt_illegal_hashmoves</span>;
-
-        <span class="self">self</span>.<span class="ident">pawn_hashtable_added</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">pawn_hashtable_added</span>;
-        <span class="self">self</span>.<span class="ident">pawn_hashtable_hits</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">pawn_hashtable_hits</span>;
-        <span class="self">self</span>.<span class="ident">pawn_hashtable_misses</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">pawn_hashtable_misses</span>;
-        <span class="self">self</span>.<span class="ident">pawn_hashtable_collisions</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">pawn_hashtable_collisions</span>;
-
-        <span class="self">self</span>.<span class="ident">move_generator_hash_move_stages</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">move_generator_hash_move_stages</span>;
-        <span class="self">self</span>.<span class="ident">move_generator_captures_stages</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">move_generator_captures_stages</span>;
-        <span class="self">self</span>.<span class="ident">move_generator_quiet_moves_stages</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rhs</span>.<span class="ident">move_generator_quiet_moves_stages</span>;
-
-        <span class="self">self</span>.<span class="ident">max_ply</span> <span class="op">=</span> <span class="ident">cmp::max</span>(<span class="self">self</span>.<span class="ident">max_ply</span>, <span class="ident">rhs</span>.<span class="ident">max_ply</span>);
+<span class="kw">impl </span>SearchResultLine {
+    <span class="doccomment">/// Constructs a new instance of [SearchResultLine] with stored `score` and `pv_line`.
+    </span><span class="kw">pub fn </span>new(score: i16, pv_line: Vec&lt;Move&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ score, pv_line }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="inanis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="inanis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.1 (90743e729 2023-01-10)" ></div></body></html>

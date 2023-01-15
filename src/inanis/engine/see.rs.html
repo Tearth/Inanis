@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/engine/see.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>see.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../inanis/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../inanis/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../inanis/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/engine/see.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>see.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../inanis/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -101,105 +95,102 @@
 <span id="95">95</span>
 <span id="96">96</span>
 <span id="97">97</span>
-<span id="98">98</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::evaluation::EvaluationParameters</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::state</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">std::cmp</span>;
-<span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::evaluation::EvaluationParameters;
+<span class="kw">use </span><span class="kw">crate</span>::state::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::utils::bithelpers::BitHelpers;
+<span class="kw">use </span>std::cmp;
+<span class="kw">use </span>std::sync::Arc;
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SEEContainer</span> {
-    <span class="kw">pub</span> <span class="ident">table</span>: <span class="ident">Box</span><span class="op">&lt;</span>[[[<span class="ident">i16</span>; <span class="number">256</span>]; <span class="number">256</span>]; <span class="number">6</span>]<span class="op">&gt;</span>,
+<span class="kw">pub struct </span>SEEContainer {
+    <span class="kw">pub </span>table: Box&lt;[[[i16; <span class="number">256</span>]; <span class="number">256</span>]; <span class="number">6</span>]&gt;,
+    <span class="kw">pub </span>evaluation_parameters: Arc&lt;EvaluationParameters&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">SEEContainer</span> {
-    <span class="doccomment">/// Constructs a default instance of [SEEContainer] with zeroed elements.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">evaluation_parameters</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">EvaluationParameters</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">evaluation_parameters</span> <span class="op">=</span> <span class="ident">evaluation_parameters</span>.<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Arc::new</span>(<span class="ident">Default::default</span>()));
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">Self</span> {
-            <span class="ident">table</span>: <span class="ident">Box::new</span>([[[<span class="number">0</span>; <span class="number">256</span>]; <span class="number">256</span>]; <span class="number">6</span>]),
-        };
+<span class="kw">impl </span>SEEContainer {
+    <span class="doccomment">/// Constructs a default instance of [SEEContainer] with zeroed elements.
+    </span><span class="kw">pub fn </span>new(evaluation_parameters: <span class="prelude-ty">Option</span>&lt;Arc&lt;EvaluationParameters&gt;&gt;) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>evaluation_parameters = evaluation_parameters.unwrap_or_else(|| Arc::new(Default::default()));
+        <span class="kw">let </span><span class="kw-2">mut </span>result = <span class="self">Self </span>{ table: Box::new([[[<span class="number">0</span>; <span class="number">256</span>]; <span class="number">256</span>]; <span class="number">6</span>]), evaluation_parameters };
 
-        <span class="kw">for</span> <span class="ident">target_piece</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">6</span> {
-            <span class="kw">for</span> <span class="ident">attackers</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">256</span> {
-                <span class="kw">for</span> <span class="ident">defenders</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">256</span> {
-                    <span class="kw">let</span> <span class="ident">see</span> <span class="op">=</span> <span class="ident">result</span>.<span class="ident">evaluate</span>(<span class="ident">target_piece</span> <span class="kw">as</span> <span class="ident">u8</span>, <span class="ident">attackers</span> <span class="kw">as</span> <span class="ident">u8</span>, <span class="ident">defenders</span> <span class="kw">as</span> <span class="ident">u8</span>, <span class="kw-2">&amp;</span><span class="ident">evaluation_parameters</span>);
-                    <span class="ident">result</span>.<span class="ident">table</span>[<span class="ident">target_piece</span>][<span class="ident">attackers</span>][<span class="ident">defenders</span>] <span class="op">=</span> <span class="ident">see</span>;
+        <span class="kw">for </span>target_piece <span class="kw">in </span>ALL_PIECES {
+            <span class="kw">for </span>attackers <span class="kw">in </span><span class="number">0</span>..<span class="number">256 </span>{
+                <span class="kw">for </span>defenders <span class="kw">in </span><span class="number">0</span>..<span class="number">256 </span>{
+                    <span class="kw">let </span>see = result.evaluate(target_piece, attackers, defenders);
+                    result.table[target_piece][attackers][defenders] = see;
                 }
             }
         }
 
-        <span class="ident">result</span>
+        result
     }
 
-    <span class="doccomment">/// Gets a result of the static exchange evaluation, based on `attacking_piece`, `target_piece`, `attackers` and `defenders`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">attacking_piece</span>: <span class="ident">u8</span>, <span class="ident">target_piece</span>: <span class="ident">u8</span>, <span class="ident">attackers</span>: <span class="ident">u8</span>, <span class="ident">defenders</span>: <span class="ident">u8</span>, <span class="ident">evaluation_parameters</span>: <span class="kw-2">&amp;</span><span class="ident">EvaluationParameters</span>) -&gt; <span class="ident">i16</span> {
-        <span class="kw">let</span> <span class="ident">attacking_piece_index</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_see_piece_index</span>(<span class="ident">attacking_piece</span>);
-        <span class="kw">let</span> <span class="ident">target_piece_index</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_see_piece_index</span>(<span class="ident">target_piece</span>);
-        <span class="kw">let</span> <span class="ident">updated_attackers</span> <span class="op">=</span> <span class="ident">attackers</span> <span class="op">&amp;</span> <span class="op">!</span>(<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">attacking_piece_index</span>);
+    <span class="doccomment">/// Gets a result of the static exchange evaluation, based on `attacking_piece`, `target_piece`, `attackers` and `defenders`.
+    </span><span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, attacking_piece: usize, target_piece: usize, attackers: usize, defenders: usize) -&gt; i16 {
+        <span class="kw">let </span>attacking_piece_index = <span class="self">self</span>.get_see_piece_index(attacking_piece);
+        <span class="kw">let </span>target_piece_index = <span class="self">self</span>.get_see_piece_index(target_piece);
+        <span class="kw">let </span>updated_attackers = attackers &amp; !(<span class="number">1 </span>&lt;&lt; attacking_piece_index);
 
-        <span class="kw">let</span> <span class="ident">see</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">table</span>[<span class="ident">attacking_piece</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">defenders</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">updated_attackers</span> <span class="kw">as</span> <span class="ident">usize</span>];
-        <span class="self">self</span>.<span class="ident">get_piece_value</span>(<span class="ident">target_piece_index</span>, <span class="ident">evaluation_parameters</span>) <span class="op">-</span> <span class="ident">see</span>
+        <span class="kw">let </span>see = <span class="self">self</span>.table[attacking_piece][defenders][updated_attackers];
+        <span class="self">self</span>.get_piece_value(target_piece_index) - see
     }
 
-    <span class="doccomment">/// Evaluates a static exchange evaluation result, based on `target_piece`, `attackers`, `defenders`.</span>
-    <span class="kw">fn</span> <span class="ident">evaluate</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">target_piece</span>: <span class="ident">u8</span>, <span class="ident">attackers</span>: <span class="ident">u8</span>, <span class="ident">defenders</span>: <span class="ident">u8</span>, <span class="ident">evaluation_parameters</span>: <span class="kw-2">&amp;</span><span class="ident">EvaluationParameters</span>) -&gt; <span class="ident">i16</span> {
-        <span class="kw">if</span> <span class="ident">attackers</span> <span class="op">==</span> <span class="number">0</span> {
-            <span class="kw">return</span> <span class="number">0</span>;
+    <span class="doccomment">/// Evaluates a static exchange evaluation result, based on `target_piece`, `attackers`, `defenders`.
+    </span><span class="kw">fn </span>evaluate(<span class="kw-2">&amp;</span><span class="self">self</span>, target_piece: usize, attackers: usize, defenders: usize) -&gt; i16 {
+        <span class="kw">if </span>attackers == <span class="number">0 </span>{
+            <span class="kw">return </span><span class="number">0</span>;
         }
 
-        <span class="kw">let</span> <span class="ident">attacking_piece_index</span> <span class="op">=</span> <span class="ident">bit_scan</span>(<span class="ident">get_lsb</span>(<span class="ident">attackers</span> <span class="kw">as</span> <span class="ident">u64</span>)) <span class="kw">as</span> <span class="ident">u8</span>;
-        <span class="kw">let</span> <span class="ident">target_piece_index</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_see_piece_index</span>(<span class="ident">target_piece</span>);
+        <span class="kw">let </span>attacking_piece_index = attackers.get_lsb().bit_scan();
+        <span class="kw">let </span>target_piece_index = <span class="self">self</span>.get_see_piece_index(target_piece);
 
-        <span class="self">self</span>.<span class="ident">evaluate_internal</span>(<span class="ident">attacking_piece_index</span>, <span class="ident">target_piece_index</span>, <span class="ident">attackers</span>, <span class="ident">defenders</span>, <span class="ident">evaluation_parameters</span>)
+        <span class="self">self</span>.evaluate_internal(attacking_piece_index, target_piece_index, attackers, defenders)
     }
 
-    <span class="doccomment">/// Recursive function called by `evaluate` to help evaluate a static exchange evaluation result.</span>
-    <span class="kw">fn</span> <span class="ident">evaluate_internal</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">attacking_piece</span>: <span class="ident">u8</span>, <span class="ident">target_piece</span>: <span class="ident">u8</span>, <span class="ident">attackers</span>: <span class="ident">u8</span>, <span class="ident">defenders</span>: <span class="ident">u8</span>, <span class="ident">evaluation_parameters</span>: <span class="kw-2">&amp;</span><span class="ident">EvaluationParameters</span>) -&gt; <span class="ident">i16</span> {
-        <span class="kw">if</span> <span class="ident">attackers</span> <span class="op">==</span> <span class="number">0</span> {
-            <span class="kw">return</span> <span class="number">0</span>;
+    <span class="doccomment">/// Recursive function called by `evaluate` to help evaluate a static exchange evaluation result.
+    </span><span class="kw">fn </span>evaluate_internal(<span class="kw-2">&amp;</span><span class="self">self</span>, attacking_piece: usize, target_piece: usize, attackers: usize, defenders: usize) -&gt; i16 {
+        <span class="kw">if </span>attackers == <span class="number">0 </span>{
+            <span class="kw">return </span><span class="number">0</span>;
         }
 
-        <span class="kw">let</span> <span class="ident">target_piece_value</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_piece_value</span>(<span class="ident">target_piece</span>, <span class="ident">evaluation_parameters</span>);
-        <span class="kw">let</span> <span class="ident">new_attackers</span> <span class="op">=</span> <span class="ident">attackers</span> <span class="op">&amp;</span> <span class="op">!</span>(<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">attacking_piece</span>);
-        <span class="kw">let</span> <span class="ident">new_attacking_piece</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">defenders</span> {
-            <span class="number">0</span> =&gt; <span class="number">0</span>,
-            <span class="kw">_</span> =&gt; <span class="ident">bit_scan</span>(<span class="ident">get_lsb</span>(<span class="ident">defenders</span> <span class="kw">as</span> <span class="ident">u64</span>)) <span class="kw">as</span> <span class="ident">u8</span>,
+        <span class="kw">let </span>target_piece_value = <span class="self">self</span>.get_piece_value(target_piece);
+        <span class="kw">let </span>new_attackers = attackers &amp; !(<span class="number">1 </span>&lt;&lt; attacking_piece);
+        <span class="kw">let </span>new_attacking_piece = <span class="kw">match </span>defenders {
+            <span class="number">0 </span>=&gt; <span class="number">0</span>,
+            <span class="kw">_ </span>=&gt; defenders.get_lsb().bit_scan(),
         };
 
-        <span class="kw">let</span> <span class="ident">see</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">evaluate_internal</span>(<span class="ident">new_attacking_piece</span>, <span class="ident">attacking_piece</span>, <span class="ident">defenders</span>, <span class="ident">new_attackers</span>, <span class="ident">evaluation_parameters</span>);
-        <span class="ident">cmp::max</span>(<span class="number">0</span>, <span class="ident">target_piece_value</span> <span class="op">-</span> <span class="ident">see</span>)
+        cmp::max(<span class="number">0</span>, target_piece_value - <span class="self">self</span>.evaluate_internal(new_attacking_piece, attacking_piece, defenders, new_attackers))
     }
 
-    <span class="doccomment">/// Converts `piece` index to SEE piece index, which supports multiple pieces of the same type stored in one variable:</span>
-    <span class="doccomment">///  - 1 pawn (index 0)</span>
-    <span class="doccomment">///  - 3 knights/bishops (index 1-3)</span>
-    <span class="doccomment">///  - 2 rooks (index 4-5)</span>
-    <span class="doccomment">///  - 1 queen (index 6)</span>
-    <span class="doccomment">///  - 1 king (index 7)</span>
-    <span class="kw">fn</span> <span class="ident">get_see_piece_index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">piece</span>: <span class="ident">u8</span>) -&gt; <span class="ident">u8</span> {
-        <span class="kw">match</span> <span class="ident">piece</span> {
-            <span class="ident">PAWN</span> =&gt; <span class="number">0</span>,
-            <span class="ident">KNIGHT</span> =&gt; <span class="number">1</span>,
-            <span class="ident">BISHOP</span> =&gt; <span class="number">1</span>,
-            <span class="ident">ROOK</span> =&gt; <span class="number">4</span>,
-            <span class="ident">QUEEN</span> =&gt; <span class="number">6</span>,
-            <span class="ident">KING</span> =&gt; <span class="number">7</span>,
-            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: piece={}&quot;</span>, <span class="ident">piece</span>),
+    <span class="doccomment">/// Converts `piece` index to SEE piece index, which supports multiple pieces of the same type stored in one variable:
+    ///  - 1 pawn (index 0)
+    ///  - 3 knights/bishops (index 1-3)
+    ///  - 2 rooks (index 4-5)
+    ///  - 1 queen (index 6)
+    ///  - 1 king (index 7)
+    </span><span class="kw">fn </span>get_see_piece_index(<span class="kw-2">&amp;</span><span class="self">self</span>, piece: usize) -&gt; usize {
+        <span class="kw">match </span>piece {
+            PAWN =&gt; <span class="number">0</span>,
+            KNIGHT =&gt; <span class="number">1</span>,
+            BISHOP =&gt; <span class="number">1</span>,
+            ROOK =&gt; <span class="number">4</span>,
+            QUEEN =&gt; <span class="number">6</span>,
+            KING =&gt; <span class="number">7</span>,
+            <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: piece={}&quot;</span>, piece),
         }
     }
 
-    <span class="doccomment">/// Gets a piece value based on `piece_index` saved in SEE format (look `get_see_piece_index`).</span>
-    <span class="kw">fn</span> <span class="ident">get_piece_value</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">piece_index</span>: <span class="ident">u8</span>, <span class="ident">evaluation_parameters</span>: <span class="kw-2">&amp;</span><span class="ident">EvaluationParameters</span>) -&gt; <span class="ident">i16</span> {
-        <span class="kw">match</span> <span class="ident">piece_index</span> {
-            <span class="number">0</span> =&gt; <span class="ident">evaluation_parameters</span>.<span class="ident">piece_value</span>[<span class="ident">PAWN</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="kw">as</span> <span class="ident">i16</span>,           <span class="comment">// Pawn</span>
-            <span class="number">1</span> <span class="op">|</span> <span class="number">2</span> <span class="op">|</span> <span class="number">3</span> =&gt; <span class="ident">evaluation_parameters</span>.<span class="ident">piece_value</span>[<span class="ident">BISHOP</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="kw">as</span> <span class="ident">i16</span>, <span class="comment">// 3x Knight/bishop</span>
-            <span class="number">4</span> <span class="op">|</span> <span class="number">5</span> =&gt; <span class="ident">evaluation_parameters</span>.<span class="ident">piece_value</span>[<span class="ident">ROOK</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="kw">as</span> <span class="ident">i16</span>,       <span class="comment">// 2x Rook</span>
-            <span class="number">6</span> =&gt; <span class="ident">evaluation_parameters</span>.<span class="ident">piece_value</span>[<span class="ident">QUEEN</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="kw">as</span> <span class="ident">i16</span>,          <span class="comment">// Queen</span>
-            <span class="number">7</span> =&gt; <span class="ident">evaluation_parameters</span>.<span class="ident">piece_value</span>[<span class="ident">KING</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="kw">as</span> <span class="ident">i16</span>,           <span class="comment">// King</span>
-            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: piece_index={}&quot;</span>, <span class="ident">piece_index</span>),
+    <span class="doccomment">/// Gets a piece value based on `piece_index` saved in SEE format (look `get_see_piece_index`).
+    </span><span class="kw">fn </span>get_piece_value(<span class="kw-2">&amp;</span><span class="self">self</span>, piece_index: usize) -&gt; i16 {
+        <span class="kw">match </span>piece_index {
+            <span class="number">0 </span>=&gt; <span class="self">self</span>.evaluation_parameters.piece_value[PAWN],           <span class="comment">// Pawn
+            </span><span class="number">1 </span>| <span class="number">2 </span>| <span class="number">3 </span>=&gt; <span class="self">self</span>.evaluation_parameters.piece_value[BISHOP], <span class="comment">// 3x Knight/bishop
+            </span><span class="number">4 </span>| <span class="number">5 </span>=&gt; <span class="self">self</span>.evaluation_parameters.piece_value[ROOK],       <span class="comment">// 2x Rook
+            </span><span class="number">6 </span>=&gt; <span class="self">self</span>.evaluation_parameters.piece_value[QUEEN],          <span class="comment">// Queen
+            </span><span class="number">7 </span>=&gt; <span class="self">self</span>.evaluation_parameters.piece_value[KING],           <span class="comment">// King
+            </span><span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: piece_index={}&quot;</span>, piece_index),
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="inanis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="inanis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.1 (90743e729 2023-01-10)" ></div></body></html>

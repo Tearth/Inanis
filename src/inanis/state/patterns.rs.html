@@ -1,10 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/state/patterns.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>patterns.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../inanis/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a><h2 class="location"></h2>
-    </nav>
-    <nav class="sidebar"><a class="sidebar-logo" href="../../../inanis/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../inanis/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><div id="settings-menu" tabindex="-1">
-                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
-                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/state/patterns.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>patterns.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../inanis/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -270,272 +264,271 @@
 <span id="264">264</span>
 <span id="265">265</span>
 <span id="266">266</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+</pre><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PatternsContainer</span> {
-    <span class="kw">pub</span> <span class="ident">file_patterns</span>: [<span class="ident">u64</span>; <span class="number">64</span>],
-    <span class="kw">pub</span> <span class="ident">rank_patterns</span>: [<span class="ident">u64</span>; <span class="number">64</span>],
-    <span class="kw">pub</span> <span class="ident">diagonal_patterns</span>: [<span class="ident">u64</span>; <span class="number">64</span>],
-    <span class="kw">pub</span> <span class="ident">jump_patterns</span>: [<span class="ident">u64</span>; <span class="number">64</span>],
-    <span class="kw">pub</span> <span class="ident">box_patterns</span>: [<span class="ident">u64</span>; <span class="number">64</span>],
-    <span class="kw">pub</span> <span class="ident">rail_patterns</span>: [<span class="ident">u64</span>; <span class="number">8</span>],
-    <span class="kw">pub</span> <span class="ident">star_patterns</span>: [<span class="ident">u64</span>; <span class="number">64</span>],
-    <span class="kw">pub</span> <span class="ident">front_patterns</span>: [[<span class="ident">u64</span>; <span class="number">64</span>]; <span class="number">2</span>],
+<span class="kw">pub struct </span>PatternsContainer {
+    <span class="kw">pub </span>file_patterns: [u64; <span class="number">64</span>],
+    <span class="kw">pub </span>rank_patterns: [u64; <span class="number">64</span>],
+    <span class="kw">pub </span>diagonal_patterns: [u64; <span class="number">64</span>],
+    <span class="kw">pub </span>jump_patterns: [u64; <span class="number">64</span>],
+    <span class="kw">pub </span>box_patterns: [u64; <span class="number">64</span>],
+    <span class="kw">pub </span>rail_patterns: [u64; <span class="number">8</span>],
+    <span class="kw">pub </span>star_patterns: [u64; <span class="number">64</span>],
+    <span class="kw">pub </span>front_patterns: [[u64; <span class="number">64</span>]; <span class="number">2</span>],
 }
 
-<span class="kw">impl</span> <span class="ident">PatternsContainer</span> {
-    <span class="doccomment">/// Gets a file pattern for the field specified by `field_index`.</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// . . . x . . . .</span>
-    <span class="doccomment">/// . . . x . . . .</span>
-    <span class="doccomment">/// . . . x . . . .</span>
-    <span class="doccomment">/// . . . x . . . .</span>
-    <span class="doccomment">/// . . . o . . . .</span>
-    <span class="doccomment">/// . . . x . . . .</span>
-    <span class="doccomment">/// . . . x . . . .</span>
-    <span class="doccomment">/// . . . x . . . .</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_file</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">field_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u64</span> {
-        <span class="self">self</span>.<span class="ident">file_patterns</span>[<span class="ident">field_index</span>]
+<span class="kw">impl </span>PatternsContainer {
+    <span class="doccomment">/// Gets a file pattern for the square specified by `square`.
+    /// ```
+    /// . . . x . . . .
+    /// . . . x . . . .
+    /// . . . x . . . .
+    /// . . . x . . . .
+    /// . . . o . . . .
+    /// . . . x . . . .
+    /// . . . x . . . .
+    /// . . . x . . . .
+    /// ```
+    </span><span class="kw">pub fn </span>get_file(<span class="kw-2">&amp;</span><span class="self">self</span>, square: usize) -&gt; u64 {
+        <span class="self">self</span>.file_patterns[square]
     }
 
-    <span class="doccomment">/// Gets a rank pattern for the field specified by `field_index`.</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// . . . . . . . .</span>
-    <span class="doccomment">/// . . . . . . . .</span>
-    <span class="doccomment">/// . . . . . . . .</span>
-    <span class="doccomment">/// . . . . . . . .</span>
-    <span class="doccomment">/// x x x o x x x x</span>
-    <span class="doccomment">/// . . . . . . . .</span>
-    <span class="doccomment">/// . . . . . . . .</span>
-    <span class="doccomment">/// . . . . . . . .</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_rank</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">field_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u64</span> {
-        <span class="self">self</span>.<span class="ident">rank_patterns</span>[<span class="ident">field_index</span>]
+    <span class="doccomment">/// Gets a rank pattern for the square specified by `square`.
+    /// ```
+    /// . . . . . . . .
+    /// . . . . . . . .
+    /// . . . . . . . .
+    /// . . . . . . . .
+    /// x x x o x x x x
+    /// . . . . . . . .
+    /// . . . . . . . .
+    /// . . . . . . . .
+    /// ```
+    </span><span class="kw">pub fn </span>get_rank(<span class="kw-2">&amp;</span><span class="self">self</span>, square: usize) -&gt; u64 {
+        <span class="self">self</span>.rank_patterns[square]
     }
 
-    <span class="doccomment">/// Gets a diagonal pattern for the field specified by `field_index`.</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// . . . . . . . x</span>
-    <span class="doccomment">/// x . . . . . x .</span>
-    <span class="doccomment">/// . x . . . x . .</span>
-    <span class="doccomment">/// . . x . x . . .</span>
-    <span class="doccomment">/// . . . o . . . .</span>
-    <span class="doccomment">/// . . x . x . . .</span>
-    <span class="doccomment">/// . x . . . x . .</span>
-    <span class="doccomment">/// x . . . . . x .</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_diagonals</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">field_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u64</span> {
-        <span class="self">self</span>.<span class="ident">diagonal_patterns</span>[<span class="ident">field_index</span>]
+    <span class="doccomment">/// Gets a diagonal pattern for the square specified by `square_`.
+    /// ```
+    /// . . . . . . . x
+    /// x . . . . . x .
+    /// . x . . . x . .
+    /// . . x . x . . .
+    /// . . . o . . . .
+    /// . . x . x . . .
+    /// . x . . . x . .
+    /// x . . . . . x .
+    /// ```
+    </span><span class="kw">pub fn </span>get_diagonals(<span class="kw-2">&amp;</span><span class="self">self</span>, square: usize) -&gt; u64 {
+        <span class="self">self</span>.diagonal_patterns[square]
     }
 
-    <span class="doccomment">/// Get a jumps pattern for the field specified by `field_index`.</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// . . . . . . . .</span>
-    <span class="doccomment">/// . . . . . . . .</span>
-    <span class="doccomment">/// . . x . x . . .</span>
-    <span class="doccomment">/// . x . . . x . .</span>
-    <span class="doccomment">/// . . . o . . . .</span>
-    <span class="doccomment">/// . x . . . x . .</span>
-    <span class="doccomment">/// . . x . x . . .</span>
-    <span class="doccomment">/// . . . . . . . .</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_jumps</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">field_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u64</span> {
-        <span class="self">self</span>.<span class="ident">jump_patterns</span>[<span class="ident">field_index</span>]
+    <span class="doccomment">/// Get a jumps pattern for the square specified by `square`.
+    /// ```
+    /// . . . . . . . .
+    /// . . . . . . . .
+    /// . . x . x . . .
+    /// . x . . . x . .
+    /// . . . o . . . .
+    /// . x . . . x . .
+    /// . . x . x . . .
+    /// . . . . . . . .
+    /// ```
+    </span><span class="kw">pub fn </span>get_jumps(<span class="kw-2">&amp;</span><span class="self">self</span>, square: usize) -&gt; u64 {
+        <span class="self">self</span>.jump_patterns[square]
     }
 
-    <span class="doccomment">/// Get a box pattern for the field specified by `field_index`.</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// . . . . . . . .</span>
-    <span class="doccomment">/// . . . . . . . .</span>
-    <span class="doccomment">/// . . . . . . . .</span>
-    <span class="doccomment">/// . . x x x . . .</span>
-    <span class="doccomment">/// . . x o x . . .</span>
-    <span class="doccomment">/// . . x x x . . .</span>
-    <span class="doccomment">/// . . . . . . . .</span>
-    <span class="doccomment">/// . . . . . . . .</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_box</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">field_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u64</span> {
-        <span class="self">self</span>.<span class="ident">box_patterns</span>[<span class="ident">field_index</span>]
+    <span class="doccomment">/// Get a box pattern for the square specified by `square`.
+    /// ```
+    /// . . . . . . . .
+    /// . . . . . . . .
+    /// . . . . . . . .
+    /// . . x x x . . .
+    /// . . x o x . . .
+    /// . . x x x . . .
+    /// . . . . . . . .
+    /// . . . . . . . .
+    /// ```
+    </span><span class="kw">pub fn </span>get_box(<span class="kw-2">&amp;</span><span class="self">self</span>, square: usize) -&gt; u64 {
+        <span class="self">self</span>.box_patterns[square]
     }
 
-    <span class="doccomment">/// Get a rail pattern for the field specified by `field_index`.</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// . . x . x . . .</span>
-    <span class="doccomment">/// . . x . x . . .</span>
-    <span class="doccomment">/// . . x . x . . .</span>
-    <span class="doccomment">/// . . x . x . . .</span>
-    <span class="doccomment">/// . . x o x . . .</span>
-    <span class="doccomment">/// . . x . x . . .</span>
-    <span class="doccomment">/// . . x . x . . .</span>
-    <span class="doccomment">/// . . x . x . . .</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_rail</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">file</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u64</span> {
-        <span class="self">self</span>.<span class="ident">rail_patterns</span>[<span class="ident">file</span>]
+    <span class="doccomment">/// Get a rail pattern for the square specified by `file`.
+    /// ```
+    /// . . x . x . . .
+    /// . . x . x . . .
+    /// . . x . x . . .
+    /// . . x . x . . .
+    /// . . x o x . . .
+    /// . . x . x . . .
+    /// . . x . x . . .
+    /// . . x . x . . .
+    /// ```
+    </span><span class="kw">pub fn </span>get_rail(<span class="kw-2">&amp;</span><span class="self">self</span>, file: usize) -&gt; u64 {
+        <span class="self">self</span>.rail_patterns[file]
     }
 
-    <span class="doccomment">/// Get a star pattern for the field specified by `field_index`.</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// . . . . . . . .</span>
-    <span class="doccomment">/// . . . . . . . .</span>
-    <span class="doccomment">/// . . . . . . . .</span>
-    <span class="doccomment">/// . . x . x . . .</span>
-    <span class="doccomment">/// . . . o . . . .</span>
-    <span class="doccomment">/// . . x . x . . .</span>
-    <span class="doccomment">/// . . . . . . . .</span>
-    <span class="doccomment">/// . . . . . . . .</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_star</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">field_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u64</span> {
-        <span class="self">self</span>.<span class="ident">star_patterns</span>[<span class="ident">field_index</span>]
+    <span class="doccomment">/// Get a star pattern for the square specified by `square`.
+    /// ```
+    /// . . . . . . . .
+    /// . . . . . . . .
+    /// . . . . . . . .
+    /// . . x . x . . .
+    /// . . . o . . . .
+    /// . . x . x . . .
+    /// . . . . . . . .
+    /// . . . . . . . .
+    /// ```
+    </span><span class="kw">pub fn </span>get_star(<span class="kw-2">&amp;</span><span class="self">self</span>, square: usize) -&gt; u64 {
+        <span class="self">self</span>.star_patterns[square]
     }
 
-    <span class="doccomment">/// Get a front pattern for the field specified by `field_index`, from the `color` perspective.</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">/// . . x x x . . .</span>
-    <span class="doccomment">/// . . x x x . . .</span>
-    <span class="doccomment">/// . . x x x . . .</span>
-    <span class="doccomment">/// . . x x x . . .</span>
-    <span class="doccomment">/// . . . o . . . .</span>
-    <span class="doccomment">/// . . . . . . . .</span>
-    <span class="doccomment">/// . . . . . . . .</span>
-    <span class="doccomment">/// . . . . . . . .</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_front</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">color</span>: <span class="ident">usize</span>, <span class="ident">field_index</span>: <span class="ident">usize</span>) -&gt; <span class="ident">u64</span> {
-        <span class="self">self</span>.<span class="ident">front_patterns</span>[<span class="ident">color</span>][<span class="ident">field_index</span>]
+    <span class="doccomment">/// Get a front pattern for the square specified by `square`, from the `color` perspective.
+    /// ```
+    /// . . x x x . . .
+    /// . . x x x . . .
+    /// . . x x x . . .
+    /// . . x x x . . .
+    /// . . . o . . . .
+    /// . . . . . . . .
+    /// . . . . . . . .
+    /// . . . . . . . .
+    /// ```
+    </span><span class="kw">pub fn </span>get_front(<span class="kw-2">&amp;</span><span class="self">self</span>, color: usize, square: usize) -&gt; u64 {
+        <span class="self">self</span>.front_patterns[color][square]
     }
 
-    <span class="doccomment">/// Generates file patterns for all fields.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">regenerate_files</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">for</span> <span class="ident">field_index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">64</span> {
-            <span class="self">self</span>.<span class="ident">file_patterns</span>[<span class="ident">field_index</span>] <span class="op">=</span> (<span class="ident">FILE_H</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="ident">field_index</span> <span class="op">%</span> <span class="number">8</span>)) <span class="op">&amp;</span> <span class="op">!</span>(<span class="number">1u64</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">field_index</span>);
+    <span class="doccomment">/// Generates file patterns for all squares.
+    </span><span class="kw">pub fn </span>regenerate_files(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">for </span>square <span class="kw">in </span>ALL_SQUARES {
+            <span class="self">self</span>.file_patterns[square] = (FILE_H_BB &lt;&lt; (square % <span class="number">8</span>)) &amp; !(<span class="number">1u64 </span>&lt;&lt; square);
         }
     }
 
-    <span class="doccomment">/// Generates rank patterns for all fields.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">regenerate_ranks</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">for</span> <span class="ident">field_index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">64</span> {
-            <span class="self">self</span>.<span class="ident">rank_patterns</span>[<span class="ident">field_index</span>] <span class="op">=</span> (<span class="ident">RANK_A</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="number">8</span> <span class="op">*</span> (<span class="ident">field_index</span> <span class="op">/</span> <span class="number">8</span>))) <span class="op">&amp;</span> <span class="op">!</span>(<span class="number">1u64</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">field_index</span>);
+    <span class="doccomment">/// Generates rank patterns for all squares.
+    </span><span class="kw">pub fn </span>regenerate_ranks(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">for </span>square <span class="kw">in </span>ALL_SQUARES {
+            <span class="self">self</span>.rank_patterns[square] = (RANK_1_BB &lt;&lt; (<span class="number">8 </span>* (square / <span class="number">8</span>))) &amp; !(<span class="number">1u64 </span>&lt;&lt; square);
         }
     }
 
-    <span class="doccomment">/// Generates diagonal patterns for all fields.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">regenerate_diagonals</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">for</span> <span class="ident">field_index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">64</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="number">0u64</span>;
+    <span class="doccomment">/// Generates diagonal patterns for all squares.
+    </span><span class="kw">pub fn </span>regenerate_diagonals(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">for </span>square <span class="kw">in </span>ALL_SQUARES {
+            <span class="kw">let </span><span class="kw-2">mut </span>result = <span class="number">0u64</span>;
 
-            <span class="kw">for</span> <span class="ident">direction</span> <span class="kw">in</span> [(<span class="number">1</span>, <span class="number">1</span>), (<span class="op">-</span><span class="number">1</span>, <span class="number">1</span>), (<span class="number">1</span>, <span class="op">-</span><span class="number">1</span>), (<span class="op">-</span><span class="number">1</span>, <span class="op">-</span><span class="number">1</span>)] {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">current</span> <span class="op">=</span> ((<span class="ident">field_index</span> <span class="kw">as</span> <span class="ident">isize</span>) <span class="op">%</span> <span class="number">8</span> <span class="op">+</span> <span class="ident">direction</span>.<span class="number">0</span>, (<span class="ident">field_index</span> <span class="kw">as</span> <span class="ident">isize</span>) <span class="op">/</span> <span class="number">8</span> <span class="op">+</span> <span class="ident">direction</span>.<span class="number">1</span>);
+            <span class="kw">for </span>direction <span class="kw">in </span>[(<span class="number">1</span>, <span class="number">1</span>), (-<span class="number">1</span>, <span class="number">1</span>), (<span class="number">1</span>, -<span class="number">1</span>), (-<span class="number">1</span>, -<span class="number">1</span>)] {
+                <span class="kw">let </span><span class="kw-2">mut </span>current = ((square <span class="kw">as </span>isize) % <span class="number">8 </span>+ direction.<span class="number">0</span>, (square <span class="kw">as </span>isize) / <span class="number">8 </span>+ direction.<span class="number">1</span>);
 
-                <span class="kw">while</span> <span class="ident">current</span>.<span class="number">0</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">current</span>.<span class="number">0</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">7</span> <span class="op">&amp;&amp;</span> <span class="ident">current</span>.<span class="number">1</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">current</span>.<span class="number">1</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">7</span> {
-                    <span class="ident">result</span> <span class="op">|</span><span class="op">=</span> <span class="number">1u64</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="ident">current</span>.<span class="number">0</span> <span class="op">+</span> <span class="ident">current</span>.<span class="number">1</span> <span class="op">*</span> <span class="number">8</span>);
-                    <span class="ident">current</span> <span class="op">=</span> (<span class="ident">current</span>.<span class="number">0</span> <span class="op">+</span> <span class="ident">direction</span>.<span class="number">0</span>, <span class="ident">current</span>.<span class="number">1</span> <span class="op">+</span> <span class="ident">direction</span>.<span class="number">1</span>);
+                <span class="kw">while </span>current.<span class="number">0 </span>&gt;= <span class="number">0 </span>&amp;&amp; current.<span class="number">0 </span>&lt;= <span class="number">7 </span>&amp;&amp; current.<span class="number">1 </span>&gt;= <span class="number">0 </span>&amp;&amp; current.<span class="number">1 </span>&lt;= <span class="number">7 </span>{
+                    result |= <span class="number">1u64 </span>&lt;&lt; (current.<span class="number">0 </span>+ current.<span class="number">1 </span>* <span class="number">8</span>);
+                    current = (current.<span class="number">0 </span>+ direction.<span class="number">0</span>, current.<span class="number">1 </span>+ direction.<span class="number">1</span>);
                 }
             }
 
-            <span class="self">self</span>.<span class="ident">diagonal_patterns</span>[<span class="ident">field_index</span>] <span class="op">=</span> <span class="ident">result</span>;
+            <span class="self">self</span>.diagonal_patterns[square] = result;
         }
     }
 
-    <span class="doccomment">/// Generates jump patterns for all fiellds.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">regenerate_jumps</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">for</span> <span class="ident">field_index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">64</span> {
-            <span class="kw">let</span> <span class="ident">field</span> <span class="op">=</span> <span class="number">1u64</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">field_index</span>;
+    <span class="doccomment">/// Generates jump patterns for all fiellds.
+    </span><span class="kw">pub fn </span>regenerate_jumps(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">for </span>square <span class="kw">in </span>ALL_SQUARES {
+            <span class="kw">let </span>square_bb = <span class="number">1u64 </span>&lt;&lt; square;
 
-            <span class="self">self</span>.<span class="ident">jump_patterns</span>[<span class="ident">field_index</span>] <span class="op">=</span> <span class="number">0</span>
-                <span class="op">|</span> ((<span class="ident">field</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">FILE_G</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">FILE_H</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">6</span>)
-                <span class="op">|</span> ((<span class="ident">field</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">FILE_A</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">FILE_B</span>) <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">6</span>)
-                <span class="op">|</span> ((<span class="ident">field</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">FILE_A</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">FILE_B</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">10</span>)
-                <span class="op">|</span> ((<span class="ident">field</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">FILE_G</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">FILE_H</span>) <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">10</span>)
-                <span class="op">|</span> ((<span class="ident">field</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">FILE_H</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">15</span>)
-                <span class="op">|</span> ((<span class="ident">field</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">FILE_A</span>) <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">15</span>)
-                <span class="op">|</span> ((<span class="ident">field</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">FILE_A</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">17</span>)
-                <span class="op">|</span> ((<span class="ident">field</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">FILE_H</span>) <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">17</span>);
+            <span class="self">self</span>.jump_patterns[square] = <span class="number">0
+                </span>| ((square_bb &amp; !FILE_G_BB &amp; !FILE_H_BB) &lt;&lt; <span class="number">6</span>)
+                | ((square_bb &amp; !FILE_A_BB &amp; !FILE_B_BB) &gt;&gt; <span class="number">6</span>)
+                | ((square_bb &amp; !FILE_A_BB &amp; !FILE_B_BB) &lt;&lt; <span class="number">10</span>)
+                | ((square_bb &amp; !FILE_G_BB &amp; !FILE_H_BB) &gt;&gt; <span class="number">10</span>)
+                | ((square_bb &amp; !FILE_H_BB) &lt;&lt; <span class="number">15</span>)
+                | ((square_bb &amp; !FILE_A_BB) &gt;&gt; <span class="number">15</span>)
+                | ((square_bb &amp; !FILE_A_BB) &lt;&lt; <span class="number">17</span>)
+                | ((square_bb &amp; !FILE_H_BB) &gt;&gt; <span class="number">17</span>);
         }
     }
 
-    <span class="doccomment">/// Generates box patterns for all fields.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">regenerate_boxes</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">for</span> <span class="ident">field_index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">64</span> {
-            <span class="kw">let</span> <span class="ident">field</span> <span class="op">=</span> <span class="number">1u64</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">field_index</span>;
+    <span class="doccomment">/// Generates box patterns for all squares.
+    </span><span class="kw">pub fn </span>regenerate_boxes(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">for </span>square <span class="kw">in </span>ALL_SQUARES {
+            <span class="kw">let </span>square_bb = <span class="number">1u64 </span>&lt;&lt; square;
 
-            <span class="self">self</span>.<span class="ident">box_patterns</span>[<span class="ident">field_index</span>] <span class="op">=</span> <span class="number">0</span>
-                <span class="op">|</span> ((<span class="ident">field</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">FILE_A</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">1</span>)
-                <span class="op">|</span> ((<span class="ident">field</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">FILE_H</span>) <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">1</span>)
-                <span class="op">|</span> ((<span class="ident">field</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">FILE_H</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">7</span>)
-                <span class="op">|</span> ((<span class="ident">field</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">FILE_A</span>) <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">7</span>)
-                <span class="op">|</span> ((<span class="ident">field</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">RANK_H</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">8</span>)
-                <span class="op">|</span> ((<span class="ident">field</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">RANK_A</span>) <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">8</span>)
-                <span class="op">|</span> ((<span class="ident">field</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">FILE_A</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">9</span>)
-                <span class="op">|</span> ((<span class="ident">field</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">FILE_H</span>) <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">9</span>);
+            <span class="self">self</span>.box_patterns[square] = <span class="number">0
+                </span>| ((square_bb &amp; !FILE_A_BB) &lt;&lt; <span class="number">1</span>)
+                | ((square_bb &amp; !FILE_H_BB) &gt;&gt; <span class="number">1</span>)
+                | ((square_bb &amp; !FILE_H_BB) &lt;&lt; <span class="number">7</span>)
+                | ((square_bb &amp; !FILE_A_BB) &gt;&gt; <span class="number">7</span>)
+                | ((square_bb &amp; !RANK_8_BB) &lt;&lt; <span class="number">8</span>)
+                | ((square_bb &amp; !RANK_1_BB) &gt;&gt; <span class="number">8</span>)
+                | ((square_bb &amp; !FILE_A_BB) &lt;&lt; <span class="number">9</span>)
+                | ((square_bb &amp; !FILE_H_BB) &gt;&gt; <span class="number">9</span>);
         }
     }
 
-    <span class="doccomment">/// Generates rail patterns for all fields.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">regenerate_rails</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">for</span> <span class="ident">file</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">8</span> {
-            <span class="kw">let</span> <span class="ident">left_file</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">file</span> <span class="op">&gt;</span> <span class="number">0</span> { <span class="ident">FILE_H</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="ident">file</span> <span class="op">-</span> <span class="number">1</span>) } <span class="kw">else</span> { <span class="number">0</span> };
-            <span class="kw">let</span> <span class="ident">right_file</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">file</span> <span class="op">&lt;</span> <span class="number">7</span> { <span class="ident">FILE_H</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="ident">file</span> <span class="op">+</span> <span class="number">1</span>) } <span class="kw">else</span> { <span class="number">0</span> };
-            <span class="self">self</span>.<span class="ident">rail_patterns</span>[<span class="ident">file</span>] <span class="op">=</span> <span class="ident">left_file</span> <span class="op">|</span> <span class="ident">right_file</span>;
+    <span class="doccomment">/// Generates rail patterns for all squares.
+    </span><span class="kw">pub fn </span>regenerate_rails(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">for </span>file <span class="kw">in </span>ALL_FILES {
+            <span class="kw">let </span>left_file_bb = <span class="kw">if </span>file &gt; <span class="number">0 </span>{ FILE_H_BB &lt;&lt; (file - <span class="number">1</span>) } <span class="kw">else </span>{ <span class="number">0 </span>};
+            <span class="kw">let </span>right_file_bb = <span class="kw">if </span>file &lt; <span class="number">7 </span>{ FILE_H_BB &lt;&lt; (file + <span class="number">1</span>) } <span class="kw">else </span>{ <span class="number">0 </span>};
+            <span class="self">self</span>.rail_patterns[file] = left_file_bb | right_file_bb;
         }
     }
 
-    <span class="doccomment">/// Generates star patterns for all fields.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">regenerate_stars</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">for</span> <span class="ident">field_index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">64</span> {
-            <span class="self">self</span>.<span class="ident">star_patterns</span>[<span class="ident">field_index</span>] <span class="op">=</span> <span class="self">self</span>.<span class="ident">diagonal_patterns</span>[<span class="ident">field_index</span>] <span class="op">&amp;</span> <span class="self">self</span>.<span class="ident">box_patterns</span>[<span class="ident">field_index</span>];
+    <span class="doccomment">/// Generates star patterns for all squares.
+    </span><span class="kw">pub fn </span>regenerate_stars(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">for </span>square <span class="kw">in </span>ALL_SQUARES {
+            <span class="self">self</span>.star_patterns[square] = <span class="self">self</span>.diagonal_patterns[square] &amp; <span class="self">self</span>.box_patterns[square];
         }
     }
 
-    <span class="doccomment">/// Generates front patterns for all fields.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">regenerate_fronts</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">for</span> <span class="ident">color</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">2</span> {
-            <span class="kw">for</span> <span class="ident">field_index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">64</span> {
-                <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">field_index</span> <span class="op">%</span> <span class="number">8</span>;
-                <span class="kw">let</span> <span class="ident">rank</span> <span class="op">=</span> <span class="ident">field_index</span> <span class="op">/</span> <span class="number">8</span>;
+    <span class="doccomment">/// Generates front patterns for all squares.
+    </span><span class="kw">pub fn </span>regenerate_fronts(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">for </span>color <span class="kw">in </span>ALL_PHASES {
+            <span class="kw">for </span>square <span class="kw">in </span>ALL_SQUARES {
+                <span class="kw">let </span>file = square % <span class="number">8</span>;
+                <span class="kw">let </span>rank = square / <span class="number">8</span>;
 
-                <span class="kw">let</span> <span class="ident">center_file</span> <span class="op">=</span> <span class="ident">FILE_H</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">file</span>;
-                <span class="kw">let</span> <span class="ident">left_file</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">file</span> <span class="op">&gt;</span> <span class="number">0</span> { <span class="ident">FILE_H</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="ident">file</span> <span class="op">-</span> <span class="number">1</span>) } <span class="kw">else</span> { <span class="number">0</span> };
-                <span class="kw">let</span> <span class="ident">right_file</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">file</span> <span class="op">&lt;</span> <span class="number">7</span> { <span class="ident">FILE_H</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="ident">file</span> <span class="op">+</span> <span class="number">1</span>) } <span class="kw">else</span> { <span class="number">0</span> };
+                <span class="kw">let </span>center_file_bb = FILE_H_BB &lt;&lt; file;
+                <span class="kw">let </span>left_file_bb = <span class="kw">if </span>file &gt; <span class="number">0 </span>{ FILE_H_BB &lt;&lt; (file - <span class="number">1</span>) } <span class="kw">else </span>{ <span class="number">0 </span>};
+                <span class="kw">let </span>right_file_bb = <span class="kw">if </span>file &lt; <span class="number">7 </span>{ FILE_H_BB &lt;&lt; (file + <span class="number">1</span>) } <span class="kw">else </span>{ <span class="number">0 </span>};
 
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">current_rank</span> <span class="op">=</span> <span class="ident">rank</span>;
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">forbidden_area</span> <span class="op">=</span> <span class="number">0</span>;
-                <span class="kw">while</span> (<span class="number">0</span>..<span class="number">8</span>).<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">current_rank</span>) {
-                    <span class="ident">forbidden_area</span> <span class="op">|</span><span class="op">=</span> <span class="number">255</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="ident">current_rank</span> <span class="op">*</span> <span class="number">8</span>);
-                    <span class="ident">current_rank</span> <span class="op">+</span><span class="op">=</span> (<span class="ident">color</span> <span class="kw">as</span> <span class="ident">i8</span>) <span class="op">*</span> <span class="number">2</span> <span class="op">-</span> <span class="number">1</span>;
+                <span class="kw">let </span><span class="kw-2">mut </span>current_rank = rank <span class="kw">as </span>i8;
+                <span class="kw">let </span><span class="kw-2">mut </span>forbidden_area = <span class="number">0</span>;
+                <span class="kw">while </span>ALL_RANKS.contains(<span class="kw-2">&amp;</span>(current_rank <span class="kw">as </span>usize)) {
+                    forbidden_area |= <span class="number">255 </span>&lt;&lt; (current_rank * <span class="number">8</span>);
+                    current_rank += (color <span class="kw">as </span>i8) * <span class="number">2 </span>- <span class="number">1</span>;
                 }
 
-                <span class="self">self</span>.<span class="ident">front_patterns</span>[<span class="ident">color</span>][<span class="ident">field_index</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">=</span> (<span class="ident">left_file</span> <span class="op">|</span> <span class="ident">center_file</span> <span class="op">|</span> <span class="ident">right_file</span>) <span class="op">&amp;</span> <span class="op">!</span><span class="ident">forbidden_area</span>;
+                <span class="self">self</span>.front_patterns[color][square] = (left_file_bb | center_file_bb | right_file_bb) &amp; !forbidden_area;
             }
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">PatternsContainer</span> {
-    <span class="doccomment">/// Constructs a default instance of [PatternsContainer] with initialized patterns.</span>
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">Self</span> {
-            <span class="ident">file_patterns</span>: [<span class="number">0</span>; <span class="number">64</span>],
-            <span class="ident">rank_patterns</span>: [<span class="number">0</span>; <span class="number">64</span>],
-            <span class="ident">diagonal_patterns</span>: [<span class="number">0</span>; <span class="number">64</span>],
-            <span class="ident">jump_patterns</span>: [<span class="number">0</span>; <span class="number">64</span>],
-            <span class="ident">box_patterns</span>: [<span class="number">0</span>; <span class="number">64</span>],
-            <span class="ident">rail_patterns</span>: [<span class="number">0</span>; <span class="number">8</span>],
-            <span class="ident">star_patterns</span>: [<span class="number">0</span>; <span class="number">64</span>],
-            <span class="ident">front_patterns</span>: [[<span class="number">0</span>; <span class="number">64</span>]; <span class="number">2</span>],
+<span class="kw">impl </span>Default <span class="kw">for </span>PatternsContainer {
+    <span class="doccomment">/// Constructs a default instance of [PatternsContainer] with initialized patterns.
+    </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>result = <span class="self">Self </span>{
+            file_patterns: [<span class="number">0</span>; <span class="number">64</span>],
+            rank_patterns: [<span class="number">0</span>; <span class="number">64</span>],
+            diagonal_patterns: [<span class="number">0</span>; <span class="number">64</span>],
+            jump_patterns: [<span class="number">0</span>; <span class="number">64</span>],
+            box_patterns: [<span class="number">0</span>; <span class="number">64</span>],
+            rail_patterns: [<span class="number">0</span>; <span class="number">8</span>],
+            star_patterns: [<span class="number">0</span>; <span class="number">64</span>],
+            front_patterns: [[<span class="number">0</span>; <span class="number">64</span>]; <span class="number">2</span>],
         };
 
-        <span class="ident">result</span>.<span class="ident">regenerate_files</span>();
-        <span class="ident">result</span>.<span class="ident">regenerate_ranks</span>();
-        <span class="ident">result</span>.<span class="ident">regenerate_diagonals</span>();
-        <span class="ident">result</span>.<span class="ident">regenerate_jumps</span>();
-        <span class="ident">result</span>.<span class="ident">regenerate_boxes</span>();
-        <span class="ident">result</span>.<span class="ident">regenerate_rails</span>();
-        <span class="ident">result</span>.<span class="ident">regenerate_stars</span>();
-        <span class="ident">result</span>.<span class="ident">regenerate_fronts</span>();
+        result.regenerate_files();
+        result.regenerate_ranks();
+        result.regenerate_diagonals();
+        result.regenerate_jumps();
+        result.regenerate_boxes();
+        result.regenerate_rails();
+        result.regenerate_stars();
+        result.regenerate_fronts();
 
-        <span class="ident">result</span>
+        result
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="inanis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0 (4b91a6ea7 2022-08-08)" ></div>
-</body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="inanis" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.1 (90743e729 2023-01-10)" ></div></body></html>
