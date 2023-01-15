@@ -11,10 +11,10 @@
  - Removed underpromotions in qsearch
  - Reduced binary size by removing dependencies and replacing them with custom implementation
  - Renamed "test" command to "testset"
- - Simplified evaluation by reducing the amount of score taperings 
+ - Simplified evaluation by reducing the number of score taperings 
  - Improved build process
  - Improved benchmark output
- - Improved allocation of all hashtables, now their size will be always a power of 2 for better performance
+ - Improved allocation of all hashtables, now their size will always be a power of 2 for better performance
  - Improved king safety evaluation by taking a number of attacked adjacent fields more serious
  - Improved overall performance by a lot of minor refactors and adjustments
  - Improved game phase evaluation
