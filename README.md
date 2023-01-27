@@ -25,7 +25,7 @@ Each release contains a set of binaries for various platforms: Linux (x86, x86-6
 Big thanks to all testers and their effort! Please note that Elo on the lists above can slightly differ from the author's estimations due to different engine pools and the time control used for tests. 
 
 ## How to play online
-Inanis has an official lichess account, where you can try to challenge the engine: https://lichess.org/@/InanisBot. Please note that ratings there are very understated and not comparable to CCRL ones. Accepts standard chess with a bullet, blitz, rapid and classic time control (up to 3 games at a time).
+Inanis has an official lichess account, where you can try to challenge the engine: https://lichess.org/@/InanisBot. Please note that ratings there are very understated and not comparable to CCRL ones. Accepts standard chess with a bullet, blitz, rapid and classical time control.
 
 ## UCI options
  - `Hash` *(default: 2 MB)* - a total size (in megabytes) for the transposition table and pawn hashtable
