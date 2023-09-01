@@ -6,6 +6,7 @@ use crate::cache::search::TranspositionTable;
 use crate::engine;
 use crate::engine::context::HelperThreadContext;
 use crate::engine::context::SearchContext;
+use crate::perft;
 use crate::state::movescan::Move;
 use crate::state::representation::Board;
 use crate::state::*;
@@ -24,6 +25,7 @@ use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
+use std::time::SystemTime;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
@@ -143,8 +145,10 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
     let mut moves_to_go = 0;
     let mut moves_to_search = Vec::new();
     let mut ponder_mode = false;
+    let mut perft_mode = false;
+    let mut perft_depth = 0;
 
-    let state_lock = state.lock().unwrap();
+    let mut state_lock = state.lock().unwrap();
     let mut iter = parameters[1..].iter().peekable();
 
     while let Some(token) = iter.next() {
@@ -224,8 +228,27 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
                 ponder_mode = true;
                 forced_depth = engine::MAX_DEPTH;
             }
+            "perft" => {
+                perft_mode = true;
+                perft_depth = match iter.peek() {
+                    Some(value) => value.parse().unwrap_or(perft_depth),
+                    None => perft_depth,
+                }
+            }
             _ => {}
         }
+    }
+
+    if perft_mode {
+        for depth in 1..=perft_depth {
+            let now = SystemTime::now();
+            let result = perft::normal::run(depth, &mut state_lock.board, false);
+            let time = now.elapsed().unwrap().as_millis();
+
+            println!("info time {} depth {} nodes {}", time, depth, result.nodes);
+        }
+
+        return;
     }
 
     let mut time = match state_lock.board.active_color {
