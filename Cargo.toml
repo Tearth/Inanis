@@ -1,7 +1,7 @@
 [package]
 name = "inanis"
-version = "1.2.0"
-authors = ["Pawel Osikowski"]
+version = "1.2.1"
+authors = [ "Pawel Osikowski" ]
 repository = "https://github.com/Tearth/Inanis"
 edition = "2021"
 
@@ -9,8 +9,8 @@ edition = "2021"
 doctest = false
 
 [features]
-syzygy = ["dep:cc"]
-bindgen = ["dep:bindgen"]
+syzygy = [ "dep:cc" ]
+bindgen = [ "dep:bindgen" ]
 
 [dependencies]
 common = { path = "./common/" }
@@ -21,7 +21,7 @@ cc = { version = "1.0.73", optional = true }
 bindgen = { version = "0.60.1", optional = true }
 
 [dev-dependencies]
-criterion = { version = "0.3.6", features = ["html_reports"] }
+criterion = { version = "0.3.6", features = [ "html_reports" ] }
 
 [profile.release]
 panic = "abort"
