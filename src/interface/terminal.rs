@@ -13,6 +13,7 @@ use crate::testing::testset;
 use crate::tuning::tuner;
 use crate::tuning::tunerset;
 use crate::utils::percent;
+use std::ffi::OsString;
 use std::io;
 use std::process;
 use std::time::SystemTime;
@@ -25,7 +26,8 @@ const HASH: &str = env!("HASH");
 const COMPILER: &str = env!("COMPILER");
 
 /// Entry point of the terminal interface and command loop.
-pub fn run(target_features: Vec<&'static str>) {
+pub fn run(args: Vec<OsString>, target_features: Vec<&'static str>) {
+    let use_args = args.len() > 1;
     let header = if target_features.is_empty() {
         format!("Inanis {} ({}), created by {}", VERSION, DATE, AUTHOR)
     } else {
@@ -41,14 +43,19 @@ pub fn run(target_features: Vec<&'static str>) {
 
     loop {
         let mut input = String::new();
-        let read_bytes = io::stdin().read_line(&mut input).unwrap();
+        let tokens: Vec<&str> = if use_args {
+            args[1..].iter().filter_map(|s| s.to_str()).collect()
+        } else {
+            let read_bytes = io::stdin().read_line(&mut input).unwrap();
 
-        // Input stream has reached EOF, according to https://doc.rust-lang.org/stable/std/io/trait.BufRead.html#method.read_line
-        if read_bytes == 0 {
-            process::exit(0);
-        }
+            // Input stream has reached EOF, according to https://doc.rust-lang.org/stable/std/io/trait.BufRead.html#method.read_line
+            if read_bytes == 0 {
+                process::exit(0);
+            }
 
-        let tokens: Vec<&str> = input.split(' ').map(|v| v.trim()).collect();
+            input.split(' ').map(|v| v.trim()).collect()
+        };
+
         match tokens[0] {
             "help" => handle_help(),
             "benchmark" => handle_benchmark(),
@@ -64,6 +71,10 @@ pub fn run(target_features: Vec<&'static str>) {
             "wah" => handle_wah(),
             "quit" => handle_quit(),
             _ => handle_unknown_command(),
+        }
+
+        if use_args {
+            break;
         }
     }
 }

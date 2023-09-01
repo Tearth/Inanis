@@ -1,8 +1,12 @@
 use inanis::interface::terminal;
+use std::env;
 
 /// Entry point of the Inanis engine.
 pub fn main() {
-    terminal::run(get_target_features());
+    let args = env::args_os().collect();
+    let target_features = get_target_features();
+
+    terminal::run(args, target_features);
 }
 
 /// Gets a list of target features (POPCNT, BMI1, BMI2) with which the executable was built.
