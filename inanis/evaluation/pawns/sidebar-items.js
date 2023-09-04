@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["evaluate","Evaluates structure of pawns on the `board` and returns score from the white color perspective (more than 0 when advantage, less than 0 when disadvantage). This evaluator considers:"],["evaluate_color","Evaluates pawn structure on the `board` for the specified `color`."],["evaluate_without_cache","Does the same thing as [evaluate], but doesn’t use pawn hashtable to save evalations."]]};
+window.SIDEBAR_ITEMS = {"fn":["evaluate","evaluate_color","evaluate_without_cache"]};

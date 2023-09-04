@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["bindings",""],["probe",""]]};
+window.SIDEBAR_ITEMS = {"mod":["bindings","probe"]};

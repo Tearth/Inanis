@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["evaluate","Evaluates king safety on the `board` and returns score from the white color perspective (more than 0 when advantage, less than 0 when disadvantage). Both additional parameters, `dangered_white_king_squares` and `dangered_black_king_squares`, are calculated during mobility evaluation and are used here to get the final score."],["evaluate_color","Evaluates pawn structure on the `board` for the specified `color` and with `dangered_king_squares` count."]]};
+window.SIDEBAR_ITEMS = {"fn":["evaluate","evaluate_color"]};

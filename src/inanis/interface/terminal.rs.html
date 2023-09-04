@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/interface/terminal.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>terminal.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-6827029ac823cab7.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-ebce58d0a40c3431.css"><link rel="stylesheet" disabled href="../../../static.files/dark-f23faae4a2daf9a6.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-8af5e100b21cd173.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-5cf2e01a42cc9858.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-c55e1eb52e1886b4.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../inanis/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/interface/terminal.rs`."><title>terminal.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9bb858ba049f1f21.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="inanis" data-themes="" data-resource-suffix="" data-rustdoc-version="1.72.0 (5680fa18f 2023-08-23)" data-channel="1.72.0" data-search-js="search-f6292fe389d70017.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ><script src="../../../static.files/storage-59fd9b8ccb335783.js"></script><script defer src="../../../static.files/source-script-106908c7a7964ba4.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../inanis/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -751,7 +751,18 @@
 <a href="#751" id="751">751</a>
 <a href="#752" id="752">752</a>
 <a href="#753" id="753">753</a>
-</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::uci;
+<a href="#754" id="754">754</a>
+<a href="#755" id="755">755</a>
+<a href="#756" id="756">756</a>
+<a href="#757" id="757">757</a>
+<a href="#758" id="758">758</a>
+<a href="#759" id="759">759</a>
+<a href="#760" id="760">760</a>
+<a href="#761" id="761">761</a>
+<a href="#762" id="762">762</a>
+<a href="#763" id="763">763</a>
+<a href="#764" id="764">764</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::uci;
 <span class="kw">use </span><span class="kw">crate</span>::evaluation::material;
 <span class="kw">use </span><span class="kw">crate</span>::evaluation::mobility;
 <span class="kw">use </span><span class="kw">crate</span>::evaluation::pawns;
@@ -766,6 +777,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::tuning::tuner;
 <span class="kw">use </span><span class="kw">crate</span>::tuning::tunerset;
 <span class="kw">use </span><span class="kw">crate</span>::utils::percent;
+<span class="kw">use </span>std::ffi::OsString;
 <span class="kw">use </span>std::io;
 <span class="kw">use </span>std::process;
 <span class="kw">use </span>std::time::SystemTime;
@@ -778,7 +790,8 @@
 <span class="kw">const </span>COMPILER: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">&quot;COMPILER&quot;</span>);
 
 <span class="doccomment">/// Entry point of the terminal interface and command loop.
-</span><span class="kw">pub fn </span>run(target_features: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str&gt;) {
+</span><span class="kw">pub fn </span>run(args: Vec&lt;OsString&gt;, target_features: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str&gt;) {
+    <span class="kw">let </span>use_args = args.len() &gt; <span class="number">1</span>;
     <span class="kw">let </span>header = <span class="kw">if </span>target_features.is_empty() {
         <span class="macro">format!</span>(<span class="string">&quot;Inanis {} ({}), created by {}&quot;</span>, VERSION, DATE, AUTHOR)
     } <span class="kw">else </span>{
@@ -794,14 +807,19 @@
 
     <span class="kw">loop </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>input = String::new();
-        <span class="kw">let </span>read_bytes = io::stdin().read_line(<span class="kw-2">&amp;mut </span>input).unwrap();
+        <span class="kw">let </span>tokens: Vec&lt;<span class="kw-2">&amp;</span>str&gt; = <span class="kw">if </span>use_args {
+            args[<span class="number">1</span>..].iter().filter_map(|s| s.to_str()).collect()
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>read_bytes = io::stdin().read_line(<span class="kw-2">&amp;mut </span>input).unwrap();
 
-        <span class="comment">// Input stream has reached EOF, according to https://doc.rust-lang.org/stable/std/io/trait.BufRead.html#method.read_line
-        </span><span class="kw">if </span>read_bytes == <span class="number">0 </span>{
-            process::exit(<span class="number">0</span>);
-        }
+            <span class="comment">// Input stream has reached EOF, according to https://doc.rust-lang.org/stable/std/io/trait.BufRead.html#method.read_line
+            </span><span class="kw">if </span>read_bytes == <span class="number">0 </span>{
+                process::exit(<span class="number">0</span>);
+            }
 
-        <span class="kw">let </span>tokens: Vec&lt;<span class="kw-2">&amp;</span>str&gt; = input.split(<span class="string">&#39; &#39;</span>).map(|v| v.trim()).collect();
+            input.split(<span class="string">&#39; &#39;</span>).map(|v| v.trim()).collect()
+        };
+
         <span class="kw">match </span>tokens[<span class="number">0</span>] {
             <span class="string">&quot;help&quot; </span>=&gt; handle_help(),
             <span class="string">&quot;benchmark&quot; </span>=&gt; handle_benchmark(),
@@ -817,6 +835,10 @@
             <span class="string">&quot;wah&quot; </span>=&gt; handle_wah(),
             <span class="string">&quot;quit&quot; </span>=&gt; handle_quit(),
             <span class="kw">_ </span>=&gt; handle_unknown_command(),
+        }
+
+        <span class="kw">if </span>use_args {
+            <span class="kw">break</span>;
         }
     }
 }
@@ -1504,5 +1526,4 @@
         <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid mode: parameter[0]={}&quot;</span>, parameters[<span class="number">0</span>])),
     }
 }
-</code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="inanis" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.0 (fc594f156 2023-01-24)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
+</code></pre></div></section></main></body></html>

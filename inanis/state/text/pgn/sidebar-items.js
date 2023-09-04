@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["PGNLoader",""],["ParsedPGN",""]]};
+window.SIDEBAR_ITEMS = {"struct":["PGNLoader","ParsedPGN"]};

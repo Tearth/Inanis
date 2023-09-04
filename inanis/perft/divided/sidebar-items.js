@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["run","Entry point of the fixed-`depth` divided perft, which performs a separate perfts for every possible move in the position specified by `board`. Returns a map with the long notation moves as the key, and calculated nodes count as the associated value."]]};
+window.SIDEBAR_ITEMS = {"fn":["run"]};

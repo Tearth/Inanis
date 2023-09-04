@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"macro":[["bit_helpers_implementation",""]],"trait":[["BitHelpers",""]]};
+window.SIDEBAR_ITEMS = {"macro":["bit_helpers_implementation"],"trait":["BitHelpers"]};

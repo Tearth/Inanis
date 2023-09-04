@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["recalculate_hash","Recalculates board’s hash entirely."],["recalculate_pawn_hash","Recalculates board’s pawn hash entirely."]],"struct":[["ZobristContainer",""]]};
+window.SIDEBAR_ITEMS = {"fn":["recalculate_hash","recalculate_pawn_hash"],"struct":["ZobristContainer"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"macro":[["div_ceil_implementation",""]],"trait":[["DivCeil",""]]};
+window.SIDEBAR_ITEMS = {"macro":["div_ceil_implementation"],"trait":["DivCeil"]};

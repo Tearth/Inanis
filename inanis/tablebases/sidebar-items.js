@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["WdlResult",""]],"fn":[["get_tablebase_move","Checks if there’s a tablebase move (only Syzygy supported for now) and returns it as [Some], otherwise [None]."]],"mod":[["syzygy",""]],"struct":[["WdlDtzResult",""]]};
+window.SIDEBAR_ITEMS = {"enum":["WdlResult"],"fn":["get_tablebase_move"],"mod":["syzygy"],"struct":["WdlDtzResult"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["piece_to_symbol","Converts `piece` into the corresponding character (p/P, n/N, b/B, r/R, q/Q, k/K). Returns [Err] with the proper error message when the `piece` is unknown."],["symbol_to_piece","Converts piece `symbol` (p/P, n/N, b/B, r/R, q/Q, k/K) into the corresponding [u8] value. Returns [Err] with the proper error messages when the `symbol` is unknown."]],"mod":[["fen",""],["moves",""],["pgn",""]]};
+window.SIDEBAR_ITEMS = {"fn":["piece_to_symbol","symbol_to_piece"],"mod":["fen","moves","pgn"]};

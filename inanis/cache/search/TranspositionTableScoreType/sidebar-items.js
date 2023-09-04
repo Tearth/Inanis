@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["EXACT_SCORE",""],["INVALID",""],["LOWER_BOUND",""],["UPPER_BOUND",""]]};
+window.SIDEBAR_ITEMS = {"constant":["EXACT_SCORE","INVALID","LOWER_BOUND","UPPER_BOUND"]};

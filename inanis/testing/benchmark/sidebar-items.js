@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["run","Runs a benchmark by performing a fixed-depth search for the built-in list of positions."]],"struct":[["BenchmarkResult",""]]};
+window.SIDEBAR_ITEMS = {"fn":["run"],"struct":["BenchmarkResult"]};

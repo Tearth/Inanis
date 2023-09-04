@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["CastlingRights",""]],"struct":[["Board",""],["BoardState",""]]};
+window.SIDEBAR_ITEMS = {"mod":["CastlingRights"],"struct":["Board","BoardState"]};
