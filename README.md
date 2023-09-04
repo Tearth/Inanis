@@ -8,6 +8,7 @@ UCI chess engine written in Rust, the successor of [Proxima b](https://github.co
 ## Releases
 | Version                                                       | Release date | Elo  | Main changes |
 |---------------------------------------------------------------|--------------|------|--------------|
+| [1.2.1](https://github.com/Tearth/Inanis/releases/tag/v1.2.1) | 04-09-2023   | 2850 | Commands executed directly from a command line, perft in UCI mode |
 | [1.2.0](https://github.com/Tearth/Inanis/releases/tag/v1.2.0) | 15-01-2023   | 2850 | Improved Syzygy support, general performance and stability improvement |
 | [1.1.1](https://github.com/Tearth/Inanis/releases/tag/v1.1.1) | 14-08-2022   | 2800 | A bunch of fixes for reported issues, stability improvement |
 | [1.1.0](https://github.com/Tearth/Inanis/releases/tag/v1.1.0) | 31-07-2022   | 2800 | Syzygy tablebases, MultiPV, adjusted evaluation |
@@ -101,6 +102,9 @@ Examples of running the tests:
 Because Inanis is a pet project, pull requests are not currently accepted - this may or may not change in the future, depending on the way the project will go. However, feel free to make issues or suggestions, they are greatly appreciated. 
 
 ## Commands
+
+All commands listed below can be executed both in interactive mode and directly from a command line, on example `inanis.exe perft 5`. 
+
 ```
 === General ===
  benchmark - run test for a set of positions

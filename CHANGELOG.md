@@ -1,3 +1,7 @@
+# Version 1.2.1 (04-09-2023)
+ - Added executing commands directly from a command line
+ - Added perft in UCI mode (go perft)
+
 # Version 1.2.0 (15-01-2023)
  - Added integration with Fathom library to better support Syzygy tablebases
  - Added "tbhits" to the search output
