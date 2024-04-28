@@ -223,7 +223,7 @@ impl Iterator for SearchContext {
             } else {
                 let desired_time = clock::get_time_for_move(self.board.fullmove_number, self.time, self.inc_time, self.moves_to_go);
 
-                // Desider time can't exceed the whole available time
+                // Desired time can't exceed the whole available time
                 cmp::min(desired_time, self.time)
             };
 
