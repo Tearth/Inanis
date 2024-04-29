@@ -149,7 +149,13 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
 
     if context.board.is_king_checked(context.board.active_color ^ 1) {
         conditional_expression!(DIAG, context.statistics.leafs_count += 1);
-        return CHECKMATE_SCORE - (ply as i16);
+
+        // The position where both kings are checked is illegal, it will be filtered after returning invalid score
+        if friendly_king_checked {
+            return INVALID_SCORE;
+        } else {
+            return CHECKMATE_SCORE - (ply as i16);
+        }
     }
 
     if context.board.is_repetition_draw(if ROOT { 3 } else { 2 }) || context.board.is_fifty_move_rule_draw() || context.board.is_insufficient_material_draw() {
@@ -354,7 +360,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
                 let zero_window_score = -run_internal::<false, false, DIAG>(context, depth - r - 1, ply + 1, -alpha - 1, -alpha, true, king_checked);
                 conditional_expression!(DIAG, context.statistics.pvs_zero_window_searches += 1);
 
-                if zero_window_score > alpha && (alpha != beta - 1 || r > 0) {
+                if zero_window_score > alpha && (alpha != beta - 1 || r > 0) && zero_window_score != -INVALID_SCORE {
                     conditional_expression!(DIAG, context.statistics.pvs_rejected_searches += 1);
                     -run_internal::<false, true, DIAG>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked)
                 } else {
@@ -365,7 +371,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
             let zero_window_score = -run_internal::<false, false, DIAG>(context, depth - r - 1, ply + 1, -beta, -alpha, true, king_checked);
             conditional_expression!(DIAG, context.statistics.pvs_zero_window_searches += 1);
 
-            if zero_window_score > alpha && r > 0 {
+            if zero_window_score > alpha && r > 0 && zero_window_score != -INVALID_SCORE {
                 conditional_expression!(DIAG, context.statistics.pvs_rejected_searches += 1);
                 -run_internal::<false, false, DIAG>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked)
             } else {
@@ -374,6 +380,10 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
         };
 
         context.board.undo_move(r#move);
+
+        if score == -INVALID_SCORE {
+            continue;
+        }
 
         if score > best_score {
             best_score = cmp::max(best_score, score);
