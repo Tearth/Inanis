@@ -10,8 +10,9 @@ pub fn evaluate(board: &Board, dangered_white_king_squares: u32, dangered_black_
 
 /// Evaluates pawn structure on the `board` for the specified `color` and with `dangered_king_squares` count.
 fn evaluate_color(board: &Board, dangered_king_squares: u32) -> EvaluationResult {
-    let opening_score = (dangered_king_squares as i16).pow(2) * board.evaluation_parameters.king_attacked_squares_opening;
-    let ending_score = (dangered_king_squares as i16).pow(2) * board.evaluation_parameters.king_attacked_squares_ending;
+    let index = (dangered_king_squares as usize).min(7);
+    let opening_score = board.evaluation_parameters.king_attacked_squares_opening[index];
+    let ending_score = board.evaluation_parameters.king_attacked_squares_ending[index];
 
     EvaluationResult::new(opening_score, ending_score)
 }

@@ -36,8 +36,8 @@ pub struct EvaluationParameters {
     pub pawn_shield_open_file_opening: i16,
     pub pawn_shield_open_file_ending: i16,
 
-    pub king_attacked_squares_opening: i16,
-    pub king_attacked_squares_ending: i16,
+    pub king_attacked_squares_opening: [i16; 8],
+    pub king_attacked_squares_ending: [i16; 8],
 
     pub pst: [[[[i16; 64]; 2]; 6]; 2],
     pub pst_patterns: [[[i16; 64]; 2]; 6],
