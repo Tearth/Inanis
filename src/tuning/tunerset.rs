@@ -14,7 +14,8 @@ use crate::state::representation::Board;
 use crate::state::text::pgn::PGNLoader;
 use crate::state::zobrist::ZobristContainer;
 use crate::utils::rand;
-use std::collections::HashSet;
+use std::cmp::Ordering;
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
@@ -25,8 +26,8 @@ use std::sync::Arc;
 use std::time::SystemTime;
 
 /// Runs generator of the dataset for the tuner. It works by parsing `pgn_filename`, and then picking random positions based on the
-/// provided restrictions like `min_ply`, `max_score`, `max_differ`, `density` and `avg_game_phase`. Output positions are then stored in the `output_file`.
-pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16, max_diff: u16, density: usize, avg_game_phase: f32) {
+/// provided restrictions like `min_ply`, `max_score`, `max_differ` and `density`. Output positions are then stored in the `output_file`.
+pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16, max_diff: u16, density: usize) {
     println!("Loading PGN file...");
 
     let start_time = SystemTime::now();
@@ -39,7 +40,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
     };
 
     let pgn_loader = PGNLoader::new(BufReader::new(file).lines());
-    let mut output_positions = HashSet::new();
+    let mut output_positions = HashMap::new();
     let mut parsed_pgns = 0;
 
     let evaluation_parameters = Arc::new(EvaluationParameters::default());
@@ -68,6 +69,10 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
                 return;
             }
         };
+
+        if pgn.result == "*" {
+            continue;
+        }
 
         let board = match pgn.fen {
             Some(fen) => {
@@ -125,6 +130,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
         );
 
         let mut viable_positions = Vec::new();
+
         for (index, r#move) in pgn.moves.iter().enumerate() {
             context.board.make_move(*r#move);
 
@@ -133,12 +139,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
                 continue;
             }
 
-            if index > pgn.moves.len() - 12 {
-                ignored_positions += 1;
-                continue;
-            }
-
-            if index > 160 {
+            if r#move.is_capture() || r#move.is_castling() || r#move.is_promotion() {
                 ignored_positions += 1;
                 continue;
             }
@@ -154,22 +155,22 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
                 continue;
             }
 
+            let score = context.board.evaluate_without_cache(context.board.active_color);
             let q_score = qsearch::run::<false>(&mut context, 0, MIN_ALPHA, MIN_BETA);
-            let evaluation = context.board.evaluate_without_cache(context.board.active_color);
-            if evaluation.abs_diff(q_score) > max_diff {
+
+            if score.abs_diff(q_score) > max_diff {
                 ignored_positions += 1;
                 continue;
             }
 
-            let epd = format!("{} c9 \"{}\";", context.board.to_epd(), pgn.result);
+            let epd = context.board.to_epd();
             let game_phase = (context.board.game_phase as f32) / (evaluation_parameters.initial_game_phase as f32);
 
-            viable_positions.push((epd, game_phase));
+            viable_positions.push((epd, pgn.result.to_string(), game_phase));
             total_viable_positions += 1;
         }
 
         let mut picked_positions = 0;
-        let mut tries = 0;
 
         while picked_positions < density {
             if viable_positions.is_empty() {
@@ -177,29 +178,21 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
             }
 
             let index = rand::usize(0..viable_positions.len());
-            let (position, game_phase) = viable_positions[index].to_owned();
+            let (position, result, game_phase) = viable_positions[index].to_owned();
+            let result_value = match result.as_str() {
+                "1-0" => 1,
+                "1/2-1/2" => 0,
+                "0-1" => -1,
+                _ => panic!("Unknown result"),
+            };
 
-            if output_positions.contains(&position) {
-                viable_positions.remove(index);
+            if let Some(position_result) = output_positions.get_mut(&position) {
+                *position_result += result_value;
                 duplicates += 1;
-
-                continue;
-            }
-
-            let avg_game_phase_now = sum_of_game_phases / (output_positions.len() as f32);
-            if tries < 10 {
-                if (avg_game_phase_now < avg_game_phase && game_phase < avg_game_phase) || (avg_game_phase_now > avg_game_phase && game_phase > avg_game_phase)
-                {
-                    tries += 1;
-                    continue;
-                } else {
-                    tries = 0;
-                }
             } else {
-                break;
+                output_positions.insert(position, result_value);
             }
 
-            output_positions.insert(position);
             viable_positions.remove(index);
             picked_positions += 1;
             sum_of_game_phases += game_phase;
@@ -232,8 +225,14 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
     let mut output_file_line_writer = LineWriter::new(output_file);
     let positions_count = output_positions.len();
 
-    for fen in output_positions {
-        output_file_line_writer.write_all((fen + "\n").as_bytes()).unwrap();
+    for (fen, result) in output_positions {
+        let result_string = match result.cmp(&0) {
+            Ordering::Greater => "1-0",
+            Ordering::Less => "0-1",
+            Ordering::Equal => "1/2-1/2",
+        };
+
+        output_file_line_writer.write_all((format!("{} c9 \"{}\";", fen, result_string) + "\n").as_bytes()).unwrap();
     }
 
     println!(

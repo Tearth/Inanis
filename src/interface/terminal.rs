@@ -87,7 +87,7 @@ fn handle_help() {
     println!(" magic - generate magic numbers");
     println!(" testset [epd] [depth] [transposition_table_size] [threads_count] - run test of positions");
     println!(" tuner [epd] [output] [lock_material] [randomize] [threads_count] - run tuning");
-    println!(" tunerset [pgn] [output] [min_ply] [max_score] [max_diff] [density] [avg_game_phase] - dataset generator");
+    println!(" tunerset [pgn] [output] [min_ply] [max_score] [max_diff] [density] - dataset generator");
     println!(" uci - run Universal Chess Interface");
     println!(" quit - close the application");
     println!();
@@ -647,7 +647,7 @@ fn handle_tuner(input: Vec<&str>) {
 
 /// Handles `tunerset [pgn] [output] [min_ply] [max_score] [max_diff] [density]` command by running generator of the dataset for the tuner.
 /// It works by parsing `pgn_filename`, and then picking random positions based on the provided restrictions like `min_ply`, `max_score`,
-/// `max_differ`, `density` and `avg_game_phase`. Output positions are then stored in the `output_file`.
+/// `max_differ` and `density`. Output positions are then stored in the `output_file`.
 fn handle_tunerset(input: Vec<&str>) {
     if input.len() < 2 {
         println!("PGN filename parameter not found");
@@ -676,11 +676,6 @@ fn handle_tunerset(input: Vec<&str>) {
 
     if input.len() < 7 {
         println!("Maximal density parameter not found");
-        return;
-    }
-
-    if input.len() < 8 {
-        println!("Average game phase parameter not found");
         return;
     }
 
@@ -716,15 +711,7 @@ fn handle_tunerset(input: Vec<&str>) {
         }
     };
 
-    let avg_game_phase = match input[7].parse() {
-        Ok(value) => value,
-        Err(error) => {
-            println!("Invalid average game phase parameter: {}", error);
-            return;
-        }
-    };
-
-    tunerset::run(input[1], input[2], min_ply, max_score, max_diff, density, avg_game_phase);
+    tunerset::run(input[1], input[2], min_ply, max_score, max_diff, density);
 }
 
 /// Handles `uci` command by entering into the UCI (Universal Chess Interface) mode.

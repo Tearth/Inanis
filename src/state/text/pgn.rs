@@ -107,6 +107,10 @@ impl PGNLoader {
                         continue;
                     }
 
+                    if token == "*" {
+                        break;
+                    }
+
                     let r#move = match Move::from_short_notation(token, &mut board) {
                         Ok(r#move) => r#move,
                         Err(error) => return Err(format!("Invalid move: {}", error)),
