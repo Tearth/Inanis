@@ -36,7 +36,7 @@ macro_rules! rand_definition {
             if from == $min_value && to == $max_value {
                 rand_internal() as $type
             } else {
-                ((rand_internal() % ((to as u64) - (from as u64) + 1)) + (from as u64)) as $type
+                (rand_internal() % (((to as i128) - (from as i128) + 1) as u64)) as $type + from
             }
         }
     };
