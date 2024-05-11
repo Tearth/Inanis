@@ -105,6 +105,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
 
         let mut context = SearchContext::new(
             board,
+            Default::default(),
             0,
             0,
             0,

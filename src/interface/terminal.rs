@@ -9,14 +9,20 @@ use crate::state::movegen::MagicContainer;
 use crate::state::representation::Board;
 use crate::state::*;
 use crate::testing::benchmark;
-use crate::testing::testset;
-use crate::tuning::tuner;
-use crate::tuning::tunerset;
 use crate::utils::percent;
 use std::ffi::OsString;
 use std::io;
 use std::process;
 use std::time::SystemTime;
+
+#[cfg(feature = "dev")]
+use crate::testing::testset;
+
+#[cfg(feature = "dev")]
+use crate::tuning::tuner;
+
+#[cfg(feature = "dev")]
+use crate::tuning::tunerset;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
@@ -60,13 +66,21 @@ pub fn run(args: Vec<OsString>, target_features: Vec<&'static str>) {
             "help" => handle_help(),
             "benchmark" => handle_benchmark(),
             "evaluate" => handle_evaluate(tokens),
+
+            #[cfg(feature = "dev")]
             "magic" => handle_magic(),
+
             "perft" => handle_perft(tokens),
             "dperft" => handle_dperft(tokens),
             "qperft" => handle_qperft(tokens),
+
+            #[cfg(feature = "dev")]
             "testset" => handle_testset(tokens),
+            #[cfg(feature = "dev")]
             "tuner" => handle_tuner(tokens),
+            #[cfg(feature = "dev")]
             "tunerset" => handle_tunerset(tokens),
+
             "uci" => handle_uci(),
             "wah" => handle_wah(),
             "quit" => handle_quit(),
@@ -84,10 +98,16 @@ fn handle_help() {
     println!("=== General ===");
     println!(" benchmark - run test for a set of positions");
     println!(" evaluate [fen] - show score for the position");
+
+    #[cfg(feature = "dev")]
     println!(" magic - generate magic numbers");
+    #[cfg(feature = "dev")]
     println!(" testset [epd] [depth] [transposition_table_size] [threads_count] - run test of positions");
+    #[cfg(feature = "dev")]
     println!(" tuner [epd] [output] [lock_material] [randomize] [threads_count] - run tuning");
+    #[cfg(feature = "dev")]
     println!(" tunerset [pgn] [output] [min_ply] [max_score] [max_diff] [density] - dataset generator");
+
     println!(" uci - run Universal Chess Interface");
     println!(" quit - close the application");
     println!();
@@ -223,39 +243,39 @@ fn handle_benchmark() {
     println!();
     println!("{: <H$} {: <V$} {: <V$} {: <V$}", "", "Attempts", "Accepted", "Rejected", H = header_intendation, V = value_intendation);
 
-    let static_null_move_pruning_accepted_percent = percent!(result.static_null_move_pruning_accepted, result.static_null_move_pruning_attempts);
-    let static_null_move_pruning_rejected_percent = percent!(result.static_null_move_pruning_rejected, result.static_null_move_pruning_attempts);
+    let snmp_accepted_percent = percent!(result.snmp_accepted, result.snmp_attempts);
+    let snmp_rejected_percent = percent!(result.snmp_rejected, result.snmp_attempts);
     println!(
         "{: <H$} {: <V$} {: <V$} {: <V$}",
         "Static null move pruning",
-        format!("{:.2}", result.static_null_move_pruning_attempts),
-        format!("{} ({:.2}%)", result.static_null_move_pruning_accepted, static_null_move_pruning_accepted_percent),
-        format!("{} ({:.2}%)", result.static_null_move_pruning_rejected, static_null_move_pruning_rejected_percent),
+        format!("{:.2}", result.snmp_attempts),
+        format!("{} ({:.2}%)", result.snmp_accepted, snmp_accepted_percent),
+        format!("{} ({:.2}%)", result.snmp_rejected, snmp_rejected_percent),
         H = header_intendation,
         V = value_intendation
     );
 
-    let null_move_pruning_accepted_percent = percent!(result.null_move_pruning_accepted, result.null_move_pruning_attempts);
-    let null_move_pruning_rejected_percent = percent!(result.null_move_pruning_rejected, result.null_move_pruning_attempts);
+    let nmp_accepted_percent = percent!(result.nmp_accepted, result.nmp_attempts);
+    let nmp_rejected_percent = percent!(result.nmp_rejected, result.nmp_attempts);
     println!(
         "{: <H$} {: <V$} {: <V$} {: <V$}",
         "Null move pruning",
-        format!("{:.2}", result.null_move_pruning_attempts),
-        format!("{} ({:.2}%)", result.null_move_pruning_accepted, null_move_pruning_accepted_percent),
-        format!("{} ({:.2}%)", result.null_move_pruning_rejected, null_move_pruning_rejected_percent),
+        format!("{:.2}", result.nmp_attempts),
+        format!("{} ({:.2}%)", result.nmp_accepted, nmp_accepted_percent),
+        format!("{} ({:.2}%)", result.nmp_rejected, nmp_rejected_percent),
         H = header_intendation,
         V = value_intendation
     );
 
-    let late_move_pruning_attempts = result.late_move_pruning_accepted + result.late_move_pruning_rejected;
-    let late_move_pruning_accepted_percent = percent!(result.late_move_pruning_accepted, late_move_pruning_attempts);
-    let late_move_pruning_rejected_percent = percent!(result.late_move_pruning_rejected, late_move_pruning_attempts);
+    let lmp_attempts = result.lmp_accepted + result.lmp_rejected;
+    let lmp_accepted_percent = percent!(result.lmp_accepted, lmp_attempts);
+    let lmp_rejected_percent = percent!(result.lmp_rejected, lmp_attempts);
     println!(
         "{: <H$} {: <V$} {: <V$} {: <V$}",
         "Late move pruning",
-        format!("{:.2}", late_move_pruning_attempts),
-        format!("{} ({:.2}%)", result.late_move_pruning_accepted, late_move_pruning_accepted_percent),
-        format!("{} ({:.2}%)", result.late_move_pruning_rejected, late_move_pruning_rejected_percent),
+        format!("{:.2}", lmp_attempts),
+        format!("{} ({:.2}%)", result.lmp_accepted, lmp_accepted_percent),
+        format!("{} ({:.2}%)", result.lmp_rejected, lmp_rejected_percent),
         H = header_intendation,
         V = value_intendation
     );
@@ -359,6 +379,7 @@ fn handle_evaluate(input: Vec<&str>) {
 }
 
 /// Handles `magic` command by printing a fresh set of magic numbers.
+#[cfg(feature = "dev")]
 fn handle_magic() {
     let now = SystemTime::now();
     let magic = MagicContainer::default();
@@ -536,6 +557,7 @@ fn handle_qperft(input: Vec<&str>) {
 
 /// Handles `testset [epd] [depth] [transposition_table_size] [threads_count]` command by running a fixed-`depth` search of positions stored in the `epd` file,
 /// using hashtable with size specified in `transposition_table_size`. To classify the test as successful, the last iteration has to return the correct best move.
+#[cfg(feature = "dev")]
 fn handle_testset(input: Vec<&str>) {
     if input.len() < 2 {
         println!("EPD filename parameter not found");
@@ -592,6 +614,7 @@ fn handle_testset(input: Vec<&str>) {
 /// Handles `tuner [epd] [output] [lock_material] [randomize] [threads_count]` command by running the evaluation parameters tuner. The input file is specified by `epd`
 /// file with a list of positions and their expected results, and the `output` directory is used to store generated Rust sources with the optimized values. Use
 /// `lock_material` to disable tuner for piece values, and `randomize` to initialize evaluation parameters with random values. Multithreading is supported by `threads_count`.
+#[cfg(feature = "dev")]
 fn handle_tuner(input: Vec<&str>) {
     if input.len() < 2 {
         println!("EPD filename parameter not found");
@@ -648,6 +671,7 @@ fn handle_tuner(input: Vec<&str>) {
 /// Handles `tunerset [pgn] [output] [min_ply] [max_score] [max_diff] [density]` command by running generator of the dataset for the tuner.
 /// It works by parsing `pgn_filename`, and then picking random positions based on the provided restrictions like `min_ply`, `max_score`,
 /// `max_differ` and `density`. Output positions are then stored in the `output_file`.
+#[cfg(feature = "dev")]
 fn handle_tunerset(input: Vec<&str>) {
     if input.len() < 2 {
         println!("PGN filename parameter not found");

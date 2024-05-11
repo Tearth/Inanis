@@ -3,6 +3,7 @@ use std::mem::MaybeUninit;
 
 pub mod clock;
 pub mod context;
+pub mod parameters;
 pub mod qsearch;
 pub mod search;
 pub mod see;

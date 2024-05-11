@@ -1,6 +1,7 @@
 pub mod bitflags;
 pub mod bithelpers;
 pub mod divceil;
+pub mod minmax;
 pub mod rand;
 
 macro_rules! conditional_expression {

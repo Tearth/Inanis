@@ -6,11 +6,13 @@ use crate::cache::search::TranspositionTable;
 use crate::engine;
 use crate::engine::context::HelperThreadContext;
 use crate::engine::context::SearchContext;
+use crate::engine::parameters::SearchParameters;
 use crate::perft;
 use crate::state::movescan::Move;
 use crate::state::representation::Board;
 use crate::state::*;
 use crate::tablebases::syzygy;
+use crate::utils::minmax::MinMax;
 use std::cmp;
 use std::collections::HashMap;
 use std::fs;
@@ -32,7 +34,7 @@ const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
 
 pub struct UciState {
     board: Board,
-    options: HashMap<String, String>,
+    options: HashMap<String, UciOption>,
     transposition_table: Arc<TranspositionTable>,
     pawn_hashtable: Arc<PawnHashTable>,
     killers_table: Arc<KillersTable>,
@@ -40,6 +42,39 @@ pub struct UciState {
     abort_flag: Arc<AtomicBool>,
     ponder_flag: Arc<AtomicBool>,
     debug_mode: AtomicBool,
+}
+
+#[derive(Clone)]
+pub struct UciOption {
+    pub order: u32,
+    pub r#type: String,
+    pub min: String,
+    pub max: String,
+    pub default: String,
+    pub value: String,
+}
+
+impl UciOption {
+    pub fn new<T>(order: u32, r#type: &str, min: T, max: T, default: T) -> Self
+    where
+        T: ToString,
+    {
+        Self { order, r#type: r#type.to_string(), min: min.to_string(), max: max.to_string(), default: default.to_string(), value: default.to_string() }
+    }
+
+    pub fn new_wide<T>(order: u32, default: T) -> Self
+    where
+        T: ToString + MinMax,
+    {
+        Self {
+            order,
+            r#type: "spin".to_string(),
+            min: T::min().to_string(),
+            max: T::max().to_string(),
+            default: default.to_string(),
+            value: default.to_string(),
+        }
+    }
 }
 
 impl Default for UciState {
@@ -62,31 +97,75 @@ impl Default for UciState {
 /// Entry point of the UCI (Universal Chess Interface) and command loop.
 pub fn run() {
     let state: Arc<Mutex<UciState>> = Arc::new(Mutex::new(Default::default()));
-
     let mut state_lock = state.lock().unwrap();
-    state_lock.options.insert("Hash".to_string(), "2".to_string());
-    state_lock.options.insert("Move Overhead".to_string(), "10".to_string());
-    state_lock.options.insert("MultiPV".to_string(), "1".to_string());
-    state_lock.options.insert("Threads".to_string(), "1".to_string());
-    state_lock.options.insert("SyzygyPath".to_string(), "<empty>".to_string());
-    state_lock.options.insert("SyzygyProbeLimit".to_string(), "8".to_string());
-    state_lock.options.insert("SyzygyProbeDepth".to_string(), "6".to_string());
-    state_lock.options.insert("Ponder".to_string(), "false".to_string());
-    state_lock.options.insert("Crash Files".to_string(), "false".to_string());
-    drop(state_lock);
 
     println!("id name Inanis {}", VERSION);
     println!("id author {}", AUTHOR);
-    println!("option name Hash type spin default 2 min 2 max 1048576");
-    println!("option name Move Overhead type spin default 10 min 0 max 3600000");
-    println!("option name MultiPV type spin default 1 min 1 max 256");
-    println!("option name Threads type spin default 1 min 1 max 1024");
-    println!("option name SyzygyPath type string default <empty>");
-    println!("option name SyzygyProbeLimit type spin default 8 min 1 max 8");
-    println!("option name SyzygyProbeDepth type spin default 6 min 1 max 32");
-    println!("option name Ponder type check default false");
-    println!("option name Crash Files type check default false");
-    println!("option name Clear Hash type button");
+
+    state_lock.options.insert("Hash".to_string(), UciOption::new(0, "spin", 1, 1048576, 2));
+    state_lock.options.insert("Move Overhead".to_string(), UciOption::new(1, "spin", 0, 3600000, 10));
+    state_lock.options.insert("MultiPV".to_string(), UciOption::new(2, "spin", 1, 256, 1));
+    state_lock.options.insert("Threads".to_string(), UciOption::new(3, "spin", 1, 1024, 1));
+    state_lock.options.insert("SyzygyPath".to_string(), UciOption::new(4, "string", "", "", "<empty>"));
+    state_lock.options.insert("SyzygyProbeLimit".to_string(), UciOption::new(5, "spin", 1, 9, 8));
+    state_lock.options.insert("SyzygyProbeDepth".to_string(), UciOption::new(6, "spin", 1, 32, 6));
+    state_lock.options.insert("Ponder".to_string(), UciOption::new(7, "check", false, false, false));
+    state_lock.options.insert("Crash Files".to_string(), UciOption::new(8, "check", false, false, false));
+    state_lock.options.insert("Clear Hash".to_string(), UciOption::new(9, "button", "", "", ""));
+
+    let parameters = SearchParameters::default();
+    state_lock.options.insert("razoring_min_depth".to_string(), UciOption::new_wide(99, parameters.razoring_min_depth));
+    state_lock.options.insert("razoring_max_depth".to_string(), UciOption::new_wide(99, parameters.razoring_max_depth));
+    state_lock.options.insert("razoring_depth_margin_base".to_string(), UciOption::new_wide(99, parameters.razoring_depth_margin_base));
+    state_lock.options.insert("razoring_depth_margin_multiplier".to_string(), UciOption::new_wide(99, parameters.razoring_depth_margin_multiplier));
+
+    state_lock.options.insert("snmp_min_depth".to_string(), UciOption::new_wide(99, parameters.snmp_min_depth));
+    state_lock.options.insert("snmp_max_depth".to_string(), UciOption::new_wide(99, parameters.snmp_max_depth));
+    state_lock.options.insert("snmp_depth_margin_base".to_string(), UciOption::new_wide(99, parameters.snmp_depth_margin_base));
+    state_lock.options.insert("snmp_depth_margin_multiplier".to_string(), UciOption::new_wide(99, parameters.snmp_depth_margin_multiplier));
+
+    state_lock.options.insert("nmp_min_depth".to_string(), UciOption::new_wide(99, parameters.nmp_min_depth));
+    state_lock.options.insert("nmp_min_game_phase".to_string(), UciOption::new_wide(99, parameters.nmp_min_game_phase));
+    state_lock.options.insert("nmp_margin".to_string(), UciOption::new_wide(99, parameters.nmp_margin));
+    state_lock.options.insert("nmp_depth_base".to_string(), UciOption::new_wide(99, parameters.nmp_depth_base));
+    state_lock.options.insert("nmp_depth_divider".to_string(), UciOption::new_wide(99, parameters.nmp_depth_divider));
+
+    state_lock.options.insert("lmp_min_depth".to_string(), UciOption::new_wide(99, parameters.lmp_min_depth));
+    state_lock.options.insert("lmp_max_depth".to_string(), UciOption::new_wide(99, parameters.lmp_max_depth));
+    state_lock.options.insert("lmp_move_index_margin_base".to_string(), UciOption::new_wide(99, parameters.lmp_move_index_margin_base));
+    state_lock.options.insert("lmp_move_index_margin_multiplier".to_string(), UciOption::new_wide(99, parameters.lmp_move_index_margin_multiplier));
+    state_lock.options.insert("lmp_max_score".to_string(), UciOption::new_wide(99, parameters.lmp_max_score));
+
+    state_lock.options.insert("lmr_min_depth".to_string(), UciOption::new_wide(99, parameters.lmr_min_depth));
+    state_lock.options.insert("lmr_max_score".to_string(), UciOption::new_wide(99, parameters.lmr_max_score));
+    state_lock.options.insert("lmr_min_move_index".to_string(), UciOption::new_wide(99, parameters.lmr_min_move_index));
+    state_lock.options.insert("lmr_reduction_base".to_string(), UciOption::new_wide(99, parameters.lmr_reduction_base));
+    state_lock.options.insert("lmr_reduction_step".to_string(), UciOption::new_wide(99, parameters.lmr_reduction_step));
+    state_lock.options.insert("lmr_max_reduction".to_string(), UciOption::new_wide(99, parameters.lmr_max_reduction));
+    state_lock.options.insert("lmr_pv_min_move_index".to_string(), UciOption::new_wide(99, parameters.lmr_pv_min_move_index));
+    state_lock.options.insert("lmr_pv_reduction_base".to_string(), UciOption::new_wide(99, parameters.lmr_pv_reduction_base));
+    state_lock.options.insert("lmr_pv_reduction_step".to_string(), UciOption::new_wide(99, parameters.lmr_pv_reduction_step));
+    state_lock.options.insert("lmr_pv_max_reduction".to_string(), UciOption::new_wide(99, parameters.lmr_pv_max_reduction));
+
+    let mut options_sorted = state_lock.options.iter().collect::<Vec<_>>();
+    options_sorted.sort_by_key(|(_, option)| option.order);
+
+    for (name, option) in options_sorted {
+        #[cfg(not(feature = "dev"))]
+        if option.order == 99 {
+            continue;
+        }
+
+        match option.r#type.as_str() {
+            "spin" => println!("option name {} type {} default {} min {} max {}", name, option.r#type, option.default, option.min, option.max),
+            "string" => println!("option name {} type {} default {}", name, option.r#type, option.default),
+            "check" => println!("option name {} type {} default {}", name, option.r#type, option.default),
+            "button" => println!("option name {} type {}", name, option.r#type),
+            _ => panic!("Invalid value: option.r#type={}", option.r#type),
+        };
+    }
+
+    drop(state_lock);
     println!("uciok");
 
     loop {
@@ -256,7 +335,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
         BLACK => black_time,
         _ => panic!("Invalid value: state_lock.board.active_color={}", state_lock.board.active_color),
     };
-    time -= cmp::min(time, state_lock.options["Move Overhead"].parse::<u32>().unwrap());
+    time -= cmp::min(time, state_lock.options["Move Overhead"].value.parse::<u32>().unwrap());
 
     let inc_time = match state_lock.board.active_color {
         WHITE => white_inc_time,
@@ -272,16 +351,52 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
     thread::spawn(move || {
         let state_lock = state_arc.lock().unwrap();
 
-        let multipv = state_lock.options["MultiPV"].parse::<u32>().unwrap();
-        let threads = state_lock.options["Threads"].parse::<usize>().unwrap();
-        let ponder = state_lock.options["Ponder"].parse::<bool>().unwrap();
-        let syzygy_path = state_lock.options["SyzygyPath"].clone();
+        let multipv = state_lock.options["MultiPV"].value.parse::<u32>().unwrap();
+        let threads = state_lock.options["Threads"].value.parse::<usize>().unwrap();
+        let ponder = state_lock.options["Ponder"].value.parse::<bool>().unwrap();
+        let syzygy_path = state_lock.options["SyzygyPath"].value.clone();
         let syzygy_enabled = !syzygy_path.is_empty() && syzygy_path != "<empty>";
-        let syzygy_probe_limit = state_lock.options["SyzygyProbeLimit"].parse::<u32>().unwrap();
-        let syzygy_probe_depth = state_lock.options["SyzygyProbeDepth"].parse::<i8>().unwrap();
+        let syzygy_probe_limit = state_lock.options["SyzygyProbeLimit"].value.parse::<u32>().unwrap();
+        let syzygy_probe_depth = state_lock.options["SyzygyProbeDepth"].value.parse::<i8>().unwrap();
+
+        let search_parameters = SearchParameters {
+            razoring_min_depth: state_lock.options["razoring_min_depth"].value.parse().unwrap(),
+            razoring_max_depth: state_lock.options["razoring_max_depth"].value.parse().unwrap(),
+            razoring_depth_margin_base: state_lock.options["razoring_depth_margin_base"].value.parse().unwrap(),
+            razoring_depth_margin_multiplier: state_lock.options["razoring_depth_margin_multiplier"].value.parse().unwrap(),
+
+            snmp_min_depth: state_lock.options["snmp_min_depth"].value.parse().unwrap(),
+            snmp_max_depth: state_lock.options["snmp_max_depth"].value.parse().unwrap(),
+            snmp_depth_margin_base: state_lock.options["snmp_depth_margin_base"].value.parse().unwrap(),
+            snmp_depth_margin_multiplier: state_lock.options["snmp_depth_margin_multiplier"].value.parse().unwrap(),
+
+            nmp_min_depth: state_lock.options["nmp_min_depth"].value.parse().unwrap(),
+            nmp_min_game_phase: state_lock.options["nmp_min_game_phase"].value.parse().unwrap(),
+            nmp_margin: state_lock.options["nmp_margin"].value.parse().unwrap(),
+            nmp_depth_base: state_lock.options["nmp_depth_base"].value.parse().unwrap(),
+            nmp_depth_divider: state_lock.options["nmp_depth_divider"].value.parse().unwrap(),
+
+            lmp_min_depth: state_lock.options["lmp_min_depth"].value.parse().unwrap(),
+            lmp_max_depth: state_lock.options["lmp_max_depth"].value.parse().unwrap(),
+            lmp_move_index_margin_base: state_lock.options["lmp_move_index_margin_base"].value.parse().unwrap(),
+            lmp_move_index_margin_multiplier: state_lock.options["lmp_move_index_margin_multiplier"].value.parse().unwrap(),
+            lmp_max_score: state_lock.options["lmp_max_score"].value.parse().unwrap(),
+
+            lmr_min_depth: state_lock.options["lmr_min_depth"].value.parse().unwrap(),
+            lmr_max_score: state_lock.options["lmr_max_score"].value.parse().unwrap(),
+            lmr_min_move_index: state_lock.options["lmr_min_move_index"].value.parse().unwrap(),
+            lmr_reduction_base: state_lock.options["lmr_reduction_base"].value.parse().unwrap(),
+            lmr_reduction_step: state_lock.options["lmr_reduction_step"].value.parse().unwrap(),
+            lmr_max_reduction: state_lock.options["lmr_max_reduction"].value.parse().unwrap(),
+            lmr_pv_min_move_index: state_lock.options["lmr_pv_min_move_index"].value.parse().unwrap(),
+            lmr_pv_reduction_base: state_lock.options["lmr_pv_reduction_base"].value.parse().unwrap(),
+            lmr_pv_reduction_step: state_lock.options["lmr_pv_reduction_step"].value.parse().unwrap(),
+            lmr_pv_max_reduction: state_lock.options["lmr_pv_max_reduction"].value.parse().unwrap(),
+        };
 
         let mut context = SearchContext::new(
             state_lock.board.clone(),
+            search_parameters.clone(),
             state_lock.board.state_stack.len() as u8,
             time,
             inc_time,
@@ -312,6 +427,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
                 let state_lock = state_arc.lock().unwrap();
                 let helper_context = SearchContext::new(
                     state_lock.board.clone(),
+                    search_parameters.clone(),
                     state_lock.board.state_stack.len() as u8,
                     time,
                     inc_time,
@@ -512,7 +628,12 @@ fn handle_setoption(parameters: &[String], state: Arc<Mutex<UciState>>) {
     let value = value_tokens.join(" ");
 
     if !name.is_empty() && !value.is_empty() {
-        state.lock().unwrap().options.insert(name.to_owned(), value.to_owned());
+        if let Some(option) = state.lock().unwrap().options.get_mut(&name) {
+            option.value = value.to_string();
+        } else {
+            #[cfg(feature = "dev")]
+            panic!("Invalid value: name={}, value={}", name, value);
+        }
     }
 
     match name.as_str() {
@@ -562,7 +683,7 @@ fn handle_quit() {
 /// Recreates transposition table, pawn hashtable, killers table and history table.
 fn recreate_state_tables(state: Arc<Mutex<UciState>>) {
     let mut state_lock = state.lock().unwrap();
-    let total_size = state_lock.options["Hash"].parse::<usize>().unwrap();
+    let total_size = state_lock.options["Hash"].value.parse::<usize>().unwrap();
     let allocation_result = allocator::get_allocation(total_size);
 
     state_lock.transposition_table = Arc::new(TranspositionTable::new(allocation_result.transposition_table_size * 1024 * 1024));

@@ -9,8 +9,9 @@ edition = "2021"
 doctest = false
 
 [features]
-syzygy = [ "dep:cc" ]
+dev = []
 bindgen = [ "dep:bindgen" ]
+syzygy = [ "dep:cc" ]
 
 [dependencies]
 common = { path = "./common/" }

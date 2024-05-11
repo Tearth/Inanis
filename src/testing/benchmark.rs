@@ -28,16 +28,16 @@ pub struct BenchmarkResult {
     pub pvs_zero_window_searches: u64,
     pub pvs_rejected_searches: u64,
 
-    pub static_null_move_pruning_attempts: u64,
-    pub static_null_move_pruning_accepted: u64,
-    pub static_null_move_pruning_rejected: u64,
+    pub snmp_attempts: u64,
+    pub snmp_accepted: u64,
+    pub snmp_rejected: u64,
 
-    pub null_move_pruning_attempts: u64,
-    pub null_move_pruning_accepted: u64,
-    pub null_move_pruning_rejected: u64,
+    pub nmp_attempts: u64,
+    pub nmp_accepted: u64,
+    pub nmp_rejected: u64,
 
-    pub late_move_pruning_accepted: u64,
-    pub late_move_pruning_rejected: u64,
+    pub lmp_accepted: u64,
+    pub lmp_rejected: u64,
 
     pub razoring_attempts: u64,
     pub razoring_accepted: u64,
@@ -124,6 +124,7 @@ pub fn run() -> BenchmarkResult {
         let board = Board::new_from_fen(fen, None, None, None, None, None).unwrap();
         let context = SearchContext::new(
             board,
+            Default::default(),
             0,
             0,
             0,
@@ -166,16 +167,16 @@ pub fn run() -> BenchmarkResult {
         benchmark_result.pvs_zero_window_searches += result.statistics.pvs_zero_window_searches;
         benchmark_result.pvs_rejected_searches += result.statistics.pvs_rejected_searches;
 
-        benchmark_result.static_null_move_pruning_attempts += result.statistics.static_null_move_pruning_attempts;
-        benchmark_result.static_null_move_pruning_accepted += result.statistics.static_null_move_pruning_accepted;
-        benchmark_result.static_null_move_pruning_rejected += result.statistics.static_null_move_pruning_rejected;
+        benchmark_result.snmp_attempts += result.statistics.snmp_attempts;
+        benchmark_result.snmp_accepted += result.statistics.snmp_accepted;
+        benchmark_result.snmp_rejected += result.statistics.snmp_rejected;
 
-        benchmark_result.null_move_pruning_attempts += result.statistics.null_move_pruning_attempts;
-        benchmark_result.null_move_pruning_accepted += result.statistics.null_move_pruning_accepted;
-        benchmark_result.null_move_pruning_rejected += result.statistics.null_move_pruning_rejected;
+        benchmark_result.nmp_attempts += result.statistics.nmp_attempts;
+        benchmark_result.nmp_accepted += result.statistics.nmp_accepted;
+        benchmark_result.nmp_rejected += result.statistics.nmp_rejected;
 
-        benchmark_result.late_move_pruning_accepted += result.statistics.late_move_pruning_accepted;
-        benchmark_result.late_move_pruning_rejected += result.statistics.late_move_pruning_rejected;
+        benchmark_result.lmp_accepted += result.statistics.lmp_accepted;
+        benchmark_result.lmp_rejected += result.statistics.lmp_rejected;
 
         benchmark_result.razoring_attempts += result.statistics.razoring_attempts;
         benchmark_result.razoring_accepted += result.statistics.razoring_accepted;

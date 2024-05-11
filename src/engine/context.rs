@@ -1,3 +1,4 @@
+use self::parameters::SearchParameters;
 use super::statistics::SearchStatistics;
 use super::*;
 use crate::cache::history::HistoryTable;
@@ -21,6 +22,7 @@ use std::time::SystemTime;
 
 pub struct SearchContext {
     pub board: Board,
+    pub parameters: SearchParameters,
     pub search_id: u8,
     pub time: u32,
     pub inc_time: u32,
@@ -99,6 +101,7 @@ impl SearchContext {
     ///  - `ponder_flag` - flag used to change a search mode from pondering to the regular one
     pub fn new(
         board: Board,
+        parameters: SearchParameters,
         search_id: u8,
         time: u32,
         inc_time: u32,
@@ -124,6 +127,7 @@ impl SearchContext {
     ) -> Self {
         Self {
             board,
+            parameters,
             search_id,
             time,
             inc_time,

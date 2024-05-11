@@ -13,39 +13,6 @@ use std::cmp;
 use std::mem::MaybeUninit;
 use std::sync::atomic::Ordering;
 
-pub const RAZORING_MIN_DEPTH: i8 = 1;
-pub const RAZORING_MAX_DEPTH: i8 = 4;
-pub const RAZORING_DEPTH_MARGIN_BASE: i16 = 300;
-pub const RAZORING_DEPTH_MARGIN_MULTIPLIER: i16 = 300;
-
-pub const STATIC_NULL_MOVE_PRUNING_MIN_DEPTH: i8 = 1;
-pub const STATIC_NULL_MOVE_PRUNING_MAX_DEPTH: i8 = 8;
-pub const STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_BASE: i16 = 150;
-pub const STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_MULTIPLIER: i16 = 150;
-
-pub const NULL_MOVE_PRUNING_MIN_DEPTH: i8 = 2;
-pub const NULL_MOVE_PRUNING_MIN_GAME_PHASE: u8 = 3;
-pub const NULL_MOVE_PRUNING_MARGIN: i16 = 50;
-pub const NULL_MOVE_PRUNING_DEPTH_BASE: i8 = 2;
-pub const NULL_MOVE_PRUNING_DEPTH_DIVIDER: i8 = 5;
-
-pub const LATE_MOVE_PRUNING_MIN_DEPTH: i8 = 1;
-pub const LATE_MOVE_PRUNING_MAX_DEPTH: i8 = 4;
-pub const LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_BASE: usize = 2;
-pub const LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_MULTIPLIER: usize = 4;
-pub const LATE_MOVE_PRUNING_MAX_SCORE: i16 = 0;
-
-pub const LATE_MOVE_REDUCTION_MIN_DEPTH: i8 = 2;
-pub const LATE_MOVE_REDUCTION_MAX_SCORE: i16 = 90;
-pub const LATE_MOVE_REDUCTION_MIN_MOVE_INDEX: usize = 2;
-pub const LATE_MOVE_REDUCTION_REDUCTION_BASE: usize = 1;
-pub const LATE_MOVE_REDUCTION_REDUCTION_STEP: usize = 4;
-pub const LATE_MOVE_REDUCTION_MAX_REDUCTION: i8 = 3;
-pub const LATE_MOVE_REDUCTION_PV_MIN_MOVE_INDEX: usize = 2;
-pub const LATE_MOVE_REDUCTION_PV_REDUCTION_BASE: usize = 1;
-pub const LATE_MOVE_REDUCTION_PV_REDUCTION_STEP: usize = 8;
-pub const LATE_MOVE_REDUCTION_PV_MAX_REDUCTION: i8 = 2;
-
 pub const MOVE_ORDERING_HASH_MOVE: i16 = 10000;
 pub const MOVE_ORDERING_WINNING_CAPTURES_OFFSET: i16 = 100;
 pub const MOVE_ORDERING_KILLER_MOVE_1: i16 = 99;
@@ -240,8 +207,8 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
 
     let mut lazy_evaluation = None;
 
-    if razoring_can_be_applied::<PV>(depth, alpha, friendly_king_checked) {
-        let margin = razoring_get_margin(depth);
+    if razoring_can_be_applied::<PV>(context, depth, alpha, friendly_king_checked) {
+        let margin = razoring_get_margin(context, depth);
         let lazy_evaluation_value = match lazy_evaluation {
             Some(value) => value,
             None => context.board.evaluate_lazy(context.board.active_color),
@@ -262,35 +229,35 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
         lazy_evaluation = Some(lazy_evaluation_value);
     }
 
-    if static_null_move_pruning_can_be_applied::<PV>(depth, beta, friendly_king_checked) {
-        let margin = static_null_move_pruning_get_margin(depth);
+    if snmp_can_be_applied::<PV>(context, depth, beta, friendly_king_checked) {
+        let margin = snmp_get_margin(context, depth);
         let lazy_evaluation_value = match lazy_evaluation {
             Some(value) => value,
             None => context.board.evaluate_lazy(context.board.active_color),
         };
 
-        conditional_expression!(DIAG, context.statistics.static_null_move_pruning_attempts += 1);
+        conditional_expression!(DIAG, context.statistics.snmp_attempts += 1);
         if lazy_evaluation_value - margin >= beta {
             conditional_expression!(DIAG, context.statistics.leafs_count += 1);
-            conditional_expression!(DIAG, context.statistics.static_null_move_pruning_accepted += 1);
+            conditional_expression!(DIAG, context.statistics.snmp_accepted += 1);
             return lazy_evaluation_value - margin;
         } else {
-            conditional_expression!(DIAG, context.statistics.static_null_move_pruning_rejected += 1);
+            conditional_expression!(DIAG, context.statistics.snmp_rejected += 1);
         }
 
         lazy_evaluation = Some(lazy_evaluation_value);
     }
 
-    if null_move_pruning_can_be_applied::<PV>(context, depth, beta, allow_null_move, friendly_king_checked) {
-        let margin = NULL_MOVE_PRUNING_MARGIN;
+    if nmp_can_be_applied::<PV>(context, depth, beta, allow_null_move, friendly_king_checked) {
+        let margin = context.parameters.nmp_margin;
         let lazy_evaluation_value = match lazy_evaluation {
             Some(value) => value,
             None => context.board.evaluate_lazy(context.board.active_color),
         };
 
-        conditional_expression!(DIAG, context.statistics.null_move_pruning_attempts += 1);
+        conditional_expression!(DIAG, context.statistics.nmp_attempts += 1);
         if lazy_evaluation_value + margin >= beta {
-            let r = null_move_pruning_get_r(depth);
+            let r = nmp_get_r(context, depth);
 
             context.board.make_null_move();
             let score = -run_internal::<false, false, DIAG>(context, depth - r - 1, ply + 1, -beta, -beta + 1, false, false);
@@ -298,10 +265,10 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
 
             if score >= beta {
                 conditional_expression!(DIAG, context.statistics.leafs_count += 1);
-                conditional_expression!(DIAG, context.statistics.null_move_pruning_accepted += 1);
+                conditional_expression!(DIAG, context.statistics.nmp_accepted += 1);
                 return score;
             } else {
-                conditional_expression!(DIAG, context.statistics.null_move_pruning_rejected += 1);
+                conditional_expression!(DIAG, context.statistics.nmp_rejected += 1);
             }
         }
 
@@ -336,18 +303,18 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
             continue;
         }
 
-        if late_move_pruning_can_be_applied::<PV>(depth, move_number, score, friendly_king_checked) {
-            conditional_expression!(DIAG, context.statistics.late_move_pruning_accepted += 1);
+        if lmp_can_be_applied::<PV>(context, depth, move_number, score, friendly_king_checked) {
+            conditional_expression!(DIAG, context.statistics.lmp_accepted += 1);
             break;
         } else {
-            conditional_expression!(DIAG, context.statistics.late_move_pruning_rejected += 1);
+            conditional_expression!(DIAG, context.statistics.lmp_rejected += 1);
         }
 
         context.board.make_move(r#move);
 
         let king_checked = context.board.is_king_checked(context.board.active_color);
-        let r = if late_move_reduction_can_be_applied(depth, r#move, move_number, score, friendly_king_checked, king_checked) {
-            late_move_reduction_get_r::<PV>(move_number)
+        let r = if lmr_can_be_applied::<PV>(context, depth, r#move, move_number, score, friendly_king_checked, king_checked) {
+            lmr_get_r::<PV>(context, move_number)
         } else {
             0
         };
@@ -746,17 +713,21 @@ fn get_next_move<const DIAG: bool>(
 ///
 /// Conditions:
 ///  - only non-PV nodes
-///  - depth >= [RAZORING_MIN_DEPTH]
-///  - depth <= [RAZORING_MAX_DEPTH]
+///  - depth >= [razoring_min_depth]
+///  - depth <= [razoring_max_depth]
 ///  - alpha is not a mate score
 ///  - friendly king is not checked
-fn razoring_can_be_applied<const PV: bool>(depth: i8, alpha: i16, friendly_king_checked: bool) -> bool {
-    !PV && depth >= RAZORING_MIN_DEPTH && depth <= RAZORING_MAX_DEPTH && !is_score_near_checkmate(alpha) && !friendly_king_checked
+fn razoring_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, alpha: i16, friendly_king_checked: bool) -> bool {
+    !PV && depth >= context.parameters.razoring_min_depth
+        && depth <= context.parameters.razoring_max_depth
+        && !is_score_near_checkmate(alpha)
+        && !friendly_king_checked
 }
 
 /// Gets the razoring margin, based on `depth`. The further from the horizon we are, the more margin we should take to determine if node can be pruned.
-fn razoring_get_margin(depth: i8) -> i16 {
-    RAZORING_DEPTH_MARGIN_BASE + ((depth - RAZORING_MIN_DEPTH) as i16) * RAZORING_DEPTH_MARGIN_MULTIPLIER
+fn razoring_get_margin(context: &mut SearchContext, depth: i8) -> i16 {
+    context.parameters.razoring_depth_margin_base
+        + ((depth - context.parameters.razoring_min_depth) as i16) * context.parameters.razoring_depth_margin_multiplier
 }
 
 /// The main idea of the static null move pruning (also called as reverse futility pruning) is to prune all nodes, which (based on lazy evaluation) are too
@@ -765,21 +736,18 @@ fn razoring_get_margin(depth: i8) -> i16 {
 ///
 /// Conditions:
 ///  - only non-PV nodes
-///  - depth >= [STATIC_NULL_MOVE_PRUNING_MIN_DEPTH]
-///  - depth <= [STATIC_NULL_MOVE_PRUNING_MAX_DEPTH]
+///  - depth >= [snmp_min_depth]
+///  - depth <= [snmp_max_depth]
 ///  - beta is not a mate score
 ///  - friendly king is not checked
-fn static_null_move_pruning_can_be_applied<const PV: bool>(depth: i8, beta: i16, friendly_king_checked: bool) -> bool {
-    !PV && depth >= STATIC_NULL_MOVE_PRUNING_MIN_DEPTH
-        && depth <= STATIC_NULL_MOVE_PRUNING_MAX_DEPTH
-        && !is_score_near_checkmate(beta)
-        && !friendly_king_checked
+fn snmp_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, beta: i16, friendly_king_checked: bool) -> bool {
+    !PV && depth >= context.parameters.snmp_min_depth && depth <= context.parameters.snmp_max_depth && !is_score_near_checkmate(beta) && !friendly_king_checked
 }
 
 /// Gets the static null move pruning margin, based on `depth`. The further from the horizon we are, the more margin should we take to determine
 /// if node can be pruned.
-fn static_null_move_pruning_get_margin(depth: i8) -> i16 {
-    STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_BASE + ((depth - STATIC_NULL_MOVE_PRUNING_MIN_DEPTH) as i16) * STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_MULTIPLIER
+fn snmp_get_margin(context: &mut SearchContext, depth: i8) -> i16 {
+    context.parameters.snmp_depth_margin_base + ((depth - context.parameters.snmp_min_depth) as i16) * context.parameters.snmp_depth_margin_multiplier
 }
 
 /// The main idea of the null move pruning is to prune all nodes, for which the search gives us score above beta even if we skip a move (which allows
@@ -788,28 +756,22 @@ fn static_null_move_pruning_get_margin(depth: i8) -> i16 {
 ///
 /// Conditions:
 ///  - only non-PV nodes
-///  - depth >= [NULL_MOVE_PRUNING_MIN_DEPTH]
+///  - depth >= [nmp_min_depth]
 ///  - game phase is not indicating endgame
 ///  - beta score is not a mate score
 ///  - friendly king is not checked
 ///  - this is not the second null move in a row
-fn null_move_pruning_can_be_applied<const PV: bool>(
-    context: &mut SearchContext,
-    depth: i8,
-    beta: i16,
-    allow_null_move: bool,
-    friendly_king_checked: bool,
-) -> bool {
-    !PV && depth >= NULL_MOVE_PRUNING_MIN_DEPTH
-        && context.board.game_phase > NULL_MOVE_PRUNING_MIN_GAME_PHASE
+fn nmp_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, beta: i16, allow_null_move: bool, friendly_king_checked: bool) -> bool {
+    !PV && depth >= context.parameters.nmp_min_depth
+        && context.board.game_phase > context.parameters.nmp_min_game_phase
         && !is_score_near_checkmate(beta)
         && !friendly_king_checked
         && allow_null_move
 }
 
 /// Gets the null move pruning depth reduction, called R, based on `depth`. The further from the horizon we are, the more reduction will be applied.
-fn null_move_pruning_get_r(depth: i8) -> i8 {
-    NULL_MOVE_PRUNING_DEPTH_BASE + depth / NULL_MOVE_PRUNING_DEPTH_DIVIDER
+fn nmp_get_r(context: &mut SearchContext, depth: i8) -> i8 {
+    context.parameters.nmp_depth_base + depth / context.parameters.nmp_depth_divider
 }
 
 /// The main idea of the late move pruning is to prune all nodes, which are near the horizon and were scored low by the history table.
@@ -817,16 +779,16 @@ fn null_move_pruning_get_r(depth: i8) -> i8 {
 ///
 /// Conditions:
 ///  - only non-PV nodes
-///  - depth >= [LATE_MOVE_PRUNING_MIN_DEPTH]
-///  - depth <= [LATE_MOVE_PRUNING_MAX_DEPTH]
-///  - move index >= [LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_BASE] + some margin depending on `depth`
-///  - move score <= [LATE_MOVE_PRUNING_MAX_SCORE]
+///  - depth >= [lmp_min_depth]
+///  - depth <= [lmp_max_depth]
+///  - move index >= [lmp_move_index_margin_multiplier] + (`depth` - 1) * [lmp_move_index_margin_multiplier]
+///  - move score <= [lmp_max_score]
 ///  - friendly king is not checked
-fn late_move_pruning_can_be_applied<const PV: bool>(depth: i8, move_index: usize, move_score: i16, friendly_king_checked: bool) -> bool {
-    !PV && depth >= LATE_MOVE_PRUNING_MIN_DEPTH
-        && depth <= LATE_MOVE_PRUNING_MAX_DEPTH
-        && move_index >= LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_BASE + (depth as usize - 1) * LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_MULTIPLIER
-        && move_score <= LATE_MOVE_PRUNING_MAX_SCORE
+fn lmp_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, move_index: usize, move_score: i16, friendly_king_checked: bool) -> bool {
+    !PV && depth >= context.parameters.lmp_min_depth
+        && depth <= context.parameters.lmp_max_depth
+        && move_index >= context.parameters.lmp_move_index_margin_base + (depth as usize - 1) * context.parameters.lmp_move_index_margin_multiplier
+        && move_score <= context.parameters.lmp_max_score
         && !friendly_king_checked
 }
 
@@ -835,13 +797,14 @@ fn late_move_pruning_can_be_applied<const PV: bool>(depth: i8, move_index: usize
 /// so it's also applied in PV nodes.
 ///
 /// Conditions:
-///  - depth >= [LATE_MOVE_REDUCTION_MIN_DEPTH]
-///  - move index >= [LATE_MOVE_REDUCTION_MIN_MOVE_INDEX]
-///  - move score <= [LATE_MOVE_REDUCTION_MAX_SCORE]
+///  - depth >= [lmr_min_depth]
+///  - move index >= [lmr_pv_min_move_index] or move index >= [lmr_min_move_index]
+///  - move score <= [lmr_max_score]
 ///  - move is quiet
 ///  - friendly king is not checked
 ///  - enemy king is not checked
-fn late_move_reduction_can_be_applied(
+fn lmr_can_be_applied<const PV: bool>(
+    context: &mut SearchContext,
     depth: i8,
     r#move: Move,
     move_index: usize,
@@ -849,25 +812,27 @@ fn late_move_reduction_can_be_applied(
     friendly_king_checked: bool,
     enemy_king_checked: bool,
 ) -> bool {
-    depth >= LATE_MOVE_REDUCTION_MIN_DEPTH
-        && move_index >= LATE_MOVE_REDUCTION_MIN_MOVE_INDEX
-        && move_score <= LATE_MOVE_REDUCTION_MAX_SCORE
+    depth >= context.parameters.lmr_min_depth
+        && move_index >= if PV { context.parameters.lmr_pv_min_move_index } else { context.parameters.lmr_min_move_index }
+        && move_score <= context.parameters.lmr_max_score
         && r#move.is_quiet()
         && !friendly_king_checked
         && !enemy_king_checked
 }
 
 /// Gets the late move depth reduction, called R, based on `move_index`. The lower the move was scored, the larger reduction will be returned.
-fn late_move_reduction_get_r<const PV: bool>(move_index: usize) -> i8 {
-    if PV {
-        cmp::min(
-            LATE_MOVE_REDUCTION_PV_MAX_REDUCTION,
-            (LATE_MOVE_REDUCTION_PV_REDUCTION_BASE + (move_index - LATE_MOVE_REDUCTION_PV_MIN_MOVE_INDEX) / LATE_MOVE_REDUCTION_PV_REDUCTION_STEP) as i8,
+fn lmr_get_r<const PV: bool>(context: &mut SearchContext, move_index: usize) -> i8 {
+    let (max, r) = if PV {
+        (
+            context.parameters.lmr_pv_max_reduction,
+            (context.parameters.lmr_pv_reduction_base + (move_index - context.parameters.lmr_pv_min_move_index) / context.parameters.lmr_pv_reduction_step),
         )
     } else {
-        cmp::min(
-            LATE_MOVE_REDUCTION_MAX_REDUCTION,
-            (LATE_MOVE_REDUCTION_REDUCTION_BASE + (move_index - LATE_MOVE_REDUCTION_MIN_MOVE_INDEX) / LATE_MOVE_REDUCTION_REDUCTION_STEP) as i8,
+        (
+            context.parameters.lmr_max_reduction,
+            (context.parameters.lmr_reduction_base + (move_index - context.parameters.lmr_min_move_index) / context.parameters.lmr_reduction_step),
         )
-    }
+    };
+
+    cmp::min(max, r as i8)
 }

@@ -21,16 +21,16 @@ pub struct SearchStatistics {
     pub pvs_zero_window_searches: u64,
     pub pvs_rejected_searches: u64,
 
-    pub static_null_move_pruning_attempts: u64,
-    pub static_null_move_pruning_accepted: u64,
-    pub static_null_move_pruning_rejected: u64,
+    pub snmp_attempts: u64,
+    pub snmp_accepted: u64,
+    pub snmp_rejected: u64,
 
-    pub null_move_pruning_attempts: u64,
-    pub null_move_pruning_accepted: u64,
-    pub null_move_pruning_rejected: u64,
+    pub nmp_attempts: u64,
+    pub nmp_accepted: u64,
+    pub nmp_rejected: u64,
 
-    pub late_move_pruning_accepted: u64,
-    pub late_move_pruning_rejected: u64,
+    pub lmp_accepted: u64,
+    pub lmp_rejected: u64,
 
     pub razoring_attempts: u64,
     pub razoring_accepted: u64,
@@ -84,16 +84,16 @@ impl ops::AddAssign<SearchStatistics> for SearchStatistics {
         self.pvs_zero_window_searches += rhs.pvs_zero_window_searches;
         self.pvs_rejected_searches += rhs.pvs_rejected_searches;
 
-        self.static_null_move_pruning_attempts += rhs.static_null_move_pruning_attempts;
-        self.static_null_move_pruning_accepted += rhs.static_null_move_pruning_accepted;
-        self.static_null_move_pruning_rejected += rhs.static_null_move_pruning_rejected;
+        self.snmp_attempts += rhs.snmp_attempts;
+        self.snmp_accepted += rhs.snmp_accepted;
+        self.snmp_rejected += rhs.snmp_rejected;
 
-        self.null_move_pruning_attempts += rhs.null_move_pruning_attempts;
-        self.null_move_pruning_accepted += rhs.null_move_pruning_accepted;
-        self.null_move_pruning_rejected += rhs.null_move_pruning_rejected;
+        self.nmp_attempts += rhs.nmp_attempts;
+        self.nmp_accepted += rhs.nmp_accepted;
+        self.nmp_rejected += rhs.nmp_rejected;
 
-        self.late_move_pruning_accepted += rhs.late_move_pruning_accepted;
-        self.late_move_pruning_rejected += rhs.late_move_pruning_rejected;
+        self.lmp_accepted += rhs.lmp_accepted;
+        self.lmp_rejected += rhs.lmp_rejected;
 
         self.razoring_attempts += rhs.razoring_attempts;
         self.razoring_accepted += rhs.razoring_accepted;
