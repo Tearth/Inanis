@@ -7,7 +7,7 @@ pub trait BitHelpers {
     fn bit_scan(&self) -> usize;
 }
 
-macro_rules! bit_helpers_implementation {
+macro_rules! bit_helpers {
     ($type:ident) => {
         impl BitHelpers for $type {
             type Item = $type;
@@ -47,13 +47,13 @@ macro_rules! bit_helpers_implementation {
     };
 }
 
-bit_helpers_implementation!(i8);
-bit_helpers_implementation!(u8);
-bit_helpers_implementation!(i16);
-bit_helpers_implementation!(u16);
-bit_helpers_implementation!(i32);
-bit_helpers_implementation!(u32);
-bit_helpers_implementation!(i64);
-bit_helpers_implementation!(u64);
-bit_helpers_implementation!(isize);
-bit_helpers_implementation!(usize);
+bit_helpers!(i8);
+bit_helpers!(u8);
+bit_helpers!(i16);
+bit_helpers!(u16);
+bit_helpers!(i32);
+bit_helpers!(u32);
+bit_helpers!(i64);
+bit_helpers!(u64);
+bit_helpers!(isize);
+bit_helpers!(usize);

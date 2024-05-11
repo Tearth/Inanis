@@ -4,7 +4,7 @@ pub trait DivCeil {
     fn div_ceil_stable(&self, divider: Self::Item) -> Self::Item;
 }
 
-macro_rules! div_ceil_implementation {
+macro_rules! div_ceil {
     ($type:ident) => {
         impl DivCeil for $type {
             type Item = $type;
@@ -19,8 +19,8 @@ macro_rules! div_ceil_implementation {
     };
 }
 
-div_ceil_implementation!(u8);
-div_ceil_implementation!(u16);
-div_ceil_implementation!(u32);
-div_ceil_implementation!(u64);
-div_ceil_implementation!(usize);
+div_ceil!(u8);
+div_ceil!(u16);
+div_ceil!(u32);
+div_ceil!(u64);
+div_ceil!(usize);
