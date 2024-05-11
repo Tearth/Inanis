@@ -15,7 +15,7 @@ macro_rules! min_max {
             /// Gets maximal possible value for the type.
             #[inline(always)]
             fn max() -> $type {
-                $type::MIN
+                $type::MAX
             }
         }
     };
