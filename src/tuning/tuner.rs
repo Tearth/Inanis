@@ -299,7 +299,7 @@ fn load_positions(epd_filename: &str) -> Result<Vec<TunerPosition>, String> {
         coefficients.append(&mut pst::get_coefficients(&parsed_epd.board, QUEEN, &mut index));
         coefficients.append(&mut pst::get_coefficients(&parsed_epd.board, KING, &mut index));
 
-        let game_phase = parsed_epd.board.game_phase as f32 / u8::MAX as f32;
+        let game_phase = parsed_epd.board.game_phase as f32 / parsed_epd.board.evaluation_parameters.initial_game_phase as f32;
         positions.push(TunerPosition::new(result, game_phase, coefficients));
     }
 
