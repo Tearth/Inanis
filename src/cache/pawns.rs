@@ -1,6 +1,7 @@
 use crate::utils::percent;
 use std::mem;
-use std::sync::atomic::AtomicU32;
+use std::sync::atomic::AtomicI16;
+use std::sync::atomic::AtomicU16;
 use std::sync::atomic::Ordering;
 use std::u64;
 
@@ -10,12 +11,15 @@ pub struct PawnHashTable {
 }
 
 pub struct PawnHashTableEntry {
-    pub key_data: AtomicU32,
+    pub key: AtomicU16,
+    pub score_opening: AtomicI16,
+    pub score_ending: AtomicI16,
 }
 
 pub struct PawnHashTableResult {
     pub key: u16,
-    pub score: i16,
+    pub score_opening: i16,
+    pub score_ending: i16,
 }
 
 impl PawnHashTable {
@@ -32,12 +36,12 @@ impl PawnHashTable {
         hashtable
     }
 
-    /// Adds a new entry (storing the key and `score`) using `hash & (self.table.len() - 1)` formula to calculate an index.
-    pub fn add(&self, hash: u64, score: i16) {
+    /// Adds a new entry (storing the key, `score_opening` and `score_ending`) using `hash & (self.table.len() - 1)` formula to calculate an index.
+    pub fn add(&self, hash: u64, score_opening: i16, score_ending: i16) {
         let key = self.get_key(hash);
         let index = self.get_index(hash);
 
-        self.table[index].set_data(key, score);
+        self.table[index].set_data(key, score_opening, score_ending);
     }
 
     /// Gets a wanted entry using `hash & (self.table.len() - 1)` formula to calculate an index. Returns [None] if `hash` is incompatible with the stored key.
@@ -78,40 +82,44 @@ impl PawnHashTable {
 }
 
 impl PawnHashTableEntry {
-    /// Converts `key` and `score` into an atomic word, and stores it.
-    pub fn set_data(&self, key: u16, score: i16) {
-        let key_data = (key as u32) | (((score as u16) as u32) << 16);
-        self.key_data.store(key_data, Ordering::Relaxed);
+    /// Converts `key`, `score_opening` and `score_ending` into an atomic word, and stores it.
+    pub fn set_data(&self, key: u16, score_opening: i16, score_ending: i16) {
+        self.key.store(key, Ordering::Relaxed);
+        self.score_opening.store(score_opening, Ordering::Relaxed);
+        self.score_ending.store(score_ending, Ordering::Relaxed);
     }
 
     /// Loads and parses atomic value into a [PawnHashTableResult] struct.
     pub fn get_data(&self) -> PawnHashTableResult {
-        let key_data = self.key_data.load(Ordering::Relaxed);
+        let key = self.key.load(Ordering::Relaxed);
+        let score_opening = self.score_opening.load(Ordering::Relaxed);
+        let score_ending = self.score_ending.load(Ordering::Relaxed);
 
-        let key = key_data as u16;
-        let score = (key_data >> 16) as i16;
-
-        PawnHashTableResult::new(key, score)
+        PawnHashTableResult::new(key, score_opening, score_ending)
     }
 }
 
 impl Default for PawnHashTableEntry {
     /// Constructs a default instance of [PawnHashTableEntry] with zeroed elements.
     fn default() -> Self {
-        PawnHashTableEntry { key_data: AtomicU32::new(0) }
+        PawnHashTableEntry { key: AtomicU16::new(0), score_opening: AtomicI16::new(0), score_ending: AtomicI16::new(0) }
     }
 }
 
 impl Clone for PawnHashTableEntry {
     /// Clones [PawnHashTableEntry] by creating a new atomic (with the original value).
     fn clone(&self) -> Self {
-        Self { key_data: AtomicU32::new(self.key_data.load(Ordering::Relaxed)) }
+        Self {
+            key: AtomicU16::new(self.key.load(Ordering::Relaxed)),
+            score_opening: AtomicI16::new(self.score_opening.load(Ordering::Relaxed)),
+            score_ending: AtomicI16::new(self.score_ending.load(Ordering::Relaxed)),
+        }
     }
 }
 
 impl PawnHashTableResult {
-    /// Constructs a new instance of [PawnHashTableResult] with stored `key` and `score`.
-    pub fn new(key: u16, score: i16) -> Self {
-        Self { key, score }
+    /// Constructs a new instance of [PawnHashTableResult] with stored `key`, `score_opening` and `score_ending`.
+    pub fn new(key: u16, score_opening: i16, score_ending: i16) -> Self {
+        Self { key, score_opening, score_ending }
     }
 }

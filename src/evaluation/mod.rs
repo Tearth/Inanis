@@ -14,9 +14,11 @@ pub struct EvaluationParameters {
     pub piece_phase_value: [u8; 6],
     pub initial_game_phase: u8,
 
-    pub mobility_opening: [i16; 6],
-    pub mobility_ending: [i16; 6],
-    pub mobility_center_multiplier: [i16; 6],
+    pub mobility_inner_opening: [i16; 6],
+    pub mobility_inner_ending: [i16; 6],
+
+    pub mobility_outer_opening: [i16; 6],
+    pub mobility_outer_ending: [i16; 6],
 
     pub doubled_pawn_opening: i16,
     pub doubled_pawn_ending: i16,

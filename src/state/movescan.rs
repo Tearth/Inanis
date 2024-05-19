@@ -2,6 +2,7 @@ use super::representation::Board;
 use super::representation::CastlingRights;
 use super::*;
 use crate::engine;
+use crate::evaluation::mobility::PieceMobility;
 use crate::utils::bitflags::BitFlags;
 use crate::utils::bithelpers::BitHelpers;
 use crate::utils::rand;
@@ -438,9 +439,10 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(
 
 /// Gets `PIECE` mobility (by counting all possible moves at the position specified by `board`) with `color` and increases `dangered_king_squares` if the enemy
 /// king is near to the squares included in the mobility.
-pub fn get_piece_mobility<const PIECE: usize>(board: &Board, color: usize, dangered_king_squares: &mut u32) -> i16 {
+pub fn get_piece_mobility<const PIECE: usize>(board: &Board, color: usize, dangered_king_squares: &mut u32) -> PieceMobility {
     let mut pieces_bb = board.pieces[color][PIECE];
-    let mut mobility = 0;
+    let mut mobility_inner = 0;
+    let mut mobility_outer = 0;
 
     let enemy_color = color ^ 1;
     let enemy_king_square = (board.pieces[enemy_color][KING]).bit_scan();
@@ -471,13 +473,11 @@ pub fn get_piece_mobility<const PIECE: usize>(board: &Board, color: usize, dange
         *dangered_king_squares += (enemy_king_box_bb & (piece_moves_bb | from_bb)).bit_count() as u32;
         piece_moves_bb &= !board.occupancy[color];
 
-        let center_mobility = board.evaluation_parameters.mobility_center_multiplier[PIECE] * (piece_moves_bb & CENTER_BB).bit_count() as i16;
-        let outside_mobility = (piece_moves_bb & OUTSIDE_BB).bit_count() as i16;
-
-        mobility += center_mobility + outside_mobility;
+        mobility_inner += (piece_moves_bb & CENTER_BB).bit_count() as i8;
+        mobility_outer += (piece_moves_bb & OUTSIDE_BB).bit_count() as i8;
     }
 
-    mobility
+    PieceMobility { inner: mobility_inner, outer: mobility_outer }
 }
 
 /// Generates all possible non-captures (if `CAPTURES` is false) or all possible captures (if `CAPTURES` is true) for the pawns at

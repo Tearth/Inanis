@@ -1,5 +1,6 @@
 use super::*;
 use crate::state::representation::Board;
+use crate::tuning::tuner::TunerCoefficient;
 use crate::utils::bithelpers::BitHelpers;
 
 pub mod bishop;
@@ -37,4 +38,31 @@ pub fn recalculate_incremental_values(board: &mut Board) {
             board.pst_scores[color_index][phase] = score;
         }
     }
+}
+
+pub fn get_coefficients(board: &Board, piece: usize, index: &mut u16) -> Vec<TunerCoefficient> {
+    let mut coefficients = Vec::new();
+
+    for game_phase in ALL_PHASES {
+        for square in ALL_SQUARES {
+            let current_index = 63 - square;
+            let opposite_index = (square / 8) * 8 + (7 - (square % 8));
+
+            let current_piece = board.piece_table[current_index];
+            let opposite_piece = board.piece_table[opposite_index];
+
+            let current_color = if (board.occupancy[WHITE] & (1 << current_index)) != 0 { WHITE } else { BLACK };
+            let opposite_color = if (board.occupancy[WHITE] & (1 << opposite_index)) != 0 { WHITE } else { BLACK };
+
+            if current_piece == piece as u8 && opposite_piece != piece as u8 && current_color == WHITE {
+                coefficients.push(TunerCoefficient::new(1, game_phase, *index));
+            } else if opposite_piece == piece as u8 && current_piece != piece as u8 && opposite_color == BLACK {
+                coefficients.push(TunerCoefficient::new(-1, game_phase, *index));
+            }
+
+            *index += 1;
+        }
+    }
+
+    coefficients
 }

@@ -2,9 +2,19 @@ use super::*;
 use crate::cache::pawns::PawnHashTable;
 use crate::engine::statistics::SearchStatistics;
 use crate::state::representation::Board;
+use crate::tuning::tuner::TunerCoefficient;
 use crate::utils::bithelpers::BitHelpers;
 use crate::utils::conditional_expression;
 use std::cmp;
+
+pub struct PawnsData {
+    doubled_pawns: i8,
+    isolated_pawns: i8,
+    chained_pawns: i8,
+    passed_pawns: i8,
+    opened_files: i8,
+    pawn_shield: i8,
+}
 
 /// Evaluates structure of pawns on the `board` and returns score from the white color perspective (more than 0 when advantage,
 /// less than 0 when disadvantage). This evaluator considers:
@@ -16,27 +26,26 @@ use std::cmp;
 ///
 /// To improve performance (using the fact that structure of pawns changes relatively rare), each evaluation is saved in the pawn hashtable,
 /// and used again if possible.
-pub fn evaluate<const DIAG: bool>(board: &Board, pawn_hashtable: &PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
+pub fn evaluate<const DIAG: bool>(board: &Board, pawn_hashtable: &PawnHashTable, statistics: &mut SearchStatistics) -> EvaluationResult {
     match pawn_hashtable.get(board.pawn_hash) {
         Some(entry) => {
             conditional_expression!(DIAG, statistics.pawn_hashtable_hits += 1);
-            return entry.score;
+            return EvaluationResult::new(entry.score_opening, entry.score_ending);
         }
         None => {
             conditional_expression!(DIAG, statistics.pawn_hashtable_misses += 1);
         }
     }
 
-    let game_phase = board.game_phase;
-    let initial_game_phase = board.evaluation_parameters.initial_game_phase;
+    let white_evaluation = evaluate_color(board, WHITE);
+    let black_evaluation = evaluate_color(board, BLACK);
+    let score_opening = white_evaluation.opening_score - black_evaluation.opening_score;
+    let score_ending = white_evaluation.ending_score - black_evaluation.ending_score;
 
-    let score = evaluate_color(board, WHITE) - evaluate_color(board, BLACK);
-    let score = score.taper_score(game_phase, initial_game_phase);
-
-    pawn_hashtable.add(board.pawn_hash, score);
+    pawn_hashtable.add(board.pawn_hash, score_opening, score_ending);
     conditional_expression!(DIAG, statistics.pawn_hashtable_added += 1);
 
-    score
+    EvaluationResult::new(score_opening, score_ending)
 }
 
 /// Does the same thing as [evaluate], but doesn't use pawn hashtable to save evalations.
@@ -46,15 +55,36 @@ pub fn evaluate_without_cache(board: &Board) -> EvaluationResult {
 
 /// Evaluates pawn structure on the `board` for the specified `color`.
 fn evaluate_color(board: &Board, color: usize) -> EvaluationResult {
-    let mut doubled_pawns = 0i16;
-    let mut isolated_pawns = 0i16;
-    let mut chained_pawns = 0i16;
-    let mut passed_pawns = 0i16;
-    let mut opened_files = 0i16;
-    let mut pawn_shield = 0i16;
+    let pawns_data = get_pawns_data(board, color);
+
+    let opening_score = 0
+        + pawns_data.doubled_pawns as i16 * board.evaluation_parameters.doubled_pawn_opening
+        + pawns_data.isolated_pawns as i16 * board.evaluation_parameters.isolated_pawn_opening
+        + pawns_data.chained_pawns as i16 * board.evaluation_parameters.chained_pawn_opening
+        + pawns_data.passed_pawns as i16 * board.evaluation_parameters.passed_pawn_opening
+        + pawns_data.pawn_shield as i16 * board.evaluation_parameters.pawn_shield_opening
+        + pawns_data.opened_files as i16 * board.evaluation_parameters.pawn_shield_open_file_opening;
+    let ending_score = 0
+        + pawns_data.doubled_pawns as i16 * board.evaluation_parameters.doubled_pawn_ending
+        + pawns_data.isolated_pawns as i16 * board.evaluation_parameters.isolated_pawn_ending
+        + pawns_data.chained_pawns as i16 * board.evaluation_parameters.chained_pawn_ending
+        + pawns_data.passed_pawns as i16 * board.evaluation_parameters.passed_pawn_ending
+        + pawns_data.pawn_shield as i16 * board.evaluation_parameters.pawn_shield_ending
+        + pawns_data.opened_files as i16 * board.evaluation_parameters.pawn_shield_open_file_ending;
+
+    EvaluationResult::new(opening_score, ending_score)
+}
+
+fn get_pawns_data(board: &Board, color: usize) -> PawnsData {
+    let mut doubled_pawns = 0i8;
+    let mut isolated_pawns = 0i8;
+    let mut chained_pawns = 0i8;
+    let mut passed_pawns = 0i8;
+    let mut pawn_shield = 0i8;
+    let mut opened_files = 0i8;
 
     for file in ALL_FILES {
-        let pawns_on_file_count = (board.patterns.get_file(file) & board.pieces[color][PAWN]).bit_count() as i16;
+        let pawns_on_file_count = (board.patterns.get_file(file) & board.pieces[color][PAWN]).bit_count() as i8;
         if pawns_on_file_count > 1 {
             doubled_pawns += pawns_on_file_count;
         }
@@ -73,7 +103,7 @@ fn evaluate_color(board: &Board, color: usize) -> EvaluationResult {
         let square = square_bb.bit_scan();
         pawns_bb = pawns_bb.pop_lsb();
 
-        chained_pawns += (board.patterns.get_star(square) & board.pieces[color][PAWN]).bit_count() as i16;
+        chained_pawns += (board.patterns.get_star(square) & board.pieces[color][PAWN]).bit_count() as i8;
 
         let front_bb = board.patterns.get_front(color, square);
         let enemy_pawns_ahead_count = (front_bb & board.pieces[color ^ 1][PAWN]).bit_count();
@@ -87,7 +117,7 @@ fn evaluate_color(board: &Board, color: usize) -> EvaluationResult {
     let king_bb = board.pieces[color][KING];
     let king_square = king_bb.bit_scan();
     let king_square_file = (king_square & 7) as i8;
-    pawn_shield = (board.patterns.get_box(king_square) & board.pieces[color][PAWN]).bit_count() as i16;
+    pawn_shield = (board.patterns.get_box(king_square) & board.pieces[color][PAWN]).bit_count() as i8;
 
     for file in cmp::max(0, king_square_file - 1)..=(cmp::min(7, king_square_file + 1)) {
         if (board.patterns.get_file(file as usize) & board.pieces[color][PAWN]) == 0 {
@@ -95,20 +125,38 @@ fn evaluate_color(board: &Board, color: usize) -> EvaluationResult {
         }
     }
 
-    let opening_score = 0
-        + doubled_pawns * board.evaluation_parameters.doubled_pawn_opening
-        + isolated_pawns * board.evaluation_parameters.isolated_pawn_opening
-        + chained_pawns * board.evaluation_parameters.chained_pawn_opening
-        + passed_pawns * board.evaluation_parameters.passed_pawn_opening
-        + pawn_shield * board.evaluation_parameters.pawn_shield_opening
-        + opened_files * board.evaluation_parameters.pawn_shield_open_file_opening;
-    let ending_score = 0
-        + doubled_pawns * board.evaluation_parameters.doubled_pawn_ending
-        + isolated_pawns * board.evaluation_parameters.isolated_pawn_ending
-        + chained_pawns * board.evaluation_parameters.chained_pawn_ending
-        + passed_pawns * board.evaluation_parameters.passed_pawn_ending
-        + pawn_shield * board.evaluation_parameters.pawn_shield_ending
-        + opened_files * board.evaluation_parameters.pawn_shield_open_file_ending;
+    PawnsData { doubled_pawns, isolated_pawns, chained_pawns, passed_pawns, pawn_shield, opened_files }
+}
 
-    EvaluationResult::new(opening_score, ending_score)
+pub fn get_coefficients(board: &Board, index: &mut u16) -> Vec<TunerCoefficient> {
+    let white_pawns_data = get_pawns_data(board, WHITE);
+    let black_pawns_data = get_pawns_data(board, BLACK);
+
+    let mut coefficients = [
+        TunerCoefficient::new(white_pawns_data.doubled_pawns - black_pawns_data.doubled_pawns, OPENING, 0),
+        TunerCoefficient::new(white_pawns_data.doubled_pawns - black_pawns_data.doubled_pawns, ENDING, 0),
+        TunerCoefficient::new(white_pawns_data.isolated_pawns - black_pawns_data.isolated_pawns, OPENING, 0),
+        TunerCoefficient::new(white_pawns_data.isolated_pawns - black_pawns_data.isolated_pawns, ENDING, 0),
+        TunerCoefficient::new(white_pawns_data.chained_pawns - black_pawns_data.chained_pawns, OPENING, 0),
+        TunerCoefficient::new(white_pawns_data.chained_pawns - black_pawns_data.chained_pawns, ENDING, 0),
+        TunerCoefficient::new(white_pawns_data.passed_pawns - black_pawns_data.passed_pawns, OPENING, 0),
+        TunerCoefficient::new(white_pawns_data.passed_pawns - black_pawns_data.passed_pawns, ENDING, 0),
+        TunerCoefficient::new(white_pawns_data.pawn_shield - black_pawns_data.pawn_shield, OPENING, 0),
+        TunerCoefficient::new(white_pawns_data.pawn_shield - black_pawns_data.pawn_shield, ENDING, 0),
+        TunerCoefficient::new(white_pawns_data.opened_files - black_pawns_data.opened_files, OPENING, 0),
+        TunerCoefficient::new(white_pawns_data.opened_files - black_pawns_data.opened_files, ENDING, 0),
+    ];
+    let mut coefficients_filtered = Vec::new();
+
+    for coefficient in &mut coefficients {
+        coefficient.index = *index;
+
+        if coefficient.value != 0 {
+            coefficients_filtered.push(coefficient.clone());
+        }
+
+        *index += 1;
+    }
+
+    coefficients_filtered
 }

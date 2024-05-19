@@ -1,8 +1,12 @@
 use crate::engine::see::SEEContainer;
+use crate::evaluation::material;
+use crate::evaluation::mobility;
+use crate::evaluation::pawns;
+use crate::evaluation::pst;
+use crate::evaluation::safety;
 use crate::evaluation::EvaluationParameters;
 use crate::state::movegen::MagicContainer;
 use crate::state::patterns::PatternsContainer;
-use crate::state::representation::Board;
 use crate::state::text::fen;
 use crate::state::zobrist::ZobristContainer;
 use crate::state::*;
@@ -16,17 +20,26 @@ use std::io::BufReader;
 use std::io::Write;
 use std::path::Path;
 use std::sync::Arc;
-use std::thread;
 use std::time::SystemTime;
+
+const LEARNING_RATE: f32 = 0.1;
+const K_DEFAULT: f32 = 0.008;
+const K_STEP: f32 = 0.0001;
+const B1: f32 = 0.9;
+const B2: f32 = 0.999;
+const OUTPUT_INTERVAL: i32 = 100;
 
 pub struct TunerContext {
     positions: Vec<TunerPosition>,
     parameters: EvaluationParameters,
+    weights: Vec<f32>,
+    gradients: Vec<f32>,
 }
 
 pub struct TunerPosition {
-    board: Board,
-    result: f64,
+    result: f32,
+    phase: f32,
+    coefficients: Vec<TunerCoefficient>,
 }
 
 #[derive(Clone, Copy)]
@@ -38,17 +51,24 @@ pub struct TunerParameter {
     max: i16,
 }
 
+#[derive(Clone)]
+pub struct TunerCoefficient {
+    pub value: i8,
+    pub phase: u8,
+    pub index: u16,
+}
+
 impl TunerContext {
     /// Constructs a new instance of [TunerContext] with stored `positions`.
     pub fn new(positions: Vec<TunerPosition>) -> Self {
-        Self { positions, parameters: Default::default() }
+        Self { positions, parameters: Default::default(), weights: Vec::new(), gradients: Vec::new() }
     }
 }
 
 impl TunerPosition {
     /// Constructs a new instance of [TunerPosition] with stored `board` and `result`.
-    pub fn new(board: Board, result: f64) -> Self {
-        Self { board, result }
+    pub fn new(result: f32, phase: f32, coefficients: Vec<TunerCoefficient>) -> Self {
+        Self { result, phase, coefficients }
     }
 }
 
@@ -59,16 +79,15 @@ impl TunerParameter {
     }
 }
 
+impl TunerCoefficient {
+    pub fn new(value: i8, phase: usize, index: u16) -> Self {
+        Self { value, phase: phase as u8, index }
+    }
+}
+
 /// Runs tuner of evaluation parameters. The input file is specified by `epd_filename` with a list of positions and their expected results, and the `output_directory`
 /// directory is used to store generated Rust sources with the optimized values. Use `lock_material` to disable tuner for piece values, and `random_values` to initialize
-/// evaluation parameters with random values. Multithreading is supported by `threads_count`.
-///
-/// The tuner is implemented using Texel's tuning method (<https://www.chessprogramming.org/Texel%27s_Tuning_Method>), with addition of cache to reduce time needed
-/// to get the best result. The loaded positions must be quiet, since the tuner doesn't run quiescence search to make sure that the position is not in the middle
-/// of capture sequence. The cache itself is a list of trends corresponding to the evaluation parameters - it's used to save the information if the value in the previous
-/// iterations was increasing or decreasing, so the tuner can try this direction first. The more times the direction was right, the bigger increasion or decreasion will
-/// be performed as next.
-///
+/// evaluation parameters with random values. Multithreading is supported by `threads_count`. The tuner is implemented using gradient descent and Adam optimizer.
 /// The result (Rust sources with the calculated values) are saved every iteration, and can be put directly into the code.
 pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, random_values: bool, threads_count: usize) {
     println!("Loading EPD file...");
@@ -82,120 +101,148 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
     println!("Loaded {} positions, starting tuner", positions.len());
 
     let mut context = TunerContext::new(positions);
-    let mut tendence = Vec::new();
-    tendence.resize(context.positions.len(), 1i8);
+    let mut parameters = load_values(&context, lock_material, random_values);
 
-    let mut best_values = load_values(&context, lock_material, random_values);
-    save_values(&mut context, &mut best_values, lock_material);
+    for parameter in &parameters {
+        context.weights.push(parameter.value as f32);
+    }
+    context.gradients.resize(context.weights.len(), 0.0);
 
-    let mut best_error = calculate_error(&mut context, 1.13, threads_count);
-    let mut improved = true;
+    let mut m = Vec::new();
+    m.resize(context.weights.len(), 0.0);
+
+    let mut v = Vec::new();
+    v.resize(context.weights.len(), 0.0);
+
+    let mut k = K_DEFAULT;
+    let mut last_error = calculate_error(&mut context, k, threads_count);
     let mut iterations_count = 0;
 
-    while improved {
-        improved = false;
-        iterations_count += 1;
+    if !random_values {
+        k = calculate_k(&mut context, threads_count);
+    }
 
-        let mut changes = 0;
-        let last_best_error = best_error;
-        let start_time = SystemTime::now();
+    println!("Scaling constant: {}", k);
 
-        for value_index in 0..best_values.len() {
-            // Ignore pawn and king value (no point to tune it)
-            if !lock_material && (value_index == 0 || value_index == 5) {
-                continue;
-            }
+    let mut start_time = SystemTime::now();
+    loop {
+        context.gradients.fill(0.0);
 
-            let step = tendence[value_index] as i16;
-            let mut values = best_values.to_vec();
-            let mut value_changed = false;
+        // Calculate gradients for all coefficients
+        for p in 0..context.positions.len() {
+            let evaluation = evaluate_position(&context.positions[p], &context.weights);
 
-            let original_value = values[value_index].value;
-            let error = if original_value == values[value_index].max {
-                f64::MAX
-            } else {
-                let min = values[value_index].min;
-                let max = values[value_index].max;
+            let sig = sigmoid(evaluation, k);
+            let a = context.positions[p].result - sig;
+            let b = sig * (1.0 - sig);
 
-                values[value_index].value += step;
-                values[value_index].value = values[value_index].value.clamp(min, max);
-
-                save_values(&mut context, &mut values, lock_material);
-                calculate_error(&mut context, 1.13, threads_count)
-            };
-
-            if error < best_error {
-                tendence[value_index] *= 2;
-                best_error = error;
-                best_values = values;
-                improved = true;
-                value_changed = true;
-                changes += 1;
-
-                println!("Value {} changed by {} (new error: {:.6})", value_index, step, best_error);
-            } else if error > best_error {
-                let mut values = best_values.to_vec();
-                let error = if original_value == values[value_index].min {
-                    f64::MAX
-                } else {
-                    let min = values[value_index].min;
-                    let max = values[value_index].max;
-
-                    values[value_index].value -= step.signum();
-                    values[value_index].value = values[value_index].value.clamp(min, max);
-
-                    save_values(&mut context, &mut values, lock_material);
-                    calculate_error(&mut context, 1.13, threads_count)
-                };
-
-                if error < best_error {
-                    tendence[value_index] = 2 * -step.signum() as i8;
-                    best_error = error;
-                    best_values = values;
-                    improved = true;
-                    value_changed = true;
-                    changes += 1;
-
-                    println!("Value {} changed by {} (tendence change, new error: {:.6})", value_index, -step.signum(), best_error);
+            for coefficient in &context.positions[p].coefficients {
+                // Ignore pawn and king values
+                if coefficient.index == 0 || coefficient.index == 5 {
+                    continue;
                 }
-            }
 
-            if !value_changed {
-                println!("Value {} skipped", value_index);
-
-                // Step may be too big, reset it
-                tendence[value_index] = step.signum() as i8;
+                let c = context.positions[p].phase * coefficient.value as f32;
+                context.gradients[coefficient.index as usize] += a * b * c;
             }
         }
 
-        write_evaluation_parameters(&mut context, output_directory, best_error);
-        write_piece_square_table(output_directory, best_error, "pawn", &context.parameters.pst_patterns[PAWN]);
-        write_piece_square_table(output_directory, best_error, "knight", &context.parameters.pst_patterns[KNIGHT]);
-        write_piece_square_table(output_directory, best_error, "bishop", &context.parameters.pst_patterns[BISHOP]);
-        write_piece_square_table(output_directory, best_error, "rook", &context.parameters.pst_patterns[ROOK]);
-        write_piece_square_table(output_directory, best_error, "queen", &context.parameters.pst_patterns[QUEEN]);
-        write_piece_square_table(output_directory, best_error, "king", &context.parameters.pst_patterns[KING]);
+        // Apply gradients and calculate new weights
+        for i in 0..context.weights.len() {
+            let gradient = -2.0 * context.gradients[i] / context.positions.len() as f32;
+            m[i] = B1 * m[i] + (1.0 - B1) * gradient;
+            v[i] = B2 * v[i] + (1.0 - B2) * gradient.powi(2);
 
-        println!(
-            "Iteration {} done in {} seconds, {} changes made, error reduced from {:.6} to {:.6} ({:.6})",
-            iterations_count,
-            (start_time.elapsed().unwrap().as_millis() as f32) / 1000.0,
-            changes,
-            last_best_error,
-            best_error,
-            last_best_error - best_error
-        );
+            context.weights[i] -= LEARNING_RATE * m[i] / (v[i] + 0.00000001).sqrt();
+            context.weights[i] = context.weights[i].clamp(parameters[i].min as f32, parameters[i].max as f32);
+        }
+
+        if iterations_count % OUTPUT_INTERVAL == 0 {
+            for i in 0..parameters.len() {
+                parameters[i].value = context.weights[i].round() as i16;
+            }
+
+            save_values(&mut context, &mut parameters, lock_material);
+
+            let error = calculate_error(&mut context, k, 1);
+            write_evaluation_parameters(&mut context, output_directory, error);
+            write_piece_square_table(output_directory, error, "pawn", &context.parameters.pst_patterns[PAWN]);
+            write_piece_square_table(output_directory, error, "knight", &context.parameters.pst_patterns[KNIGHT]);
+            write_piece_square_table(output_directory, error, "bishop", &context.parameters.pst_patterns[BISHOP]);
+            write_piece_square_table(output_directory, error, "rook", &context.parameters.pst_patterns[ROOK]);
+            write_piece_square_table(output_directory, error, "queen", &context.parameters.pst_patterns[QUEEN]);
+            write_piece_square_table(output_directory, error, "king", &context.parameters.pst_patterns[KING]);
+
+            println!(
+                "Iteration {} done in {} seconds, error reduced from {:.6} to {:.6} ({:.6})",
+                iterations_count,
+                (start_time.elapsed().unwrap().as_millis() as f32) / 1000.0,
+                last_error,
+                error,
+                last_error - error
+            );
+
+            last_error = error;
+            start_time = SystemTime::now();
+        }
+
+        iterations_count += 1;
     }
 }
 
-/// Tests the correctness of [load_values] and [save_values] methods.
-pub fn validate() -> bool {
-    let mut context = TunerContext::new(Vec::new());
-    let mut values = load_values(&context, false, false);
-    save_values(&mut context, &mut values, false);
+fn calculate_k(context: &mut TunerContext, threads_count: usize) -> f32 {
+    let mut k = 0.0;
+    let mut last_error = calculate_error(context, k, threads_count);
 
-    let values_after_save = load_values(&context, false, false);
-    values.iter().zip(&values_after_save).all(|(a, b)| a.value == b.value)
+    loop {
+        let error = calculate_error(context, k + K_STEP, threads_count);
+        if error >= last_error {
+            break;
+        }
+
+        last_error = error;
+        k += K_STEP;
+    }
+
+    k
+}
+
+/// Calculates an error by evaluating all loaded positions with the currently set evaluation parameters. Multithreading is supported by `threads_count`.
+fn calculate_error(context: &mut TunerContext, scaling_constant: f32, _threads_count: usize) -> f32 {
+    let mut sum_of_errors = 0.0;
+    let positions_count = context.positions.len();
+
+    for position in &context.positions {
+        let evaluation = evaluate_position(position, &context.weights);
+        sum_of_errors += (position.result - sigmoid(evaluation, scaling_constant)).powi(2);
+    }
+
+    sum_of_errors / (positions_count as f32)
+}
+
+fn evaluate_position(position: &TunerPosition, weights: &[f32]) -> f32 {
+    let mut opening_score = 0.0;
+    let mut ending_score = 0.0;
+
+    for coefficient in &position.coefficients {
+        let value = weights[coefficient.index as usize] * coefficient.value as f32;
+        if coefficient.index < 6 {
+            opening_score += value;
+            ending_score += value;
+        } else {
+            if coefficient.phase == OPENING as u8 {
+                opening_score += value;
+            } else {
+                ending_score += value;
+            }
+        }
+    }
+
+    (opening_score * position.phase) + (ending_score * (1.0 - position.phase))
+}
+
+fn sigmoid(e: f32, k: f32) -> f32 {
+    1.0 / (1.0 + (-k * e).exp())
 }
 
 /// Loads positions from the `epd_filename` and parses them into a list of [TunerPosition]. Returns [Err] with a proper error message if the
@@ -236,43 +283,27 @@ fn load_positions(epd_filename: &str) -> Result<Vec<TunerPosition>, String> {
             _ => return Err(format!("Invalid game result: comment={}", comment)),
         };
 
-        positions.push(TunerPosition::new(parsed_epd.board, result));
+        let mut coefficients = Vec::new();
+        let mut index = 0;
+        let mut dangered_white_king_squares = 0;
+        let mut dangered_black_king_squares = 0;
+
+        coefficients.append(&mut material::get_coefficients(&parsed_epd.board, &mut index));
+        coefficients.append(&mut mobility::get_coefficients(&parsed_epd.board, &mut dangered_white_king_squares, &mut dangered_black_king_squares, &mut index));
+        coefficients.append(&mut pawns::get_coefficients(&parsed_epd.board, &mut index));
+        coefficients.append(&mut safety::get_coefficients(dangered_white_king_squares, dangered_black_king_squares, &mut index));
+        coefficients.append(&mut pst::get_coefficients(&parsed_epd.board, PAWN, &mut index));
+        coefficients.append(&mut pst::get_coefficients(&parsed_epd.board, KNIGHT, &mut index));
+        coefficients.append(&mut pst::get_coefficients(&parsed_epd.board, BISHOP, &mut index));
+        coefficients.append(&mut pst::get_coefficients(&parsed_epd.board, ROOK, &mut index));
+        coefficients.append(&mut pst::get_coefficients(&parsed_epd.board, QUEEN, &mut index));
+        coefficients.append(&mut pst::get_coefficients(&parsed_epd.board, KING, &mut index));
+
+        let game_phase = parsed_epd.board.game_phase as f32 / u8::MAX as f32;
+        positions.push(TunerPosition::new(result, game_phase, coefficients));
     }
 
     Ok(positions)
-}
-
-/// Calculates an error by evaluating all loaded positions with the currently set evaluation parameters. Multithreading is supported by `threads_count`.
-fn calculate_error(context: &mut TunerContext, scaling_constant: f64, threads_count: usize) -> f64 {
-    let mut sum_of_errors = 0.0;
-    let positions_count = context.positions.len();
-
-    let evaluation_parameters = Arc::new(context.parameters.clone());
-    thread::scope(|scope| {
-        let mut threads = Vec::new();
-        for chunk in context.positions.chunks_mut(positions_count / threads_count) {
-            let evaluation_parameters_arc = evaluation_parameters.clone();
-            threads.push(scope.spawn(move || {
-                for position in chunk {
-                    let evaluation_parameters_arc = evaluation_parameters_arc.clone();
-                    position.board.evaluation_parameters = evaluation_parameters_arc;
-                    position.board.recalculate_incremental_values();
-
-                    let evaluation = position.board.evaluate_without_cache(WHITE) as f64;
-                    let sigmoid = 1.0 / (1.0 + 10.0f64.powf(-scaling_constant * evaluation / 400.0));
-                    sum_of_errors += (position.result - sigmoid).powi(2);
-                }
-
-                sum_of_errors
-            }));
-        }
-
-        for thread in threads {
-            sum_of_errors += thread.join().unwrap();
-        }
-    });
-
-    sum_of_errors / (positions_count as f64)
 }
 
 /// Transforms the current evaluation values into a list of [TunerParameter]. Use `lock_material` if the parameters related to piece values should
@@ -289,26 +320,33 @@ fn load_values(context: &TunerContext, lock_material: bool, random_values: bool)
         parameters.push(TunerParameter::new(context.parameters.piece_value[KING], 10000, 10000, 10000, 10000));
     }
 
-    parameters.push(TunerParameter::new(context.parameters.mobility_opening[PAWN], 0, 3, 6, 8));
-    parameters.push(TunerParameter::new(context.parameters.mobility_opening[KNIGHT], 0, 3, 6, 8));
-    parameters.push(TunerParameter::new(context.parameters.mobility_opening[BISHOP], 0, 3, 6, 8));
-    parameters.push(TunerParameter::new(context.parameters.mobility_opening[ROOK], 0, 3, 6, 8));
-    parameters.push(TunerParameter::new(context.parameters.mobility_opening[QUEEN], 0, 3, 6, 8));
-    parameters.push(TunerParameter::new(context.parameters.mobility_opening[KING], 0, 3, 6, 8));
+    parameters.push(TunerParameter::new(context.parameters.mobility_inner_opening[PAWN], 0, 3, 6, 99));
+    parameters.push(TunerParameter::new(context.parameters.mobility_inner_opening[KNIGHT], 0, 3, 6, 99));
+    parameters.push(TunerParameter::new(context.parameters.mobility_inner_opening[BISHOP], 0, 3, 6, 99));
+    parameters.push(TunerParameter::new(context.parameters.mobility_inner_opening[ROOK], 0, 3, 6, 99));
+    parameters.push(TunerParameter::new(context.parameters.mobility_inner_opening[QUEEN], 0, 3, 6, 99));
+    parameters.push(TunerParameter::new(context.parameters.mobility_inner_opening[KING], 0, 3, 6, 99));
 
-    parameters.push(TunerParameter::new(context.parameters.mobility_ending[PAWN], 0, 2, 6, 10));
-    parameters.push(TunerParameter::new(context.parameters.mobility_ending[KNIGHT], 0, 2, 6, 10));
-    parameters.push(TunerParameter::new(context.parameters.mobility_ending[BISHOP], 0, 2, 6, 10));
-    parameters.push(TunerParameter::new(context.parameters.mobility_ending[ROOK], 0, 2, 6, 10));
-    parameters.push(TunerParameter::new(context.parameters.mobility_ending[QUEEN], 0, 2, 6, 10));
-    parameters.push(TunerParameter::new(context.parameters.mobility_ending[KING], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_inner_ending[PAWN], 0, 2, 6, 99));
+    parameters.push(TunerParameter::new(context.parameters.mobility_inner_ending[KNIGHT], 0, 2, 6, 99));
+    parameters.push(TunerParameter::new(context.parameters.mobility_inner_ending[BISHOP], 0, 2, 6, 99));
+    parameters.push(TunerParameter::new(context.parameters.mobility_inner_ending[ROOK], 0, 2, 6, 99));
+    parameters.push(TunerParameter::new(context.parameters.mobility_inner_ending[QUEEN], 0, 2, 6, 99));
+    parameters.push(TunerParameter::new(context.parameters.mobility_inner_ending[KING], 0, 2, 6, 99));
 
-    parameters.push(TunerParameter::new(context.parameters.mobility_center_multiplier[PAWN], 0, 2, 6, 10));
-    parameters.push(TunerParameter::new(context.parameters.mobility_center_multiplier[KNIGHT], 0, 2, 6, 10));
-    parameters.push(TunerParameter::new(context.parameters.mobility_center_multiplier[BISHOP], 0, 2, 6, 10));
-    parameters.push(TunerParameter::new(context.parameters.mobility_center_multiplier[ROOK], 0, 2, 6, 10));
-    parameters.push(TunerParameter::new(context.parameters.mobility_center_multiplier[QUEEN], 0, 2, 6, 10));
-    parameters.push(TunerParameter::new(context.parameters.mobility_center_multiplier[KING], 0, 2, 6, 10));
+    parameters.push(TunerParameter::new(context.parameters.mobility_outer_opening[PAWN], 0, 3, 6, 99));
+    parameters.push(TunerParameter::new(context.parameters.mobility_outer_opening[KNIGHT], 0, 3, 6, 99));
+    parameters.push(TunerParameter::new(context.parameters.mobility_outer_opening[BISHOP], 0, 3, 6, 99));
+    parameters.push(TunerParameter::new(context.parameters.mobility_outer_opening[ROOK], 0, 3, 6, 99));
+    parameters.push(TunerParameter::new(context.parameters.mobility_outer_opening[QUEEN], 0, 3, 6, 99));
+    parameters.push(TunerParameter::new(context.parameters.mobility_outer_opening[KING], 0, 3, 6, 99));
+
+    parameters.push(TunerParameter::new(context.parameters.mobility_outer_ending[PAWN], 0, 2, 6, 99));
+    parameters.push(TunerParameter::new(context.parameters.mobility_outer_ending[KNIGHT], 0, 2, 6, 99));
+    parameters.push(TunerParameter::new(context.parameters.mobility_outer_ending[BISHOP], 0, 2, 6, 99));
+    parameters.push(TunerParameter::new(context.parameters.mobility_outer_ending[ROOK], 0, 2, 6, 99));
+    parameters.push(TunerParameter::new(context.parameters.mobility_outer_ending[QUEEN], 0, 2, 6, 99));
+    parameters.push(TunerParameter::new(context.parameters.mobility_outer_ending[KING], 0, 2, 6, 99));
 
     parameters.push(TunerParameter::new(context.parameters.doubled_pawn_opening, -999, -40, -10, 999));
     parameters.push(TunerParameter::new(context.parameters.doubled_pawn_ending, -999, -40, -10, 999));
@@ -328,8 +366,8 @@ fn load_values(context: &TunerContext, lock_material: bool, random_values: bool)
     parameters.push(TunerParameter::new(context.parameters.pawn_shield_open_file_opening, -999, -40, -10, 999));
     parameters.push(TunerParameter::new(context.parameters.pawn_shield_open_file_ending, -999, -40, -10, 999));
 
-    parameters.append(&mut context.parameters.king_attacked_squares_opening.iter().map(|v| TunerParameter::new(*v, -999, -40, 0, 999)).collect());
-    parameters.append(&mut context.parameters.king_attacked_squares_ending.iter().map(|v| TunerParameter::new(*v, -999, -40, 0, 999)).collect());
+    parameters.append(&mut context.parameters.king_attacked_squares_opening.iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+    parameters.append(&mut context.parameters.king_attacked_squares_ending.iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
 
     let pawn_pst = &context.parameters.pst_patterns[PAWN];
     parameters.append(&mut pawn_pst[0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
@@ -378,9 +416,10 @@ fn save_values(context: &mut TunerContext, values: &mut [TunerParameter], lock_m
         save_values_to_i16_array_internal(values, &mut context.parameters.piece_value, &mut index);
     }
 
-    save_values_to_i16_array_internal(values, &mut context.parameters.mobility_opening, &mut index);
-    save_values_to_i16_array_internal(values, &mut context.parameters.mobility_ending, &mut index);
-    save_values_to_i16_array_internal(values, &mut context.parameters.mobility_center_multiplier, &mut index);
+    save_values_to_i16_array_internal(values, &mut context.parameters.mobility_inner_opening, &mut index);
+    save_values_to_i16_array_internal(values, &mut context.parameters.mobility_inner_ending, &mut index);
+    save_values_to_i16_array_internal(values, &mut context.parameters.mobility_outer_opening, &mut index);
+    save_values_to_i16_array_internal(values, &mut context.parameters.mobility_outer_ending, &mut index);
 
     save_values_internal(values, &mut context.parameters.doubled_pawn_opening, &mut index);
     save_values_internal(values, &mut context.parameters.doubled_pawn_ending, &mut index);
@@ -449,7 +488,7 @@ fn save_values_to_i16_array_internal(values: &mut [TunerParameter], array: &mut 
 }
 
 /// Generates `parameters.rs` file with current evaluation parameters, and saves it into the `output_directory`.
-fn write_evaluation_parameters(context: &mut TunerContext, output_directory: &str, best_error: f64) {
+fn write_evaluation_parameters(context: &mut TunerContext, output_directory: &str, best_error: f32) {
     let mut output = String::new();
 
     output.push_str(get_header(best_error).as_str());
@@ -463,9 +502,11 @@ fn write_evaluation_parameters(context: &mut TunerContext, output_directory: &st
     output.push_str(get_array("piece_phase_value", &context.parameters.piece_phase_value).as_str());
     output.push_str(get_parameter("initial_game_phase", context.parameters.initial_game_phase).as_str());
     output.push('\n');
-    output.push_str(get_array("mobility_opening", &context.parameters.mobility_opening).as_str());
-    output.push_str(get_array("mobility_ending", &context.parameters.mobility_ending).as_str());
-    output.push_str(get_array("mobility_center_multiplier", &context.parameters.mobility_center_multiplier).as_str());
+    output.push_str(get_array("mobility_inner_opening", &context.parameters.mobility_inner_opening).as_str());
+    output.push_str(get_array("mobility_inner_ending", &context.parameters.mobility_inner_ending).as_str());
+    output.push('\n');
+    output.push_str(get_array("mobility_outer_opening", &context.parameters.mobility_outer_opening).as_str());
+    output.push_str(get_array("mobility_outer_ending", &context.parameters.mobility_outer_ending).as_str());
     output.push('\n');
     output.push_str(get_parameter("doubled_pawn_opening", context.parameters.doubled_pawn_opening).as_str());
     output.push_str(get_parameter("doubled_pawn_ending", context.parameters.doubled_pawn_ending).as_str());
@@ -506,7 +547,7 @@ fn write_evaluation_parameters(context: &mut TunerContext, output_directory: &st
 }
 
 /// Generates piece-square tables (Rust source file with current evaluation parameters), and saves it into the `output_directory`.
-fn write_piece_square_table(output_directory: &str, best_error: f64, name: &str, patterns: &[[i16; 64]; 2]) {
+fn write_piece_square_table(output_directory: &str, best_error: f32, name: &str, patterns: &[[i16; 64]; 2]) {
     let mut output = String::new();
     let function_signature = format!("    pub fn get_{}_pst_pattern(&self) -> [[i16; 64]; 2] {{\n", name);
 
@@ -536,7 +577,7 @@ fn write_piece_square_table(output_directory: &str, best_error: f64, name: &str,
 }
 
 /// Gets a generated Rust source file header with timestamp and `best_error`.
-fn get_header(best_error: f64) -> String {
+fn get_header(best_error: f32) -> String {
     let mut output = String::new();
 
     let datetime = DateTime::now();
@@ -583,4 +624,14 @@ fn get_piece_square_table(values: &[i16]) -> String {
     }
 
     output
+}
+
+/// Tests the correctness of [load_values] and [save_values] methods.
+pub fn validate() -> bool {
+    let mut context = TunerContext::new(Vec::new());
+    let mut values = load_values(&context, false, false);
+    save_values(&mut context, &mut values, false);
+
+    let values_after_save = load_values(&context, false, false);
+    values.iter().zip(&values_after_save).all(|(a, b)| a.value == b.value)
 }
