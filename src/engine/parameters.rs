@@ -38,26 +38,26 @@ impl Default for SearchParameters {
     fn default() -> Self {
         Self {
             razoring_min_depth: 1,
-            razoring_max_depth: 4,
-            razoring_depth_margin_base: 300,
-            razoring_depth_margin_multiplier: 300,
+            razoring_max_depth: 5,
+            razoring_depth_margin_base: 260,
+            razoring_depth_margin_multiplier: 260,
 
             snmp_min_depth: 1,
             snmp_max_depth: 8,
-            snmp_depth_margin_base: 150,
-            snmp_depth_margin_multiplier: 150,
+            snmp_depth_margin_base: 135,
+            snmp_depth_margin_multiplier: 55,
 
             nmp_min_depth: 2,
             nmp_min_game_phase: 3,
-            nmp_margin: 50,
+            nmp_margin: 60,
             nmp_depth_base: 2,
             nmp_depth_divider: 5,
 
             lmp_min_depth: 1,
-            lmp_max_depth: 4,
+            lmp_max_depth: 3,
             lmp_move_index_margin_base: 2,
-            lmp_move_index_margin_multiplier: 4,
-            lmp_max_score: 0,
+            lmp_move_index_margin_multiplier: 5,
+            lmp_max_score: -55,
 
             lmr_min_depth: 2,
             lmr_max_score: 90,
