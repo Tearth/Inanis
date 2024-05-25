@@ -583,7 +583,6 @@ impl Board {
         let enemy_color = color ^ 1;
         let occupancy_bb = self.occupancy[WHITE] | self.occupancy[BLACK];
 
-        let bishops_rooks_bb = self.pieces[enemy_color][BISHOP] | self.pieces[enemy_color][ROOK];
         let rooks_queens_bb = self.pieces[enemy_color][ROOK] | self.pieces[enemy_color][QUEEN];
         let bishops_queens_bb = self.pieces[enemy_color][BISHOP] | self.pieces[enemy_color][QUEEN];
 
@@ -591,24 +590,24 @@ impl Board {
         let attacking_kings_count = ((king_attacks_bb & self.pieces[enemy_color][KING]) != 0) as usize;
         result |= attacking_kings_count << 7;
 
-        let queen_attacks_bb = self.magic.get_queen_moves(occupancy_bb & !bishops_rooks_bb, square);
-        let attacking_queens_count = ((queen_attacks_bb & self.pieces[enemy_color][QUEEN]) != 0) as usize;
-        result |= attacking_queens_count << 6;
-
         let rook_attacks_bb = self.magic.get_rook_moves(occupancy_bb & !rooks_queens_bb, square);
         let attacking_rooks_count = (rook_attacks_bb & self.pieces[enemy_color][ROOK]).bit_count();
+        let attacking_queens_count = ((rook_attacks_bb & self.pieces[enemy_color][QUEEN]) != 0) as usize;
 
         result |= match attacking_rooks_count {
             0 => 0,
             1 => 1 << 4,
             _ => 3 << 4,
         };
+        result |= attacking_queens_count << 6;
 
         let knight_attacks_bb = self.magic.get_knight_moves(square, &self.patterns);
         let attacking_knights_count = (knight_attacks_bb & self.pieces[enemy_color][KNIGHT]).bit_count();
+
         let bishop_attacks_bb = self.magic.get_bishop_moves(occupancy_bb & !bishops_queens_bb, square);
         let attacking_bishops_count = (bishop_attacks_bb & self.pieces[enemy_color][BISHOP]).bit_count();
         let attacking_knights_bishops_count = attacking_knights_count + attacking_bishops_count;
+        let attacking_queens_count = ((bishop_attacks_bb & self.pieces[enemy_color][QUEEN]) != 0) as usize;
 
         result |= match attacking_knights_bishops_count {
             0 => 0,
@@ -616,6 +615,7 @@ impl Board {
             2 => 3 << 1,
             _ => 7 << 1,
         };
+        result |= attacking_queens_count << 6;
 
         let square_bb = 1u64 << square;
         let potential_enemy_pawns_bb = king_attacks_bb & self.pieces[enemy_color][PAWN];
