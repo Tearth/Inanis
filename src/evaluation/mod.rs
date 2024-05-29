@@ -20,23 +20,23 @@ pub struct EvaluationParameters {
     pub mobility_outer_opening: [i16; 6],
     pub mobility_outer_ending: [i16; 6],
 
-    pub doubled_pawn_opening: i16,
-    pub doubled_pawn_ending: i16,
+    pub doubled_pawn_opening: [i16; 8],
+    pub doubled_pawn_ending: [i16; 8],
 
-    pub isolated_pawn_opening: i16,
-    pub isolated_pawn_ending: i16,
+    pub isolated_pawn_opening: [i16; 8],
+    pub isolated_pawn_ending: [i16; 8],
 
-    pub chained_pawn_opening: i16,
-    pub chained_pawn_ending: i16,
+    pub chained_pawn_opening: [i16; 8],
+    pub chained_pawn_ending: [i16; 8],
 
-    pub passed_pawn_opening: i16,
-    pub passed_pawn_ending: i16,
+    pub passed_pawn_opening: [i16; 8],
+    pub passed_pawn_ending: [i16; 8],
 
-    pub pawn_shield_opening: i16,
-    pub pawn_shield_ending: i16,
+    pub pawn_shield_opening: [i16; 8],
+    pub pawn_shield_ending: [i16; 8],
 
-    pub pawn_shield_open_file_opening: i16,
-    pub pawn_shield_open_file_ending: i16,
+    pub pawn_shield_open_file_opening: [i16; 8],
+    pub pawn_shield_open_file_ending: [i16; 8],
 
     pub king_attacked_squares_opening: [i16; 8],
     pub king_attacked_squares_ending: [i16; 8],

@@ -348,23 +348,23 @@ fn load_values(context: &TunerContext, lock_material: bool, random_values: bool)
     parameters.push(TunerParameter::new(context.parameters.mobility_outer_ending[QUEEN], 0, 2, 6, 99));
     parameters.push(TunerParameter::new(context.parameters.mobility_outer_ending[KING], 0, 2, 6, 99));
 
-    parameters.push(TunerParameter::new(context.parameters.doubled_pawn_opening, -999, -40, -10, 999));
-    parameters.push(TunerParameter::new(context.parameters.doubled_pawn_ending, -999, -40, -10, 999));
+    parameters.append(&mut context.parameters.doubled_pawn_opening.iter().map(|v| TunerParameter::new(*v, -999, -40, -10, 999)).collect());
+    parameters.append(&mut context.parameters.doubled_pawn_ending.iter().map(|v| TunerParameter::new(*v, -999, -40, -10, 999)).collect());
 
-    parameters.push(TunerParameter::new(context.parameters.isolated_pawn_opening, -999, -40, -10, 999));
-    parameters.push(TunerParameter::new(context.parameters.isolated_pawn_ending, -999, -40, -10, 999));
+    parameters.append(&mut context.parameters.isolated_pawn_opening.iter().map(|v| TunerParameter::new(*v, -999, -40, -10, 999)).collect());
+    parameters.append(&mut context.parameters.isolated_pawn_ending.iter().map(|v| TunerParameter::new(*v, -999, -40, -10, 999)).collect());
 
-    parameters.push(TunerParameter::new(context.parameters.chained_pawn_opening, -999, 10, 40, 999));
-    parameters.push(TunerParameter::new(context.parameters.chained_pawn_ending, -999, 10, 40, 999));
+    parameters.append(&mut context.parameters.chained_pawn_opening.iter().map(|v| TunerParameter::new(*v, -999, 10, 40, 999)).collect());
+    parameters.append(&mut context.parameters.chained_pawn_ending.iter().map(|v| TunerParameter::new(*v, -999, 10, 40, 999)).collect());
 
-    parameters.push(TunerParameter::new(context.parameters.passed_pawn_opening, -999, 10, 40, 999));
-    parameters.push(TunerParameter::new(context.parameters.passed_pawn_ending, -999, 10, 40, 999));
+    parameters.append(&mut context.parameters.passed_pawn_opening.iter().map(|v| TunerParameter::new(*v, -999, 10, 40, 999)).collect());
+    parameters.append(&mut context.parameters.passed_pawn_ending.iter().map(|v| TunerParameter::new(*v, -999, 10, 40, 999)).collect());
 
-    parameters.push(TunerParameter::new(context.parameters.pawn_shield_opening, -999, 10, 40, 999));
-    parameters.push(TunerParameter::new(context.parameters.pawn_shield_ending, -999, 10, 40, 999));
+    parameters.append(&mut context.parameters.pawn_shield_opening.iter().map(|v| TunerParameter::new(*v, -999, 10, 40, 999)).collect());
+    parameters.append(&mut context.parameters.pawn_shield_ending.iter().map(|v| TunerParameter::new(*v, -999, 10, 40, 999)).collect());
 
-    parameters.push(TunerParameter::new(context.parameters.pawn_shield_open_file_opening, -999, -40, -10, 999));
-    parameters.push(TunerParameter::new(context.parameters.pawn_shield_open_file_ending, -999, -40, -10, 999));
+    parameters.append(&mut context.parameters.pawn_shield_open_file_opening.iter().map(|v| TunerParameter::new(*v, -999, -40, -10, 999)).collect());
+    parameters.append(&mut context.parameters.pawn_shield_open_file_ending.iter().map(|v| TunerParameter::new(*v, -999, -40, -10, 999)).collect());
 
     parameters.append(&mut context.parameters.king_attacked_squares_opening.iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
     parameters.append(&mut context.parameters.king_attacked_squares_ending.iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
@@ -421,23 +421,23 @@ fn save_values(context: &mut TunerContext, values: &mut [TunerParameter], lock_m
     save_values_to_i16_array_internal(values, &mut context.parameters.mobility_outer_opening, &mut index);
     save_values_to_i16_array_internal(values, &mut context.parameters.mobility_outer_ending, &mut index);
 
-    save_values_internal(values, &mut context.parameters.doubled_pawn_opening, &mut index);
-    save_values_internal(values, &mut context.parameters.doubled_pawn_ending, &mut index);
+    save_values_to_i16_array_internal(values, &mut context.parameters.doubled_pawn_opening, &mut index);
+    save_values_to_i16_array_internal(values, &mut context.parameters.doubled_pawn_ending, &mut index);
 
-    save_values_internal(values, &mut context.parameters.isolated_pawn_opening, &mut index);
-    save_values_internal(values, &mut context.parameters.isolated_pawn_ending, &mut index);
+    save_values_to_i16_array_internal(values, &mut context.parameters.isolated_pawn_opening, &mut index);
+    save_values_to_i16_array_internal(values, &mut context.parameters.isolated_pawn_ending, &mut index);
 
-    save_values_internal(values, &mut context.parameters.chained_pawn_opening, &mut index);
-    save_values_internal(values, &mut context.parameters.chained_pawn_ending, &mut index);
+    save_values_to_i16_array_internal(values, &mut context.parameters.chained_pawn_opening, &mut index);
+    save_values_to_i16_array_internal(values, &mut context.parameters.chained_pawn_ending, &mut index);
 
-    save_values_internal(values, &mut context.parameters.passed_pawn_opening, &mut index);
-    save_values_internal(values, &mut context.parameters.passed_pawn_ending, &mut index);
+    save_values_to_i16_array_internal(values, &mut context.parameters.passed_pawn_opening, &mut index);
+    save_values_to_i16_array_internal(values, &mut context.parameters.passed_pawn_ending, &mut index);
 
-    save_values_internal(values, &mut context.parameters.pawn_shield_opening, &mut index);
-    save_values_internal(values, &mut context.parameters.pawn_shield_ending, &mut index);
+    save_values_to_i16_array_internal(values, &mut context.parameters.pawn_shield_opening, &mut index);
+    save_values_to_i16_array_internal(values, &mut context.parameters.pawn_shield_ending, &mut index);
 
-    save_values_internal(values, &mut context.parameters.pawn_shield_open_file_opening, &mut index);
-    save_values_internal(values, &mut context.parameters.pawn_shield_open_file_ending, &mut index);
+    save_values_to_i16_array_internal(values, &mut context.parameters.pawn_shield_open_file_opening, &mut index);
+    save_values_to_i16_array_internal(values, &mut context.parameters.pawn_shield_open_file_ending, &mut index);
 
     save_values_to_i16_array_internal(values, &mut context.parameters.king_attacked_squares_opening, &mut index);
     save_values_to_i16_array_internal(values, &mut context.parameters.king_attacked_squares_ending, &mut index);
@@ -508,23 +508,23 @@ fn write_evaluation_parameters(context: &mut TunerContext, output_directory: &st
     output.push_str(get_array("mobility_outer_opening", &context.parameters.mobility_outer_opening).as_str());
     output.push_str(get_array("mobility_outer_ending", &context.parameters.mobility_outer_ending).as_str());
     output.push('\n');
-    output.push_str(get_parameter("doubled_pawn_opening", context.parameters.doubled_pawn_opening).as_str());
-    output.push_str(get_parameter("doubled_pawn_ending", context.parameters.doubled_pawn_ending).as_str());
+    output.push_str(get_array("doubled_pawn_opening", &context.parameters.doubled_pawn_opening).as_str());
+    output.push_str(get_array("doubled_pawn_ending", &context.parameters.doubled_pawn_ending).as_str());
     output.push('\n');
-    output.push_str(get_parameter("isolated_pawn_opening", context.parameters.isolated_pawn_opening).as_str());
-    output.push_str(get_parameter("isolated_pawn_ending", context.parameters.isolated_pawn_ending).as_str());
+    output.push_str(get_array("isolated_pawn_opening", &context.parameters.isolated_pawn_opening).as_str());
+    output.push_str(get_array("isolated_pawn_ending", &context.parameters.isolated_pawn_ending).as_str());
     output.push('\n');
-    output.push_str(get_parameter("chained_pawn_opening", context.parameters.chained_pawn_opening).as_str());
-    output.push_str(get_parameter("chained_pawn_ending", context.parameters.chained_pawn_ending).as_str());
+    output.push_str(get_array("chained_pawn_opening", &context.parameters.chained_pawn_opening).as_str());
+    output.push_str(get_array("chained_pawn_ending", &context.parameters.chained_pawn_ending).as_str());
     output.push('\n');
-    output.push_str(get_parameter("passed_pawn_opening", context.parameters.passed_pawn_opening).as_str());
-    output.push_str(get_parameter("passed_pawn_ending", context.parameters.passed_pawn_ending).as_str());
+    output.push_str(get_array("passed_pawn_opening", &context.parameters.passed_pawn_opening).as_str());
+    output.push_str(get_array("passed_pawn_ending", &context.parameters.passed_pawn_ending).as_str());
     output.push('\n');
-    output.push_str(get_parameter("pawn_shield_opening", context.parameters.pawn_shield_opening).as_str());
-    output.push_str(get_parameter("pawn_shield_ending", context.parameters.pawn_shield_ending).as_str());
+    output.push_str(get_array("pawn_shield_opening", &context.parameters.pawn_shield_opening).as_str());
+    output.push_str(get_array("pawn_shield_ending", &context.parameters.pawn_shield_ending).as_str());
     output.push('\n');
-    output.push_str(get_parameter("pawn_shield_open_file_opening", context.parameters.pawn_shield_open_file_opening).as_str());
-    output.push_str(get_parameter("pawn_shield_open_file_ending", context.parameters.pawn_shield_open_file_ending).as_str());
+    output.push_str(get_array("pawn_shield_open_file_opening", &context.parameters.pawn_shield_open_file_opening).as_str());
+    output.push_str(get_array("pawn_shield_open_file_ending", &context.parameters.pawn_shield_open_file_ending).as_str());
     output.push('\n');
     output.push_str(get_array("king_attacked_squares_opening", &context.parameters.king_attacked_squares_opening).as_str());
     output.push_str(get_array("king_attacked_squares_ending", &context.parameters.king_attacked_squares_ending).as_str());

@@ -56,21 +56,20 @@ pub fn evaluate_without_cache(board: &Board) -> EvaluationResult {
 /// Evaluates pawn structure on the `board` for the specified `color`.
 fn evaluate_color(board: &Board, color: usize) -> EvaluationResult {
     let pawns_data = get_pawns_data(board, color);
-
     let opening_score = 0
-        + pawns_data.doubled_pawns as i16 * board.evaluation_parameters.doubled_pawn_opening
-        + pawns_data.isolated_pawns as i16 * board.evaluation_parameters.isolated_pawn_opening
-        + pawns_data.chained_pawns as i16 * board.evaluation_parameters.chained_pawn_opening
-        + pawns_data.passed_pawns as i16 * board.evaluation_parameters.passed_pawn_opening
-        + pawns_data.pawn_shield as i16 * board.evaluation_parameters.pawn_shield_opening
-        + pawns_data.opened_files as i16 * board.evaluation_parameters.pawn_shield_open_file_opening;
+        + board.evaluation_parameters.doubled_pawn_opening[pawns_data.doubled_pawns as usize]
+        + board.evaluation_parameters.isolated_pawn_opening[pawns_data.isolated_pawns as usize]
+        + board.evaluation_parameters.chained_pawn_opening[pawns_data.chained_pawns as usize]
+        + board.evaluation_parameters.passed_pawn_opening[pawns_data.passed_pawns as usize]
+        + board.evaluation_parameters.pawn_shield_opening[pawns_data.pawn_shield as usize]
+        + board.evaluation_parameters.pawn_shield_open_file_opening[pawns_data.opened_files as usize];
     let ending_score = 0
-        + pawns_data.doubled_pawns as i16 * board.evaluation_parameters.doubled_pawn_ending
-        + pawns_data.isolated_pawns as i16 * board.evaluation_parameters.isolated_pawn_ending
-        + pawns_data.chained_pawns as i16 * board.evaluation_parameters.chained_pawn_ending
-        + pawns_data.passed_pawns as i16 * board.evaluation_parameters.passed_pawn_ending
-        + pawns_data.pawn_shield as i16 * board.evaluation_parameters.pawn_shield_ending
-        + pawns_data.opened_files as i16 * board.evaluation_parameters.pawn_shield_open_file_ending;
+        + board.evaluation_parameters.doubled_pawn_ending[pawns_data.doubled_pawns as usize]
+        + board.evaluation_parameters.isolated_pawn_ending[pawns_data.isolated_pawns as usize]
+        + board.evaluation_parameters.chained_pawn_ending[pawns_data.chained_pawns as usize]
+        + board.evaluation_parameters.passed_pawn_ending[pawns_data.passed_pawns as usize]
+        + board.evaluation_parameters.pawn_shield_ending[pawns_data.pawn_shield as usize]
+        + board.evaluation_parameters.pawn_shield_open_file_ending[pawns_data.opened_files as usize];
 
     EvaluationResult::new(opening_score, ending_score)
 }
@@ -86,7 +85,7 @@ fn get_pawns_data(board: &Board, color: usize) -> PawnsData {
     for file in ALL_FILES {
         let pawns_on_file_count = (board.patterns.get_file(file) & board.pieces[color][PAWN]).bit_count() as i8;
         if pawns_on_file_count > 1 {
-            doubled_pawns += pawns_on_file_count;
+            doubled_pawns += pawns_on_file_count - 1;
         }
 
         if pawns_on_file_count > 0 {
@@ -101,9 +100,9 @@ fn get_pawns_data(board: &Board, color: usize) -> PawnsData {
     while pawns_bb != 0 {
         let square_bb = pawns_bb.get_lsb();
         let square = square_bb.bit_scan();
-        pawns_bb = pawns_bb.pop_lsb();
 
-        chained_pawns += (board.patterns.get_star(square) & board.pieces[color][PAWN]).bit_count() as i8;
+        chained_pawns += if (board.patterns.get_star(square) & pawns_bb) > 0 { 1 } else { 0 };
+        pawns_bb = pawns_bb.pop_lsb();
 
         let front_bb = board.patterns.get_front(color, square);
         let enemy_pawns_ahead_count = (front_bb & board.pieces[color ^ 1][PAWN]).bit_count();
@@ -131,32 +130,39 @@ fn get_pawns_data(board: &Board, color: usize) -> PawnsData {
 pub fn get_coefficients(board: &Board, index: &mut u16) -> Vec<TunerCoefficient> {
     let white_pawns_data = get_pawns_data(board, WHITE);
     let black_pawns_data = get_pawns_data(board, BLACK);
+    let mut coefficients = Vec::new();
 
-    let mut coefficients = [
-        TunerCoefficient::new(white_pawns_data.doubled_pawns - black_pawns_data.doubled_pawns, OPENING, 0),
-        TunerCoefficient::new(white_pawns_data.doubled_pawns - black_pawns_data.doubled_pawns, ENDING, 0),
-        TunerCoefficient::new(white_pawns_data.isolated_pawns - black_pawns_data.isolated_pawns, OPENING, 0),
-        TunerCoefficient::new(white_pawns_data.isolated_pawns - black_pawns_data.isolated_pawns, ENDING, 0),
-        TunerCoefficient::new(white_pawns_data.chained_pawns - black_pawns_data.chained_pawns, OPENING, 0),
-        TunerCoefficient::new(white_pawns_data.chained_pawns - black_pawns_data.chained_pawns, ENDING, 0),
-        TunerCoefficient::new(white_pawns_data.passed_pawns - black_pawns_data.passed_pawns, OPENING, 0),
-        TunerCoefficient::new(white_pawns_data.passed_pawns - black_pawns_data.passed_pawns, ENDING, 0),
-        TunerCoefficient::new(white_pawns_data.pawn_shield - black_pawns_data.pawn_shield, OPENING, 0),
-        TunerCoefficient::new(white_pawns_data.pawn_shield - black_pawns_data.pawn_shield, ENDING, 0),
-        TunerCoefficient::new(white_pawns_data.opened_files - black_pawns_data.opened_files, OPENING, 0),
-        TunerCoefficient::new(white_pawns_data.opened_files - black_pawns_data.opened_files, ENDING, 0),
-    ];
-    let mut coefficients_filtered = Vec::new();
+    coefficients.append(&mut get_coefficients_for_feature(white_pawns_data.doubled_pawns, black_pawns_data.doubled_pawns, index));
+    coefficients.append(&mut get_coefficients_for_feature(white_pawns_data.isolated_pawns, black_pawns_data.isolated_pawns, index));
+    coefficients.append(&mut get_coefficients_for_feature(white_pawns_data.chained_pawns, black_pawns_data.chained_pawns, index));
+    coefficients.append(&mut get_coefficients_for_feature(white_pawns_data.passed_pawns, black_pawns_data.passed_pawns, index));
+    coefficients.append(&mut get_coefficients_for_feature(white_pawns_data.pawn_shield, black_pawns_data.pawn_shield, index));
+    coefficients.append(&mut get_coefficients_for_feature(white_pawns_data.opened_files, black_pawns_data.opened_files, index));
 
-    for coefficient in &mut coefficients {
-        coefficient.index = *index;
+    coefficients
+}
 
-        if coefficient.value != 0 {
-            coefficients_filtered.push(coefficient.clone());
+pub fn get_coefficients_for_feature(white_feature: i8, black_feature: i8, index: &mut u16) -> Vec<TunerCoefficient> {
+    let mut coefficients = Vec::new();
+
+    for game_phase in ALL_PHASES {
+        for i in 0..8 {
+            let mut sum = 0;
+
+            if white_feature == i || (i == 7 && white_feature > 7) {
+                sum += 1;
+            }
+            if black_feature == i || (i == 7 && black_feature > 7) {
+                sum -= 1;
+            }
+
+            if sum != 0 {
+                coefficients.push(TunerCoefficient::new(sum, game_phase, *index));
+            }
+
+            *index += 1;
         }
-
-        *index += 1;
     }
 
-    coefficients_filtered
+    coefficients
 }
