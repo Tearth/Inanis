@@ -20,6 +20,7 @@ use std::io::BufReader;
 use std::io::Write;
 use std::path::Path;
 use std::sync::Arc;
+use std::thread;
 use std::time::SystemTime;
 
 const LEARNING_RATE: f32 = 0.1;
@@ -129,23 +130,44 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
         context.gradients.fill(0.0);
 
         // Calculate gradients for all coefficients
-        for p in 0..context.positions.len() {
-            let evaluation = evaluate_position(&context.positions[p], &context.weights);
+        thread::scope(|scope| {
+            let mut threads = Vec::new();
+            let weights = Arc::new(context.weights.clone());
 
-            let sig = sigmoid(evaluation, k);
-            let a = context.positions[p].result - sig;
-            let b = sig * (1.0 - sig);
+            for chunk in context.positions.chunks(context.positions.len() / threads_count) {
+                let weights = weights.clone();
+                threads.push(scope.spawn(move || {
+                    let mut gradients = vec![0.0; weights.len()];
+                    for position in chunk {
+                        let evaluation = evaluate_position(position, &weights);
 
-            for coefficient in &context.positions[p].coefficients {
-                // Ignore pawn and king values
-                if coefficient.index == 0 || coefficient.index == 5 {
-                    continue;
-                }
+                        let sig = sigmoid(evaluation, k);
+                        let a = position.result - sig;
+                        let b = sig * (1.0 - sig);
 
-                let c = context.positions[p].phase * coefficient.value as f32;
-                context.gradients[coefficient.index as usize] += a * b * c;
+                        for coefficient in &position.coefficients {
+                            // Ignore pawn and king values
+                            if coefficient.index == 0 || coefficient.index == 5 {
+                                continue;
+                            }
+
+                            let phase = if coefficient.phase == OPENING as u8 { position.phase } else { 1.0 - position.phase };
+                            let c = phase * coefficient.value as f32;
+
+                            gradients[coefficient.index as usize] += a * b * c;
+                        }
+                    }
+
+                    gradients
+                }));
             }
-        }
+
+            for thread in threads {
+                for (i, gradient) in thread.join().unwrap().iter().enumerate() {
+                    context.gradients[i] += gradient;
+                }
+            }
+        });
 
         // Apply gradients and calculate new weights
         for i in 0..context.weights.len() {
@@ -164,7 +186,7 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
 
             save_values(&mut context, &mut parameters, lock_material);
 
-            let error = calculate_error(&mut context, k, 1);
+            let error = calculate_error(&mut context, k, threads_count);
             write_evaluation_parameters(&mut context, output_directory, error);
             write_piece_square_table(output_directory, error, "pawn", &context.parameters.pst_patterns[PAWN]);
             write_piece_square_table(output_directory, error, "knight", &context.parameters.pst_patterns[KNIGHT]);
@@ -208,14 +230,31 @@ fn calculate_k(context: &mut TunerContext, threads_count: usize) -> f32 {
 }
 
 /// Calculates an error by evaluating all loaded positions with the currently set evaluation parameters. Multithreading is supported by `threads_count`.
-fn calculate_error(context: &mut TunerContext, scaling_constant: f32, _threads_count: usize) -> f32 {
+fn calculate_error(context: &mut TunerContext, scaling_constant: f32, threads_count: usize) -> f32 {
     let mut sum_of_errors = 0.0;
     let positions_count = context.positions.len();
 
-    for position in &context.positions {
-        let evaluation = evaluate_position(position, &context.weights);
-        sum_of_errors += (position.result - sigmoid(evaluation, scaling_constant)).powi(2);
-    }
+    thread::scope(|scope| {
+        let mut threads = Vec::new();
+        let weights = Arc::new(context.weights.clone());
+
+        for chunk in context.positions.chunks(positions_count / threads_count) {
+            let weights = weights.clone();
+            threads.push(scope.spawn(move || {
+                let mut error = 0.0;
+                for position in chunk {
+                    let evaluation = evaluate_position(position, &weights);
+                    error += (position.result - sigmoid(evaluation, scaling_constant)).powi(2);
+                }
+
+                error
+            }));
+        }
+
+        for thread in threads {
+            sum_of_errors += thread.join().unwrap();
+        }
+    });
 
     sum_of_errors / (positions_count as f32)
 }
