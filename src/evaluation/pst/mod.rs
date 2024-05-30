@@ -1,7 +1,9 @@
 use super::*;
 use crate::state::representation::Board;
-use crate::tuning::tuner::TunerCoefficient;
 use crate::utils::bithelpers::BitHelpers;
+
+#[cfg(feature = "dev")]
+use crate::tuning::tuner::TunerCoefficient;
 
 pub mod bishop;
 pub mod king;
@@ -40,6 +42,7 @@ pub fn recalculate_incremental_values(board: &mut Board) {
     }
 }
 
+#[cfg(feature = "dev")]
 pub fn get_coefficients(board: &Board, piece: usize, index: &mut u16) -> Vec<TunerCoefficient> {
     let mut coefficients = Vec::new();
 

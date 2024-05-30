@@ -2,10 +2,12 @@ use super::*;
 use crate::cache::pawns::PawnHashTable;
 use crate::engine::statistics::SearchStatistics;
 use crate::state::representation::Board;
-use crate::tuning::tuner::TunerCoefficient;
 use crate::utils::bithelpers::BitHelpers;
 use crate::utils::conditional_expression;
 use std::cmp;
+
+#[cfg(feature = "dev")]
+use crate::tuning::tuner::TunerCoefficient;
 
 pub struct PawnsData {
     doubled_pawns: i8,
@@ -127,6 +129,7 @@ fn get_pawns_data(board: &Board, color: usize) -> PawnsData {
     PawnsData { doubled_pawns, isolated_pawns, chained_pawns, passed_pawns, pawn_shield, opened_files }
 }
 
+#[cfg(feature = "dev")]
 pub fn get_coefficients(board: &Board, index: &mut u16) -> Vec<TunerCoefficient> {
     let white_pawns_data = get_pawns_data(board, WHITE);
     let black_pawns_data = get_pawns_data(board, BLACK);
@@ -142,6 +145,7 @@ pub fn get_coefficients(board: &Board, index: &mut u16) -> Vec<TunerCoefficient>
     coefficients
 }
 
+#[cfg(feature = "dev")]
 pub fn get_coefficients_for_feature(white_feature: i8, black_feature: i8, index: &mut u16) -> Vec<TunerCoefficient> {
     let mut coefficients = Vec::new();
 

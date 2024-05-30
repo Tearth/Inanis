@@ -1,6 +1,8 @@
 use super::*;
 use crate::state::movescan;
 use crate::state::representation::Board;
+
+#[cfg(feature = "dev")]
 use crate::tuning::tuner::TunerCoefficient;
 
 pub struct MobilityData {
@@ -83,6 +85,7 @@ fn get_mobility_data(board: &Board, color: usize, dangered_king_squares: &mut u3
     }
 }
 
+#[cfg(feature = "dev")]
 pub fn get_coefficients(board: &Board, dangered_white_king_squares: &mut u32, dangered_black_king_squares: &mut u32, index: &mut u16) -> Vec<TunerCoefficient> {
     let white_mobility_data = get_mobility_data(board, WHITE, dangered_black_king_squares);
     let black_mobility_data = get_mobility_data(board, BLACK, dangered_white_king_squares);

@@ -1,7 +1,9 @@
 use crate::state::representation::Board;
 use crate::state::*;
-use crate::tuning::tuner::TunerCoefficient;
 use crate::utils::bithelpers::BitHelpers;
+
+#[cfg(feature = "dev")]
+use crate::tuning::tuner::TunerCoefficient;
 
 /// Evaluates material on the `board` and returns score from the white color perspective (more than 0 when advantage, less than 0 when disadvantage).
 /// This simple evaluator sums all scores of all present pieces using incremental counters in `board`, without considering the current game phase.
@@ -22,6 +24,7 @@ pub fn recalculate_incremental_values(board: &mut Board) {
     }
 }
 
+#[cfg(feature = "dev")]
 pub fn get_coefficients(board: &Board, index: &mut u16) -> Vec<TunerCoefficient> {
     let mut coefficients = vec![
         TunerCoefficient::new(board.pieces[WHITE][PAWN].bit_count() as i8 - board.pieces[BLACK][PAWN].bit_count() as i8, OPENING, 0),
