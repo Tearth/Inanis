@@ -59,19 +59,19 @@ pub fn evaluate_without_cache(board: &Board) -> EvaluationResult {
 fn evaluate_color(board: &Board, color: usize) -> EvaluationResult {
     let pawns_data = get_pawns_data(board, color);
     let opening_score = 0
-        + board.evaluation_parameters.doubled_pawn_opening[pawns_data.doubled_pawns as usize]
-        + board.evaluation_parameters.isolated_pawn_opening[pawns_data.isolated_pawns as usize]
-        + board.evaluation_parameters.chained_pawn_opening[pawns_data.chained_pawns as usize]
-        + board.evaluation_parameters.passed_pawn_opening[pawns_data.passed_pawns as usize]
-        + board.evaluation_parameters.pawn_shield_opening[pawns_data.pawn_shield as usize]
-        + board.evaluation_parameters.pawn_shield_open_file_opening[pawns_data.opened_files as usize];
+        + board.evaluation_parameters.doubled_pawn_opening[pawns_data.doubled_pawns.min(7) as usize]
+        + board.evaluation_parameters.isolated_pawn_opening[pawns_data.isolated_pawns.min(7) as usize]
+        + board.evaluation_parameters.chained_pawn_opening[pawns_data.chained_pawns.min(7) as usize]
+        + board.evaluation_parameters.passed_pawn_opening[pawns_data.passed_pawns.min(7) as usize]
+        + board.evaluation_parameters.pawn_shield_opening[pawns_data.pawn_shield.min(7) as usize]
+        + board.evaluation_parameters.pawn_shield_open_file_opening[pawns_data.opened_files.min(7) as usize];
     let ending_score = 0
-        + board.evaluation_parameters.doubled_pawn_ending[pawns_data.doubled_pawns as usize]
-        + board.evaluation_parameters.isolated_pawn_ending[pawns_data.isolated_pawns as usize]
-        + board.evaluation_parameters.chained_pawn_ending[pawns_data.chained_pawns as usize]
-        + board.evaluation_parameters.passed_pawn_ending[pawns_data.passed_pawns as usize]
-        + board.evaluation_parameters.pawn_shield_ending[pawns_data.pawn_shield as usize]
-        + board.evaluation_parameters.pawn_shield_open_file_ending[pawns_data.opened_files as usize];
+        + board.evaluation_parameters.doubled_pawn_ending[pawns_data.doubled_pawns.min(7) as usize]
+        + board.evaluation_parameters.isolated_pawn_ending[pawns_data.isolated_pawns.min(7) as usize]
+        + board.evaluation_parameters.chained_pawn_ending[pawns_data.chained_pawns.min(7) as usize]
+        + board.evaluation_parameters.passed_pawn_ending[pawns_data.passed_pawns.min(7) as usize]
+        + board.evaluation_parameters.pawn_shield_ending[pawns_data.pawn_shield.min(7) as usize]
+        + board.evaluation_parameters.pawn_shield_open_file_ending[pawns_data.opened_files.min(7) as usize];
 
     EvaluationResult::new(opening_score, ending_score)
 }
