@@ -1,5 +1,10 @@
 #[derive(Clone)]
 pub struct SearchParameters {
+    pub iir_min_depth: i8,
+    pub iir_reduction_base: i8,
+    pub iir_reduction_step: i8,
+    pub iir_max_reduction: i8,
+
     pub razoring_min_depth: i8,
     pub razoring_max_depth: i8,
     pub razoring_depth_margin_base: i16,
@@ -37,6 +42,11 @@ pub struct SearchParameters {
 impl Default for SearchParameters {
     fn default() -> Self {
         Self {
+            iir_min_depth: 4,
+            iir_reduction_base: 1,
+            iir_reduction_step: 99,
+            iir_max_reduction: 3,
+
             razoring_min_depth: 1,
             razoring_max_depth: 5,
             razoring_depth_margin_base: 260,

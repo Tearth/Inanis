@@ -87,7 +87,7 @@ pub fn run<const DIAG: bool>(context: &mut SearchContext, depth: i8) {
 ///  - update transposition table
 fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
     context: &mut SearchContext,
-    depth: i8,
+    mut depth: i8,
     ply: u16,
     mut alpha: i16,
     mut beta: i16,
@@ -204,6 +204,10 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
             conditional_expression!(DIAG, context.statistics.tt_misses += 1);
         }
     };
+
+    if iir_can_be_applied(context, depth, hash_move) {
+        depth -= iir_get_r(context, depth);
+    }
 
     let mut lazy_evaluation = None;
 
@@ -705,6 +709,15 @@ fn get_next_move<const DIAG: bool>(
             }
         }
     }
+}
+
+fn iir_can_be_applied(context: &mut SearchContext, depth: i8, hash_move: Move) -> bool {
+    depth >= context.parameters.iir_min_depth && hash_move == Move::default()
+}
+
+fn iir_get_r(context: &mut SearchContext, depth: i8) -> i8 {
+    (context.parameters.iir_reduction_base + (depth - context.parameters.iir_min_depth) / context.parameters.iir_reduction_step)
+        .min(context.parameters.iir_max_reduction)
 }
 
 /// The main idea of the razoring is to detect and prune all nodes, which (based on lazy evaluation) are hopeless compared to the current alpha and

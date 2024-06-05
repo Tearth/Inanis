@@ -114,6 +114,11 @@ pub fn run() {
     state_lock.options.insert("Clear Hash".to_string(), UciOption::new(9, "button", "", "", ""));
 
     let parameters = SearchParameters::default();
+    state_lock.options.insert("iir_min_depth".to_string(), UciOption::new_wide(99, parameters.iir_min_depth));
+    state_lock.options.insert("iir_reduction_base".to_string(), UciOption::new_wide(99, parameters.iir_reduction_base));
+    state_lock.options.insert("iir_reduction_step".to_string(), UciOption::new_wide(99, parameters.iir_reduction_step));
+    state_lock.options.insert("iir_max_reduction".to_string(), UciOption::new_wide(99, parameters.iir_max_reduction));
+
     state_lock.options.insert("razoring_min_depth".to_string(), UciOption::new_wide(99, parameters.razoring_min_depth));
     state_lock.options.insert("razoring_max_depth".to_string(), UciOption::new_wide(99, parameters.razoring_max_depth));
     state_lock.options.insert("razoring_depth_margin_base".to_string(), UciOption::new_wide(99, parameters.razoring_depth_margin_base));
@@ -360,6 +365,11 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
         let syzygy_probe_depth = state_lock.options["SyzygyProbeDepth"].value.parse::<i8>().unwrap();
 
         let search_parameters = SearchParameters {
+            iir_min_depth: state_lock.options["iir_min_depth"].value.parse().unwrap(),
+            iir_reduction_base: state_lock.options["iir_reduction_base"].value.parse().unwrap(),
+            iir_reduction_step: state_lock.options["iir_reduction_step"].value.parse().unwrap(),
+            iir_max_reduction: state_lock.options["iir_max_reduction"].value.parse().unwrap(),
+
             razoring_min_depth: state_lock.options["razoring_min_depth"].value.parse().unwrap(),
             razoring_max_depth: state_lock.options["razoring_max_depth"].value.parse().unwrap(),
             razoring_depth_margin_base: state_lock.options["razoring_depth_margin_base"].value.parse().unwrap(),
