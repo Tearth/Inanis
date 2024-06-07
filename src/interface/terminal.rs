@@ -368,7 +368,7 @@ fn handle_evaluate(input: Vec<&str>) {
     let safety_evaluation = safety::evaluate(&board, dangered_white_king_squares, dangered_black_king_squares);
     let pawns_evaluation = pawns::evaluate_without_cache(&board);
 
-    println!("Material: {}", material_evaluation);
+    println!("Material: {}", material_evaluation.taper_score(game_phase, initial_game_phase));
     println!("Piece-square tables: {}", pst_evaluation.taper_score(game_phase, initial_game_phase));
     println!("Mobility: {}", mobility_evaluation.taper_score(game_phase, initial_game_phase));
     println!("Safety: {}", safety_evaluation.taper_score(game_phase, initial_game_phase));

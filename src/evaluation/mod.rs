@@ -11,8 +11,9 @@ pub mod safety;
 #[derive(Clone)]
 pub struct EvaluationParameters {
     pub piece_value: [i16; 6],
-    pub piece_phase_value: [u8; 6],
-    pub initial_game_phase: u8,
+
+    pub bishop_pair_opening: i16,
+    pub bishop_pair_ending: i16,
 
     pub mobility_inner_opening: [i16; 6],
     pub mobility_inner_ending: [i16; 6],
@@ -43,6 +44,9 @@ pub struct EvaluationParameters {
 
     pub pst: [[[[i16; 64]; 2]; 6]; 2],
     pub pst_patterns: [[[i16; 64]; 2]; 6],
+
+    pub piece_phase_value: [u8; 6],
+    pub initial_game_phase: u8,
 }
 
 pub struct EvaluationResult {

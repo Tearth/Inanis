@@ -359,6 +359,9 @@ fn load_values(context: &TunerContext, lock_material: bool, random_values: bool)
         parameters.push(TunerParameter::new(context.parameters.piece_value[KING], 10000, 10000, 10000, 10000));
     }
 
+    parameters.push(TunerParameter::new(context.parameters.bishop_pair_opening, -99, 10, 40, 99));
+    parameters.push(TunerParameter::new(context.parameters.bishop_pair_ending, -99, 10, 40, 99));
+
     parameters.push(TunerParameter::new(context.parameters.mobility_inner_opening[PAWN], 0, 3, 6, 99));
     parameters.push(TunerParameter::new(context.parameters.mobility_inner_opening[KNIGHT], 0, 3, 6, 99));
     parameters.push(TunerParameter::new(context.parameters.mobility_inner_opening[BISHOP], 0, 3, 6, 99));
@@ -455,6 +458,9 @@ fn save_values(context: &mut TunerContext, values: &mut [TunerParameter], lock_m
         save_values_to_i16_array_internal(values, &mut context.parameters.piece_value, &mut index);
     }
 
+    save_values_internal(values, &mut context.parameters.bishop_pair_opening, &mut index);
+    save_values_internal(values, &mut context.parameters.bishop_pair_ending, &mut index);
+
     save_values_to_i16_array_internal(values, &mut context.parameters.mobility_inner_opening, &mut index);
     save_values_to_i16_array_internal(values, &mut context.parameters.mobility_inner_ending, &mut index);
     save_values_to_i16_array_internal(values, &mut context.parameters.mobility_outer_opening, &mut index);
@@ -538,8 +544,9 @@ fn write_evaluation_parameters(context: &mut TunerContext, output_directory: &st
     output.push_str("    fn default() -> Self {\n");
     output.push_str("        let mut evaluation_parameters = Self {\n");
     output.push_str(get_array("piece_value", &context.parameters.piece_value).as_str());
-    output.push_str(get_array("piece_phase_value", &context.parameters.piece_phase_value).as_str());
-    output.push_str(get_parameter("initial_game_phase", context.parameters.initial_game_phase).as_str());
+    output.push('\n');
+    output.push_str(get_parameter("bishop_pair_opening", context.parameters.bishop_pair_opening).as_str());
+    output.push_str(get_parameter("bishop_pair_ending", context.parameters.bishop_pair_ending).as_str());
     output.push('\n');
     output.push_str(get_array("mobility_inner_opening", &context.parameters.mobility_inner_opening).as_str());
     output.push_str(get_array("mobility_inner_ending", &context.parameters.mobility_inner_ending).as_str());
@@ -570,6 +577,9 @@ fn write_evaluation_parameters(context: &mut TunerContext, output_directory: &st
     output.push('\n');
     output.push_str("            pst: [[[[0; 64]; 2]; 6]; 2],\n");
     output.push_str("            pst_patterns: [[[0; 64]; 2]; 6],\n");
+    output.push('\n');
+    output.push_str(get_array("piece_phase_value", &context.parameters.piece_phase_value).as_str());
+    output.push_str(get_parameter("initial_game_phase", context.parameters.initial_game_phase).as_str());
     output.push_str("        };\n");
     output.push('\n');
     output.push_str("        evaluation_parameters.set_default_pst_patterns();\n");
