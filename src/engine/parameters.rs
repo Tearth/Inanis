@@ -37,6 +37,9 @@ pub struct SearchParameters {
     pub lmr_pv_reduction_base: usize,
     pub lmr_pv_reduction_step: usize,
     pub lmr_pv_max_reduction: i8,
+
+    pub q_score_pruning_treshold: i16,
+    pub q_futility_pruning_margin: i16,
 }
 
 impl Default for SearchParameters {
@@ -79,6 +82,9 @@ impl Default for SearchParameters {
             lmr_pv_reduction_base: 1,
             lmr_pv_reduction_step: 8,
             lmr_pv_max_reduction: 2,
+
+            q_score_pruning_treshold: 0,
+            q_futility_pruning_margin: 100,
         }
     }
 }

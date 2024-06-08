@@ -152,6 +152,9 @@ pub fn run() {
     state_lock.options.insert("lmr_pv_reduction_step".to_string(), UciOption::new_wide(99, parameters.lmr_pv_reduction_step));
     state_lock.options.insert("lmr_pv_max_reduction".to_string(), UciOption::new_wide(99, parameters.lmr_pv_max_reduction));
 
+    state_lock.options.insert("q_score_pruning_treshold".to_string(), UciOption::new_wide(99, parameters.q_score_pruning_treshold));
+    state_lock.options.insert("q_futility_pruning_margin".to_string(), UciOption::new_wide(99, parameters.q_futility_pruning_margin));
+
     let mut options_sorted = state_lock.options.iter().collect::<Vec<_>>();
     options_sorted.sort_by_key(|(_, option)| option.order);
 
@@ -402,6 +405,9 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
             lmr_pv_reduction_base: state_lock.options["lmr_pv_reduction_base"].value.parse().unwrap(),
             lmr_pv_reduction_step: state_lock.options["lmr_pv_reduction_step"].value.parse().unwrap(),
             lmr_pv_max_reduction: state_lock.options["lmr_pv_max_reduction"].value.parse().unwrap(),
+
+            q_score_pruning_treshold: state_lock.options["q_score_pruning_treshold"].value.parse().unwrap(),
+            q_futility_pruning_margin: state_lock.options["q_futility_pruning_margin"].value.parse().unwrap(),
         };
 
         let mut context = SearchContext::new(
