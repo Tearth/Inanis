@@ -5,9 +5,7 @@ use crate::evaluation::pawns;
 use crate::evaluation::pst;
 use crate::evaluation::safety;
 use crate::perft;
-use crate::state::movegen::MagicContainer;
 use crate::state::representation::Board;
-use crate::state::*;
 use crate::testing::benchmark;
 use crate::utils::percent;
 use std::ffi::OsString;
@@ -23,6 +21,12 @@ use crate::tuning::tuner;
 
 #[cfg(feature = "dev")]
 use crate::tuning::tunerset;
+
+#[cfg(feature = "dev")]
+use crate::state::movegen::MagicContainer;
+
+#[cfg(feature = "dev")]
+use crate::state::*;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
