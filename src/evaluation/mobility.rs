@@ -85,6 +85,8 @@ fn get_mobility_data(board: &Board, color: usize, dangered_king_squares: &mut u3
     }
 }
 
+/// Gets coefficients of mobility on `board` and assigns indexes starting from `index`. Similarly to [evaluate], both `dangered_white_king_squares` and
+/// `dangered_black_king_squares` are accordingly updated.
 #[cfg(feature = "dev")]
 pub fn get_coefficients(board: &Board, dangered_white_king_squares: &mut u32, dangered_black_king_squares: &mut u32, index: &mut u16) -> Vec<TunerCoefficient> {
     let white_mobility_data = get_mobility_data(board, WHITE, dangered_black_king_squares);

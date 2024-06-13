@@ -151,7 +151,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
             }
 
             let material_evaluation = material::evaluate(&context.board);
-            if material_evaluation.abs() > max_score {
+            if material_evaluation.taper_score(context.board.game_phase, context.board.evaluation_parameters.initial_game_phase).abs() > max_score {
                 ignored_positions += 1;
                 continue;
             }

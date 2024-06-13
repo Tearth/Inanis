@@ -81,6 +81,7 @@ impl TunerParameter {
 }
 
 impl TunerCoefficient {
+    /// Constructs a new instance of [TunerCoefficient] with stored `value`, `phase` and `index`.
     pub fn new(value: i8, phase: usize, index: u16) -> Self {
         Self { value, phase: phase as u8, index }
     }
@@ -259,6 +260,7 @@ fn calculate_error(context: &mut TunerContext, scaling_constant: f32, threads_co
     sum_of_errors / (positions_count as f32)
 }
 
+/// Evaluates `position` based on `weights`.
 fn evaluate_position(position: &TunerPosition, weights: &[f32]) -> f32 {
     let mut opening_score = 0.0;
     let mut ending_score = 0.0;
@@ -280,6 +282,7 @@ fn evaluate_position(position: &TunerPosition, weights: &[f32]) -> f32 {
     (opening_score * position.phase) + (ending_score * (1.0 - position.phase))
 }
 
+/// Gets simplified sigmoid function.
 fn sigmoid(e: f32, k: f32) -> f32 {
     1.0 / (1.0 + (-k * e).exp())
 }

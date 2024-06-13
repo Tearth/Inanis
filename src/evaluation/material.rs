@@ -31,6 +31,7 @@ pub fn recalculate_incremental_values(board: &mut Board) {
     }
 }
 
+/// Gets coefficients of material on `board` and assigns indexes starting from `index`.
 #[cfg(feature = "dev")]
 pub fn get_coefficients(board: &Board, index: &mut u16) -> Vec<TunerCoefficient> {
     let mut coefficients = vec![

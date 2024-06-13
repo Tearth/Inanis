@@ -76,6 +76,7 @@ fn evaluate_color(board: &Board, color: usize) -> EvaluationResult {
     EvaluationResult::new(opening_score, ending_score)
 }
 
+/// Gets all pawn features on `board` for `color`.
 fn get_pawns_data(board: &Board, color: usize) -> PawnsData {
     let mut doubled_pawns = 0i8;
     let mut isolated_pawns = 0i8;
@@ -129,6 +130,7 @@ fn get_pawns_data(board: &Board, color: usize) -> PawnsData {
     PawnsData { doubled_pawns, isolated_pawns, chained_pawns, passed_pawns, pawn_shield, opened_files }
 }
 
+/// Gets coefficients of pawn structure on `board` and assigns indexes starting from `index`.
 #[cfg(feature = "dev")]
 pub fn get_coefficients(board: &Board, index: &mut u16) -> Vec<TunerCoefficient> {
     let white_pawns_data = get_pawns_data(board, WHITE);

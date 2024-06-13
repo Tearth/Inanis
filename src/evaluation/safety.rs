@@ -11,7 +11,7 @@ pub fn evaluate(board: &Board, dangered_white_king_squares: u32, dangered_black_
     evaluate_color(board, dangered_white_king_squares) - evaluate_color(board, dangered_black_king_squares)
 }
 
-/// Evaluates pawn structure on the `board` for the specified `color` and with `dangered_king_squares` count.
+/// Evaluates king safety on the `board` for the specified `color` and with `dangered_king_squares` count.
 fn evaluate_color(board: &Board, dangered_king_squares: u32) -> EvaluationResult {
     let index = (dangered_king_squares as usize).min(7);
     let opening_score = board.evaluation_parameters.king_attacked_squares_opening[index];

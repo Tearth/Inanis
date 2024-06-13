@@ -61,6 +61,7 @@ pub fn run<const DIAG: bool>(context: &mut SearchContext, depth: i8) {
 ///  - test if there's threefold repetition draw, fifty move rule draw or insufficient material draw
 ///  - switch to the quiescence search if the depth is equal to zero
 ///  - read from the transposition table, return score if possible or update alpha/beta (<https://www.chessprogramming.org/Transposition_Table>)
+///  - internal iterative reduction (<https://chessprogrammingwiki.netlify.app/internal_iterative_reductions/>)
 ///  - main loop:
 ///     - filter moves (if `ROOT` is set)
 ///     - late move reduction (<https://www.chessprogramming.org/Late_Move_Reductions>)
@@ -75,6 +76,7 @@ pub fn run<const DIAG: bool>(context: &mut SearchContext, depth: i8) {
 ///  - test if there's threefold repetition draw, fifty move rule draw or insufficient material draw
 ///  - switch to the quiescence search if the depth is equal to zero
 ///  - read from the transposition table, return score if possible or update alpha/beta (<https://www.chessprogramming.org/Transposition_Table>)
+///  - internal iterative reduction (<https://chessprogrammingwiki.netlify.app/internal_iterative_reductions/>)
 ///  - razoring (<https://www.chessprogramming.org/Razoring>)
 ///  - static null move pruning (<https://www.chessprogramming.org/Reverse_Futility_Pruning>)
 ///  - null move pruning (<https://www.chessprogramming.org/Null_Move_Pruning>)
@@ -711,10 +713,17 @@ fn get_next_move<const DIAG: bool>(
     }
 }
 
+/// The main idea of the internal iterative reduction is that nodes without hash moves are potentially less important, so we
+/// try to save time here by reducing depth a little bit. This is not always true, but some inaccuracies should be recompensated by deeper search.
+///
+/// Conditions:
+///  - depth >= context.parameters.iir_min_depth
+///  - hash move does not exists
 fn iir_can_be_applied(context: &mut SearchContext, depth: i8, hash_move: Move) -> bool {
     depth >= context.parameters.iir_min_depth && hash_move == Move::default()
 }
 
+/// Gets the internal iterative depth reduction, called R, based on `depth`. The further from the horizon we are, the more reduction will be applied.
 fn iir_get_r(context: &mut SearchContext, depth: i8) -> i8 {
     (context.parameters.iir_reduction_base + (depth - context.parameters.iir_min_depth) / context.parameters.iir_reduction_step)
         .min(context.parameters.iir_max_reduction)

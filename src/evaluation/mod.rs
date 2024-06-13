@@ -106,6 +106,7 @@ impl EvaluationParameters {
 }
 
 impl EvaluationResult {
+    /// Constructs a new instance of [EvaluationResult] with stored `opening_score` and `ending_score`.
     pub fn new(opening_score: i16, ending_score: i16) -> EvaluationResult {
         EvaluationResult { opening_score, ending_score }
     }
