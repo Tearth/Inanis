@@ -1,3 +1,20 @@
+# Version 1.3.0 (..-..-....)
+ - Added search parameters as UCI options (only if the dev feature is present)
+ - Added gradient descent tuner in place of local search
+ - Added internal iterative reduction
+ - Added bishop pair evaluation
+ - Removed "avg_game_phase" in "tunerset" command
+ - Removed "magic", "testset", "tuner" and "tunerset" commands from the release builds
+ - Improved king safety evaluation
+ - Improved quality of tunerset output
+ - Improved search parameters
+ - Improved pawn structure evaluation
+ - Improved mobility evaluation by excluding squares attacked by enemy pawns
+ - Fixed invalid position score when both kings are checked
+ - Fixed incorrect SEE results for sliding pieces 
+
+**Strength**: 2900 Elo
+
 # Version 1.2.1 (04-09-2023)
  - Added executing commands directly from a command line
  - Added perft in UCI mode (go perft)

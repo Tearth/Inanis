@@ -8,6 +8,7 @@ UCI chess engine written in Rust, the successor of [Proxima b](https://github.co
 ## Releases
 | Version                                                       | Release date | Elo  | Main changes |
 |---------------------------------------------------------------|--------------|------|--------------|
+| [1.3.0](https://github.com/Tearth/Inanis/releases/tag/v1.3.0) | ..-..-....   | 2900 | Gradient descent tuner, improved SEE and evaluation |
 | [1.2.1](https://github.com/Tearth/Inanis/releases/tag/v1.2.1) | 04-09-2023   | 2850 | Commands executed directly from a command line, perft in UCI mode |
 | [1.2.0](https://github.com/Tearth/Inanis/releases/tag/v1.2.0) | 15-01-2023   | 2850 | Improved Syzygy support, general performance and stability improvement |
 | [1.1.1](https://github.com/Tearth/Inanis/releases/tag/v1.1.1) | 14-08-2022   | 2800 | A bunch of fixes for reported issues, stability improvement |
@@ -103,16 +104,16 @@ Because Inanis is a pet project, pull requests are not currently accepted - this
 
 ## Commands
 
-All commands listed below can be executed both in interactive mode and directly from a command line, on example `inanis.exe perft 5`. 
+All commands listed below can be executed both in interactive mode and directly from a command line, on example `inanis.exe perft 5`. Entries marked by [DEV] are available only when the engine is compiled with `dev` feature.
 
 ```
 === General ===
  benchmark - run test for a set of positions
  evaluate [fen] - show score for the position
- magic - generate magic numbers
- testset [epd] [depth] [transposition_table_size] [threads_count] - run test of positions
- tuner [epd] [output] [lock_material] [randomize] [threads_count] - run tuning
- tunerset [pgn] [output] [min_ply] [max_score] [max_diff] [density] [avg_game_phase] - dataset generator
+ [DEV] magic - generate magic numbers
+ [DEV] testset [epd] [depth] [transposition_table_size] [threads_count] - run test of positions
+ [DEV] tuner [epd] [output] [lock_material] [randomize] [threads_count] - run tuning
+ [DEV] tunerset [pgn] [output] [min_ply] [max_score] [max_diff] [density] - dataset generator
  uci - run Universal Chess Interface
  quit - close the application
 
