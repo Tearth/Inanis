@@ -1,4 +1,4 @@
-# Version 1.3.0 (..-..-....)
+# Version 1.3.0 (14-06-2024)
  - Added search parameters as UCI options (only if the dev feature is present)
  - Added gradient descent tuner in place of local search
  - Added internal iterative reduction

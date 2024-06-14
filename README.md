@@ -8,7 +8,7 @@ UCI chess engine written in Rust, the successor of [Proxima b](https://github.co
 ## Releases
 | Version                                                       | Release date | Elo  | Main changes |
 |---------------------------------------------------------------|--------------|------|--------------|
-| [1.3.0](https://github.com/Tearth/Inanis/releases/tag/v1.3.0) | ..-..-....   | 2900 | Gradient descent tuner, improved SEE and evaluation |
+| [1.3.0](https://github.com/Tearth/Inanis/releases/tag/v1.3.0) | 14-06-2024   | 2900 | Gradient descent tuner, improved SEE and evaluation |
 | [1.2.1](https://github.com/Tearth/Inanis/releases/tag/v1.2.1) | 04-09-2023   | 2850 | Commands executed directly from a command line, perft in UCI mode |
 | [1.2.0](https://github.com/Tearth/Inanis/releases/tag/v1.2.0) | 15-01-2023   | 2850 | Improved Syzygy support, general performance and stability improvement |
 | [1.1.1](https://github.com/Tearth/Inanis/releases/tag/v1.1.1) | 14-08-2022   | 2800 | A bunch of fixes for reported issues, stability improvement |
