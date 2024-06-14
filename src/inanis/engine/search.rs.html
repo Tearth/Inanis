@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/engine/search.rs`."><title>search.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9bb858ba049f1f21.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="inanis" data-themes="" data-resource-suffix="" data-rustdoc-version="1.72.0 (5680fa18f 2023-08-23)" data-channel="1.72.0" data-search-js="search-f6292fe389d70017.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ><script src="../../../static.files/storage-59fd9b8ccb335783.js"></script><script defer src="../../../static.files/source-script-106908c7a7964ba4.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../inanis/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/engine/search.rs`."><title>search.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="inanis" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.2 (25ef9e3d8 2024-04-09)" data-channel="1.77.2" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../inanis/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -858,9 +860,6 @@
 <a href="#858" id="858">858</a>
 <a href="#859" id="859">859</a>
 <a href="#860" id="860">860</a>
-<a href="#861" id="861">861</a>
-<a href="#862" id="862">862</a>
-<a href="#863" id="863">863</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::context::SearchContext;
 <span class="kw">use </span><span class="kw">super</span>::context::SearchResultLine;
 <span class="kw">use </span><span class="kw">super</span>::qsearch;
@@ -875,39 +874,6 @@
 <span class="kw">use </span>std::cmp;
 <span class="kw">use </span>std::mem::MaybeUninit;
 <span class="kw">use </span>std::sync::atomic::Ordering;
-
-<span class="kw">pub const </span>RAZORING_MIN_DEPTH: i8 = <span class="number">1</span>;
-<span class="kw">pub const </span>RAZORING_MAX_DEPTH: i8 = <span class="number">4</span>;
-<span class="kw">pub const </span>RAZORING_DEPTH_MARGIN_BASE: i16 = <span class="number">300</span>;
-<span class="kw">pub const </span>RAZORING_DEPTH_MARGIN_MULTIPLIER: i16 = <span class="number">300</span>;
-
-<span class="kw">pub const </span>STATIC_NULL_MOVE_PRUNING_MIN_DEPTH: i8 = <span class="number">1</span>;
-<span class="kw">pub const </span>STATIC_NULL_MOVE_PRUNING_MAX_DEPTH: i8 = <span class="number">8</span>;
-<span class="kw">pub const </span>STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_BASE: i16 = <span class="number">150</span>;
-<span class="kw">pub const </span>STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_MULTIPLIER: i16 = <span class="number">150</span>;
-
-<span class="kw">pub const </span>NULL_MOVE_PRUNING_MIN_DEPTH: i8 = <span class="number">2</span>;
-<span class="kw">pub const </span>NULL_MOVE_PRUNING_MIN_GAME_PHASE: u8 = <span class="number">3</span>;
-<span class="kw">pub const </span>NULL_MOVE_PRUNING_MARGIN: i16 = <span class="number">50</span>;
-<span class="kw">pub const </span>NULL_MOVE_PRUNING_DEPTH_BASE: i8 = <span class="number">2</span>;
-<span class="kw">pub const </span>NULL_MOVE_PRUNING_DEPTH_DIVIDER: i8 = <span class="number">5</span>;
-
-<span class="kw">pub const </span>LATE_MOVE_PRUNING_MIN_DEPTH: i8 = <span class="number">1</span>;
-<span class="kw">pub const </span>LATE_MOVE_PRUNING_MAX_DEPTH: i8 = <span class="number">4</span>;
-<span class="kw">pub const </span>LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_BASE: usize = <span class="number">2</span>;
-<span class="kw">pub const </span>LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_MULTIPLIER: usize = <span class="number">4</span>;
-<span class="kw">pub const </span>LATE_MOVE_PRUNING_MAX_SCORE: i16 = <span class="number">0</span>;
-
-<span class="kw">pub const </span>LATE_MOVE_REDUCTION_MIN_DEPTH: i8 = <span class="number">2</span>;
-<span class="kw">pub const </span>LATE_MOVE_REDUCTION_MAX_SCORE: i16 = <span class="number">90</span>;
-<span class="kw">pub const </span>LATE_MOVE_REDUCTION_MIN_MOVE_INDEX: usize = <span class="number">2</span>;
-<span class="kw">pub const </span>LATE_MOVE_REDUCTION_REDUCTION_BASE: usize = <span class="number">1</span>;
-<span class="kw">pub const </span>LATE_MOVE_REDUCTION_REDUCTION_STEP: usize = <span class="number">4</span>;
-<span class="kw">pub const </span>LATE_MOVE_REDUCTION_MAX_REDUCTION: i8 = <span class="number">3</span>;
-<span class="kw">pub const </span>LATE_MOVE_REDUCTION_PV_MIN_MOVE_INDEX: usize = <span class="number">2</span>;
-<span class="kw">pub const </span>LATE_MOVE_REDUCTION_PV_REDUCTION_BASE: usize = <span class="number">1</span>;
-<span class="kw">pub const </span>LATE_MOVE_REDUCTION_PV_REDUCTION_STEP: usize = <span class="number">8</span>;
-<span class="kw">pub const </span>LATE_MOVE_REDUCTION_PV_MAX_REDUCTION: i8 = <span class="number">2</span>;
 
 <span class="kw">pub const </span>MOVE_ORDERING_HASH_MOVE: i16 = <span class="number">10000</span>;
 <span class="kw">pub const </span>MOVE_ORDERING_WINNING_CAPTURES_OFFSET: i16 = <span class="number">100</span>;
@@ -945,18 +911,19 @@
 <span class="doccomment">/// Entry point of the regular search, with generic `ROOT` parameter indicating if this is the root node where the moves filterigh might happen, and `PV` parameter
 /// determining if the current node is a PV (principal variation) node in the PVS framework. The implementation contains a typical alpha-beta approach, together with
 /// a bunch of reductions and prunings to optimize search. The most important parameter here, `context`, contains the current state of the search, board state,
-/// statistics, and is passed by reference to all nodes. Besides obvious parameters like `depth`, `ply`, `alpha` and `beta`, there&#39;s also `allow_null_move`
-/// which prevents two null move checks in a row, and `friendly_king_checked` which is used to share friendly king check status between nodes (it&#39;s always
-/// calculated one depth earlier, as it&#39;s used as one of the LMR constraints). If `DIAG` is set to true, additional statistics will be gathered (with a small
+/// statistics, and is passed by reference to all nodes. Besides obvious parameters like `depth`, `ply`, `alpha` and `beta`, there's also `allow_null_move`
+/// which prevents two null move checks in a row, and `friendly_king_checked` which is used to share friendly king check status between nodes (it's always
+/// calculated one depth earlier, as it's used as one of the LMR constraints). If `DIAG` is set to true, additional statistics will be gathered (with a small
 /// performance penalty).
 ///
 /// Search steps for PV node:
 ///  - test of abort flag
 ///  - test of initial constraints: abort flag, forced depth
 ///  - test if the enemy king is checked
-///  - test if there&#39;s threefold repetition draw, fifty move rule draw or insufficient material draw
+///  - test if there's threefold repetition draw, fifty move rule draw or insufficient material draw
 ///  - switch to the quiescence search if the depth is equal to zero
 ///  - read from the transposition table, return score if possible or update alpha/beta (&lt;https://www.chessprogramming.org/Transposition_Table&gt;)
+///  - internal iterative reduction (&lt;https://chessprogrammingwiki.netlify.app/internal_iterative_reductions/&gt;)
 ///  - main loop:
 ///     - filter moves (if `ROOT` is set)
 ///     - late move reduction (&lt;https://www.chessprogramming.org/Late_Move_Reductions&gt;)
@@ -968,9 +935,10 @@
 ///  - test of abort flag
 ///  - test of initial constraints: abort flag, forced depth, max nodes count
 ///  - test if the enemy king is checked
-///  - test if there&#39;s threefold repetition draw, fifty move rule draw or insufficient material draw
+///  - test if there's threefold repetition draw, fifty move rule draw or insufficient material draw
 ///  - switch to the quiescence search if the depth is equal to zero
 ///  - read from the transposition table, return score if possible or update alpha/beta (&lt;https://www.chessprogramming.org/Transposition_Table&gt;)
+///  - internal iterative reduction (&lt;https://chessprogrammingwiki.netlify.app/internal_iterative_reductions/&gt;)
 ///  - razoring (&lt;https://www.chessprogramming.org/Razoring&gt;)
 ///  - static null move pruning (&lt;https://www.chessprogramming.org/Reverse_Futility_Pruning&gt;)
 ///  - null move pruning (&lt;https://www.chessprogramming.org/Null_Move_Pruning&gt;)
@@ -983,7 +951,7 @@
 ///  - update transposition table
 </span><span class="kw">fn </span>run_internal&lt;<span class="kw">const </span>ROOT: bool, <span class="kw">const </span>PV: bool, <span class="kw">const </span>DIAG: bool&gt;(
     context: <span class="kw-2">&amp;mut </span>SearchContext,
-    depth: i8,
+    <span class="kw-2">mut </span>depth: i8,
     ply: u16,
     <span class="kw-2">mut </span>alpha: i16,
     <span class="kw-2">mut </span>beta: i16,
@@ -1012,7 +980,13 @@
 
     <span class="kw">if </span>context.board.is_king_checked(context.board.active_color ^ <span class="number">1</span>) {
         <span class="macro">conditional_expression!</span>(DIAG, context.statistics.leafs_count += <span class="number">1</span>);
-        <span class="kw">return </span>CHECKMATE_SCORE - (ply <span class="kw">as </span>i16);
+
+        <span class="comment">// The position where both kings are checked is illegal, it will be filtered after returning invalid score
+        </span><span class="kw">if </span>friendly_king_checked {
+            <span class="kw">return </span>INVALID_SCORE;
+        } <span class="kw">else </span>{
+            <span class="kw">return </span>CHECKMATE_SCORE - (ply <span class="kw">as </span>i16);
+        }
     }
 
     <span class="kw">if </span>context.board.is_repetition_draw(<span class="kw">if </span>ROOT { <span class="number">3 </span>} <span class="kw">else </span>{ <span class="number">2 </span>}) || context.board.is_fifty_move_rule_draw() || context.board.is_insufficient_material_draw() {
@@ -1095,10 +1069,14 @@
         }
     };
 
+    <span class="kw">if </span>iir_can_be_applied(context, depth, hash_move) {
+        depth -= iir_get_r(context, depth);
+    }
+
     <span class="kw">let </span><span class="kw-2">mut </span>lazy_evaluation = <span class="prelude-val">None</span>;
 
-    <span class="kw">if </span>razoring_can_be_applied::&lt;PV&gt;(depth, alpha, friendly_king_checked) {
-        <span class="kw">let </span>margin = razoring_get_margin(depth);
+    <span class="kw">if </span>razoring_can_be_applied::&lt;PV&gt;(context, depth, alpha, friendly_king_checked) {
+        <span class="kw">let </span>margin = razoring_get_margin(context, depth);
         <span class="kw">let </span>lazy_evaluation_value = <span class="kw">match </span>lazy_evaluation {
             <span class="prelude-val">Some</span>(value) =&gt; value,
             <span class="prelude-val">None </span>=&gt; context.board.evaluate_lazy(context.board.active_color),
@@ -1119,35 +1097,35 @@
         lazy_evaluation = <span class="prelude-val">Some</span>(lazy_evaluation_value);
     }
 
-    <span class="kw">if </span>static_null_move_pruning_can_be_applied::&lt;PV&gt;(depth, beta, friendly_king_checked) {
-        <span class="kw">let </span>margin = static_null_move_pruning_get_margin(depth);
+    <span class="kw">if </span>snmp_can_be_applied::&lt;PV&gt;(context, depth, beta, friendly_king_checked) {
+        <span class="kw">let </span>margin = snmp_get_margin(context, depth);
         <span class="kw">let </span>lazy_evaluation_value = <span class="kw">match </span>lazy_evaluation {
             <span class="prelude-val">Some</span>(value) =&gt; value,
             <span class="prelude-val">None </span>=&gt; context.board.evaluate_lazy(context.board.active_color),
         };
 
-        <span class="macro">conditional_expression!</span>(DIAG, context.statistics.static_null_move_pruning_attempts += <span class="number">1</span>);
+        <span class="macro">conditional_expression!</span>(DIAG, context.statistics.snmp_attempts += <span class="number">1</span>);
         <span class="kw">if </span>lazy_evaluation_value - margin &gt;= beta {
             <span class="macro">conditional_expression!</span>(DIAG, context.statistics.leafs_count += <span class="number">1</span>);
-            <span class="macro">conditional_expression!</span>(DIAG, context.statistics.static_null_move_pruning_accepted += <span class="number">1</span>);
+            <span class="macro">conditional_expression!</span>(DIAG, context.statistics.snmp_accepted += <span class="number">1</span>);
             <span class="kw">return </span>lazy_evaluation_value - margin;
         } <span class="kw">else </span>{
-            <span class="macro">conditional_expression!</span>(DIAG, context.statistics.static_null_move_pruning_rejected += <span class="number">1</span>);
+            <span class="macro">conditional_expression!</span>(DIAG, context.statistics.snmp_rejected += <span class="number">1</span>);
         }
 
         lazy_evaluation = <span class="prelude-val">Some</span>(lazy_evaluation_value);
     }
 
-    <span class="kw">if </span>null_move_pruning_can_be_applied::&lt;PV&gt;(context, depth, beta, allow_null_move, friendly_king_checked) {
-        <span class="kw">let </span>margin = NULL_MOVE_PRUNING_MARGIN;
+    <span class="kw">if </span>nmp_can_be_applied::&lt;PV&gt;(context, depth, beta, allow_null_move, friendly_king_checked) {
+        <span class="kw">let </span>margin = context.parameters.nmp_margin;
         <span class="kw">let </span>lazy_evaluation_value = <span class="kw">match </span>lazy_evaluation {
             <span class="prelude-val">Some</span>(value) =&gt; value,
             <span class="prelude-val">None </span>=&gt; context.board.evaluate_lazy(context.board.active_color),
         };
 
-        <span class="macro">conditional_expression!</span>(DIAG, context.statistics.null_move_pruning_attempts += <span class="number">1</span>);
+        <span class="macro">conditional_expression!</span>(DIAG, context.statistics.nmp_attempts += <span class="number">1</span>);
         <span class="kw">if </span>lazy_evaluation_value + margin &gt;= beta {
-            <span class="kw">let </span>r = null_move_pruning_get_r(depth);
+            <span class="kw">let </span>r = nmp_get_r(context, depth);
 
             context.board.make_null_move();
             <span class="kw">let </span>score = -run_internal::&lt;<span class="bool-val">false</span>, <span class="bool-val">false</span>, DIAG&gt;(context, depth - r - <span class="number">1</span>, ply + <span class="number">1</span>, -beta, -beta + <span class="number">1</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>);
@@ -1155,10 +1133,10 @@
 
             <span class="kw">if </span>score &gt;= beta {
                 <span class="macro">conditional_expression!</span>(DIAG, context.statistics.leafs_count += <span class="number">1</span>);
-                <span class="macro">conditional_expression!</span>(DIAG, context.statistics.null_move_pruning_accepted += <span class="number">1</span>);
+                <span class="macro">conditional_expression!</span>(DIAG, context.statistics.nmp_accepted += <span class="number">1</span>);
                 <span class="kw">return </span>score;
             } <span class="kw">else </span>{
-                <span class="macro">conditional_expression!</span>(DIAG, context.statistics.null_move_pruning_rejected += <span class="number">1</span>);
+                <span class="macro">conditional_expression!</span>(DIAG, context.statistics.nmp_rejected += <span class="number">1</span>);
             }
         }
 
@@ -1193,18 +1171,18 @@
             <span class="kw">continue</span>;
         }
 
-        <span class="kw">if </span>late_move_pruning_can_be_applied::&lt;PV&gt;(depth, move_number, score, friendly_king_checked) {
-            <span class="macro">conditional_expression!</span>(DIAG, context.statistics.late_move_pruning_accepted += <span class="number">1</span>);
+        <span class="kw">if </span>lmp_can_be_applied::&lt;PV&gt;(context, depth, move_number, score, friendly_king_checked) {
+            <span class="macro">conditional_expression!</span>(DIAG, context.statistics.lmp_accepted += <span class="number">1</span>);
             <span class="kw">break</span>;
         } <span class="kw">else </span>{
-            <span class="macro">conditional_expression!</span>(DIAG, context.statistics.late_move_pruning_rejected += <span class="number">1</span>);
+            <span class="macro">conditional_expression!</span>(DIAG, context.statistics.lmp_rejected += <span class="number">1</span>);
         }
 
         context.board.make_move(r#move);
 
         <span class="kw">let </span>king_checked = context.board.is_king_checked(context.board.active_color);
-        <span class="kw">let </span>r = <span class="kw">if </span>late_move_reduction_can_be_applied(depth, r#move, move_number, score, friendly_king_checked, king_checked) {
-            late_move_reduction_get_r::&lt;PV&gt;(move_number)
+        <span class="kw">let </span>r = <span class="kw">if </span>lmr_can_be_applied::&lt;PV&gt;(context, depth, r#move, move_number, score, friendly_king_checked, king_checked) {
+            lmr_get_r::&lt;PV&gt;(context, move_number)
         } <span class="kw">else </span>{
             <span class="number">0
         </span>};
@@ -1217,7 +1195,7 @@
                 <span class="kw">let </span>zero_window_score = -run_internal::&lt;<span class="bool-val">false</span>, <span class="bool-val">false</span>, DIAG&gt;(context, depth - r - <span class="number">1</span>, ply + <span class="number">1</span>, -alpha - <span class="number">1</span>, -alpha, <span class="bool-val">true</span>, king_checked);
                 <span class="macro">conditional_expression!</span>(DIAG, context.statistics.pvs_zero_window_searches += <span class="number">1</span>);
 
-                <span class="kw">if </span>zero_window_score &gt; alpha &amp;&amp; (alpha != beta - <span class="number">1 </span>|| r &gt; <span class="number">0</span>) {
+                <span class="kw">if </span>zero_window_score &gt; alpha &amp;&amp; (alpha != beta - <span class="number">1 </span>|| r &gt; <span class="number">0</span>) &amp;&amp; zero_window_score != -INVALID_SCORE {
                     <span class="macro">conditional_expression!</span>(DIAG, context.statistics.pvs_rejected_searches += <span class="number">1</span>);
                     -run_internal::&lt;<span class="bool-val">false</span>, <span class="bool-val">true</span>, DIAG&gt;(context, depth - <span class="number">1</span>, ply + <span class="number">1</span>, -beta, -alpha, <span class="bool-val">true</span>, king_checked)
                 } <span class="kw">else </span>{
@@ -1228,7 +1206,7 @@
             <span class="kw">let </span>zero_window_score = -run_internal::&lt;<span class="bool-val">false</span>, <span class="bool-val">false</span>, DIAG&gt;(context, depth - r - <span class="number">1</span>, ply + <span class="number">1</span>, -beta, -alpha, <span class="bool-val">true</span>, king_checked);
             <span class="macro">conditional_expression!</span>(DIAG, context.statistics.pvs_zero_window_searches += <span class="number">1</span>);
 
-            <span class="kw">if </span>zero_window_score &gt; alpha &amp;&amp; r &gt; <span class="number">0 </span>{
+            <span class="kw">if </span>zero_window_score &gt; alpha &amp;&amp; r &gt; <span class="number">0 </span>&amp;&amp; zero_window_score != -INVALID_SCORE {
                 <span class="macro">conditional_expression!</span>(DIAG, context.statistics.pvs_rejected_searches += <span class="number">1</span>);
                 -run_internal::&lt;<span class="bool-val">false</span>, <span class="bool-val">false</span>, DIAG&gt;(context, depth - <span class="number">1</span>, ply + <span class="number">1</span>, -beta, -alpha, <span class="bool-val">true</span>, king_checked)
             } <span class="kw">else </span>{
@@ -1237,6 +1215,10 @@
         };
 
         context.board.undo_move(r#move);
+
+        <span class="kw">if </span>score == -INVALID_SCORE {
+            <span class="kw">continue</span>;
+        }
 
         <span class="kw">if </span>score &gt; best_score {
             best_score = cmp::max(best_score, score);
@@ -1275,7 +1257,7 @@
         }
     }
 
-    <span class="comment">// When no legal move is possible, but king is not checked, it&#39;s a stalemate
+    <span class="comment">// When no legal move is possible, but king is not checked, it's a stalemate
     </span><span class="kw">if </span>best_score == -CHECKMATE_SCORE + (ply <span class="kw">as </span>i16) + <span class="number">1 </span>&amp;&amp; !friendly_king_checked {
         <span class="kw">return </span>DRAW_SCORE;
     }
@@ -1302,7 +1284,7 @@
 }
 
 <span class="doccomment">/// Assigns capture scores for `moves` by filling `move_scores` array with `moves_count` length (starting from `start_index`), based on current `context`.
-/// If transposition table move is available, it&#39;s passed as `tt_move` too. Moves are prioritized as follows (from most important to the less ones):
+/// If transposition table move is available, it's passed as `tt_move` too. Moves are prioritized as follows (from most important to the less ones):
 ///  - for transposition table move, assign [MOVE_ORDERING_HASH_MOVE]
 ///  - for every positive capture, assign SEE score + [MOVE_ORDERING_WINNING_CAPTURES_OFFSET]
 ///  - for every negative capture, assign SEE score + [MOVE_ORDERING_LOSING_CAPTURES_OFFSET]
@@ -1354,13 +1336,13 @@
 }
 
 <span class="doccomment">/// Assigns quiet scores for `moves` by filling `move_scores` array with `moves_count` length (starting from `start_index`), based on current `context`.
-/// If transposition table move is available, it&#39;s passed as `tt_move` too. Moves are prioritized as follows (from most important to the less ones):
+/// If transposition table move is available, it's passed as `tt_move` too. Moves are prioritized as follows (from most important to the less ones):
 ///  - for transposition table move, assign [MOVE_ORDERING_HASH_MOVE]
 ///  - for every promotion (excluding these with capture), assign [MOVE_ORDERING_QUEEN_PROMOTION], [MOVE_ORDERING_ROOK_PROMOTION],
 ///    [MOVE_ORDERING_BISHOP_PROMOTION] or [MOVE_ORDERING_KNIGHT_PROMOTION]
 ///  - for every move found in killer table, assign [MOVE_ORDERING_KILLER_MOVE_1] or [MOVE_ORDERING_KILLER_MOVE_2]
 ///  - for every castling, assign [MOVE_ORDERING_CASTLING]
-///  - for every quiet move which didn&#39;t fit in other categories, assign score from history table + [MOVE_ORDERING_HISTORY_MOVE_OFFSET] + random noise
+///  - for every quiet move which didn't fit in other categories, assign score from history table + [MOVE_ORDERING_HISTORY_MOVE_OFFSET] + random noise
 ///    defined by [LAZY_SMP_NOISE] if Lazy SMP is enabled
 </span><span class="kw">fn </span>assign_quiet_scores(
     context: <span class="kw-2">&amp;</span>SearchContext,
@@ -1407,7 +1389,7 @@
                 ROOK =&gt; MOVE_ORDERING_ROOK_PROMOTION,
                 BISHOP =&gt; MOVE_ORDERING_BISHOP_PROMOTION,
                 KNIGHT =&gt; MOVE_ORDERING_KNIGHT_PROMOTION,
-                <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: fen={}, r#move.data={}&quot;</span>, context.board, r#move.data),
+                <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">"Invalid value: fen={}, r#move.data={}"</span>, context.board, r#move.data),
             });
 
             <span class="kw">continue</span>;
@@ -1416,7 +1398,7 @@
             <span class="kw">continue</span>;
         }
 
-        <span class="macro">panic!</span>(<span class="string">&quot;Sorting rule missing: fen={}, r#move.data={}&quot;</span>, context.board, r#move.data);
+        <span class="macro">panic!</span>(<span class="string">"Sorting rule missing: fen={}, r#move.data={}"</span>, context.board, r#move.data);
     }
 }
 
@@ -1593,23 +1575,43 @@
     }
 }
 
+<span class="doccomment">/// The main idea of the internal iterative reduction is that nodes without hash moves are potentially less important, so we
+/// try to save time here by reducing depth a little bit. This is not always true, but some inaccuracies should be recompensated by deeper search.
+///
+/// Conditions:
+///  - depth &gt;= context.parameters.iir_min_depth
+///  - hash move does not exists
+</span><span class="kw">fn </span>iir_can_be_applied(context: <span class="kw-2">&amp;mut </span>SearchContext, depth: i8, hash_move: Move) -&gt; bool {
+    depth &gt;= context.parameters.iir_min_depth &amp;&amp; hash_move == Move::default()
+}
+
+<span class="doccomment">/// Gets the internal iterative depth reduction, called R, based on `depth`. The further from the horizon we are, the more reduction will be applied.
+</span><span class="kw">fn </span>iir_get_r(context: <span class="kw-2">&amp;mut </span>SearchContext, depth: i8) -&gt; i8 {
+    (context.parameters.iir_reduction_base + (depth - context.parameters.iir_min_depth) / context.parameters.iir_reduction_step)
+        .min(context.parameters.iir_max_reduction)
+}
+
 <span class="doccomment">/// The main idea of the razoring is to detect and prune all nodes, which (based on lazy evaluation) are hopeless compared to the current alpha and
-/// the chance to improve the score is too small to spend time here. To make it more safe and not to skip positions where we&#39;re somewhere in the
-/// middle of capture sequence, there&#39;s the quiescence search performed to verify if the final score is still below alpha - margin.
+/// the chance to improve the score is too small to spend time here. To make it more safe and not to skip positions where we're somewhere in the
+/// middle of capture sequence, there's the quiescence search performed to verify if the final score is still below alpha - margin.
 ///
 /// Conditions:
 ///  - only non-PV nodes
-///  - depth &gt;= [RAZORING_MIN_DEPTH]
-///  - depth &lt;= [RAZORING_MAX_DEPTH]
+///  - depth &gt;= [razoring_min_depth]
+///  - depth &lt;= [razoring_max_depth]
 ///  - alpha is not a mate score
 ///  - friendly king is not checked
-</span><span class="kw">fn </span>razoring_can_be_applied&lt;<span class="kw">const </span>PV: bool&gt;(depth: i8, alpha: i16, friendly_king_checked: bool) -&gt; bool {
-    !PV &amp;&amp; depth &gt;= RAZORING_MIN_DEPTH &amp;&amp; depth &lt;= RAZORING_MAX_DEPTH &amp;&amp; !is_score_near_checkmate(alpha) &amp;&amp; !friendly_king_checked
+</span><span class="kw">fn </span>razoring_can_be_applied&lt;<span class="kw">const </span>PV: bool&gt;(context: <span class="kw-2">&amp;mut </span>SearchContext, depth: i8, alpha: i16, friendly_king_checked: bool) -&gt; bool {
+    !PV &amp;&amp; depth &gt;= context.parameters.razoring_min_depth
+        &amp;&amp; depth &lt;= context.parameters.razoring_max_depth
+        &amp;&amp; !is_score_near_checkmate(alpha)
+        &amp;&amp; !friendly_king_checked
 }
 
 <span class="doccomment">/// Gets the razoring margin, based on `depth`. The further from the horizon we are, the more margin we should take to determine if node can be pruned.
-</span><span class="kw">fn </span>razoring_get_margin(depth: i8) -&gt; i16 {
-    RAZORING_DEPTH_MARGIN_BASE + ((depth - RAZORING_MIN_DEPTH) <span class="kw">as </span>i16) * RAZORING_DEPTH_MARGIN_MULTIPLIER
+</span><span class="kw">fn </span>razoring_get_margin(context: <span class="kw-2">&amp;mut </span>SearchContext, depth: i8) -&gt; i16 {
+    context.parameters.razoring_depth_margin_base
+        + ((depth - context.parameters.razoring_min_depth) <span class="kw">as </span>i16) * context.parameters.razoring_depth_margin_multiplier
 }
 
 <span class="doccomment">/// The main idea of the static null move pruning (also called as reverse futility pruning) is to prune all nodes, which (based on lazy evaluation) are too
@@ -1618,83 +1620,75 @@
 ///
 /// Conditions:
 ///  - only non-PV nodes
-///  - depth &gt;= [STATIC_NULL_MOVE_PRUNING_MIN_DEPTH]
-///  - depth &lt;= [STATIC_NULL_MOVE_PRUNING_MAX_DEPTH]
+///  - depth &gt;= [snmp_min_depth]
+///  - depth &lt;= [snmp_max_depth]
 ///  - beta is not a mate score
 ///  - friendly king is not checked
-</span><span class="kw">fn </span>static_null_move_pruning_can_be_applied&lt;<span class="kw">const </span>PV: bool&gt;(depth: i8, beta: i16, friendly_king_checked: bool) -&gt; bool {
-    !PV &amp;&amp; depth &gt;= STATIC_NULL_MOVE_PRUNING_MIN_DEPTH
-        &amp;&amp; depth &lt;= STATIC_NULL_MOVE_PRUNING_MAX_DEPTH
-        &amp;&amp; !is_score_near_checkmate(beta)
-        &amp;&amp; !friendly_king_checked
+</span><span class="kw">fn </span>snmp_can_be_applied&lt;<span class="kw">const </span>PV: bool&gt;(context: <span class="kw-2">&amp;mut </span>SearchContext, depth: i8, beta: i16, friendly_king_checked: bool) -&gt; bool {
+    !PV &amp;&amp; depth &gt;= context.parameters.snmp_min_depth &amp;&amp; depth &lt;= context.parameters.snmp_max_depth &amp;&amp; !is_score_near_checkmate(beta) &amp;&amp; !friendly_king_checked
 }
 
 <span class="doccomment">/// Gets the static null move pruning margin, based on `depth`. The further from the horizon we are, the more margin should we take to determine
 /// if node can be pruned.
-</span><span class="kw">fn </span>static_null_move_pruning_get_margin(depth: i8) -&gt; i16 {
-    STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_BASE + ((depth - STATIC_NULL_MOVE_PRUNING_MIN_DEPTH) <span class="kw">as </span>i16) * STATIC_NULL_MOVE_PRUNING_DEPTH_MARGIN_MULTIPLIER
+</span><span class="kw">fn </span>snmp_get_margin(context: <span class="kw-2">&amp;mut </span>SearchContext, depth: i8) -&gt; i16 {
+    context.parameters.snmp_depth_margin_base + ((depth - context.parameters.snmp_min_depth) <span class="kw">as </span>i16) * context.parameters.snmp_depth_margin_multiplier
 }
 
 <span class="doccomment">/// The main idea of the null move pruning is to prune all nodes, for which the search gives us score above beta even if we skip a move (which allows
-/// the opposite color to make two of them in a row). This is based on the null move observation, which says that there&#39;s always a better alternative than
+/// the opposite color to make two of them in a row). This is based on the null move observation, which says that there's always a better alternative than
 /// doing nothing (except zugzwang).
 ///
 /// Conditions:
 ///  - only non-PV nodes
-///  - depth &gt;= [NULL_MOVE_PRUNING_MIN_DEPTH]
+///  - depth &gt;= [nmp_min_depth]
 ///  - game phase is not indicating endgame
 ///  - beta score is not a mate score
 ///  - friendly king is not checked
 ///  - this is not the second null move in a row
-</span><span class="kw">fn </span>null_move_pruning_can_be_applied&lt;<span class="kw">const </span>PV: bool&gt;(
-    context: <span class="kw-2">&amp;mut </span>SearchContext,
-    depth: i8,
-    beta: i16,
-    allow_null_move: bool,
-    friendly_king_checked: bool,
-) -&gt; bool {
-    !PV &amp;&amp; depth &gt;= NULL_MOVE_PRUNING_MIN_DEPTH
-        &amp;&amp; context.board.game_phase &gt; NULL_MOVE_PRUNING_MIN_GAME_PHASE
+</span><span class="kw">fn </span>nmp_can_be_applied&lt;<span class="kw">const </span>PV: bool&gt;(context: <span class="kw-2">&amp;mut </span>SearchContext, depth: i8, beta: i16, allow_null_move: bool, friendly_king_checked: bool) -&gt; bool {
+    !PV &amp;&amp; depth &gt;= context.parameters.nmp_min_depth
+        &amp;&amp; context.board.game_phase &gt; context.parameters.nmp_min_game_phase
         &amp;&amp; !is_score_near_checkmate(beta)
         &amp;&amp; !friendly_king_checked
         &amp;&amp; allow_null_move
 }
 
 <span class="doccomment">/// Gets the null move pruning depth reduction, called R, based on `depth`. The further from the horizon we are, the more reduction will be applied.
-</span><span class="kw">fn </span>null_move_pruning_get_r(depth: i8) -&gt; i8 {
-    NULL_MOVE_PRUNING_DEPTH_BASE + depth / NULL_MOVE_PRUNING_DEPTH_DIVIDER
+</span><span class="kw">fn </span>nmp_get_r(context: <span class="kw-2">&amp;mut </span>SearchContext, depth: i8) -&gt; i8 {
+    context.parameters.nmp_depth_base + depth / context.parameters.nmp_depth_divider
 }
 
 <span class="doccomment">/// The main idea of the late move pruning is to prune all nodes, which are near the horizon and were scored low by the history table.
-/// We assume here, that there&#39;s a little chance that move being near the end of the list will improve score, so there&#39;s no point of spending time here.
+/// We assume here, that there's a little chance that move being near the end of the list will improve score, so there's no point of spending time here.
 ///
 /// Conditions:
 ///  - only non-PV nodes
-///  - depth &gt;= [LATE_MOVE_PRUNING_MIN_DEPTH]
-///  - depth &lt;= [LATE_MOVE_PRUNING_MAX_DEPTH]
-///  - move index &gt;= [LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_BASE] + some margin depending on `depth`
-///  - move score &lt;= [LATE_MOVE_PRUNING_MAX_SCORE]
+///  - depth &gt;= [lmp_min_depth]
+///  - depth &lt;= [lmp_max_depth]
+///  - move index &gt;= [lmp_move_index_margin_multiplier] + (`depth` - 1) * [lmp_move_index_margin_multiplier]
+///  - move score &lt;= [lmp_max_score]
 ///  - friendly king is not checked
-</span><span class="kw">fn </span>late_move_pruning_can_be_applied&lt;<span class="kw">const </span>PV: bool&gt;(depth: i8, move_index: usize, move_score: i16, friendly_king_checked: bool) -&gt; bool {
-    !PV &amp;&amp; depth &gt;= LATE_MOVE_PRUNING_MIN_DEPTH
-        &amp;&amp; depth &lt;= LATE_MOVE_PRUNING_MAX_DEPTH
-        &amp;&amp; move_index &gt;= LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_BASE + (depth <span class="kw">as </span>usize - <span class="number">1</span>) * LATE_MOVE_PRUNING_MOVE_INDEX_MARGIN_MULTIPLIER
-        &amp;&amp; move_score &lt;= LATE_MOVE_PRUNING_MAX_SCORE
+</span><span class="kw">fn </span>lmp_can_be_applied&lt;<span class="kw">const </span>PV: bool&gt;(context: <span class="kw-2">&amp;mut </span>SearchContext, depth: i8, move_index: usize, move_score: i16, friendly_king_checked: bool) -&gt; bool {
+    !PV &amp;&amp; depth &gt;= context.parameters.lmp_min_depth
+        &amp;&amp; depth &lt;= context.parameters.lmp_max_depth
+        &amp;&amp; move_index &gt;= context.parameters.lmp_move_index_margin_base + (depth <span class="kw">as </span>usize - <span class="number">1</span>) * context.parameters.lmp_move_index_margin_multiplier
+        &amp;&amp; move_score &lt;= context.parameters.lmp_max_score
         &amp;&amp; !friendly_king_checked
 }
 
-<span class="doccomment">/// The main idea of the late move reduction is to reduce search depth of all quiet moves, which aren&#39;t promising and with high chance won&#39;t improve score.
+<span class="doccomment">/// The main idea of the late move reduction is to reduce search depth of all quiet moves, which aren't promising and with high chance won't improve score.
 /// This is the least risky type of pruning (used inside PVS framework which cares about re-search when the move is better than expected),
-/// so it&#39;s also applied in PV nodes.
+/// so it's also applied in PV nodes.
 ///
 /// Conditions:
-///  - depth &gt;= [LATE_MOVE_REDUCTION_MIN_DEPTH]
-///  - move index &gt;= [LATE_MOVE_REDUCTION_MIN_MOVE_INDEX]
-///  - move score &lt;= [LATE_MOVE_REDUCTION_MAX_SCORE]
+///  - depth &gt;= [lmr_min_depth]
+///  - move index &gt;= [lmr_pv_min_move_index] or move index &gt;= [lmr_min_move_index]
+///  - move score &lt;= [lmr_max_score]
 ///  - move is quiet
 ///  - friendly king is not checked
 ///  - enemy king is not checked
-</span><span class="kw">fn </span>late_move_reduction_can_be_applied(
+</span><span class="kw">fn </span>lmr_can_be_applied&lt;<span class="kw">const </span>PV: bool&gt;(
+    context: <span class="kw-2">&amp;mut </span>SearchContext,
     depth: i8,
     r#move: Move,
     move_index: usize,
@@ -1702,26 +1696,28 @@
     friendly_king_checked: bool,
     enemy_king_checked: bool,
 ) -&gt; bool {
-    depth &gt;= LATE_MOVE_REDUCTION_MIN_DEPTH
-        &amp;&amp; move_index &gt;= LATE_MOVE_REDUCTION_MIN_MOVE_INDEX
-        &amp;&amp; move_score &lt;= LATE_MOVE_REDUCTION_MAX_SCORE
+    depth &gt;= context.parameters.lmr_min_depth
+        &amp;&amp; move_index &gt;= <span class="kw">if </span>PV { context.parameters.lmr_pv_min_move_index } <span class="kw">else </span>{ context.parameters.lmr_min_move_index }
+        &amp;&amp; move_score &lt;= context.parameters.lmr_max_score
         &amp;&amp; r#move.is_quiet()
         &amp;&amp; !friendly_king_checked
         &amp;&amp; !enemy_king_checked
 }
 
 <span class="doccomment">/// Gets the late move depth reduction, called R, based on `move_index`. The lower the move was scored, the larger reduction will be returned.
-</span><span class="kw">fn </span>late_move_reduction_get_r&lt;<span class="kw">const </span>PV: bool&gt;(move_index: usize) -&gt; i8 {
-    <span class="kw">if </span>PV {
-        cmp::min(
-            LATE_MOVE_REDUCTION_PV_MAX_REDUCTION,
-            (LATE_MOVE_REDUCTION_PV_REDUCTION_BASE + (move_index - LATE_MOVE_REDUCTION_PV_MIN_MOVE_INDEX) / LATE_MOVE_REDUCTION_PV_REDUCTION_STEP) <span class="kw">as </span>i8,
+</span><span class="kw">fn </span>lmr_get_r&lt;<span class="kw">const </span>PV: bool&gt;(context: <span class="kw-2">&amp;mut </span>SearchContext, move_index: usize) -&gt; i8 {
+    <span class="kw">let </span>(max, r) = <span class="kw">if </span>PV {
+        (
+            context.parameters.lmr_pv_max_reduction,
+            (context.parameters.lmr_pv_reduction_base + (move_index - context.parameters.lmr_pv_min_move_index) / context.parameters.lmr_pv_reduction_step),
         )
     } <span class="kw">else </span>{
-        cmp::min(
-            LATE_MOVE_REDUCTION_MAX_REDUCTION,
-            (LATE_MOVE_REDUCTION_REDUCTION_BASE + (move_index - LATE_MOVE_REDUCTION_MIN_MOVE_INDEX) / LATE_MOVE_REDUCTION_REDUCTION_STEP) <span class="kw">as </span>i8,
+        (
+            context.parameters.lmr_max_reduction,
+            (context.parameters.lmr_reduction_base + (move_index - context.parameters.lmr_min_move_index) / context.parameters.lmr_reduction_step),
         )
-    }
+    };
+
+    cmp::min(max, r <span class="kw">as </span>i8)
 }
 </code></pre></div></section></main></body></html>

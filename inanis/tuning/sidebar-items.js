@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["tuner","tunerset"]};
+window.SIDEBAR_ITEMS = {};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["FUTILITY_PRUNING_MARGIN","SCORE_PRUNING_THRESHOLD"],"fn":["assign_move_scores","futility_pruning_can_be_applied","run","score_pruning_can_be_applied"]};
+window.SIDEBAR_ITEMS = {"fn":["assign_move_scores","futility_pruning_can_be_applied","run","score_pruning_can_be_applied"]};

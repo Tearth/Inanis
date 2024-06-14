@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["evaluate","evaluate_color"]};
+window.SIDEBAR_ITEMS = {"fn":["evaluate","get_mobility_data"],"struct":["MobilityData","PieceMobility"]};

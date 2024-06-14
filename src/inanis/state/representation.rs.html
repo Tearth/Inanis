@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/state/representation.rs`."><title>representation.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9bb858ba049f1f21.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="inanis" data-themes="" data-resource-suffix="" data-rustdoc-version="1.72.0 (5680fa18f 2023-08-23)" data-channel="1.72.0" data-search-js="search-f6292fe389d70017.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ><script src="../../../static.files/storage-59fd9b8ccb335783.js"></script><script defer src="../../../static.files/source-script-106908c7a7964ba4.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../inanis/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/state/representation.rs`."><title>representation.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="inanis" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.2 (25ef9e3d8 2024-04-09)" data-channel="1.77.2" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../inanis/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1026,7 +1028,7 @@
         magic_container: <span class="prelude-ty">Option</span>&lt;Arc&lt;MagicContainer&gt;&gt;,
     ) -&gt; <span class="self">Self </span>{
         Board::new_from_fen(
-            <span class="string">&quot;rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1&quot;</span>,
+            <span class="string">"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"</span>,
             evaluation_parameters,
             zobrist_container,
             patterns_container,
@@ -1037,7 +1039,7 @@
     }
 
     <span class="doccomment">/// Constructs a new instance of [Board] with position specified by `fen`, using provided containers. If the parameter is [None],
-    /// then the new container is created. Returns [Err] with proper error message if `fen` couldn&#39;t be parsed correctly.
+    /// then the new container is created. Returns [Err] with proper error message if `fen` couldn't be parsed correctly.
     </span><span class="kw">pub fn </span>new_from_fen(
         fen: <span class="kw-2">&amp;</span>str,
         evaluation_parameters: <span class="prelude-ty">Option</span>&lt;Arc&lt;EvaluationParameters&gt;&gt;,
@@ -1050,7 +1052,7 @@
     }
 
     <span class="doccomment">/// Constructs a new instance of [Board] with position specified by list of `moves`, using provided containers. If the parameter is [None],
-    /// then the new container is created. Returns [Err] with proper error message is `moves` couldn&#39;t be parsed correctly.
+    /// then the new container is created. Returns [Err] with proper error message is `moves` couldn't be parsed correctly.
     </span><span class="kw">pub fn </span>new_from_moves(
         moves: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str],
         evaluation_parameters: <span class="prelude-ty">Option</span>&lt;Arc&lt;EvaluationParameters&gt;&gt;,
@@ -1092,7 +1094,7 @@
         index
     }
 
-    <span class="doccomment">/// Makes `r#move`, with the assumption that it&#39;s perfectly valid at the current position (otherwise, internal state can be irreversibly corrupted).
+    <span class="doccomment">/// Makes `r#move`, with the assumption that it's perfectly valid at the current position (otherwise, internal state can be irreversibly corrupted).
     ///
     /// Steps of making a move:
     ///  - preserve halfmove clock, castling rights, en passant bitboard, board hash and pawn hash
@@ -1235,7 +1237,7 @@
 
                     !CastlingRights::BLACK_CASTLING
                 }
-                <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid parameter: fen={}, color={}&quot;</span>, <span class="self">self</span>, color),
+                <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">"Invalid parameter: fen={}, color={}"</span>, <span class="self">self</span>, color),
             };
 
             <span class="self">self</span>.pawn_hash ^= <span class="self">self</span>.zobrist.get_piece_hash(color, KING, from);
@@ -1264,7 +1266,7 @@
                     }
                     <span class="kw">_ </span>=&gt; {}
                 },
-                <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid parameter: fen={}, color={}&quot;</span>, <span class="self">self</span>, color),
+                <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">"Invalid parameter: fen={}, color={}"</span>, <span class="self">self</span>, color),
             }
         }
 
@@ -1292,7 +1294,7 @@
                     }
                     <span class="kw">_ </span>=&gt; {}
                 },
-                <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid parameter: fen={}, color={}&quot;</span>, <span class="self">self</span>, color),
+                <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">"Invalid parameter: fen={}, color={}"</span>, <span class="self">self</span>, color),
             }
         }
 
@@ -1310,7 +1312,7 @@
         <span class="self">self</span>.active_color = enemy_color;
     }
 
-    <span class="doccomment">/// Undoes `r#move`, with the assumption that it&#39;s perfectly valid at the current position (otherwise, internal state can be irreversibly corrupted).
+    <span class="doccomment">/// Undoes `r#move`, with the assumption that it's perfectly valid at the current position (otherwise, internal state can be irreversibly corrupted).
     ///
     /// Steps of undoing a move:
     ///  - update piece bitboards
@@ -1462,7 +1464,7 @@
         <span class="kw">let </span>attacking_enemy_pawns_bb = <span class="kw">match </span>color {
             WHITE =&gt; square_bb &amp; ((potential_enemy_pawns_bb &gt;&gt; <span class="number">7</span>) | (potential_enemy_pawns_bb &gt;&gt; <span class="number">9</span>)),
             BLACK =&gt; square_bb &amp; ((potential_enemy_pawns_bb &lt;&lt; <span class="number">7</span>) | (potential_enemy_pawns_bb &lt;&lt; <span class="number">9</span>)),
-            <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid parameter: fen={}, color={}&quot;</span>, <span class="self">self</span>, color),
+            <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">"Invalid parameter: fen={}, color={}"</span>, <span class="self">self</span>, color),
         };
 
         <span class="kw">if </span>attacking_enemy_pawns_bb != <span class="number">0 </span>{
@@ -1488,7 +1490,6 @@
         <span class="kw">let </span>enemy_color = color ^ <span class="number">1</span>;
         <span class="kw">let </span>occupancy_bb = <span class="self">self</span>.occupancy[WHITE] | <span class="self">self</span>.occupancy[BLACK];
 
-        <span class="kw">let </span>bishops_rooks_bb = <span class="self">self</span>.pieces[enemy_color][BISHOP] | <span class="self">self</span>.pieces[enemy_color][ROOK];
         <span class="kw">let </span>rooks_queens_bb = <span class="self">self</span>.pieces[enemy_color][ROOK] | <span class="self">self</span>.pieces[enemy_color][QUEEN];
         <span class="kw">let </span>bishops_queens_bb = <span class="self">self</span>.pieces[enemy_color][BISHOP] | <span class="self">self</span>.pieces[enemy_color][QUEEN];
 
@@ -1496,24 +1497,24 @@
         <span class="kw">let </span>attacking_kings_count = ((king_attacks_bb &amp; <span class="self">self</span>.pieces[enemy_color][KING]) != <span class="number">0</span>) <span class="kw">as </span>usize;
         result |= attacking_kings_count &lt;&lt; <span class="number">7</span>;
 
-        <span class="kw">let </span>queen_attacks_bb = <span class="self">self</span>.magic.get_queen_moves(occupancy_bb &amp; !bishops_rooks_bb, square);
-        <span class="kw">let </span>attacking_queens_count = ((queen_attacks_bb &amp; <span class="self">self</span>.pieces[enemy_color][QUEEN]) != <span class="number">0</span>) <span class="kw">as </span>usize;
-        result |= attacking_queens_count &lt;&lt; <span class="number">6</span>;
-
         <span class="kw">let </span>rook_attacks_bb = <span class="self">self</span>.magic.get_rook_moves(occupancy_bb &amp; !rooks_queens_bb, square);
         <span class="kw">let </span>attacking_rooks_count = (rook_attacks_bb &amp; <span class="self">self</span>.pieces[enemy_color][ROOK]).bit_count();
+        <span class="kw">let </span>attacking_queens_count = ((rook_attacks_bb &amp; <span class="self">self</span>.pieces[enemy_color][QUEEN]) != <span class="number">0</span>) <span class="kw">as </span>usize;
 
         result |= <span class="kw">match </span>attacking_rooks_count {
             <span class="number">0 </span>=&gt; <span class="number">0</span>,
             <span class="number">1 </span>=&gt; <span class="number">1 </span>&lt;&lt; <span class="number">4</span>,
             <span class="kw">_ </span>=&gt; <span class="number">3 </span>&lt;&lt; <span class="number">4</span>,
         };
+        result |= attacking_queens_count &lt;&lt; <span class="number">6</span>;
 
         <span class="kw">let </span>knight_attacks_bb = <span class="self">self</span>.magic.get_knight_moves(square, <span class="kw-2">&amp;</span><span class="self">self</span>.patterns);
         <span class="kw">let </span>attacking_knights_count = (knight_attacks_bb &amp; <span class="self">self</span>.pieces[enemy_color][KNIGHT]).bit_count();
+
         <span class="kw">let </span>bishop_attacks_bb = <span class="self">self</span>.magic.get_bishop_moves(occupancy_bb &amp; !bishops_queens_bb, square);
         <span class="kw">let </span>attacking_bishops_count = (bishop_attacks_bb &amp; <span class="self">self</span>.pieces[enemy_color][BISHOP]).bit_count();
         <span class="kw">let </span>attacking_knights_bishops_count = attacking_knights_count + attacking_bishops_count;
+        <span class="kw">let </span>attacking_queens_count = ((bishop_attacks_bb &amp; <span class="self">self</span>.pieces[enemy_color][QUEEN]) != <span class="number">0</span>) <span class="kw">as </span>usize;
 
         result |= <span class="kw">match </span>attacking_knights_bishops_count {
             <span class="number">0 </span>=&gt; <span class="number">0</span>,
@@ -1521,13 +1522,14 @@
             <span class="number">2 </span>=&gt; <span class="number">3 </span>&lt;&lt; <span class="number">1</span>,
             <span class="kw">_ </span>=&gt; <span class="number">7 </span>&lt;&lt; <span class="number">1</span>,
         };
+        result |= attacking_queens_count &lt;&lt; <span class="number">6</span>;
 
         <span class="kw">let </span>square_bb = <span class="number">1u64 </span>&lt;&lt; square;
         <span class="kw">let </span>potential_enemy_pawns_bb = king_attacks_bb &amp; <span class="self">self</span>.pieces[enemy_color][PAWN];
         <span class="kw">let </span>attacking_pawns_count = (<span class="kw">match </span>color {
             WHITE =&gt; square_bb &amp; ((potential_enemy_pawns_bb &gt;&gt; <span class="number">7</span>) | (potential_enemy_pawns_bb &gt;&gt; <span class="number">9</span>)),
             BLACK =&gt; square_bb &amp; ((potential_enemy_pawns_bb &lt;&lt; <span class="number">7</span>) | (potential_enemy_pawns_bb &lt;&lt; <span class="number">9</span>)),
-            <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid parameter: fen={}, color={}&quot;</span>, <span class="self">self</span>, color),
+            <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">"Invalid parameter: fen={}, color={}"</span>, <span class="self">self</span>, color),
         } != <span class="number">0</span>) <span class="kw">as </span>usize;
 
         result |= attacking_pawns_count;
@@ -1553,7 +1555,7 @@
         piece <span class="kw">as </span>usize
     }
 
-    <span class="doccomment">/// Gets piece&#39;s color on the square specified by `square`. Returns `u8::MAX` if there is no piece there.
+    <span class="doccomment">/// Gets piece's color on the square specified by `square`. Returns `u8::MAX` if there is no piece there.
     </span><span class="kw">pub fn </span>get_piece_color(<span class="kw-2">&amp;</span><span class="self">self</span>, square: usize) -&gt; usize {
         <span class="kw">let </span>piece = <span class="self">self</span>.piece_table[square];
         <span class="kw">if </span>piece == u8::MAX {
@@ -1601,7 +1603,7 @@
         <span class="self">self</span>.pst_scores[color][ENDING] += <span class="self">self</span>.evaluation_parameters.get_pst_value(color, piece, ENDING, to);
     }
 
-    <span class="doccomment">/// Recalculates board&#39;s hashes entirely.
+    <span class="doccomment">/// Recalculates board's hashes entirely.
     </span><span class="kw">pub fn </span>recalculate_hashes(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         zobrist::recalculate_hash(<span class="self">self</span>);
         zobrist::recalculate_pawn_hash(<span class="self">self</span>);
@@ -1664,7 +1666,7 @@
         pst::recalculate_incremental_values(<span class="self">self</span>);
     }
 
-    <span class="doccomment">/// Checks if there&#39;s repetition draw with the specified `threshold` (should be 3 in the most cases) at the current position.
+    <span class="doccomment">/// Checks if there's repetition draw with the specified `threshold` (should be 3 in the most cases) at the current position.
     </span><span class="kw">pub fn </span>is_repetition_draw(<span class="kw-2">&amp;</span><span class="self">self</span>, threshold: i32) -&gt; bool {
         <span class="kw">if </span><span class="self">self</span>.state_stack.len() &lt; <span class="number">6 </span>|| <span class="self">self</span>.null_moves &gt; <span class="number">0 </span>{
             <span class="kw">return </span><span class="bool-val">false</span>;
@@ -1687,7 +1689,7 @@
         <span class="bool-val">false
     </span>}
 
-    <span class="doccomment">/// Checks if there&#39;s fifty move rule draw at the current position.
+    <span class="doccomment">/// Checks if there's fifty move rule draw at the current position.
     </span><span class="kw">pub fn </span>is_fifty_move_rule_draw(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="kw">if </span><span class="self">self</span>.null_moves &gt; <span class="number">0 </span>{
             <span class="kw">return </span><span class="bool-val">false</span>;
@@ -1696,7 +1698,7 @@
         <span class="self">self</span>.halfmove_clock &gt;= <span class="number">100
     </span>}
 
-    <span class="doccomment">/// Checks if there&#39;s an inssuficient material draw:
+    <span class="doccomment">/// Checks if there's an inssuficient material draw:
     ///  - King vs King
     ///  - King + Knight/Bishop vs King
     ///  - King + Bishop (same color) vs King + Bishop (same color)
@@ -1744,7 +1746,7 @@
         (<span class="self">self</span>.occupancy[WHITE] | <span class="self">self</span>.occupancy[BLACK]).bit_count() <span class="kw">as </span>u8
     }
 
-    <span class="doccomment">/// Checks if there&#39;s an instant move possible and returns it as [Some], otherwise [None].
+    <span class="doccomment">/// Checks if there's an instant move possible and returns it as [Some], otherwise [None].
     </span><span class="kw">pub fn </span>get_instant_move(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Move&gt; {
         <span class="kw">if </span>!<span class="self">self</span>.is_king_checked(<span class="self">self</span>.active_color) {
             <span class="kw">return </span><span class="prelude-val">None</span>;
@@ -1780,12 +1782,12 @@
         <span class="prelude-val">None
     </span>}
 
-    <span class="doccomment">/// Checks if there&#39;s a tablebase move (only Syzygy supported for now) and returns it as [Some], otherwise [None].
+    <span class="doccomment">/// Checks if there's a tablebase move (only Syzygy supported for now) and returns it as [Some], otherwise [None].
     </span><span class="kw">pub fn </span>get_tablebase_move(<span class="kw-2">&amp;</span><span class="self">self</span>, probe_limit: u32) -&gt; <span class="prelude-ty">Option</span>&lt;(Move, i16)&gt; {
         tablebases::get_tablebase_move(<span class="self">self</span>, probe_limit)
     }
 
-    <span class="doccomment">/// Converts the board&#39;s state into FEN.
+    <span class="doccomment">/// Converts the board's state into FEN.
     </span><span class="kw">pub fn </span>to_fen(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
         fen::board_to_fen(<span class="self">self</span>)
     }
@@ -1797,8 +1799,8 @@
 }
 
 <span class="kw">impl </span>Display <span class="kw">for </span>Board {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
-        <span class="macro">write!</span>(f, <span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.to_fen())
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+        <span class="macro">write!</span>(f, <span class="string">"{}"</span>, <span class="self">self</span>.to_fen())
     }
 }
 

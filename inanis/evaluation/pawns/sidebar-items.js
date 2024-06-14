@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["evaluate","evaluate_color","evaluate_without_cache"]};
+window.SIDEBAR_ITEMS = {"fn":["evaluate","evaluate_color","evaluate_without_cache","get_pawns_data"],"struct":["PawnsData"]};

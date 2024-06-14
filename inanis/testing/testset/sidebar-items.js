@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["load_positions","run","run_internal"],"struct":["TestContext","TestPosition"]};

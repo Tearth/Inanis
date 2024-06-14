@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/testing/benchmark.rs`."><title>benchmark.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9bb858ba049f1f21.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="inanis" data-themes="" data-resource-suffix="" data-rustdoc-version="1.72.0 (5680fa18f 2023-08-23)" data-channel="1.72.0" data-search-js="search-f6292fe389d70017.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ><script src="../../../static.files/storage-59fd9b8ccb335783.js"></script><script defer src="../../../static.files/source-script-106908c7a7964ba4.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../inanis/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/testing/benchmark.rs`."><title>benchmark.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="inanis" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.2 (25ef9e3d8 2024-04-09)" data-channel="1.77.2" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../inanis/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -211,6 +213,7 @@
 <a href="#211" id="211">211</a>
 <a href="#212" id="212">212</a>
 <a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::cache::history::HistoryTable;
 <span class="kw">use </span><span class="kw">crate</span>::cache::killers::KillersTable;
 <span class="kw">use </span><span class="kw">crate</span>::cache::pawns::PawnHashTable;
@@ -241,16 +244,16 @@
     <span class="kw">pub </span>pvs_zero_window_searches: u64,
     <span class="kw">pub </span>pvs_rejected_searches: u64,
 
-    <span class="kw">pub </span>static_null_move_pruning_attempts: u64,
-    <span class="kw">pub </span>static_null_move_pruning_accepted: u64,
-    <span class="kw">pub </span>static_null_move_pruning_rejected: u64,
+    <span class="kw">pub </span>snmp_attempts: u64,
+    <span class="kw">pub </span>snmp_accepted: u64,
+    <span class="kw">pub </span>snmp_rejected: u64,
 
-    <span class="kw">pub </span>null_move_pruning_attempts: u64,
-    <span class="kw">pub </span>null_move_pruning_accepted: u64,
-    <span class="kw">pub </span>null_move_pruning_rejected: u64,
+    <span class="kw">pub </span>nmp_attempts: u64,
+    <span class="kw">pub </span>nmp_accepted: u64,
+    <span class="kw">pub </span>nmp_rejected: u64,
 
-    <span class="kw">pub </span>late_move_pruning_accepted: u64,
-    <span class="kw">pub </span>late_move_pruning_rejected: u64,
+    <span class="kw">pub </span>lmp_accepted: u64,
+    <span class="kw">pub </span>lmp_rejected: u64,
 
     <span class="kw">pub </span>razoring_attempts: u64,
     <span class="kw">pub </span>razoring_accepted: u64,
@@ -287,45 +290,45 @@
 </span><span class="kw">pub fn </span>run() -&gt; BenchmarkResult {
     <span class="kw">let </span>benchmark_positions = [
         <span class="comment">// Opening
-        </span><span class="string">&quot;rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1&quot;</span>,
-        <span class="string">&quot;rnbqkb1r/pp2pppp/2p2n2/3p4/2PP4/4P3/PP3PPP/RNBQKBNR w KQkq - 1 4&quot;</span>,
-        <span class="string">&quot;2kr1b1r/ppp1qppp/2n5/3p1b2/2PPn3/5N2/PP2BPPP/RNBQR1K1 w - - 1 10&quot;</span>,
-        <span class="string">&quot;rnbqk2r/pppp1ppp/8/2b5/2P1P1n1/3pNN2/PP3PPP/R1BQKB1R b KQkq - 1 7&quot;</span>,
-        <span class="string">&quot;r1bq1rk1/pp1nppbp/2p3p1/8/3PB3/2P2N2/PP2QPPP/R1B2RK1 b - - 6 10&quot;</span>,
-        <span class="string">&quot;rnbq1rk1/ppn2ppp/4p3/2p5/3PP3/P1P2P2/2Q1N1PP/R1B1KB1R b KQ - 2 10&quot;</span>,
-        <span class="string">&quot;r1bqkb1r/pp1nnp1p/4p1p1/2ppP2P/3P4/2PB1N2/PP3PP1/RNBQ1RK1 b kq - 0 9&quot;</span>,
+        </span><span class="string">"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"</span>,
+        <span class="string">"rnbqkb1r/pp2pppp/2p2n2/3p4/2PP4/4P3/PP3PPP/RNBQKBNR w KQkq - 1 4"</span>,
+        <span class="string">"2kr1b1r/ppp1qppp/2n5/3p1b2/2PPn3/5N2/PP2BPPP/RNBQR1K1 w - - 1 10"</span>,
+        <span class="string">"rnbqk2r/pppp1ppp/8/2b5/2P1P1n1/3pNN2/PP3PPP/R1BQKB1R b KQkq - 1 7"</span>,
+        <span class="string">"r1bq1rk1/pp1nppbp/2p3p1/8/3PB3/2P2N2/PP2QPPP/R1B2RK1 b - - 6 10"</span>,
+        <span class="string">"rnbq1rk1/ppn2ppp/4p3/2p5/3PP3/P1P2P2/2Q1N1PP/R1B1KB1R b KQ - 2 10"</span>,
+        <span class="string">"r1bqkb1r/pp1nnp1p/4p1p1/2ppP2P/3P4/2PB1N2/PP3PP1/RNBQ1RK1 b kq - 0 9"</span>,
         <span class="comment">// Midgame
-        </span><span class="string">&quot;5rk1/2b1qp1p/1r2p1pB/1ppnn3/3pN3/1P1P2P1/2P1QPBP/R4RK1 b - - 7 22&quot;</span>,
-        <span class="string">&quot;2k4r/1p3pp1/p2p2n1/2P1p2q/P1P1P3/3PBPP1/2R3Qr/5RK1 b - - 2 22&quot;</span>,
-        <span class="string">&quot;r6k/p1B4p/Pp3rp1/3p4/2nP4/2PQ1PPq/7P/1R3RK1 b - - 0 32&quot;</span>,
-        <span class="string">&quot;r3kb2/p4pp1/2q1p3/1pP1n1N1/3B2nr/1QP1P3/PP1N3P/R2R2K1 w q b6 0 2&quot;</span>,
-        <span class="string">&quot;rn1qkbnr/pp3ppp/4p3/3pPb2/1PpP4/4BN2/P1P1BPPP/RN1QK2R b KQkq b3 0 2&quot;</span>,
-        <span class="string">&quot;rnbqkbnr/pp1p1ppp/8/2pPp3/8/8/PPP1PPPP/RNBQKBNR w KQkq e6 0 2&quot;</span>,
-        <span class="string">&quot;r3k2r/1p1n4/1p1b1p2/2pp2p1/P2P2p1/1P1NP2P/R2BKP2/6R1 w kq - 0 21&quot;</span>,
-        <span class="string">&quot;1k1r4/p1p5/Q2b1pp1/R2P4/b3P2P/P7/1P5P/6K1 w - - 1 34&quot;</span>,
-        <span class="string">&quot;4rrk1/pppb1p1p/3pq3/4nNp1/2P1P3/3BP3/PP1Q1RPP/5RK1 w - - 4 18&quot;</span>,
-        <span class="string">&quot;4rrk1/1q3pbp/1p4p1/p3p3/2P1bn2/2B1QN1P/PP3PP1/3RR1K1 w - - 0 26&quot;</span>,
-        <span class="string">&quot;r5k1/ppq2rpp/2b5/4n3/3QPN2/P5P1/6BP/1R3RK1 b - - 3 22&quot;</span>,
-        <span class="string">&quot;r3kn1r/1p3pbp/p5n1/q2pPRNQ/3P4/1P6/P3N1P1/R1B3K1 b kq - 0 19&quot;</span>,
-        <span class="string">&quot;7r/4b1k1/N1nq1rp1/1p1p1p2/4pP1P/P1P1B2R/1P2Q1P1/3R2K1 b - - 2 39&quot;</span>,
-        <span class="string">&quot;3r4/2q1b1k1/p1np1rp1/1p1Qpp2/5P2/PNP1B1R1/1P4PP/3R2K1 w - - 1 26&quot;</span>,
+        </span><span class="string">"5rk1/2b1qp1p/1r2p1pB/1ppnn3/3pN3/1P1P2P1/2P1QPBP/R4RK1 b - - 7 22"</span>,
+        <span class="string">"2k4r/1p3pp1/p2p2n1/2P1p2q/P1P1P3/3PBPP1/2R3Qr/5RK1 b - - 2 22"</span>,
+        <span class="string">"r6k/p1B4p/Pp3rp1/3p4/2nP4/2PQ1PPq/7P/1R3RK1 b - - 0 32"</span>,
+        <span class="string">"r3kb2/p4pp1/2q1p3/1pP1n1N1/3B2nr/1QP1P3/PP1N3P/R2R2K1 w q b6 0 2"</span>,
+        <span class="string">"rn1qkbnr/pp3ppp/4p3/3pPb2/1PpP4/4BN2/P1P1BPPP/RN1QK2R b KQkq b3 0 2"</span>,
+        <span class="string">"rnbqkbnr/pp1p1ppp/8/2pPp3/8/8/PPP1PPPP/RNBQKBNR w KQkq e6 0 2"</span>,
+        <span class="string">"r3k2r/1p1n4/1p1b1p2/2pp2p1/P2P2p1/1P1NP2P/R2BKP2/6R1 w kq - 0 21"</span>,
+        <span class="string">"1k1r4/p1p5/Q2b1pp1/R2P4/b3P2P/P7/1P5P/6K1 w - - 1 34"</span>,
+        <span class="string">"4rrk1/pppb1p1p/3pq3/4nNp1/2P1P3/3BP3/PP1Q1RPP/5RK1 w - - 4 18"</span>,
+        <span class="string">"4rrk1/1q3pbp/1p4p1/p3p3/2P1bn2/2B1QN1P/PP3PP1/3RR1K1 w - - 0 26"</span>,
+        <span class="string">"r5k1/ppq2rpp/2b5/4n3/3QPN2/P5P1/6BP/1R3RK1 b - - 3 22"</span>,
+        <span class="string">"r3kn1r/1p3pbp/p5n1/q2pPRNQ/3P4/1P6/P3N1P1/R1B3K1 b kq - 0 19"</span>,
+        <span class="string">"7r/4b1k1/N1nq1rp1/1p1p1p2/4pP1P/P1P1B2R/1P2Q1P1/3R2K1 b - - 2 39"</span>,
+        <span class="string">"3r4/2q1b1k1/p1np1rp1/1p1Qpp2/5P2/PNP1B1R1/1P4PP/3R2K1 w - - 1 26"</span>,
         <span class="comment">// Endgame
-        </span><span class="string">&quot;8/8/6Q1/8/6k1/1P2q3/7p/7K b - - 14 75&quot;</span>,
-        <span class="string">&quot;8/8/4nPk1/8/6pK/8/1R3P1P/2B3r1 b - - 1 54&quot;</span>,
-        <span class="string">&quot;8/7q/5K2/2q5/6k1/8/8/8 b - - 5 60&quot;</span>,
-        <span class="string">&quot;8/8/5k2/bp1r4/4R1P1/3pK3/3N1P2/8 b - - 11 59&quot;</span>,
-        <span class="string">&quot;8/2pkr1Q1/6p1/3P1p2/R6P/P7/1P5P/6K1 w - - 3 42&quot;</span>,
-        <span class="string">&quot;8/2p2k2/3p4/p1rPn3/6pQ/1K6/8/8 w - - 2 119&quot;</span>,
-        <span class="string">&quot;8/7N/8/2n5/p3p1Pp/3k1p1P/5P2/6K1 b - - 1 54&quot;</span>,
-        <span class="string">&quot;8/6p1/1p5p/5PkP/6P1/6K1/p7/N6b b - - 1 48&quot;</span>,
-        <span class="string">&quot;8/1p6/pP3p2/P2k1P2/6Kp/8/8/8 b - - 1 73&quot;</span>,
+        </span><span class="string">"8/8/6Q1/8/6k1/1P2q3/7p/7K b - - 14 75"</span>,
+        <span class="string">"8/8/4nPk1/8/6pK/8/1R3P1P/2B3r1 b - - 1 54"</span>,
+        <span class="string">"8/7q/5K2/2q5/6k1/8/8/8 b - - 5 60"</span>,
+        <span class="string">"8/8/5k2/bp1r4/4R1P1/3pK3/3N1P2/8 b - - 11 59"</span>,
+        <span class="string">"8/2pkr1Q1/6p1/3P1p2/R6P/P7/1P5P/6K1 w - - 3 42"</span>,
+        <span class="string">"8/2p2k2/3p4/p1rPn3/6pQ/1K6/8/8 w - - 2 119"</span>,
+        <span class="string">"8/7N/8/2n5/p3p1Pp/3k1p1P/5P2/6K1 b - - 1 54"</span>,
+        <span class="string">"8/6p1/1p5p/5PkP/6P1/6K1/p7/N6b b - - 1 48"</span>,
+        <span class="string">"8/1p6/pP3p2/P2k1P2/6Kp/8/8/8 b - - 1 73"</span>,
     ];
 
     <span class="kw">let </span><span class="kw-2">mut </span>benchmark_result: BenchmarkResult = Default::default();
     <span class="kw">let </span>benchmark_time_start = SystemTime::now();
 
     <span class="kw">for </span>(current_position_index, fen) <span class="kw">in </span>benchmark_positions.into_iter().enumerate() {
-        <span class="macro">println!</span>(<span class="string">&quot;{}/{}. {}&quot;</span>, current_position_index + <span class="number">1</span>, benchmark_positions.len(), fen);
+        <span class="macro">println!</span>(<span class="string">"{}/{}. {}"</span>, current_position_index + <span class="number">1</span>, benchmark_positions.len(), fen);
 
         <span class="kw">let </span>transposition_table = Arc::new(TranspositionTable::new(<span class="number">64 </span>* <span class="number">1024 </span>* <span class="number">1024</span>));
         <span class="kw">let </span>pawn_hashtable = Arc::new(PawnHashTable::new(<span class="number">2 </span>* <span class="number">1024 </span>* <span class="number">1024</span>));
@@ -337,6 +340,7 @@
         <span class="kw">let </span>board = Board::new_from_fen(fen, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>).unwrap();
         <span class="kw">let </span>context = SearchContext::new(
             board,
+            Default::default(),
             <span class="number">0</span>,
             <span class="number">0</span>,
             <span class="number">0</span>,
@@ -379,16 +383,16 @@
         benchmark_result.pvs_zero_window_searches += result.statistics.pvs_zero_window_searches;
         benchmark_result.pvs_rejected_searches += result.statistics.pvs_rejected_searches;
 
-        benchmark_result.static_null_move_pruning_attempts += result.statistics.static_null_move_pruning_attempts;
-        benchmark_result.static_null_move_pruning_accepted += result.statistics.static_null_move_pruning_accepted;
-        benchmark_result.static_null_move_pruning_rejected += result.statistics.static_null_move_pruning_rejected;
+        benchmark_result.snmp_attempts += result.statistics.snmp_attempts;
+        benchmark_result.snmp_accepted += result.statistics.snmp_accepted;
+        benchmark_result.snmp_rejected += result.statistics.snmp_rejected;
 
-        benchmark_result.null_move_pruning_attempts += result.statistics.null_move_pruning_attempts;
-        benchmark_result.null_move_pruning_accepted += result.statistics.null_move_pruning_accepted;
-        benchmark_result.null_move_pruning_rejected += result.statistics.null_move_pruning_rejected;
+        benchmark_result.nmp_attempts += result.statistics.nmp_attempts;
+        benchmark_result.nmp_accepted += result.statistics.nmp_accepted;
+        benchmark_result.nmp_rejected += result.statistics.nmp_rejected;
 
-        benchmark_result.late_move_pruning_accepted += result.statistics.late_move_pruning_accepted;
-        benchmark_result.late_move_pruning_rejected += result.statistics.late_move_pruning_rejected;
+        benchmark_result.lmp_accepted += result.statistics.lmp_accepted;
+        benchmark_result.lmp_rejected += result.statistics.lmp_rejected;
 
         benchmark_result.razoring_attempts += result.statistics.razoring_attempts;
         benchmark_result.razoring_accepted += result.statistics.razoring_accepted;

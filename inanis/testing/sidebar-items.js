@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["benchmark","testset"]};
+window.SIDEBAR_ITEMS = {"mod":["benchmark"]};

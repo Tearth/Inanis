@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/interface/terminal.rs`."><title>terminal.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9bb858ba049f1f21.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="inanis" data-themes="" data-resource-suffix="" data-rustdoc-version="1.72.0 (5680fa18f 2023-08-23)" data-channel="1.72.0" data-search-js="search-f6292fe389d70017.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ><script src="../../../static.files/storage-59fd9b8ccb335783.js"></script><script defer src="../../../static.files/source-script-106908c7a7964ba4.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../inanis/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/interface/terminal.rs`."><title>terminal.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="inanis" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.2 (25ef9e3d8 2024-04-09)" data-channel="1.77.2" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../inanis/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -762,6 +764,21 @@
 <a href="#762" id="762">762</a>
 <a href="#763" id="763">763</a>
 <a href="#764" id="764">764</a>
+<a href="#765" id="765">765</a>
+<a href="#766" id="766">766</a>
+<a href="#767" id="767">767</a>
+<a href="#768" id="768">768</a>
+<a href="#769" id="769">769</a>
+<a href="#770" id="770">770</a>
+<a href="#771" id="771">771</a>
+<a href="#772" id="772">772</a>
+<a href="#773" id="773">773</a>
+<a href="#774" id="774">774</a>
+<a href="#775" id="775">775</a>
+<a href="#776" id="776">776</a>
+<a href="#777" id="777">777</a>
+<a href="#778" id="778">778</a>
+<a href="#779" id="779">779</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::uci;
 <span class="kw">use </span><span class="kw">crate</span>::evaluation::material;
 <span class="kw">use </span><span class="kw">crate</span>::evaluation::mobility;
@@ -769,41 +786,51 @@
 <span class="kw">use </span><span class="kw">crate</span>::evaluation::pst;
 <span class="kw">use </span><span class="kw">crate</span>::evaluation::safety;
 <span class="kw">use </span><span class="kw">crate</span>::perft;
-<span class="kw">use </span><span class="kw">crate</span>::state::movegen::MagicContainer;
 <span class="kw">use </span><span class="kw">crate</span>::state::representation::Board;
-<span class="kw">use </span><span class="kw">crate</span>::state::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::testing::benchmark;
-<span class="kw">use </span><span class="kw">crate</span>::testing::testset;
-<span class="kw">use </span><span class="kw">crate</span>::tuning::tuner;
-<span class="kw">use </span><span class="kw">crate</span>::tuning::tunerset;
 <span class="kw">use </span><span class="kw">crate</span>::utils::percent;
 <span class="kw">use </span>std::ffi::OsString;
 <span class="kw">use </span>std::io;
 <span class="kw">use </span>std::process;
 <span class="kw">use </span>std::time::SystemTime;
 
-<span class="kw">const </span>VERSION: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">&quot;CARGO_PKG_VERSION&quot;</span>);
-<span class="kw">const </span>AUTHOR: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">&quot;CARGO_PKG_AUTHORS&quot;</span>);
-<span class="kw">const </span>REPOSITORY: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">&quot;CARGO_PKG_REPOSITORY&quot;</span>);
-<span class="kw">const </span>DATE: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">&quot;DATE&quot;</span>);
-<span class="kw">const </span>HASH: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">&quot;HASH&quot;</span>);
-<span class="kw">const </span>COMPILER: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">&quot;COMPILER&quot;</span>);
+<span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
+</span><span class="kw">use </span><span class="kw">crate</span>::testing::testset;
+
+<span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
+</span><span class="kw">use </span><span class="kw">crate</span>::tuning::tuner;
+
+<span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
+</span><span class="kw">use </span><span class="kw">crate</span>::tuning::tunerset;
+
+<span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
+</span><span class="kw">use </span><span class="kw">crate</span>::state::movegen::MagicContainer;
+
+<span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
+</span><span class="kw">use </span><span class="kw">crate</span>::state::<span class="kw-2">*</span>;
+
+<span class="kw">const </span>VERSION: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">"CARGO_PKG_VERSION"</span>);
+<span class="kw">const </span>AUTHOR: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">"CARGO_PKG_AUTHORS"</span>);
+<span class="kw">const </span>REPOSITORY: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">"CARGO_PKG_REPOSITORY"</span>);
+<span class="kw">const </span>DATE: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">"DATE"</span>);
+<span class="kw">const </span>HASH: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">"HASH"</span>);
+<span class="kw">const </span>COMPILER: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">"COMPILER"</span>);
 
 <span class="doccomment">/// Entry point of the terminal interface and command loop.
-</span><span class="kw">pub fn </span>run(args: Vec&lt;OsString&gt;, target_features: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str&gt;) {
+</span><span class="kw">pub fn </span>run(args: Vec&lt;OsString&gt;, target_features: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt;) {
     <span class="kw">let </span>use_args = args.len() &gt; <span class="number">1</span>;
     <span class="kw">let </span>header = <span class="kw">if </span>target_features.is_empty() {
-        <span class="macro">format!</span>(<span class="string">&quot;Inanis {} ({}), created by {}&quot;</span>, VERSION, DATE, AUTHOR)
+        <span class="macro">format!</span>(<span class="string">"Inanis {} ({}), created by {}"</span>, VERSION, DATE, AUTHOR)
     } <span class="kw">else </span>{
-        <span class="macro">format!</span>(<span class="string">&quot;Inanis {} {} ({}), created by {}&quot;</span>, VERSION, target_features.join(<span class="string">&quot; &quot;</span>), DATE, AUTHOR)
+        <span class="macro">format!</span>(<span class="string">"Inanis {} {} ({}), created by {}"</span>, VERSION, target_features.join(<span class="string">" "</span>), DATE, AUTHOR)
     };
 
-    <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, header);
-    <span class="macro">println!</span>(<span class="string">&quot;Executable hash: {}&quot;</span>, HASH);
-    <span class="macro">println!</span>(<span class="string">&quot;Compiler: {}&quot;</span>, COMPILER);
-    <span class="macro">println!</span>(<span class="string">&quot;Homepage: {}&quot;</span>, REPOSITORY);
+    <span class="macro">println!</span>(<span class="string">"{}"</span>, header);
+    <span class="macro">println!</span>(<span class="string">"Executable hash: {}"</span>, HASH);
+    <span class="macro">println!</span>(<span class="string">"Compiler: {}"</span>, COMPILER);
+    <span class="macro">println!</span>(<span class="string">"Homepage: {}"</span>, REPOSITORY);
     <span class="macro">println!</span>();
-    <span class="macro">println!</span>(<span class="string">&quot;Type \&quot;help\&quot; to get a list of available commands&quot;</span>);
+    <span class="macro">println!</span>(<span class="string">"Type \"help\" to get a list of available commands"</span>);
 
     <span class="kw">loop </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>input = String::new();
@@ -817,23 +844,31 @@
                 process::exit(<span class="number">0</span>);
             }
 
-            input.split(<span class="string">&#39; &#39;</span>).map(|v| v.trim()).collect()
+            input.split(<span class="string">' '</span>).map(|v| v.trim()).collect()
         };
 
         <span class="kw">match </span>tokens[<span class="number">0</span>] {
-            <span class="string">&quot;help&quot; </span>=&gt; handle_help(),
-            <span class="string">&quot;benchmark&quot; </span>=&gt; handle_benchmark(),
-            <span class="string">&quot;evaluate&quot; </span>=&gt; handle_evaluate(tokens),
-            <span class="string">&quot;magic&quot; </span>=&gt; handle_magic(),
-            <span class="string">&quot;perft&quot; </span>=&gt; handle_perft(tokens),
-            <span class="string">&quot;dperft&quot; </span>=&gt; handle_dperft(tokens),
-            <span class="string">&quot;qperft&quot; </span>=&gt; handle_qperft(tokens),
-            <span class="string">&quot;testset&quot; </span>=&gt; handle_testset(tokens),
-            <span class="string">&quot;tuner&quot; </span>=&gt; handle_tuner(tokens),
-            <span class="string">&quot;tunerset&quot; </span>=&gt; handle_tunerset(tokens),
-            <span class="string">&quot;uci&quot; </span>=&gt; handle_uci(),
-            <span class="string">&quot;wah&quot; </span>=&gt; handle_wah(),
-            <span class="string">&quot;quit&quot; </span>=&gt; handle_quit(),
+            <span class="string">"help" </span>=&gt; handle_help(),
+            <span class="string">"benchmark" </span>=&gt; handle_benchmark(),
+            <span class="string">"evaluate" </span>=&gt; handle_evaluate(tokens),
+
+            <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
+            </span><span class="string">"magic" </span>=&gt; handle_magic(),
+
+            <span class="string">"perft" </span>=&gt; handle_perft(tokens),
+            <span class="string">"dperft" </span>=&gt; handle_dperft(tokens),
+            <span class="string">"qperft" </span>=&gt; handle_qperft(tokens),
+
+            <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
+            </span><span class="string">"testset" </span>=&gt; handle_testset(tokens),
+            <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
+            </span><span class="string">"tuner" </span>=&gt; handle_tuner(tokens),
+            <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
+            </span><span class="string">"tunerset" </span>=&gt; handle_tunerset(tokens),
+
+            <span class="string">"uci" </span>=&gt; handle_uci(),
+            <span class="string">"wah" </span>=&gt; handle_wah(),
+            <span class="string">"quit" </span>=&gt; handle_quit(),
             <span class="kw">_ </span>=&gt; handle_unknown_command(),
         }
 
@@ -845,30 +880,36 @@
 
 <span class="doccomment">/// Handles `help` command by printing all available ones.
 </span><span class="kw">fn </span>handle_help() {
-    <span class="macro">println!</span>(<span class="string">&quot;=== General ===&quot;</span>);
-    <span class="macro">println!</span>(<span class="string">&quot; benchmark - run test for a set of positions&quot;</span>);
-    <span class="macro">println!</span>(<span class="string">&quot; evaluate [fen] - show score for the position&quot;</span>);
-    <span class="macro">println!</span>(<span class="string">&quot; magic - generate magic numbers&quot;</span>);
-    <span class="macro">println!</span>(<span class="string">&quot; testset [epd] [depth] [transposition_table_size] [threads_count] - run test of positions&quot;</span>);
-    <span class="macro">println!</span>(<span class="string">&quot; tuner [epd] [output] [lock_material] [randomize] [threads_count] - run tuning&quot;</span>);
-    <span class="macro">println!</span>(<span class="string">&quot; tunerset [pgn] [output] [min_ply] [max_score] [max_diff] [density] [avg_game_phase] - dataset generator&quot;</span>);
-    <span class="macro">println!</span>(<span class="string">&quot; uci - run Universal Chess Interface&quot;</span>);
-    <span class="macro">println!</span>(<span class="string">&quot; quit - close the application&quot;</span>);
+    <span class="macro">println!</span>(<span class="string">"=== General ==="</span>);
+    <span class="macro">println!</span>(<span class="string">" benchmark - run test for a set of positions"</span>);
+    <span class="macro">println!</span>(<span class="string">" evaluate [fen] - show score for the position"</span>);
+
+    <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
+    </span><span class="macro">println!</span>(<span class="string">" magic - generate magic numbers"</span>);
+    <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
+    </span><span class="macro">println!</span>(<span class="string">" testset [epd] [depth] [transposition_table_size] [threads_count] - run test of positions"</span>);
+    <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
+    </span><span class="macro">println!</span>(<span class="string">" tuner [epd] [output] [lock_material] [randomize] [threads_count] - run tuning"</span>);
+    <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
+    </span><span class="macro">println!</span>(<span class="string">" tunerset [pgn] [output] [min_ply] [max_score] [max_diff] [density] - dataset generator"</span>);
+
+    <span class="macro">println!</span>(<span class="string">" uci - run Universal Chess Interface"</span>);
+    <span class="macro">println!</span>(<span class="string">" quit - close the application"</span>);
     <span class="macro">println!</span>();
-    <span class="macro">println!</span>(<span class="string">&quot;=== Perft ===&quot;</span>);
-    <span class="macro">println!</span>(<span class="string">&quot; perft [depth]&quot;</span>);
-    <span class="macro">println!</span>(<span class="string">&quot; perft [depth] fen [fen]&quot;</span>);
-    <span class="macro">println!</span>(<span class="string">&quot; perft [depth] moves [moves]&quot;</span>);
+    <span class="macro">println!</span>(<span class="string">"=== Perft ==="</span>);
+    <span class="macro">println!</span>(<span class="string">" perft [depth]"</span>);
+    <span class="macro">println!</span>(<span class="string">" perft [depth] fen [fen]"</span>);
+    <span class="macro">println!</span>(<span class="string">" perft [depth] moves [moves]"</span>);
     <span class="macro">println!</span>();
-    <span class="macro">println!</span>(<span class="string">&quot;=== Divided Perft ===&quot;</span>);
-    <span class="macro">println!</span>(<span class="string">&quot; dperft [depth]&quot;</span>);
-    <span class="macro">println!</span>(<span class="string">&quot; dperft [depth] fen [fen]&quot;</span>);
-    <span class="macro">println!</span>(<span class="string">&quot; dperft [depth] moves [moves]&quot;</span>);
+    <span class="macro">println!</span>(<span class="string">"=== Divided Perft ==="</span>);
+    <span class="macro">println!</span>(<span class="string">" dperft [depth]"</span>);
+    <span class="macro">println!</span>(<span class="string">" dperft [depth] fen [fen]"</span>);
+    <span class="macro">println!</span>(<span class="string">" dperft [depth] moves [moves]"</span>);
     <span class="macro">println!</span>();
-    <span class="macro">println!</span>(<span class="string">&quot;=== Quick Perft ===&quot;</span>);
-    <span class="macro">println!</span>(<span class="string">&quot; qperft [depth] [threads_count] [hashtable_size_mb]&quot;</span>);
-    <span class="macro">println!</span>(<span class="string">&quot; qperft [depth] [threads_count] [hashtable_size_mb] fen [fen]&quot;</span>);
-    <span class="macro">println!</span>(<span class="string">&quot; qperft [depth] [threads_count] [hashtable_size_mb] moves [moves]&quot;</span>);
+    <span class="macro">println!</span>(<span class="string">"=== Quick Perft ==="</span>);
+    <span class="macro">println!</span>(<span class="string">" qperft [depth] [threads_count] [hashtable_size_mb]"</span>);
+    <span class="macro">println!</span>(<span class="string">" qperft [depth] [threads_count] [hashtable_size_mb] fen [fen]"</span>);
+    <span class="macro">println!</span>(<span class="string">" qperft [depth] [threads_count] [hashtable_size_mb] moves [moves]"</span>);
 }
 
 <span class="doccomment">/// Handles `benchmark` command by running a fixed-depth search for a set of static positions and printing diagnostic data.
@@ -876,13 +917,13 @@
     <span class="kw">let </span>header_intendation = <span class="number">25</span>;
     <span class="kw">let </span>value_intendation = <span class="number">20</span>;
 
-    <span class="macro">println!</span>(<span class="string">&quot;Starting benchmark...&quot;</span>);
+    <span class="macro">println!</span>(<span class="string">"Starting benchmark..."</span>);
     <span class="kw">let </span>result = benchmark::run();
     <span class="macro">println!</span>();
-    <span class="macro">println!</span>(<span class="string">&quot;Benchmark done in {:.2} s&quot;</span>, result.time);
+    <span class="macro">println!</span>(<span class="string">"Benchmark done in {:.2} s"</span>, result.time);
     <span class="macro">println!</span>();
 
-    <span class="macro">println!</span>(<span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>, <span class="string">&quot;&quot;</span>, <span class="string">&quot;Normal&quot;</span>, <span class="string">&quot;Quiescence&quot;</span>, <span class="string">&quot;Total&quot;</span>, H = header_intendation, V = value_intendation);
+    <span class="macro">println!</span>(<span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>, <span class="string">""</span>, <span class="string">"Normal"</span>, <span class="string">"Quiescence"</span>, <span class="string">"Total"</span>, H = header_intendation, V = value_intendation);
     <span class="kw">let </span>t_nodes_count = result.nodes_count + result.q_nodes_count;
     <span class="kw">let </span>t_leafs_count = result.leafs_count + result.q_leafs_count;
 
@@ -890,11 +931,11 @@
     <span class="kw">let </span>q_nodes_count_percent = <span class="macro">percent!</span>(result.q_nodes_count, t_nodes_count);
     <span class="kw">let </span>t_mnps = (((result.nodes_count + result.q_nodes_count) <span class="kw">as </span>f32) / <span class="number">1000000.0</span>) / result.time;
     <span class="macro">println!</span>(
-        <span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>,
-        <span class="string">&quot;Nodes count&quot;</span>,
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.nodes_count, nodes_count_percent),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.q_nodes_count, q_nodes_count_percent),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2} MN/s)&quot;</span>, t_nodes_count, t_mnps),
+        <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
+        <span class="string">"Nodes count"</span>,
+        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.nodes_count, nodes_count_percent),
+        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.q_nodes_count, q_nodes_count_percent),
+        <span class="macro">format!</span>(<span class="string">"{} ({:.2} MN/s)"</span>, t_nodes_count, t_mnps),
         H = header_intendation,
         V = value_intendation
     );
@@ -903,11 +944,11 @@
     <span class="kw">let </span>q_leafs_count_percent = <span class="macro">percent!</span>(result.q_leafs_count, t_leafs_count);
     <span class="kw">let </span>t_leafs_count_percent = <span class="macro">percent!</span>(result.leafs_count + result.q_leafs_count, t_nodes_count);
     <span class="macro">println!</span>(
-        <span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>,
-        <span class="string">&quot;Leafs count&quot;</span>,
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.leafs_count, leafs_count_percent),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.q_leafs_count, q_leafs_count_percent),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, t_leafs_count, t_leafs_count_percent),
+        <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
+        <span class="string">"Leafs count"</span>,
+        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.leafs_count, leafs_count_percent),
+        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.q_leafs_count, q_leafs_count_percent),
+        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, t_leafs_count, t_leafs_count_percent),
         H = header_intendation,
         V = value_intendation
     );
@@ -916,11 +957,11 @@
     <span class="kw">let </span>q_beta_cutoffs_percent = <span class="macro">percent!</span>(result.q_beta_cutoffs, result.q_nodes_count);
     <span class="kw">let </span>t_beta_cutoffs_percent = <span class="macro">percent!</span>(result.beta_cutoffs + result.q_beta_cutoffs, t_nodes_count);
     <span class="macro">println!</span>(
-        <span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>,
-        <span class="string">&quot;Beta cutoffs&quot;</span>,
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.beta_cutoffs, beta_cutoffs_percent),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.q_beta_cutoffs, q_beta_cutoffs_percent),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.beta_cutoffs + result.q_beta_cutoffs, t_beta_cutoffs_percent),
+        <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
+        <span class="string">"Beta cutoffs"</span>,
+        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.beta_cutoffs, beta_cutoffs_percent),
+        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.q_beta_cutoffs, q_beta_cutoffs_percent),
+        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.beta_cutoffs + result.q_beta_cutoffs, t_beta_cutoffs_percent),
         H = header_intendation,
         V = value_intendation
     );
@@ -933,11 +974,11 @@
     <span class="kw">let </span>q_ordering_quality = <span class="macro">percent!</span>(result.q_perfect_cutoffs, q_ordering_hits);
     <span class="kw">let </span>t_ordering_quality = <span class="macro">percent!</span>(result.perfect_cutoffs + result.q_perfect_cutoffs, t_ordering_hits);
     <span class="macro">println!</span>(
-        <span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>,
-        <span class="string">&quot;Ordering quality&quot;</span>,
-        <span class="macro">format!</span>(<span class="string">&quot;{:.2}%&quot;</span>, ordering_quality),
-        <span class="macro">format!</span>(<span class="string">&quot;{:.2}%&quot;</span>, q_ordering_quality),
-        <span class="macro">format!</span>(<span class="string">&quot;{:.2}%&quot;</span>, t_ordering_quality),
+        <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
+        <span class="string">"Ordering quality"</span>,
+        <span class="macro">format!</span>(<span class="string">"{:.2}%"</span>, ordering_quality),
+        <span class="macro">format!</span>(<span class="string">"{:.2}%"</span>, q_ordering_quality),
+        <span class="macro">format!</span>(<span class="string">"{:.2}%"</span>, t_ordering_quality),
         H = header_intendation,
         V = value_intendation
     );
@@ -946,27 +987,27 @@
     <span class="kw">let </span>q_branching_factor = (result.q_nodes_count <span class="kw">as </span>f64) / ((result.q_nodes_count - result.q_leafs_count) <span class="kw">as </span>f64);
     <span class="kw">let </span>t_branching_factor = (t_nodes_count <span class="kw">as </span>f64) / ((t_nodes_count - t_leafs_count) <span class="kw">as </span>f64);
     <span class="macro">println!</span>(
-        <span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>,
-        <span class="string">&quot;Branching factor&quot;</span>,
-        <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, branching_factor),
-        <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, q_branching_factor),
-        <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, t_branching_factor),
+        <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
+        <span class="string">"Branching factor"</span>,
+        <span class="macro">format!</span>(<span class="string">"{:.2}"</span>, branching_factor),
+        <span class="macro">format!</span>(<span class="string">"{:.2}"</span>, q_branching_factor),
+        <span class="macro">format!</span>(<span class="string">"{:.2}"</span>, t_branching_factor),
         H = header_intendation,
         V = value_intendation
     );
 
     <span class="macro">println!</span>();
-    <span class="macro">println!</span>(<span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>, <span class="string">&quot;&quot;</span>, <span class="string">&quot;Added&quot;</span>, <span class="string">&quot;Hits&quot;</span>, <span class="string">&quot;Misses&quot;</span>, H = header_intendation, V = value_intendation);
+    <span class="macro">println!</span>(<span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>, <span class="string">""</span>, <span class="string">"Added"</span>, <span class="string">"Hits"</span>, <span class="string">"Misses"</span>, H = header_intendation, V = value_intendation);
 
     <span class="kw">let </span>tt_attempts = result.tt_hits + result.tt_misses;
     <span class="kw">let </span>tt_hits_percent = <span class="macro">percent!</span>(result.tt_hits, tt_attempts);
     <span class="kw">let </span>tt_misses_percent = <span class="macro">percent!</span>(result.tt_misses, tt_attempts);
     <span class="macro">println!</span>(
-        <span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>,
-        <span class="string">&quot;Transposition table&quot;</span>,
-        <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, result.tt_added),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.tt_hits, tt_hits_percent),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.tt_misses, tt_misses_percent),
+        <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
+        <span class="string">"Transposition table"</span>,
+        <span class="macro">format!</span>(<span class="string">"{}"</span>, result.tt_added),
+        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.tt_hits, tt_hits_percent),
+        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.tt_misses, tt_misses_percent),
         H = header_intendation,
         V = value_intendation
     );
@@ -975,51 +1016,51 @@
     <span class="kw">let </span>pawn_hashtable_hits_percent = <span class="macro">percent!</span>(result.pawn_hashtable_hits, pawn_hashtable_attempts);
     <span class="kw">let </span>pawn_hashtable_misses_percent = <span class="macro">percent!</span>(result.pawn_hashtable_misses, pawn_hashtable_attempts);
     <span class="macro">println!</span>(
-        <span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>,
-        <span class="string">&quot;Pawn hashtable&quot;</span>,
-        <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, result.pawn_hashtable_added),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.pawn_hashtable_hits, pawn_hashtable_hits_percent),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.pawn_hashtable_misses, pawn_hashtable_misses_percent),
+        <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
+        <span class="string">"Pawn hashtable"</span>,
+        <span class="macro">format!</span>(<span class="string">"{}"</span>, result.pawn_hashtable_added),
+        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.pawn_hashtable_hits, pawn_hashtable_hits_percent),
+        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.pawn_hashtable_misses, pawn_hashtable_misses_percent),
         H = header_intendation,
         V = value_intendation
     );
 
     <span class="macro">println!</span>();
-    <span class="macro">println!</span>(<span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>, <span class="string">&quot;&quot;</span>, <span class="string">&quot;Attempts&quot;</span>, <span class="string">&quot;Accepted&quot;</span>, <span class="string">&quot;Rejected&quot;</span>, H = header_intendation, V = value_intendation);
+    <span class="macro">println!</span>(<span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>, <span class="string">""</span>, <span class="string">"Attempts"</span>, <span class="string">"Accepted"</span>, <span class="string">"Rejected"</span>, H = header_intendation, V = value_intendation);
 
-    <span class="kw">let </span>static_null_move_pruning_accepted_percent = <span class="macro">percent!</span>(result.static_null_move_pruning_accepted, result.static_null_move_pruning_attempts);
-    <span class="kw">let </span>static_null_move_pruning_rejected_percent = <span class="macro">percent!</span>(result.static_null_move_pruning_rejected, result.static_null_move_pruning_attempts);
+    <span class="kw">let </span>snmp_accepted_percent = <span class="macro">percent!</span>(result.snmp_accepted, result.snmp_attempts);
+    <span class="kw">let </span>snmp_rejected_percent = <span class="macro">percent!</span>(result.snmp_rejected, result.snmp_attempts);
     <span class="macro">println!</span>(
-        <span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>,
-        <span class="string">&quot;Static null move pruning&quot;</span>,
-        <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, result.static_null_move_pruning_attempts),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.static_null_move_pruning_accepted, static_null_move_pruning_accepted_percent),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.static_null_move_pruning_rejected, static_null_move_pruning_rejected_percent),
+        <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
+        <span class="string">"Static null move pruning"</span>,
+        <span class="macro">format!</span>(<span class="string">"{:.2}"</span>, result.snmp_attempts),
+        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.snmp_accepted, snmp_accepted_percent),
+        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.snmp_rejected, snmp_rejected_percent),
         H = header_intendation,
         V = value_intendation
     );
 
-    <span class="kw">let </span>null_move_pruning_accepted_percent = <span class="macro">percent!</span>(result.null_move_pruning_accepted, result.null_move_pruning_attempts);
-    <span class="kw">let </span>null_move_pruning_rejected_percent = <span class="macro">percent!</span>(result.null_move_pruning_rejected, result.null_move_pruning_attempts);
+    <span class="kw">let </span>nmp_accepted_percent = <span class="macro">percent!</span>(result.nmp_accepted, result.nmp_attempts);
+    <span class="kw">let </span>nmp_rejected_percent = <span class="macro">percent!</span>(result.nmp_rejected, result.nmp_attempts);
     <span class="macro">println!</span>(
-        <span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>,
-        <span class="string">&quot;Null move pruning&quot;</span>,
-        <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, result.null_move_pruning_attempts),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.null_move_pruning_accepted, null_move_pruning_accepted_percent),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.null_move_pruning_rejected, null_move_pruning_rejected_percent),
+        <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
+        <span class="string">"Null move pruning"</span>,
+        <span class="macro">format!</span>(<span class="string">"{:.2}"</span>, result.nmp_attempts),
+        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.nmp_accepted, nmp_accepted_percent),
+        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.nmp_rejected, nmp_rejected_percent),
         H = header_intendation,
         V = value_intendation
     );
 
-    <span class="kw">let </span>late_move_pruning_attempts = result.late_move_pruning_accepted + result.late_move_pruning_rejected;
-    <span class="kw">let </span>late_move_pruning_accepted_percent = <span class="macro">percent!</span>(result.late_move_pruning_accepted, late_move_pruning_attempts);
-    <span class="kw">let </span>late_move_pruning_rejected_percent = <span class="macro">percent!</span>(result.late_move_pruning_rejected, late_move_pruning_attempts);
+    <span class="kw">let </span>lmp_attempts = result.lmp_accepted + result.lmp_rejected;
+    <span class="kw">let </span>lmp_accepted_percent = <span class="macro">percent!</span>(result.lmp_accepted, lmp_attempts);
+    <span class="kw">let </span>lmp_rejected_percent = <span class="macro">percent!</span>(result.lmp_rejected, lmp_attempts);
     <span class="macro">println!</span>(
-        <span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>,
-        <span class="string">&quot;Late move pruning&quot;</span>,
-        <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, late_move_pruning_attempts),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.late_move_pruning_accepted, late_move_pruning_accepted_percent),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.late_move_pruning_rejected, late_move_pruning_rejected_percent),
+        <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
+        <span class="string">"Late move pruning"</span>,
+        <span class="macro">format!</span>(<span class="string">"{:.2}"</span>, lmp_attempts),
+        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.lmp_accepted, lmp_accepted_percent),
+        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.lmp_rejected, lmp_rejected_percent),
         H = header_intendation,
         V = value_intendation
     );
@@ -1027,11 +1068,11 @@
     <span class="kw">let </span>razoring_accepted_percent = <span class="macro">percent!</span>(result.razoring_accepted, result.razoring_attempts);
     <span class="kw">let </span>razoring_rejected_percent = <span class="macro">percent!</span>(result.razoring_rejected, result.razoring_attempts);
     <span class="macro">println!</span>(
-        <span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>,
-        <span class="string">&quot;Razoring&quot;</span>,
-        <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, result.razoring_attempts),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.razoring_accepted, razoring_accepted_percent),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.razoring_rejected, razoring_rejected_percent),
+        <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
+        <span class="string">"Razoring"</span>,
+        <span class="macro">format!</span>(<span class="string">"{:.2}"</span>, result.razoring_attempts),
+        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.razoring_accepted, razoring_accepted_percent),
+        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.razoring_rejected, razoring_rejected_percent),
         H = header_intendation,
         V = value_intendation
     );
@@ -1040,11 +1081,11 @@
     <span class="kw">let </span>q_score_pruning_accepted_percent = <span class="macro">percent!</span>(result.q_score_pruning_accepted, total_q_score_pruning_attempts);
     <span class="kw">let </span>q_score_pruning_rejected_percent = <span class="macro">percent!</span>(result.q_score_pruning_rejected, total_q_score_pruning_attempts);
     <span class="macro">println!</span>(
-        <span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>,
-        <span class="string">&quot;Q score pruning&quot;</span>,
-        <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, total_q_score_pruning_attempts),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.q_score_pruning_accepted, q_score_pruning_accepted_percent),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.q_score_pruning_rejected, q_score_pruning_rejected_percent),
+        <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
+        <span class="string">"Q score pruning"</span>,
+        <span class="macro">format!</span>(<span class="string">"{:.2}"</span>, total_q_score_pruning_attempts),
+        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.q_score_pruning_accepted, q_score_pruning_accepted_percent),
+        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.q_score_pruning_rejected, q_score_pruning_rejected_percent),
         H = header_intendation,
         V = value_intendation
     );
@@ -1053,11 +1094,11 @@
     <span class="kw">let </span>q_futility_pruning_accepted_percent = <span class="macro">percent!</span>(result.q_futility_pruning_accepted, total_q_futility_prunings_attempts);
     <span class="kw">let </span>q_futility_pruning_rejected_percent = <span class="macro">percent!</span>(result.q_futility_pruning_rejected, total_q_futility_prunings_attempts);
     <span class="macro">println!</span>(
-        <span class="string">&quot;{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}&quot;</span>,
-        <span class="string">&quot;Q futility pruning&quot;</span>,
-        <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, total_q_futility_prunings_attempts),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.q_futility_pruning_accepted, q_futility_pruning_accepted_percent),
-        <span class="macro">format!</span>(<span class="string">&quot;{} ({:.2}%)&quot;</span>, result.q_futility_pruning_rejected, q_futility_pruning_rejected_percent),
+        <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
+        <span class="string">"Q futility pruning"</span>,
+        <span class="macro">format!</span>(<span class="string">"{:.2}"</span>, total_q_futility_prunings_attempts),
+        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.q_futility_pruning_accepted, q_futility_pruning_accepted_percent),
+        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.q_futility_pruning_rejected, q_futility_pruning_rejected_percent),
         H = header_intendation,
         V = value_intendation
     );
@@ -1066,36 +1107,36 @@
 
     <span class="kw">let </span>pvs_rejected_searches_percent = <span class="macro">percent!</span>(result.pvs_rejected_searches, result.pvs_zero_window_searches);
     <span class="macro">println!</span>(
-        <span class="string">&quot;PVS: {} full-window searches, {} zero-window searches, {} rejected ({:.2}%)&quot;</span>,
+        <span class="string">"PVS: {} full-window searches, {} zero-window searches, {} rejected ({:.2}%)"</span>,
         result.pvs_full_window_searches, result.pvs_zero_window_searches, result.pvs_rejected_searches, pvs_rejected_searches_percent
     );
 
     <span class="macro">println!</span>(
-        <span class="string">&quot;Move generator stages: {} hash moves, {} captures, {} killers, {} quiet&quot;</span>,
+        <span class="string">"Move generator stages: {} hash moves, {} captures, {} killers, {} quiet"</span>,
         result.move_generator_hash_move_stages,
         result.move_generator_captures_stages,
         result.move_generator_killers_stages,
         result.move_generator_quiet_moves_stages
     );
 
-    <span class="macro">println!</span>(<span class="string">&quot;Transposition table move legality check: {} legal, {} illegal&quot;</span>, result.tt_legal_hashmoves, result.tt_illegal_hashmoves);
-    <span class="macro">println!</span>(<span class="string">&quot;Killers table move legality check: {} legal, {} illegal&quot;</span>, result.killers_table_legal_moves, result.killers_table_illegal_moves);
-    <span class="macro">println!</span>(<span class="string">&quot;Result hash: {}&quot;</span>, result.result_hash);
+    <span class="macro">println!</span>(<span class="string">"Transposition table move legality check: {} legal, {} illegal"</span>, result.tt_legal_hashmoves, result.tt_illegal_hashmoves);
+    <span class="macro">println!</span>(<span class="string">"Killers table move legality check: {} legal, {} illegal"</span>, result.killers_table_legal_moves, result.killers_table_illegal_moves);
+    <span class="macro">println!</span>(<span class="string">"Result hash: {}"</span>, result.result_hash);
     <span class="macro">println!</span>();
 }
 
 <span class="doccomment">/// Handles `evaluate [fen]` command by printing evaluation for the position specified by FEN.
 </span><span class="kw">fn </span>handle_evaluate(input: Vec&lt;<span class="kw-2">&amp;</span>str&gt;) {
     <span class="kw">if </span>input.len() &lt; <span class="number">2 </span>{
-        <span class="macro">println!</span>(<span class="string">&quot;FEN parameter not found&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">"FEN parameter not found"</span>);
         <span class="kw">return</span>;
     }
 
-    <span class="kw">let </span>fen = input[<span class="number">1</span>..].join(<span class="string">&quot; &quot;</span>);
+    <span class="kw">let </span>fen = input[<span class="number">1</span>..].join(<span class="string">" "</span>);
     <span class="kw">let </span>board = <span class="kw">match </span>Board::new_from_fen(fen.as_str(), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>) {
         <span class="prelude-val">Ok</span>(board) =&gt; board,
         <span class="prelude-val">Err</span>(error) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid FEN parameter: {}&quot;</span>, error);
+            <span class="macro">println!</span>(<span class="string">"Invalid FEN parameter: {}"</span>, error);
             <span class="kw">return</span>;
         }
     };
@@ -1112,49 +1153,50 @@
     <span class="kw">let </span>safety_evaluation = safety::evaluate(<span class="kw-2">&amp;</span>board, dangered_white_king_squares, dangered_black_king_squares);
     <span class="kw">let </span>pawns_evaluation = pawns::evaluate_without_cache(<span class="kw-2">&amp;</span>board);
 
-    <span class="macro">println!</span>(<span class="string">&quot;Material: {}&quot;</span>, material_evaluation);
-    <span class="macro">println!</span>(<span class="string">&quot;Piece-square tables: {}&quot;</span>, pst_evaluation.taper_score(game_phase, initial_game_phase));
-    <span class="macro">println!</span>(<span class="string">&quot;Mobility: {}&quot;</span>, mobility_evaluation.taper_score(game_phase, initial_game_phase));
-    <span class="macro">println!</span>(<span class="string">&quot;Safety: {}&quot;</span>, safety_evaluation.taper_score(game_phase, initial_game_phase));
-    <span class="macro">println!</span>(<span class="string">&quot;Pawns: {}&quot;</span>, pawns_evaluation.taper_score(game_phase, initial_game_phase));
+    <span class="macro">println!</span>(<span class="string">"Material: {}"</span>, material_evaluation.taper_score(game_phase, initial_game_phase));
+    <span class="macro">println!</span>(<span class="string">"Piece-square tables: {}"</span>, pst_evaluation.taper_score(game_phase, initial_game_phase));
+    <span class="macro">println!</span>(<span class="string">"Mobility: {}"</span>, mobility_evaluation.taper_score(game_phase, initial_game_phase));
+    <span class="macro">println!</span>(<span class="string">"Safety: {}"</span>, safety_evaluation.taper_score(game_phase, initial_game_phase));
+    <span class="macro">println!</span>(<span class="string">"Pawns: {}"</span>, pawns_evaluation.taper_score(game_phase, initial_game_phase));
 
     <span class="kw">let </span>sum = material_evaluation + pst_evaluation + mobility_evaluation + safety_evaluation + pawns_evaluation;
-    <span class="macro">println!</span>(<span class="string">&quot; --- Total: {} --- &quot;</span>, sum.taper_score(game_phase, initial_game_phase));
+    <span class="macro">println!</span>(<span class="string">" --- Total: {} --- "</span>, sum.taper_score(game_phase, initial_game_phase));
 }
 
 <span class="doccomment">/// Handles `magic` command by printing a fresh set of magic numbers.
+</span><span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
 </span><span class="kw">fn </span>handle_magic() {
     <span class="kw">let </span>now = SystemTime::now();
     <span class="kw">let </span>magic = MagicContainer::default();
-    <span class="macro">println!</span>(<span class="string">&quot;Generating magic numbers for rook...&quot;</span>);
+    <span class="macro">println!</span>(<span class="string">"Generating magic numbers for rook..."</span>);
 
     <span class="kw">for </span>index <span class="kw">in </span>ALL_SQUARES {
-        <span class="macro">println!</span>(<span class="string">&quot;{},&quot;</span>, magic.generate_rook_magic_number(index));
+        <span class="macro">println!</span>(<span class="string">"{},"</span>, magic.generate_rook_magic_number(index));
     }
 
     <span class="macro">println!</span>();
-    <span class="macro">println!</span>(<span class="string">&quot;Generating magic numbers for bishop...&quot;</span>);
+    <span class="macro">println!</span>(<span class="string">"Generating magic numbers for bishop..."</span>);
 
     <span class="kw">for </span>index <span class="kw">in </span>ALL_SQUARES {
-        <span class="macro">println!</span>(<span class="string">&quot;{},&quot;</span>, magic.generate_bishop_magic_number(index));
+        <span class="macro">println!</span>(<span class="string">"{},"</span>, magic.generate_bishop_magic_number(index));
     }
 
     <span class="kw">let </span>diff = now.elapsed().unwrap().as_millis();
-    <span class="macro">println!</span>(<span class="string">&quot;Done! Magic numbers generated in {} ms&quot;</span>, diff);
+    <span class="macro">println!</span>(<span class="string">"Done! Magic numbers generated in {} ms"</span>, diff);
 }
 
 <span class="doccomment">/// Handles `perft [depth]`, `perft [depth] fen [fen]` and `perft [depth] moves [moves]` commands by running a perft test to the depth specified
 /// by `depth` parameter. The initial position can be specified by FEN, a list of moves, or just omitted (so the default start position will be taken).
 </span><span class="kw">fn </span>handle_perft(input: Vec&lt;<span class="kw-2">&amp;</span>str&gt;) {
     <span class="kw">if </span>input.len() &lt; <span class="number">2 </span>{
-        <span class="macro">println!</span>(<span class="string">&quot;Depth parameter not found&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">"Depth parameter not found"</span>);
         <span class="kw">return</span>;
     }
 
     <span class="kw">let </span>max_depth: i32 = <span class="kw">match </span>input[<span class="number">1</span>].parse() {
         <span class="prelude-val">Ok</span>(result) =&gt; result,
         <span class="prelude-val">Err</span>(error) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid depth parameter: {}&quot;</span>, error);
+            <span class="macro">println!</span>(<span class="string">"Invalid depth parameter: {}"</span>, error);
             <span class="kw">return</span>;
         }
     };
@@ -1162,7 +1204,7 @@
     <span class="kw">let </span><span class="kw-2">mut </span>board = <span class="kw">match </span>prepare_board(<span class="kw-2">&amp;</span>input[<span class="number">2</span>..]) {
         <span class="prelude-val">Ok</span>(board) =&gt; board,
         <span class="prelude-val">Err</span>(error) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid FEN parameter: {}&quot;</span>, error);
+            <span class="macro">println!</span>(<span class="string">"Invalid FEN parameter: {}"</span>, error);
             <span class="kw">return</span>;
         }
     };
@@ -1175,7 +1217,7 @@
         <span class="kw">let </span>mnps = ((result.nodes <span class="kw">as </span>f64) / <span class="number">1000000.0</span>) / diff;
 
         <span class="macro">println!</span>(
-            <span class="string">&quot;Depth {}: {} leafs in {:.2} s ({:.2} ML/s), {} captures, {} en passants, {} castles, {} promotions, {} checks&quot;</span>,
+            <span class="string">"Depth {}: {} leafs in {:.2} s ({:.2} ML/s), {} captures, {} en passants, {} castles, {} promotions, {} checks"</span>,
             depth,
             result.nodes,
             diff,
@@ -1188,21 +1230,21 @@
         );
     }
 
-    <span class="macro">println!</span>(<span class="string">&quot;Perft done!&quot;</span>);
+    <span class="macro">println!</span>(<span class="string">"Perft done!"</span>);
 }
 
 <span class="doccomment">/// Handles `dperft [depth]`, `dperft [depth] fen [fen]` and `dperft [depth] moves [moves]` commands by running a divided perft test to the depth specified
 /// by `depth` parameter. The initial position can be specified by FEN, a list of moves, or just omitted (so the default start position will be taken).
 </span><span class="kw">fn </span>handle_dperft(input: Vec&lt;<span class="kw-2">&amp;</span>str&gt;) {
     <span class="kw">if </span>input.len() &lt; <span class="number">2 </span>{
-        <span class="macro">println!</span>(<span class="string">&quot;Depth parameter not found&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">"Depth parameter not found"</span>);
         <span class="kw">return</span>;
     }
 
     <span class="kw">let </span>depth: i32 = <span class="kw">match </span>input[<span class="number">1</span>].parse() {
         <span class="prelude-val">Ok</span>(result) =&gt; result,
         <span class="prelude-val">Err</span>(error) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid depth parameter: {}&quot;</span>, error);
+            <span class="macro">println!</span>(<span class="string">"Invalid depth parameter: {}"</span>, error);
             <span class="kw">return</span>;
         }
     };
@@ -1210,7 +1252,7 @@
     <span class="kw">let </span><span class="kw-2">mut </span>board = <span class="kw">match </span>prepare_board(<span class="kw-2">&amp;</span>input[<span class="number">2</span>..]) {
         <span class="prelude-val">Ok</span>(board) =&gt; board,
         <span class="prelude-val">Err</span>(error) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid FEN parameter: {}&quot;</span>, error);
+            <span class="macro">println!</span>(<span class="string">"Invalid FEN parameter: {}"</span>, error);
             <span class="kw">return</span>;
         }
     };
@@ -1219,13 +1261,13 @@
 
     <span class="kw">let </span><span class="kw-2">mut </span>total_leafs = <span class="number">0</span>;
     <span class="kw">for </span>r#move <span class="kw">in </span>result {
-        <span class="macro">println!</span>(<span class="string">&quot;{}: {} leafs&quot;</span>, r#move.<span class="number">0</span>, r#move.<span class="number">1</span>);
+        <span class="macro">println!</span>(<span class="string">"{}: {} leafs"</span>, r#move.<span class="number">0</span>, r#move.<span class="number">1</span>);
         total_leafs += r#move.<span class="number">1</span>;
     }
 
     <span class="macro">println!</span>();
-    <span class="macro">println!</span>(<span class="string">&quot;{} leafs total&quot;</span>, total_leafs);
-    <span class="macro">println!</span>(<span class="string">&quot;Perft done!&quot;</span>);
+    <span class="macro">println!</span>(<span class="string">"{} leafs total"</span>, total_leafs);
+    <span class="macro">println!</span>(<span class="string">"Perft done!"</span>);
 }
 
 <span class="doccomment">/// Handles `qperft [depth] [threads_count] [hashtable_size_mb]`, `qperft [depth] [threads_count] [hashtable_size_mb] fen [fen]` and
@@ -1234,24 +1276,24 @@
 /// The initial position can be specified by FEN, a list of moves, or just omitted (so the default start position will be taken).
 </span><span class="kw">fn </span>handle_qperft(input: Vec&lt;<span class="kw-2">&amp;</span>str&gt;) {
     <span class="kw">if </span>input.len() &lt; <span class="number">2 </span>{
-        <span class="macro">println!</span>(<span class="string">&quot;Depth parameter not found&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">"Depth parameter not found"</span>);
         <span class="kw">return</span>;
     }
 
     <span class="kw">if </span>input.len() &lt; <span class="number">3 </span>{
-        <span class="macro">println!</span>(<span class="string">&quot;Hashtable size parameter not found&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">"Hashtable size parameter not found"</span>);
         <span class="kw">return</span>;
     }
 
     <span class="kw">if </span>input.len() &lt; <span class="number">4 </span>{
-        <span class="macro">println!</span>(<span class="string">&quot;Threads count parameter not found&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">"Threads count parameter not found"</span>);
         <span class="kw">return</span>;
     }
 
     <span class="kw">let </span>max_depth: i32 = <span class="kw">match </span>input[<span class="number">1</span>].parse() {
         <span class="prelude-val">Ok</span>(result) =&gt; result,
         <span class="prelude-val">Err</span>(error) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid depth parameter: {}&quot;</span>, error);
+            <span class="macro">println!</span>(<span class="string">"Invalid depth parameter: {}"</span>, error);
             <span class="kw">return</span>;
         }
     };
@@ -1259,7 +1301,7 @@
     <span class="kw">let </span>threads_count: usize = <span class="kw">match </span>input[<span class="number">2</span>].parse() {
         <span class="prelude-val">Ok</span>(result) =&gt; result,
         <span class="prelude-val">Err</span>(error) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid threads count parameter: {}&quot;</span>, error);
+            <span class="macro">println!</span>(<span class="string">"Invalid threads count parameter: {}"</span>, error);
             <span class="kw">return</span>;
         }
     };
@@ -1267,20 +1309,20 @@
     <span class="kw">let </span>hashtable_size: usize = <span class="kw">match </span>input[<span class="number">3</span>].parse() {
         <span class="prelude-val">Ok</span>(result) =&gt; result,
         <span class="prelude-val">Err</span>(error) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid hashtable size parameter: {}&quot;</span>, error);
+            <span class="macro">println!</span>(<span class="string">"Invalid hashtable size parameter: {}"</span>, error);
             <span class="kw">return</span>;
         }
     };
 
     <span class="kw">if </span>hashtable_size == <span class="number">0 </span>{
-        <span class="macro">println!</span>(<span class="string">&quot;Hashtable size must be greater than zero&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">"Hashtable size must be greater than zero"</span>);
         <span class="kw">return</span>;
     }
 
     <span class="kw">let </span><span class="kw-2">mut </span>board = <span class="kw">match </span>prepare_board(<span class="kw-2">&amp;</span>input[<span class="number">4</span>..]) {
         <span class="prelude-val">Ok</span>(board) =&gt; board,
         <span class="prelude-val">Err</span>(error) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid FEN parameter: {}&quot;</span>, error);
+            <span class="macro">println!</span>(<span class="string">"Invalid FEN parameter: {}"</span>, error);
             <span class="kw">return</span>;
         }
     };
@@ -1292,39 +1334,40 @@
         <span class="kw">let </span>diff = (now.elapsed().unwrap().as_millis() <span class="kw">as </span>f64) / <span class="number">1000.0</span>;
         <span class="kw">let </span>mnps = ((count <span class="kw">as </span>f64) / <span class="number">1000000.0</span>) / diff;
 
-        <span class="macro">println!</span>(<span class="string">&quot;Depth {}: {} leafs in {:.2} s ({:.2} ML/s, {:.2}% of hashtable used)&quot;</span>, depth, count, diff, mnps, hashtable_usage);
+        <span class="macro">println!</span>(<span class="string">"Depth {}: {} leafs in {:.2} s ({:.2} ML/s, {:.2}% of hashtable used)"</span>, depth, count, diff, mnps, hashtable_usage);
     }
 
-    <span class="macro">println!</span>(<span class="string">&quot;Perft done!&quot;</span>);
+    <span class="macro">println!</span>(<span class="string">"Perft done!"</span>);
 }
 
 <span class="doccomment">/// Handles `testset [epd] [depth] [transposition_table_size] [threads_count]` command by running a fixed-`depth` search of positions stored in the `epd` file,
 /// using hashtable with size specified in `transposition_table_size`. To classify the test as successful, the last iteration has to return the correct best move.
+</span><span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
 </span><span class="kw">fn </span>handle_testset(input: Vec&lt;<span class="kw-2">&amp;</span>str&gt;) {
     <span class="kw">if </span>input.len() &lt; <span class="number">2 </span>{
-        <span class="macro">println!</span>(<span class="string">&quot;EPD filename parameter not found&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">"EPD filename parameter not found"</span>);
         <span class="kw">return</span>;
     }
 
     <span class="kw">if </span>input.len() &lt; <span class="number">3 </span>{
-        <span class="macro">println!</span>(<span class="string">&quot;Depth parameter not found&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">"Depth parameter not found"</span>);
         <span class="kw">return</span>;
     }
 
     <span class="kw">if </span>input.len() &lt; <span class="number">4 </span>{
-        <span class="macro">println!</span>(<span class="string">&quot;Transposition table size parameter not found&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">"Transposition table size parameter not found"</span>);
         <span class="kw">return</span>;
     }
 
     <span class="kw">if </span>input.len() &lt; <span class="number">5 </span>{
-        <span class="macro">println!</span>(<span class="string">&quot;Threads count parameter not found&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">"Threads count parameter not found"</span>);
         <span class="kw">return</span>;
     }
 
     <span class="kw">let </span>depth = <span class="kw">match </span>input[<span class="number">2</span>].parse() {
         <span class="prelude-val">Ok</span>(value) =&gt; value,
         <span class="prelude-val">Err</span>(error) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid depth parameter: {}&quot;</span>, error);
+            <span class="macro">println!</span>(<span class="string">"Invalid depth parameter: {}"</span>, error);
             <span class="kw">return</span>;
         }
     };
@@ -1332,20 +1375,20 @@
     <span class="kw">let </span>transposition_table_size: usize = <span class="kw">match </span>input[<span class="number">3</span>].parse() {
         <span class="prelude-val">Ok</span>(value) =&gt; value,
         <span class="prelude-val">Err</span>(error) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid transposition table size parameter: {}&quot;</span>, error);
+            <span class="macro">println!</span>(<span class="string">"Invalid transposition table size parameter: {}"</span>, error);
             <span class="kw">return</span>;
         }
     };
 
     <span class="kw">if </span>transposition_table_size == <span class="number">0 </span>{
-        <span class="macro">println!</span>(<span class="string">&quot;Transposition table size must be greater than zero&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">"Transposition table size must be greater than zero"</span>);
         <span class="kw">return</span>;
     }
 
     <span class="kw">let </span>threads_count = <span class="kw">match </span>input[<span class="number">4</span>].parse() {
         <span class="prelude-val">Ok</span>(value) =&gt; value,
         <span class="prelude-val">Err</span>(error) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid threads count parameter: {}&quot;</span>, error);
+            <span class="macro">println!</span>(<span class="string">"Invalid threads count parameter: {}"</span>, error);
             <span class="kw">return</span>;
         }
     };
@@ -1356,36 +1399,37 @@
 <span class="doccomment">/// Handles `tuner [epd] [output] [lock_material] [randomize] [threads_count]` command by running the evaluation parameters tuner. The input file is specified by `epd`
 /// file with a list of positions and their expected results, and the `output` directory is used to store generated Rust sources with the optimized values. Use
 /// `lock_material` to disable tuner for piece values, and `randomize` to initialize evaluation parameters with random values. Multithreading is supported by `threads_count`.
+</span><span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
 </span><span class="kw">fn </span>handle_tuner(input: Vec&lt;<span class="kw-2">&amp;</span>str&gt;) {
     <span class="kw">if </span>input.len() &lt; <span class="number">2 </span>{
-        <span class="macro">println!</span>(<span class="string">&quot;EPD filename parameter not found&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">"EPD filename parameter not found"</span>);
         <span class="kw">return</span>;
     }
 
     <span class="kw">if </span>input.len() &lt; <span class="number">3 </span>{
-        <span class="macro">println!</span>(<span class="string">&quot;Output directory parameter not found&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">"Output directory parameter not found"</span>);
         <span class="kw">return</span>;
     }
 
     <span class="kw">if </span>input.len() &lt; <span class="number">4 </span>{
-        <span class="macro">println!</span>(<span class="string">&quot;Lock material parameter not found&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">"Lock material parameter not found"</span>);
         <span class="kw">return</span>;
     }
 
     <span class="kw">if </span>input.len() &lt; <span class="number">5 </span>{
-        <span class="macro">println!</span>(<span class="string">&quot;Random values parameter not found&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">"Random values parameter not found"</span>);
         <span class="kw">return</span>;
     }
 
     <span class="kw">if </span>input.len() &lt; <span class="number">6 </span>{
-        <span class="macro">println!</span>(<span class="string">&quot;Threads count parameter not found&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">"Threads count parameter not found"</span>);
         <span class="kw">return</span>;
     }
 
     <span class="kw">let </span>lock_material = <span class="kw">match </span>input[<span class="number">3</span>].parse() {
         <span class="prelude-val">Ok</span>(value) =&gt; value,
         <span class="prelude-val">Err</span>(error) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid lock material parameter: {}&quot;</span>, error);
+            <span class="macro">println!</span>(<span class="string">"Invalid lock material parameter: {}"</span>, error);
             <span class="kw">return</span>;
         }
     };
@@ -1393,7 +1437,7 @@
     <span class="kw">let </span>random_values = <span class="kw">match </span>input[<span class="number">4</span>].parse() {
         <span class="prelude-val">Ok</span>(value) =&gt; value,
         <span class="prelude-val">Err</span>(error) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid random values parameter: {}&quot;</span>, error);
+            <span class="macro">println!</span>(<span class="string">"Invalid random values parameter: {}"</span>, error);
             <span class="kw">return</span>;
         }
     };
@@ -1401,7 +1445,7 @@
     <span class="kw">let </span>threads_count = <span class="kw">match </span>input[<span class="number">5</span>].parse() {
         <span class="prelude-val">Ok</span>(value) =&gt; value,
         <span class="prelude-val">Err</span>(error) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid threads count parameter: {}&quot;</span>, error);
+            <span class="macro">println!</span>(<span class="string">"Invalid threads count parameter: {}"</span>, error);
             <span class="kw">return</span>;
         }
     };
@@ -1411,47 +1455,43 @@
 
 <span class="doccomment">/// Handles `tunerset [pgn] [output] [min_ply] [max_score] [max_diff] [density]` command by running generator of the dataset for the tuner.
 /// It works by parsing `pgn_filename`, and then picking random positions based on the provided restrictions like `min_ply`, `max_score`,
-/// `max_differ`, `density` and `avg_game_phase`. Output positions are then stored in the `output_file`.
+/// `max_differ` and `density`. Output positions are then stored in the `output_file`.
+</span><span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
 </span><span class="kw">fn </span>handle_tunerset(input: Vec&lt;<span class="kw-2">&amp;</span>str&gt;) {
     <span class="kw">if </span>input.len() &lt; <span class="number">2 </span>{
-        <span class="macro">println!</span>(<span class="string">&quot;PGN filename parameter not found&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">"PGN filename parameter not found"</span>);
         <span class="kw">return</span>;
     }
 
     <span class="kw">if </span>input.len() &lt; <span class="number">3 </span>{
-        <span class="macro">println!</span>(<span class="string">&quot;Output directory parameter not found&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">"Output directory parameter not found"</span>);
         <span class="kw">return</span>;
     }
 
     <span class="kw">if </span>input.len() &lt; <span class="number">4 </span>{
-        <span class="macro">println!</span>(<span class="string">&quot;Minimal ply parameter not found&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">"Minimal ply parameter not found"</span>);
         <span class="kw">return</span>;
     }
 
     <span class="kw">if </span>input.len() &lt; <span class="number">5 </span>{
-        <span class="macro">println!</span>(<span class="string">&quot;Maximal score parameter not found&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">"Maximal score parameter not found"</span>);
         <span class="kw">return</span>;
     }
 
     <span class="kw">if </span>input.len() &lt; <span class="number">6 </span>{
-        <span class="macro">println!</span>(<span class="string">&quot;Maximal score difference parameter not found&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">"Maximal score difference parameter not found"</span>);
         <span class="kw">return</span>;
     }
 
     <span class="kw">if </span>input.len() &lt; <span class="number">7 </span>{
-        <span class="macro">println!</span>(<span class="string">&quot;Maximal density parameter not found&quot;</span>);
-        <span class="kw">return</span>;
-    }
-
-    <span class="kw">if </span>input.len() &lt; <span class="number">8 </span>{
-        <span class="macro">println!</span>(<span class="string">&quot;Average game phase parameter not found&quot;</span>);
+        <span class="macro">println!</span>(<span class="string">"Maximal density parameter not found"</span>);
         <span class="kw">return</span>;
     }
 
     <span class="kw">let </span>min_ply = <span class="kw">match </span>input[<span class="number">3</span>].parse() {
         <span class="prelude-val">Ok</span>(value) =&gt; value,
         <span class="prelude-val">Err</span>(error) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid minimal ply parameter: {}&quot;</span>, error);
+            <span class="macro">println!</span>(<span class="string">"Invalid minimal ply parameter: {}"</span>, error);
             <span class="kw">return</span>;
         }
     };
@@ -1459,7 +1499,7 @@
     <span class="kw">let </span>max_score = <span class="kw">match </span>input[<span class="number">4</span>].parse() {
         <span class="prelude-val">Ok</span>(value) =&gt; value,
         <span class="prelude-val">Err</span>(error) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid maximal quiescence score parameter: {}&quot;</span>, error);
+            <span class="macro">println!</span>(<span class="string">"Invalid maximal quiescence score parameter: {}"</span>, error);
             <span class="kw">return</span>;
         }
     };
@@ -1467,7 +1507,7 @@
     <span class="kw">let </span>max_diff = <span class="kw">match </span>input[<span class="number">5</span>].parse() {
         <span class="prelude-val">Ok</span>(value) =&gt; value,
         <span class="prelude-val">Err</span>(error) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid maximal score difference parameter: {}&quot;</span>, error);
+            <span class="macro">println!</span>(<span class="string">"Invalid maximal score difference parameter: {}"</span>, error);
             <span class="kw">return</span>;
         }
     };
@@ -1475,20 +1515,12 @@
     <span class="kw">let </span>density = <span class="kw">match </span>input[<span class="number">6</span>].parse() {
         <span class="prelude-val">Ok</span>(value) =&gt; value,
         <span class="prelude-val">Err</span>(error) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid density parameter: {}&quot;</span>, error);
+            <span class="macro">println!</span>(<span class="string">"Invalid density parameter: {}"</span>, error);
             <span class="kw">return</span>;
         }
     };
 
-    <span class="kw">let </span>avg_game_phase = <span class="kw">match </span>input[<span class="number">7</span>].parse() {
-        <span class="prelude-val">Ok</span>(value) =&gt; value,
-        <span class="prelude-val">Err</span>(error) =&gt; {
-            <span class="macro">println!</span>(<span class="string">&quot;Invalid average game phase parameter: {}&quot;</span>, error);
-            <span class="kw">return</span>;
-        }
-    };
-
-    tunerset::run(input[<span class="number">1</span>], input[<span class="number">2</span>], min_ply, max_score, max_diff, density, avg_game_phase);
+    tunerset::run(input[<span class="number">1</span>], input[<span class="number">2</span>], min_ply, max_score, max_diff, density);
 }
 
 <span class="doccomment">/// Handles `uci` command by entering into the UCI (Universal Chess Interface) mode.
@@ -1498,7 +1530,7 @@
 
 <span class="doccomment">/// Handles `wah` command by printing WAH.                  
 </span><span class="kw">fn </span>handle_wah() {
-    <span class="macro">println!</span>(<span class="string">&quot;WAH&quot;</span>);
+    <span class="macro">println!</span>(<span class="string">"WAH"</span>);
 }
 
 <span class="doccomment">/// Handles `quit` command by exiting process.
@@ -1508,7 +1540,7 @@
 
 <span class="doccomment">/// Handles unknown command by printing warning message.
 </span><span class="kw">fn </span>handle_unknown_command() {
-    <span class="macro">println!</span>(<span class="string">&quot;Unknown command, type \&quot;help\&quot; to get a list of available ones&quot;</span>);
+    <span class="macro">println!</span>(<span class="string">"Unknown command, type \"help\" to get a list of available ones"</span>);
 }
 
 <span class="doccomment">/// Creates a new board based on the input with FEN or moves list - returns [Err] if internal parser failed.
@@ -1518,12 +1550,12 @@
     }
 
     <span class="kw">match </span>parameters[<span class="number">0</span>] {
-        <span class="string">&quot;fen&quot; </span>=&gt; {
-            <span class="kw">let </span>fen = parameters[<span class="number">1</span>..].join(<span class="string">&quot; &quot;</span>);
+        <span class="string">"fen" </span>=&gt; {
+            <span class="kw">let </span>fen = parameters[<span class="number">1</span>..].join(<span class="string">" "</span>);
             Board::new_from_fen(fen.as_str(), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>)
         }
-        <span class="string">&quot;moves&quot; </span>=&gt; Board::new_from_moves(<span class="kw-2">&amp;</span>parameters[<span class="number">1</span>..], <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
-        <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid mode: parameter[0]={}&quot;</span>, parameters[<span class="number">0</span>])),
+        <span class="string">"moves" </span>=&gt; Board::new_from_moves(<span class="kw-2">&amp;</span>parameters[<span class="number">1</span>..], <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
+        <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">"Invalid mode: parameter[0]={}"</span>, parameters[<span class="number">0</span>])),
     }
 }
 </code></pre></div></section></main></body></html>

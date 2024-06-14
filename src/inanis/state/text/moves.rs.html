@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/state/text/moves.rs`."><title>moves.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9bb858ba049f1f21.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="inanis" data-themes="" data-resource-suffix="" data-rustdoc-version="1.72.0 (5680fa18f 2023-08-23)" data-channel="1.72.0" data-search-js="search-f6292fe389d70017.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ><script src="../../../../static.files/storage-59fd9b8ccb335783.js"></script><script defer src="../../../../static.files/source-script-106908c7a7964ba4.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../inanis/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/state/text/moves.rs`."><title>moves.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="inanis" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.2 (25ef9e3d8 2024-04-09)" data-channel="1.77.2" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../../inanis/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -312,7 +314,7 @@
 
 <span class="kw">impl </span>Move {
     <span class="doccomment">/// Converts short-notated move (e4, Rc8, Qxb6) in `text` into the [Move] instance, using the `board` as context.
-    /// Returns [Err] with the proper message if `text` couldn&#39;t be parsed correctly.
+    /// Returns [Err] with the proper message if `text` couldn't be parsed correctly.
     </span><span class="kw">pub fn </span>from_short_notation(<span class="kw-2">mut </span>text: <span class="kw-2">&amp;</span>str, board: <span class="kw-2">&amp;mut </span>Board) -&gt; <span class="prelude-ty">Result</span>&lt;Move, String&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>moves = [MaybeUninit::uninit(); engine::MAX_MOVES_COUNT];
         <span class="kw">let </span>moves_count = board.get_all_moves(<span class="kw-2">&amp;mut </span>moves, u64::MAX);
@@ -326,32 +328,32 @@
         <span class="kw">let </span><span class="kw-2">mut </span>desired_promotion: <span class="prelude-ty">Option</span>&lt;usize&gt; = <span class="prelude-val">None</span>;
 
         <span class="kw">let </span>original_text = text;
-        text = text.trim_matches(<span class="string">&#39;#&#39;</span>);
-        text = text.trim_matches(<span class="string">&#39;+&#39;</span>);
-        text = text.trim_matches(<span class="string">&#39;=&#39;</span>);
-        text = text.trim_matches(<span class="string">&#39;?&#39;</span>);
-        text = text.trim_matches(<span class="string">&#39;!&#39;</span>);
+        text = text.trim_matches(<span class="string">'#'</span>);
+        text = text.trim_matches(<span class="string">'+'</span>);
+        text = text.trim_matches(<span class="string">'='</span>);
+        text = text.trim_matches(<span class="string">'?'</span>);
+        text = text.trim_matches(<span class="string">'!'</span>);
 
-        <span class="kw">if </span>text.contains(<span class="string">&#39;=&#39;</span>) {
+        <span class="kw">if </span>text.contains(<span class="string">'='</span>) {
             <span class="kw">let </span>promotion = <span class="kw-2">&amp;</span>text[text.len() - <span class="number">2</span>..];
             desired_promotion = <span class="kw">match </span>promotion {
-                <span class="string">&quot;=Q&quot; </span>=&gt; <span class="prelude-val">Some</span>(QUEEN),
-                <span class="string">&quot;=R&quot; </span>=&gt; <span class="prelude-val">Some</span>(ROOK),
-                <span class="string">&quot;=B&quot; </span>=&gt; <span class="prelude-val">Some</span>(BISHOP),
-                <span class="string">&quot;=N&quot; </span>=&gt; <span class="prelude-val">Some</span>(KNIGHT),
-                <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid promotion: fen={}, promotion={}&quot;</span>, board, promotion)),
+                <span class="string">"=Q" </span>=&gt; <span class="prelude-val">Some</span>(QUEEN),
+                <span class="string">"=R" </span>=&gt; <span class="prelude-val">Some</span>(ROOK),
+                <span class="string">"=B" </span>=&gt; <span class="prelude-val">Some</span>(BISHOP),
+                <span class="string">"=N" </span>=&gt; <span class="prelude-val">Some</span>(KNIGHT),
+                <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">"Invalid promotion: fen={}, promotion={}"</span>, board, promotion)),
             }
         }
 
-        text = text.trim_end_matches(<span class="string">&quot;=Q&quot;</span>);
-        text = text.trim_end_matches(<span class="string">&quot;=R&quot;</span>);
-        text = text.trim_end_matches(<span class="string">&quot;=B&quot;</span>);
-        text = text.trim_end_matches(<span class="string">&quot;=N&quot;</span>);
+        text = text.trim_end_matches(<span class="string">"=Q"</span>);
+        text = text.trim_end_matches(<span class="string">"=R"</span>);
+        text = text.trim_end_matches(<span class="string">"=B"</span>);
+        text = text.trim_end_matches(<span class="string">"=N"</span>);
 
-        <span class="kw">if </span>text == <span class="string">&quot;0-0&quot; </span>|| text == <span class="string">&quot;O-O&quot; </span>{
+        <span class="kw">if </span>text == <span class="string">"0-0" </span>|| text == <span class="string">"O-O" </span>{
             desired_piece = <span class="prelude-val">Some</span>(KING);
             desired_flags = <span class="prelude-val">Some</span>(MoveFlags::SHORT_CASTLING);
-        } <span class="kw">else if </span>text == <span class="string">&quot;0-0-0&quot; </span>|| text == <span class="string">&quot;O-O-O&quot; </span>{
+        } <span class="kw">else if </span>text == <span class="string">"0-0-0" </span>|| text == <span class="string">"O-O-O" </span>{
             desired_piece = <span class="prelude-val">Some</span>(KING);
             desired_flags = <span class="prelude-val">Some</span>(MoveFlags::LONG_CASTLING);
         } <span class="kw">else </span>{
@@ -359,20 +361,20 @@
             <span class="kw">match </span>text.len() {
                 <span class="comment">// e4
                 </span><span class="number">2 </span>=&gt; {
-                    <span class="kw">let </span>file = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination file: text={}&quot;</span>, text))<span class="question-mark">? </span><span class="kw">as </span>u8;
-                    <span class="kw">let </span>rank = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad source rank: text={}&quot;</span>, text))<span class="question-mark">? </span><span class="kw">as </span>u8;
-                    <span class="kw">let </span>to = (<span class="number">7 </span>- (file - <span class="string">b&#39;a&#39;</span>)) + <span class="number">8 </span>* (rank - <span class="string">b&#39;1&#39;</span>);
+                    <span class="kw">let </span>file = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">"Invalid move, bad destination file: text={}"</span>, text))<span class="question-mark">? </span><span class="kw">as </span>u8;
+                    <span class="kw">let </span>rank = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">"Invalid move, bad source rank: text={}"</span>, text))<span class="question-mark">? </span><span class="kw">as </span>u8;
+                    <span class="kw">let </span>to = (<span class="number">7 </span>- (file - <span class="string">b'a'</span>)) + <span class="number">8 </span>* (rank - <span class="string">b'1'</span>);
 
                     desired_to = <span class="prelude-val">Some</span>(to <span class="kw">as </span>usize);
                     desired_piece = <span class="prelude-val">Some</span>(PAWN);
                 }
                 <span class="comment">// Nd5
                 </span><span class="number">3 </span>=&gt; {
-                    <span class="kw">let </span>piece = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad piece: text={}&quot;</span>, text))<span class="question-mark">?</span>;
-                    <span class="kw">let </span>file = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination file: text={}&quot;</span>, text))<span class="question-mark">? </span><span class="kw">as </span>u8;
-                    <span class="kw">let </span>rank = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination rank: text={}&quot;</span>, text))<span class="question-mark">? </span><span class="kw">as </span>u8;
+                    <span class="kw">let </span>piece = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">"Invalid move, bad piece: text={}"</span>, text))<span class="question-mark">?</span>;
+                    <span class="kw">let </span>file = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">"Invalid move, bad destination file: text={}"</span>, text))<span class="question-mark">? </span><span class="kw">as </span>u8;
+                    <span class="kw">let </span>rank = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">"Invalid move, bad destination rank: text={}"</span>, text))<span class="question-mark">? </span><span class="kw">as </span>u8;
 
-                    <span class="kw">let </span>to = (<span class="number">7 </span>- (file - <span class="string">b&#39;a&#39;</span>)) + <span class="number">8 </span>* (rank - <span class="string">b&#39;1&#39;</span>);
+                    <span class="kw">let </span>to = (<span class="number">7 </span>- (file - <span class="string">b'a'</span>)) + <span class="number">8 </span>* (rank - <span class="string">b'1'</span>);
                     <span class="kw">let </span>piece_type = text::symbol_to_piece(piece)<span class="question-mark">?</span>;
 
                     desired_to = <span class="prelude-val">Some</span>(to <span class="kw">as </span>usize);
@@ -380,17 +382,17 @@
                 }
                 <span class="comment">// exf5, Rxf5, N3e4, Nde4
                 </span><span class="number">4 </span>=&gt; {
-                    <span class="kw">let </span>piece_or_file = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad symbol: text={}&quot;</span>, text))<span class="question-mark">?</span>;
-                    <span class="kw">let </span>capture_or_file_rank = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad symbol: text={}&quot;</span>, text))<span class="question-mark">?</span>;
-                    <span class="kw">let </span>file = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination file: text={}&quot;</span>, text))<span class="question-mark">? </span><span class="kw">as </span>u8;
-                    <span class="kw">let </span>rank = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination rank: text={}&quot;</span>, text))<span class="question-mark">? </span><span class="kw">as </span>u8;
-                    <span class="kw">let </span>to = (<span class="number">7 </span>- (file - <span class="string">b&#39;a&#39;</span>)) + <span class="number">8 </span>* (rank - <span class="string">b&#39;1&#39;</span>);
+                    <span class="kw">let </span>piece_or_file = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">"Invalid move, bad symbol: text={}"</span>, text))<span class="question-mark">?</span>;
+                    <span class="kw">let </span>capture_or_file_rank = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">"Invalid move, bad symbol: text={}"</span>, text))<span class="question-mark">?</span>;
+                    <span class="kw">let </span>file = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">"Invalid move, bad destination file: text={}"</span>, text))<span class="question-mark">? </span><span class="kw">as </span>u8;
+                    <span class="kw">let </span>rank = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">"Invalid move, bad destination rank: text={}"</span>, text))<span class="question-mark">? </span><span class="kw">as </span>u8;
+                    <span class="kw">let </span>to = (<span class="number">7 </span>- (file - <span class="string">b'a'</span>)) + <span class="number">8 </span>* (rank - <span class="string">b'1'</span>);
 
                     <span class="comment">// exf5, Rxf5
-                    </span><span class="kw">if </span>capture_or_file_rank == <span class="string">&#39;x&#39; </span>{
+                    </span><span class="kw">if </span>capture_or_file_rank == <span class="string">'x' </span>{
                         <span class="comment">// exf5
                         </span><span class="kw">if </span>piece_or_file.is_lowercase() {
-                            <span class="kw">let </span>file_from = <span class="number">7 </span>- ((piece_or_file <span class="kw">as </span>u8) - <span class="string">b&#39;a&#39;</span>);
+                            <span class="kw">let </span>file_from = <span class="number">7 </span>- ((piece_or_file <span class="kw">as </span>u8) - <span class="string">b'a'</span>);
 
                             desired_to = <span class="prelude-val">Some</span>(to <span class="kw">as </span>usize);
                             desired_file = <span class="prelude-val">Some</span>(file_from <span class="kw">as </span>usize);
@@ -407,7 +409,7 @@
                     <span class="comment">// N3e4
                     </span>} <span class="kw">else if </span>capture_or_file_rank.is_ascii_digit() {
                         <span class="kw">let </span>piece_type = text::symbol_to_piece(piece_or_file)<span class="question-mark">?</span>;
-                        <span class="kw">let </span>rank_from = (capture_or_file_rank <span class="kw">as </span>u8) - <span class="string">b&#39;1&#39;</span>;
+                        <span class="kw">let </span>rank_from = (capture_or_file_rank <span class="kw">as </span>u8) - <span class="string">b'1'</span>;
 
                         desired_to = <span class="prelude-val">Some</span>(to <span class="kw">as </span>usize);
                         desired_piece = <span class="prelude-val">Some</span>(piece_type);
@@ -415,7 +417,7 @@
                     }
                     <span class="comment">// Nde4
                     </span><span class="kw">else </span>{
-                        <span class="kw">let </span>file_from = <span class="number">7 </span>- ((capture_or_file_rank <span class="kw">as </span>u8) - <span class="string">b&#39;a&#39;</span>);
+                        <span class="kw">let </span>file_from = <span class="number">7 </span>- ((capture_or_file_rank <span class="kw">as </span>u8) - <span class="string">b'a'</span>);
                         <span class="kw">let </span>piece_type = text::symbol_to_piece(piece_or_file)<span class="question-mark">?</span>;
 
                         desired_to = <span class="prelude-val">Some</span>(to <span class="kw">as </span>usize);
@@ -425,18 +427,18 @@
                 }
                 <span class="comment">// R2xc2, Rexc2, Qd3c2
                 </span><span class="number">5 </span>=&gt; {
-                    <span class="kw">let </span>piece = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad piece: text={}&quot;</span>, text))<span class="question-mark">?</span>;
-                    <span class="kw">let </span>file_or_rank = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad symbol: text={}&quot;</span>, text))<span class="question-mark">?</span>;
-                    <span class="kw">let </span>capture_or_rank = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad symbol: text={}&quot;</span>, text))<span class="question-mark">?</span>;
-                    <span class="kw">let </span>file = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination file: text={}&quot;</span>, text))<span class="question-mark">? </span><span class="kw">as </span>u8;
-                    <span class="kw">let </span>rank = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination rank: text={}&quot;</span>, text))<span class="question-mark">? </span><span class="kw">as </span>u8;
-                    <span class="kw">let </span>to = (<span class="number">7 </span>- (file - <span class="string">b&#39;a&#39;</span>)) + <span class="number">8 </span>* (rank - <span class="string">b&#39;1&#39;</span>);
+                    <span class="kw">let </span>piece = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">"Invalid move, bad piece: text={}"</span>, text))<span class="question-mark">?</span>;
+                    <span class="kw">let </span>file_or_rank = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">"Invalid move, bad symbol: text={}"</span>, text))<span class="question-mark">?</span>;
+                    <span class="kw">let </span>capture_or_rank = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">"Invalid move, bad symbol: text={}"</span>, text))<span class="question-mark">?</span>;
+                    <span class="kw">let </span>file = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">"Invalid move, bad destination file: text={}"</span>, text))<span class="question-mark">? </span><span class="kw">as </span>u8;
+                    <span class="kw">let </span>rank = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">"Invalid move, bad destination rank: text={}"</span>, text))<span class="question-mark">? </span><span class="kw">as </span>u8;
+                    <span class="kw">let </span>to = (<span class="number">7 </span>- (file - <span class="string">b'a'</span>)) + <span class="number">8 </span>* (rank - <span class="string">b'1'</span>);
                     <span class="kw">let </span>piece_type = text::symbol_to_piece(piece)<span class="question-mark">?</span>;
 
-                    <span class="kw">if </span>capture_or_rank == <span class="string">&#39;x&#39; </span>{
+                    <span class="kw">if </span>capture_or_rank == <span class="string">'x' </span>{
                         <span class="comment">// R2xc2
                         </span><span class="kw">if </span>file_or_rank.is_ascii_digit() {
-                            <span class="kw">let </span>rank_from = (file_or_rank <span class="kw">as </span>u8) - <span class="string">b&#39;1&#39;</span>;
+                            <span class="kw">let </span>rank_from = (file_or_rank <span class="kw">as </span>u8) - <span class="string">b'1'</span>;
 
                             desired_to = <span class="prelude-val">Some</span>(to <span class="kw">as </span>usize);
                             desired_rank = <span class="prelude-val">Some</span>(rank_from <span class="kw">as </span>usize);
@@ -444,7 +446,7 @@
                             desired_capture = <span class="prelude-val">Some</span>(<span class="bool-val">true</span>);
                         <span class="comment">// Rexc2
                         </span>} <span class="kw">else </span>{
-                            <span class="kw">let </span>file_from = <span class="number">7 </span>- ((file_or_rank <span class="kw">as </span>u8) - <span class="string">b&#39;a&#39;</span>);
+                            <span class="kw">let </span>file_from = <span class="number">7 </span>- ((file_or_rank <span class="kw">as </span>u8) - <span class="string">b'a'</span>);
 
                             desired_to = <span class="prelude-val">Some</span>(to <span class="kw">as </span>usize);
                             desired_file = <span class="prelude-val">Some</span>(file_from <span class="kw">as </span>usize);
@@ -453,8 +455,8 @@
                         }
                     <span class="comment">// Qd3c2
                     </span>} <span class="kw">else </span>{
-                        <span class="kw">let </span>file_from = <span class="number">7 </span>- ((file_or_rank <span class="kw">as </span>u8) - <span class="string">b&#39;a&#39;</span>);
-                        <span class="kw">let </span>rank_from = (capture_or_rank <span class="kw">as </span>u8) - <span class="string">b&#39;1&#39;</span>;
+                        <span class="kw">let </span>file_from = <span class="number">7 </span>- ((file_or_rank <span class="kw">as </span>u8) - <span class="string">b'a'</span>);
+                        <span class="kw">let </span>rank_from = (capture_or_rank <span class="kw">as </span>u8) - <span class="string">b'1'</span>;
 
                         desired_to = <span class="prelude-val">Some</span>(to <span class="kw">as </span>usize);
                         desired_file = <span class="prelude-val">Some</span>(file_from <span class="kw">as </span>usize);
@@ -464,17 +466,17 @@
                 }
                 <span class="comment">// Qa1xd4
                 </span><span class="number">6 </span>=&gt; {
-                    <span class="kw">let </span>piece = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad piece: text={}&quot;</span>, text))<span class="question-mark">?</span>;
-                    <span class="kw">let </span>source_file = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad source file: text={}&quot;</span>, text))<span class="question-mark">?</span>;
-                    <span class="kw">let </span>source_rank = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad source rank: text={}&quot;</span>, text))<span class="question-mark">?</span>;
-                    <span class="kw">let _ </span>= chars.next().ok_or(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad symbol: text={}&quot;</span>, text))<span class="question-mark">?</span>;
-                    <span class="kw">let </span>file = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination file: text={}&quot;</span>, text))<span class="question-mark">? </span><span class="kw">as </span>u8;
-                    <span class="kw">let </span>rank = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination rank: text={}&quot;</span>, text))<span class="question-mark">? </span><span class="kw">as </span>u8;
-                    <span class="kw">let </span>to = (<span class="number">7 </span>- (file - <span class="string">b&#39;a&#39;</span>)) + <span class="number">8 </span>* (rank - <span class="string">b&#39;1&#39;</span>);
+                    <span class="kw">let </span>piece = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">"Invalid move, bad piece: text={}"</span>, text))<span class="question-mark">?</span>;
+                    <span class="kw">let </span>source_file = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">"Invalid move, bad source file: text={}"</span>, text))<span class="question-mark">?</span>;
+                    <span class="kw">let </span>source_rank = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">"Invalid move, bad source rank: text={}"</span>, text))<span class="question-mark">?</span>;
+                    <span class="kw">let _ </span>= chars.next().ok_or(<span class="macro">format!</span>(<span class="string">"Invalid move, bad symbol: text={}"</span>, text))<span class="question-mark">?</span>;
+                    <span class="kw">let </span>file = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">"Invalid move, bad destination file: text={}"</span>, text))<span class="question-mark">? </span><span class="kw">as </span>u8;
+                    <span class="kw">let </span>rank = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">"Invalid move, bad destination rank: text={}"</span>, text))<span class="question-mark">? </span><span class="kw">as </span>u8;
+                    <span class="kw">let </span>to = (<span class="number">7 </span>- (file - <span class="string">b'a'</span>)) + <span class="number">8 </span>* (rank - <span class="string">b'1'</span>);
                     <span class="kw">let </span>piece_type = text::symbol_to_piece(piece)<span class="question-mark">?</span>;
 
-                    <span class="kw">let </span>file_from = <span class="number">7 </span>- ((source_file <span class="kw">as </span>u8) - <span class="string">b&#39;a&#39;</span>);
-                    <span class="kw">let </span>rank_from = (source_rank <span class="kw">as </span>u8) - <span class="string">b&#39;1&#39;</span>;
+                    <span class="kw">let </span>file_from = <span class="number">7 </span>- ((source_file <span class="kw">as </span>u8) - <span class="string">b'a'</span>);
+                    <span class="kw">let </span>rank_from = (source_rank <span class="kw">as </span>u8) - <span class="string">b'1'</span>;
 
                     desired_to = <span class="prelude-val">Some</span>(to <span class="kw">as </span>usize);
                     desired_file = <span class="prelude-val">Some</span>(file_from <span class="kw">as </span>usize);
@@ -482,7 +484,7 @@
                     desired_piece = <span class="prelude-val">Some</span>(piece_type);
                     desired_capture = <span class="prelude-val">Some</span>(<span class="bool-val">true</span>);
                 }
-                <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move: fen={}, original_text={}&quot;</span>, board, original_text)),
+                <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">"Invalid move: fen={}, original_text={}"</span>, board, original_text)),
             }
         }
 
@@ -502,7 +504,7 @@
         }
 
         <span class="kw">match </span>valid_moves.len() {
-            <span class="number">0 </span>=&gt; <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move: fen={}, original_text={}&quot;</span>, board, original_text)),
+            <span class="number">0 </span>=&gt; <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">"Invalid move: fen={}, original_text={}"</span>, board, original_text)),
             <span class="number">1 </span>=&gt; <span class="prelude-val">Ok</span>(valid_moves[<span class="number">0</span>]),
             <span class="kw">_ </span>=&gt; {
                 <span class="kw">for </span>r#move <span class="kw">in </span>valid_moves {
@@ -514,45 +516,45 @@
                     board.undo_move(r#move);
                 }
 
-                <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move: fen={}, original_text={}&quot;</span>, board, original_text))
+                <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">"Invalid move: fen={}, original_text={}"</span>, board, original_text))
             }
         }
     }
 
     <span class="doccomment">/// Converts long-notated move (e2e4, a1a8) in `text` into the [Move] instance, using the `board` as context.
-    /// Returns [Err] with the proper message if `text` couldn&#39;t be parsed correctly.
+    /// Returns [Err] with the proper message if `text` couldn't be parsed correctly.
     </span><span class="kw">pub fn </span>from_long_notation(text: <span class="kw-2">&amp;</span>str, board: <span class="kw-2">&amp;</span>Board) -&gt; <span class="prelude-ty">Result</span>&lt;Move, String&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>chars = text.chars();
-        <span class="kw">let </span>from_file = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad source file: text={}&quot;</span>, text))<span class="question-mark">? </span><span class="kw">as </span>u8;
-        <span class="kw">let </span>from_rank = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad source rank: text={}&quot;</span>, text))<span class="question-mark">? </span><span class="kw">as </span>u8;
-        <span class="kw">let </span>to_file = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination file: text={}&quot;</span>, text))<span class="question-mark">? </span><span class="kw">as </span>u8;
-        <span class="kw">let </span>to_rank = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination rank: text={}&quot;</span>, text))<span class="question-mark">? </span><span class="kw">as </span>u8;
+        <span class="kw">let </span>from_file = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">"Invalid move, bad source file: text={}"</span>, text))<span class="question-mark">? </span><span class="kw">as </span>u8;
+        <span class="kw">let </span>from_rank = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">"Invalid move, bad source rank: text={}"</span>, text))<span class="question-mark">? </span><span class="kw">as </span>u8;
+        <span class="kw">let </span>to_file = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">"Invalid move, bad destination file: text={}"</span>, text))<span class="question-mark">? </span><span class="kw">as </span>u8;
+        <span class="kw">let </span>to_rank = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">"Invalid move, bad destination rank: text={}"</span>, text))<span class="question-mark">? </span><span class="kw">as </span>u8;
         <span class="kw">let </span>promotion = chars.next();
 
-        <span class="kw">if </span>!(<span class="string">b&#39;a&#39;</span>..=<span class="string">b&#39;h&#39;</span>).contains(<span class="kw-2">&amp;</span>from_file) || !(<span class="string">b&#39;a&#39;</span>..=<span class="string">b&#39;h&#39;</span>).contains(<span class="kw-2">&amp;</span>to_file) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad source square: fen={}, text={}&quot;</span>, board, text));
+        <span class="kw">if </span>!(<span class="string">b'a'</span>..=<span class="string">b'h'</span>).contains(<span class="kw-2">&amp;</span>from_file) || !(<span class="string">b'a'</span>..=<span class="string">b'h'</span>).contains(<span class="kw-2">&amp;</span>to_file) {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">"Invalid move, bad source square: fen={}, text={}"</span>, board, text));
         }
 
-        <span class="kw">if </span>!(<span class="string">b&#39;1&#39;</span>..=<span class="string">b&#39;8&#39;</span>).contains(<span class="kw-2">&amp;</span>from_rank) || !(<span class="string">b&#39;1&#39;</span>..=<span class="string">b&#39;8&#39;</span>).contains(<span class="kw-2">&amp;</span>to_rank) {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad destination square: fen={}, text={}&quot;</span>, board, text));
+        <span class="kw">if </span>!(<span class="string">b'1'</span>..=<span class="string">b'8'</span>).contains(<span class="kw-2">&amp;</span>from_rank) || !(<span class="string">b'1'</span>..=<span class="string">b'8'</span>).contains(<span class="kw-2">&amp;</span>to_rank) {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">"Invalid move, bad destination square: fen={}, text={}"</span>, board, text));
         }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(promotion_piece) = promotion {
-            <span class="kw">if </span>![<span class="string">&#39;n&#39;</span>, <span class="string">&#39;b&#39;</span>, <span class="string">&#39;r&#39;</span>, <span class="string">&#39;q&#39;</span>].contains(<span class="kw-2">&amp;</span>promotion_piece) {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad promotion piece: fen={}, text={}&quot;</span>, board, text));
+            <span class="kw">if </span>![<span class="string">'n'</span>, <span class="string">'b'</span>, <span class="string">'r'</span>, <span class="string">'q'</span>].contains(<span class="kw-2">&amp;</span>promotion_piece) {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">"Invalid move, bad promotion piece: fen={}, text={}"</span>, board, text));
             }
         }
 
-        <span class="kw">let </span>from = ((<span class="number">7 </span>- (from_file - <span class="string">b&#39;a&#39;</span>)) + <span class="number">8 </span>* (from_rank - <span class="string">b&#39;1&#39;</span>)) <span class="kw">as </span>usize;
-        <span class="kw">let </span>to = ((<span class="number">7 </span>- (to_file - <span class="string">b&#39;a&#39;</span>)) + <span class="number">8 </span>* (to_rank - <span class="string">b&#39;1&#39;</span>)) <span class="kw">as </span>usize;
+        <span class="kw">let </span>from = ((<span class="number">7 </span>- (from_file - <span class="string">b'a'</span>)) + <span class="number">8 </span>* (from_rank - <span class="string">b'1'</span>)) <span class="kw">as </span>usize;
+        <span class="kw">let </span>to = ((<span class="number">7 </span>- (to_file - <span class="string">b'a'</span>)) + <span class="number">8 </span>* (to_rank - <span class="string">b'1'</span>)) <span class="kw">as </span>usize;
         <span class="kw">let </span>promotion_flags = <span class="kw">match </span>promotion {
             <span class="prelude-val">Some</span>(promotion_piece) =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>flags = <span class="kw">match </span>promotion_piece {
-                    <span class="string">&#39;n&#39; </span>=&gt; MoveFlags::KNIGHT_PROMOTION,
-                    <span class="string">&#39;b&#39; </span>=&gt; MoveFlags::BISHOP_PROMOTION,
-                    <span class="string">&#39;r&#39; </span>=&gt; MoveFlags::ROOK_PROMOTION,
-                    <span class="string">&#39;q&#39; </span>=&gt; MoveFlags::QUEEN_PROMOTION,
-                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move, bad promotion piece: fen={}, text={}&quot;</span>, board, text)),
+                    <span class="string">'n' </span>=&gt; MoveFlags::KNIGHT_PROMOTION,
+                    <span class="string">'b' </span>=&gt; MoveFlags::BISHOP_PROMOTION,
+                    <span class="string">'r' </span>=&gt; MoveFlags::ROOK_PROMOTION,
+                    <span class="string">'q' </span>=&gt; MoveFlags::QUEEN_PROMOTION,
+                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">"Invalid move, bad promotion piece: fen={}, text={}"</span>, board, text)),
                 };
 
                 <span class="kw">if </span>((from <span class="kw">as </span>i8) - (to <span class="kw">as </span>i8)).abs() != <span class="number">8 </span>{
@@ -577,7 +579,7 @@
             }
         }
 
-        <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;Invalid move: fen={}, text={}&quot;</span>, board, text))
+        <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">"Invalid move: fen={}, text={}"</span>, board, text))
     }
 
     <span class="doccomment">/// Converts move into the long notation (e2e4, a1a8).
@@ -586,20 +588,20 @@
         <span class="kw">let </span>to = <span class="self">self</span>.get_to();
 
         <span class="kw">let </span><span class="kw-2">mut </span>result = <span class="macro">vec!</span>[
-            char::from(<span class="string">b&#39;a&#39; </span>+ (<span class="number">7 </span>- from % <span class="number">8</span>) <span class="kw">as </span>u8),
-            char::from(<span class="string">b&#39;1&#39; </span>+ (from / <span class="number">8</span>) <span class="kw">as </span>u8),
-            char::from(<span class="string">b&#39;a&#39; </span>+ (<span class="number">7 </span>- to % <span class="number">8</span>) <span class="kw">as </span>u8),
-            char::from(<span class="string">b&#39;1&#39; </span>+ (to / <span class="number">8</span>) <span class="kw">as </span>u8),
+            char::from(<span class="string">b'a' </span>+ (<span class="number">7 </span>- from % <span class="number">8</span>) <span class="kw">as </span>u8),
+            char::from(<span class="string">b'1' </span>+ (from / <span class="number">8</span>) <span class="kw">as </span>u8),
+            char::from(<span class="string">b'a' </span>+ (<span class="number">7 </span>- to % <span class="number">8</span>) <span class="kw">as </span>u8),
+            char::from(<span class="string">b'1' </span>+ (to / <span class="number">8</span>) <span class="kw">as </span>u8),
         ];
 
         <span class="kw">let </span>flags = <span class="self">self</span>.get_flags();
         <span class="kw">if </span>flags.contains(MoveFlags::KNIGHT_PROMOTION) {
             result.push(<span class="kw">match </span>flags {
-                MoveFlags::KNIGHT_PROMOTION | MoveFlags::KNIGHT_PROMOTION_CAPTURE =&gt; <span class="string">&#39;n&#39;</span>,
-                MoveFlags::BISHOP_PROMOTION | MoveFlags::BISHOP_PROMOTION_CAPTURE =&gt; <span class="string">&#39;b&#39;</span>,
-                MoveFlags::ROOK_PROMOTION | MoveFlags::ROOK_PROMOTION_CAPTURE =&gt; <span class="string">&#39;r&#39;</span>,
-                MoveFlags::QUEEN_PROMOTION | MoveFlags::QUEEN_PROMOTION_CAPTURE =&gt; <span class="string">&#39;q&#39;</span>,
-                <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid value: flags={:?}&quot;</span>, flags),
+                MoveFlags::KNIGHT_PROMOTION | MoveFlags::KNIGHT_PROMOTION_CAPTURE =&gt; <span class="string">'n'</span>,
+                MoveFlags::BISHOP_PROMOTION | MoveFlags::BISHOP_PROMOTION_CAPTURE =&gt; <span class="string">'b'</span>,
+                MoveFlags::ROOK_PROMOTION | MoveFlags::ROOK_PROMOTION_CAPTURE =&gt; <span class="string">'r'</span>,
+                MoveFlags::QUEEN_PROMOTION | MoveFlags::QUEEN_PROMOTION_CAPTURE =&gt; <span class="string">'q'</span>,
+                <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">"Invalid value: flags={:?}"</span>, flags),
             });
         }
 

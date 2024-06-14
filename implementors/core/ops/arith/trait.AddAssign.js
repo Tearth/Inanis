@@ -1,3 +1,0 @@
-(function() {var implementors = {
-"inanis":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.72.0/core/ops/arith/trait.AddAssign.html\" title=\"trait core::ops::arith::AddAssign\">AddAssign</a>&lt;<a class=\"struct\" href=\"inanis/engine/statistics/struct.SearchStatistics.html\" title=\"struct inanis::engine::statistics::SearchStatistics\">SearchStatistics</a>&gt; for <a class=\"struct\" href=\"inanis/engine/statistics/struct.SearchStatistics.html\" title=\"struct inanis::engine::statistics::SearchStatistics\">SearchStatistics</a>"]]
-};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
