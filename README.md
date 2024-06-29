@@ -1,7 +1,7 @@
 # Inanis
 UCI chess engine written in Rust, the successor of [Proxima b](https://github.com/Tearth/Proxima-b), [Proxima b 2.0](https://github.com/Tearth/Proxima-b-2.0) and [Cosette](https://github.com/Tearth/Cosette). The project is written after hours, with the goal to reach a strength of 3000 Elo. Perfect as a sparring partner for other chess engines, since it was heavily tested using very fast games. Supports Syzygy tablebases, MultiPV, pondering and multithreading.
 
-**Current strength**: 2850 Elo (15-01-2023)
+**Current strength**: 2900 Elo (14-06-2024)
 
 **Documentation**: https://tearth.dev/Inanis/
 
@@ -21,8 +21,8 @@ Each release contains a set of binaries for various platforms: Linux (x86, x86-6
 ## Rating lists
  - [CCRL Blitz](https://computerchess.org.uk/ccrl/404/index.html)
  - [CCRL 40/15](https://computerchess.org.uk/ccrl/4040/index.html)
- - [CEGT Blitz](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)
- - [JCER](https://chessengines.blogspot.com/p/rating-jcer.html)
+ - [CEGT 40/4](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)
+ - [CEDR Blitz](https://chessengines.blogspot.com/p/rating-jcer.html)
 
 Big thanks to all testers and their effort! Please note that Elo on the lists above can slightly differ from the author's estimations due to different engine pools and the time control used for tests. 
 
