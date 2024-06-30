@@ -32,21 +32,24 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
 const REPOSITORY: &str = env!("CARGO_PKG_REPOSITORY");
 const DATE: &str = env!("DATE");
-const HASH: &str = env!("HASH");
 const COMPILER: &str = env!("COMPILER");
+const TARGET: &str = env!("TARGET");
+const PROFILE: &str = env!("PROFILE");
 
 /// Entry point of the terminal interface and command loop.
 pub fn run(args: Vec<OsString>, target_features: Vec<&'static str>) {
     let use_args = args.len() > 1;
-    let header = if target_features.is_empty() {
-        format!("Inanis {} ({}), created by {}", VERSION, DATE, AUTHOR)
-    } else {
-        format!("Inanis {} {} ({}), created by {}", VERSION, target_features.join(" "), DATE, AUTHOR)
-    };
+
+    let mut header = String::new();
+    header.push_str(&format!("Inanis {}", VERSION));
+    if !target_features.is_empty() {
+        header.push_str(&format!(" {}", target_features.join(" ")));
+    }
+    header.push_str(&format!(" ({}), created by {}", DATE, AUTHOR));
 
     println!("{}", header);
-    println!("Executable hash: {}", HASH);
     println!("Compiler: {}", COMPILER);
+    println!("Target: {}, profile: {}", TARGET, PROFILE);
     println!("Homepage: {}", REPOSITORY);
     println!();
     println!("Type \"help\" to get a list of available commands");

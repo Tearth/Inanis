@@ -3,21 +3,13 @@ use std::env;
 use std::process::Command;
 
 fn main() {
-    println!("cargo:rustc-env=HASH={}", hash());
     println!("cargo:rustc-env=DATE={}", date());
     println!("cargo:rustc-env=COMPILER={}", compiler());
+    println!("cargo:rustc-env=TARGET={}", target());
+    println!("cargo:rustc-env=PROFILE={}", profile());
 
     build_dependencies();
     generate_bindings();
-}
-
-fn hash() -> String {
-    let output = Command::new("git").arg("log").arg("-1").arg("--pretty=format:%H").current_dir(env!("CARGO_MANIFEST_DIR")).output();
-
-    match output {
-        Ok(v) => String::from_utf8_lossy(&v.stdout).to_string(),
-        Err(_) => "ERROR".to_string(),
-    }
 }
 
 fn date() -> String {
@@ -26,12 +18,46 @@ fn date() -> String {
 }
 
 fn compiler() -> String {
-    let output = Command::new("rustc").arg("--version").current_dir(env!("CARGO_MANIFEST_DIR")).output();
+    let output = Command::new("rustc").args(["--version", "--verbose"]).current_dir(env!("CARGO_MANIFEST_DIR")).output();
 
     match output {
-        Ok(v) => String::from_utf8_lossy(&v.stdout).to_string(),
-        Err(_) => "ERROR".to_string(),
+        Ok(output) => {
+            let output_content = String::from_utf8_lossy(&output.stdout).to_string();
+            let lines = output_content.split('\n').collect::<Vec<&str>>();
+            let rustc_version = lines[0].trim();
+            let llvm_version = lines[lines.len() - 2].trim();
+
+            format!("{}, {}", rustc_version, llvm_version)
+        }
+        Err(_) => String::from("ERROR"),
     }
+}
+
+fn target() -> String {
+    env::var("TARGET").unwrap_or(String::from("ERROR"))
+}
+
+fn profile() -> String {
+    let mut features = Vec::new();
+    let profile = env::var("PROFILE").unwrap_or(String::from("ERROR"));
+
+    if cfg!(feature = "dev") {
+        features.push("dev");
+    }
+
+    if cfg!(feature = "bindgen") {
+        features.push("bindgen");
+    }
+
+    if cfg!(feature = "syzygy") {
+        features.push("syzygy");
+    }
+
+    if features.is_empty() {
+        features.push("none");
+    }
+
+    format!("{} ({})", profile, features.join(", "))
 }
 
 fn build_dependencies() {
