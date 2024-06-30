@@ -31,7 +31,7 @@ jobs:
           - name: Windows 64-bit x86-64 POPCNT BMI2
             target: x86_64-pc-windows-gnu
             output: windows_64bit_x86-64_popcnt_bmi2
-            features: +popcnt,+bmi1,+bmi2
+            features: +popcnt,+lzcnt,+bmi1,+bmi2
             extension: .exe
             
           - name: Linux 32-bit x86
@@ -50,7 +50,7 @@ jobs:
           - name: Linux 64-bit x86-64 POPCNT BMI2
             target: x86_64-unknown-linux-musl
             output: linux_64bit_x86-64_popcnt_bmi2
-            features: +popcnt,+bmi1,+bmi2
+            features: +popcnt,+lzcnt,+bmi1,+bmi2
             
           - name: Linux 32-bit ARM
             target: arm-unknown-linux-musleabi

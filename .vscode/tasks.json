@@ -28,7 +28,7 @@
         {
             "label": "build debug windows",
             "type": "shell",
-            "command": "cargo rustc --bin inanis --target=x86_64-pc-windows-msvc --features dev,syzygy -- -C target-feature=+bmi1,+bmi2,+popcnt",
+            "command": "cargo rustc --bin inanis --target=x86_64-pc-windows-msvc --features dev,syzygy -- -C target-feature=+popcnt,+lzcnt,+bmi1,+bmi2",
             "group": {
                 "kind": "build"
             },
@@ -44,7 +44,7 @@
         {
             "label": "build release windows",
             "type": "shell",
-            "command": "cargo rustc --bin inanis --release --target=x86_64-pc-windows-msvc --features syzygy -- -C target-feature=+popcnt,+bmi1,+bmi2 -C llvm-args=-x86-asm-syntax=intel --emit asm",
+            "command": "cargo rustc --bin inanis --release --target=x86_64-pc-windows-msvc --features syzygy -- -C target-feature=+popcnt,+lzcnt,+bmi1,+bmi2 -C llvm-args=-x86-asm-syntax=intel --emit asm",
             "group": {
                 "kind": "build"
             },
@@ -52,7 +52,7 @@
         {
             "label": "build release windows DEV",
             "type": "shell",
-            "command": "cargo rustc --bin inanis --release --target=x86_64-pc-windows-msvc --features dev,syzygy -- -C target-feature=+popcnt,+bmi1,+bmi2 -C llvm-args=-x86-asm-syntax=intel --emit asm",
+            "command": "cargo rustc --bin inanis --release --target=x86_64-pc-windows-msvc --features dev,syzygy -- -C target-feature=+popcnt,+lzcnt,+bmi1,+bmi2 -C llvm-args=-x86-asm-syntax=intel --emit asm",
             "group": {
                 "kind": "build"
             },
