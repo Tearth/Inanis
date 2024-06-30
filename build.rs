@@ -8,8 +8,11 @@ fn main() {
     println!("cargo:rustc-env=TARGET={}", target());
     println!("cargo:rustc-env=PROFILE={}", profile());
 
-    build_dependencies();
-    generate_bindings();
+    #[cfg(feature = "syzygy")]
+    build_fathom();
+
+    #[cfg(feature = "syzygy")]
+    generate_fathom_bindings();
 }
 
 fn date() -> String {
@@ -45,10 +48,6 @@ fn profile() -> String {
         features.push("dev");
     }
 
-    if cfg!(feature = "bindgen") {
-        features.push("bindgen");
-    }
-
     if cfg!(feature = "syzygy") {
         features.push("syzygy");
     }
@@ -58,11 +57,6 @@ fn profile() -> String {
     }
 
     format!("{} ({})", profile, features.join(", "))
-}
-
-fn build_dependencies() {
-    #[cfg(feature = "syzygy")]
-    build_fathom();
 }
 
 #[cfg(feature = "syzygy")]
@@ -80,12 +74,7 @@ fn build_fathom() {
     cc.compile("fathom");
 }
 
-fn generate_bindings() {
-    #[cfg(all(feature = "bindgen", feature = "syzygy"))]
-    generate_fathom_bindings();
-}
-
-#[cfg(all(feature = "bindgen", feature = "syzygy"))]
+#[cfg(feature = "syzygy")]
 fn generate_fathom_bindings() {
     let bindings = bindgen::Builder::default()
         .header("./deps/fathom/src/tbprobe.h")

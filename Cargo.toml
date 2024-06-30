@@ -10,8 +10,7 @@ doctest = false
 
 [features]
 dev = []
-bindgen = [ "dep:bindgen" ]
-syzygy = [ "dep:cc" ]
+syzygy = [ "dep:bindgen", "dep:cc" ]
 
 [dependencies]
 common = { path = "./common/" }
