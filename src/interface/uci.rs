@@ -113,57 +113,55 @@ pub fn run() {
     state_lock.options.insert("Crash Files".to_string(), UciOption::new(8, "check", false, false, false));
     state_lock.options.insert("Clear Hash".to_string(), UciOption::new(9, "button", "", "", ""));
 
-    let parameters = SearchParameters::default();
-    state_lock.options.insert("iir_min_depth".to_string(), UciOption::new_wide(99, parameters.iir_min_depth));
-    state_lock.options.insert("iir_reduction_base".to_string(), UciOption::new_wide(99, parameters.iir_reduction_base));
-    state_lock.options.insert("iir_reduction_step".to_string(), UciOption::new_wide(99, parameters.iir_reduction_step));
-    state_lock.options.insert("iir_max_reduction".to_string(), UciOption::new_wide(99, parameters.iir_max_reduction));
-
-    state_lock.options.insert("razoring_min_depth".to_string(), UciOption::new_wide(99, parameters.razoring_min_depth));
-    state_lock.options.insert("razoring_max_depth".to_string(), UciOption::new_wide(99, parameters.razoring_max_depth));
-    state_lock.options.insert("razoring_depth_margin_base".to_string(), UciOption::new_wide(99, parameters.razoring_depth_margin_base));
-    state_lock.options.insert("razoring_depth_margin_multiplier".to_string(), UciOption::new_wide(99, parameters.razoring_depth_margin_multiplier));
-
-    state_lock.options.insert("snmp_min_depth".to_string(), UciOption::new_wide(99, parameters.snmp_min_depth));
-    state_lock.options.insert("snmp_max_depth".to_string(), UciOption::new_wide(99, parameters.snmp_max_depth));
-    state_lock.options.insert("snmp_depth_margin_base".to_string(), UciOption::new_wide(99, parameters.snmp_depth_margin_base));
-    state_lock.options.insert("snmp_depth_margin_multiplier".to_string(), UciOption::new_wide(99, parameters.snmp_depth_margin_multiplier));
-
-    state_lock.options.insert("nmp_min_depth".to_string(), UciOption::new_wide(99, parameters.nmp_min_depth));
-    state_lock.options.insert("nmp_min_game_phase".to_string(), UciOption::new_wide(99, parameters.nmp_min_game_phase));
-    state_lock.options.insert("nmp_margin".to_string(), UciOption::new_wide(99, parameters.nmp_margin));
-    state_lock.options.insert("nmp_depth_base".to_string(), UciOption::new_wide(99, parameters.nmp_depth_base));
-    state_lock.options.insert("nmp_depth_divider".to_string(), UciOption::new_wide(99, parameters.nmp_depth_divider));
-
-    state_lock.options.insert("lmp_min_depth".to_string(), UciOption::new_wide(99, parameters.lmp_min_depth));
-    state_lock.options.insert("lmp_max_depth".to_string(), UciOption::new_wide(99, parameters.lmp_max_depth));
-    state_lock.options.insert("lmp_move_index_margin_base".to_string(), UciOption::new_wide(99, parameters.lmp_move_index_margin_base));
-    state_lock.options.insert("lmp_move_index_margin_multiplier".to_string(), UciOption::new_wide(99, parameters.lmp_move_index_margin_multiplier));
-    state_lock.options.insert("lmp_max_score".to_string(), UciOption::new_wide(99, parameters.lmp_max_score));
-
-    state_lock.options.insert("lmr_min_depth".to_string(), UciOption::new_wide(99, parameters.lmr_min_depth));
-    state_lock.options.insert("lmr_max_score".to_string(), UciOption::new_wide(99, parameters.lmr_max_score));
-    state_lock.options.insert("lmr_min_move_index".to_string(), UciOption::new_wide(99, parameters.lmr_min_move_index));
-    state_lock.options.insert("lmr_reduction_base".to_string(), UciOption::new_wide(99, parameters.lmr_reduction_base));
-    state_lock.options.insert("lmr_reduction_step".to_string(), UciOption::new_wide(99, parameters.lmr_reduction_step));
-    state_lock.options.insert("lmr_max_reduction".to_string(), UciOption::new_wide(99, parameters.lmr_max_reduction));
-    state_lock.options.insert("lmr_pv_min_move_index".to_string(), UciOption::new_wide(99, parameters.lmr_pv_min_move_index));
-    state_lock.options.insert("lmr_pv_reduction_base".to_string(), UciOption::new_wide(99, parameters.lmr_pv_reduction_base));
-    state_lock.options.insert("lmr_pv_reduction_step".to_string(), UciOption::new_wide(99, parameters.lmr_pv_reduction_step));
-    state_lock.options.insert("lmr_pv_max_reduction".to_string(), UciOption::new_wide(99, parameters.lmr_pv_max_reduction));
-
-    state_lock.options.insert("q_score_pruning_treshold".to_string(), UciOption::new_wide(99, parameters.q_score_pruning_treshold));
-    state_lock.options.insert("q_futility_pruning_margin".to_string(), UciOption::new_wide(99, parameters.q_futility_pruning_margin));
-
+    #[cfg(feature = "dev")]
+    {
+        let parameters = SearchParameters::default();
+        state_lock.options.insert("iir_min_depth".to_string(), UciOption::new_wide(99, parameters.iir_min_depth));
+        state_lock.options.insert("iir_reduction_base".to_string(), UciOption::new_wide(99, parameters.iir_reduction_base));
+        state_lock.options.insert("iir_reduction_step".to_string(), UciOption::new_wide(99, parameters.iir_reduction_step));
+        state_lock.options.insert("iir_max_reduction".to_string(), UciOption::new_wide(99, parameters.iir_max_reduction));
+    
+        state_lock.options.insert("razoring_min_depth".to_string(), UciOption::new_wide(99, parameters.razoring_min_depth));
+        state_lock.options.insert("razoring_max_depth".to_string(), UciOption::new_wide(99, parameters.razoring_max_depth));
+        state_lock.options.insert("razoring_depth_margin_base".to_string(), UciOption::new_wide(99, parameters.razoring_depth_margin_base));
+        state_lock.options.insert("razoring_depth_margin_multiplier".to_string(), UciOption::new_wide(99, parameters.razoring_depth_margin_multiplier));
+    
+        state_lock.options.insert("snmp_min_depth".to_string(), UciOption::new_wide(99, parameters.snmp_min_depth));
+        state_lock.options.insert("snmp_max_depth".to_string(), UciOption::new_wide(99, parameters.snmp_max_depth));
+        state_lock.options.insert("snmp_depth_margin_base".to_string(), UciOption::new_wide(99, parameters.snmp_depth_margin_base));
+        state_lock.options.insert("snmp_depth_margin_multiplier".to_string(), UciOption::new_wide(99, parameters.snmp_depth_margin_multiplier));
+    
+        state_lock.options.insert("nmp_min_depth".to_string(), UciOption::new_wide(99, parameters.nmp_min_depth));
+        state_lock.options.insert("nmp_min_game_phase".to_string(), UciOption::new_wide(99, parameters.nmp_min_game_phase));
+        state_lock.options.insert("nmp_margin".to_string(), UciOption::new_wide(99, parameters.nmp_margin));
+        state_lock.options.insert("nmp_depth_base".to_string(), UciOption::new_wide(99, parameters.nmp_depth_base));
+        state_lock.options.insert("nmp_depth_divider".to_string(), UciOption::new_wide(99, parameters.nmp_depth_divider));
+    
+        state_lock.options.insert("lmp_min_depth".to_string(), UciOption::new_wide(99, parameters.lmp_min_depth));
+        state_lock.options.insert("lmp_max_depth".to_string(), UciOption::new_wide(99, parameters.lmp_max_depth));
+        state_lock.options.insert("lmp_move_index_margin_base".to_string(), UciOption::new_wide(99, parameters.lmp_move_index_margin_base));
+        state_lock.options.insert("lmp_move_index_margin_multiplier".to_string(), UciOption::new_wide(99, parameters.lmp_move_index_margin_multiplier));
+        state_lock.options.insert("lmp_max_score".to_string(), UciOption::new_wide(99, parameters.lmp_max_score));
+    
+        state_lock.options.insert("lmr_min_depth".to_string(), UciOption::new_wide(99, parameters.lmr_min_depth));
+        state_lock.options.insert("lmr_max_score".to_string(), UciOption::new_wide(99, parameters.lmr_max_score));
+        state_lock.options.insert("lmr_min_move_index".to_string(), UciOption::new_wide(99, parameters.lmr_min_move_index));
+        state_lock.options.insert("lmr_reduction_base".to_string(), UciOption::new_wide(99, parameters.lmr_reduction_base));
+        state_lock.options.insert("lmr_reduction_step".to_string(), UciOption::new_wide(99, parameters.lmr_reduction_step));
+        state_lock.options.insert("lmr_max_reduction".to_string(), UciOption::new_wide(99, parameters.lmr_max_reduction));
+        state_lock.options.insert("lmr_pv_min_move_index".to_string(), UciOption::new_wide(99, parameters.lmr_pv_min_move_index));
+        state_lock.options.insert("lmr_pv_reduction_base".to_string(), UciOption::new_wide(99, parameters.lmr_pv_reduction_base));
+        state_lock.options.insert("lmr_pv_reduction_step".to_string(), UciOption::new_wide(99, parameters.lmr_pv_reduction_step));
+        state_lock.options.insert("lmr_pv_max_reduction".to_string(), UciOption::new_wide(99, parameters.lmr_pv_max_reduction));
+    
+        state_lock.options.insert("q_score_pruning_treshold".to_string(), UciOption::new_wide(99, parameters.q_score_pruning_treshold));
+        state_lock.options.insert("q_futility_pruning_margin".to_string(), UciOption::new_wide(99, parameters.q_futility_pruning_margin));
+    }
+    
     let mut options_sorted = state_lock.options.iter().collect::<Vec<_>>();
     options_sorted.sort_by_key(|(_, option)| option.order);
 
     for (name, option) in options_sorted {
-        #[cfg(not(feature = "dev"))]
-        if option.order == 99 {
-            continue;
-        }
-
         match option.r#type.as_str() {
             "spin" => println!("option name {} type {} default {} min {} max {}", name, option.r#type, option.default, option.min, option.max),
             "string" => println!("option name {} type {} default {}", name, option.r#type, option.default),
@@ -367,6 +365,10 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
         let syzygy_probe_limit = state_lock.options["SyzygyProbeLimit"].value.parse::<u32>().unwrap();
         let syzygy_probe_depth = state_lock.options["SyzygyProbeDepth"].value.parse::<i8>().unwrap();
 
+        #[cfg(not(feature = "dev"))]
+        let search_parameters = SearchParameters::default();
+
+        #[cfg(feature = "dev")]
         let search_parameters = SearchParameters {
             iir_min_depth: state_lock.options["iir_min_depth"].value.parse().unwrap(),
             iir_reduction_base: state_lock.options["iir_reduction_base"].value.parse().unwrap(),
