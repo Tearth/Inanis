@@ -263,10 +263,14 @@ impl Iterator for SearchContext {
 
             self.multipv_lines.clear();
 
-            match self.diagnostic_mode {
-                true => search::run::<true>(self, self.current_depth),
-                false => search::run::<false>(self, self.current_depth),
-            };
+            if cfg!(feature = "dev") {
+                match self.diagnostic_mode {
+                    true => search::run::<true>(self, self.current_depth),
+                    false => search::run::<false>(self, self.current_depth),
+                };
+            } else {
+                search::run::<false>(self, self.current_depth);
+            }
 
             let search_time = self.search_time_start.elapsed().unwrap().as_millis() as u32;
             if self.uci_debug {

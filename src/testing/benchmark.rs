@@ -16,9 +16,11 @@ pub struct BenchmarkResult {
     pub q_nodes_count: u64,
     pub leafs_count: u64,
     pub q_leafs_count: u64,
+
     pub beta_cutoffs: u64,
     pub q_beta_cutoffs: u64,
 
+    #[cfg(feature = "dev")]
     pub perfect_cutoffs: u64,
     pub q_perfect_cutoffs: u64,
     pub non_perfect_cutoffs: u64,
@@ -72,7 +74,7 @@ pub struct BenchmarkResult {
 
 /// Runs a benchmark by performing a fixed-depth search for the built-in list of positions.
 pub fn run() -> BenchmarkResult {
-    let benchmark_positions = [
+    const BENCHMARK_POSITIONS: [&str; 30] = [
         // Opening
         "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
         "rnbqkb1r/pp2pppp/2p2n2/3p4/2PP4/4P3/PP3PPP/RNBQKBNR w KQkq - 1 4",
@@ -111,8 +113,8 @@ pub fn run() -> BenchmarkResult {
     let mut benchmark_result: BenchmarkResult = Default::default();
     let benchmark_time_start = SystemTime::now();
 
-    for (current_position_index, fen) in benchmark_positions.into_iter().enumerate() {
-        println!("{}/{}. {}", current_position_index + 1, benchmark_positions.len(), fen);
+    for (current_position_index, fen) in BENCHMARK_POSITIONS.into_iter().enumerate() {
+        println!("{}/{}. {}", current_position_index + 1, BENCHMARK_POSITIONS.len(), fen);
 
         let transposition_table = Arc::new(TranspositionTable::new(64 * 1024 * 1024));
         let pawn_hashtable = Arc::new(PawnHashTable::new(2 * 1024 * 1024));
@@ -155,56 +157,60 @@ pub fn run() -> BenchmarkResult {
         benchmark_result.q_nodes_count += result.statistics.q_nodes_count;
         benchmark_result.leafs_count += result.statistics.leafs_count;
         benchmark_result.q_leafs_count += result.statistics.q_leafs_count;
-        benchmark_result.beta_cutoffs += result.statistics.beta_cutoffs;
-        benchmark_result.q_beta_cutoffs += result.statistics.q_beta_cutoffs;
 
-        benchmark_result.perfect_cutoffs += result.statistics.perfect_cutoffs;
-        benchmark_result.q_perfect_cutoffs += result.statistics.q_perfect_cutoffs;
-        benchmark_result.non_perfect_cutoffs += result.statistics.non_perfect_cutoffs;
-        benchmark_result.q_non_perfect_cutoffs += result.statistics.q_non_perfect_cutoffs;
+        #[cfg(feature = "dev")]
+        {
+            benchmark_result.beta_cutoffs += result.statistics.beta_cutoffs;
+            benchmark_result.q_beta_cutoffs += result.statistics.q_beta_cutoffs;
 
-        benchmark_result.pvs_full_window_searches += result.statistics.pvs_full_window_searches;
-        benchmark_result.pvs_zero_window_searches += result.statistics.pvs_zero_window_searches;
-        benchmark_result.pvs_rejected_searches += result.statistics.pvs_rejected_searches;
+            benchmark_result.perfect_cutoffs += result.statistics.perfect_cutoffs;
+            benchmark_result.q_perfect_cutoffs += result.statistics.q_perfect_cutoffs;
+            benchmark_result.non_perfect_cutoffs += result.statistics.non_perfect_cutoffs;
+            benchmark_result.q_non_perfect_cutoffs += result.statistics.q_non_perfect_cutoffs;
 
-        benchmark_result.snmp_attempts += result.statistics.snmp_attempts;
-        benchmark_result.snmp_accepted += result.statistics.snmp_accepted;
-        benchmark_result.snmp_rejected += result.statistics.snmp_rejected;
+            benchmark_result.pvs_full_window_searches += result.statistics.pvs_full_window_searches;
+            benchmark_result.pvs_zero_window_searches += result.statistics.pvs_zero_window_searches;
+            benchmark_result.pvs_rejected_searches += result.statistics.pvs_rejected_searches;
 
-        benchmark_result.nmp_attempts += result.statistics.nmp_attempts;
-        benchmark_result.nmp_accepted += result.statistics.nmp_accepted;
-        benchmark_result.nmp_rejected += result.statistics.nmp_rejected;
+            benchmark_result.snmp_attempts += result.statistics.snmp_attempts;
+            benchmark_result.snmp_accepted += result.statistics.snmp_accepted;
+            benchmark_result.snmp_rejected += result.statistics.snmp_rejected;
 
-        benchmark_result.lmp_accepted += result.statistics.lmp_accepted;
-        benchmark_result.lmp_rejected += result.statistics.lmp_rejected;
+            benchmark_result.nmp_attempts += result.statistics.nmp_attempts;
+            benchmark_result.nmp_accepted += result.statistics.nmp_accepted;
+            benchmark_result.nmp_rejected += result.statistics.nmp_rejected;
 
-        benchmark_result.razoring_attempts += result.statistics.razoring_attempts;
-        benchmark_result.razoring_accepted += result.statistics.razoring_accepted;
-        benchmark_result.razoring_rejected += result.statistics.razoring_rejected;
+            benchmark_result.lmp_accepted += result.statistics.lmp_accepted;
+            benchmark_result.lmp_rejected += result.statistics.lmp_rejected;
 
-        benchmark_result.q_score_pruning_accepted += result.statistics.q_score_pruning_accepted;
-        benchmark_result.q_score_pruning_rejected += result.statistics.q_score_pruning_rejected;
+            benchmark_result.razoring_attempts += result.statistics.razoring_attempts;
+            benchmark_result.razoring_accepted += result.statistics.razoring_accepted;
+            benchmark_result.razoring_rejected += result.statistics.razoring_rejected;
 
-        benchmark_result.q_futility_pruning_accepted += result.statistics.q_futility_pruning_accepted;
-        benchmark_result.q_futility_pruning_rejected += result.statistics.q_futility_pruning_rejected;
+            benchmark_result.q_score_pruning_accepted += result.statistics.q_score_pruning_accepted;
+            benchmark_result.q_score_pruning_rejected += result.statistics.q_score_pruning_rejected;
 
-        benchmark_result.tt_added += result.statistics.tt_added;
-        benchmark_result.tt_hits += result.statistics.tt_hits;
-        benchmark_result.tt_misses += result.statistics.tt_misses;
+            benchmark_result.q_futility_pruning_accepted += result.statistics.q_futility_pruning_accepted;
+            benchmark_result.q_futility_pruning_rejected += result.statistics.q_futility_pruning_rejected;
 
-        benchmark_result.tt_legal_hashmoves += result.statistics.tt_legal_hashmoves;
-        benchmark_result.tt_illegal_hashmoves += result.statistics.tt_illegal_hashmoves;
-        benchmark_result.killers_table_legal_moves += result.statistics.killers_table_legal_moves;
-        benchmark_result.killers_table_illegal_moves += result.statistics.killers_table_illegal_moves;
+            benchmark_result.tt_added += result.statistics.tt_added;
+            benchmark_result.tt_hits += result.statistics.tt_hits;
+            benchmark_result.tt_misses += result.statistics.tt_misses;
 
-        benchmark_result.pawn_hashtable_added += result.statistics.pawn_hashtable_added;
-        benchmark_result.pawn_hashtable_hits += result.statistics.pawn_hashtable_hits;
-        benchmark_result.pawn_hashtable_misses += result.statistics.pawn_hashtable_misses;
+            benchmark_result.tt_legal_hashmoves += result.statistics.tt_legal_hashmoves;
+            benchmark_result.tt_illegal_hashmoves += result.statistics.tt_illegal_hashmoves;
+            benchmark_result.killers_table_legal_moves += result.statistics.killers_table_legal_moves;
+            benchmark_result.killers_table_illegal_moves += result.statistics.killers_table_illegal_moves;
 
-        benchmark_result.move_generator_hash_move_stages += result.statistics.move_generator_hash_move_stages;
-        benchmark_result.move_generator_captures_stages += result.statistics.move_generator_captures_stages;
-        benchmark_result.move_generator_killers_stages += result.statistics.move_generator_killers_stages;
-        benchmark_result.move_generator_quiet_moves_stages += result.statistics.move_generator_quiet_moves_stages;
+            benchmark_result.pawn_hashtable_added += result.statistics.pawn_hashtable_added;
+            benchmark_result.pawn_hashtable_hits += result.statistics.pawn_hashtable_hits;
+            benchmark_result.pawn_hashtable_misses += result.statistics.pawn_hashtable_misses;
+
+            benchmark_result.move_generator_hash_move_stages += result.statistics.move_generator_hash_move_stages;
+            benchmark_result.move_generator_captures_stages += result.statistics.move_generator_captures_stages;
+            benchmark_result.move_generator_killers_stages += result.statistics.move_generator_killers_stages;
+            benchmark_result.move_generator_quiet_moves_stages += result.statistics.move_generator_quiet_moves_stages;
+        }
 
         benchmark_result.result_hash ^= result.lines[0].pv_line[0].data;
     }

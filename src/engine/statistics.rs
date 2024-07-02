@@ -7,6 +7,7 @@ pub struct SearchStatistics {
     pub q_nodes_count: u64,
     pub leafs_count: u64,
     pub q_leafs_count: u64,
+
     pub beta_cutoffs: u64,
     pub q_beta_cutoffs: u64,
 

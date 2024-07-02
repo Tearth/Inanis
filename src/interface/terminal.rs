@@ -145,204 +145,218 @@ fn handle_benchmark() {
     println!("Benchmark done in {:.2} s", result.time);
     println!();
 
-    println!("{: <H$} {: <V$} {: <V$} {: <V$}", "", "Normal", "Quiescence", "Total", H = header_intendation, V = value_intendation);
     let t_nodes_count = result.nodes_count + result.q_nodes_count;
     let t_leafs_count = result.leafs_count + result.q_leafs_count;
 
     let nodes_count_percent = percent!(result.nodes_count, t_nodes_count);
     let q_nodes_count_percent = percent!(result.q_nodes_count, t_nodes_count);
     let t_mnps = (((result.nodes_count + result.q_nodes_count) as f32) / 1000000.0) / result.time;
-    println!(
-        "{: <H$} {: <V$} {: <V$} {: <V$}",
-        "Nodes count",
-        format!("{} ({:.2}%)", result.nodes_count, nodes_count_percent),
-        format!("{} ({:.2}%)", result.q_nodes_count, q_nodes_count_percent),
-        format!("{} ({:.2} MN/s)", t_nodes_count, t_mnps),
-        H = header_intendation,
-        V = value_intendation
-    );
 
-    let leafs_count_percent = percent!(result.leafs_count, t_leafs_count);
-    let q_leafs_count_percent = percent!(result.q_leafs_count, t_leafs_count);
-    let t_leafs_count_percent = percent!(result.leafs_count + result.q_leafs_count, t_nodes_count);
-    println!(
-        "{: <H$} {: <V$} {: <V$} {: <V$}",
-        "Leafs count",
-        format!("{} ({:.2}%)", result.leafs_count, leafs_count_percent),
-        format!("{} ({:.2}%)", result.q_leafs_count, q_leafs_count_percent),
-        format!("{} ({:.2}%)", t_leafs_count, t_leafs_count_percent),
-        H = header_intendation,
-        V = value_intendation
-    );
+    #[cfg(not(feature = "dev"))]
+    {
+        println!("Nodes:");
+        println!(" Normal: {} ({:.2}%)", result.nodes_count, nodes_count_percent);
+        println!(" Quiescence: {} ({:.2}%)", result.q_nodes_count, q_nodes_count_percent);
+        println!(" Total: {} ({:.2} MN/s)", t_nodes_count, t_mnps);
+    }
 
-    let beta_cutoffs_percent = percent!(result.beta_cutoffs, result.nodes_count);
-    let q_beta_cutoffs_percent = percent!(result.q_beta_cutoffs, result.q_nodes_count);
-    let t_beta_cutoffs_percent = percent!(result.beta_cutoffs + result.q_beta_cutoffs, t_nodes_count);
-    println!(
-        "{: <H$} {: <V$} {: <V$} {: <V$}",
-        "Beta cutoffs",
-        format!("{} ({:.2}%)", result.beta_cutoffs, beta_cutoffs_percent),
-        format!("{} ({:.2}%)", result.q_beta_cutoffs, q_beta_cutoffs_percent),
-        format!("{} ({:.2}%)", result.beta_cutoffs + result.q_beta_cutoffs, t_beta_cutoffs_percent),
-        H = header_intendation,
-        V = value_intendation
-    );
+    #[cfg(feature = "dev")]
+    {
+        println!("{: <H$} {: <V$} {: <V$} {: <V$}", "", "Normal", "Quiescence", "Total", H = header_intendation, V = value_intendation);
+        println!(
+            "{: <H$} {: <V$} {: <V$} {: <V$}",
+            "Nodes count",
+            format!("{} ({:.2}%)", result.nodes_count, nodes_count_percent),
+            format!("{} ({:.2}%)", result.q_nodes_count, q_nodes_count_percent),
+            format!("{} ({:.2} MN/s)", t_nodes_count, t_mnps),
+            H = header_intendation,
+            V = value_intendation
+        );
 
-    let ordering_hits = result.perfect_cutoffs + result.non_perfect_cutoffs;
-    let q_ordering_hits = result.q_perfect_cutoffs + result.q_non_perfect_cutoffs;
-    let t_ordering_hits = ordering_hits + q_ordering_hits;
+        let leafs_count_percent = percent!(result.leafs_count, t_leafs_count);
+        let q_leafs_count_percent = percent!(result.q_leafs_count, t_leafs_count);
+        let t_leafs_count_percent = percent!(result.leafs_count + result.q_leafs_count, t_nodes_count);
+        println!(
+            "{: <H$} {: <V$} {: <V$} {: <V$}",
+            "Leafs count",
+            format!("{} ({:.2}%)", result.leafs_count, leafs_count_percent),
+            format!("{} ({:.2}%)", result.q_leafs_count, q_leafs_count_percent),
+            format!("{} ({:.2}%)", t_leafs_count, t_leafs_count_percent),
+            H = header_intendation,
+            V = value_intendation
+        );
 
-    let ordering_quality = percent!(result.perfect_cutoffs, ordering_hits);
-    let q_ordering_quality = percent!(result.q_perfect_cutoffs, q_ordering_hits);
-    let t_ordering_quality = percent!(result.perfect_cutoffs + result.q_perfect_cutoffs, t_ordering_hits);
-    println!(
-        "{: <H$} {: <V$} {: <V$} {: <V$}",
-        "Ordering quality",
-        format!("{:.2}%", ordering_quality),
-        format!("{:.2}%", q_ordering_quality),
-        format!("{:.2}%", t_ordering_quality),
-        H = header_intendation,
-        V = value_intendation
-    );
+        let beta_cutoffs_percent = percent!(result.beta_cutoffs, result.nodes_count);
+        let q_beta_cutoffs_percent = percent!(result.q_beta_cutoffs, result.q_nodes_count);
+        let t_beta_cutoffs_percent = percent!(result.beta_cutoffs + result.q_beta_cutoffs, t_nodes_count);
+        println!(
+            "{: <H$} {: <V$} {: <V$} {: <V$}",
+            "Beta cutoffs",
+            format!("{} ({:.2}%)", result.beta_cutoffs, beta_cutoffs_percent),
+            format!("{} ({:.2}%)", result.q_beta_cutoffs, q_beta_cutoffs_percent),
+            format!("{} ({:.2}%)", result.beta_cutoffs + result.q_beta_cutoffs, t_beta_cutoffs_percent),
+            H = header_intendation,
+            V = value_intendation
+        );
 
-    let branching_factor = (result.nodes_count as f64) / ((result.nodes_count - result.leafs_count) as f64);
-    let q_branching_factor = (result.q_nodes_count as f64) / ((result.q_nodes_count - result.q_leafs_count) as f64);
-    let t_branching_factor = (t_nodes_count as f64) / ((t_nodes_count - t_leafs_count) as f64);
-    println!(
-        "{: <H$} {: <V$} {: <V$} {: <V$}",
-        "Branching factor",
-        format!("{:.2}", branching_factor),
-        format!("{:.2}", q_branching_factor),
-        format!("{:.2}", t_branching_factor),
-        H = header_intendation,
-        V = value_intendation
-    );
+        let ordering_hits = result.perfect_cutoffs + result.non_perfect_cutoffs;
+        let q_ordering_hits = result.q_perfect_cutoffs + result.q_non_perfect_cutoffs;
+        let t_ordering_hits = ordering_hits + q_ordering_hits;
+
+        let ordering_quality = percent!(result.perfect_cutoffs, ordering_hits);
+        let q_ordering_quality = percent!(result.q_perfect_cutoffs, q_ordering_hits);
+        let t_ordering_quality = percent!(result.perfect_cutoffs + result.q_perfect_cutoffs, t_ordering_hits);
+        println!(
+            "{: <H$} {: <V$} {: <V$} {: <V$}",
+            "Ordering quality",
+            format!("{:.2}%", ordering_quality),
+            format!("{:.2}%", q_ordering_quality),
+            format!("{:.2}%", t_ordering_quality),
+            H = header_intendation,
+            V = value_intendation
+        );
+
+        let branching_factor = (result.nodes_count as f64) / ((result.nodes_count - result.leafs_count) as f64);
+        let q_branching_factor = (result.q_nodes_count as f64) / ((result.q_nodes_count - result.q_leafs_count) as f64);
+        let t_branching_factor = (t_nodes_count as f64) / ((t_nodes_count - t_leafs_count) as f64);
+        println!(
+            "{: <H$} {: <V$} {: <V$} {: <V$}",
+            "Branching factor",
+            format!("{:.2}", branching_factor),
+            format!("{:.2}", q_branching_factor),
+            format!("{:.2}", t_branching_factor),
+            H = header_intendation,
+            V = value_intendation
+        );
+
+        println!();
+        println!("{: <H$} {: <V$} {: <V$} {: <V$}", "", "Added", "Hits", "Misses", H = header_intendation, V = value_intendation);
+
+        let tt_attempts = result.tt_hits + result.tt_misses;
+        let tt_hits_percent = percent!(result.tt_hits, tt_attempts);
+        let tt_misses_percent = percent!(result.tt_misses, tt_attempts);
+        println!(
+            "{: <H$} {: <V$} {: <V$} {: <V$}",
+            "Transposition table",
+            format!("{}", result.tt_added),
+            format!("{} ({:.2}%)", result.tt_hits, tt_hits_percent),
+            format!("{} ({:.2}%)", result.tt_misses, tt_misses_percent),
+            H = header_intendation,
+            V = value_intendation
+        );
+
+        let pawn_hashtable_attempts = result.pawn_hashtable_hits + result.pawn_hashtable_misses;
+        let pawn_hashtable_hits_percent = percent!(result.pawn_hashtable_hits, pawn_hashtable_attempts);
+        let pawn_hashtable_misses_percent = percent!(result.pawn_hashtable_misses, pawn_hashtable_attempts);
+        println!(
+            "{: <H$} {: <V$} {: <V$} {: <V$}",
+            "Pawn hashtable",
+            format!("{}", result.pawn_hashtable_added),
+            format!("{} ({:.2}%)", result.pawn_hashtable_hits, pawn_hashtable_hits_percent),
+            format!("{} ({:.2}%)", result.pawn_hashtable_misses, pawn_hashtable_misses_percent),
+            H = header_intendation,
+            V = value_intendation
+        );
+
+        println!();
+        println!("{: <H$} {: <V$} {: <V$} {: <V$}", "", "Attempts", "Accepted", "Rejected", H = header_intendation, V = value_intendation);
+
+        let snmp_accepted_percent = percent!(result.snmp_accepted, result.snmp_attempts);
+        let snmp_rejected_percent = percent!(result.snmp_rejected, result.snmp_attempts);
+        println!(
+            "{: <H$} {: <V$} {: <V$} {: <V$}",
+            "Static null move pruning",
+            format!("{:.2}", result.snmp_attempts),
+            format!("{} ({:.2}%)", result.snmp_accepted, snmp_accepted_percent),
+            format!("{} ({:.2}%)", result.snmp_rejected, snmp_rejected_percent),
+            H = header_intendation,
+            V = value_intendation
+        );
+
+        let nmp_accepted_percent = percent!(result.nmp_accepted, result.nmp_attempts);
+        let nmp_rejected_percent = percent!(result.nmp_rejected, result.nmp_attempts);
+        println!(
+            "{: <H$} {: <V$} {: <V$} {: <V$}",
+            "Null move pruning",
+            format!("{:.2}", result.nmp_attempts),
+            format!("{} ({:.2}%)", result.nmp_accepted, nmp_accepted_percent),
+            format!("{} ({:.2}%)", result.nmp_rejected, nmp_rejected_percent),
+            H = header_intendation,
+            V = value_intendation
+        );
+
+        let lmp_attempts = result.lmp_accepted + result.lmp_rejected;
+        let lmp_accepted_percent = percent!(result.lmp_accepted, lmp_attempts);
+        let lmp_rejected_percent = percent!(result.lmp_rejected, lmp_attempts);
+        println!(
+            "{: <H$} {: <V$} {: <V$} {: <V$}",
+            "Late move pruning",
+            format!("{:.2}", lmp_attempts),
+            format!("{} ({:.2}%)", result.lmp_accepted, lmp_accepted_percent),
+            format!("{} ({:.2}%)", result.lmp_rejected, lmp_rejected_percent),
+            H = header_intendation,
+            V = value_intendation
+        );
+
+        let razoring_accepted_percent = percent!(result.razoring_accepted, result.razoring_attempts);
+        let razoring_rejected_percent = percent!(result.razoring_rejected, result.razoring_attempts);
+        println!(
+            "{: <H$} {: <V$} {: <V$} {: <V$}",
+            "Razoring",
+            format!("{:.2}", result.razoring_attempts),
+            format!("{} ({:.2}%)", result.razoring_accepted, razoring_accepted_percent),
+            format!("{} ({:.2}%)", result.razoring_rejected, razoring_rejected_percent),
+            H = header_intendation,
+            V = value_intendation
+        );
+
+        let total_q_score_pruning_attempts = result.q_score_pruning_accepted + result.q_score_pruning_rejected;
+        let q_score_pruning_accepted_percent = percent!(result.q_score_pruning_accepted, total_q_score_pruning_attempts);
+        let q_score_pruning_rejected_percent = percent!(result.q_score_pruning_rejected, total_q_score_pruning_attempts);
+        println!(
+            "{: <H$} {: <V$} {: <V$} {: <V$}",
+            "Q score pruning",
+            format!("{:.2}", total_q_score_pruning_attempts),
+            format!("{} ({:.2}%)", result.q_score_pruning_accepted, q_score_pruning_accepted_percent),
+            format!("{} ({:.2}%)", result.q_score_pruning_rejected, q_score_pruning_rejected_percent),
+            H = header_intendation,
+            V = value_intendation
+        );
+
+        let total_q_futility_prunings_attempts = result.q_futility_pruning_accepted + result.q_futility_pruning_rejected;
+        let q_futility_pruning_accepted_percent = percent!(result.q_futility_pruning_accepted, total_q_futility_prunings_attempts);
+        let q_futility_pruning_rejected_percent = percent!(result.q_futility_pruning_rejected, total_q_futility_prunings_attempts);
+        println!(
+            "{: <H$} {: <V$} {: <V$} {: <V$}",
+            "Q futility pruning",
+            format!("{:.2}", total_q_futility_prunings_attempts),
+            format!("{} ({:.2}%)", result.q_futility_pruning_accepted, q_futility_pruning_accepted_percent),
+            format!("{} ({:.2}%)", result.q_futility_pruning_rejected, q_futility_pruning_rejected_percent),
+            H = header_intendation,
+            V = value_intendation
+        );
+
+        println!();
+
+        let pvs_rejected_searches_percent = percent!(result.pvs_rejected_searches, result.pvs_zero_window_searches);
+        println!(
+            "PVS: {} full-window searches, {} zero-window searches, {} rejected ({:.2}%)",
+            result.pvs_full_window_searches, result.pvs_zero_window_searches, result.pvs_rejected_searches, pvs_rejected_searches_percent
+        );
+
+        println!(
+            "Move generator stages: {} hash moves, {} captures, {} killers, {} quiet",
+            result.move_generator_hash_move_stages,
+            result.move_generator_captures_stages,
+            result.move_generator_killers_stages,
+            result.move_generator_quiet_moves_stages
+        );
+
+        println!("Transposition table move legality check: {} legal, {} illegal", result.tt_legal_hashmoves, result.tt_illegal_hashmoves);
+        println!("Killers table move legality check: {} legal, {} illegal", result.killers_table_legal_moves, result.killers_table_illegal_moves);
+    }
 
     println!();
-    println!("{: <H$} {: <V$} {: <V$} {: <V$}", "", "Added", "Hits", "Misses", H = header_intendation, V = value_intendation);
-
-    let tt_attempts = result.tt_hits + result.tt_misses;
-    let tt_hits_percent = percent!(result.tt_hits, tt_attempts);
-    let tt_misses_percent = percent!(result.tt_misses, tt_attempts);
-    println!(
-        "{: <H$} {: <V$} {: <V$} {: <V$}",
-        "Transposition table",
-        format!("{}", result.tt_added),
-        format!("{} ({:.2}%)", result.tt_hits, tt_hits_percent),
-        format!("{} ({:.2}%)", result.tt_misses, tt_misses_percent),
-        H = header_intendation,
-        V = value_intendation
-    );
-
-    let pawn_hashtable_attempts = result.pawn_hashtable_hits + result.pawn_hashtable_misses;
-    let pawn_hashtable_hits_percent = percent!(result.pawn_hashtable_hits, pawn_hashtable_attempts);
-    let pawn_hashtable_misses_percent = percent!(result.pawn_hashtable_misses, pawn_hashtable_attempts);
-    println!(
-        "{: <H$} {: <V$} {: <V$} {: <V$}",
-        "Pawn hashtable",
-        format!("{}", result.pawn_hashtable_added),
-        format!("{} ({:.2}%)", result.pawn_hashtable_hits, pawn_hashtable_hits_percent),
-        format!("{} ({:.2}%)", result.pawn_hashtable_misses, pawn_hashtable_misses_percent),
-        H = header_intendation,
-        V = value_intendation
-    );
-
-    println!();
-    println!("{: <H$} {: <V$} {: <V$} {: <V$}", "", "Attempts", "Accepted", "Rejected", H = header_intendation, V = value_intendation);
-
-    let snmp_accepted_percent = percent!(result.snmp_accepted, result.snmp_attempts);
-    let snmp_rejected_percent = percent!(result.snmp_rejected, result.snmp_attempts);
-    println!(
-        "{: <H$} {: <V$} {: <V$} {: <V$}",
-        "Static null move pruning",
-        format!("{:.2}", result.snmp_attempts),
-        format!("{} ({:.2}%)", result.snmp_accepted, snmp_accepted_percent),
-        format!("{} ({:.2}%)", result.snmp_rejected, snmp_rejected_percent),
-        H = header_intendation,
-        V = value_intendation
-    );
-
-    let nmp_accepted_percent = percent!(result.nmp_accepted, result.nmp_attempts);
-    let nmp_rejected_percent = percent!(result.nmp_rejected, result.nmp_attempts);
-    println!(
-        "{: <H$} {: <V$} {: <V$} {: <V$}",
-        "Null move pruning",
-        format!("{:.2}", result.nmp_attempts),
-        format!("{} ({:.2}%)", result.nmp_accepted, nmp_accepted_percent),
-        format!("{} ({:.2}%)", result.nmp_rejected, nmp_rejected_percent),
-        H = header_intendation,
-        V = value_intendation
-    );
-
-    let lmp_attempts = result.lmp_accepted + result.lmp_rejected;
-    let lmp_accepted_percent = percent!(result.lmp_accepted, lmp_attempts);
-    let lmp_rejected_percent = percent!(result.lmp_rejected, lmp_attempts);
-    println!(
-        "{: <H$} {: <V$} {: <V$} {: <V$}",
-        "Late move pruning",
-        format!("{:.2}", lmp_attempts),
-        format!("{} ({:.2}%)", result.lmp_accepted, lmp_accepted_percent),
-        format!("{} ({:.2}%)", result.lmp_rejected, lmp_rejected_percent),
-        H = header_intendation,
-        V = value_intendation
-    );
-
-    let razoring_accepted_percent = percent!(result.razoring_accepted, result.razoring_attempts);
-    let razoring_rejected_percent = percent!(result.razoring_rejected, result.razoring_attempts);
-    println!(
-        "{: <H$} {: <V$} {: <V$} {: <V$}",
-        "Razoring",
-        format!("{:.2}", result.razoring_attempts),
-        format!("{} ({:.2}%)", result.razoring_accepted, razoring_accepted_percent),
-        format!("{} ({:.2}%)", result.razoring_rejected, razoring_rejected_percent),
-        H = header_intendation,
-        V = value_intendation
-    );
-
-    let total_q_score_pruning_attempts = result.q_score_pruning_accepted + result.q_score_pruning_rejected;
-    let q_score_pruning_accepted_percent = percent!(result.q_score_pruning_accepted, total_q_score_pruning_attempts);
-    let q_score_pruning_rejected_percent = percent!(result.q_score_pruning_rejected, total_q_score_pruning_attempts);
-    println!(
-        "{: <H$} {: <V$} {: <V$} {: <V$}",
-        "Q score pruning",
-        format!("{:.2}", total_q_score_pruning_attempts),
-        format!("{} ({:.2}%)", result.q_score_pruning_accepted, q_score_pruning_accepted_percent),
-        format!("{} ({:.2}%)", result.q_score_pruning_rejected, q_score_pruning_rejected_percent),
-        H = header_intendation,
-        V = value_intendation
-    );
-
-    let total_q_futility_prunings_attempts = result.q_futility_pruning_accepted + result.q_futility_pruning_rejected;
-    let q_futility_pruning_accepted_percent = percent!(result.q_futility_pruning_accepted, total_q_futility_prunings_attempts);
-    let q_futility_pruning_rejected_percent = percent!(result.q_futility_pruning_rejected, total_q_futility_prunings_attempts);
-    println!(
-        "{: <H$} {: <V$} {: <V$} {: <V$}",
-        "Q futility pruning",
-        format!("{:.2}", total_q_futility_prunings_attempts),
-        format!("{} ({:.2}%)", result.q_futility_pruning_accepted, q_futility_pruning_accepted_percent),
-        format!("{} ({:.2}%)", result.q_futility_pruning_rejected, q_futility_pruning_rejected_percent),
-        H = header_intendation,
-        V = value_intendation
-    );
-
-    println!();
-
-    let pvs_rejected_searches_percent = percent!(result.pvs_rejected_searches, result.pvs_zero_window_searches);
-    println!(
-        "PVS: {} full-window searches, {} zero-window searches, {} rejected ({:.2}%)",
-        result.pvs_full_window_searches, result.pvs_zero_window_searches, result.pvs_rejected_searches, pvs_rejected_searches_percent
-    );
-
-    println!(
-        "Move generator stages: {} hash moves, {} captures, {} killers, {} quiet",
-        result.move_generator_hash_move_stages,
-        result.move_generator_captures_stages,
-        result.move_generator_killers_stages,
-        result.move_generator_quiet_moves_stages
-    );
-
-    println!("Transposition table move legality check: {} legal, {} illegal", result.tt_legal_hashmoves, result.tt_illegal_hashmoves);
-    println!("Killers table move legality check: {} legal, {} illegal", result.killers_table_legal_moves, result.killers_table_illegal_moves);
     println!("Result hash: {}", result.result_hash);
     println!();
 }
