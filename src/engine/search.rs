@@ -286,6 +286,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
     let mut moves = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
     let mut move_scores = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
     let mut move_generator_stage = MoveGeneratorStage::ReadyToCheckHashMove;
+    let mut quiet_moves_start_index = 0;
 
     let mut move_index = 0;
     let mut move_number = 0;
@@ -304,6 +305,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
         hash_move,
         ply,
         friendly_king_checked,
+        &mut quiet_moves_start_index,
     ) {
         if ROOT && !context.moves_to_search.is_empty() && !context.moves_to_search.contains(&r#move) {
             continue;
@@ -367,6 +369,15 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
                 if r#move.is_quiet() {
                     context.killers_table.add(ply, r#move);
                     context.history_table.add(r#move.get_from(), r#move.get_to(), depth as u8);
+
+                    if move_generator_stage != MoveGeneratorStage::HashMove {
+                        for i in quiet_moves_start_index..moves_count {
+                            let move_from_list = unsafe { moves[i].assume_init() };
+                            if move_from_list.is_quiet() && move_from_list != best_move {
+                                context.history_table.punish(move_from_list.get_from(), move_from_list.get_to(), depth as u8);
+                            }
+                        }
+                    }
                 }
 
                 conditional_expression!(DIAG, context.statistics.beta_cutoffs += 1);
@@ -563,6 +574,7 @@ fn get_next_move<const DIAG: bool>(
     hash_move: Move,
     ply: u16,
     friendly_king_checked: bool,
+    quiet_moves_start_index: &mut usize,
 ) -> Option<(Move, i16)> {
     if matches!(*stage, MoveGeneratorStage::HashMove | MoveGeneratorStage::Captures | MoveGeneratorStage::KillerMoves | MoveGeneratorStage::AllGenerated) {
         *move_index += 1;
@@ -685,6 +697,7 @@ fn get_next_move<const DIAG: bool>(
                 conditional_expression!(DIAG, context.statistics.move_generator_quiet_moves_stages += 1);
                 let original_moves_count = *moves_count;
 
+                *quiet_moves_start_index = *move_index;
                 *moves_count = context.board.get_moves::<false>(moves, *moves_count, *evasion_mask);
                 *stage = MoveGeneratorStage::AllGenerated;
 

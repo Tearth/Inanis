@@ -31,6 +31,16 @@ impl HistoryTable {
         entry.set_data(updated_value);
     }
 
+    pub fn punish(&self, from: usize, to: usize, depth: u8) {
+        let entry = &self.table[from][to];
+        let entry_data = entry.get_data();
+
+        let value = depth as u32;
+        let updated_value = if value > entry_data.value { 0 } else { entry_data.value - value };
+
+        entry.set_data(updated_value);
+    }
+
     /// Gets `[from][to]` history slot value, relative to `max`.
     pub fn get(&self, from: usize, to: usize, max: u8) -> u8 {
         let entry = &self.table[from][to];
