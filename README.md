@@ -23,6 +23,7 @@ Each release contains a set of binaries for various platforms: Linux (x86, x86-6
  - [CCRL 40/15](https://computerchess.org.uk/ccrl/4040/index.html)
  - [CEGT 40/4](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)
  - [CEDR Blitz](https://chessengines.blogspot.com/p/rating-jcer.html)
+ - [MCERL Blitz](https://www.chessengeria.eu/mcerl)
 
 Big thanks to all testers and their effort! Please note that Elo on the lists above can slightly differ from the author's estimations due to different engine pools and the time control used for tests. 
 
