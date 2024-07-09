@@ -3,7 +3,7 @@ use std::cmp;
 use std::sync::atomic::AtomicU32;
 use std::sync::atomic::Ordering;
 
-const AGING_DIVISOR: u32 = 64;
+const AGING_DIVISOR: u32 = 16;
 
 pub struct HistoryTable {
     pub table: [[HistoryTableEntry; 64]; 64],
