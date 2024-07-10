@@ -411,7 +411,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
         return DRAW_SCORE;
     }
 
-    if !tt_entry_found || alpha != original_alpha {
+    if (!tt_entry_found || alpha != original_alpha) && !context.abort_flag.load(Ordering::Relaxed) {
         let score_type = if alpha <= original_alpha {
             TranspositionTableScoreType::UPPER_BOUND
         } else if alpha >= beta {
