@@ -59,6 +59,7 @@ pub fn run<const DIAG: bool>(context: &mut SearchContext, depth: i8) {
 ///  - test of initial constraints: abort flag, forced depth
 ///  - test if the enemy king is checked
 ///  - test if there's threefold repetition draw, fifty move rule draw or insufficient material draw
+///  - check extensions (<https://www.chessprogramming.org/Check_Extensions>)
 ///  - switch to the quiescence search if the depth is equal to zero
 ///  - read from the transposition table, return score if possible or update alpha/beta (<https://www.chessprogramming.org/Transposition_Table>)
 ///  - internal iterative reduction (<https://chessprogrammingwiki.netlify.app/internal_iterative_reductions/>)
@@ -74,6 +75,7 @@ pub fn run<const DIAG: bool>(context: &mut SearchContext, depth: i8) {
 ///  - test of initial constraints: abort flag, forced depth, max nodes count
 ///  - test if the enemy king is checked
 ///  - test if there's threefold repetition draw, fifty move rule draw or insufficient material draw
+///  - check extensions (<https://www.chessprogramming.org/Check_Extensions>)
 ///  - switch to the quiescence search if the depth is equal to zero
 ///  - read from the transposition table, return score if possible or update alpha/beta (<https://www.chessprogramming.org/Transposition_Table>)
 ///  - internal iterative reduction (<https://chessprogrammingwiki.netlify.app/internal_iterative_reductions/>)
@@ -141,6 +143,10 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
                 WdlResult::Draw => DRAW_SCORE,
             };
         }
+    }
+
+    if check_extensions_can_be_applied(friendly_king_checked) {
+        depth += check_extensions_get_e();
     }
 
     if depth <= 0 {
@@ -724,6 +730,20 @@ fn get_next_move<const DIAG: bool>(
             }
         }
     }
+}
+
+/// The main idea of the check extensions is to extend search when there's a check. Because it's a forced move, we assume that a lot is going on
+/// in that branch and it's a good idea to search it deeper so we avoid horizon effects.
+///
+/// Conditions:
+///  - friendly king is checked
+fn check_extensions_can_be_applied(friendly_king_checked: bool) -> bool {
+    friendly_king_checked
+}
+
+/// Gets the check extensions, for now it's constant 1.
+fn check_extensions_get_e() -> i8 {
+    1
 }
 
 /// The main idea of the internal iterative reduction is that nodes without hash moves are potentially less important, so we
