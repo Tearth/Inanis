@@ -120,29 +120,29 @@ pub fn run() {
         state_lock.options.insert("iir_reduction_base".to_string(), UciOption::new_wide(99, parameters.iir_reduction_base));
         state_lock.options.insert("iir_reduction_step".to_string(), UciOption::new_wide(99, parameters.iir_reduction_step));
         state_lock.options.insert("iir_max_reduction".to_string(), UciOption::new_wide(99, parameters.iir_max_reduction));
-    
+
         state_lock.options.insert("razoring_min_depth".to_string(), UciOption::new_wide(99, parameters.razoring_min_depth));
         state_lock.options.insert("razoring_max_depth".to_string(), UciOption::new_wide(99, parameters.razoring_max_depth));
         state_lock.options.insert("razoring_depth_margin_base".to_string(), UciOption::new_wide(99, parameters.razoring_depth_margin_base));
         state_lock.options.insert("razoring_depth_margin_multiplier".to_string(), UciOption::new_wide(99, parameters.razoring_depth_margin_multiplier));
-    
+
         state_lock.options.insert("snmp_min_depth".to_string(), UciOption::new_wide(99, parameters.snmp_min_depth));
         state_lock.options.insert("snmp_max_depth".to_string(), UciOption::new_wide(99, parameters.snmp_max_depth));
         state_lock.options.insert("snmp_depth_margin_base".to_string(), UciOption::new_wide(99, parameters.snmp_depth_margin_base));
         state_lock.options.insert("snmp_depth_margin_multiplier".to_string(), UciOption::new_wide(99, parameters.snmp_depth_margin_multiplier));
-    
+
         state_lock.options.insert("nmp_min_depth".to_string(), UciOption::new_wide(99, parameters.nmp_min_depth));
         state_lock.options.insert("nmp_min_game_phase".to_string(), UciOption::new_wide(99, parameters.nmp_min_game_phase));
         state_lock.options.insert("nmp_margin".to_string(), UciOption::new_wide(99, parameters.nmp_margin));
         state_lock.options.insert("nmp_depth_base".to_string(), UciOption::new_wide(99, parameters.nmp_depth_base));
         state_lock.options.insert("nmp_depth_divider".to_string(), UciOption::new_wide(99, parameters.nmp_depth_divider));
-    
+
         state_lock.options.insert("lmp_min_depth".to_string(), UciOption::new_wide(99, parameters.lmp_min_depth));
         state_lock.options.insert("lmp_max_depth".to_string(), UciOption::new_wide(99, parameters.lmp_max_depth));
         state_lock.options.insert("lmp_move_index_margin_base".to_string(), UciOption::new_wide(99, parameters.lmp_move_index_margin_base));
         state_lock.options.insert("lmp_move_index_margin_multiplier".to_string(), UciOption::new_wide(99, parameters.lmp_move_index_margin_multiplier));
         state_lock.options.insert("lmp_max_score".to_string(), UciOption::new_wide(99, parameters.lmp_max_score));
-    
+
         state_lock.options.insert("lmr_min_depth".to_string(), UciOption::new_wide(99, parameters.lmr_min_depth));
         state_lock.options.insert("lmr_max_score".to_string(), UciOption::new_wide(99, parameters.lmr_max_score));
         state_lock.options.insert("lmr_min_move_index".to_string(), UciOption::new_wide(99, parameters.lmr_min_move_index));
@@ -153,11 +153,11 @@ pub fn run() {
         state_lock.options.insert("lmr_pv_reduction_base".to_string(), UciOption::new_wide(99, parameters.lmr_pv_reduction_base));
         state_lock.options.insert("lmr_pv_reduction_step".to_string(), UciOption::new_wide(99, parameters.lmr_pv_reduction_step));
         state_lock.options.insert("lmr_pv_max_reduction".to_string(), UciOption::new_wide(99, parameters.lmr_pv_max_reduction));
-    
+
         state_lock.options.insert("q_score_pruning_treshold".to_string(), UciOption::new_wide(99, parameters.q_score_pruning_treshold));
         state_lock.options.insert("q_futility_pruning_margin".to_string(), UciOption::new_wide(99, parameters.q_futility_pruning_margin));
     }
-    
+
     let mut options_sorted = state_lock.options.iter().collect::<Vec<_>>();
     options_sorted.sort_by_key(|(_, option)| option.order);
 
@@ -713,14 +713,14 @@ fn recreate_state_tables(state: Arc<Mutex<UciState>>) {
 /// Enables saving of crash files by setting a custom panic hook.
 fn enable_crash_files() {
     panic::set_hook(Box::new(|panic| {
-        let path = Path::new("crash");
+        let path = Path::new("./crash");
         fs::create_dir_all(path).unwrap();
 
-        let path = Path::new("crash").join(format!("{}.txt", common::time::get_unix_timestamp()));
+        let path = path.join(format!("{}.txt", common::time::get_unix_timestamp()));
         write!(&mut File::create(path.clone()).unwrap(), "{}", panic).unwrap();
 
         let absolute_path = fs::canonicalize(path).unwrap();
-        println!("Crash file saved as {}", absolute_path.into_os_string().into_string().unwrap());
+        println!("info string Crash file saved as {}", absolute_path.into_os_string().into_string().unwrap());
     }));
 }
 
