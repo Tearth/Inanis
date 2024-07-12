@@ -185,6 +185,7 @@ pub fn run() {
         let tokens: Vec<String> = input.split(' ').map(|v| v.trim().to_string()).collect();
         match tokens[0].to_lowercase().as_str() {
             "debug" => handle_debug(&tokens, state.clone()),
+            "fen" => handle_fen(state.clone()),
             "go" => handle_go(&tokens, state.clone()),
             "isready" => handle_isready(),
             "ponderhit" => handle_ponderhit(state.clone()),
@@ -205,6 +206,11 @@ fn handle_debug(parameters: &[String], state: Arc<Mutex<UciState>>) {
     }
 
     state.lock().unwrap().debug_mode.store(matches!(parameters[1].as_str(), "on"), Ordering::Relaxed);
+}
+
+/// Handles non-standard `fen` command by printing FEN of the current position.
+fn handle_fen(state: Arc<Mutex<UciState>>) {
+    println!("info string {}", state.lock().unwrap().board);
 }
 
 /// Handles `go [parameters]` command by running a new search for a position which was set using `position` command. Supported parameters:
