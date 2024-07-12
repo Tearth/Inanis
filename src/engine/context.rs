@@ -332,6 +332,11 @@ impl Iterator for SearchContext {
                 return None;
             }
 
+            #[cfg(feature = "dev")]
+            if self.multipv_lines[0].pv_line[0] == Default::default() {
+                panic!("Invalid PV move: {}", self.multipv_lines[0].pv_line[0]);
+            }
+
             if self.forced_depth == 0 && self.max_nodes_count == 0 {
                 if search_time > ((desired_time as f32) * TIME_THRESHOLD_RATIO) as u32 {
                     self.search_done = true;
