@@ -48,7 +48,7 @@ By default, calling `cargo build` or `cargo build --release` will build the engi
  - **Board representation**: bitboards (a hybrid of make/undo scheme and storing data on stacks)
  - **Move generator**: staged (hash move, captures, quiet moves), magic bitboards, precalculated arrays for knight and king
  - **Move ordering**: hash move, good captures (SEE with support for x-ray attacks), killer table, special moves, history table (with random noise if lazy SMP is enabled), bad captures
- - **Search**: negamax, alpha-beta pruning, quiescence search, null-move pruning, static null move pruning, razoring, late move reduction, late move pruning, lazy SMP
+ - **Search**: negamax, alpha-beta pruning, quiescence search, null-move pruning, static null move pruning, razoring, late move reduction, late move pruning, lazy SMP, internal iterative reductions, check extensions
  - **Cache**: transposition table, pawn hashtable
  - **Evaluation**: material, piece-square tables, pawn structure, mobility, king safety
 
