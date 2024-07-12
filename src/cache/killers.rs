@@ -23,7 +23,7 @@ impl KillersTable {
     /// [KILLER_SLOTS] constant, and newer entries have always a priority over old ones. If there's already exactly the same
     /// move in the slot 0, the table is not changed.
     pub fn add(&self, ply: u16, r#move: Move) {
-        if self.table[ply as usize][0].get_data().r#move == r#move {
+        if ply >= MAX_DEPTH as u16 || self.table[ply as usize][0].get_data().r#move == r#move {
             return;
         }
 
@@ -40,6 +40,11 @@ impl KillersTable {
     /// Gets all killer moves at the level specified by `ply`.
     pub fn get(&self, ply: u16) -> [Move; KILLER_SLOTS] {
         let mut result = [Default::default(); KILLER_SLOTS];
+
+        if ply >= MAX_DEPTH as u16 {
+            return result;
+        }
+
         for (index, slot) in self.table[ply as usize].iter().enumerate() {
             result[index] = slot.get_data().r#move;
         }
