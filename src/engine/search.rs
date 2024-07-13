@@ -376,7 +376,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
                     context.killers_table.add(ply, r#move);
                     context.history_table.add(r#move.get_from(), r#move.get_to(), depth as u8);
 
-                    if move_generator_stage != MoveGeneratorStage::HashMove {
+                    if move_generator_stage == MoveGeneratorStage::AllGenerated {
                         for i in quiet_moves_start_index..moves_count {
                             let move_from_list = unsafe { moves[i].assume_init() };
                             if move_from_list.is_quiet() && move_from_list != best_move {
@@ -588,78 +588,67 @@ fn get_next_move<const DIAG: bool>(
     }
 
     loop {
+        if move_index >= moves_count {
+            match *stage {
+                MoveGeneratorStage::HashMove => *stage = MoveGeneratorStage::ReadyToGenerateCaptures,
+                MoveGeneratorStage::Captures => *stage = MoveGeneratorStage::ReadyToGenerateKillerMoves,
+                MoveGeneratorStage::KillerMoves => *stage = MoveGeneratorStage::ReadyToGenerateQuietMoves,
+                MoveGeneratorStage::AllGenerated => return None,
+                _ => {}
+            }
+        }
+
         match stage {
             MoveGeneratorStage::ReadyToCheckHashMove => {
-                conditional_expression!(DIAG, context.statistics.move_generator_hash_move_stages += 1);
-
                 if hash_move != Default::default() {
-                    *stage = MoveGeneratorStage::HashMove;
                     *moves_count = 1;
+                    *stage = MoveGeneratorStage::HashMove;
                 } else {
                     *stage = MoveGeneratorStage::ReadyToGenerateCaptures;
                 }
+
+                conditional_expression!(DIAG, context.statistics.move_generator_hash_move_stages += 1);
             }
             MoveGeneratorStage::HashMove => {
-                if move_index >= moves_count {
-                    *stage = MoveGeneratorStage::ReadyToGenerateCaptures;
-                    continue;
-                }
-
                 return Some((hash_move, MOVE_ORDERING_HASH_MOVE));
             }
             MoveGeneratorStage::ReadyToGenerateCaptures => {
-                conditional_expression!(DIAG, context.statistics.move_generator_captures_stages += 1);
-
                 *evasion_mask = if friendly_king_checked {
-                    if context.board.pieces[context.board.active_color][KING] == 0 {
-                        u64::MAX
-                    } else {
-                        let king_square = (context.board.pieces[context.board.active_color][KING]).bit_scan();
-                        let occupancy_bb = context.board.occupancy[WHITE] | context.board.occupancy[BLACK];
+                    let king_square = (context.board.pieces[context.board.active_color][KING]).bit_scan();
+                    let occupancy_bb = context.board.occupancy[WHITE] | context.board.occupancy[BLACK];
 
-                        let queen_moves_bb = context.board.magic.get_queen_moves(occupancy_bb, king_square);
-                        let knight_moves_bb = context.board.magic.get_knight_moves(king_square, &context.board.patterns);
+                    let queen_moves_bb = context.board.magic.get_queen_moves(occupancy_bb, king_square);
+                    let knight_moves_bb = context.board.magic.get_knight_moves(king_square, &context.board.patterns);
 
-                        queen_moves_bb | knight_moves_bb
-                    }
+                    queen_moves_bb | knight_moves_bb
                 } else {
                     u64::MAX
                 };
 
-                *moves_count = context.board.get_moves::<true>(moves, 0, *evasion_mask);
                 *move_index = 0;
+                *moves_count = context.board.get_moves::<true>(moves, 0, *evasion_mask);
 
                 if *moves_count == 0 {
                     *stage = MoveGeneratorStage::ReadyToGenerateKillerMoves;
-                    continue;
+                } else {
+                    *stage = MoveGeneratorStage::Captures;
+                    assign_capture_scores(context, moves, move_scores, 0, *moves_count, hash_move);
                 }
 
-                assign_capture_scores(context, moves, move_scores, 0, *moves_count, hash_move);
-                *stage = MoveGeneratorStage::Captures;
+                conditional_expression!(DIAG, context.statistics.move_generator_captures_stages += 1);
             }
             MoveGeneratorStage::Captures => {
-                if move_index >= moves_count {
-                    *stage = MoveGeneratorStage::ReadyToGenerateKillerMoves;
-                    continue;
-                }
-
                 let (r#move, score) = sort_next_move(moves, move_scores, *move_index, *moves_count);
 
                 if r#move == hash_move {
                     *move_index += 1;
-                    continue;
-                }
-
-                if score < MOVE_ORDERING_WINNING_CAPTURES_OFFSET {
+                } else if score < MOVE_ORDERING_WINNING_CAPTURES_OFFSET {
                     *stage = MoveGeneratorStage::ReadyToGenerateKillerMoves;
-                    continue;
+                } else {
+                    return Some((r#move, score));
                 }
-
-                return Some((r#move, score));
             }
             MoveGeneratorStage::ReadyToGenerateKillerMoves => {
-                conditional_expression!(DIAG, context.statistics.move_generator_killers_stages += 1);
-
                 let original_moves_count = *moves_count;
                 let killer_moves = context.killers_table.get(ply);
 
@@ -677,30 +666,21 @@ fn get_next_move<const DIAG: bool>(
                     }
                 }
 
-                *stage = if original_moves_count != *moves_count { MoveGeneratorStage::KillerMoves } else { MoveGeneratorStage::ReadyToGenerateQuietMoves }
+                *stage = if original_moves_count != *moves_count { MoveGeneratorStage::KillerMoves } else { MoveGeneratorStage::ReadyToGenerateQuietMoves };
+                conditional_expression!(DIAG, context.statistics.move_generator_killers_stages += 1);
             }
             MoveGeneratorStage::KillerMoves => {
-                if move_index >= moves_count {
-                    *stage = MoveGeneratorStage::ReadyToGenerateQuietMoves;
-                    continue;
-                }
-
                 let (r#move, score) = sort_next_move(moves, move_scores, *move_index, *moves_count);
 
                 if r#move == hash_move {
                     *move_index += 1;
-                    continue;
-                }
-
-                if score < MOVE_ORDERING_KILLER_MOVE_2 {
+                } else if score < MOVE_ORDERING_KILLER_MOVE_2 {
                     *stage = MoveGeneratorStage::ReadyToGenerateQuietMoves;
-                    continue;
+                } else {
+                    return Some((r#move, score));
                 }
-
-                return Some((r#move, score));
             }
             MoveGeneratorStage::ReadyToGenerateQuietMoves => {
-                conditional_expression!(DIAG, context.statistics.move_generator_quiet_moves_stages += 1);
                 let original_moves_count = *moves_count;
 
                 *quiet_moves_start_index = *move_index;
@@ -708,25 +688,16 @@ fn get_next_move<const DIAG: bool>(
                 *stage = MoveGeneratorStage::AllGenerated;
 
                 assign_quiet_scores(context, moves, move_scores, original_moves_count, *moves_count, hash_move, ply);
+                conditional_expression!(DIAG, context.statistics.move_generator_quiet_moves_stages += 1);
             }
             MoveGeneratorStage::AllGenerated => {
-                if move_index >= moves_count {
-                    return None;
-                }
-
                 let (r#move, score) = sort_next_move(moves, move_scores, *move_index, *moves_count);
 
-                if r#move == hash_move {
+                if r#move == hash_move || score == MOVE_ORDERING_KILLER_MOVE_1 || score == MOVE_ORDERING_KILLER_MOVE_2 {
                     *move_index += 1;
-                    continue;
+                } else {
+                    return Some((r#move, score));
                 }
-
-                if score == MOVE_ORDERING_KILLER_MOVE_1 || score == MOVE_ORDERING_KILLER_MOVE_2 {
-                    *move_index += 1;
-                    continue;
-                }
-
-                return Some((r#move, score));
             }
         }
     }
