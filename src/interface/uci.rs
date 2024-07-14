@@ -1,4 +1,5 @@
 use crate::cache::allocator;
+use crate::cache::counter::CountermovesTable;
 use crate::cache::history::HistoryTable;
 use crate::cache::killers::KillersTable;
 use crate::cache::pawns::PawnHashTable;
@@ -39,6 +40,7 @@ pub struct UciState {
     pawn_hashtable: Arc<PawnHashTable>,
     killers_table: Arc<KillersTable>,
     history_table: Arc<HistoryTable>,
+    countermoves_table: Arc<CountermovesTable>,
     abort_flag: Arc<AtomicBool>,
     ponder_flag: Arc<AtomicBool>,
     debug_mode: AtomicBool,
@@ -87,6 +89,7 @@ impl Default for UciState {
             pawn_hashtable: Arc::new(PawnHashTable::new(1 * 1024 * 1024)),
             killers_table: Arc::new(Default::default()),
             history_table: Arc::new(Default::default()),
+            countermoves_table: Arc::new(Default::default()),
             abort_flag: Arc::new(AtomicBool::new(false)),
             ponder_flag: Arc::new(AtomicBool::new(false)),
             debug_mode: AtomicBool::new(false),
@@ -441,6 +444,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
             state_lock.pawn_hashtable.clone(),
             state_lock.killers_table.clone(),
             state_lock.history_table.clone(),
+            state_lock.countermoves_table.clone(),
             state_lock.abort_flag.clone(),
             state_lock.ponder_flag.clone(),
         );
@@ -472,6 +476,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
                     state_lock.pawn_hashtable.clone(),
                     state_lock.killers_table.clone(),
                     state_lock.history_table.clone(),
+                    state_lock.countermoves_table.clone(),
                     state_lock.abort_flag.clone(),
                     state_lock.ponder_flag.clone(),
                 );

@@ -1,6 +1,7 @@
 use self::parameters::SearchParameters;
 use super::statistics::SearchStatistics;
 use super::*;
+use crate::cache::counter::CountermovesTable;
 use crate::cache::history::HistoryTable;
 use crate::cache::killers::KillersTable;
 use crate::cache::pawns::PawnHashTable;
@@ -48,6 +49,7 @@ pub struct SearchContext {
     pub pawn_hashtable: Arc<PawnHashTable>,
     pub killers_table: Arc<KillersTable>,
     pub history_table: Arc<HistoryTable>,
+    pub countermoves_table: Arc<CountermovesTable>,
     pub helper_contexts: Vec<HelperThreadContext>,
     pub abort_flag: Arc<AtomicBool>,
     pub ponder_flag: Arc<AtomicBool>,
@@ -122,6 +124,7 @@ impl SearchContext {
         pawn_hashtable: Arc<PawnHashTable>,
         killers_table: Arc<KillersTable>,
         history_table: Arc<HistoryTable>,
+        countermoves_table: Arc<CountermovesTable>,
         abort_flag: Arc<AtomicBool>,
         ponder_flag: Arc<AtomicBool>,
     ) -> Self {
@@ -153,6 +156,7 @@ impl SearchContext {
             pawn_hashtable,
             killers_table,
             history_table,
+            countermoves_table,
             helper_contexts: Vec::new(),
             abort_flag,
             ponder_flag,

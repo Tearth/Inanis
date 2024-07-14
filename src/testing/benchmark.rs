@@ -1,3 +1,4 @@
+use crate::cache::counter::CountermovesTable;
 use crate::cache::history::HistoryTable;
 use crate::cache::killers::KillersTable;
 use crate::cache::pawns::PawnHashTable;
@@ -59,6 +60,8 @@ pub struct BenchmarkResult {
     pub tt_illegal_hashmoves: u64,
     pub killers_table_legal_moves: u64,
     pub killers_table_illegal_moves: u64,
+    pub countermoves_table_legal_moves: u64,
+    pub countermoves_table_illegal_moves: u64,
 
     pub pawn_hashtable_added: u64,
     pub pawn_hashtable_hits: u64,
@@ -67,7 +70,8 @@ pub struct BenchmarkResult {
     pub move_generator_hash_move_stages: u64,
     pub move_generator_captures_stages: u64,
     pub move_generator_killers_stages: u64,
-    pub move_generator_quiet_moves_stages: u64,
+    pub move_generator_counters_stages: u64,
+    pub move_generator_quiets_stages: u64,
 
     pub result_hash: u16,
 }
@@ -120,6 +124,7 @@ pub fn run() -> BenchmarkResult {
         let pawn_hashtable = Arc::new(PawnHashTable::new(2 * 1024 * 1024));
         let killers_table = Arc::new(KillersTable::default());
         let history_table = Arc::new(HistoryTable::default());
+        let countermoves_table = Arc::new(CountermovesTable::default());
         let abort_flag = Arc::new(AtomicBool::new(false));
         let ponder_flag = Arc::new(AtomicBool::new(false));
 
@@ -147,6 +152,7 @@ pub fn run() -> BenchmarkResult {
             pawn_hashtable.clone(),
             killers_table.clone(),
             history_table.clone(),
+            countermoves_table.clone(),
             abort_flag.clone(),
             ponder_flag.clone(),
         );
@@ -201,6 +207,8 @@ pub fn run() -> BenchmarkResult {
             benchmark_result.tt_illegal_hashmoves += result.statistics.tt_illegal_hashmoves;
             benchmark_result.killers_table_legal_moves += result.statistics.killers_table_legal_moves;
             benchmark_result.killers_table_illegal_moves += result.statistics.killers_table_illegal_moves;
+            benchmark_result.countermoves_table_legal_moves += result.statistics.countermoves_table_legal_moves;
+            benchmark_result.countermoves_table_illegal_moves += result.statistics.countermoves_table_illegal_moves;
 
             benchmark_result.pawn_hashtable_added += result.statistics.pawn_hashtable_added;
             benchmark_result.pawn_hashtable_hits += result.statistics.pawn_hashtable_hits;
@@ -209,7 +217,8 @@ pub fn run() -> BenchmarkResult {
             benchmark_result.move_generator_hash_move_stages += result.statistics.move_generator_hash_move_stages;
             benchmark_result.move_generator_captures_stages += result.statistics.move_generator_captures_stages;
             benchmark_result.move_generator_killers_stages += result.statistics.move_generator_killers_stages;
-            benchmark_result.move_generator_quiet_moves_stages += result.statistics.move_generator_quiet_moves_stages;
+            benchmark_result.move_generator_counters_stages += result.statistics.move_generator_counters_stages;
+            benchmark_result.move_generator_quiets_stages += result.statistics.move_generator_quiets_stages;
         }
 
         benchmark_result.result_hash ^= result.lines[0].pv_line[0].data;

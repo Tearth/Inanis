@@ -17,6 +17,7 @@ pub const MOVE_ORDERING_HASH_MOVE: i16 = 10000;
 pub const MOVE_ORDERING_WINNING_CAPTURES_OFFSET: i16 = 100;
 pub const MOVE_ORDERING_KILLER_MOVE_1: i16 = 99;
 pub const MOVE_ORDERING_KILLER_MOVE_2: i16 = 98;
+pub const MOVE_ORDERING_COUNTERMOVE: i16 = 97;
 pub const MOVE_ORDERING_QUEEN_PROMOTION: i16 = 95;
 pub const MOVE_ORDERING_ROOK_PROMOTION: i16 = 94;
 pub const MOVE_ORDERING_BISHOP_PROMOTION: i16 = 93;
@@ -34,16 +35,18 @@ enum MoveGeneratorStage {
     HashMove,
     ReadyToGenerateCaptures,
     Captures,
-    ReadyToGenerateKillerMoves,
-    KillerMoves,
-    ReadyToGenerateQuietMoves,
+    ReadyToGenerateKillers,
+    Killers,
+    ReadyToGenerateCounters,
+    Counters,
+    ReadyToGenerateQuiets,
     AllGenerated,
 }
 
 /// Wrapper for the entry point of the regular search, look at `run_internal` for more information.
 pub fn run<const DIAG: bool>(context: &mut SearchContext, depth: i8) {
     let king_checked = context.board.is_king_checked(context.board.active_color);
-    run_internal::<true, true, DIAG>(context, depth, 0, MIN_ALPHA, MIN_BETA, true, king_checked);
+    run_internal::<true, true, DIAG>(context, depth, 0, MIN_ALPHA, MIN_BETA, true, king_checked, Move::default());
 }
 
 /// Entry point of the regular search, with generic `ROOT` parameter indicating if this is the root node where the moves filterigh might happen, and `PV` parameter
@@ -97,6 +100,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
     mut beta: i16,
     mut allow_null_move: bool,
     friendly_king_checked: bool,
+    previous_move: Move,
 ) -> i16 {
     if context.abort_flag.load(Ordering::Relaxed) {
         return INVALID_SCORE;
@@ -272,7 +276,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
             let r = nmp_get_r(context, depth);
 
             context.board.make_null_move();
-            let score = -run_internal::<false, false, DIAG>(context, depth - r - 1, ply + 1, -beta, -beta + 1, false, false);
+            let score = -run_internal::<false, false, DIAG>(context, depth - r - 1, ply + 1, -beta, -beta + 1, false, false, Move::default());
             context.board.undo_null_move();
 
             if score >= beta {
@@ -311,6 +315,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
         hash_move,
         ply,
         friendly_king_checked,
+        previous_move,
         &mut quiet_moves_start_index,
     ) {
         if ROOT && !context.moves_to_search.is_empty() && !context.moves_to_search.contains(&r#move) {
@@ -336,25 +341,25 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
         let score = if PV {
             if move_index == 0 {
                 conditional_expression!(DIAG, context.statistics.pvs_full_window_searches += 1);
-                -run_internal::<false, true, DIAG>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked)
+                -run_internal::<false, true, DIAG>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked, r#move)
             } else {
-                let zero_window_score = -run_internal::<false, false, DIAG>(context, depth - r - 1, ply + 1, -alpha - 1, -alpha, true, king_checked);
+                let zero_window_score = -run_internal::<false, false, DIAG>(context, depth - r - 1, ply + 1, -alpha - 1, -alpha, true, king_checked, r#move);
                 conditional_expression!(DIAG, context.statistics.pvs_zero_window_searches += 1);
 
                 if zero_window_score > alpha && (alpha != beta - 1 || r > 0) && zero_window_score != -INVALID_SCORE {
                     conditional_expression!(DIAG, context.statistics.pvs_rejected_searches += 1);
-                    -run_internal::<false, true, DIAG>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked)
+                    -run_internal::<false, true, DIAG>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked, r#move)
                 } else {
                     zero_window_score
                 }
             }
         } else {
-            let zero_window_score = -run_internal::<false, false, DIAG>(context, depth - r - 1, ply + 1, -beta, -alpha, true, king_checked);
+            let zero_window_score = -run_internal::<false, false, DIAG>(context, depth - r - 1, ply + 1, -beta, -alpha, true, king_checked, r#move);
             conditional_expression!(DIAG, context.statistics.pvs_zero_window_searches += 1);
 
             if zero_window_score > alpha && r > 0 && zero_window_score != -INVALID_SCORE {
                 conditional_expression!(DIAG, context.statistics.pvs_rejected_searches += 1);
-                -run_internal::<false, false, DIAG>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked)
+                -run_internal::<false, false, DIAG>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked, r#move)
             } else {
                 zero_window_score
             }
@@ -375,6 +380,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
                 if r#move.is_quiet() {
                     context.killers_table.add(ply, r#move);
                     context.history_table.add(r#move.get_from(), r#move.get_to(), depth as u8);
+                    context.countermoves_table.add(previous_move, r#move);
 
                     if move_generator_stage == MoveGeneratorStage::AllGenerated {
                         for i in quiet_moves_start_index..moves_count {
@@ -506,14 +512,20 @@ fn assign_quiet_scores(
     start_index: usize,
     moves_count: usize,
     tt_move: Move,
+    previous_move: Move,
     ply: u16,
 ) {
     let killer_moves = context.killers_table.get(ply);
+    let countermove = context.countermoves_table.get(previous_move);
+
     for move_index in start_index..moves_count {
         let r#move = unsafe { moves[move_index].assume_init() };
 
         if r#move == tt_move {
             move_scores[move_index].write(MOVE_ORDERING_HASH_MOVE);
+            continue;
+        } else if r#move == countermove {
+            move_scores[move_index].write(MOVE_ORDERING_COUNTERMOVE);
             continue;
         } else if r#move.is_quiet() {
             let mut killer_move_found = false;
@@ -563,7 +575,11 @@ fn assign_quiet_scores(
 ///  - [MoveGeneratorStage::HashMove] - returns hashmove if possible
 ///  - [MoveGeneratorStage::ReadyToGenerateCaptures] - generates all captures in the position
 ///  - [MoveGeneratorStage::Captures] - returns subsequent elements until the end or score is less than [MOVE_ORDERING_WINNING_CAPTURES_OFFSET]
-///  - [MoveGeneratorStage::ReadyToGenerateQuietMoves] - generates all quiet moves in the position
+///  - [MoveGeneratorStage::ReadyToGenerateKillers] -
+///  - [MoveGeneratorStage::Killers] -
+///  - [MoveGeneratorStage::ReadyToGenerateCounters] -
+///  - [MoveGeneratorStage::Counters] -
+///  - [MoveGeneratorStage::ReadyToGenerateQuiets] - generates all quiet moves in the position
 ///  - [MoveGeneratorStage::AllGenerated] - returns subsequent elements until the end
 ///
 /// Both [MoveGeneratorStage::ReadyToGenerateCaptures] and [MoveGeneratorStage::ReadyToGenerateQuietMoves] are generating moves and assigning scores
@@ -580,9 +596,17 @@ fn get_next_move<const DIAG: bool>(
     hash_move: Move,
     ply: u16,
     friendly_king_checked: bool,
+    previous_move: Move,
     quiet_moves_start_index: &mut usize,
 ) -> Option<(Move, i16)> {
-    if matches!(*stage, MoveGeneratorStage::HashMove | MoveGeneratorStage::Captures | MoveGeneratorStage::KillerMoves | MoveGeneratorStage::AllGenerated) {
+    if matches!(
+        *stage,
+        MoveGeneratorStage::HashMove
+            | MoveGeneratorStage::Captures
+            | MoveGeneratorStage::Killers
+            | MoveGeneratorStage::Counters
+            | MoveGeneratorStage::AllGenerated
+    ) {
         *move_index += 1;
         *move_number += 1;
     }
@@ -591,8 +615,9 @@ fn get_next_move<const DIAG: bool>(
         if move_index >= moves_count {
             match *stage {
                 MoveGeneratorStage::HashMove => *stage = MoveGeneratorStage::ReadyToGenerateCaptures,
-                MoveGeneratorStage::Captures => *stage = MoveGeneratorStage::ReadyToGenerateKillerMoves,
-                MoveGeneratorStage::KillerMoves => *stage = MoveGeneratorStage::ReadyToGenerateQuietMoves,
+                MoveGeneratorStage::Captures => *stage = MoveGeneratorStage::ReadyToGenerateKillers,
+                MoveGeneratorStage::Killers => *stage = MoveGeneratorStage::ReadyToGenerateCounters,
+                MoveGeneratorStage::Counters => *stage = MoveGeneratorStage::ReadyToGenerateQuiets,
                 MoveGeneratorStage::AllGenerated => return None,
                 _ => {}
             }
@@ -629,7 +654,7 @@ fn get_next_move<const DIAG: bool>(
                 *moves_count = context.board.get_moves::<true>(moves, 0, *evasion_mask);
 
                 if *moves_count == 0 {
-                    *stage = MoveGeneratorStage::ReadyToGenerateKillerMoves;
+                    *stage = MoveGeneratorStage::ReadyToGenerateKillers;
                 } else {
                     *stage = MoveGeneratorStage::Captures;
                     assign_capture_scores(context, moves, move_scores, 0, *moves_count, hash_move);
@@ -643,12 +668,12 @@ fn get_next_move<const DIAG: bool>(
                 if r#move == hash_move {
                     *move_index += 1;
                 } else if score < MOVE_ORDERING_WINNING_CAPTURES_OFFSET {
-                    *stage = MoveGeneratorStage::ReadyToGenerateKillerMoves;
+                    *stage = MoveGeneratorStage::ReadyToGenerateKillers;
                 } else {
                     return Some((r#move, score));
                 }
             }
-            MoveGeneratorStage::ReadyToGenerateKillerMoves => {
+            MoveGeneratorStage::ReadyToGenerateKillers => {
                 let original_moves_count = *moves_count;
                 let killer_moves = context.killers_table.get(ply);
 
@@ -666,34 +691,61 @@ fn get_next_move<const DIAG: bool>(
                     }
                 }
 
-                *stage = if original_moves_count != *moves_count { MoveGeneratorStage::KillerMoves } else { MoveGeneratorStage::ReadyToGenerateQuietMoves };
+                *stage = if original_moves_count != *moves_count { MoveGeneratorStage::Killers } else { MoveGeneratorStage::ReadyToGenerateCounters };
                 conditional_expression!(DIAG, context.statistics.move_generator_killers_stages += 1);
             }
-            MoveGeneratorStage::KillerMoves => {
+            MoveGeneratorStage::Killers => {
                 let (r#move, score) = sort_next_move(moves, move_scores, *move_index, *moves_count);
 
-                if r#move == hash_move {
-                    *move_index += 1;
-                } else if score < MOVE_ORDERING_KILLER_MOVE_2 {
-                    *stage = MoveGeneratorStage::ReadyToGenerateQuietMoves;
+                if score < MOVE_ORDERING_KILLER_MOVE_2 {
+                    *stage = MoveGeneratorStage::ReadyToGenerateCounters;
                 } else {
                     return Some((r#move, score));
                 }
             }
-            MoveGeneratorStage::ReadyToGenerateQuietMoves => {
+            MoveGeneratorStage::ReadyToGenerateCounters => {
+                let original_moves_count = *moves_count;
+                let killer_moves = context.killers_table.get(ply);
+                let countermove = context.countermoves_table.get(previous_move);
+
+                if countermove != hash_move && countermove != killer_moves[0] && countermove != killer_moves[1] {
+                    if ((1u64 << countermove.get_to()) & *evasion_mask) != 0 && countermove.is_legal(&context.board) {
+                        moves[*moves_count].write(countermove);
+                        move_scores[*moves_count].write(MOVE_ORDERING_COUNTERMOVE);
+                        *moves_count += 1;
+
+                        conditional_expression!(DIAG, context.statistics.countermoves_table_legal_moves += 1);
+                    } else {
+                        conditional_expression!(DIAG, context.statistics.countermoves_table_illegal_moves += 1);
+                    }
+                }
+
+                *stage = if original_moves_count != *moves_count { MoveGeneratorStage::Counters } else { MoveGeneratorStage::ReadyToGenerateQuiets };
+                conditional_expression!(DIAG, context.statistics.move_generator_counters_stages += 1);
+            }
+            MoveGeneratorStage::Counters => {
+                let (r#move, score) = sort_next_move(moves, move_scores, *move_index, *moves_count);
+
+                if score < MOVE_ORDERING_COUNTERMOVE {
+                    *stage = MoveGeneratorStage::ReadyToGenerateQuiets;
+                } else {
+                    return Some((r#move, score));
+                }
+            }
+            MoveGeneratorStage::ReadyToGenerateQuiets => {
                 let original_moves_count = *moves_count;
 
                 *quiet_moves_start_index = *move_index;
                 *moves_count = context.board.get_moves::<false>(moves, *moves_count, *evasion_mask);
                 *stage = MoveGeneratorStage::AllGenerated;
 
-                assign_quiet_scores(context, moves, move_scores, original_moves_count, *moves_count, hash_move, ply);
-                conditional_expression!(DIAG, context.statistics.move_generator_quiet_moves_stages += 1);
+                assign_quiet_scores(context, moves, move_scores, original_moves_count, *moves_count, hash_move, previous_move, ply);
+                conditional_expression!(DIAG, context.statistics.move_generator_quiets_stages += 1);
             }
             MoveGeneratorStage::AllGenerated => {
                 let (r#move, score) = sort_next_move(moves, move_scores, *move_index, *moves_count);
 
-                if r#move == hash_move || score == MOVE_ORDERING_KILLER_MOVE_1 || score == MOVE_ORDERING_KILLER_MOVE_2 {
+                if r#move == hash_move || score == MOVE_ORDERING_KILLER_MOVE_1 || score == MOVE_ORDERING_KILLER_MOVE_2 || score == MOVE_ORDERING_COUNTERMOVE {
                     *move_index += 1;
                 } else {
                     return Some((r#move, score));

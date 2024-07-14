@@ -1,3 +1,4 @@
+use crate::cache::counter::CountermovesTable;
 use crate::cache::history::HistoryTable;
 use crate::cache::killers::KillersTable;
 use crate::cache::pawns::PawnHashTable;
@@ -85,6 +86,7 @@ fn run_internal(context: &mut TestContext, depth: i8, transposition_table_size: 
                     let pawn_hashtable = Arc::new(PawnHashTable::new(1 * 1024 * 1024));
                     let killers_table = Arc::new(KillersTable::default());
                     let history_table = Arc::new(HistoryTable::default());
+                    let countermoves_table = Arc::new(CountermovesTable::default());
                     let abort_flag = Arc::new(AtomicBool::new(false));
                     let ponder_flag = Arc::new(AtomicBool::new(false));
 
@@ -112,6 +114,7 @@ fn run_internal(context: &mut TestContext, depth: i8, transposition_table_size: 
                         pawn_hashtable.clone(),
                         killers_table.clone(),
                         history_table.clone(),
+                        countermoves_table.clone(),
                         abort_flag.clone(),
                         ponder_flag.clone(),
                     );

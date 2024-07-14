@@ -51,6 +51,8 @@ pub struct SearchStatistics {
     pub tt_illegal_hashmoves: u64,
     pub killers_table_legal_moves: u64,
     pub killers_table_illegal_moves: u64,
+    pub countermoves_table_legal_moves: u64,
+    pub countermoves_table_illegal_moves: u64,
 
     pub pawn_hashtable_added: u64,
     pub pawn_hashtable_hits: u64,
@@ -59,7 +61,8 @@ pub struct SearchStatistics {
     pub move_generator_hash_move_stages: u64,
     pub move_generator_captures_stages: u64,
     pub move_generator_killers_stages: u64,
-    pub move_generator_quiet_moves_stages: u64,
+    pub move_generator_counters_stages: u64,
+    pub move_generator_quiets_stages: u64,
 
     pub max_ply: u16,
 }
@@ -119,7 +122,7 @@ impl ops::AddAssign<SearchStatistics> for SearchStatistics {
 
         self.move_generator_hash_move_stages += rhs.move_generator_hash_move_stages;
         self.move_generator_captures_stages += rhs.move_generator_captures_stages;
-        self.move_generator_quiet_moves_stages += rhs.move_generator_quiet_moves_stages;
+        self.move_generator_quiets_stages += rhs.move_generator_quiets_stages;
 
         self.max_ply = cmp::max(self.max_ply, rhs.max_ply);
     }

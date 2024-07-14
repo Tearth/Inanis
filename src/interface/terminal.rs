@@ -345,15 +345,20 @@ fn handle_benchmark() {
         );
 
         println!(
-            "Move generator stages: {} hash moves, {} captures, {} killers, {} quiet",
+            "Move generator stages: {} hash moves, {} captures, {} killers, {} countermoves, {} quiets",
             result.move_generator_hash_move_stages,
             result.move_generator_captures_stages,
             result.move_generator_killers_stages,
-            result.move_generator_quiet_moves_stages
+            result.move_generator_counters_stages,
+            result.move_generator_quiets_stages
         );
 
         println!("Transposition table move legality check: {} legal, {} illegal", result.tt_legal_hashmoves, result.tt_illegal_hashmoves);
         println!("Killers table move legality check: {} legal, {} illegal", result.killers_table_legal_moves, result.killers_table_illegal_moves);
+        println!(
+            "Countermoves table move legality check: {} legal, {} illegal",
+            result.countermoves_table_legal_moves, result.countermoves_table_illegal_moves
+        );
     }
 
     println!();
