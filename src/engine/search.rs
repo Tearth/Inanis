@@ -297,6 +297,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
     let mut move_scores = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
     let mut move_generator_stage = MoveGeneratorStage::ReadyToCheckHashMove;
     let mut quiet_moves_start_index = 0;
+    let mut killer_moves = [MaybeUninit::uninit(); 2];
 
     let mut move_index = 0;
     let mut move_number = 0;
@@ -317,6 +318,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
         friendly_king_checked,
         previous_move,
         &mut quiet_moves_start_index,
+        &mut killer_moves,
     ) {
         if ROOT && !context.moves_to_search.is_empty() && !context.moves_to_search.contains(&r#move) {
             continue;
@@ -598,6 +600,7 @@ fn get_next_move<const DIAG: bool>(
     friendly_king_checked: bool,
     previous_move: Move,
     quiet_moves_start_index: &mut usize,
+    killer_moves_cache: &mut [MaybeUninit<Move>; 2],
 ) -> Option<(Move, i16)> {
     if matches!(
         *stage,
@@ -689,6 +692,8 @@ fn get_next_move<const DIAG: bool>(
                             conditional_expression!(DIAG, context.statistics.killers_table_illegal_moves += 1);
                         }
                     }
+                    
+                    killer_moves_cache[index].write(killer_move);
                 }
 
                 *stage = if original_moves_count != *moves_count { MoveGeneratorStage::Killers } else { MoveGeneratorStage::ReadyToGenerateCounters };
@@ -705,10 +710,12 @@ fn get_next_move<const DIAG: bool>(
             }
             MoveGeneratorStage::ReadyToGenerateCounters => {
                 let original_moves_count = *moves_count;
-                let killer_moves = context.killers_table.get(ply);
                 let countermove = context.countermoves_table.get(previous_move);
 
-                if countermove != hash_move && countermove != killer_moves[0] && countermove != killer_moves[1] {
+                if countermove != hash_move
+                    && countermove != unsafe { killer_moves_cache[0].assume_init() }
+                    && countermove != unsafe { killer_moves_cache[1].assume_init() }
+                {
                     if ((1u64 << countermove.get_to()) & *evasion_mask) != 0 && countermove.is_legal(&context.board) {
                         moves[*moves_count].write(countermove);
                         move_scores[*moves_count].write(MOVE_ORDERING_COUNTERMOVE);
