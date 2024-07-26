@@ -24,6 +24,7 @@ pub fn evaluate(board: &Board) -> EvaluationResult {
 /// Recalculates incremental counters on the `board`. This function should be called only once during board initialization, as it's too slow in regular search.
 pub fn recalculate_incremental_values(board: &mut Board) {
     for color_index in ALL_COLORS {
+        let king_file = board.pieces[color_index][KING].bit_scan() & 7;
         for phase in ALL_PHASES {
             let mut score = 0;
             for piece_index in ALL_PIECES {
@@ -33,7 +34,7 @@ pub fn recalculate_incremental_values(board: &mut Board) {
                     let square = square_bb.bit_scan();
                     pieces_bb = pieces_bb.pop_lsb();
 
-                    score += board.evaluation_parameters.pst[color_index][piece_index][phase][square];
+                    score += board.evaluation_parameters.pst[color_index][piece_index][king_file][phase][square];
                 }
             }
 
@@ -47,24 +48,39 @@ pub fn recalculate_incremental_values(board: &mut Board) {
 pub fn get_coefficients(board: &Board, piece: usize, index: &mut u16) -> Vec<TunerCoefficient> {
     let mut coefficients = Vec::new();
 
-    for game_phase in ALL_PHASES {
-        for square in ALL_SQUARES {
-            let current_index = 63 - square;
-            let opposite_index = (square / 8) * 8 + (7 - (square % 8));
+    for king_file in ALL_FILES {
+        let valid_for_white = king_file == board.pieces[WHITE][KING].bit_scan() & 7;
+        let valid_for_black = king_file == board.pieces[BLACK][KING].bit_scan() & 7;
 
-            let current_piece = board.piece_table[current_index];
-            let opposite_piece = board.piece_table[opposite_index];
+        for game_phase in ALL_PHASES {
+            for square in ALL_SQUARES {
+                let current_index = 63 - square;
+                let opposite_index = (square / 8) * 8 + (7 - (square % 8));
 
-            let current_color = if (board.occupancy[WHITE] & (1 << current_index)) != 0 { WHITE } else { BLACK };
-            let opposite_color = if (board.occupancy[WHITE] & (1 << opposite_index)) != 0 { WHITE } else { BLACK };
+                let current_piece = board.piece_table[current_index];
+                let opposite_piece = board.piece_table[opposite_index];
 
-            if current_piece == piece as u8 && opposite_piece != piece as u8 && current_color == WHITE {
-                coefficients.push(TunerCoefficient::new(1, game_phase, *index));
-            } else if opposite_piece == piece as u8 && current_piece != piece as u8 && opposite_color == BLACK {
-                coefficients.push(TunerCoefficient::new(-1, game_phase, *index));
+                let current_color = if (board.occupancy[WHITE] & (1 << current_index)) != 0 { WHITE } else { BLACK };
+                let opposite_color = if (board.occupancy[WHITE] & (1 << opposite_index)) != 0 { WHITE } else { BLACK };
+
+                if valid_for_white && !valid_for_black {
+                    if current_piece == piece as u8 && current_color == WHITE {
+                        coefficients.push(TunerCoefficient::new(1, game_phase, *index));
+                    }
+                } else if !valid_for_white && valid_for_black {
+                    if opposite_piece == piece as u8 && opposite_color == BLACK {
+                        coefficients.push(TunerCoefficient::new(-1, game_phase, *index));
+                    }
+                } else if valid_for_white && valid_for_black {
+                    if current_piece == piece as u8 && opposite_piece != piece as u8 && current_color == WHITE {
+                        coefficients.push(TunerCoefficient::new(1, game_phase, *index));
+                    } else if opposite_piece == piece as u8 && current_piece != piece as u8 && opposite_color == BLACK {
+                        coefficients.push(TunerCoefficient::new(-1, game_phase, *index));
+                    }
+                }
+
+                *index += 1;
             }
-
-            *index += 1;
         }
     }
 

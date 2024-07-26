@@ -415,28 +415,40 @@ fn load_values(context: &TunerContext, lock_material: bool, random_values: bool)
     parameters.append(&mut context.parameters.king_attacked_squares_ending.iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
 
     let pawn_pst = &context.parameters.pst_patterns[PAWN];
-    parameters.append(&mut pawn_pst[0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
-    parameters.append(&mut pawn_pst[1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+    for king_file in ALL_FILES {
+        parameters.append(&mut pawn_pst[king_file][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+        parameters.append(&mut pawn_pst[king_file][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+    }
 
-    let knight_pst = &context.parameters.pst_patterns[KNIGHT];
-    parameters.append(&mut knight_pst[0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
-    parameters.append(&mut knight_pst[1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+    for king_file in ALL_FILES {
+        let knight_pst = &context.parameters.pst_patterns[KNIGHT];
+        parameters.append(&mut knight_pst[king_file][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+        parameters.append(&mut knight_pst[king_file][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+    }
 
-    let bishop_pst = &context.parameters.pst_patterns[BISHOP];
-    parameters.append(&mut bishop_pst[0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
-    parameters.append(&mut bishop_pst[1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+    for king_file in ALL_FILES {
+        let bishop_pst = &context.parameters.pst_patterns[BISHOP];
+        parameters.append(&mut bishop_pst[king_file][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+        parameters.append(&mut bishop_pst[king_file][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+    }
 
-    let rook_pst = &context.parameters.pst_patterns[ROOK];
-    parameters.append(&mut rook_pst[0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
-    parameters.append(&mut rook_pst[1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+    for king_file in ALL_FILES {
+        let rook_pst = &context.parameters.pst_patterns[ROOK];
+        parameters.append(&mut rook_pst[king_file][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+        parameters.append(&mut rook_pst[king_file][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+    }
 
-    let queen_pst = &context.parameters.pst_patterns[QUEEN];
-    parameters.append(&mut queen_pst[0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
-    parameters.append(&mut queen_pst[1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+    for king_file in ALL_FILES {
+        let queen_pst = &context.parameters.pst_patterns[QUEEN];
+        parameters.append(&mut queen_pst[king_file][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+        parameters.append(&mut queen_pst[king_file][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+    }
 
-    let king_pst = &context.parameters.pst_patterns[KING];
-    parameters.append(&mut king_pst[0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
-    parameters.append(&mut king_pst[1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+    for king_file in ALL_FILES {
+        let king_pst = &context.parameters.pst_patterns[KING];
+        parameters.append(&mut king_pst[king_file][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+        parameters.append(&mut king_pst[king_file][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+    }
 
     if random_values {
         rand::seed(common::time::get_unix_timestamp());
@@ -491,28 +503,40 @@ fn save_values(context: &mut TunerContext, values: &mut [TunerParameter], lock_m
     save_values_to_i16_array_internal(values, &mut context.parameters.king_attacked_squares_ending, &mut index);
 
     let pawn_pst = &mut context.parameters.pst_patterns[PAWN];
-    save_values_to_i8_array_internal(values, &mut pawn_pst[0], &mut index);
-    save_values_to_i8_array_internal(values, &mut pawn_pst[1], &mut index);
+    for king_file in ALL_FILES {
+        save_values_to_i8_array_internal(values, &mut pawn_pst[king_file][0], &mut index);
+        save_values_to_i8_array_internal(values, &mut pawn_pst[king_file][1], &mut index);
+    }
 
-    let knight_pst = &mut context.parameters.pst_patterns[KNIGHT];
-    save_values_to_i8_array_internal(values, &mut knight_pst[0], &mut index);
-    save_values_to_i8_array_internal(values, &mut knight_pst[1], &mut index);
+    for king_file in ALL_FILES {
+        let knight_pst = &mut context.parameters.pst_patterns[KNIGHT];
+        save_values_to_i8_array_internal(values, &mut knight_pst[king_file][0], &mut index);
+        save_values_to_i8_array_internal(values, &mut knight_pst[king_file][1], &mut index);
+    }
 
-    let bishop_pst = &mut context.parameters.pst_patterns[BISHOP];
-    save_values_to_i8_array_internal(values, &mut bishop_pst[0], &mut index);
-    save_values_to_i8_array_internal(values, &mut bishop_pst[1], &mut index);
+    for king_file in ALL_FILES {
+        let bishop_pst = &mut context.parameters.pst_patterns[BISHOP];
+        save_values_to_i8_array_internal(values, &mut bishop_pst[king_file][0], &mut index);
+        save_values_to_i8_array_internal(values, &mut bishop_pst[king_file][1], &mut index);
+    }
 
-    let rook_pst = &mut context.parameters.pst_patterns[ROOK];
-    save_values_to_i8_array_internal(values, &mut rook_pst[0], &mut index);
-    save_values_to_i8_array_internal(values, &mut rook_pst[1], &mut index);
+    for king_file in ALL_FILES {
+        let rook_pst = &mut context.parameters.pst_patterns[ROOK];
+        save_values_to_i8_array_internal(values, &mut rook_pst[king_file][0], &mut index);
+        save_values_to_i8_array_internal(values, &mut rook_pst[king_file][1], &mut index);
+    }
 
-    let queen_pst = &mut context.parameters.pst_patterns[QUEEN];
-    save_values_to_i8_array_internal(values, &mut queen_pst[0], &mut index);
-    save_values_to_i8_array_internal(values, &mut queen_pst[1], &mut index);
+    for king_file in ALL_FILES {
+        let queen_pst = &mut context.parameters.pst_patterns[QUEEN];
+        save_values_to_i8_array_internal(values, &mut queen_pst[king_file][0], &mut index);
+        save_values_to_i8_array_internal(values, &mut queen_pst[king_file][1], &mut index);
+    }
 
-    let king_pst = &mut context.parameters.pst_patterns[KING];
-    save_values_to_i8_array_internal(values, &mut king_pst[0], &mut index);
-    save_values_to_i8_array_internal(values, &mut king_pst[1], &mut index);
+    for king_file in ALL_FILES {
+        let king_pst = &mut context.parameters.pst_patterns[KING];
+        save_values_to_i8_array_internal(values, &mut king_pst[king_file][0], &mut index);
+        save_values_to_i8_array_internal(values, &mut king_pst[king_file][1], &mut index);
+    }
 
     context.parameters.recalculate();
 }
@@ -578,8 +602,8 @@ fn write_evaluation_parameters(context: &mut TunerContext, output_directory: &st
     output.push_str(get_array("king_attacked_squares_opening", &context.parameters.king_attacked_squares_opening).as_str());
     output.push_str(get_array("king_attacked_squares_ending", &context.parameters.king_attacked_squares_ending).as_str());
     output.push('\n');
-    output.push_str("            pst: [[[[0; 64]; 2]; 6]; 2],\n");
-    output.push_str("            pst_patterns: [[[0; 64]; 2]; 6],\n");
+    output.push_str("            pst: Box::new([[[[[0; 64]; 2]; 8]; 6]; 2]),\n");
+    output.push_str("            pst_patterns: Box::new([[[[0; 64]; 2]; 8]; 6]),\n");
     output.push('\n');
     output.push_str(get_array("piece_phase_value", &context.parameters.piece_phase_value).as_str());
     output.push_str(get_parameter("initial_game_phase", context.parameters.initial_game_phase).as_str());
@@ -599,9 +623,9 @@ fn write_evaluation_parameters(context: &mut TunerContext, output_directory: &st
 }
 
 /// Generates piece-square tables (Rust source file with current evaluation parameters), and saves it into the `output_directory`.
-fn write_piece_square_table(output_directory: &str, best_error: f32, name: &str, patterns: &[[i16; 64]; 2]) {
+fn write_piece_square_table(output_directory: &str, best_error: f32, name: &str, patterns: &[[[i16; 64]; 2]; 8]) {
     let mut output = String::new();
-    let function_signature = format!("    pub fn get_{}_pst_pattern(&self) -> [[i16; 64]; 2] {{\n", name);
+    let function_signature = format!("    pub fn get_{}_pst_pattern(&self) -> [[[i16; 64]; 2]; 8] {{\n", name);
 
     output.push_str(get_header(best_error).as_str());
     output.push('\n');
@@ -611,12 +635,18 @@ fn write_piece_square_table(output_directory: &str, best_error: f32, name: &str,
     output.push_str("    #[rustfmt::skip]\n");
     output.push_str(&function_signature);
     output.push_str("        [\n");
-    output.push_str("            [\n");
-    output.push_str(get_piece_square_table(&patterns[0]).as_str());
-    output.push_str("            ],\n");
-    output.push_str("            [\n");
-    output.push_str(get_piece_square_table(&patterns[1]).as_str());
-    output.push_str("            ],\n");
+
+    for king_file in ALL_FILES {
+        output.push_str("            [\n");
+        output.push_str("                [\n");
+        output.push_str(get_piece_square_table(&patterns[king_file][0]).as_str());
+        output.push_str("                ],\n");
+        output.push_str("                [\n");
+        output.push_str(get_piece_square_table(&patterns[king_file][1]).as_str());
+        output.push_str("                ],\n");
+        output.push_str("            ],\n");
+    }
+
     output.push_str("        ]\n");
     output.push_str("    }\n");
     output.push_str("}\n");
@@ -662,13 +692,13 @@ where
 fn get_piece_square_table(values: &[i16]) -> String {
     let mut output = String::new();
 
-    output.push_str("                ");
+    output.push_str("                    ");
     for index in ALL_SQUARES {
         output.push_str(format!("{:4}", values[index]).as_str());
         if index % 8 == 7 {
             output.push_str(",\n");
             if index != 63 {
-                output.push_str("                ");
+                output.push_str("                    ");
             }
         } else {
             output.push_str(", ");

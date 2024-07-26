@@ -70,6 +70,7 @@ pub struct BoardState {
     pub hash: u64,
     pub pawn_hash: u64,
     pub captured_piece: usize,
+    pub pst_scores: [[i16; 2]; 2],
 }
 
 impl Board {
@@ -215,7 +216,7 @@ impl Board {
 
         match flags {
             MoveFlags::SINGLE_PUSH => {
-                self.move_piece(color, piece, from, to);
+                self.move_piece::<false>(color, piece, from, to);
                 self.hash ^= self.zobrist.get_piece_hash(color, piece, from);
                 self.hash ^= self.zobrist.get_piece_hash(color, piece, to);
 
@@ -225,7 +226,7 @@ impl Board {
                 }
             }
             MoveFlags::DOUBLE_PUSH => {
-                self.move_piece(color, piece, from, to);
+                self.move_piece::<false>(color, piece, from, to);
                 self.hash ^= self.zobrist.get_piece_hash(color, piece, from);
                 self.hash ^= self.zobrist.get_piece_hash(color, piece, to);
 
@@ -238,14 +239,14 @@ impl Board {
             }
             MoveFlags::CAPTURE => {
                 self.captured_piece = self.get_piece(to);
-                self.remove_piece(enemy_color, self.captured_piece, to);
+                self.remove_piece::<false>(enemy_color, self.captured_piece, to);
                 self.hash ^= self.zobrist.get_piece_hash(enemy_color, self.captured_piece, to);
 
                 if self.captured_piece == PAWN {
                     self.pawn_hash ^= self.zobrist.get_piece_hash(enemy_color, self.captured_piece, to);
                 }
 
-                self.move_piece(color, piece, from, to);
+                self.move_piece::<false>(color, piece, from, to);
                 self.hash ^= self.zobrist.get_piece_hash(color, piece, from);
                 self.hash ^= self.zobrist.get_piece_hash(color, piece, to);
 
@@ -258,14 +259,14 @@ impl Board {
                 let king_from = 3 + 56 * color;
                 let king_to = 1 + 56 * color;
 
-                self.move_piece(color, KING, king_from, king_to);
+                self.move_piece::<false>(color, KING, king_from, king_to);
                 self.hash ^= self.zobrist.get_piece_hash(color, KING, king_from);
                 self.hash ^= self.zobrist.get_piece_hash(color, KING, king_to);
 
                 let rook_from = 0 + 56 * color;
                 let rook_to = 2 + 56 * color;
 
-                self.move_piece(color, ROOK, rook_from, rook_to);
+                self.move_piece::<false>(color, ROOK, rook_from, rook_to);
                 self.hash ^= self.zobrist.get_piece_hash(color, ROOK, rook_from);
                 self.hash ^= self.zobrist.get_piece_hash(color, ROOK, rook_to);
             }
@@ -273,19 +274,19 @@ impl Board {
                 let king_from = 3 + 56 * color;
                 let king_to = 5 + 56 * color;
 
-                self.move_piece(color, KING, king_from, king_to);
+                self.move_piece::<false>(color, KING, king_from, king_to);
                 self.hash ^= self.zobrist.get_piece_hash(color, KING, king_from);
                 self.hash ^= self.zobrist.get_piece_hash(color, KING, king_to);
 
                 let rook_from = 7 + 56 * color;
                 let rook_to = 4 + 56 * color;
 
-                self.move_piece(color, ROOK, rook_from, rook_to);
+                self.move_piece::<false>(color, ROOK, rook_from, rook_to);
                 self.hash ^= self.zobrist.get_piece_hash(color, ROOK, rook_from);
                 self.hash ^= self.zobrist.get_piece_hash(color, ROOK, rook_to);
             }
             MoveFlags::EN_PASSANT => {
-                self.move_piece(color, piece, from, to);
+                self.move_piece::<false>(color, piece, from, to);
                 self.hash ^= self.zobrist.get_piece_hash(color, piece, from);
                 self.hash ^= self.zobrist.get_piece_hash(color, piece, to);
 
@@ -295,7 +296,7 @@ impl Board {
                 let sign = (color as isize) * 2 - 1;
                 let enemy_pawn_square = ((to as isize) + sign * 8) as usize;
 
-                self.remove_piece(enemy_color, PAWN, enemy_pawn_square);
+                self.remove_piece::<false>(enemy_color, PAWN, enemy_pawn_square);
                 self.hash ^= self.zobrist.get_piece_hash(enemy_color, piece, enemy_pawn_square);
                 self.pawn_hash ^= self.zobrist.get_piece_hash(enemy_color, piece, enemy_pawn_square);
             }
@@ -303,15 +304,15 @@ impl Board {
                 let promotion_piece = r#move.get_promotion_piece();
                 if flags.contains(MoveFlags::CAPTURE) {
                     self.captured_piece = self.get_piece(to);
-                    self.remove_piece(enemy_color, self.captured_piece, to);
+                    self.remove_piece::<false>(enemy_color, self.captured_piece, to);
                     self.hash ^= self.zobrist.get_piece_hash(enemy_color, self.captured_piece, to);
                 }
 
-                self.remove_piece(color, PAWN, from);
+                self.remove_piece::<false>(color, PAWN, from);
                 self.hash ^= self.zobrist.get_piece_hash(color, PAWN, from);
                 self.pawn_hash ^= self.zobrist.get_piece_hash(color, PAWN, from);
 
-                self.add_piece(color, promotion_piece, to);
+                self.add_piece::<false>(color, promotion_piece, to);
                 self.hash ^= self.zobrist.get_piece_hash(color, promotion_piece, to);
             }
         }
@@ -335,6 +336,8 @@ impl Board {
 
             self.pawn_hash ^= self.zobrist.get_piece_hash(color, KING, from);
             self.pawn_hash ^= self.zobrist.get_piece_hash(color, KING, to);
+
+            pst::recalculate_incremental_values(self);
         } else if piece == ROOK {
             match color {
                 WHITE => match from {
@@ -423,36 +426,36 @@ impl Board {
 
         match flags {
             MoveFlags::SINGLE_PUSH => {
-                self.move_piece(color, piece, to, from);
+                self.move_piece::<true>(color, piece, to, from);
             }
             MoveFlags::DOUBLE_PUSH => {
-                self.move_piece(color, piece, to, from);
+                self.move_piece::<true>(color, piece, to, from);
             }
             MoveFlags::CAPTURE => {
-                self.move_piece(color, piece, to, from);
-                self.add_piece(enemy_color, self.captured_piece, to);
+                self.move_piece::<true>(color, piece, to, from);
+                self.add_piece::<true>(enemy_color, self.captured_piece, to);
             }
             MoveFlags::SHORT_CASTLING => {
-                self.move_piece(color, KING, 1 + 56 * color, 3 + 56 * color);
-                self.move_piece(color, ROOK, 2 + 56 * color, 0 + 56 * color);
+                self.move_piece::<true>(color, KING, 1 + 56 * color, 3 + 56 * color);
+                self.move_piece::<true>(color, ROOK, 2 + 56 * color, 0 + 56 * color);
             }
             MoveFlags::LONG_CASTLING => {
-                self.move_piece(color, KING, 5 + 56 * color, 3 + 56 * color);
-                self.move_piece(color, ROOK, 4 + 56 * color, 7 + 56 * color);
+                self.move_piece::<true>(color, KING, 5 + 56 * color, 3 + 56 * color);
+                self.move_piece::<true>(color, ROOK, 4 + 56 * color, 7 + 56 * color);
             }
             MoveFlags::EN_PASSANT => {
                 let sign = (color as isize) * 2 - 1;
                 let enemy_pawn_square = ((to as isize) + sign * 8) as usize;
 
-                self.move_piece(color, piece, to, from);
-                self.add_piece(enemy_color, PAWN, enemy_pawn_square);
+                self.move_piece::<true>(color, piece, to, from);
+                self.add_piece::<true>(enemy_color, PAWN, enemy_pawn_square);
             }
             _ => {
-                self.add_piece(color, PAWN, from);
-                self.remove_piece(color, piece, to);
+                self.add_piece::<true>(color, PAWN, from);
+                self.remove_piece::<true>(color, piece, to);
 
                 if flags.contains(MoveFlags::CAPTURE) {
-                    self.add_piece(enemy_color, self.captured_piece, to);
+                    self.add_piece::<true>(enemy_color, self.captured_piece, to);
                 }
             }
         }
@@ -509,7 +512,15 @@ impl Board {
 
     /// Preserves halfmove clock, castling rights, en passant bitboard, board hash, pawn hash and captured piece on the stack
     pub fn push_state(&mut self) {
-        self.state_stack.push(BoardState::new(self.halfmove_clock, self.castling_rights, self.en_passant, self.hash, self.pawn_hash, self.captured_piece));
+        self.state_stack.push(BoardState::new(
+            self.halfmove_clock,
+            self.castling_rights,
+            self.en_passant,
+            self.hash,
+            self.pawn_hash,
+            self.captured_piece,
+            self.pst_scores,
+        ));
     }
 
     /// Restores halfmove clock, castling rights, en passant bitboard, board hash, pawn hash and captured piece from the stack
@@ -521,6 +532,7 @@ impl Board {
         self.hash = state.hash;
         self.pawn_hash = state.pawn_hash;
         self.captured_piece = state.captured_piece;
+        self.pst_scores = state.pst_scores;
     }
 
     /// Checks if the square specified by `square` is attacked by enemy, from the `color` perspective.
@@ -659,41 +671,50 @@ impl Board {
     }
 
     /// Adds `piece` on the `square` with the specified `color`, also updates occupancy and incremental values.
-    pub fn add_piece(&mut self, color: usize, piece: usize, square: usize) {
+    pub fn add_piece<const UNDO: bool>(&mut self, color: usize, piece: usize, square: usize) {
         self.pieces[color][piece] |= 1u64 << square;
         self.occupancy[color] |= 1u64 << square;
         self.piece_table[square] = piece as u8;
         self.material_scores[color] += self.evaluation_parameters.piece_value[piece];
         self.game_phase += self.evaluation_parameters.piece_phase_value[piece];
 
-        self.pst_scores[color][OPENING] += self.evaluation_parameters.get_pst_value(color, piece, OPENING, square);
-        self.pst_scores[color][ENDING] += self.evaluation_parameters.get_pst_value(color, piece, ENDING, square);
+        if !UNDO {
+            let king_file = self.pieces[color][KING].bit_scan() & 7;
+            self.pst_scores[color][OPENING] += self.evaluation_parameters.get_pst_value(color, piece, king_file, OPENING, square);
+            self.pst_scores[color][ENDING] += self.evaluation_parameters.get_pst_value(color, piece, king_file, ENDING, square);
+        }
     }
 
     /// Removes `piece` on the `square` with the specified `color`, also updates occupancy and incremental values.
-    pub fn remove_piece(&mut self, color: usize, piece: usize, square: usize) {
+    pub fn remove_piece<const UNDO: bool>(&mut self, color: usize, piece: usize, square: usize) {
         self.pieces[color][piece] &= !(1u64 << square);
         self.occupancy[color] &= !(1u64 << square);
         self.piece_table[square] = u8::MAX;
         self.material_scores[color] -= self.evaluation_parameters.piece_value[piece];
         self.game_phase -= self.evaluation_parameters.piece_phase_value[piece];
 
-        self.pst_scores[color][OPENING] -= self.evaluation_parameters.get_pst_value(color, piece, OPENING, square);
-        self.pst_scores[color][ENDING] -= self.evaluation_parameters.get_pst_value(color, piece, ENDING, square);
+        if !UNDO {
+            let king_file = self.pieces[color][KING].bit_scan() & 7;
+            self.pst_scores[color][OPENING] -= self.evaluation_parameters.get_pst_value(color, piece, king_file, OPENING, square);
+            self.pst_scores[color][ENDING] -= self.evaluation_parameters.get_pst_value(color, piece, king_file, ENDING, square);
+        }
     }
 
     /// Moves `piece` from the square specified by `from` to the square specified by `to` with the specified `color`, also updates occupancy and incremental values.
-    pub fn move_piece(&mut self, color: usize, piece: usize, from: usize, to: usize) {
+    pub fn move_piece<const UNDO: bool>(&mut self, color: usize, piece: usize, from: usize, to: usize) {
         self.pieces[color][piece] ^= (1u64 << from) | (1u64 << to);
         self.occupancy[color] ^= (1u64 << from) | (1u64 << to);
 
         self.piece_table[to] = self.piece_table[from];
         self.piece_table[from] = u8::MAX;
 
-        self.pst_scores[color][OPENING] -= self.evaluation_parameters.get_pst_value(color, piece, OPENING, from);
-        self.pst_scores[color][ENDING] -= self.evaluation_parameters.get_pst_value(color, piece, ENDING, from);
-        self.pst_scores[color][OPENING] += self.evaluation_parameters.get_pst_value(color, piece, OPENING, to);
-        self.pst_scores[color][ENDING] += self.evaluation_parameters.get_pst_value(color, piece, ENDING, to);
+        if !UNDO {
+            let king_file = self.pieces[color][KING].bit_scan() & 7;
+            self.pst_scores[color][OPENING] -= self.evaluation_parameters.get_pst_value(color, piece, king_file, OPENING, from);
+            self.pst_scores[color][ENDING] -= self.evaluation_parameters.get_pst_value(color, piece, king_file, ENDING, from);
+            self.pst_scores[color][OPENING] += self.evaluation_parameters.get_pst_value(color, piece, king_file, OPENING, to);
+            self.pst_scores[color][ENDING] += self.evaluation_parameters.get_pst_value(color, piece, king_file, ENDING, to);
+        }
     }
 
     /// Recalculates board's hashes entirely.
@@ -899,7 +920,15 @@ impl Display for Board {
 
 impl BoardState {
     /// Constructs a new instance of [BoardState] with stored `halfmove_clock`, `castling_rights`, `en_passant`, `hash`, `pawn_hash` and `captured_piece`.
-    pub fn new(halfmove_clock: u16, castling_rights: u8, en_passant: u64, hash: u64, pawn_hash: u64, captured_piece: usize) -> BoardState {
-        BoardState { halfmove_clock, castling_rights, en_passant, hash, pawn_hash, captured_piece }
+    pub fn new(
+        halfmove_clock: u16,
+        castling_rights: u8,
+        en_passant: u64,
+        hash: u64,
+        pawn_hash: u64,
+        captured_piece: usize,
+        pst_scores: [[i16; 2]; 2],
+    ) -> BoardState {
+        BoardState { halfmove_clock, castling_rights, en_passant, hash, pawn_hash, captured_piece, pst_scores }
     }
 }

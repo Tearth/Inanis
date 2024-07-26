@@ -42,8 +42,8 @@ pub struct EvaluationParameters {
     pub king_attacked_squares_opening: [i16; 8],
     pub king_attacked_squares_ending: [i16; 8],
 
-    pub pst: [[[[i16; 64]; 2]; 6]; 2],
-    pub pst_patterns: [[[i16; 64]; 2]; 6],
+    pub pst: Box<[[[[[i16; 64]; 2]; 8]; 6]; 2]>,
+    pub pst_patterns: Box<[[[[i16; 64]; 2]; 8]; 6]>,
 
     pub piece_phase_value: [u8; 6],
     pub initial_game_phase: u8,
@@ -69,8 +69,10 @@ impl EvaluationParameters {
     pub fn recalculate(&mut self) {
         for color in ALL_COLORS {
             for piece in ALL_PIECES {
-                for phase in ALL_PHASES {
-                    self.pst[color][piece][phase] = self.calculate_pst(color, &self.pst_patterns[piece][phase]);
+                for king_file in ALL_FILES {
+                    for phase in ALL_PHASES {
+                        self.pst[color][piece][king_file][phase] = self.calculate_pst(color, &self.pst_patterns[piece][king_file][phase]);
+                    }
                 }
             }
         }
@@ -100,8 +102,8 @@ impl EvaluationParameters {
     }
 
     /// Gets a PST value for the specified `color`, `piece`, `phase` and `square`.
-    pub fn get_pst_value(&self, color: usize, piece: usize, phase: usize, square: usize) -> i16 {
-        self.pst[color][piece][phase][square]
+    pub fn get_pst_value(&self, color: usize, piece: usize, king_file: usize, phase: usize, square: usize) -> i16 {
+        self.pst[color][piece][king_file][phase][square]
     }
 }
 

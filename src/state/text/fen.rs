@@ -139,7 +139,7 @@ fn fen_to_pieces(board: &mut Board, pieces: &str) -> Result<(), String> {
             let color = if char.is_uppercase() { WHITE } else { BLACK };
             let piece = text::symbol_to_piece(char)?;
 
-            board.add_piece(color, piece, current_square as usize);
+            board.add_piece::<false>(color, piece, current_square as usize);
             current_square -= 1;
         }
     }
