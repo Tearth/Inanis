@@ -448,15 +448,6 @@ pub fn get_piece_mobility<const PIECE: usize>(board: &Board, color: usize, dange
     let enemy_king_square = (board.pieces[enemy_color][KING]).bit_scan();
     let enemy_king_box_bb = board.patterns.get_box(enemy_king_square);
 
-    let pawns_bb = board.pieces[enemy_color][PAWN];
-    let pawn_attacked_squares_bb = match enemy_color {
-        WHITE => ((pawns_bb & !FILE_A_BB) << 9) | ((pawns_bb & !FILE_H_BB) << 7),
-        BLACK => ((pawns_bb & !FILE_A_BB) >> 7) | ((pawns_bb & !FILE_H_BB) >> 9),
-        _ => {
-            panic!("Invalid value: enemy_color={}", enemy_color);
-        }
-    };
-
     while pieces_bb != 0 {
         let from_bb = pieces_bb.get_lsb();
         let from = from_bb.bit_scan();
@@ -480,7 +471,7 @@ pub fn get_piece_mobility<const PIECE: usize>(board: &Board, color: usize, dange
         };
 
         *dangered_king_squares += (enemy_king_box_bb & (piece_moves_bb | from_bb)).bit_count() as u32;
-        piece_moves_bb &= !board.occupancy[color] & !pawn_attacked_squares_bb;
+        piece_moves_bb &= !board.occupancy[color] & !board.pawn_attacks[enemy_color];
 
         mobility_inner += (piece_moves_bb & CENTER_BB).bit_count() as i8;
         mobility_outer += (piece_moves_bb & OUTSIDE_BB).bit_count() as i8;

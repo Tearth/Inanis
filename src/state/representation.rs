@@ -55,6 +55,7 @@ pub struct Board {
     pub state_stack: Vec<BoardState>,
     pub material_scores: [i16; 2],
     pub pst_scores: [[i16; 2]; 2],
+    pub pawn_attacks: [u64; 2],
     pub evaluation_parameters: Arc<EvaluationParameters>,
     pub zobrist: Arc<ZobristContainer>,
     pub patterns: Arc<PatternsContainer>,
@@ -105,6 +106,7 @@ impl Board {
             state_stack: Vec::new(),
             material_scores: [0; 2],
             pst_scores: [[0, 2]; 2],
+            pawn_attacks: [0; 2],
             evaluation_parameters,
             zobrist: zobrist_container,
             patterns: patterns_container,
@@ -223,6 +225,7 @@ impl Board {
                 if piece == PAWN {
                     self.pawn_hash ^= self.zobrist.get_piece_hash(color, piece, from);
                     self.pawn_hash ^= self.zobrist.get_piece_hash(color, piece, to);
+                    self.recalculate_pawn_attacks(color);
                 }
             }
             MoveFlags::DOUBLE_PUSH => {
@@ -236,6 +239,8 @@ impl Board {
                 let sign = (color as i8) * 2 - 1;
                 self.en_passant = 1u64 << ((to as i8) + sign * 8);
                 self.hash ^= self.zobrist.get_en_passant_hash(self.en_passant.bit_scan() & 7);
+
+                self.recalculate_pawn_attacks(color);
             }
             MoveFlags::CAPTURE => {
                 self.captured_piece = self.get_piece(to);
@@ -244,6 +249,7 @@ impl Board {
 
                 if self.captured_piece == PAWN {
                     self.pawn_hash ^= self.zobrist.get_piece_hash(enemy_color, self.captured_piece, to);
+                    self.recalculate_pawn_attacks(enemy_color);
                 }
 
                 self.move_piece::<false>(color, piece, from, to);
@@ -253,6 +259,7 @@ impl Board {
                 if piece == PAWN {
                     self.pawn_hash ^= self.zobrist.get_piece_hash(color, piece, from);
                     self.pawn_hash ^= self.zobrist.get_piece_hash(color, piece, to);
+                    self.recalculate_pawn_attacks(color);
                 }
             }
             MoveFlags::SHORT_CASTLING => {
@@ -299,6 +306,9 @@ impl Board {
                 self.remove_piece::<false>(enemy_color, PAWN, enemy_pawn_square);
                 self.hash ^= self.zobrist.get_piece_hash(enemy_color, piece, enemy_pawn_square);
                 self.pawn_hash ^= self.zobrist.get_piece_hash(enemy_color, piece, enemy_pawn_square);
+
+                self.recalculate_pawn_attacks(color);
+                self.recalculate_pawn_attacks(enemy_color);
             }
             _ => {
                 let promotion_piece = r#move.get_promotion_piece();
@@ -314,6 +324,8 @@ impl Board {
 
                 self.add_piece::<false>(color, promotion_piece, to);
                 self.hash ^= self.zobrist.get_piece_hash(color, promotion_piece, to);
+
+                self.recalculate_pawn_attacks(color);
             }
         }
 
@@ -427,13 +439,26 @@ impl Board {
         match flags {
             MoveFlags::SINGLE_PUSH => {
                 self.move_piece::<true>(color, piece, to, from);
+
+                if piece == PAWN {
+                    self.recalculate_pawn_attacks(color);
+                }
             }
             MoveFlags::DOUBLE_PUSH => {
                 self.move_piece::<true>(color, piece, to, from);
+                self.recalculate_pawn_attacks(color);
             }
             MoveFlags::CAPTURE => {
                 self.move_piece::<true>(color, piece, to, from);
                 self.add_piece::<true>(enemy_color, self.captured_piece, to);
+
+                if piece == PAWN {
+                    self.recalculate_pawn_attacks(color);
+                }
+
+                if self.captured_piece == PAWN {
+                    self.recalculate_pawn_attacks(enemy_color);
+                }
             }
             MoveFlags::SHORT_CASTLING => {
                 self.move_piece::<true>(color, KING, 1 + 56 * color, 3 + 56 * color);
@@ -449,10 +474,13 @@ impl Board {
 
                 self.move_piece::<true>(color, piece, to, from);
                 self.add_piece::<true>(enemy_color, PAWN, enemy_pawn_square);
+                self.recalculate_pawn_attacks(color);
+                self.recalculate_pawn_attacks(enemy_color);
             }
             _ => {
                 self.add_piece::<true>(color, PAWN, from);
                 self.remove_piece::<true>(color, piece, to);
+                self.recalculate_pawn_attacks(color);
 
                 if flags.contains(MoveFlags::CAPTURE) {
                     self.add_piece::<true>(enemy_color, self.captured_piece, to);
@@ -565,14 +593,7 @@ impl Board {
         }
 
         let square_bb = 1u64 << square;
-        let potential_enemy_pawns_bb = king_attacks_bb & self.pieces[enemy_color][PAWN];
-        let attacking_enemy_pawns_bb = match color {
-            WHITE => square_bb & ((potential_enemy_pawns_bb >> 7) | (potential_enemy_pawns_bb >> 9)),
-            BLACK => square_bb & ((potential_enemy_pawns_bb << 7) | (potential_enemy_pawns_bb << 9)),
-            _ => panic!("Invalid parameter: fen={}, color={}", self, color),
-        };
-
-        if attacking_enemy_pawns_bb != 0 {
+        if (self.pawn_attacks[enemy_color] & square_bb) != 0 {
             return true;
         }
 
@@ -630,12 +651,7 @@ impl Board {
         result |= attacking_queens_count << 6;
 
         let square_bb = 1u64 << square;
-        let potential_enemy_pawns_bb = king_attacks_bb & self.pieces[enemy_color][PAWN];
-        let attacking_pawns_count = (match color {
-            WHITE => square_bb & ((potential_enemy_pawns_bb >> 7) | (potential_enemy_pawns_bb >> 9)),
-            BLACK => square_bb & ((potential_enemy_pawns_bb << 7) | (potential_enemy_pawns_bb << 9)),
-            _ => panic!("Invalid parameter: fen={}, color={}", self, color),
-        } != 0) as usize;
+        let attacking_pawns_count = ((self.pawn_attacks[enemy_color] & square_bb) != 0) as usize;
 
         result |= attacking_pawns_count;
         result
@@ -721,6 +737,18 @@ impl Board {
     pub fn recalculate_hashes(&mut self) {
         zobrist::recalculate_hash(self);
         zobrist::recalculate_pawn_hash(self);
+    }
+
+    /// Recalculate pawn attacks for the specific `color`.
+    pub fn recalculate_pawn_attacks(&mut self, color: usize) {
+        let pawns_bb = self.pieces[color][PAWN];
+        self.pawn_attacks[color] = match color {
+            WHITE => ((pawns_bb & !FILE_A_BB) << 9) | ((pawns_bb & !FILE_H_BB) << 7),
+            BLACK => ((pawns_bb & !FILE_A_BB) >> 7) | ((pawns_bb & !FILE_H_BB) >> 9),
+            _ => {
+                panic!("Invalid value: color={}", color);
+            }
+        };
     }
 
     /// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position, using `pawn_hashtable` to store pawn

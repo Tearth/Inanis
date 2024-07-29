@@ -60,6 +60,8 @@ pub fn epd_to_board(
 
     board.recalculate_hashes();
     board.recalculate_incremental_values();
+    board.recalculate_pawn_attacks(WHITE);
+    board.recalculate_pawn_attacks(BLACK);
 
     if tokens.len() > 4 {
         let mut parsed_epd = ParsedEPD::new(board);
