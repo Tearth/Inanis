@@ -8,6 +8,7 @@ use crate::tablebases::syzygy;
 use crate::tablebases::WdlResult;
 use crate::utils::bithelpers::BitHelpers;
 use crate::utils::conditional_expression;
+use crate::utils::parameter;
 use crate::utils::rand;
 use std::cmp;
 use std::mem::MaybeUninit;
@@ -265,7 +266,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
     }
 
     if nmp_can_be_applied::<PV>(context, depth, beta, allow_null_move, friendly_king_checked) {
-        let margin = context.parameters.nmp_margin;
+        let margin = parameter!(context.parameters.nmp_margin);
         let lazy_evaluation_value = match lazy_evaluation {
             Some(value) => value,
             None => context.board.evaluate_lazy(context.board.active_color),
@@ -692,7 +693,7 @@ fn get_next_move<const DIAG: bool>(
                             conditional_expression!(DIAG, context.statistics.killers_table_illegal_moves += 1);
                         }
                     }
-                    
+
                     killer_moves_cache[index].write(killer_move);
                 }
 
@@ -783,13 +784,18 @@ fn check_extensions_get_e() -> i8 {
 ///  - depth >= context.parameters.iir_min_depth
 ///  - hash move does not exists
 fn iir_can_be_applied(context: &mut SearchContext, depth: i8, hash_move: Move) -> bool {
-    depth >= context.parameters.iir_min_depth && hash_move == Move::default()
+    depth >= parameter!(context.parameters.iir_min_depth) && hash_move == Move::default()
 }
 
 /// Gets the internal iterative depth reduction, called R, based on `depth`. The further from the horizon we are, the more reduction will be applied.
+#[inline(never)]
 fn iir_get_r(context: &mut SearchContext, depth: i8) -> i8 {
-    (context.parameters.iir_reduction_base + (depth - context.parameters.iir_min_depth) / context.parameters.iir_reduction_step)
-        .min(context.parameters.iir_max_reduction)
+    let reduction_base = parameter!(context.parameters.iir_reduction_base);
+    let min_depth = parameter!(context.parameters.iir_min_depth);
+    let reduction_step = parameter!(context.parameters.iir_reduction_step);
+    let max_reduction = parameter!(context.parameters.iir_max_reduction);
+
+    (reduction_base + (depth - min_depth) / reduction_step).min(max_reduction)
 }
 
 /// The main idea of the razoring is to detect and prune all nodes, which (based on lazy evaluation) are hopeless compared to the current alpha and
@@ -803,16 +809,19 @@ fn iir_get_r(context: &mut SearchContext, depth: i8) -> i8 {
 ///  - alpha is not a mate score
 ///  - friendly king is not checked
 fn razoring_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, alpha: i16, friendly_king_checked: bool) -> bool {
-    !PV && depth >= context.parameters.razoring_min_depth
-        && depth <= context.parameters.razoring_max_depth
-        && !is_score_near_checkmate(alpha)
-        && !friendly_king_checked
+    let min_depth = parameter!(context.parameters.razoring_min_depth);
+    let max_depth = parameter!(context.parameters.razoring_max_depth);
+
+    !PV && depth >= min_depth && depth <= max_depth && !is_score_near_checkmate(alpha) && !friendly_king_checked
 }
 
 /// Gets the razoring margin, based on `depth`. The further from the horizon we are, the more margin we should take to determine if node can be pruned.
 fn razoring_get_margin(context: &mut SearchContext, depth: i8) -> i16 {
-    context.parameters.razoring_depth_margin_base
-        + ((depth - context.parameters.razoring_min_depth) as i16) * context.parameters.razoring_depth_margin_multiplier
+    let depth_margin_base = parameter!(context.parameters.razoring_depth_margin_base);
+    let min_depth = parameter!(context.parameters.razoring_min_depth);
+    let depth_margin_multiplier = parameter!(context.parameters.razoring_depth_margin_multiplier);
+
+    depth_margin_base + ((depth - min_depth) as i16) * depth_margin_multiplier
 }
 
 /// The main idea of the static null move pruning (also called as reverse futility pruning) is to prune all nodes, which (based on lazy evaluation) are too
@@ -826,13 +835,20 @@ fn razoring_get_margin(context: &mut SearchContext, depth: i8) -> i16 {
 ///  - beta is not a mate score
 ///  - friendly king is not checked
 fn snmp_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, beta: i16, friendly_king_checked: bool) -> bool {
-    !PV && depth >= context.parameters.snmp_min_depth && depth <= context.parameters.snmp_max_depth && !is_score_near_checkmate(beta) && !friendly_king_checked
+    let min_depth = parameter!(context.parameters.snmp_min_depth);
+    let max_depth = parameter!(context.parameters.snmp_max_depth);
+
+    !PV && depth >= min_depth && depth <= max_depth && !is_score_near_checkmate(beta) && !friendly_king_checked
 }
 
 /// Gets the static null move pruning margin, based on `depth`. The further from the horizon we are, the more margin should we take to determine
 /// if node can be pruned.
 fn snmp_get_margin(context: &mut SearchContext, depth: i8) -> i16 {
-    context.parameters.snmp_depth_margin_base + ((depth - context.parameters.snmp_min_depth) as i16) * context.parameters.snmp_depth_margin_multiplier
+    let depth_margin_base = parameter!(context.parameters.snmp_depth_margin_base);
+    let min_depth = parameter!(context.parameters.snmp_min_depth);
+    let depth_margin_multiplier = parameter!(context.parameters.snmp_depth_margin_multiplier);
+
+    depth_margin_base + ((depth - min_depth) as i16) * depth_margin_multiplier
 }
 
 /// The main idea of the null move pruning is to prune all nodes, for which the search gives us score above beta even if we skip a move (which allows
@@ -847,16 +863,18 @@ fn snmp_get_margin(context: &mut SearchContext, depth: i8) -> i16 {
 ///  - friendly king is not checked
 ///  - this is not the second null move in a row
 fn nmp_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, beta: i16, allow_null_move: bool, friendly_king_checked: bool) -> bool {
-    !PV && depth >= context.parameters.nmp_min_depth
-        && context.board.game_phase > context.parameters.nmp_min_game_phase
-        && !is_score_near_checkmate(beta)
-        && !friendly_king_checked
-        && allow_null_move
+    let min_depth = parameter!(context.parameters.nmp_min_depth);
+    let min_game_phase = parameter!(context.parameters.nmp_min_game_phase);
+
+    !PV && depth >= min_depth && context.board.game_phase > min_game_phase && !is_score_near_checkmate(beta) && !friendly_king_checked && allow_null_move
 }
 
 /// Gets the null move pruning depth reduction, called R, based on `depth`. The further from the horizon we are, the more reduction will be applied.
 fn nmp_get_r(context: &mut SearchContext, depth: i8) -> i8 {
-    context.parameters.nmp_depth_base + depth / context.parameters.nmp_depth_divider
+    let depth_base = parameter!(context.parameters.nmp_depth_base);
+    let depth_divider = parameter!(context.parameters.nmp_depth_divider);
+
+    depth_base + depth / depth_divider
 }
 
 /// The main idea of the late move pruning is to prune all nodes, which are near the horizon and were scored low by the history table.
@@ -870,10 +888,16 @@ fn nmp_get_r(context: &mut SearchContext, depth: i8) -> i8 {
 ///  - move score <= [lmp_max_score]
 ///  - friendly king is not checked
 fn lmp_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, move_index: usize, move_score: i16, friendly_king_checked: bool) -> bool {
-    !PV && depth >= context.parameters.lmp_min_depth
-        && depth <= context.parameters.lmp_max_depth
-        && move_index >= context.parameters.lmp_move_index_margin_base + (depth as usize - 1) * context.parameters.lmp_move_index_margin_multiplier
-        && move_score <= context.parameters.lmp_max_score
+    let min_depth = parameter!(context.parameters.lmp_min_depth);
+    let max_depth = parameter!(context.parameters.lmp_max_depth);
+    let move_index_margin_base = parameter!(context.parameters.lmp_move_index_margin_base);
+    let move_index_margin_multiplier = parameter!(context.parameters.lmp_move_index_margin_multiplier);
+    let max_score = parameter!(context.parameters.lmp_max_score);
+
+    !PV && depth >= min_depth
+        && depth <= max_depth
+        && move_index >= move_index_margin_base + (depth as usize - 1) * move_index_margin_multiplier
+        && move_score <= max_score
         && !friendly_king_checked
 }
 
@@ -897,26 +921,29 @@ fn lmr_can_be_applied<const PV: bool>(
     friendly_king_checked: bool,
     enemy_king_checked: bool,
 ) -> bool {
-    depth >= context.parameters.lmr_min_depth
-        && move_index >= if PV { context.parameters.lmr_pv_min_move_index } else { context.parameters.lmr_min_move_index }
-        && move_score <= context.parameters.lmr_max_score
-        && r#move.is_quiet()
-        && !friendly_king_checked
-        && !enemy_king_checked
+    let min_depth = parameter!(context.parameters.lmr_min_depth);
+    let min_move_index = if PV { parameter!(context.parameters.lmr_pv_min_move_index) } else { parameter!(context.parameters.lmr_min_move_index) };
+    let max_score = parameter!(context.parameters.lmr_max_score);
+
+    depth >= min_depth && move_index >= min_move_index && move_score <= max_score && r#move.is_quiet() && !friendly_king_checked && !enemy_king_checked
 }
 
 /// Gets the late move depth reduction, called R, based on `move_index`. The lower the move was scored, the larger reduction will be returned.
 fn lmr_get_r<const PV: bool>(context: &mut SearchContext, move_index: usize) -> i8 {
     let (max, r) = if PV {
-        (
-            context.parameters.lmr_pv_max_reduction,
-            (context.parameters.lmr_pv_reduction_base + (move_index - context.parameters.lmr_pv_min_move_index) / context.parameters.lmr_pv_reduction_step),
-        )
+        let max_reduction = parameter!(context.parameters.lmr_pv_max_reduction);
+        let reduction_base = parameter!(context.parameters.lmr_pv_reduction_base);
+        let min_move_index = parameter!(context.parameters.lmr_pv_min_move_index);
+        let reduction_step = parameter!(context.parameters.lmr_pv_reduction_step);
+
+        (max_reduction, (reduction_base + (move_index - min_move_index) / reduction_step))
     } else {
-        (
-            context.parameters.lmr_max_reduction,
-            (context.parameters.lmr_reduction_base + (move_index - context.parameters.lmr_min_move_index) / context.parameters.lmr_reduction_step),
-        )
+        let max_reduction = parameter!(context.parameters.lmr_max_reduction);
+        let reduction_base = parameter!(context.parameters.lmr_reduction_base);
+        let min_move_index = parameter!(context.parameters.lmr_min_move_index);
+        let reduction_step = parameter!(context.parameters.lmr_reduction_step);
+
+        (max_reduction, (reduction_base + (move_index - min_move_index) / reduction_step))
     };
 
     cmp::min(max, r as i8)

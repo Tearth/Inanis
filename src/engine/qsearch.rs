@@ -4,6 +4,7 @@ use crate::state::movescan::Move;
 use crate::state::movescan::MoveFlags;
 use crate::state::*;
 use crate::utils::conditional_expression;
+use crate::utils::parameter;
 use std::cmp;
 use std::mem::MaybeUninit;
 
@@ -137,12 +138,12 @@ fn assign_move_scores(
 /// Checks if the score pruning can be applied for `move_score`. The main idea here is to omit all capture sequances, which are clearly
 /// loosing material (`move_score` is less than [q_score_pruning_treshold]) and with high probability won't improve alpha.
 fn score_pruning_can_be_applied(context: &SearchContext, move_score: i16) -> bool {
-    move_score < context.parameters.q_score_pruning_treshold
+    move_score < parameter!(context.parameters.q_score_pruning_treshold)
 }
 
 /// Checks if the futility pruning can be applied for `move_score`. The main idea here is similar to score pruning, but instead of checking
 /// if the specified capture sequence loses some material or not, it checks if the final result added to the `stand_pat` and [q_futility_pruning_margin]
 /// will be below alpha - if yes, then we can safely assume that this move is not enough good to be relevant for the search.
 fn futility_pruning_can_be_applied(context: &SearchContext, move_score: i16, stand_pat: i16, alpha: i16) -> bool {
-    stand_pat + move_score + context.parameters.q_futility_pruning_margin < alpha
+    stand_pat + move_score + parameter!(context.parameters.q_futility_pruning_margin) < alpha
 }

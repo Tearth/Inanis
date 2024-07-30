@@ -18,5 +18,16 @@ macro_rules! percent {
     };
 }
 
+macro_rules! parameter {
+    ($a : ident . $b : ident . $c : ident) => {
+        if cfg!(feature = "dev") {
+            $a.$b.$c
+        } else {
+            crate::engine::parameters::SearchParameters::$c
+        }
+    };
+}
+
 pub(crate) use conditional_expression;
+pub(crate) use parameter;
 pub(crate) use percent;
