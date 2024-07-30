@@ -57,12 +57,12 @@ pub struct EvaluationResult {
 impl EvaluationParameters {
     /// Initializes PST patterns with used by default during search.
     fn set_default_pst_patterns(&mut self) {
-        self.pst_patterns[PAWN] = self.get_pawn_pst_pattern();
-        self.pst_patterns[KNIGHT] = self.get_knight_pst_pattern();
-        self.pst_patterns[BISHOP] = self.get_bishop_pst_pattern();
-        self.pst_patterns[ROOK] = self.get_rook_pst_pattern();
-        self.pst_patterns[QUEEN] = self.get_queen_pst_pattern();
-        self.pst_patterns[KING] = self.get_king_pst_pattern();
+        self.pst_patterns[PAWN] = Self::PAWN_PST_PATTERN;
+        self.pst_patterns[KNIGHT] = Self::KNIGHT_PST_PATTERN;
+        self.pst_patterns[BISHOP] = Self::BISHOP_PST_PATTERN;
+        self.pst_patterns[ROOK] = Self::ROOK_PST_PATTERN;
+        self.pst_patterns[QUEEN] = Self::QUEEN_PST_PATTERN;
+        self.pst_patterns[KING] = Self::KING_PST_PATTERN;
     }
 
     /// Recalculates initial material and PST tables.

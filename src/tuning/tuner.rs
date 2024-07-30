@@ -189,12 +189,12 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
 
             let error = calculate_error(&mut context, k, threads_count);
             write_evaluation_parameters(&mut context, output_directory, error);
-            write_piece_square_table(output_directory, error, "pawn", &context.parameters.pst_patterns[PAWN]);
-            write_piece_square_table(output_directory, error, "knight", &context.parameters.pst_patterns[KNIGHT]);
-            write_piece_square_table(output_directory, error, "bishop", &context.parameters.pst_patterns[BISHOP]);
-            write_piece_square_table(output_directory, error, "rook", &context.parameters.pst_patterns[ROOK]);
-            write_piece_square_table(output_directory, error, "queen", &context.parameters.pst_patterns[QUEEN]);
-            write_piece_square_table(output_directory, error, "king", &context.parameters.pst_patterns[KING]);
+            write_piece_square_table(output_directory, error, "PAWN", &context.parameters.pst_patterns[PAWN]);
+            write_piece_square_table(output_directory, error, "KNIGHT", &context.parameters.pst_patterns[KNIGHT]);
+            write_piece_square_table(output_directory, error, "BISHOP", &context.parameters.pst_patterns[BISHOP]);
+            write_piece_square_table(output_directory, error, "ROOK", &context.parameters.pst_patterns[ROOK]);
+            write_piece_square_table(output_directory, error, "QUEEN", &context.parameters.pst_patterns[QUEEN]);
+            write_piece_square_table(output_directory, error, "KING", &context.parameters.pst_patterns[KING]);
 
             println!(
                 "Iteration {} done in {} seconds, error reduced from {:.6} to {:.6} ({:.6})",
@@ -625,7 +625,6 @@ fn write_evaluation_parameters(context: &mut TunerContext, output_directory: &st
 /// Generates piece-square tables (Rust source file with current evaluation parameters), and saves it into the `output_directory`.
 fn write_piece_square_table(output_directory: &str, best_error: f32, name: &str, patterns: &[[[i16; 64]; 2]; 8]) {
     let mut output = String::new();
-    let function_signature = format!("    pub fn get_{}_pst_pattern(&self) -> [[[i16; 64]; 2]; 8] {{\n", name);
 
     output.push_str(get_header(best_error).as_str());
     output.push('\n');
@@ -633,22 +632,21 @@ fn write_piece_square_table(output_directory: &str, best_error: f32, name: &str,
     output.push('\n');
     output.push_str("impl EvaluationParameters {\n");
     output.push_str("    #[rustfmt::skip]\n");
-    output.push_str(&function_signature);
-    output.push_str("        [\n");
+    output.push_str(&format!("    pub const {}_PST_PATTERN: [[[i16; 64]; 2]; 8] =\n", name));
+    output.push_str("    [\n");
 
     for king_file in ALL_FILES {
+        output.push_str("        [\n");
         output.push_str("            [\n");
-        output.push_str("                [\n");
         output.push_str(get_piece_square_table(&patterns[king_file][0]).as_str());
-        output.push_str("                ],\n");
-        output.push_str("                [\n");
-        output.push_str(get_piece_square_table(&patterns[king_file][1]).as_str());
-        output.push_str("                ],\n");
         output.push_str("            ],\n");
+        output.push_str("            [\n");
+        output.push_str(get_piece_square_table(&patterns[king_file][1]).as_str());
+        output.push_str("            ],\n");
+        output.push_str("        ],\n");
     }
 
-    output.push_str("        ]\n");
-    output.push_str("    }\n");
+    output.push_str("    ];\n");
     output.push_str("}\n");
 
     let path = Path::new(output_directory).join("pst");
@@ -692,13 +690,13 @@ where
 fn get_piece_square_table(values: &[i16]) -> String {
     let mut output = String::new();
 
-    output.push_str("                    ");
+    output.push_str("                ");
     for index in ALL_SQUARES {
         output.push_str(format!("{:4}", values[index]).as_str());
         if index % 8 == 7 {
             output.push_str(",\n");
             if index != 63 {
-                output.push_str("                    ");
+                output.push_str("                ");
             }
         } else {
             output.push_str(", ");
