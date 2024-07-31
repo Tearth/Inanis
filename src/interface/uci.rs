@@ -719,6 +719,7 @@ fn recreate_state_tables(state: Arc<Mutex<UciState>>) {
     state_lock.pawn_hashtable = Arc::new(PawnHashTable::new(allocation_result.pawn_hashtable_size * 1024 * 1024));
     state_lock.killers_table = Default::default();
     state_lock.history_table = Default::default();
+    state_lock.countermoves_table = Default::default();
 }
 
 /// Enables saving of crash files by setting a custom panic hook.
