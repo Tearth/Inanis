@@ -142,9 +142,6 @@ fn handle_help() {
 
 /// Handles `benchmark` command by running a fixed-depth search for a set of static positions and printing diagnostic data.
 fn handle_benchmark() {
-    let header_intendation = 25;
-    let value_intendation = 20;
-
     println!("Starting benchmark...");
     let result = benchmark::run();
     println!();
@@ -152,8 +149,6 @@ fn handle_benchmark() {
     println!();
 
     let t_nodes_count = result.nodes_count + result.q_nodes_count;
-    let t_leafs_count = result.leafs_count + result.q_leafs_count;
-
     let nodes_count_percent = percent!(result.nodes_count, t_nodes_count);
     let q_nodes_count_percent = percent!(result.q_nodes_count, t_nodes_count);
     let t_mnps = (((result.nodes_count + result.q_nodes_count) as f32) / 1000000.0) / result.time;
@@ -168,17 +163,21 @@ fn handle_benchmark() {
 
     #[cfg(feature = "dev")]
     {
-        println!("{: <H$} {: <V$} {: <V$} {: <V$}", "", "Normal", "Quiescence", "Total", H = header_intendation, V = value_intendation);
+        const HEADER_INDENT: usize = 25;
+        const VALUE_INDENT: usize = 20;
+
+        println!("{: <H$} {: <V$} {: <V$} {: <V$}", "", "Normal", "Quiescence", "Total", H = HEADER_INDENT, V = VALUE_INDENT);
         println!(
             "{: <H$} {: <V$} {: <V$} {: <V$}",
             "Nodes count",
             format!("{} ({:.2}%)", result.nodes_count, nodes_count_percent),
             format!("{} ({:.2}%)", result.q_nodes_count, q_nodes_count_percent),
             format!("{} ({:.2} MN/s)", t_nodes_count, t_mnps),
-            H = header_intendation,
-            V = value_intendation
+            H = HEADER_INDENT,
+            V = VALUE_INDENT
         );
 
+        let t_leafs_count = result.leafs_count + result.q_leafs_count;
         let leafs_count_percent = percent!(result.leafs_count, t_leafs_count);
         let q_leafs_count_percent = percent!(result.q_leafs_count, t_leafs_count);
         let t_leafs_count_percent = percent!(result.leafs_count + result.q_leafs_count, t_nodes_count);
@@ -188,8 +187,8 @@ fn handle_benchmark() {
             format!("{} ({:.2}%)", result.leafs_count, leafs_count_percent),
             format!("{} ({:.2}%)", result.q_leafs_count, q_leafs_count_percent),
             format!("{} ({:.2}%)", t_leafs_count, t_leafs_count_percent),
-            H = header_intendation,
-            V = value_intendation
+            H = HEADER_INDENT,
+            V = VALUE_INDENT
         );
 
         let beta_cutoffs_percent = percent!(result.beta_cutoffs, result.nodes_count);
@@ -201,8 +200,8 @@ fn handle_benchmark() {
             format!("{} ({:.2}%)", result.beta_cutoffs, beta_cutoffs_percent),
             format!("{} ({:.2}%)", result.q_beta_cutoffs, q_beta_cutoffs_percent),
             format!("{} ({:.2}%)", result.beta_cutoffs + result.q_beta_cutoffs, t_beta_cutoffs_percent),
-            H = header_intendation,
-            V = value_intendation
+            H = HEADER_INDENT,
+            V = VALUE_INDENT
         );
 
         let ordering_hits = result.perfect_cutoffs + result.non_perfect_cutoffs;
@@ -218,8 +217,8 @@ fn handle_benchmark() {
             format!("{:.2}%", ordering_quality),
             format!("{:.2}%", q_ordering_quality),
             format!("{:.2}%", t_ordering_quality),
-            H = header_intendation,
-            V = value_intendation
+            H = HEADER_INDENT,
+            V = VALUE_INDENT
         );
 
         let branching_factor = (result.nodes_count as f64) / ((result.nodes_count - result.leafs_count) as f64);
@@ -231,12 +230,12 @@ fn handle_benchmark() {
             format!("{:.2}", branching_factor),
             format!("{:.2}", q_branching_factor),
             format!("{:.2}", t_branching_factor),
-            H = header_intendation,
-            V = value_intendation
+            H = HEADER_INDENT,
+            V = VALUE_INDENT
         );
 
         println!();
-        println!("{: <H$} {: <V$} {: <V$} {: <V$}", "", "Added", "Hits", "Misses", H = header_intendation, V = value_intendation);
+        println!("{: <H$} {: <V$} {: <V$} {: <V$}", "", "Added", "Hits", "Misses", H = HEADER_INDENT, V = VALUE_INDENT);
 
         let tt_attempts = result.tt_hits + result.tt_misses;
         let tt_hits_percent = percent!(result.tt_hits, tt_attempts);
@@ -247,8 +246,8 @@ fn handle_benchmark() {
             format!("{}", result.tt_added),
             format!("{} ({:.2}%)", result.tt_hits, tt_hits_percent),
             format!("{} ({:.2}%)", result.tt_misses, tt_misses_percent),
-            H = header_intendation,
-            V = value_intendation
+            H = HEADER_INDENT,
+            V = VALUE_INDENT
         );
 
         let pawn_hashtable_attempts = result.pawn_hashtable_hits + result.pawn_hashtable_misses;
@@ -260,12 +259,12 @@ fn handle_benchmark() {
             format!("{}", result.pawn_hashtable_added),
             format!("{} ({:.2}%)", result.pawn_hashtable_hits, pawn_hashtable_hits_percent),
             format!("{} ({:.2}%)", result.pawn_hashtable_misses, pawn_hashtable_misses_percent),
-            H = header_intendation,
-            V = value_intendation
+            H = HEADER_INDENT,
+            V = VALUE_INDENT
         );
 
         println!();
-        println!("{: <H$} {: <V$} {: <V$} {: <V$}", "", "Attempts", "Accepted", "Rejected", H = header_intendation, V = value_intendation);
+        println!("{: <H$} {: <V$} {: <V$} {: <V$}", "", "Attempts", "Accepted", "Rejected", H = HEADER_INDENT, V = VALUE_INDENT);
 
         let snmp_accepted_percent = percent!(result.snmp_accepted, result.snmp_attempts);
         let snmp_rejected_percent = percent!(result.snmp_rejected, result.snmp_attempts);
@@ -275,8 +274,8 @@ fn handle_benchmark() {
             format!("{:.2}", result.snmp_attempts),
             format!("{} ({:.2}%)", result.snmp_accepted, snmp_accepted_percent),
             format!("{} ({:.2}%)", result.snmp_rejected, snmp_rejected_percent),
-            H = header_intendation,
-            V = value_intendation
+            H = HEADER_INDENT,
+            V = VALUE_INDENT
         );
 
         let nmp_accepted_percent = percent!(result.nmp_accepted, result.nmp_attempts);
@@ -287,8 +286,8 @@ fn handle_benchmark() {
             format!("{:.2}", result.nmp_attempts),
             format!("{} ({:.2}%)", result.nmp_accepted, nmp_accepted_percent),
             format!("{} ({:.2}%)", result.nmp_rejected, nmp_rejected_percent),
-            H = header_intendation,
-            V = value_intendation
+            H = HEADER_INDENT,
+            V = VALUE_INDENT
         );
 
         let lmp_attempts = result.lmp_accepted + result.lmp_rejected;
@@ -300,8 +299,8 @@ fn handle_benchmark() {
             format!("{:.2}", lmp_attempts),
             format!("{} ({:.2}%)", result.lmp_accepted, lmp_accepted_percent),
             format!("{} ({:.2}%)", result.lmp_rejected, lmp_rejected_percent),
-            H = header_intendation,
-            V = value_intendation
+            H = HEADER_INDENT,
+            V = VALUE_INDENT
         );
 
         let razoring_accepted_percent = percent!(result.razoring_accepted, result.razoring_attempts);
@@ -312,8 +311,8 @@ fn handle_benchmark() {
             format!("{:.2}", result.razoring_attempts),
             format!("{} ({:.2}%)", result.razoring_accepted, razoring_accepted_percent),
             format!("{} ({:.2}%)", result.razoring_rejected, razoring_rejected_percent),
-            H = header_intendation,
-            V = value_intendation
+            H = HEADER_INDENT,
+            V = VALUE_INDENT
         );
 
         let total_q_score_pruning_attempts = result.q_score_pruning_accepted + result.q_score_pruning_rejected;
@@ -325,8 +324,8 @@ fn handle_benchmark() {
             format!("{:.2}", total_q_score_pruning_attempts),
             format!("{} ({:.2}%)", result.q_score_pruning_accepted, q_score_pruning_accepted_percent),
             format!("{} ({:.2}%)", result.q_score_pruning_rejected, q_score_pruning_rejected_percent),
-            H = header_intendation,
-            V = value_intendation
+            H = HEADER_INDENT,
+            V = VALUE_INDENT
         );
 
         let total_q_futility_prunings_attempts = result.q_futility_pruning_accepted + result.q_futility_pruning_rejected;
@@ -338,8 +337,8 @@ fn handle_benchmark() {
             format!("{:.2}", total_q_futility_prunings_attempts),
             format!("{} ({:.2}%)", result.q_futility_pruning_accepted, q_futility_pruning_accepted_percent),
             format!("{} ({:.2}%)", result.q_futility_pruning_rejected, q_futility_pruning_rejected_percent),
-            H = header_intendation,
-            V = value_intendation
+            H = HEADER_INDENT,
+            V = VALUE_INDENT
         );
 
         println!();
