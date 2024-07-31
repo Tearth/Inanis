@@ -10,7 +10,8 @@
     clippy::format_in_format_args,
     clippy::question_mark,
     clippy::manual_range_patterns,
-    clippy::collapsible_else_if
+    clippy::collapsible_else_if,
+    clippy::type_complexity
 )]
 
 //! The main page of the Inanis documentation. Feel free to explore it by going into the specific module below,

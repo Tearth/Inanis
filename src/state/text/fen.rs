@@ -275,29 +275,9 @@ fn en_passant_to_fen(board: &Board) -> String {
     result.into_iter().collect()
 }
 
-/// Parses FEN's halfmove clock and stores it into the `board`. Returns [Err] with the proper error message if `halfmove_clock` couldn't be parsed.
-fn fen_to_halfmove_clock(board: &mut Board, halfmove_clock: &str) -> Result<(), String> {
-    board.halfmove_clock = match halfmove_clock.parse::<u16>() {
-        Ok(value) => value,
-        Err(error) => return Err(format!("Invalid FEN, bad halfmove clock: {}", error)),
-    };
-
-    Ok(())
-}
-
 /// Converts halfmove clock from the `board` into the FEN chunk.
 fn halfmove_clock_to_fen(board: &Board) -> String {
     board.halfmove_clock.to_string()
-}
-
-/// Parses FEN's fullmove number and stores it into the `board`. Returns [Err] with the proper error message if `fullmove_number` couldn't be parsed.
-fn fen_to_fullmove_number(board: &mut Board, fullmove_number: &str) -> Result<(), String> {
-    board.fullmove_number = match fullmove_number.parse::<u16>() {
-        Ok(value) => value,
-        Err(error) => return Err(format!("Invalid FEN, bad fullmove clock: {}", error)),
-    };
-
-    Ok(())
 }
 
 /// Converts fullmove number from the `board` into the FEN chunk.

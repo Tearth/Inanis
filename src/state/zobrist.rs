@@ -43,8 +43,6 @@ impl Default for ZobristContainer {
     fn default() -> Self {
         let mut result = Self { piece_hashes: [[[0; 64]; 6]; 2], castling_hashes: [0; 4], en_passant_hashes: [0; 8], active_color_hash: 0 };
 
-        rand::seed(584578);
-
         for color in ALL_COLORS {
             for piece in ALL_PIECES {
                 for square in ALL_SQUARES {
