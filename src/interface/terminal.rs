@@ -20,7 +20,7 @@ use crate::testing::testset;
 use crate::tuning::tuner;
 
 #[cfg(feature = "dev")]
-use crate::tuning::tunerset;
+use crate::tuning::dataset;
 
 #[cfg(feature = "dev")]
 use crate::state::movegen::MagicContainer;
@@ -72,6 +72,10 @@ pub fn run(args: Vec<OsString>, target_features: Vec<&'static str>) {
         match tokens[0] {
             "help" => handle_help(),
             "benchmark" => handle_benchmark(),
+
+            #[cfg(feature = "dev")]
+            "dataset" => handle_dataset(tokens),
+
             "evaluate" => handle_evaluate(tokens),
 
             #[cfg(feature = "dev")]
@@ -85,8 +89,6 @@ pub fn run(args: Vec<OsString>, target_features: Vec<&'static str>) {
             "testset" => handle_testset(tokens),
             #[cfg(feature = "dev")]
             "tuner" => handle_tuner(tokens),
-            #[cfg(feature = "dev")]
-            "tunerset" => handle_tunerset(tokens),
 
             "uci" => handle_uci(),
             "wah" => handle_wah(),
@@ -105,7 +107,14 @@ fn handle_help() {
     println!("=== General ===");
     println!(" benchmark - run test for a set of positions");
     println!(" evaluate [fen] - show score for the position");
+    println!(" uci - run Universal Chess Interface");
+    println!(" quit - close the application");
+    println!();
 
+    #[cfg(feature = "dev")]
+    println!("=== Development ===");
+    #[cfg(feature = "dev")]
+    println!(" dataset [pgn] [output] [min_ply] [max_score] [max_diff] [density] - dataset generator");
     #[cfg(feature = "dev")]
     println!(" magic - generate magic numbers");
     #[cfg(feature = "dev")]
@@ -113,11 +122,8 @@ fn handle_help() {
     #[cfg(feature = "dev")]
     println!(" tuner [epd] [output] [lock_material] [randomize] [threads_count] - run tuning");
     #[cfg(feature = "dev")]
-    println!(" tunerset [pgn] [output] [min_ply] [max_score] [max_diff] [density] - dataset generator");
-
-    println!(" uci - run Universal Chess Interface");
-    println!(" quit - close the application");
     println!();
+
     println!("=== Perft ===");
     println!(" perft [depth]");
     println!(" perft [depth] fen [fen]");
@@ -694,11 +700,11 @@ fn handle_tuner(input: Vec<&str>) {
     tuner::run(input[1], input[2], lock_material, random_values, threads_count);
 }
 
-/// Handles `tunerset [pgn] [output] [min_ply] [max_score] [max_diff] [density]` command by running generator of the dataset for the tuner.
+/// Handles `dataset [pgn] [output] [min_ply] [max_score] [max_diff] [density]` command by running generator of the dataset for the tuner.
 /// It works by parsing `pgn_filename`, and then picking random positions based on the provided restrictions like `min_ply`, `max_score`,
 /// `max_differ` and `density`. Output positions are then stored in the `output_file`.
 #[cfg(feature = "dev")]
-fn handle_tunerset(input: Vec<&str>) {
+fn handle_dataset(input: Vec<&str>) {
     if input.len() < 2 {
         println!("PGN filename parameter not found");
         return;
@@ -761,7 +767,7 @@ fn handle_tunerset(input: Vec<&str>) {
         }
     };
 
-    tunerset::run(input[1], input[2], min_ply, max_score, max_diff, density);
+    dataset::run(input[1], input[2], min_ply, max_score, max_diff, density);
 }
 
 /// Handles `uci` command by entering into the UCI (Universal Chess Interface) mode.
