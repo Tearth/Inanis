@@ -8,12 +8,16 @@ use crate::engine;
 use crate::engine::context::HelperThreadContext;
 use crate::engine::context::SearchContext;
 use crate::engine::parameters::SearchParameters;
+use crate::engine::see::SEEContainer;
+use crate::evaluation::EvaluationParameters;
 use crate::perft;
 use crate::state::movescan::Move;
 use crate::state::representation::Board;
 use crate::state::*;
 use crate::tablebases::syzygy;
 use crate::utils::minmax::MinMax;
+use movegen::MagicContainer;
+use patterns::PatternsContainer;
 use std::cmp;
 use std::collections::HashMap;
 use std::fs;
@@ -29,6 +33,7 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
 use std::time::SystemTime;
+use zobrist::ZobristContainer;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
@@ -44,6 +49,12 @@ pub struct UciState {
     abort_flag: Arc<AtomicBool>,
     ponder_flag: Arc<AtomicBool>,
     debug_mode: AtomicBool,
+
+    evaluation_parameters: Arc<EvaluationParameters>,
+    zobrist_container: Arc<ZobristContainer>,
+    patterns_container: Arc<PatternsContainer>,
+    see_container: Arc<SEEContainer>,
+    magic_container: Arc<MagicContainer>,
 }
 
 #[derive(Clone)]
@@ -82,8 +93,20 @@ impl UciOption {
 impl Default for UciState {
     /// Constructs a default instance of [UciState] with zeroed elements and hashtables with their default sizes.
     fn default() -> Self {
+        let evaluation_parameters = Arc::new(EvaluationParameters::default());
+        let zobrist_container = Arc::new(ZobristContainer::default());
+        let patterns_container = Arc::new(PatternsContainer::default());
+        let see_container = Arc::new(SEEContainer::new(Some(evaluation_parameters.clone())));
+        let magic_container = Arc::new(MagicContainer::default());
+
         UciState {
-            board: Board::new_initial_position(None, None, None, None, None),
+            board: Board::new_initial_position(
+                Some(evaluation_parameters.clone()),
+                Some(zobrist_container.clone()),
+                Some(patterns_container.clone()),
+                Some(see_container.clone()),
+                Some(magic_container.clone()),
+            ),
             options: HashMap::new(),
             transposition_table: Arc::new(TranspositionTable::new(1 * 1024 * 1024)),
             pawn_hashtable: Arc::new(PawnHashTable::new(1 * 1024 * 1024)),
@@ -93,6 +116,12 @@ impl Default for UciState {
             abort_flag: Arc::new(AtomicBool::new(false)),
             ponder_flag: Arc::new(AtomicBool::new(false)),
             debug_mode: AtomicBool::new(false),
+
+            evaluation_parameters,
+            zobrist_container,
+            patterns_container,
+            see_container,
+            magic_container,
         }
     }
 }
@@ -596,10 +625,18 @@ fn handle_position(parameters: &[String], state: Arc<Mutex<UciState>>) {
         return;
     }
 
-    state.lock().unwrap().board = match parameters[1].as_str() {
+    let mut state_lock = state.lock().unwrap();
+    state_lock.board = match parameters[1].as_str() {
         "fen" => {
             let fen = parameters[2..].join(" ");
-            match Board::new_from_fen(fen.as_str(), None, None, None, None, None) {
+            match Board::new_from_fen(
+                fen.as_str(),
+                Some(state_lock.evaluation_parameters.clone()),
+                Some(state_lock.zobrist_container.clone()),
+                Some(state_lock.patterns_container.clone()),
+                Some(state_lock.see_container.clone()),
+                Some(state_lock.magic_container.clone()),
+            ) {
                 Ok(board) => board,
                 Err(error) => {
                     println!("info string Error: {}", error);
@@ -607,12 +644,18 @@ fn handle_position(parameters: &[String], state: Arc<Mutex<UciState>>) {
                 }
             }
         }
-        _ => Board::new_initial_position(None, None, None, None, None),
+        _ => Board::new_initial_position(
+            Some(state_lock.evaluation_parameters.clone()),
+            Some(state_lock.zobrist_container.clone()),
+            Some(state_lock.patterns_container.clone()),
+            Some(state_lock.see_container.clone()),
+            Some(state_lock.magic_container.clone()),
+        ),
     };
 
     if let Some(index) = parameters.iter().position(|s| s == "moves") {
         for premade_move in &parameters[index + 1..] {
-            let parsed_move = match Move::from_long_notation(premade_move, &state.lock().unwrap().board) {
+            let parsed_move = match Move::from_long_notation(premade_move, &state_lock.board) {
                 Ok(r#move) => r#move,
                 Err(error) => {
                     println!("info string Error: {}", error);
@@ -620,7 +663,7 @@ fn handle_position(parameters: &[String], state: Arc<Mutex<UciState>>) {
                 }
             };
 
-            state.lock().unwrap().board.make_move(parsed_move);
+            state_lock.board.make_move(parsed_move);
         }
     };
 }
@@ -692,7 +735,13 @@ fn handle_setoption(parameters: &[String], state: Arc<Mutex<UciState>>) {
 fn handle_ucinewgame(state: Arc<Mutex<UciState>>) {
     let mut state_lock = state.lock().unwrap();
     state_lock.abort_flag.store(true, Ordering::Relaxed);
-    state_lock.board = Board::new_initial_position(None, None, None, None, None);
+    state_lock.board = Board::new_initial_position(
+        Some(state_lock.evaluation_parameters.clone()),
+        Some(state_lock.zobrist_container.clone()),
+        Some(state_lock.patterns_container.clone()),
+        Some(state_lock.see_container.clone()),
+        Some(state_lock.magic_container.clone()),
+    );
     state_lock.abort_flag = Default::default();
     drop(state_lock);
 
@@ -720,6 +769,9 @@ fn recreate_state_tables(state: Arc<Mutex<UciState>>) {
     state_lock.killers_table = Default::default();
     state_lock.history_table = Default::default();
     state_lock.countermoves_table = Default::default();
+
+    // Reset Zobrist keys too, so each game will be slightly different
+    state_lock.zobrist_container = Default::default();
 }
 
 /// Enables saving of crash files by setting a custom panic hook.
