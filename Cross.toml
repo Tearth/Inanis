@@ -1,0 +1,4 @@
+[build]
+pre-build = [
+    "apt-get update && apt-get install clang --assume-yes"
+]
