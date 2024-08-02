@@ -5,7 +5,6 @@ use std::sync::atomic::Ordering;
 
 const KILLER_SLOTS: usize = 2;
 
-#[derive(Clone)]
 pub struct KillersTable {
     pub table: [[KillersTableEntry; KILLER_SLOTS]; MAX_DEPTH as usize],
 }
@@ -102,13 +101,6 @@ impl Default for KillersTableEntry {
     /// Constructs a default instance of [KillersTableEntry] with zeroed elements.
     fn default() -> Self {
         Self { data: AtomicU16::new(0) }
-    }
-}
-
-impl Clone for KillersTableEntry {
-    /// Clones [KillersTableEntry] by creating a new atomic (with the original value).
-    fn clone(&self) -> Self {
-        Self { data: AtomicU16::new(self.data.load(Ordering::Relaxed)) }
     }
 }
 

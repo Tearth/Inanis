@@ -31,6 +31,7 @@ impl HistoryTable {
         entry.set_data(updated_value);
     }
 
+    /// Punishes `[from][to]` history slot value based on `depth`.
     pub fn punish(&self, from: usize, to: usize, depth: u8) {
         let entry = &self.table[from][to];
         let entry_data = entry.get_data();
@@ -82,13 +83,6 @@ impl Default for HistoryTable {
     }
 }
 
-impl Clone for HistoryTable {
-    /// Clones [HistoryTable] by creating new atomics (with the original values).
-    fn clone(&self) -> Self {
-        Self { table: self.table.clone(), max: AtomicU32::new(self.max.load(Ordering::Relaxed)) }
-    }
-}
-
 impl HistoryTableEntry {
     /// Constructs a new instance of [HistoryTableEntry] with zeroed values.
     pub const fn new_const() -> Self {
@@ -110,13 +104,6 @@ impl Default for HistoryTableEntry {
     /// Constructs a default instance of [HistoryTableEntry] with zeroed elements.
     fn default() -> Self {
         Self { data: AtomicU32::new(0) }
-    }
-}
-
-impl Clone for HistoryTableEntry {
-    /// Clones [HistoryTableEntry] by creating a new atomic (with the original value).
-    fn clone(&self) -> Self {
-        Self { data: AtomicU32::new(self.data.load(Ordering::Relaxed)) }
     }
 }
 

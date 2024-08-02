@@ -5,7 +5,6 @@ use std::sync::atomic::AtomicU16;
 use std::sync::atomic::Ordering;
 use std::u64;
 
-#[derive(Clone)]
 pub struct PawnHashTable {
     pub table: Vec<PawnHashTableEntry>,
 }
@@ -30,7 +29,7 @@ impl PawnHashTable {
         let mut hashtable = Self { table: Vec::with_capacity(aligned_size / bucket_size) };
 
         if aligned_size != 0 {
-            hashtable.table.resize(hashtable.table.capacity(), Default::default());
+            hashtable.table.resize_with(hashtable.table.capacity(), Default::default);
         }
 
         hashtable
@@ -103,17 +102,6 @@ impl Default for PawnHashTableEntry {
     /// Constructs a default instance of [PawnHashTableEntry] with zeroed elements.
     fn default() -> Self {
         PawnHashTableEntry { key: AtomicU16::new(0), score_opening: AtomicI16::new(0), score_ending: AtomicI16::new(0) }
-    }
-}
-
-impl Clone for PawnHashTableEntry {
-    /// Clones [PawnHashTableEntry] by creating a new atomic (with the original value).
-    fn clone(&self) -> Self {
-        Self {
-            key: AtomicU16::new(self.key.load(Ordering::Relaxed)),
-            score_opening: AtomicI16::new(self.score_opening.load(Ordering::Relaxed)),
-            score_ending: AtomicI16::new(self.score_ending.load(Ordering::Relaxed)),
-        }
     }
 }
 

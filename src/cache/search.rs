@@ -21,7 +21,6 @@ pub struct TranspositionTable {
     table: Vec<TranspositionTableBucket>,
 }
 
-#[derive(Clone)]
 #[repr(align(64))]
 pub struct TranspositionTableBucket {
     pub entries: [TranspositionTableEntry; BUCKET_SLOTS],
@@ -48,7 +47,7 @@ impl TranspositionTable {
         let mut hashtable = Self { table: Vec::with_capacity(aligned_size / bucket_size) };
 
         if aligned_size != 0 {
-            hashtable.table.resize(hashtable.table.capacity(), Default::default());
+            hashtable.table.resize_with(hashtable.table.capacity(), Default::default);
         }
 
         hashtable
@@ -258,13 +257,6 @@ impl Default for TranspositionTableEntry {
     /// Constructs a default instance of [TranspositionTableEntry] with zeroed elements.
     fn default() -> Self {
         TranspositionTableEntry { key_data: AtomicU64::new(0) }
-    }
-}
-
-impl Clone for TranspositionTableEntry {
-    /// Clones [TranspositionTableEntry] by creating a new atomics (with the original values).
-    fn clone(&self) -> Self {
-        Self { key_data: AtomicU64::new(self.key_data.load(Ordering::Relaxed)) }
     }
 }
 

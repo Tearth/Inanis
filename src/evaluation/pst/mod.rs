@@ -86,3 +86,29 @@ pub fn get_coefficients(board: &Board, piece: usize, index: &mut u16) -> Vec<Tun
 
     coefficients
 }
+
+#[cfg(feature = "dev")]
+pub fn get_array_coefficients(white_feature: u8, black_feature: u8, max: u8, index: &mut u16) -> Vec<TunerCoefficient> {
+    let mut coefficients = Vec::new();
+
+    for game_phase in ALL_PHASES {
+        for i in 0..max {
+            let mut sum = 0;
+
+            if white_feature == i || (i == max - 1 && white_feature > max - 1) {
+                sum += 1;
+            }
+            if black_feature == i || (i == max - 1 && black_feature > max - 1) {
+                sum -= 1;
+            }
+
+            if sum != 0 {
+                coefficients.push(TunerCoefficient::new(sum, game_phase, *index));
+            }
+
+            *index += 1;
+        }
+    }
+
+    coefficients
+}

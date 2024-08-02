@@ -1,5 +1,5 @@
 pub mod allocator;
-pub mod counter;
+pub mod counters;
 pub mod history;
 pub mod killers;
 pub mod pawns;

@@ -7,15 +7,18 @@ use crate::utils::conditional_expression;
 use std::cmp;
 
 #[cfg(feature = "dev")]
+use pst::*;
+
+#[cfg(feature = "dev")]
 use crate::tuning::tuner::TunerCoefficient;
 
 pub struct PawnsData {
-    doubled_pawns: i8,
-    isolated_pawns: i8,
-    chained_pawns: i8,
-    passed_pawns: i8,
-    opened_files: i8,
-    pawn_shield: i8,
+    doubled_pawns: u8,
+    isolated_pawns: u8,
+    chained_pawns: u8,
+    passed_pawns: u8,
+    opened_files: u8,
+    pawn_shield: u8,
 }
 
 /// Evaluates structure of pawns on the `board` and returns score from the white color perspective (more than 0 when advantage,
@@ -78,15 +81,15 @@ fn evaluate_color(board: &Board, color: usize) -> EvaluationResult {
 
 /// Gets all pawn features on `board` for `color`.
 fn get_pawns_data(board: &Board, color: usize) -> PawnsData {
-    let mut doubled_pawns = 0i8;
-    let mut isolated_pawns = 0i8;
-    let mut chained_pawns = 0i8;
-    let mut passed_pawns = 0i8;
-    let mut pawn_shield = 0i8;
-    let mut opened_files = 0i8;
+    let mut doubled_pawns = 0;
+    let mut isolated_pawns = 0;
+    let mut chained_pawns = 0;
+    let mut passed_pawns = 0;
+    let mut pawn_shield = 0;
+    let mut opened_files = 0;
 
     for file in ALL_FILES {
-        let pawns_on_file_count = (board.patterns.get_file(file) & board.pieces[color][PAWN]).bit_count() as i8;
+        let pawns_on_file_count = (board.patterns.get_file(file) & board.pieces[color][PAWN]).bit_count() as u8;
         if pawns_on_file_count > 1 {
             doubled_pawns += pawns_on_file_count - 1;
         }
@@ -119,7 +122,7 @@ fn get_pawns_data(board: &Board, color: usize) -> PawnsData {
     let king_bb = board.pieces[color][KING];
     let king_square = king_bb.bit_scan();
     let king_square_file = (king_square & 7) as i8;
-    pawn_shield = (board.patterns.get_box(king_square) & board.pieces[color][PAWN]).bit_count() as i8;
+    pawn_shield = (board.patterns.get_box(king_square) & board.pieces[color][PAWN]).bit_count() as u8;
 
     for file in cmp::max(0, king_square_file - 1)..=(cmp::min(7, king_square_file + 1)) {
         if (board.patterns.get_file(file as usize) & board.pieces[color][PAWN]) == 0 {
@@ -137,38 +140,12 @@ pub fn get_coefficients(board: &Board, index: &mut u16) -> Vec<TunerCoefficient>
     let black_pawns_data = get_pawns_data(board, BLACK);
     let mut coefficients = Vec::new();
 
-    coefficients.append(&mut get_coefficients_for_feature(white_pawns_data.doubled_pawns, black_pawns_data.doubled_pawns, index));
-    coefficients.append(&mut get_coefficients_for_feature(white_pawns_data.isolated_pawns, black_pawns_data.isolated_pawns, index));
-    coefficients.append(&mut get_coefficients_for_feature(white_pawns_data.chained_pawns, black_pawns_data.chained_pawns, index));
-    coefficients.append(&mut get_coefficients_for_feature(white_pawns_data.passed_pawns, black_pawns_data.passed_pawns, index));
-    coefficients.append(&mut get_coefficients_for_feature(white_pawns_data.pawn_shield, black_pawns_data.pawn_shield, index));
-    coefficients.append(&mut get_coefficients_for_feature(white_pawns_data.opened_files, black_pawns_data.opened_files, index));
-
-    coefficients
-}
-
-#[cfg(feature = "dev")]
-pub fn get_coefficients_for_feature(white_feature: i8, black_feature: i8, index: &mut u16) -> Vec<TunerCoefficient> {
-    let mut coefficients = Vec::new();
-
-    for game_phase in ALL_PHASES {
-        for i in 0..8 {
-            let mut sum = 0;
-
-            if white_feature == i || (i == 7 && white_feature > 7) {
-                sum += 1;
-            }
-            if black_feature == i || (i == 7 && black_feature > 7) {
-                sum -= 1;
-            }
-
-            if sum != 0 {
-                coefficients.push(TunerCoefficient::new(sum, game_phase, *index));
-            }
-
-            *index += 1;
-        }
-    }
+    coefficients.append(&mut get_array_coefficients(white_pawns_data.doubled_pawns, black_pawns_data.doubled_pawns, 8, index));
+    coefficients.append(&mut get_array_coefficients(white_pawns_data.isolated_pawns, black_pawns_data.isolated_pawns, 8, index));
+    coefficients.append(&mut get_array_coefficients(white_pawns_data.chained_pawns, black_pawns_data.chained_pawns, 8, index));
+    coefficients.append(&mut get_array_coefficients(white_pawns_data.passed_pawns, black_pawns_data.passed_pawns, 8, index));
+    coefficients.append(&mut get_array_coefficients(white_pawns_data.pawn_shield, black_pawns_data.pawn_shield, 8, index));
+    coefficients.append(&mut get_array_coefficients(white_pawns_data.opened_files, black_pawns_data.opened_files, 8, index));
 
     coefficients
 }

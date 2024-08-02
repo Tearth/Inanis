@@ -1,5 +1,5 @@
 use crate::cache::allocator;
-use crate::cache::counter::CountermovesTable;
+use crate::cache::counters::CountermovesTable;
 use crate::cache::history::HistoryTable;
 use crate::cache::killers::KillersTable;
 use crate::cache::pawns::PawnHashTable;
@@ -511,15 +511,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
                 );
                 drop(state_lock);
 
-                let data = HelperThreadContext::new(
-                    context.board.clone(),
-                    Arc::new((*context.pawn_hashtable).clone()),
-                    Arc::new((*context.killers_table).clone()),
-                    Arc::new((*context.history_table).clone()),
-                    helper_context,
-                );
-
-                context.helper_contexts.push(data);
+                context.helper_contexts.push(HelperThreadContext::new(context.board.clone(), helper_context));
             }
         }
 

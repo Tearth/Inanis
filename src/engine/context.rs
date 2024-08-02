@@ -1,7 +1,7 @@
 use self::parameters::SearchParameters;
 use super::statistics::SearchStatistics;
 use super::*;
-use crate::cache::counter::CountermovesTable;
+use crate::cache::counters::CountermovesTable;
 use crate::cache::history::HistoryTable;
 use crate::cache::killers::KillersTable;
 use crate::cache::pawns::PawnHashTable;
@@ -58,9 +58,6 @@ pub struct SearchContext {
 
 pub struct HelperThreadContext {
     pub board: Board,
-    pub pawn_hashtable: Arc<PawnHashTable>,
-    pub killers_table: Arc<KillersTable>,
-    pub history_table: Arc<HistoryTable>,
     pub context: SearchContext,
 }
 
@@ -98,7 +95,7 @@ impl SearchContext {
     ///  - `syzygy_enabled` - enables or disables Syzygy probing
     ///  - `syzygy_probe_limit` - number of pieces for which the probing should be started
     ///  - `syzygy_probe_depth` - minimal depth at which the probing will be started
-    ///  - `transposition_table`, `pawn_hashtable`, `killers_table`, `history_table` - hashtables used during search
+    ///  - `transposition_table`, `pawn_hashtable`, `killers_table`, `history_table`, `countermoves_table` - hashtables used during search
     ///  - `abort_flag` - flag used to abort search from the outside of the context
     ///  - `ponder_flag` - flag used to change a search mode from pondering to the regular one
     pub fn new(
@@ -364,14 +361,8 @@ impl Iterator for SearchContext {
 
 impl HelperThreadContext {
     /// Constructs a new instance of [HelperThreadContext] with stored `board`, `pawn_hashtable`, `killers_table`, `history_table` and `context`.
-    pub fn new(
-        board: Board,
-        pawn_hashtable: Arc<PawnHashTable>,
-        killers_table: Arc<KillersTable>,
-        history_table: Arc<HistoryTable>,
-        context: SearchContext,
-    ) -> Self {
-        Self { board, pawn_hashtable, killers_table, history_table, context }
+    pub fn new(board: Board, context: SearchContext) -> Self {
+        Self { board, context }
     }
 }
 

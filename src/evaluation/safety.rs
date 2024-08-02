@@ -2,6 +2,9 @@ use super::*;
 use crate::state::representation::Board;
 
 #[cfg(feature = "dev")]
+use pst::*;
+
+#[cfg(feature = "dev")]
 use crate::tuning::tuner::TunerCoefficient;
 
 /// Evaluates king safety on the `board` and returns score from the white color perspective (more than 0 when advantage,
@@ -22,26 +25,5 @@ fn evaluate_color(board: &Board, dangered_king_squares: u32) -> EvaluationResult
 
 #[cfg(feature = "dev")]
 pub fn get_coefficients(dangered_white_king_squares: u32, dangered_black_king_squares: u32, index: &mut u16) -> Vec<TunerCoefficient> {
-    let mut coefficients = Vec::new();
-
-    for game_phase in ALL_PHASES {
-        for i in 0..8 {
-            let mut sum = 0;
-
-            if dangered_white_king_squares == i || (i == 7 && dangered_white_king_squares > 7) {
-                sum += 1;
-            }
-            if dangered_black_king_squares == i || (i == 7 && dangered_black_king_squares > 7) {
-                sum -= 1;
-            }
-
-            if sum != 0 {
-                coefficients.push(TunerCoefficient::new(sum, game_phase, *index));
-            }
-
-            *index += 1;
-        }
-    }
-
-    coefficients
+    get_array_coefficients(dangered_white_king_squares as u8, dangered_black_king_squares as u8, 8, index)
 }

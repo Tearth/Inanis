@@ -10,7 +10,6 @@ pub struct PerftHashTable {
     pub table: Vec<PerftHashTableBucket>,
 }
 
-#[derive(Clone)]
 #[repr(align(64))]
 pub struct PerftHashTableBucket {
     pub entries: [PerftHashTableEntry; BUCKET_SLOTS],
@@ -33,7 +32,7 @@ impl PerftHashTable {
         let mut hashtable = Self { table: Vec::with_capacity(aligned_size / bucket_size) };
 
         if aligned_size != 0 {
-            hashtable.table.resize(hashtable.table.capacity(), Default::default());
+            hashtable.table.resize_with(hashtable.table.capacity(), Default::default);
         }
 
         hashtable
@@ -117,13 +116,6 @@ impl Default for PerftHashTableEntry {
     /// Constructs a default instance of [PerftHashTableEntry] with zeroed elements.
     fn default() -> Self {
         Self { key: AtomicU64::new(0), data: AtomicU64::new(0) }
-    }
-}
-
-impl Clone for PerftHashTableEntry {
-    /// Clones [PerftHashTableEntry] by creating a new atomics (with the original values).
-    fn clone(&self) -> Self {
-        Self { key: AtomicU64::new(self.key.load(Ordering::Relaxed)), data: AtomicU64::new(self.data.load(Ordering::Relaxed)) }
     }
 }
 

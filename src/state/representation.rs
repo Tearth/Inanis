@@ -754,18 +754,18 @@ impl Board {
     /// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position, using `pawn_hashtable` to store pawn
     /// evaluations and `statistics` to gather diagnostic data. Returns score from the `color` perspective (more than 0 when advantage, less than 0 when disadvantage).
     pub fn evaluate<const DIAG: bool>(&self, color: usize, pawn_hashtable: &PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
-        let mut dangered_white_king_squares = 0;
-        let mut dangered_black_king_squares = 0;
-        let mobility_score = mobility::evaluate(self, &mut dangered_white_king_squares, &mut dangered_black_king_squares);
-
         let game_phase = self.game_phase;
         let initial_game_phase = self.evaluation_parameters.initial_game_phase;
-        let evaluation = 0
-            + material::evaluate(self)
-            + pst::evaluate(self)
-            + pawns::evaluate::<DIAG>(self, pawn_hashtable, statistics)
-            + safety::evaluate(self, dangered_white_king_squares, dangered_black_king_squares)
-            + mobility_score;
+        let mut dangered_white_king_squares = 0;
+        let mut dangered_black_king_squares = 0;
+
+        let material_evaluation = material::evaluate(self);
+        let pst_evaluation = pst::evaluate(self);
+        let mobility_evaluation = mobility::evaluate(self, &mut dangered_white_king_squares, &mut dangered_black_king_squares);
+        let safety_evaluation = safety::evaluate(self, dangered_white_king_squares, dangered_black_king_squares);
+        let pawns_evaluation = pawns::evaluate::<DIAG>(self, pawn_hashtable, statistics);
+
+        let evaluation = material_evaluation + pst_evaluation + mobility_evaluation + safety_evaluation + pawns_evaluation;
         let sign = -((color as i16) * 2 - 1);
 
         sign * evaluation.taper_score(game_phase, initial_game_phase)
@@ -774,18 +774,18 @@ impl Board {
     /// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position.
     /// Returns score from the `color` perspective (more than 0 when advantage, less than 0 when disadvantage).
     pub fn evaluate_without_cache(&self, color: usize) -> i16 {
-        let mut dangered_white_king_squares = 0;
-        let mut dangered_black_king_squares = 0;
-        let mobility_score = mobility::evaluate(self, &mut dangered_white_king_squares, &mut dangered_black_king_squares);
-
         let game_phase = self.game_phase;
         let initial_game_phase = self.evaluation_parameters.initial_game_phase;
-        let evaluation = 0
-            + material::evaluate(self)
-            + pst::evaluate(self)
-            + pawns::evaluate_without_cache(self)
-            + safety::evaluate(self, dangered_white_king_squares, dangered_black_king_squares)
-            + mobility_score;
+        let mut dangered_white_king_squares = 0;
+        let mut dangered_black_king_squares = 0;
+
+        let material_evaluation = material::evaluate(self);
+        let pst_evaluation = pst::evaluate(self);
+        let mobility_evaluation = mobility::evaluate(self, &mut dangered_white_king_squares, &mut dangered_black_king_squares);
+        let safety_evaluation = safety::evaluate(self, dangered_white_king_squares, dangered_black_king_squares);
+        let pawns_evaluation = pawns::evaluate_without_cache(self);
+
+        let evaluation = material_evaluation + pst_evaluation + mobility_evaluation + safety_evaluation + pawns_evaluation;
         let sign = -((color as i16) * 2 - 1);
 
         sign * evaluation.taper_score(game_phase, initial_game_phase)

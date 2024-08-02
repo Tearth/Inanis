@@ -1,4 +1,4 @@
-use crate::cache::counter::CountermovesTable;
+use crate::cache::counters::CountermovesTable;
 use crate::cache::history::HistoryTable;
 use crate::cache::killers::KillersTable;
 use crate::cache::pawns::PawnHashTable;

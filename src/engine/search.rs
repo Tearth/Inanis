@@ -788,14 +788,15 @@ fn iir_can_be_applied(context: &mut SearchContext, depth: i8, hash_move: Move) -
 }
 
 /// Gets the internal iterative depth reduction, called R, based on `depth`. The further from the horizon we are, the more reduction will be applied.
-#[inline(never)]
-fn iir_get_r(context: &mut SearchContext, depth: i8) -> i8 {
-    let reduction_base = parameter!(context.parameters.iir_reduction_base);
+fn iir_get_r(_context: &mut SearchContext, _depth: i8) -> i8 {
+    /*let reduction_base = parameter!(context.parameters.iir_reduction_base);
     let min_depth = parameter!(context.parameters.iir_min_depth);
     let reduction_step = parameter!(context.parameters.iir_reduction_step);
     let max_reduction = parameter!(context.parameters.iir_max_reduction);
 
-    (reduction_base + (depth - min_depth) / reduction_step).min(max_reduction)
+    (reduction_base + (depth - min_depth) / reduction_step).min(max_reduction)*/
+
+    1
 }
 
 /// The main idea of the razoring is to detect and prune all nodes, which (based on lazy evaluation) are hopeless compared to the current alpha and
