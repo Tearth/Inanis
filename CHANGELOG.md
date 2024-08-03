@@ -1,5 +1,26 @@
+# Version 1.4.0 (03-08-2024)
+ - Added relative PST
+ - Added check extensions
+ - Added countermove heuristic
+ - Added simplified benchmark when "dev" feature is not enabled
+ - Added history table penalties and reduced aging divisor
+ - Added non-standard "fen" command to UCI
+ - Added crash when the best move is invalid (only in dev version)
+ - Added pawn attacks cache
+ - Added support for LZCNT instruction
+ - Improved evaluation parameters by using a new dataset for tuning
+ - Improved search parameters
+ - Improved header, now it also includes LLVM version, target, profile and enabled features
+ - Renamed "tunerset" command to "dataset"
+ - Merged "bindgen" and "syzygy" features
+ - Fixed rare bug with invalid moves when a search was aborted
+ - Fixed crash when ply is larger than the killer table size
+ - Fixed performance overhead of setting a new position
+
+**Strength**: 2950 Elo
+
 # Version 1.3.0 (14-06-2024)
- - Added search parameters as UCI options (only if the dev feature is present)
+ - Added search parameters as UCI options (only if the "dev" feature is enabled)
  - Added gradient descent tuner in place of local search
  - Added internal iterative reduction
  - Added bishop pair evaluation

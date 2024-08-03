@@ -1,13 +1,14 @@
 # Inanis
 UCI chess engine written in Rust, the successor of [Proxima b](https://github.com/Tearth/Proxima-b), [Proxima b 2.0](https://github.com/Tearth/Proxima-b-2.0) and [Cosette](https://github.com/Tearth/Cosette). The project is written after hours, with the goal to reach a strength of 3000 Elo. Perfect as a sparring partner for other chess engines, since it was heavily tested using very fast games. Supports Syzygy tablebases, MultiPV, pondering and multithreading.
 
-**Current strength**: 2900 Elo (14-06-2024)
+**Current strength**: 2950 Elo (03-08-2024)
 
 **Documentation**: https://tearth.dev/Inanis/
 
 ## Releases
 | Version                                                       | Release date | Elo  | Main changes |
 |---------------------------------------------------------------|--------------|------|--------------|
+| [1.4.0](https://github.com/Tearth/Inanis/releases/tag/v1.4.0) | 03-08-2024   | 2950 | Check extensions, relative PST, countermove heuristic |
 | [1.3.0](https://github.com/Tearth/Inanis/releases/tag/v1.3.0) | 14-06-2024   | 2900 | Gradient descent tuner, improved SEE and evaluation |
 | [1.2.1](https://github.com/Tearth/Inanis/releases/tag/v1.2.1) | 04-09-2023   | 2850 | Commands executed directly from a command line, perft in UCI mode |
 | [1.2.0](https://github.com/Tearth/Inanis/releases/tag/v1.2.0) | 15-01-2023   | 2850 | Improved Syzygy support, general performance and stability improvement |
@@ -70,7 +71,7 @@ Examples of running the tuner:
  - `tuner ./input/quiet.epd ./output/ true true 4` - run tuning with 4 threads (excluding piece values) for positions stored in `quiet.epd`, starting from the values already set in the engine, and saving the result in the `output` directory
 
 Since version 1.1.0, Inanis also has a command to generate epd files with quiet positions, based on provided PGN input:
- - `tunerset ./input/games.pgn ./output/quiet.epd 16 250 50 3 0.5` -  generate a new `quiet.epd` file, by parsing `games.pgn` and taking 3 random positions from each of the game, ignoring these with a ply less than 16, evaluation score bigger than 250, and the difference between evaluation score and quiescence search score bigger than 50. The average game phase 0.5 means that the positions will be balanced (> 0.5 = near opening, < 0.5 = near ending)
+ - `dataset ./input/games.pgn ./output/quiet.epd 16 250 50 3 0.5` -  generate a new `quiet.epd` file, by parsing `games.pgn` and taking 3 random positions from each of the game, ignoring these with a ply less than 16, evaluation score bigger than 250, and the difference between evaluation score and quiescence search score bigger than 50. The average game phase 0.5 means that the positions will be balanced (> 0.5 = near opening, < 0.5 = near ending)
 
 ## Test suites 
 Testing of strategic evaluation performance can be done by using the `test` command, which performs a fixed-depth search for positions stored in the EPD file.
@@ -111,12 +112,14 @@ All commands listed below can be executed both in interactive mode and directly 
 === General ===
  benchmark - run test for a set of positions
  evaluate [fen] - show score for the position
+ uci - run Universal Chess Interface
+ quit - close the application
+
+=== Development ===
+ [DEV] dataset [pgn] [output] [min_ply] [max_score] [max_diff] [density] - dataset generator
  [DEV] magic - generate magic numbers
  [DEV] testset [epd] [depth] [transposition_table_size] [threads_count] - run test of positions
  [DEV] tuner [epd] [output] [lock_material] [randomize] [threads_count] - run tuning
- [DEV] tunerset [pgn] [output] [min_ply] [max_score] [max_diff] [density] - dataset generator
- uci - run Universal Chess Interface
- quit - close the application
 
 === Perft ===
  perft [depth]
