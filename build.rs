@@ -17,7 +17,7 @@ fn main() {
 
 fn date() -> String {
     let datetime = DateTime::now();
-    format!("{:0>2}-{:0>2}-{}", datetime.day, datetime.month, datetime.year)
+    format!("{}-{:0>2}-{:0>2}", datetime.year, datetime.month, datetime.day)
 }
 
 fn compiler() -> String {
