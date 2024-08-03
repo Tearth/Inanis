@@ -112,9 +112,6 @@
 <a href="#110" id="110">110</a>
 <a href="#111" id="111">111</a>
 <a href="#112" id="112">112</a>
-<a href="#113" id="113">113</a>
-<a href="#114" id="114">114</a>
-<a href="#115" id="115">115</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::engine::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::state::movescan::Move;
 <span class="kw">use </span>std::sync::atomic::AtomicU16;
@@ -122,8 +119,7 @@
 
 <span class="kw">const </span>KILLER_SLOTS: usize = <span class="number">2</span>;
 
-<span class="attr">#[derive(Clone)]
-</span><span class="kw">pub struct </span>KillersTable {
+<span class="kw">pub struct </span>KillersTable {
     <span class="kw">pub </span>table: [[KillersTableEntry; KILLER_SLOTS]; MAX_DEPTH <span class="kw">as </span>usize],
 }
 
@@ -140,7 +136,7 @@
     /// [KILLER_SLOTS] constant, and newer entries have always a priority over old ones. If there's already exactly the same
     /// move in the slot 0, the table is not changed.
     </span><span class="kw">pub fn </span>add(<span class="kw-2">&amp;</span><span class="self">self</span>, ply: u16, r#move: Move) {
-        <span class="kw">if </span><span class="self">self</span>.table[ply <span class="kw">as </span>usize][<span class="number">0</span>].get_data().r#move == r#move {
+        <span class="kw">if </span>ply &gt;= MAX_DEPTH <span class="kw">as </span>u16 || <span class="self">self</span>.table[ply <span class="kw">as </span>usize][<span class="number">0</span>].get_data().r#move == r#move {
             <span class="kw">return</span>;
         }
 
@@ -157,6 +153,11 @@
     <span class="doccomment">/// Gets all killer moves at the level specified by `ply`.
     </span><span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, ply: u16) -&gt; [Move; KILLER_SLOTS] {
         <span class="kw">let </span><span class="kw-2">mut </span>result = [Default::default(); KILLER_SLOTS];
+
+        <span class="kw">if </span>ply &gt;= MAX_DEPTH <span class="kw">as </span>u16 {
+            <span class="kw">return </span>result;
+        }
+
         <span class="kw">for </span>(index, slot) <span class="kw">in </span><span class="self">self</span>.table[ply <span class="kw">as </span>usize].iter().enumerate() {
             result[index] = slot.get_data().r#move;
         }
@@ -214,13 +215,6 @@
     <span class="doccomment">/// Constructs a default instance of [KillersTableEntry] with zeroed elements.
     </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ data: AtomicU16::new(<span class="number">0</span>) }
-    }
-}
-
-<span class="kw">impl </span>Clone <span class="kw">for </span>KillersTableEntry {
-    <span class="doccomment">/// Clones [KillersTableEntry] by creating a new atomic (with the original value).
-    </span><span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ data: AtomicU16::new(<span class="self">self</span>.data.load(Ordering::Relaxed)) }
     }
 }
 

@@ -309,7 +309,6 @@
 <a href="#307" id="307">307</a>
 <a href="#308" id="308">308</a>
 <a href="#309" id="309">309</a>
-<a href="#310" id="310">310</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::engine::see::SEEContainer;
 <span class="kw">use </span><span class="kw">crate</span>::evaluation::EvaluationParameters;
 <span class="kw">use </span><span class="kw">crate</span>::state::movegen::MagicContainer;
@@ -372,20 +371,19 @@
 
     board.recalculate_hashes();
     board.recalculate_incremental_values();
+    board.recalculate_pawn_attacks(WHITE);
+    board.recalculate_pawn_attacks(BLACK);
 
     <span class="kw">if </span>tokens.len() &gt; <span class="number">4 </span>{
-        <span class="kw">let </span>halfmove_clock_result = fen_to_halfmove_clock(<span class="kw-2">&amp;mut </span>board, tokens[<span class="number">4</span>]);
-        <span class="kw">let </span>fullmove_number_result = fen_to_fullmove_number(<span class="kw-2">&amp;mut </span>board, tokens[<span class="number">5</span>]);
+        fen_to_halfmove_clock(<span class="kw-2">&amp;mut </span>board, tokens[<span class="number">4</span>])<span class="question-mark">?</span>;
+        fen_to_fullmove_number(<span class="kw-2">&amp;mut </span>board, tokens[<span class="number">5</span>])<span class="question-mark">?</span>;
 
-        <span class="comment">// We are in EPD mode if halfmove clock and fullmove number are not present
-        </span><span class="kw">if </span>halfmove_clock_result.is_err() &amp;&amp; fullmove_number_result.is_err() {
-            <span class="kw">let </span><span class="kw-2">mut </span>parsed_epd = ParsedEPD::new(board);
-            parsed_epd.id = get_epd_parameter(epd, <span class="kw-2">&amp;</span>[<span class="string">"id"</span>]);
-            parsed_epd.best_move = get_epd_parameter(epd, <span class="kw-2">&amp;</span>[<span class="string">"bm"</span>]);
-            parsed_epd.comment = get_epd_parameter(epd, <span class="kw-2">&amp;</span>[<span class="string">"c0"</span>, <span class="string">"c9"</span>]);
+        <span class="kw">let </span><span class="kw-2">mut </span>parsed_epd = ParsedEPD::new(board);
+        parsed_epd.id = get_epd_parameter(epd, <span class="kw-2">&amp;</span>[<span class="string">"id"</span>]);
+        parsed_epd.best_move = get_epd_parameter(epd, <span class="kw-2">&amp;</span>[<span class="string">"bm"</span>]);
+        parsed_epd.comment = get_epd_parameter(epd, <span class="kw-2">&amp;</span>[<span class="string">"c0"</span>, <span class="string">"c9"</span>]);
 
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(parsed_epd);
-        }
+        <span class="kw">return </span><span class="prelude-val">Ok</span>(parsed_epd);
     }
 
     <span class="prelude-val">Ok</span>(ParsedEPD::new(board))
@@ -451,7 +449,7 @@
             <span class="kw">let </span>color = <span class="kw">if </span>char.is_uppercase() { WHITE } <span class="kw">else </span>{ BLACK };
             <span class="kw">let </span>piece = text::symbol_to_piece(char)<span class="question-mark">?</span>;
 
-            board.add_piece(color, piece, current_square <span class="kw">as </span>usize);
+            board.add_piece::&lt;<span class="bool-val">false</span>&gt;(color, piece, current_square <span class="kw">as </span>usize);
             current_square -= <span class="number">1</span>;
         }
     }

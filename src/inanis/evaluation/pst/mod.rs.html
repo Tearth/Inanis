@@ -72,6 +72,48 @@
 <a href="#70" id="70">70</a>
 <a href="#71" id="71">71</a>
 <a href="#72" id="72">72</a>
+<a href="#73" id="73">73</a>
+<a href="#74" id="74">74</a>
+<a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
+<a href="#78" id="78">78</a>
+<a href="#79" id="79">79</a>
+<a href="#80" id="80">80</a>
+<a href="#81" id="81">81</a>
+<a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::state::representation::Board;
 <span class="kw">use </span><span class="kw">crate</span>::utils::bithelpers::BitHelpers;
@@ -98,6 +140,7 @@
 <span class="doccomment">/// Recalculates incremental counters on the `board`. This function should be called only once during board initialization, as it's too slow in regular search.
 </span><span class="kw">pub fn </span>recalculate_incremental_values(board: <span class="kw-2">&amp;mut </span>Board) {
     <span class="kw">for </span>color_index <span class="kw">in </span>ALL_COLORS {
+        <span class="kw">let </span>king_file = board.pieces[color_index][KING].bit_scan() &amp; <span class="number">7</span>;
         <span class="kw">for </span>phase <span class="kw">in </span>ALL_PHASES {
             <span class="kw">let </span><span class="kw-2">mut </span>score = <span class="number">0</span>;
             <span class="kw">for </span>piece_index <span class="kw">in </span>ALL_PIECES {
@@ -107,7 +150,7 @@
                     <span class="kw">let </span>square = square_bb.bit_scan();
                     pieces_bb = pieces_bb.pop_lsb();
 
-                    score += board.evaluation_parameters.pst[color_index][piece_index][phase][square];
+                    score += board.evaluation_parameters.pst[color_index][piece_index][king_file][phase][square];
                 }
             }
 
@@ -121,21 +164,62 @@
 </span><span class="kw">pub fn </span>get_coefficients(board: <span class="kw-2">&amp;</span>Board, piece: usize, index: <span class="kw-2">&amp;mut </span>u16) -&gt; Vec&lt;TunerCoefficient&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>coefficients = Vec::new();
 
+    <span class="kw">for </span>king_file <span class="kw">in </span>ALL_FILES {
+        <span class="kw">let </span>valid_for_white = king_file == board.pieces[WHITE][KING].bit_scan() &amp; <span class="number">7</span>;
+        <span class="kw">let </span>valid_for_black = king_file == board.pieces[BLACK][KING].bit_scan() &amp; <span class="number">7</span>;
+
+        <span class="kw">for </span>game_phase <span class="kw">in </span>ALL_PHASES {
+            <span class="kw">for </span>square <span class="kw">in </span>ALL_SQUARES {
+                <span class="kw">let </span>current_index = <span class="number">63 </span>- square;
+                <span class="kw">let </span>opposite_index = (square / <span class="number">8</span>) * <span class="number">8 </span>+ (<span class="number">7 </span>- (square % <span class="number">8</span>));
+
+                <span class="kw">let </span>current_piece = board.piece_table[current_index];
+                <span class="kw">let </span>opposite_piece = board.piece_table[opposite_index];
+
+                <span class="kw">let </span>current_color = <span class="kw">if </span>(board.occupancy[WHITE] &amp; (<span class="number">1 </span>&lt;&lt; current_index)) != <span class="number">0 </span>{ WHITE } <span class="kw">else </span>{ BLACK };
+                <span class="kw">let </span>opposite_color = <span class="kw">if </span>(board.occupancy[WHITE] &amp; (<span class="number">1 </span>&lt;&lt; opposite_index)) != <span class="number">0 </span>{ WHITE } <span class="kw">else </span>{ BLACK };
+
+                <span class="kw">if </span>valid_for_white &amp;&amp; !valid_for_black {
+                    <span class="kw">if </span>current_piece == piece <span class="kw">as </span>u8 &amp;&amp; current_color == WHITE {
+                        coefficients.push(TunerCoefficient::new(<span class="number">1</span>, game_phase, <span class="kw-2">*</span>index));
+                    }
+                } <span class="kw">else if </span>!valid_for_white &amp;&amp; valid_for_black {
+                    <span class="kw">if </span>opposite_piece == piece <span class="kw">as </span>u8 &amp;&amp; opposite_color == BLACK {
+                        coefficients.push(TunerCoefficient::new(-<span class="number">1</span>, game_phase, <span class="kw-2">*</span>index));
+                    }
+                } <span class="kw">else if </span>valid_for_white &amp;&amp; valid_for_black {
+                    <span class="kw">if </span>current_piece == piece <span class="kw">as </span>u8 &amp;&amp; opposite_piece != piece <span class="kw">as </span>u8 &amp;&amp; current_color == WHITE {
+                        coefficients.push(TunerCoefficient::new(<span class="number">1</span>, game_phase, <span class="kw-2">*</span>index));
+                    } <span class="kw">else if </span>opposite_piece == piece <span class="kw">as </span>u8 &amp;&amp; current_piece != piece <span class="kw">as </span>u8 &amp;&amp; opposite_color == BLACK {
+                        coefficients.push(TunerCoefficient::new(-<span class="number">1</span>, game_phase, <span class="kw-2">*</span>index));
+                    }
+                }
+
+                <span class="kw-2">*</span>index += <span class="number">1</span>;
+            }
+        }
+    }
+
+    coefficients
+}
+
+<span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
+</span><span class="kw">pub fn </span>get_array_coefficients(white_feature: u8, black_feature: u8, max: u8, index: <span class="kw-2">&amp;mut </span>u16) -&gt; Vec&lt;TunerCoefficient&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>coefficients = Vec::new();
+
     <span class="kw">for </span>game_phase <span class="kw">in </span>ALL_PHASES {
-        <span class="kw">for </span>square <span class="kw">in </span>ALL_SQUARES {
-            <span class="kw">let </span>current_index = <span class="number">63 </span>- square;
-            <span class="kw">let </span>opposite_index = (square / <span class="number">8</span>) * <span class="number">8 </span>+ (<span class="number">7 </span>- (square % <span class="number">8</span>));
+        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..max {
+            <span class="kw">let </span><span class="kw-2">mut </span>sum = <span class="number">0</span>;
 
-            <span class="kw">let </span>current_piece = board.piece_table[current_index];
-            <span class="kw">let </span>opposite_piece = board.piece_table[opposite_index];
+            <span class="kw">if </span>white_feature == i || (i == max - <span class="number">1 </span>&amp;&amp; white_feature &gt; max - <span class="number">1</span>) {
+                sum += <span class="number">1</span>;
+            }
+            <span class="kw">if </span>black_feature == i || (i == max - <span class="number">1 </span>&amp;&amp; black_feature &gt; max - <span class="number">1</span>) {
+                sum -= <span class="number">1</span>;
+            }
 
-            <span class="kw">let </span>current_color = <span class="kw">if </span>(board.occupancy[WHITE] &amp; (<span class="number">1 </span>&lt;&lt; current_index)) != <span class="number">0 </span>{ WHITE } <span class="kw">else </span>{ BLACK };
-            <span class="kw">let </span>opposite_color = <span class="kw">if </span>(board.occupancy[WHITE] &amp; (<span class="number">1 </span>&lt;&lt; opposite_index)) != <span class="number">0 </span>{ WHITE } <span class="kw">else </span>{ BLACK };
-
-            <span class="kw">if </span>current_piece == piece <span class="kw">as </span>u8 &amp;&amp; opposite_piece != piece <span class="kw">as </span>u8 &amp;&amp; current_color == WHITE {
-                coefficients.push(TunerCoefficient::new(<span class="number">1</span>, game_phase, <span class="kw-2">*</span>index));
-            } <span class="kw">else if </span>opposite_piece == piece <span class="kw">as </span>u8 &amp;&amp; current_piece != piece <span class="kw">as </span>u8 &amp;&amp; opposite_color == BLACK {
-                coefficients.push(TunerCoefficient::new(-<span class="number">1</span>, game_phase, <span class="kw-2">*</span>index));
+            <span class="kw">if </span>sum != <span class="number">0 </span>{
+                coefficients.push(TunerCoefficient::new(sum, game_phase, <span class="kw-2">*</span>index));
             }
 
             <span class="kw-2">*</span>index += <span class="number">1</span>;

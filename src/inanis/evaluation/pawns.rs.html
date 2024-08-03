@@ -151,29 +151,6 @@
 <a href="#149" id="149">149</a>
 <a href="#150" id="150">150</a>
 <a href="#151" id="151">151</a>
-<a href="#152" id="152">152</a>
-<a href="#153" id="153">153</a>
-<a href="#154" id="154">154</a>
-<a href="#155" id="155">155</a>
-<a href="#156" id="156">156</a>
-<a href="#157" id="157">157</a>
-<a href="#158" id="158">158</a>
-<a href="#159" id="159">159</a>
-<a href="#160" id="160">160</a>
-<a href="#161" id="161">161</a>
-<a href="#162" id="162">162</a>
-<a href="#163" id="163">163</a>
-<a href="#164" id="164">164</a>
-<a href="#165" id="165">165</a>
-<a href="#166" id="166">166</a>
-<a href="#167" id="167">167</a>
-<a href="#168" id="168">168</a>
-<a href="#169" id="169">169</a>
-<a href="#170" id="170">170</a>
-<a href="#171" id="171">171</a>
-<a href="#172" id="172">172</a>
-<a href="#173" id="173">173</a>
-<a href="#174" id="174">174</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::cache::pawns::PawnHashTable;
 <span class="kw">use </span><span class="kw">crate</span>::engine::statistics::SearchStatistics;
@@ -183,15 +160,18 @@
 <span class="kw">use </span>std::cmp;
 
 <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
+</span><span class="kw">use </span>pst::<span class="kw-2">*</span>;
+
+<span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::tuning::tuner::TunerCoefficient;
 
 <span class="kw">pub struct </span>PawnsData {
-    doubled_pawns: i8,
-    isolated_pawns: i8,
-    chained_pawns: i8,
-    passed_pawns: i8,
-    opened_files: i8,
-    pawn_shield: i8,
+    doubled_pawns: u8,
+    isolated_pawns: u8,
+    chained_pawns: u8,
+    passed_pawns: u8,
+    opened_files: u8,
+    pawn_shield: u8,
 }
 
 <span class="doccomment">/// Evaluates structure of pawns on the `board` and returns score from the white color perspective (more than 0 when advantage,
@@ -254,15 +234,15 @@
 
 <span class="doccomment">/// Gets all pawn features on `board` for `color`.
 </span><span class="kw">fn </span>get_pawns_data(board: <span class="kw-2">&amp;</span>Board, color: usize) -&gt; PawnsData {
-    <span class="kw">let </span><span class="kw-2">mut </span>doubled_pawns = <span class="number">0i8</span>;
-    <span class="kw">let </span><span class="kw-2">mut </span>isolated_pawns = <span class="number">0i8</span>;
-    <span class="kw">let </span><span class="kw-2">mut </span>chained_pawns = <span class="number">0i8</span>;
-    <span class="kw">let </span><span class="kw-2">mut </span>passed_pawns = <span class="number">0i8</span>;
-    <span class="kw">let </span><span class="kw-2">mut </span>pawn_shield = <span class="number">0i8</span>;
-    <span class="kw">let </span><span class="kw-2">mut </span>opened_files = <span class="number">0i8</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>doubled_pawns = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>isolated_pawns = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>chained_pawns = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>passed_pawns = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>pawn_shield = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>opened_files = <span class="number">0</span>;
 
     <span class="kw">for </span>file <span class="kw">in </span>ALL_FILES {
-        <span class="kw">let </span>pawns_on_file_count = (board.patterns.get_file(file) &amp; board.pieces[color][PAWN]).bit_count() <span class="kw">as </span>i8;
+        <span class="kw">let </span>pawns_on_file_count = (board.patterns.get_file(file) &amp; board.pieces[color][PAWN]).bit_count() <span class="kw">as </span>u8;
         <span class="kw">if </span>pawns_on_file_count &gt; <span class="number">1 </span>{
             doubled_pawns += pawns_on_file_count - <span class="number">1</span>;
         }
@@ -295,7 +275,7 @@
     <span class="kw">let </span>king_bb = board.pieces[color][KING];
     <span class="kw">let </span>king_square = king_bb.bit_scan();
     <span class="kw">let </span>king_square_file = (king_square &amp; <span class="number">7</span>) <span class="kw">as </span>i8;
-    pawn_shield = (board.patterns.get_box(king_square) &amp; board.pieces[color][PAWN]).bit_count() <span class="kw">as </span>i8;
+    pawn_shield = (board.patterns.get_box(king_square) &amp; board.pieces[color][PAWN]).bit_count() <span class="kw">as </span>u8;
 
     <span class="kw">for </span>file <span class="kw">in </span>cmp::max(<span class="number">0</span>, king_square_file - <span class="number">1</span>)..=(cmp::min(<span class="number">7</span>, king_square_file + <span class="number">1</span>)) {
         <span class="kw">if </span>(board.patterns.get_file(file <span class="kw">as </span>usize) &amp; board.pieces[color][PAWN]) == <span class="number">0 </span>{
@@ -313,38 +293,12 @@
     <span class="kw">let </span>black_pawns_data = get_pawns_data(board, BLACK);
     <span class="kw">let </span><span class="kw-2">mut </span>coefficients = Vec::new();
 
-    coefficients.append(<span class="kw-2">&amp;mut </span>get_coefficients_for_feature(white_pawns_data.doubled_pawns, black_pawns_data.doubled_pawns, index));
-    coefficients.append(<span class="kw-2">&amp;mut </span>get_coefficients_for_feature(white_pawns_data.isolated_pawns, black_pawns_data.isolated_pawns, index));
-    coefficients.append(<span class="kw-2">&amp;mut </span>get_coefficients_for_feature(white_pawns_data.chained_pawns, black_pawns_data.chained_pawns, index));
-    coefficients.append(<span class="kw-2">&amp;mut </span>get_coefficients_for_feature(white_pawns_data.passed_pawns, black_pawns_data.passed_pawns, index));
-    coefficients.append(<span class="kw-2">&amp;mut </span>get_coefficients_for_feature(white_pawns_data.pawn_shield, black_pawns_data.pawn_shield, index));
-    coefficients.append(<span class="kw-2">&amp;mut </span>get_coefficients_for_feature(white_pawns_data.opened_files, black_pawns_data.opened_files, index));
-
-    coefficients
-}
-
-<span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
-</span><span class="kw">pub fn </span>get_coefficients_for_feature(white_feature: i8, black_feature: i8, index: <span class="kw-2">&amp;mut </span>u16) -&gt; Vec&lt;TunerCoefficient&gt; {
-    <span class="kw">let </span><span class="kw-2">mut </span>coefficients = Vec::new();
-
-    <span class="kw">for </span>game_phase <span class="kw">in </span>ALL_PHASES {
-        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">8 </span>{
-            <span class="kw">let </span><span class="kw-2">mut </span>sum = <span class="number">0</span>;
-
-            <span class="kw">if </span>white_feature == i || (i == <span class="number">7 </span>&amp;&amp; white_feature &gt; <span class="number">7</span>) {
-                sum += <span class="number">1</span>;
-            }
-            <span class="kw">if </span>black_feature == i || (i == <span class="number">7 </span>&amp;&amp; black_feature &gt; <span class="number">7</span>) {
-                sum -= <span class="number">1</span>;
-            }
-
-            <span class="kw">if </span>sum != <span class="number">0 </span>{
-                coefficients.push(TunerCoefficient::new(sum, game_phase, <span class="kw-2">*</span>index));
-            }
-
-            <span class="kw-2">*</span>index += <span class="number">1</span>;
-        }
-    }
+    coefficients.append(<span class="kw-2">&amp;mut </span>get_array_coefficients(white_pawns_data.doubled_pawns, black_pawns_data.doubled_pawns, <span class="number">8</span>, index));
+    coefficients.append(<span class="kw-2">&amp;mut </span>get_array_coefficients(white_pawns_data.isolated_pawns, black_pawns_data.isolated_pawns, <span class="number">8</span>, index));
+    coefficients.append(<span class="kw-2">&amp;mut </span>get_array_coefficients(white_pawns_data.chained_pawns, black_pawns_data.chained_pawns, <span class="number">8</span>, index));
+    coefficients.append(<span class="kw-2">&amp;mut </span>get_array_coefficients(white_pawns_data.passed_pawns, black_pawns_data.passed_pawns, <span class="number">8</span>, index));
+    coefficients.append(<span class="kw-2">&amp;mut </span>get_array_coefficients(white_pawns_data.pawn_shield, black_pawns_data.pawn_shield, <span class="number">8</span>, index));
+    coefficients.append(<span class="kw-2">&amp;mut </span>get_array_coefficients(white_pawns_data.opened_files, black_pawns_data.opened_files, <span class="number">8</span>, index));
 
     coefficients
 }

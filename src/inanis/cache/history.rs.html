@@ -115,15 +115,12 @@
 <a href="#113" id="113">113</a>
 <a href="#114" id="114">114</a>
 <a href="#115" id="115">115</a>
-<a href="#116" id="116">116</a>
-<a href="#117" id="117">117</a>
-<a href="#118" id="118">118</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::utils::divceil::DivCeil;
 <span class="kw">use </span>std::cmp;
 <span class="kw">use </span>std::sync::atomic::AtomicU32;
 <span class="kw">use </span>std::sync::atomic::Ordering;
 
-<span class="kw">const </span>AGING_DIVISOR: u32 = <span class="number">64</span>;
+<span class="kw">const </span>AGING_DIVISOR: u32 = <span class="number">16</span>;
 
 <span class="kw">pub struct </span>HistoryTable {
     <span class="kw">pub </span>table: [[HistoryTableEntry; <span class="number">64</span>]; <span class="number">64</span>],
@@ -147,6 +144,17 @@
 
         <span class="kw">let </span>max = <span class="self">self</span>.max.load(Ordering::Relaxed);
         <span class="self">self</span>.max.store(cmp::max(max, updated_value), Ordering::Relaxed);
+
+        entry.set_data(updated_value);
+    }
+
+    <span class="doccomment">/// Punishes `[from][to]` history slot value based on `depth`.
+    </span><span class="kw">pub fn </span>punish(<span class="kw-2">&amp;</span><span class="self">self</span>, from: usize, to: usize, depth: u8) {
+        <span class="kw">let </span>entry = <span class="kw-2">&amp;</span><span class="self">self</span>.table[from][to];
+        <span class="kw">let </span>entry_data = entry.get_data();
+
+        <span class="kw">let </span>value = depth <span class="kw">as </span>u32;
+        <span class="kw">let </span>updated_value = <span class="kw">if </span>value &gt; entry_data.value { <span class="number">0 </span>} <span class="kw">else </span>{ entry_data.value - value };
 
         entry.set_data(updated_value);
     }
@@ -192,13 +200,6 @@
     }
 }
 
-<span class="kw">impl </span>Clone <span class="kw">for </span>HistoryTable {
-    <span class="doccomment">/// Clones [HistoryTable] by creating new atomics (with the original values).
-    </span><span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ table: <span class="self">self</span>.table.clone(), max: AtomicU32::new(<span class="self">self</span>.max.load(Ordering::Relaxed)) }
-    }
-}
-
 <span class="kw">impl </span>HistoryTableEntry {
     <span class="doccomment">/// Constructs a new instance of [HistoryTableEntry] with zeroed values.
     </span><span class="kw">pub const fn </span>new_const() -&gt; <span class="self">Self </span>{
@@ -220,13 +221,6 @@
     <span class="doccomment">/// Constructs a default instance of [HistoryTableEntry] with zeroed elements.
     </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ data: AtomicU32::new(<span class="number">0</span>) }
-    }
-}
-
-<span class="kw">impl </span>Clone <span class="kw">for </span>HistoryTableEntry {
-    <span class="doccomment">/// Clones [HistoryTableEntry] by creating a new atomic (with the original value).
-    </span><span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ data: AtomicU32::new(<span class="self">self</span>.data.load(Ordering::Relaxed)) }
     }
 }
 

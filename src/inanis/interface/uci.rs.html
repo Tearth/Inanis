@@ -728,7 +728,66 @@
 <a href="#726" id="726">726</a>
 <a href="#727" id="727">727</a>
 <a href="#728" id="728">728</a>
+<a href="#729" id="729">729</a>
+<a href="#730" id="730">730</a>
+<a href="#731" id="731">731</a>
+<a href="#732" id="732">732</a>
+<a href="#733" id="733">733</a>
+<a href="#734" id="734">734</a>
+<a href="#735" id="735">735</a>
+<a href="#736" id="736">736</a>
+<a href="#737" id="737">737</a>
+<a href="#738" id="738">738</a>
+<a href="#739" id="739">739</a>
+<a href="#740" id="740">740</a>
+<a href="#741" id="741">741</a>
+<a href="#742" id="742">742</a>
+<a href="#743" id="743">743</a>
+<a href="#744" id="744">744</a>
+<a href="#745" id="745">745</a>
+<a href="#746" id="746">746</a>
+<a href="#747" id="747">747</a>
+<a href="#748" id="748">748</a>
+<a href="#749" id="749">749</a>
+<a href="#750" id="750">750</a>
+<a href="#751" id="751">751</a>
+<a href="#752" id="752">752</a>
+<a href="#753" id="753">753</a>
+<a href="#754" id="754">754</a>
+<a href="#755" id="755">755</a>
+<a href="#756" id="756">756</a>
+<a href="#757" id="757">757</a>
+<a href="#758" id="758">758</a>
+<a href="#759" id="759">759</a>
+<a href="#760" id="760">760</a>
+<a href="#761" id="761">761</a>
+<a href="#762" id="762">762</a>
+<a href="#763" id="763">763</a>
+<a href="#764" id="764">764</a>
+<a href="#765" id="765">765</a>
+<a href="#766" id="766">766</a>
+<a href="#767" id="767">767</a>
+<a href="#768" id="768">768</a>
+<a href="#769" id="769">769</a>
+<a href="#770" id="770">770</a>
+<a href="#771" id="771">771</a>
+<a href="#772" id="772">772</a>
+<a href="#773" id="773">773</a>
+<a href="#774" id="774">774</a>
+<a href="#775" id="775">775</a>
+<a href="#776" id="776">776</a>
+<a href="#777" id="777">777</a>
+<a href="#778" id="778">778</a>
+<a href="#779" id="779">779</a>
+<a href="#780" id="780">780</a>
+<a href="#781" id="781">781</a>
+<a href="#782" id="782">782</a>
+<a href="#783" id="783">783</a>
+<a href="#784" id="784">784</a>
+<a href="#785" id="785">785</a>
+<a href="#786" id="786">786</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::cache::allocator;
+<span class="kw">use </span><span class="kw">crate</span>::cache::counters::CountermovesTable;
 <span class="kw">use </span><span class="kw">crate</span>::cache::history::HistoryTable;
 <span class="kw">use </span><span class="kw">crate</span>::cache::killers::KillersTable;
 <span class="kw">use </span><span class="kw">crate</span>::cache::pawns::PawnHashTable;
@@ -737,12 +796,16 @@
 <span class="kw">use </span><span class="kw">crate</span>::engine::context::HelperThreadContext;
 <span class="kw">use </span><span class="kw">crate</span>::engine::context::SearchContext;
 <span class="kw">use </span><span class="kw">crate</span>::engine::parameters::SearchParameters;
+<span class="kw">use </span><span class="kw">crate</span>::engine::see::SEEContainer;
+<span class="kw">use </span><span class="kw">crate</span>::evaluation::EvaluationParameters;
 <span class="kw">use </span><span class="kw">crate</span>::perft;
 <span class="kw">use </span><span class="kw">crate</span>::state::movescan::Move;
 <span class="kw">use </span><span class="kw">crate</span>::state::representation::Board;
 <span class="kw">use </span><span class="kw">crate</span>::state::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::tablebases::syzygy;
 <span class="kw">use </span><span class="kw">crate</span>::utils::minmax::MinMax;
+<span class="kw">use </span>movegen::MagicContainer;
+<span class="kw">use </span>patterns::PatternsContainer;
 <span class="kw">use </span>std::cmp;
 <span class="kw">use </span>std::collections::HashMap;
 <span class="kw">use </span>std::fs;
@@ -758,6 +821,7 @@
 <span class="kw">use </span>std::sync::Mutex;
 <span class="kw">use </span>std::thread;
 <span class="kw">use </span>std::time::SystemTime;
+<span class="kw">use </span>zobrist::ZobristContainer;
 
 <span class="kw">const </span>VERSION: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">"CARGO_PKG_VERSION"</span>);
 <span class="kw">const </span>AUTHOR: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">"CARGO_PKG_AUTHORS"</span>);
@@ -769,9 +833,16 @@
     pawn_hashtable: Arc&lt;PawnHashTable&gt;,
     killers_table: Arc&lt;KillersTable&gt;,
     history_table: Arc&lt;HistoryTable&gt;,
+    countermoves_table: Arc&lt;CountermovesTable&gt;,
     abort_flag: Arc&lt;AtomicBool&gt;,
     ponder_flag: Arc&lt;AtomicBool&gt;,
     debug_mode: AtomicBool,
+
+    evaluation_parameters: Arc&lt;EvaluationParameters&gt;,
+    zobrist_container: Arc&lt;ZobristContainer&gt;,
+    patterns_container: Arc&lt;PatternsContainer&gt;,
+    see_container: Arc&lt;SEEContainer&gt;,
+    magic_container: Arc&lt;MagicContainer&gt;,
 }
 
 <span class="attr">#[derive(Clone)]
@@ -810,16 +881,35 @@
 <span class="kw">impl </span>Default <span class="kw">for </span>UciState {
     <span class="doccomment">/// Constructs a default instance of [UciState] with zeroed elements and hashtables with their default sizes.
     </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>evaluation_parameters = Arc::new(EvaluationParameters::default());
+        <span class="kw">let </span>zobrist_container = Arc::new(ZobristContainer::default());
+        <span class="kw">let </span>patterns_container = Arc::new(PatternsContainer::default());
+        <span class="kw">let </span>see_container = Arc::new(SEEContainer::new(<span class="prelude-val">Some</span>(evaluation_parameters.clone())));
+        <span class="kw">let </span>magic_container = Arc::new(MagicContainer::default());
+
         UciState {
-            board: Board::new_initial_position(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
+            board: Board::new_initial_position(
+                <span class="prelude-val">Some</span>(evaluation_parameters.clone()),
+                <span class="prelude-val">Some</span>(zobrist_container.clone()),
+                <span class="prelude-val">Some</span>(patterns_container.clone()),
+                <span class="prelude-val">Some</span>(see_container.clone()),
+                <span class="prelude-val">Some</span>(magic_container.clone()),
+            ),
             options: HashMap::new(),
             transposition_table: Arc::new(TranspositionTable::new(<span class="number">1 </span>* <span class="number">1024 </span>* <span class="number">1024</span>)),
             pawn_hashtable: Arc::new(PawnHashTable::new(<span class="number">1 </span>* <span class="number">1024 </span>* <span class="number">1024</span>)),
             killers_table: Arc::new(Default::default()),
             history_table: Arc::new(Default::default()),
+            countermoves_table: Arc::new(Default::default()),
             abort_flag: Arc::new(AtomicBool::new(<span class="bool-val">false</span>)),
             ponder_flag: Arc::new(AtomicBool::new(<span class="bool-val">false</span>)),
             debug_mode: AtomicBool::new(<span class="bool-val">false</span>),
+
+            evaluation_parameters,
+            zobrist_container,
+            patterns_container,
+            see_container,
+            magic_container,
         }
     }
 }
@@ -843,57 +933,55 @@
     state_lock.options.insert(<span class="string">"Crash Files"</span>.to_string(), UciOption::new(<span class="number">8</span>, <span class="string">"check"</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>));
     state_lock.options.insert(<span class="string">"Clear Hash"</span>.to_string(), UciOption::new(<span class="number">9</span>, <span class="string">"button"</span>, <span class="string">""</span>, <span class="string">""</span>, <span class="string">""</span>));
 
-    <span class="kw">let </span>parameters = SearchParameters::default();
-    state_lock.options.insert(<span class="string">"iir_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.iir_min_depth));
-    state_lock.options.insert(<span class="string">"iir_reduction_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.iir_reduction_base));
-    state_lock.options.insert(<span class="string">"iir_reduction_step"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.iir_reduction_step));
-    state_lock.options.insert(<span class="string">"iir_max_reduction"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.iir_max_reduction));
+    <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
+    </span>{
+        <span class="kw">let </span>parameters = SearchParameters::default();
+        state_lock.options.insert(<span class="string">"iir_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.iir_min_depth));
+        state_lock.options.insert(<span class="string">"iir_reduction_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.iir_reduction_base));
+        state_lock.options.insert(<span class="string">"iir_reduction_step"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.iir_reduction_step));
+        state_lock.options.insert(<span class="string">"iir_max_reduction"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.iir_max_reduction));
 
-    state_lock.options.insert(<span class="string">"razoring_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.razoring_min_depth));
-    state_lock.options.insert(<span class="string">"razoring_max_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.razoring_max_depth));
-    state_lock.options.insert(<span class="string">"razoring_depth_margin_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.razoring_depth_margin_base));
-    state_lock.options.insert(<span class="string">"razoring_depth_margin_multiplier"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.razoring_depth_margin_multiplier));
+        state_lock.options.insert(<span class="string">"razoring_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.razoring_min_depth));
+        state_lock.options.insert(<span class="string">"razoring_max_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.razoring_max_depth));
+        state_lock.options.insert(<span class="string">"razoring_depth_margin_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.razoring_depth_margin_base));
+        state_lock.options.insert(<span class="string">"razoring_depth_margin_multiplier"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.razoring_depth_margin_multiplier));
 
-    state_lock.options.insert(<span class="string">"snmp_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.snmp_min_depth));
-    state_lock.options.insert(<span class="string">"snmp_max_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.snmp_max_depth));
-    state_lock.options.insert(<span class="string">"snmp_depth_margin_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.snmp_depth_margin_base));
-    state_lock.options.insert(<span class="string">"snmp_depth_margin_multiplier"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.snmp_depth_margin_multiplier));
+        state_lock.options.insert(<span class="string">"snmp_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.snmp_min_depth));
+        state_lock.options.insert(<span class="string">"snmp_max_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.snmp_max_depth));
+        state_lock.options.insert(<span class="string">"snmp_depth_margin_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.snmp_depth_margin_base));
+        state_lock.options.insert(<span class="string">"snmp_depth_margin_multiplier"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.snmp_depth_margin_multiplier));
 
-    state_lock.options.insert(<span class="string">"nmp_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.nmp_min_depth));
-    state_lock.options.insert(<span class="string">"nmp_min_game_phase"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.nmp_min_game_phase));
-    state_lock.options.insert(<span class="string">"nmp_margin"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.nmp_margin));
-    state_lock.options.insert(<span class="string">"nmp_depth_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.nmp_depth_base));
-    state_lock.options.insert(<span class="string">"nmp_depth_divider"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.nmp_depth_divider));
+        state_lock.options.insert(<span class="string">"nmp_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.nmp_min_depth));
+        state_lock.options.insert(<span class="string">"nmp_min_game_phase"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.nmp_min_game_phase));
+        state_lock.options.insert(<span class="string">"nmp_margin"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.nmp_margin));
+        state_lock.options.insert(<span class="string">"nmp_depth_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.nmp_depth_base));
+        state_lock.options.insert(<span class="string">"nmp_depth_divider"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.nmp_depth_divider));
 
-    state_lock.options.insert(<span class="string">"lmp_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmp_min_depth));
-    state_lock.options.insert(<span class="string">"lmp_max_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmp_max_depth));
-    state_lock.options.insert(<span class="string">"lmp_move_index_margin_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmp_move_index_margin_base));
-    state_lock.options.insert(<span class="string">"lmp_move_index_margin_multiplier"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmp_move_index_margin_multiplier));
-    state_lock.options.insert(<span class="string">"lmp_max_score"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmp_max_score));
+        state_lock.options.insert(<span class="string">"lmp_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmp_min_depth));
+        state_lock.options.insert(<span class="string">"lmp_max_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmp_max_depth));
+        state_lock.options.insert(<span class="string">"lmp_move_index_margin_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmp_move_index_margin_base));
+        state_lock.options.insert(<span class="string">"lmp_move_index_margin_multiplier"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmp_move_index_margin_multiplier));
+        state_lock.options.insert(<span class="string">"lmp_max_score"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmp_max_score));
 
-    state_lock.options.insert(<span class="string">"lmr_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_min_depth));
-    state_lock.options.insert(<span class="string">"lmr_max_score"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_max_score));
-    state_lock.options.insert(<span class="string">"lmr_min_move_index"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_min_move_index));
-    state_lock.options.insert(<span class="string">"lmr_reduction_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_reduction_base));
-    state_lock.options.insert(<span class="string">"lmr_reduction_step"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_reduction_step));
-    state_lock.options.insert(<span class="string">"lmr_max_reduction"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_max_reduction));
-    state_lock.options.insert(<span class="string">"lmr_pv_min_move_index"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_pv_min_move_index));
-    state_lock.options.insert(<span class="string">"lmr_pv_reduction_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_pv_reduction_base));
-    state_lock.options.insert(<span class="string">"lmr_pv_reduction_step"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_pv_reduction_step));
-    state_lock.options.insert(<span class="string">"lmr_pv_max_reduction"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_pv_max_reduction));
+        state_lock.options.insert(<span class="string">"lmr_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_min_depth));
+        state_lock.options.insert(<span class="string">"lmr_max_score"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_max_score));
+        state_lock.options.insert(<span class="string">"lmr_min_move_index"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_min_move_index));
+        state_lock.options.insert(<span class="string">"lmr_reduction_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_reduction_base));
+        state_lock.options.insert(<span class="string">"lmr_reduction_step"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_reduction_step));
+        state_lock.options.insert(<span class="string">"lmr_max_reduction"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_max_reduction));
+        state_lock.options.insert(<span class="string">"lmr_pv_min_move_index"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_pv_min_move_index));
+        state_lock.options.insert(<span class="string">"lmr_pv_reduction_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_pv_reduction_base));
+        state_lock.options.insert(<span class="string">"lmr_pv_reduction_step"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_pv_reduction_step));
+        state_lock.options.insert(<span class="string">"lmr_pv_max_reduction"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_pv_max_reduction));
 
-    state_lock.options.insert(<span class="string">"q_score_pruning_treshold"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.q_score_pruning_treshold));
-    state_lock.options.insert(<span class="string">"q_futility_pruning_margin"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.q_futility_pruning_margin));
+        state_lock.options.insert(<span class="string">"q_score_pruning_treshold"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.q_score_pruning_treshold));
+        state_lock.options.insert(<span class="string">"q_futility_pruning_margin"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.q_futility_pruning_margin));
+    }
 
     <span class="kw">let </span><span class="kw-2">mut </span>options_sorted = state_lock.options.iter().collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
     options_sorted.sort_by_key(|(<span class="kw">_</span>, option)| option.order);
 
     <span class="kw">for </span>(name, option) <span class="kw">in </span>options_sorted {
-        <span class="attr">#[cfg(not(feature = <span class="string">"dev"</span>))]
-        </span><span class="kw">if </span>option.order == <span class="number">99 </span>{
-            <span class="kw">continue</span>;
-        }
-
         <span class="kw">match </span>option.r#type.as_str() {
             <span class="string">"spin" </span>=&gt; <span class="macro">println!</span>(<span class="string">"option name {} type {} default {} min {} max {}"</span>, name, option.r#type, option.default, option.min, option.max),
             <span class="string">"string" </span>=&gt; <span class="macro">println!</span>(<span class="string">"option name {} type {} default {}"</span>, name, option.r#type, option.default),
@@ -917,6 +1005,7 @@
         <span class="kw">let </span>tokens: Vec&lt;String&gt; = input.split(<span class="string">' '</span>).map(|v| v.trim().to_string()).collect();
         <span class="kw">match </span>tokens[<span class="number">0</span>].to_lowercase().as_str() {
             <span class="string">"debug" </span>=&gt; handle_debug(<span class="kw-2">&amp;</span>tokens, state.clone()),
+            <span class="string">"fen" </span>=&gt; handle_fen(state.clone()),
             <span class="string">"go" </span>=&gt; handle_go(<span class="kw-2">&amp;</span>tokens, state.clone()),
             <span class="string">"isready" </span>=&gt; handle_isready(),
             <span class="string">"ponderhit" </span>=&gt; handle_ponderhit(state.clone()),
@@ -937,6 +1026,11 @@
     }
 
     state.lock().unwrap().debug_mode.store(<span class="macro">matches!</span>(parameters[<span class="number">1</span>].as_str(), <span class="string">"on"</span>), Ordering::Relaxed);
+}
+
+<span class="doccomment">/// Handles non-standard `fen` command by printing FEN of the current position.
+</span><span class="kw">fn </span>handle_fen(state: Arc&lt;Mutex&lt;UciState&gt;&gt;) {
+    <span class="macro">println!</span>(<span class="string">"info string {}"</span>, state.lock().unwrap().board);
 }
 
 <span class="doccomment">/// Handles `go [parameters]` command by running a new search for a position which was set using `position` command. Supported parameters:
@@ -1097,7 +1191,11 @@
         <span class="kw">let </span>syzygy_probe_limit = state_lock.options[<span class="string">"SyzygyProbeLimit"</span>].value.parse::&lt;u32&gt;().unwrap();
         <span class="kw">let </span>syzygy_probe_depth = state_lock.options[<span class="string">"SyzygyProbeDepth"</span>].value.parse::&lt;i8&gt;().unwrap();
 
-        <span class="kw">let </span>search_parameters = SearchParameters {
+        <span class="attr">#[cfg(not(feature = <span class="string">"dev"</span>))]
+        </span><span class="kw">let </span>search_parameters = SearchParameters::default();
+
+        <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
+        </span><span class="kw">let </span>search_parameters = SearchParameters {
             iir_min_depth: state_lock.options[<span class="string">"iir_min_depth"</span>].value.parse().unwrap(),
             iir_reduction_base: state_lock.options[<span class="string">"iir_reduction_base"</span>].value.parse().unwrap(),
             iir_reduction_step: state_lock.options[<span class="string">"iir_reduction_step"</span>].value.parse().unwrap(),
@@ -1163,6 +1261,7 @@
             state_lock.pawn_hashtable.clone(),
             state_lock.killers_table.clone(),
             state_lock.history_table.clone(),
+            state_lock.countermoves_table.clone(),
             state_lock.abort_flag.clone(),
             state_lock.ponder_flag.clone(),
         );
@@ -1194,20 +1293,13 @@
                     state_lock.pawn_hashtable.clone(),
                     state_lock.killers_table.clone(),
                     state_lock.history_table.clone(),
+                    state_lock.countermoves_table.clone(),
                     state_lock.abort_flag.clone(),
                     state_lock.ponder_flag.clone(),
                 );
                 drop(state_lock);
 
-                <span class="kw">let </span>data = HelperThreadContext::new(
-                    context.board.clone(),
-                    Arc::new((<span class="kw-2">*</span>context.pawn_hashtable).clone()),
-                    Arc::new((<span class="kw-2">*</span>context.killers_table).clone()),
-                    Arc::new((<span class="kw-2">*</span>context.history_table).clone()),
-                    helper_context,
-                );
-
-                context.helper_contexts.push(data);
+                context.helper_contexts.push(HelperThreadContext::new(context.board.clone(), helper_context));
             }
         }
 
@@ -1313,10 +1405,18 @@
         <span class="kw">return</span>;
     }
 
-    state.lock().unwrap().board = <span class="kw">match </span>parameters[<span class="number">1</span>].as_str() {
+    <span class="kw">let </span><span class="kw-2">mut </span>state_lock = state.lock().unwrap();
+    state_lock.board = <span class="kw">match </span>parameters[<span class="number">1</span>].as_str() {
         <span class="string">"fen" </span>=&gt; {
             <span class="kw">let </span>fen = parameters[<span class="number">2</span>..].join(<span class="string">" "</span>);
-            <span class="kw">match </span>Board::new_from_fen(fen.as_str(), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>) {
+            <span class="kw">match </span>Board::new_from_fen(
+                fen.as_str(),
+                <span class="prelude-val">Some</span>(state_lock.evaluation_parameters.clone()),
+                <span class="prelude-val">Some</span>(state_lock.zobrist_container.clone()),
+                <span class="prelude-val">Some</span>(state_lock.patterns_container.clone()),
+                <span class="prelude-val">Some</span>(state_lock.see_container.clone()),
+                <span class="prelude-val">Some</span>(state_lock.magic_container.clone()),
+            ) {
                 <span class="prelude-val">Ok</span>(board) =&gt; board,
                 <span class="prelude-val">Err</span>(error) =&gt; {
                     <span class="macro">println!</span>(<span class="string">"info string Error: {}"</span>, error);
@@ -1324,12 +1424,18 @@
                 }
             }
         }
-        <span class="kw">_ </span>=&gt; Board::new_initial_position(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
+        <span class="kw">_ </span>=&gt; Board::new_initial_position(
+            <span class="prelude-val">Some</span>(state_lock.evaluation_parameters.clone()),
+            <span class="prelude-val">Some</span>(state_lock.zobrist_container.clone()),
+            <span class="prelude-val">Some</span>(state_lock.patterns_container.clone()),
+            <span class="prelude-val">Some</span>(state_lock.see_container.clone()),
+            <span class="prelude-val">Some</span>(state_lock.magic_container.clone()),
+        ),
     };
 
     <span class="kw">if let </span><span class="prelude-val">Some</span>(index) = parameters.iter().position(|s| s == <span class="string">"moves"</span>) {
         <span class="kw">for </span>premade_move <span class="kw">in </span><span class="kw-2">&amp;</span>parameters[index + <span class="number">1</span>..] {
-            <span class="kw">let </span>parsed_move = <span class="kw">match </span>Move::from_long_notation(premade_move, <span class="kw-2">&amp;</span>state.lock().unwrap().board) {
+            <span class="kw">let </span>parsed_move = <span class="kw">match </span>Move::from_long_notation(premade_move, <span class="kw-2">&amp;</span>state_lock.board) {
                 <span class="prelude-val">Ok</span>(r#move) =&gt; r#move,
                 <span class="prelude-val">Err</span>(error) =&gt; {
                     <span class="macro">println!</span>(<span class="string">"info string Error: {}"</span>, error);
@@ -1337,7 +1443,7 @@
                 }
             };
 
-            state.lock().unwrap().board.make_move(parsed_move);
+            state_lock.board.make_move(parsed_move);
         }
     };
 }
@@ -1409,7 +1515,13 @@
 </span><span class="kw">fn </span>handle_ucinewgame(state: Arc&lt;Mutex&lt;UciState&gt;&gt;) {
     <span class="kw">let </span><span class="kw-2">mut </span>state_lock = state.lock().unwrap();
     state_lock.abort_flag.store(<span class="bool-val">true</span>, Ordering::Relaxed);
-    state_lock.board = Board::new_initial_position(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>);
+    state_lock.board = Board::new_initial_position(
+        <span class="prelude-val">Some</span>(state_lock.evaluation_parameters.clone()),
+        <span class="prelude-val">Some</span>(state_lock.zobrist_container.clone()),
+        <span class="prelude-val">Some</span>(state_lock.patterns_container.clone()),
+        <span class="prelude-val">Some</span>(state_lock.see_container.clone()),
+        <span class="prelude-val">Some</span>(state_lock.magic_container.clone()),
+    );
     state_lock.abort_flag = Default::default();
     drop(state_lock);
 
@@ -1436,19 +1548,23 @@
     state_lock.pawn_hashtable = Arc::new(PawnHashTable::new(allocation_result.pawn_hashtable_size * <span class="number">1024 </span>* <span class="number">1024</span>));
     state_lock.killers_table = Default::default();
     state_lock.history_table = Default::default();
+    state_lock.countermoves_table = Default::default();
+
+    <span class="comment">// Reset Zobrist keys too, so each game will be slightly different
+    </span>state_lock.zobrist_container = Default::default();
 }
 
 <span class="doccomment">/// Enables saving of crash files by setting a custom panic hook.
 </span><span class="kw">fn </span>enable_crash_files() {
     panic::set_hook(Box::new(|panic| {
-        <span class="kw">let </span>path = Path::new(<span class="string">"crash"</span>);
+        <span class="kw">let </span>path = Path::new(<span class="string">"./crash"</span>);
         fs::create_dir_all(path).unwrap();
 
-        <span class="kw">let </span>path = Path::new(<span class="string">"crash"</span>).join(<span class="macro">format!</span>(<span class="string">"{}.txt"</span>, common::time::get_unix_timestamp()));
+        <span class="kw">let </span>path = path.join(<span class="macro">format!</span>(<span class="string">"{}.txt"</span>, common::time::get_unix_timestamp()));
         <span class="macro">write!</span>(<span class="kw-2">&amp;mut </span>File::create(path.clone()).unwrap(), <span class="string">"{}"</span>, panic).unwrap();
 
         <span class="kw">let </span>absolute_path = fs::canonicalize(path).unwrap();
-        <span class="macro">println!</span>(<span class="string">"Crash file saved as {}"</span>, absolute_path.into_os_string().into_string().unwrap());
+        <span class="macro">println!</span>(<span class="string">"info string Crash file saved as {}"</span>, absolute_path.into_os_string().into_string().unwrap());
     }));
 }
 

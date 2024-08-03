@@ -860,6 +860,97 @@
 <a href="#858" id="858">858</a>
 <a href="#859" id="859">859</a>
 <a href="#860" id="860">860</a>
+<a href="#861" id="861">861</a>
+<a href="#862" id="862">862</a>
+<a href="#863" id="863">863</a>
+<a href="#864" id="864">864</a>
+<a href="#865" id="865">865</a>
+<a href="#866" id="866">866</a>
+<a href="#867" id="867">867</a>
+<a href="#868" id="868">868</a>
+<a href="#869" id="869">869</a>
+<a href="#870" id="870">870</a>
+<a href="#871" id="871">871</a>
+<a href="#872" id="872">872</a>
+<a href="#873" id="873">873</a>
+<a href="#874" id="874">874</a>
+<a href="#875" id="875">875</a>
+<a href="#876" id="876">876</a>
+<a href="#877" id="877">877</a>
+<a href="#878" id="878">878</a>
+<a href="#879" id="879">879</a>
+<a href="#880" id="880">880</a>
+<a href="#881" id="881">881</a>
+<a href="#882" id="882">882</a>
+<a href="#883" id="883">883</a>
+<a href="#884" id="884">884</a>
+<a href="#885" id="885">885</a>
+<a href="#886" id="886">886</a>
+<a href="#887" id="887">887</a>
+<a href="#888" id="888">888</a>
+<a href="#889" id="889">889</a>
+<a href="#890" id="890">890</a>
+<a href="#891" id="891">891</a>
+<a href="#892" id="892">892</a>
+<a href="#893" id="893">893</a>
+<a href="#894" id="894">894</a>
+<a href="#895" id="895">895</a>
+<a href="#896" id="896">896</a>
+<a href="#897" id="897">897</a>
+<a href="#898" id="898">898</a>
+<a href="#899" id="899">899</a>
+<a href="#900" id="900">900</a>
+<a href="#901" id="901">901</a>
+<a href="#902" id="902">902</a>
+<a href="#903" id="903">903</a>
+<a href="#904" id="904">904</a>
+<a href="#905" id="905">905</a>
+<a href="#906" id="906">906</a>
+<a href="#907" id="907">907</a>
+<a href="#908" id="908">908</a>
+<a href="#909" id="909">909</a>
+<a href="#910" id="910">910</a>
+<a href="#911" id="911">911</a>
+<a href="#912" id="912">912</a>
+<a href="#913" id="913">913</a>
+<a href="#914" id="914">914</a>
+<a href="#915" id="915">915</a>
+<a href="#916" id="916">916</a>
+<a href="#917" id="917">917</a>
+<a href="#918" id="918">918</a>
+<a href="#919" id="919">919</a>
+<a href="#920" id="920">920</a>
+<a href="#921" id="921">921</a>
+<a href="#922" id="922">922</a>
+<a href="#923" id="923">923</a>
+<a href="#924" id="924">924</a>
+<a href="#925" id="925">925</a>
+<a href="#926" id="926">926</a>
+<a href="#927" id="927">927</a>
+<a href="#928" id="928">928</a>
+<a href="#929" id="929">929</a>
+<a href="#930" id="930">930</a>
+<a href="#931" id="931">931</a>
+<a href="#932" id="932">932</a>
+<a href="#933" id="933">933</a>
+<a href="#934" id="934">934</a>
+<a href="#935" id="935">935</a>
+<a href="#936" id="936">936</a>
+<a href="#937" id="937">937</a>
+<a href="#938" id="938">938</a>
+<a href="#939" id="939">939</a>
+<a href="#940" id="940">940</a>
+<a href="#941" id="941">941</a>
+<a href="#942" id="942">942</a>
+<a href="#943" id="943">943</a>
+<a href="#944" id="944">944</a>
+<a href="#945" id="945">945</a>
+<a href="#946" id="946">946</a>
+<a href="#947" id="947">947</a>
+<a href="#948" id="948">948</a>
+<a href="#949" id="949">949</a>
+<a href="#950" id="950">950</a>
+<a href="#951" id="951">951</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::context::SearchContext;
 <span class="kw">use </span><span class="kw">super</span>::context::SearchResultLine;
 <span class="kw">use </span><span class="kw">super</span>::qsearch;
@@ -870,6 +961,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::tablebases::WdlResult;
 <span class="kw">use </span><span class="kw">crate</span>::utils::bithelpers::BitHelpers;
 <span class="kw">use </span><span class="kw">crate</span>::utils::conditional_expression;
+<span class="kw">use </span><span class="kw">crate</span>::utils::parameter;
 <span class="kw">use </span><span class="kw">crate</span>::utils::rand;
 <span class="kw">use </span>std::cmp;
 <span class="kw">use </span>std::mem::MaybeUninit;
@@ -879,6 +971,7 @@
 <span class="kw">pub const </span>MOVE_ORDERING_WINNING_CAPTURES_OFFSET: i16 = <span class="number">100</span>;
 <span class="kw">pub const </span>MOVE_ORDERING_KILLER_MOVE_1: i16 = <span class="number">99</span>;
 <span class="kw">pub const </span>MOVE_ORDERING_KILLER_MOVE_2: i16 = <span class="number">98</span>;
+<span class="kw">pub const </span>MOVE_ORDERING_COUNTERMOVE: i16 = <span class="number">97</span>;
 <span class="kw">pub const </span>MOVE_ORDERING_QUEEN_PROMOTION: i16 = <span class="number">95</span>;
 <span class="kw">pub const </span>MOVE_ORDERING_ROOK_PROMOTION: i16 = <span class="number">94</span>;
 <span class="kw">pub const </span>MOVE_ORDERING_BISHOP_PROMOTION: i16 = <span class="number">93</span>;
@@ -896,16 +989,18 @@
     HashMove,
     ReadyToGenerateCaptures,
     Captures,
-    ReadyToGenerateKillerMoves,
-    KillerMoves,
-    ReadyToGenerateQuietMoves,
+    ReadyToGenerateKillers,
+    Killers,
+    ReadyToGenerateCounters,
+    Counters,
+    ReadyToGenerateQuiets,
     AllGenerated,
 }
 
 <span class="doccomment">/// Wrapper for the entry point of the regular search, look at `run_internal` for more information.
 </span><span class="kw">pub fn </span>run&lt;<span class="kw">const </span>DIAG: bool&gt;(context: <span class="kw-2">&amp;mut </span>SearchContext, depth: i8) {
     <span class="kw">let </span>king_checked = context.board.is_king_checked(context.board.active_color);
-    run_internal::&lt;<span class="bool-val">true</span>, <span class="bool-val">true</span>, DIAG&gt;(context, depth, <span class="number">0</span>, MIN_ALPHA, MIN_BETA, <span class="bool-val">true</span>, king_checked);
+    run_internal::&lt;<span class="bool-val">true</span>, <span class="bool-val">true</span>, DIAG&gt;(context, depth, <span class="number">0</span>, MIN_ALPHA, MIN_BETA, <span class="bool-val">true</span>, king_checked, Move::default());
 }
 
 <span class="doccomment">/// Entry point of the regular search, with generic `ROOT` parameter indicating if this is the root node where the moves filterigh might happen, and `PV` parameter
@@ -921,6 +1016,7 @@
 ///  - test of initial constraints: abort flag, forced depth
 ///  - test if the enemy king is checked
 ///  - test if there's threefold repetition draw, fifty move rule draw or insufficient material draw
+///  - check extensions (&lt;https://www.chessprogramming.org/Check_Extensions&gt;)
 ///  - switch to the quiescence search if the depth is equal to zero
 ///  - read from the transposition table, return score if possible or update alpha/beta (&lt;https://www.chessprogramming.org/Transposition_Table&gt;)
 ///  - internal iterative reduction (&lt;https://chessprogrammingwiki.netlify.app/internal_iterative_reductions/&gt;)
@@ -936,6 +1032,7 @@
 ///  - test of initial constraints: abort flag, forced depth, max nodes count
 ///  - test if the enemy king is checked
 ///  - test if there's threefold repetition draw, fifty move rule draw or insufficient material draw
+///  - check extensions (&lt;https://www.chessprogramming.org/Check_Extensions&gt;)
 ///  - switch to the quiescence search if the depth is equal to zero
 ///  - read from the transposition table, return score if possible or update alpha/beta (&lt;https://www.chessprogramming.org/Transposition_Table&gt;)
 ///  - internal iterative reduction (&lt;https://chessprogrammingwiki.netlify.app/internal_iterative_reductions/&gt;)
@@ -957,6 +1054,7 @@
     <span class="kw-2">mut </span>beta: i16,
     <span class="kw-2">mut </span>allow_null_move: bool,
     friendly_king_checked: bool,
+    previous_move: Move,
 ) -&gt; i16 {
     <span class="kw">if </span>context.abort_flag.load(Ordering::Relaxed) {
         <span class="kw">return </span>INVALID_SCORE;
@@ -1003,6 +1101,10 @@
                 WdlResult::Draw =&gt; DRAW_SCORE,
             };
         }
+    }
+
+    <span class="kw">if </span>check_extensions_can_be_applied(friendly_king_checked) {
+        depth += check_extensions_get_e();
     }
 
     <span class="kw">if </span>depth &lt;= <span class="number">0 </span>{
@@ -1117,7 +1219,7 @@
     }
 
     <span class="kw">if </span>nmp_can_be_applied::&lt;PV&gt;(context, depth, beta, allow_null_move, friendly_king_checked) {
-        <span class="kw">let </span>margin = context.parameters.nmp_margin;
+        <span class="kw">let </span>margin = <span class="macro">parameter!</span>(context.parameters.nmp_margin);
         <span class="kw">let </span>lazy_evaluation_value = <span class="kw">match </span>lazy_evaluation {
             <span class="prelude-val">Some</span>(value) =&gt; value,
             <span class="prelude-val">None </span>=&gt; context.board.evaluate_lazy(context.board.active_color),
@@ -1128,7 +1230,7 @@
             <span class="kw">let </span>r = nmp_get_r(context, depth);
 
             context.board.make_null_move();
-            <span class="kw">let </span>score = -run_internal::&lt;<span class="bool-val">false</span>, <span class="bool-val">false</span>, DIAG&gt;(context, depth - r - <span class="number">1</span>, ply + <span class="number">1</span>, -beta, -beta + <span class="number">1</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>);
+            <span class="kw">let </span>score = -run_internal::&lt;<span class="bool-val">false</span>, <span class="bool-val">false</span>, DIAG&gt;(context, depth - r - <span class="number">1</span>, ply + <span class="number">1</span>, -beta, -beta + <span class="number">1</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>, Move::default());
             context.board.undo_null_move();
 
             <span class="kw">if </span>score &gt;= beta {
@@ -1148,6 +1250,8 @@
     <span class="kw">let </span><span class="kw-2">mut </span>moves = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
     <span class="kw">let </span><span class="kw-2">mut </span>move_scores = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
     <span class="kw">let </span><span class="kw-2">mut </span>move_generator_stage = MoveGeneratorStage::ReadyToCheckHashMove;
+    <span class="kw">let </span><span class="kw-2">mut </span>quiet_moves_start_index = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>killer_moves = [MaybeUninit::uninit(); <span class="number">2</span>];
 
     <span class="kw">let </span><span class="kw-2">mut </span>move_index = <span class="number">0</span>;
     <span class="kw">let </span><span class="kw-2">mut </span>move_number = <span class="number">0</span>;
@@ -1166,6 +1270,9 @@
         hash_move,
         ply,
         friendly_king_checked,
+        previous_move,
+        <span class="kw-2">&amp;mut </span>quiet_moves_start_index,
+        <span class="kw-2">&amp;mut </span>killer_moves,
     ) {
         <span class="kw">if </span>ROOT &amp;&amp; !context.moves_to_search.is_empty() &amp;&amp; !context.moves_to_search.contains(<span class="kw-2">&amp;</span>r#move) {
             <span class="kw">continue</span>;
@@ -1190,25 +1297,25 @@
         <span class="kw">let </span>score = <span class="kw">if </span>PV {
             <span class="kw">if </span>move_index == <span class="number">0 </span>{
                 <span class="macro">conditional_expression!</span>(DIAG, context.statistics.pvs_full_window_searches += <span class="number">1</span>);
-                -run_internal::&lt;<span class="bool-val">false</span>, <span class="bool-val">true</span>, DIAG&gt;(context, depth - <span class="number">1</span>, ply + <span class="number">1</span>, -beta, -alpha, <span class="bool-val">true</span>, king_checked)
+                -run_internal::&lt;<span class="bool-val">false</span>, <span class="bool-val">true</span>, DIAG&gt;(context, depth - <span class="number">1</span>, ply + <span class="number">1</span>, -beta, -alpha, <span class="bool-val">true</span>, king_checked, r#move)
             } <span class="kw">else </span>{
-                <span class="kw">let </span>zero_window_score = -run_internal::&lt;<span class="bool-val">false</span>, <span class="bool-val">false</span>, DIAG&gt;(context, depth - r - <span class="number">1</span>, ply + <span class="number">1</span>, -alpha - <span class="number">1</span>, -alpha, <span class="bool-val">true</span>, king_checked);
+                <span class="kw">let </span>zero_window_score = -run_internal::&lt;<span class="bool-val">false</span>, <span class="bool-val">false</span>, DIAG&gt;(context, depth - r - <span class="number">1</span>, ply + <span class="number">1</span>, -alpha - <span class="number">1</span>, -alpha, <span class="bool-val">true</span>, king_checked, r#move);
                 <span class="macro">conditional_expression!</span>(DIAG, context.statistics.pvs_zero_window_searches += <span class="number">1</span>);
 
                 <span class="kw">if </span>zero_window_score &gt; alpha &amp;&amp; (alpha != beta - <span class="number">1 </span>|| r &gt; <span class="number">0</span>) &amp;&amp; zero_window_score != -INVALID_SCORE {
                     <span class="macro">conditional_expression!</span>(DIAG, context.statistics.pvs_rejected_searches += <span class="number">1</span>);
-                    -run_internal::&lt;<span class="bool-val">false</span>, <span class="bool-val">true</span>, DIAG&gt;(context, depth - <span class="number">1</span>, ply + <span class="number">1</span>, -beta, -alpha, <span class="bool-val">true</span>, king_checked)
+                    -run_internal::&lt;<span class="bool-val">false</span>, <span class="bool-val">true</span>, DIAG&gt;(context, depth - <span class="number">1</span>, ply + <span class="number">1</span>, -beta, -alpha, <span class="bool-val">true</span>, king_checked, r#move)
                 } <span class="kw">else </span>{
                     zero_window_score
                 }
             }
         } <span class="kw">else </span>{
-            <span class="kw">let </span>zero_window_score = -run_internal::&lt;<span class="bool-val">false</span>, <span class="bool-val">false</span>, DIAG&gt;(context, depth - r - <span class="number">1</span>, ply + <span class="number">1</span>, -beta, -alpha, <span class="bool-val">true</span>, king_checked);
+            <span class="kw">let </span>zero_window_score = -run_internal::&lt;<span class="bool-val">false</span>, <span class="bool-val">false</span>, DIAG&gt;(context, depth - r - <span class="number">1</span>, ply + <span class="number">1</span>, -beta, -alpha, <span class="bool-val">true</span>, king_checked, r#move);
             <span class="macro">conditional_expression!</span>(DIAG, context.statistics.pvs_zero_window_searches += <span class="number">1</span>);
 
             <span class="kw">if </span>zero_window_score &gt; alpha &amp;&amp; r &gt; <span class="number">0 </span>&amp;&amp; zero_window_score != -INVALID_SCORE {
                 <span class="macro">conditional_expression!</span>(DIAG, context.statistics.pvs_rejected_searches += <span class="number">1</span>);
-                -run_internal::&lt;<span class="bool-val">false</span>, <span class="bool-val">false</span>, DIAG&gt;(context, depth - <span class="number">1</span>, ply + <span class="number">1</span>, -beta, -alpha, <span class="bool-val">true</span>, king_checked)
+                -run_internal::&lt;<span class="bool-val">false</span>, <span class="bool-val">false</span>, DIAG&gt;(context, depth - <span class="number">1</span>, ply + <span class="number">1</span>, -beta, -alpha, <span class="bool-val">true</span>, king_checked, r#move)
             } <span class="kw">else </span>{
                 zero_window_score
             }
@@ -1229,6 +1336,16 @@
                 <span class="kw">if </span>r#move.is_quiet() {
                     context.killers_table.add(ply, r#move);
                     context.history_table.add(r#move.get_from(), r#move.get_to(), depth <span class="kw">as </span>u8);
+                    context.countermoves_table.add(previous_move, r#move);
+
+                    <span class="kw">if </span>move_generator_stage == MoveGeneratorStage::AllGenerated {
+                        <span class="kw">for </span>i <span class="kw">in </span>quiet_moves_start_index..moves_count {
+                            <span class="kw">let </span>move_from_list = <span class="kw">unsafe </span>{ moves[i].assume_init() };
+                            <span class="kw">if </span>move_from_list.is_quiet() &amp;&amp; move_from_list != best_move {
+                                context.history_table.punish(move_from_list.get_from(), move_from_list.get_to(), depth <span class="kw">as </span>u8);
+                            }
+                        }
+                    }
                 }
 
                 <span class="macro">conditional_expression!</span>(DIAG, context.statistics.beta_cutoffs += <span class="number">1</span>);
@@ -1262,7 +1379,7 @@
         <span class="kw">return </span>DRAW_SCORE;
     }
 
-    <span class="kw">if </span>!tt_entry_found || alpha != original_alpha {
+    <span class="kw">if </span>(!tt_entry_found || alpha != original_alpha) &amp;&amp; !context.abort_flag.load(Ordering::Relaxed) {
         <span class="kw">let </span>score_type = <span class="kw">if </span>alpha &lt;= original_alpha {
             TranspositionTableScoreType::UPPER_BOUND
         } <span class="kw">else if </span>alpha &gt;= beta {
@@ -1351,14 +1468,20 @@
     start_index: usize,
     moves_count: usize,
     tt_move: Move,
+    previous_move: Move,
     ply: u16,
 ) {
     <span class="kw">let </span>killer_moves = context.killers_table.get(ply);
+    <span class="kw">let </span>countermove = context.countermoves_table.get(previous_move);
+
     <span class="kw">for </span>move_index <span class="kw">in </span>start_index..moves_count {
         <span class="kw">let </span>r#move = <span class="kw">unsafe </span>{ moves[move_index].assume_init() };
 
         <span class="kw">if </span>r#move == tt_move {
             move_scores[move_index].write(MOVE_ORDERING_HASH_MOVE);
+            <span class="kw">continue</span>;
+        } <span class="kw">else if </span>r#move == countermove {
+            move_scores[move_index].write(MOVE_ORDERING_COUNTERMOVE);
             <span class="kw">continue</span>;
         } <span class="kw">else if </span>r#move.is_quiet() {
             <span class="kw">let </span><span class="kw-2">mut </span>killer_move_found = <span class="bool-val">false</span>;
@@ -1408,7 +1531,11 @@
 ///  - [MoveGeneratorStage::HashMove] - returns hashmove if possible
 ///  - [MoveGeneratorStage::ReadyToGenerateCaptures] - generates all captures in the position
 ///  - [MoveGeneratorStage::Captures] - returns subsequent elements until the end or score is less than [MOVE_ORDERING_WINNING_CAPTURES_OFFSET]
-///  - [MoveGeneratorStage::ReadyToGenerateQuietMoves] - generates all quiet moves in the position
+///  - [MoveGeneratorStage::ReadyToGenerateKillers] -
+///  - [MoveGeneratorStage::Killers] -
+///  - [MoveGeneratorStage::ReadyToGenerateCounters] -
+///  - [MoveGeneratorStage::Counters] -
+///  - [MoveGeneratorStage::ReadyToGenerateQuiets] - generates all quiet moves in the position
 ///  - [MoveGeneratorStage::AllGenerated] - returns subsequent elements until the end
 ///
 /// Both [MoveGeneratorStage::ReadyToGenerateCaptures] and [MoveGeneratorStage::ReadyToGenerateQuietMoves] are generating moves and assigning scores
@@ -1425,85 +1552,85 @@
     hash_move: Move,
     ply: u16,
     friendly_king_checked: bool,
+    previous_move: Move,
+    quiet_moves_start_index: <span class="kw-2">&amp;mut </span>usize,
+    killer_moves_cache: <span class="kw-2">&amp;mut </span>[MaybeUninit&lt;Move&gt;; <span class="number">2</span>],
 ) -&gt; <span class="prelude-ty">Option</span>&lt;(Move, i16)&gt; {
-    <span class="kw">if </span><span class="macro">matches!</span>(<span class="kw-2">*</span>stage, MoveGeneratorStage::HashMove | MoveGeneratorStage::Captures | MoveGeneratorStage::KillerMoves | MoveGeneratorStage::AllGenerated) {
+    <span class="kw">if </span><span class="macro">matches!</span>(
+        <span class="kw-2">*</span>stage,
+        MoveGeneratorStage::HashMove
+            | MoveGeneratorStage::Captures
+            | MoveGeneratorStage::Killers
+            | MoveGeneratorStage::Counters
+            | MoveGeneratorStage::AllGenerated
+    ) {
         <span class="kw-2">*</span>move_index += <span class="number">1</span>;
         <span class="kw-2">*</span>move_number += <span class="number">1</span>;
     }
 
     <span class="kw">loop </span>{
+        <span class="kw">if </span>move_index &gt;= moves_count {
+            <span class="kw">match </span><span class="kw-2">*</span>stage {
+                MoveGeneratorStage::HashMove =&gt; <span class="kw-2">*</span>stage = MoveGeneratorStage::ReadyToGenerateCaptures,
+                MoveGeneratorStage::Captures =&gt; <span class="kw-2">*</span>stage = MoveGeneratorStage::ReadyToGenerateKillers,
+                MoveGeneratorStage::Killers =&gt; <span class="kw-2">*</span>stage = MoveGeneratorStage::ReadyToGenerateCounters,
+                MoveGeneratorStage::Counters =&gt; <span class="kw-2">*</span>stage = MoveGeneratorStage::ReadyToGenerateQuiets,
+                MoveGeneratorStage::AllGenerated =&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
+                <span class="kw">_ </span>=&gt; {}
+            }
+        }
+
         <span class="kw">match </span>stage {
             MoveGeneratorStage::ReadyToCheckHashMove =&gt; {
-                <span class="macro">conditional_expression!</span>(DIAG, context.statistics.move_generator_hash_move_stages += <span class="number">1</span>);
-
                 <span class="kw">if </span>hash_move != Default::default() {
-                    <span class="kw-2">*</span>stage = MoveGeneratorStage::HashMove;
                     <span class="kw-2">*</span>moves_count = <span class="number">1</span>;
+                    <span class="kw-2">*</span>stage = MoveGeneratorStage::HashMove;
                 } <span class="kw">else </span>{
                     <span class="kw-2">*</span>stage = MoveGeneratorStage::ReadyToGenerateCaptures;
                 }
+
+                <span class="macro">conditional_expression!</span>(DIAG, context.statistics.move_generator_hash_move_stages += <span class="number">1</span>);
             }
             MoveGeneratorStage::HashMove =&gt; {
-                <span class="kw">if </span>move_index &gt;= moves_count {
-                    <span class="kw-2">*</span>stage = MoveGeneratorStage::ReadyToGenerateCaptures;
-                    <span class="kw">continue</span>;
-                }
-
                 <span class="kw">return </span><span class="prelude-val">Some</span>((hash_move, MOVE_ORDERING_HASH_MOVE));
             }
             MoveGeneratorStage::ReadyToGenerateCaptures =&gt; {
-                <span class="macro">conditional_expression!</span>(DIAG, context.statistics.move_generator_captures_stages += <span class="number">1</span>);
-
                 <span class="kw-2">*</span>evasion_mask = <span class="kw">if </span>friendly_king_checked {
-                    <span class="kw">if </span>context.board.pieces[context.board.active_color][KING] == <span class="number">0 </span>{
-                        u64::MAX
-                    } <span class="kw">else </span>{
-                        <span class="kw">let </span>king_square = (context.board.pieces[context.board.active_color][KING]).bit_scan();
-                        <span class="kw">let </span>occupancy_bb = context.board.occupancy[WHITE] | context.board.occupancy[BLACK];
+                    <span class="kw">let </span>king_square = (context.board.pieces[context.board.active_color][KING]).bit_scan();
+                    <span class="kw">let </span>occupancy_bb = context.board.occupancy[WHITE] | context.board.occupancy[BLACK];
 
-                        <span class="kw">let </span>queen_moves_bb = context.board.magic.get_queen_moves(occupancy_bb, king_square);
-                        <span class="kw">let </span>knight_moves_bb = context.board.magic.get_knight_moves(king_square, <span class="kw-2">&amp;</span>context.board.patterns);
+                    <span class="kw">let </span>queen_moves_bb = context.board.magic.get_queen_moves(occupancy_bb, king_square);
+                    <span class="kw">let </span>knight_moves_bb = context.board.magic.get_knight_moves(king_square, <span class="kw-2">&amp;</span>context.board.patterns);
 
-                        queen_moves_bb | knight_moves_bb
-                    }
+                    queen_moves_bb | knight_moves_bb
                 } <span class="kw">else </span>{
                     u64::MAX
                 };
 
-                <span class="kw-2">*</span>moves_count = context.board.get_moves::&lt;<span class="bool-val">true</span>&gt;(moves, <span class="number">0</span>, <span class="kw-2">*</span>evasion_mask);
                 <span class="kw-2">*</span>move_index = <span class="number">0</span>;
+                <span class="kw-2">*</span>moves_count = context.board.get_moves::&lt;<span class="bool-val">true</span>&gt;(moves, <span class="number">0</span>, <span class="kw-2">*</span>evasion_mask);
 
                 <span class="kw">if </span><span class="kw-2">*</span>moves_count == <span class="number">0 </span>{
-                    <span class="kw-2">*</span>stage = MoveGeneratorStage::ReadyToGenerateKillerMoves;
-                    <span class="kw">continue</span>;
+                    <span class="kw-2">*</span>stage = MoveGeneratorStage::ReadyToGenerateKillers;
+                } <span class="kw">else </span>{
+                    <span class="kw-2">*</span>stage = MoveGeneratorStage::Captures;
+                    assign_capture_scores(context, moves, move_scores, <span class="number">0</span>, <span class="kw-2">*</span>moves_count, hash_move);
                 }
 
-                assign_capture_scores(context, moves, move_scores, <span class="number">0</span>, <span class="kw-2">*</span>moves_count, hash_move);
-                <span class="kw-2">*</span>stage = MoveGeneratorStage::Captures;
+                <span class="macro">conditional_expression!</span>(DIAG, context.statistics.move_generator_captures_stages += <span class="number">1</span>);
             }
             MoveGeneratorStage::Captures =&gt; {
-                <span class="kw">if </span>move_index &gt;= moves_count {
-                    <span class="kw-2">*</span>stage = MoveGeneratorStage::ReadyToGenerateKillerMoves;
-                    <span class="kw">continue</span>;
-                }
-
                 <span class="kw">let </span>(r#move, score) = sort_next_move(moves, move_scores, <span class="kw-2">*</span>move_index, <span class="kw-2">*</span>moves_count);
 
                 <span class="kw">if </span>r#move == hash_move {
                     <span class="kw-2">*</span>move_index += <span class="number">1</span>;
-                    <span class="kw">continue</span>;
+                } <span class="kw">else if </span>score &lt; MOVE_ORDERING_WINNING_CAPTURES_OFFSET {
+                    <span class="kw-2">*</span>stage = MoveGeneratorStage::ReadyToGenerateKillers;
+                } <span class="kw">else </span>{
+                    <span class="kw">return </span><span class="prelude-val">Some</span>((r#move, score));
                 }
-
-                <span class="kw">if </span>score &lt; MOVE_ORDERING_WINNING_CAPTURES_OFFSET {
-                    <span class="kw-2">*</span>stage = MoveGeneratorStage::ReadyToGenerateKillerMoves;
-                    <span class="kw">continue</span>;
-                }
-
-                <span class="kw">return </span><span class="prelude-val">Some</span>((r#move, score));
             }
-            MoveGeneratorStage::ReadyToGenerateKillerMoves =&gt; {
-                <span class="macro">conditional_expression!</span>(DIAG, context.statistics.move_generator_killers_stages += <span class="number">1</span>);
-
+            MoveGeneratorStage::ReadyToGenerateKillers =&gt; {
                 <span class="kw">let </span>original_moves_count = <span class="kw-2">*</span>moves_count;
                 <span class="kw">let </span>killer_moves = context.killers_table.get(ply);
 
@@ -1519,61 +1646,89 @@
                             <span class="macro">conditional_expression!</span>(DIAG, context.statistics.killers_table_illegal_moves += <span class="number">1</span>);
                         }
                     }
+
+                    killer_moves_cache[index].write(killer_move);
                 }
 
-                <span class="kw-2">*</span>stage = <span class="kw">if </span>original_moves_count != <span class="kw-2">*</span>moves_count { MoveGeneratorStage::KillerMoves } <span class="kw">else </span>{ MoveGeneratorStage::ReadyToGenerateQuietMoves }
+                <span class="kw-2">*</span>stage = <span class="kw">if </span>original_moves_count != <span class="kw-2">*</span>moves_count { MoveGeneratorStage::Killers } <span class="kw">else </span>{ MoveGeneratorStage::ReadyToGenerateCounters };
+                <span class="macro">conditional_expression!</span>(DIAG, context.statistics.move_generator_killers_stages += <span class="number">1</span>);
             }
-            MoveGeneratorStage::KillerMoves =&gt; {
-                <span class="kw">if </span>move_index &gt;= moves_count {
-                    <span class="kw-2">*</span>stage = MoveGeneratorStage::ReadyToGenerateQuietMoves;
-                    <span class="kw">continue</span>;
-                }
-
+            MoveGeneratorStage::Killers =&gt; {
                 <span class="kw">let </span>(r#move, score) = sort_next_move(moves, move_scores, <span class="kw-2">*</span>move_index, <span class="kw-2">*</span>moves_count);
 
-                <span class="kw">if </span>r#move == hash_move {
-                    <span class="kw-2">*</span>move_index += <span class="number">1</span>;
-                    <span class="kw">continue</span>;
-                }
-
                 <span class="kw">if </span>score &lt; MOVE_ORDERING_KILLER_MOVE_2 {
-                    <span class="kw-2">*</span>stage = MoveGeneratorStage::ReadyToGenerateQuietMoves;
-                    <span class="kw">continue</span>;
+                    <span class="kw-2">*</span>stage = MoveGeneratorStage::ReadyToGenerateCounters;
+                } <span class="kw">else </span>{
+                    <span class="kw">return </span><span class="prelude-val">Some</span>((r#move, score));
+                }
+            }
+            MoveGeneratorStage::ReadyToGenerateCounters =&gt; {
+                <span class="kw">let </span>original_moves_count = <span class="kw-2">*</span>moves_count;
+                <span class="kw">let </span>countermove = context.countermoves_table.get(previous_move);
+
+                <span class="kw">if </span>countermove != hash_move
+                    &amp;&amp; countermove != <span class="kw">unsafe </span>{ killer_moves_cache[<span class="number">0</span>].assume_init() }
+                    &amp;&amp; countermove != <span class="kw">unsafe </span>{ killer_moves_cache[<span class="number">1</span>].assume_init() }
+                {
+                    <span class="kw">if </span>((<span class="number">1u64 </span>&lt;&lt; countermove.get_to()) &amp; <span class="kw-2">*</span>evasion_mask) != <span class="number">0 </span>&amp;&amp; countermove.is_legal(<span class="kw-2">&amp;</span>context.board) {
+                        moves[<span class="kw-2">*</span>moves_count].write(countermove);
+                        move_scores[<span class="kw-2">*</span>moves_count].write(MOVE_ORDERING_COUNTERMOVE);
+                        <span class="kw-2">*</span>moves_count += <span class="number">1</span>;
+
+                        <span class="macro">conditional_expression!</span>(DIAG, context.statistics.countermoves_table_legal_moves += <span class="number">1</span>);
+                    } <span class="kw">else </span>{
+                        <span class="macro">conditional_expression!</span>(DIAG, context.statistics.countermoves_table_illegal_moves += <span class="number">1</span>);
+                    }
                 }
 
-                <span class="kw">return </span><span class="prelude-val">Some</span>((r#move, score));
+                <span class="kw-2">*</span>stage = <span class="kw">if </span>original_moves_count != <span class="kw-2">*</span>moves_count { MoveGeneratorStage::Counters } <span class="kw">else </span>{ MoveGeneratorStage::ReadyToGenerateQuiets };
+                <span class="macro">conditional_expression!</span>(DIAG, context.statistics.move_generator_counters_stages += <span class="number">1</span>);
             }
-            MoveGeneratorStage::ReadyToGenerateQuietMoves =&gt; {
-                <span class="macro">conditional_expression!</span>(DIAG, context.statistics.move_generator_quiet_moves_stages += <span class="number">1</span>);
+            MoveGeneratorStage::Counters =&gt; {
+                <span class="kw">let </span>(r#move, score) = sort_next_move(moves, move_scores, <span class="kw-2">*</span>move_index, <span class="kw-2">*</span>moves_count);
+
+                <span class="kw">if </span>score &lt; MOVE_ORDERING_COUNTERMOVE {
+                    <span class="kw-2">*</span>stage = MoveGeneratorStage::ReadyToGenerateQuiets;
+                } <span class="kw">else </span>{
+                    <span class="kw">return </span><span class="prelude-val">Some</span>((r#move, score));
+                }
+            }
+            MoveGeneratorStage::ReadyToGenerateQuiets =&gt; {
                 <span class="kw">let </span>original_moves_count = <span class="kw-2">*</span>moves_count;
 
+                <span class="kw-2">*</span>quiet_moves_start_index = <span class="kw-2">*</span>move_index;
                 <span class="kw-2">*</span>moves_count = context.board.get_moves::&lt;<span class="bool-val">false</span>&gt;(moves, <span class="kw-2">*</span>moves_count, <span class="kw-2">*</span>evasion_mask);
                 <span class="kw-2">*</span>stage = MoveGeneratorStage::AllGenerated;
 
-                assign_quiet_scores(context, moves, move_scores, original_moves_count, <span class="kw-2">*</span>moves_count, hash_move, ply);
+                assign_quiet_scores(context, moves, move_scores, original_moves_count, <span class="kw-2">*</span>moves_count, hash_move, previous_move, ply);
+                <span class="macro">conditional_expression!</span>(DIAG, context.statistics.move_generator_quiets_stages += <span class="number">1</span>);
             }
             MoveGeneratorStage::AllGenerated =&gt; {
-                <span class="kw">if </span>move_index &gt;= moves_count {
-                    <span class="kw">return </span><span class="prelude-val">None</span>;
-                }
-
                 <span class="kw">let </span>(r#move, score) = sort_next_move(moves, move_scores, <span class="kw-2">*</span>move_index, <span class="kw-2">*</span>moves_count);
 
-                <span class="kw">if </span>r#move == hash_move {
+                <span class="kw">if </span>r#move == hash_move || score == MOVE_ORDERING_KILLER_MOVE_1 || score == MOVE_ORDERING_KILLER_MOVE_2 || score == MOVE_ORDERING_COUNTERMOVE {
                     <span class="kw-2">*</span>move_index += <span class="number">1</span>;
-                    <span class="kw">continue</span>;
+                } <span class="kw">else </span>{
+                    <span class="kw">return </span><span class="prelude-val">Some</span>((r#move, score));
                 }
-
-                <span class="kw">if </span>score == MOVE_ORDERING_KILLER_MOVE_1 || score == MOVE_ORDERING_KILLER_MOVE_2 {
-                    <span class="kw-2">*</span>move_index += <span class="number">1</span>;
-                    <span class="kw">continue</span>;
-                }
-
-                <span class="kw">return </span><span class="prelude-val">Some</span>((r#move, score));
             }
         }
     }
 }
+
+<span class="doccomment">/// The main idea of the check extensions is to extend search when there's a check. Because it's a forced move, we assume that a lot is going on
+/// in that branch and it's a good idea to search it deeper so we avoid horizon effects.
+///
+/// Conditions:
+///  - friendly king is checked
+</span><span class="kw">fn </span>check_extensions_can_be_applied(friendly_king_checked: bool) -&gt; bool {
+    friendly_king_checked
+}
+
+<span class="doccomment">/// Gets the check extensions, for now it's constant 1.
+</span><span class="kw">fn </span>check_extensions_get_e() -&gt; i8 {
+    <span class="number">1
+</span>}
 
 <span class="doccomment">/// The main idea of the internal iterative reduction is that nodes without hash moves are potentially less important, so we
 /// try to save time here by reducing depth a little bit. This is not always true, but some inaccuracies should be recompensated by deeper search.
@@ -1582,14 +1737,20 @@
 ///  - depth &gt;= context.parameters.iir_min_depth
 ///  - hash move does not exists
 </span><span class="kw">fn </span>iir_can_be_applied(context: <span class="kw-2">&amp;mut </span>SearchContext, depth: i8, hash_move: Move) -&gt; bool {
-    depth &gt;= context.parameters.iir_min_depth &amp;&amp; hash_move == Move::default()
+    depth &gt;= <span class="macro">parameter!</span>(context.parameters.iir_min_depth) &amp;&amp; hash_move == Move::default()
 }
 
 <span class="doccomment">/// Gets the internal iterative depth reduction, called R, based on `depth`. The further from the horizon we are, the more reduction will be applied.
-</span><span class="kw">fn </span>iir_get_r(context: <span class="kw-2">&amp;mut </span>SearchContext, depth: i8) -&gt; i8 {
-    (context.parameters.iir_reduction_base + (depth - context.parameters.iir_min_depth) / context.parameters.iir_reduction_step)
-        .min(context.parameters.iir_max_reduction)
-}
+</span><span class="kw">fn </span>iir_get_r(_context: <span class="kw-2">&amp;mut </span>SearchContext, _depth: i8) -&gt; i8 {
+    <span class="comment">/*let reduction_base = parameter!(context.parameters.iir_reduction_base);
+    let min_depth = parameter!(context.parameters.iir_min_depth);
+    let reduction_step = parameter!(context.parameters.iir_reduction_step);
+    let max_reduction = parameter!(context.parameters.iir_max_reduction);
+
+    (reduction_base + (depth - min_depth) / reduction_step).min(max_reduction)*/
+
+    </span><span class="number">1
+</span>}
 
 <span class="doccomment">/// The main idea of the razoring is to detect and prune all nodes, which (based on lazy evaluation) are hopeless compared to the current alpha and
 /// the chance to improve the score is too small to spend time here. To make it more safe and not to skip positions where we're somewhere in the
@@ -1602,16 +1763,19 @@
 ///  - alpha is not a mate score
 ///  - friendly king is not checked
 </span><span class="kw">fn </span>razoring_can_be_applied&lt;<span class="kw">const </span>PV: bool&gt;(context: <span class="kw-2">&amp;mut </span>SearchContext, depth: i8, alpha: i16, friendly_king_checked: bool) -&gt; bool {
-    !PV &amp;&amp; depth &gt;= context.parameters.razoring_min_depth
-        &amp;&amp; depth &lt;= context.parameters.razoring_max_depth
-        &amp;&amp; !is_score_near_checkmate(alpha)
-        &amp;&amp; !friendly_king_checked
+    <span class="kw">let </span>min_depth = <span class="macro">parameter!</span>(context.parameters.razoring_min_depth);
+    <span class="kw">let </span>max_depth = <span class="macro">parameter!</span>(context.parameters.razoring_max_depth);
+
+    !PV &amp;&amp; depth &gt;= min_depth &amp;&amp; depth &lt;= max_depth &amp;&amp; !is_score_near_checkmate(alpha) &amp;&amp; !friendly_king_checked
 }
 
 <span class="doccomment">/// Gets the razoring margin, based on `depth`. The further from the horizon we are, the more margin we should take to determine if node can be pruned.
 </span><span class="kw">fn </span>razoring_get_margin(context: <span class="kw-2">&amp;mut </span>SearchContext, depth: i8) -&gt; i16 {
-    context.parameters.razoring_depth_margin_base
-        + ((depth - context.parameters.razoring_min_depth) <span class="kw">as </span>i16) * context.parameters.razoring_depth_margin_multiplier
+    <span class="kw">let </span>depth_margin_base = <span class="macro">parameter!</span>(context.parameters.razoring_depth_margin_base);
+    <span class="kw">let </span>min_depth = <span class="macro">parameter!</span>(context.parameters.razoring_min_depth);
+    <span class="kw">let </span>depth_margin_multiplier = <span class="macro">parameter!</span>(context.parameters.razoring_depth_margin_multiplier);
+
+    depth_margin_base + ((depth - min_depth) <span class="kw">as </span>i16) * depth_margin_multiplier
 }
 
 <span class="doccomment">/// The main idea of the static null move pruning (also called as reverse futility pruning) is to prune all nodes, which (based on lazy evaluation) are too
@@ -1625,13 +1789,20 @@
 ///  - beta is not a mate score
 ///  - friendly king is not checked
 </span><span class="kw">fn </span>snmp_can_be_applied&lt;<span class="kw">const </span>PV: bool&gt;(context: <span class="kw-2">&amp;mut </span>SearchContext, depth: i8, beta: i16, friendly_king_checked: bool) -&gt; bool {
-    !PV &amp;&amp; depth &gt;= context.parameters.snmp_min_depth &amp;&amp; depth &lt;= context.parameters.snmp_max_depth &amp;&amp; !is_score_near_checkmate(beta) &amp;&amp; !friendly_king_checked
+    <span class="kw">let </span>min_depth = <span class="macro">parameter!</span>(context.parameters.snmp_min_depth);
+    <span class="kw">let </span>max_depth = <span class="macro">parameter!</span>(context.parameters.snmp_max_depth);
+
+    !PV &amp;&amp; depth &gt;= min_depth &amp;&amp; depth &lt;= max_depth &amp;&amp; !is_score_near_checkmate(beta) &amp;&amp; !friendly_king_checked
 }
 
 <span class="doccomment">/// Gets the static null move pruning margin, based on `depth`. The further from the horizon we are, the more margin should we take to determine
 /// if node can be pruned.
 </span><span class="kw">fn </span>snmp_get_margin(context: <span class="kw-2">&amp;mut </span>SearchContext, depth: i8) -&gt; i16 {
-    context.parameters.snmp_depth_margin_base + ((depth - context.parameters.snmp_min_depth) <span class="kw">as </span>i16) * context.parameters.snmp_depth_margin_multiplier
+    <span class="kw">let </span>depth_margin_base = <span class="macro">parameter!</span>(context.parameters.snmp_depth_margin_base);
+    <span class="kw">let </span>min_depth = <span class="macro">parameter!</span>(context.parameters.snmp_min_depth);
+    <span class="kw">let </span>depth_margin_multiplier = <span class="macro">parameter!</span>(context.parameters.snmp_depth_margin_multiplier);
+
+    depth_margin_base + ((depth - min_depth) <span class="kw">as </span>i16) * depth_margin_multiplier
 }
 
 <span class="doccomment">/// The main idea of the null move pruning is to prune all nodes, for which the search gives us score above beta even if we skip a move (which allows
@@ -1646,16 +1817,18 @@
 ///  - friendly king is not checked
 ///  - this is not the second null move in a row
 </span><span class="kw">fn </span>nmp_can_be_applied&lt;<span class="kw">const </span>PV: bool&gt;(context: <span class="kw-2">&amp;mut </span>SearchContext, depth: i8, beta: i16, allow_null_move: bool, friendly_king_checked: bool) -&gt; bool {
-    !PV &amp;&amp; depth &gt;= context.parameters.nmp_min_depth
-        &amp;&amp; context.board.game_phase &gt; context.parameters.nmp_min_game_phase
-        &amp;&amp; !is_score_near_checkmate(beta)
-        &amp;&amp; !friendly_king_checked
-        &amp;&amp; allow_null_move
+    <span class="kw">let </span>min_depth = <span class="macro">parameter!</span>(context.parameters.nmp_min_depth);
+    <span class="kw">let </span>min_game_phase = <span class="macro">parameter!</span>(context.parameters.nmp_min_game_phase);
+
+    !PV &amp;&amp; depth &gt;= min_depth &amp;&amp; context.board.game_phase &gt; min_game_phase &amp;&amp; !is_score_near_checkmate(beta) &amp;&amp; !friendly_king_checked &amp;&amp; allow_null_move
 }
 
 <span class="doccomment">/// Gets the null move pruning depth reduction, called R, based on `depth`. The further from the horizon we are, the more reduction will be applied.
 </span><span class="kw">fn </span>nmp_get_r(context: <span class="kw-2">&amp;mut </span>SearchContext, depth: i8) -&gt; i8 {
-    context.parameters.nmp_depth_base + depth / context.parameters.nmp_depth_divider
+    <span class="kw">let </span>depth_base = <span class="macro">parameter!</span>(context.parameters.nmp_depth_base);
+    <span class="kw">let </span>depth_divider = <span class="macro">parameter!</span>(context.parameters.nmp_depth_divider);
+
+    depth_base + depth / depth_divider
 }
 
 <span class="doccomment">/// The main idea of the late move pruning is to prune all nodes, which are near the horizon and were scored low by the history table.
@@ -1669,10 +1842,16 @@
 ///  - move score &lt;= [lmp_max_score]
 ///  - friendly king is not checked
 </span><span class="kw">fn </span>lmp_can_be_applied&lt;<span class="kw">const </span>PV: bool&gt;(context: <span class="kw-2">&amp;mut </span>SearchContext, depth: i8, move_index: usize, move_score: i16, friendly_king_checked: bool) -&gt; bool {
-    !PV &amp;&amp; depth &gt;= context.parameters.lmp_min_depth
-        &amp;&amp; depth &lt;= context.parameters.lmp_max_depth
-        &amp;&amp; move_index &gt;= context.parameters.lmp_move_index_margin_base + (depth <span class="kw">as </span>usize - <span class="number">1</span>) * context.parameters.lmp_move_index_margin_multiplier
-        &amp;&amp; move_score &lt;= context.parameters.lmp_max_score
+    <span class="kw">let </span>min_depth = <span class="macro">parameter!</span>(context.parameters.lmp_min_depth);
+    <span class="kw">let </span>max_depth = <span class="macro">parameter!</span>(context.parameters.lmp_max_depth);
+    <span class="kw">let </span>move_index_margin_base = <span class="macro">parameter!</span>(context.parameters.lmp_move_index_margin_base);
+    <span class="kw">let </span>move_index_margin_multiplier = <span class="macro">parameter!</span>(context.parameters.lmp_move_index_margin_multiplier);
+    <span class="kw">let </span>max_score = <span class="macro">parameter!</span>(context.parameters.lmp_max_score);
+
+    !PV &amp;&amp; depth &gt;= min_depth
+        &amp;&amp; depth &lt;= max_depth
+        &amp;&amp; move_index &gt;= move_index_margin_base + (depth <span class="kw">as </span>usize - <span class="number">1</span>) * move_index_margin_multiplier
+        &amp;&amp; move_score &lt;= max_score
         &amp;&amp; !friendly_king_checked
 }
 
@@ -1696,26 +1875,29 @@
     friendly_king_checked: bool,
     enemy_king_checked: bool,
 ) -&gt; bool {
-    depth &gt;= context.parameters.lmr_min_depth
-        &amp;&amp; move_index &gt;= <span class="kw">if </span>PV { context.parameters.lmr_pv_min_move_index } <span class="kw">else </span>{ context.parameters.lmr_min_move_index }
-        &amp;&amp; move_score &lt;= context.parameters.lmr_max_score
-        &amp;&amp; r#move.is_quiet()
-        &amp;&amp; !friendly_king_checked
-        &amp;&amp; !enemy_king_checked
+    <span class="kw">let </span>min_depth = <span class="macro">parameter!</span>(context.parameters.lmr_min_depth);
+    <span class="kw">let </span>min_move_index = <span class="kw">if </span>PV { <span class="macro">parameter!</span>(context.parameters.lmr_pv_min_move_index) } <span class="kw">else </span>{ <span class="macro">parameter!</span>(context.parameters.lmr_min_move_index) };
+    <span class="kw">let </span>max_score = <span class="macro">parameter!</span>(context.parameters.lmr_max_score);
+
+    depth &gt;= min_depth &amp;&amp; move_index &gt;= min_move_index &amp;&amp; move_score &lt;= max_score &amp;&amp; r#move.is_quiet() &amp;&amp; !friendly_king_checked &amp;&amp; !enemy_king_checked
 }
 
 <span class="doccomment">/// Gets the late move depth reduction, called R, based on `move_index`. The lower the move was scored, the larger reduction will be returned.
 </span><span class="kw">fn </span>lmr_get_r&lt;<span class="kw">const </span>PV: bool&gt;(context: <span class="kw-2">&amp;mut </span>SearchContext, move_index: usize) -&gt; i8 {
     <span class="kw">let </span>(max, r) = <span class="kw">if </span>PV {
-        (
-            context.parameters.lmr_pv_max_reduction,
-            (context.parameters.lmr_pv_reduction_base + (move_index - context.parameters.lmr_pv_min_move_index) / context.parameters.lmr_pv_reduction_step),
-        )
+        <span class="kw">let </span>max_reduction = <span class="macro">parameter!</span>(context.parameters.lmr_pv_max_reduction);
+        <span class="kw">let </span>reduction_base = <span class="macro">parameter!</span>(context.parameters.lmr_pv_reduction_base);
+        <span class="kw">let </span>min_move_index = <span class="macro">parameter!</span>(context.parameters.lmr_pv_min_move_index);
+        <span class="kw">let </span>reduction_step = <span class="macro">parameter!</span>(context.parameters.lmr_pv_reduction_step);
+
+        (max_reduction, (reduction_base + (move_index - min_move_index) / reduction_step))
     } <span class="kw">else </span>{
-        (
-            context.parameters.lmr_max_reduction,
-            (context.parameters.lmr_reduction_base + (move_index - context.parameters.lmr_min_move_index) / context.parameters.lmr_reduction_step),
-        )
+        <span class="kw">let </span>max_reduction = <span class="macro">parameter!</span>(context.parameters.lmr_max_reduction);
+        <span class="kw">let </span>reduction_base = <span class="macro">parameter!</span>(context.parameters.lmr_reduction_base);
+        <span class="kw">let </span>min_move_index = <span class="macro">parameter!</span>(context.parameters.lmr_min_move_index);
+        <span class="kw">let </span>reduction_step = <span class="macro">parameter!</span>(context.parameters.lmr_reduction_step);
+
+        (max_reduction, (reduction_base + (move_index - min_move_index) / reduction_step))
     };
 
     cmp::min(max, r <span class="kw">as </span>i8)

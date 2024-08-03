@@ -113,18 +113,6 @@
 <a href="#111" id="111">111</a>
 <a href="#112" id="112">112</a>
 <a href="#113" id="113">113</a>
-<a href="#114" id="114">114</a>
-<a href="#115" id="115">115</a>
-<a href="#116" id="116">116</a>
-<a href="#117" id="117">117</a>
-<a href="#118" id="118">118</a>
-<a href="#119" id="119">119</a>
-<a href="#120" id="120">120</a>
-<a href="#121" id="121">121</a>
-<a href="#122" id="122">122</a>
-<a href="#123" id="123">123</a>
-<a href="#124" id="124">124</a>
-<a href="#125" id="125">125</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::utils::percent;
 <span class="kw">use </span>std::mem;
 <span class="kw">use </span>std::sync::atomic::AtomicI16;
@@ -132,8 +120,7 @@
 <span class="kw">use </span>std::sync::atomic::Ordering;
 <span class="kw">use </span>std::u64;
 
-<span class="attr">#[derive(Clone)]
-</span><span class="kw">pub struct </span>PawnHashTable {
+<span class="kw">pub struct </span>PawnHashTable {
     <span class="kw">pub </span>table: Vec&lt;PawnHashTableEntry&gt;,
 }
 
@@ -157,7 +144,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>hashtable = <span class="self">Self </span>{ table: Vec::with_capacity(aligned_size / bucket_size) };
 
         <span class="kw">if </span>aligned_size != <span class="number">0 </span>{
-            hashtable.table.resize(hashtable.table.capacity(), Default::default());
+            hashtable.table.resize_with(hashtable.table.capacity(), Default::default);
         }
 
         hashtable
@@ -230,17 +217,6 @@
     <span class="doccomment">/// Constructs a default instance of [PawnHashTableEntry] with zeroed elements.
     </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         PawnHashTableEntry { key: AtomicU16::new(<span class="number">0</span>), score_opening: AtomicI16::new(<span class="number">0</span>), score_ending: AtomicI16::new(<span class="number">0</span>) }
-    }
-}
-
-<span class="kw">impl </span>Clone <span class="kw">for </span>PawnHashTableEntry {
-    <span class="doccomment">/// Clones [PawnHashTableEntry] by creating a new atomic (with the original value).
-    </span><span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            key: AtomicU16::new(<span class="self">self</span>.key.load(Ordering::Relaxed)),
-            score_opening: AtomicI16::new(<span class="self">self</span>.score_opening.load(Ordering::Relaxed)),
-            score_ending: AtomicI16::new(<span class="self">self</span>.score_ending.load(Ordering::Relaxed)),
-        }
     }
 }
 

@@ -779,6 +779,33 @@
 <a href="#777" id="777">777</a>
 <a href="#778" id="778">778</a>
 <a href="#779" id="779">779</a>
+<a href="#780" id="780">780</a>
+<a href="#781" id="781">781</a>
+<a href="#782" id="782">782</a>
+<a href="#783" id="783">783</a>
+<a href="#784" id="784">784</a>
+<a href="#785" id="785">785</a>
+<a href="#786" id="786">786</a>
+<a href="#787" id="787">787</a>
+<a href="#788" id="788">788</a>
+<a href="#789" id="789">789</a>
+<a href="#790" id="790">790</a>
+<a href="#791" id="791">791</a>
+<a href="#792" id="792">792</a>
+<a href="#793" id="793">793</a>
+<a href="#794" id="794">794</a>
+<a href="#795" id="795">795</a>
+<a href="#796" id="796">796</a>
+<a href="#797" id="797">797</a>
+<a href="#798" id="798">798</a>
+<a href="#799" id="799">799</a>
+<a href="#800" id="800">800</a>
+<a href="#801" id="801">801</a>
+<a href="#802" id="802">802</a>
+<a href="#803" id="803">803</a>
+<a href="#804" id="804">804</a>
+<a href="#805" id="805">805</a>
+<a href="#806" id="806">806</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::uci;
 <span class="kw">use </span><span class="kw">crate</span>::evaluation::material;
 <span class="kw">use </span><span class="kw">crate</span>::evaluation::mobility;
@@ -801,7 +828,7 @@
 </span><span class="kw">use </span><span class="kw">crate</span>::tuning::tuner;
 
 <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
-</span><span class="kw">use </span><span class="kw">crate</span>::tuning::tunerset;
+</span><span class="kw">use </span><span class="kw">crate</span>::tuning::dataset;
 
 <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::state::movegen::MagicContainer;
@@ -813,21 +840,24 @@
 <span class="kw">const </span>AUTHOR: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">"CARGO_PKG_AUTHORS"</span>);
 <span class="kw">const </span>REPOSITORY: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">"CARGO_PKG_REPOSITORY"</span>);
 <span class="kw">const </span>DATE: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">"DATE"</span>);
-<span class="kw">const </span>HASH: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">"HASH"</span>);
 <span class="kw">const </span>COMPILER: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">"COMPILER"</span>);
+<span class="kw">const </span>TARGET: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">"TARGET"</span>);
+<span class="kw">const </span>PROFILE: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">"PROFILE"</span>);
 
 <span class="doccomment">/// Entry point of the terminal interface and command loop.
 </span><span class="kw">pub fn </span>run(args: Vec&lt;OsString&gt;, target_features: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt;) {
     <span class="kw">let </span>use_args = args.len() &gt; <span class="number">1</span>;
-    <span class="kw">let </span>header = <span class="kw">if </span>target_features.is_empty() {
-        <span class="macro">format!</span>(<span class="string">"Inanis {} ({}), created by {}"</span>, VERSION, DATE, AUTHOR)
-    } <span class="kw">else </span>{
-        <span class="macro">format!</span>(<span class="string">"Inanis {} {} ({}), created by {}"</span>, VERSION, target_features.join(<span class="string">" "</span>), DATE, AUTHOR)
-    };
+
+    <span class="kw">let </span><span class="kw-2">mut </span>header = String::new();
+    header.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"Inanis {}"</span>, VERSION));
+    <span class="kw">if </span>!target_features.is_empty() {
+        header.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">" {}"</span>, target_features.join(<span class="string">" "</span>)));
+    }
+    header.push_str(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">" ({}), created by {}"</span>, DATE, AUTHOR));
 
     <span class="macro">println!</span>(<span class="string">"{}"</span>, header);
-    <span class="macro">println!</span>(<span class="string">"Executable hash: {}"</span>, HASH);
     <span class="macro">println!</span>(<span class="string">"Compiler: {}"</span>, COMPILER);
+    <span class="macro">println!</span>(<span class="string">"Target: {}, profile: {}"</span>, TARGET, PROFILE);
     <span class="macro">println!</span>(<span class="string">"Homepage: {}"</span>, REPOSITORY);
     <span class="macro">println!</span>();
     <span class="macro">println!</span>(<span class="string">"Type \"help\" to get a list of available commands"</span>);
@@ -850,6 +880,10 @@
         <span class="kw">match </span>tokens[<span class="number">0</span>] {
             <span class="string">"help" </span>=&gt; handle_help(),
             <span class="string">"benchmark" </span>=&gt; handle_benchmark(),
+
+            <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
+            </span><span class="string">"dataset" </span>=&gt; handle_dataset(tokens),
+
             <span class="string">"evaluate" </span>=&gt; handle_evaluate(tokens),
 
             <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
@@ -863,8 +897,6 @@
             </span><span class="string">"testset" </span>=&gt; handle_testset(tokens),
             <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
             </span><span class="string">"tuner" </span>=&gt; handle_tuner(tokens),
-            <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
-            </span><span class="string">"tunerset" </span>=&gt; handle_tunerset(tokens),
 
             <span class="string">"uci" </span>=&gt; handle_uci(),
             <span class="string">"wah" </span>=&gt; handle_wah(),
@@ -883,7 +915,14 @@
     <span class="macro">println!</span>(<span class="string">"=== General ==="</span>);
     <span class="macro">println!</span>(<span class="string">" benchmark - run test for a set of positions"</span>);
     <span class="macro">println!</span>(<span class="string">" evaluate [fen] - show score for the position"</span>);
+    <span class="macro">println!</span>(<span class="string">" uci - run Universal Chess Interface"</span>);
+    <span class="macro">println!</span>(<span class="string">" quit - close the application"</span>);
+    <span class="macro">println!</span>();
 
+    <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
+    </span><span class="macro">println!</span>(<span class="string">"=== Development ==="</span>);
+    <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
+    </span><span class="macro">println!</span>(<span class="string">" dataset [pgn] [output] [min_ply] [max_score] [max_diff] [density] - dataset generator"</span>);
     <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
     </span><span class="macro">println!</span>(<span class="string">" magic - generate magic numbers"</span>);
     <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
@@ -891,11 +930,8 @@
     <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
     </span><span class="macro">println!</span>(<span class="string">" tuner [epd] [output] [lock_material] [randomize] [threads_count] - run tuning"</span>);
     <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
-    </span><span class="macro">println!</span>(<span class="string">" tunerset [pgn] [output] [min_ply] [max_score] [max_diff] [density] - dataset generator"</span>);
+    </span><span class="macro">println!</span>();
 
-    <span class="macro">println!</span>(<span class="string">" uci - run Universal Chess Interface"</span>);
-    <span class="macro">println!</span>(<span class="string">" quit - close the application"</span>);
-    <span class="macro">println!</span>();
     <span class="macro">println!</span>(<span class="string">"=== Perft ==="</span>);
     <span class="macro">println!</span>(<span class="string">" perft [depth]"</span>);
     <span class="macro">println!</span>(<span class="string">" perft [depth] fen [fen]"</span>);
@@ -914,213 +950,231 @@
 
 <span class="doccomment">/// Handles `benchmark` command by running a fixed-depth search for a set of static positions and printing diagnostic data.
 </span><span class="kw">fn </span>handle_benchmark() {
-    <span class="kw">let </span>header_intendation = <span class="number">25</span>;
-    <span class="kw">let </span>value_intendation = <span class="number">20</span>;
-
     <span class="macro">println!</span>(<span class="string">"Starting benchmark..."</span>);
     <span class="kw">let </span>result = benchmark::run();
     <span class="macro">println!</span>();
     <span class="macro">println!</span>(<span class="string">"Benchmark done in {:.2} s"</span>, result.time);
     <span class="macro">println!</span>();
 
-    <span class="macro">println!</span>(<span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>, <span class="string">""</span>, <span class="string">"Normal"</span>, <span class="string">"Quiescence"</span>, <span class="string">"Total"</span>, H = header_intendation, V = value_intendation);
     <span class="kw">let </span>t_nodes_count = result.nodes_count + result.q_nodes_count;
-    <span class="kw">let </span>t_leafs_count = result.leafs_count + result.q_leafs_count;
-
     <span class="kw">let </span>nodes_count_percent = <span class="macro">percent!</span>(result.nodes_count, t_nodes_count);
     <span class="kw">let </span>q_nodes_count_percent = <span class="macro">percent!</span>(result.q_nodes_count, t_nodes_count);
     <span class="kw">let </span>t_mnps = (((result.nodes_count + result.q_nodes_count) <span class="kw">as </span>f32) / <span class="number">1000000.0</span>) / result.time;
-    <span class="macro">println!</span>(
-        <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
-        <span class="string">"Nodes count"</span>,
-        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.nodes_count, nodes_count_percent),
-        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.q_nodes_count, q_nodes_count_percent),
-        <span class="macro">format!</span>(<span class="string">"{} ({:.2} MN/s)"</span>, t_nodes_count, t_mnps),
-        H = header_intendation,
-        V = value_intendation
-    );
 
-    <span class="kw">let </span>leafs_count_percent = <span class="macro">percent!</span>(result.leafs_count, t_leafs_count);
-    <span class="kw">let </span>q_leafs_count_percent = <span class="macro">percent!</span>(result.q_leafs_count, t_leafs_count);
-    <span class="kw">let </span>t_leafs_count_percent = <span class="macro">percent!</span>(result.leafs_count + result.q_leafs_count, t_nodes_count);
-    <span class="macro">println!</span>(
-        <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
-        <span class="string">"Leafs count"</span>,
-        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.leafs_count, leafs_count_percent),
-        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.q_leafs_count, q_leafs_count_percent),
-        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, t_leafs_count, t_leafs_count_percent),
-        H = header_intendation,
-        V = value_intendation
-    );
+    <span class="attr">#[cfg(not(feature = <span class="string">"dev"</span>))]
+    </span>{
+        <span class="macro">println!</span>(<span class="string">"Nodes:"</span>);
+        <span class="macro">println!</span>(<span class="string">" Normal: {} ({:.2}%)"</span>, result.nodes_count, nodes_count_percent);
+        <span class="macro">println!</span>(<span class="string">" Quiescence: {} ({:.2}%)"</span>, result.q_nodes_count, q_nodes_count_percent);
+        <span class="macro">println!</span>(<span class="string">" Total: {} ({:.2} MN/s)"</span>, t_nodes_count, t_mnps);
+    }
 
-    <span class="kw">let </span>beta_cutoffs_percent = <span class="macro">percent!</span>(result.beta_cutoffs, result.nodes_count);
-    <span class="kw">let </span>q_beta_cutoffs_percent = <span class="macro">percent!</span>(result.q_beta_cutoffs, result.q_nodes_count);
-    <span class="kw">let </span>t_beta_cutoffs_percent = <span class="macro">percent!</span>(result.beta_cutoffs + result.q_beta_cutoffs, t_nodes_count);
-    <span class="macro">println!</span>(
-        <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
-        <span class="string">"Beta cutoffs"</span>,
-        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.beta_cutoffs, beta_cutoffs_percent),
-        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.q_beta_cutoffs, q_beta_cutoffs_percent),
-        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.beta_cutoffs + result.q_beta_cutoffs, t_beta_cutoffs_percent),
-        H = header_intendation,
-        V = value_intendation
-    );
+    <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
+    </span>{
+        <span class="kw">const </span>HEADER_INDENT: usize = <span class="number">25</span>;
+        <span class="kw">const </span>VALUE_INDENT: usize = <span class="number">20</span>;
 
-    <span class="kw">let </span>ordering_hits = result.perfect_cutoffs + result.non_perfect_cutoffs;
-    <span class="kw">let </span>q_ordering_hits = result.q_perfect_cutoffs + result.q_non_perfect_cutoffs;
-    <span class="kw">let </span>t_ordering_hits = ordering_hits + q_ordering_hits;
+        <span class="macro">println!</span>(<span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>, <span class="string">""</span>, <span class="string">"Normal"</span>, <span class="string">"Quiescence"</span>, <span class="string">"Total"</span>, H = HEADER_INDENT, V = VALUE_INDENT);
+        <span class="macro">println!</span>(
+            <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
+            <span class="string">"Nodes count"</span>,
+            <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.nodes_count, nodes_count_percent),
+            <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.q_nodes_count, q_nodes_count_percent),
+            <span class="macro">format!</span>(<span class="string">"{} ({:.2} MN/s)"</span>, t_nodes_count, t_mnps),
+            H = HEADER_INDENT,
+            V = VALUE_INDENT
+        );
 
-    <span class="kw">let </span>ordering_quality = <span class="macro">percent!</span>(result.perfect_cutoffs, ordering_hits);
-    <span class="kw">let </span>q_ordering_quality = <span class="macro">percent!</span>(result.q_perfect_cutoffs, q_ordering_hits);
-    <span class="kw">let </span>t_ordering_quality = <span class="macro">percent!</span>(result.perfect_cutoffs + result.q_perfect_cutoffs, t_ordering_hits);
-    <span class="macro">println!</span>(
-        <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
-        <span class="string">"Ordering quality"</span>,
-        <span class="macro">format!</span>(<span class="string">"{:.2}%"</span>, ordering_quality),
-        <span class="macro">format!</span>(<span class="string">"{:.2}%"</span>, q_ordering_quality),
-        <span class="macro">format!</span>(<span class="string">"{:.2}%"</span>, t_ordering_quality),
-        H = header_intendation,
-        V = value_intendation
-    );
+        <span class="kw">let </span>t_leafs_count = result.leafs_count + result.q_leafs_count;
+        <span class="kw">let </span>leafs_count_percent = <span class="macro">percent!</span>(result.leafs_count, t_leafs_count);
+        <span class="kw">let </span>q_leafs_count_percent = <span class="macro">percent!</span>(result.q_leafs_count, t_leafs_count);
+        <span class="kw">let </span>t_leafs_count_percent = <span class="macro">percent!</span>(result.leafs_count + result.q_leafs_count, t_nodes_count);
+        <span class="macro">println!</span>(
+            <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
+            <span class="string">"Leafs count"</span>,
+            <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.leafs_count, leafs_count_percent),
+            <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.q_leafs_count, q_leafs_count_percent),
+            <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, t_leafs_count, t_leafs_count_percent),
+            H = HEADER_INDENT,
+            V = VALUE_INDENT
+        );
 
-    <span class="kw">let </span>branching_factor = (result.nodes_count <span class="kw">as </span>f64) / ((result.nodes_count - result.leafs_count) <span class="kw">as </span>f64);
-    <span class="kw">let </span>q_branching_factor = (result.q_nodes_count <span class="kw">as </span>f64) / ((result.q_nodes_count - result.q_leafs_count) <span class="kw">as </span>f64);
-    <span class="kw">let </span>t_branching_factor = (t_nodes_count <span class="kw">as </span>f64) / ((t_nodes_count - t_leafs_count) <span class="kw">as </span>f64);
-    <span class="macro">println!</span>(
-        <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
-        <span class="string">"Branching factor"</span>,
-        <span class="macro">format!</span>(<span class="string">"{:.2}"</span>, branching_factor),
-        <span class="macro">format!</span>(<span class="string">"{:.2}"</span>, q_branching_factor),
-        <span class="macro">format!</span>(<span class="string">"{:.2}"</span>, t_branching_factor),
-        H = header_intendation,
-        V = value_intendation
-    );
+        <span class="kw">let </span>beta_cutoffs_percent = <span class="macro">percent!</span>(result.beta_cutoffs, result.nodes_count);
+        <span class="kw">let </span>q_beta_cutoffs_percent = <span class="macro">percent!</span>(result.q_beta_cutoffs, result.q_nodes_count);
+        <span class="kw">let </span>t_beta_cutoffs_percent = <span class="macro">percent!</span>(result.beta_cutoffs + result.q_beta_cutoffs, t_nodes_count);
+        <span class="macro">println!</span>(
+            <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
+            <span class="string">"Beta cutoffs"</span>,
+            <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.beta_cutoffs, beta_cutoffs_percent),
+            <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.q_beta_cutoffs, q_beta_cutoffs_percent),
+            <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.beta_cutoffs + result.q_beta_cutoffs, t_beta_cutoffs_percent),
+            H = HEADER_INDENT,
+            V = VALUE_INDENT
+        );
+
+        <span class="kw">let </span>ordering_hits = result.perfect_cutoffs + result.non_perfect_cutoffs;
+        <span class="kw">let </span>q_ordering_hits = result.q_perfect_cutoffs + result.q_non_perfect_cutoffs;
+        <span class="kw">let </span>t_ordering_hits = ordering_hits + q_ordering_hits;
+
+        <span class="kw">let </span>ordering_quality = <span class="macro">percent!</span>(result.perfect_cutoffs, ordering_hits);
+        <span class="kw">let </span>q_ordering_quality = <span class="macro">percent!</span>(result.q_perfect_cutoffs, q_ordering_hits);
+        <span class="kw">let </span>t_ordering_quality = <span class="macro">percent!</span>(result.perfect_cutoffs + result.q_perfect_cutoffs, t_ordering_hits);
+        <span class="macro">println!</span>(
+            <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
+            <span class="string">"Ordering quality"</span>,
+            <span class="macro">format!</span>(<span class="string">"{:.2}%"</span>, ordering_quality),
+            <span class="macro">format!</span>(<span class="string">"{:.2}%"</span>, q_ordering_quality),
+            <span class="macro">format!</span>(<span class="string">"{:.2}%"</span>, t_ordering_quality),
+            H = HEADER_INDENT,
+            V = VALUE_INDENT
+        );
+
+        <span class="kw">let </span>branching_factor = (result.nodes_count <span class="kw">as </span>f64) / ((result.nodes_count - result.leafs_count) <span class="kw">as </span>f64);
+        <span class="kw">let </span>q_branching_factor = (result.q_nodes_count <span class="kw">as </span>f64) / ((result.q_nodes_count - result.q_leafs_count) <span class="kw">as </span>f64);
+        <span class="kw">let </span>t_branching_factor = (t_nodes_count <span class="kw">as </span>f64) / ((t_nodes_count - t_leafs_count) <span class="kw">as </span>f64);
+        <span class="macro">println!</span>(
+            <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
+            <span class="string">"Branching factor"</span>,
+            <span class="macro">format!</span>(<span class="string">"{:.2}"</span>, branching_factor),
+            <span class="macro">format!</span>(<span class="string">"{:.2}"</span>, q_branching_factor),
+            <span class="macro">format!</span>(<span class="string">"{:.2}"</span>, t_branching_factor),
+            H = HEADER_INDENT,
+            V = VALUE_INDENT
+        );
+
+        <span class="macro">println!</span>();
+        <span class="macro">println!</span>(<span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>, <span class="string">""</span>, <span class="string">"Added"</span>, <span class="string">"Hits"</span>, <span class="string">"Misses"</span>, H = HEADER_INDENT, V = VALUE_INDENT);
+
+        <span class="kw">let </span>tt_attempts = result.tt_hits + result.tt_misses;
+        <span class="kw">let </span>tt_hits_percent = <span class="macro">percent!</span>(result.tt_hits, tt_attempts);
+        <span class="kw">let </span>tt_misses_percent = <span class="macro">percent!</span>(result.tt_misses, tt_attempts);
+        <span class="macro">println!</span>(
+            <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
+            <span class="string">"Transposition table"</span>,
+            <span class="macro">format!</span>(<span class="string">"{}"</span>, result.tt_added),
+            <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.tt_hits, tt_hits_percent),
+            <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.tt_misses, tt_misses_percent),
+            H = HEADER_INDENT,
+            V = VALUE_INDENT
+        );
+
+        <span class="kw">let </span>pawn_hashtable_attempts = result.pawn_hashtable_hits + result.pawn_hashtable_misses;
+        <span class="kw">let </span>pawn_hashtable_hits_percent = <span class="macro">percent!</span>(result.pawn_hashtable_hits, pawn_hashtable_attempts);
+        <span class="kw">let </span>pawn_hashtable_misses_percent = <span class="macro">percent!</span>(result.pawn_hashtable_misses, pawn_hashtable_attempts);
+        <span class="macro">println!</span>(
+            <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
+            <span class="string">"Pawn hashtable"</span>,
+            <span class="macro">format!</span>(<span class="string">"{}"</span>, result.pawn_hashtable_added),
+            <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.pawn_hashtable_hits, pawn_hashtable_hits_percent),
+            <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.pawn_hashtable_misses, pawn_hashtable_misses_percent),
+            H = HEADER_INDENT,
+            V = VALUE_INDENT
+        );
+
+        <span class="macro">println!</span>();
+        <span class="macro">println!</span>(<span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>, <span class="string">""</span>, <span class="string">"Attempts"</span>, <span class="string">"Accepted"</span>, <span class="string">"Rejected"</span>, H = HEADER_INDENT, V = VALUE_INDENT);
+
+        <span class="kw">let </span>snmp_accepted_percent = <span class="macro">percent!</span>(result.snmp_accepted, result.snmp_attempts);
+        <span class="kw">let </span>snmp_rejected_percent = <span class="macro">percent!</span>(result.snmp_rejected, result.snmp_attempts);
+        <span class="macro">println!</span>(
+            <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
+            <span class="string">"Static null move pruning"</span>,
+            <span class="macro">format!</span>(<span class="string">"{:.2}"</span>, result.snmp_attempts),
+            <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.snmp_accepted, snmp_accepted_percent),
+            <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.snmp_rejected, snmp_rejected_percent),
+            H = HEADER_INDENT,
+            V = VALUE_INDENT
+        );
+
+        <span class="kw">let </span>nmp_accepted_percent = <span class="macro">percent!</span>(result.nmp_accepted, result.nmp_attempts);
+        <span class="kw">let </span>nmp_rejected_percent = <span class="macro">percent!</span>(result.nmp_rejected, result.nmp_attempts);
+        <span class="macro">println!</span>(
+            <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
+            <span class="string">"Null move pruning"</span>,
+            <span class="macro">format!</span>(<span class="string">"{:.2}"</span>, result.nmp_attempts),
+            <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.nmp_accepted, nmp_accepted_percent),
+            <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.nmp_rejected, nmp_rejected_percent),
+            H = HEADER_INDENT,
+            V = VALUE_INDENT
+        );
+
+        <span class="kw">let </span>lmp_attempts = result.lmp_accepted + result.lmp_rejected;
+        <span class="kw">let </span>lmp_accepted_percent = <span class="macro">percent!</span>(result.lmp_accepted, lmp_attempts);
+        <span class="kw">let </span>lmp_rejected_percent = <span class="macro">percent!</span>(result.lmp_rejected, lmp_attempts);
+        <span class="macro">println!</span>(
+            <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
+            <span class="string">"Late move pruning"</span>,
+            <span class="macro">format!</span>(<span class="string">"{:.2}"</span>, lmp_attempts),
+            <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.lmp_accepted, lmp_accepted_percent),
+            <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.lmp_rejected, lmp_rejected_percent),
+            H = HEADER_INDENT,
+            V = VALUE_INDENT
+        );
+
+        <span class="kw">let </span>razoring_accepted_percent = <span class="macro">percent!</span>(result.razoring_accepted, result.razoring_attempts);
+        <span class="kw">let </span>razoring_rejected_percent = <span class="macro">percent!</span>(result.razoring_rejected, result.razoring_attempts);
+        <span class="macro">println!</span>(
+            <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
+            <span class="string">"Razoring"</span>,
+            <span class="macro">format!</span>(<span class="string">"{:.2}"</span>, result.razoring_attempts),
+            <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.razoring_accepted, razoring_accepted_percent),
+            <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.razoring_rejected, razoring_rejected_percent),
+            H = HEADER_INDENT,
+            V = VALUE_INDENT
+        );
+
+        <span class="kw">let </span>total_q_score_pruning_attempts = result.q_score_pruning_accepted + result.q_score_pruning_rejected;
+        <span class="kw">let </span>q_score_pruning_accepted_percent = <span class="macro">percent!</span>(result.q_score_pruning_accepted, total_q_score_pruning_attempts);
+        <span class="kw">let </span>q_score_pruning_rejected_percent = <span class="macro">percent!</span>(result.q_score_pruning_rejected, total_q_score_pruning_attempts);
+        <span class="macro">println!</span>(
+            <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
+            <span class="string">"Q score pruning"</span>,
+            <span class="macro">format!</span>(<span class="string">"{:.2}"</span>, total_q_score_pruning_attempts),
+            <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.q_score_pruning_accepted, q_score_pruning_accepted_percent),
+            <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.q_score_pruning_rejected, q_score_pruning_rejected_percent),
+            H = HEADER_INDENT,
+            V = VALUE_INDENT
+        );
+
+        <span class="kw">let </span>total_q_futility_prunings_attempts = result.q_futility_pruning_accepted + result.q_futility_pruning_rejected;
+        <span class="kw">let </span>q_futility_pruning_accepted_percent = <span class="macro">percent!</span>(result.q_futility_pruning_accepted, total_q_futility_prunings_attempts);
+        <span class="kw">let </span>q_futility_pruning_rejected_percent = <span class="macro">percent!</span>(result.q_futility_pruning_rejected, total_q_futility_prunings_attempts);
+        <span class="macro">println!</span>(
+            <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
+            <span class="string">"Q futility pruning"</span>,
+            <span class="macro">format!</span>(<span class="string">"{:.2}"</span>, total_q_futility_prunings_attempts),
+            <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.q_futility_pruning_accepted, q_futility_pruning_accepted_percent),
+            <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.q_futility_pruning_rejected, q_futility_pruning_rejected_percent),
+            H = HEADER_INDENT,
+            V = VALUE_INDENT
+        );
+
+        <span class="macro">println!</span>();
+
+        <span class="kw">let </span>pvs_rejected_searches_percent = <span class="macro">percent!</span>(result.pvs_rejected_searches, result.pvs_zero_window_searches);
+        <span class="macro">println!</span>(
+            <span class="string">"PVS: {} full-window searches, {} zero-window searches, {} rejected ({:.2}%)"</span>,
+            result.pvs_full_window_searches, result.pvs_zero_window_searches, result.pvs_rejected_searches, pvs_rejected_searches_percent
+        );
+
+        <span class="macro">println!</span>(
+            <span class="string">"Move generator stages: {} hash moves, {} captures, {} killers, {} countermoves, {} quiets"</span>,
+            result.move_generator_hash_move_stages,
+            result.move_generator_captures_stages,
+            result.move_generator_killers_stages,
+            result.move_generator_counters_stages,
+            result.move_generator_quiets_stages
+        );
+
+        <span class="macro">println!</span>(<span class="string">"Transposition table move legality check: {} legal, {} illegal"</span>, result.tt_legal_hashmoves, result.tt_illegal_hashmoves);
+        <span class="macro">println!</span>(<span class="string">"Killers table move legality check: {} legal, {} illegal"</span>, result.killers_table_legal_moves, result.killers_table_illegal_moves);
+        <span class="macro">println!</span>(
+            <span class="string">"Countermoves table move legality check: {} legal, {} illegal"</span>,
+            result.countermoves_table_legal_moves, result.countermoves_table_illegal_moves
+        );
+    }
 
     <span class="macro">println!</span>();
-    <span class="macro">println!</span>(<span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>, <span class="string">""</span>, <span class="string">"Added"</span>, <span class="string">"Hits"</span>, <span class="string">"Misses"</span>, H = header_intendation, V = value_intendation);
-
-    <span class="kw">let </span>tt_attempts = result.tt_hits + result.tt_misses;
-    <span class="kw">let </span>tt_hits_percent = <span class="macro">percent!</span>(result.tt_hits, tt_attempts);
-    <span class="kw">let </span>tt_misses_percent = <span class="macro">percent!</span>(result.tt_misses, tt_attempts);
-    <span class="macro">println!</span>(
-        <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
-        <span class="string">"Transposition table"</span>,
-        <span class="macro">format!</span>(<span class="string">"{}"</span>, result.tt_added),
-        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.tt_hits, tt_hits_percent),
-        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.tt_misses, tt_misses_percent),
-        H = header_intendation,
-        V = value_intendation
-    );
-
-    <span class="kw">let </span>pawn_hashtable_attempts = result.pawn_hashtable_hits + result.pawn_hashtable_misses;
-    <span class="kw">let </span>pawn_hashtable_hits_percent = <span class="macro">percent!</span>(result.pawn_hashtable_hits, pawn_hashtable_attempts);
-    <span class="kw">let </span>pawn_hashtable_misses_percent = <span class="macro">percent!</span>(result.pawn_hashtable_misses, pawn_hashtable_attempts);
-    <span class="macro">println!</span>(
-        <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
-        <span class="string">"Pawn hashtable"</span>,
-        <span class="macro">format!</span>(<span class="string">"{}"</span>, result.pawn_hashtable_added),
-        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.pawn_hashtable_hits, pawn_hashtable_hits_percent),
-        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.pawn_hashtable_misses, pawn_hashtable_misses_percent),
-        H = header_intendation,
-        V = value_intendation
-    );
-
-    <span class="macro">println!</span>();
-    <span class="macro">println!</span>(<span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>, <span class="string">""</span>, <span class="string">"Attempts"</span>, <span class="string">"Accepted"</span>, <span class="string">"Rejected"</span>, H = header_intendation, V = value_intendation);
-
-    <span class="kw">let </span>snmp_accepted_percent = <span class="macro">percent!</span>(result.snmp_accepted, result.snmp_attempts);
-    <span class="kw">let </span>snmp_rejected_percent = <span class="macro">percent!</span>(result.snmp_rejected, result.snmp_attempts);
-    <span class="macro">println!</span>(
-        <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
-        <span class="string">"Static null move pruning"</span>,
-        <span class="macro">format!</span>(<span class="string">"{:.2}"</span>, result.snmp_attempts),
-        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.snmp_accepted, snmp_accepted_percent),
-        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.snmp_rejected, snmp_rejected_percent),
-        H = header_intendation,
-        V = value_intendation
-    );
-
-    <span class="kw">let </span>nmp_accepted_percent = <span class="macro">percent!</span>(result.nmp_accepted, result.nmp_attempts);
-    <span class="kw">let </span>nmp_rejected_percent = <span class="macro">percent!</span>(result.nmp_rejected, result.nmp_attempts);
-    <span class="macro">println!</span>(
-        <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
-        <span class="string">"Null move pruning"</span>,
-        <span class="macro">format!</span>(<span class="string">"{:.2}"</span>, result.nmp_attempts),
-        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.nmp_accepted, nmp_accepted_percent),
-        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.nmp_rejected, nmp_rejected_percent),
-        H = header_intendation,
-        V = value_intendation
-    );
-
-    <span class="kw">let </span>lmp_attempts = result.lmp_accepted + result.lmp_rejected;
-    <span class="kw">let </span>lmp_accepted_percent = <span class="macro">percent!</span>(result.lmp_accepted, lmp_attempts);
-    <span class="kw">let </span>lmp_rejected_percent = <span class="macro">percent!</span>(result.lmp_rejected, lmp_attempts);
-    <span class="macro">println!</span>(
-        <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
-        <span class="string">"Late move pruning"</span>,
-        <span class="macro">format!</span>(<span class="string">"{:.2}"</span>, lmp_attempts),
-        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.lmp_accepted, lmp_accepted_percent),
-        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.lmp_rejected, lmp_rejected_percent),
-        H = header_intendation,
-        V = value_intendation
-    );
-
-    <span class="kw">let </span>razoring_accepted_percent = <span class="macro">percent!</span>(result.razoring_accepted, result.razoring_attempts);
-    <span class="kw">let </span>razoring_rejected_percent = <span class="macro">percent!</span>(result.razoring_rejected, result.razoring_attempts);
-    <span class="macro">println!</span>(
-        <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
-        <span class="string">"Razoring"</span>,
-        <span class="macro">format!</span>(<span class="string">"{:.2}"</span>, result.razoring_attempts),
-        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.razoring_accepted, razoring_accepted_percent),
-        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.razoring_rejected, razoring_rejected_percent),
-        H = header_intendation,
-        V = value_intendation
-    );
-
-    <span class="kw">let </span>total_q_score_pruning_attempts = result.q_score_pruning_accepted + result.q_score_pruning_rejected;
-    <span class="kw">let </span>q_score_pruning_accepted_percent = <span class="macro">percent!</span>(result.q_score_pruning_accepted, total_q_score_pruning_attempts);
-    <span class="kw">let </span>q_score_pruning_rejected_percent = <span class="macro">percent!</span>(result.q_score_pruning_rejected, total_q_score_pruning_attempts);
-    <span class="macro">println!</span>(
-        <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
-        <span class="string">"Q score pruning"</span>,
-        <span class="macro">format!</span>(<span class="string">"{:.2}"</span>, total_q_score_pruning_attempts),
-        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.q_score_pruning_accepted, q_score_pruning_accepted_percent),
-        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.q_score_pruning_rejected, q_score_pruning_rejected_percent),
-        H = header_intendation,
-        V = value_intendation
-    );
-
-    <span class="kw">let </span>total_q_futility_prunings_attempts = result.q_futility_pruning_accepted + result.q_futility_pruning_rejected;
-    <span class="kw">let </span>q_futility_pruning_accepted_percent = <span class="macro">percent!</span>(result.q_futility_pruning_accepted, total_q_futility_prunings_attempts);
-    <span class="kw">let </span>q_futility_pruning_rejected_percent = <span class="macro">percent!</span>(result.q_futility_pruning_rejected, total_q_futility_prunings_attempts);
-    <span class="macro">println!</span>(
-        <span class="string">"{: &lt;H$} {: &lt;V$} {: &lt;V$} {: &lt;V$}"</span>,
-        <span class="string">"Q futility pruning"</span>,
-        <span class="macro">format!</span>(<span class="string">"{:.2}"</span>, total_q_futility_prunings_attempts),
-        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.q_futility_pruning_accepted, q_futility_pruning_accepted_percent),
-        <span class="macro">format!</span>(<span class="string">"{} ({:.2}%)"</span>, result.q_futility_pruning_rejected, q_futility_pruning_rejected_percent),
-        H = header_intendation,
-        V = value_intendation
-    );
-
-    <span class="macro">println!</span>();
-
-    <span class="kw">let </span>pvs_rejected_searches_percent = <span class="macro">percent!</span>(result.pvs_rejected_searches, result.pvs_zero_window_searches);
-    <span class="macro">println!</span>(
-        <span class="string">"PVS: {} full-window searches, {} zero-window searches, {} rejected ({:.2}%)"</span>,
-        result.pvs_full_window_searches, result.pvs_zero_window_searches, result.pvs_rejected_searches, pvs_rejected_searches_percent
-    );
-
-    <span class="macro">println!</span>(
-        <span class="string">"Move generator stages: {} hash moves, {} captures, {} killers, {} quiet"</span>,
-        result.move_generator_hash_move_stages,
-        result.move_generator_captures_stages,
-        result.move_generator_killers_stages,
-        result.move_generator_quiet_moves_stages
-    );
-
-    <span class="macro">println!</span>(<span class="string">"Transposition table move legality check: {} legal, {} illegal"</span>, result.tt_legal_hashmoves, result.tt_illegal_hashmoves);
-    <span class="macro">println!</span>(<span class="string">"Killers table move legality check: {} legal, {} illegal"</span>, result.killers_table_legal_moves, result.killers_table_illegal_moves);
     <span class="macro">println!</span>(<span class="string">"Result hash: {}"</span>, result.result_hash);
     <span class="macro">println!</span>();
 }
@@ -1453,11 +1507,11 @@
     tuner::run(input[<span class="number">1</span>], input[<span class="number">2</span>], lock_material, random_values, threads_count);
 }
 
-<span class="doccomment">/// Handles `tunerset [pgn] [output] [min_ply] [max_score] [max_diff] [density]` command by running generator of the dataset for the tuner.
+<span class="doccomment">/// Handles `dataset [pgn] [output] [min_ply] [max_score] [max_diff] [density]` command by running generator of the dataset for the tuner.
 /// It works by parsing `pgn_filename`, and then picking random positions based on the provided restrictions like `min_ply`, `max_score`,
 /// `max_differ` and `density`. Output positions are then stored in the `output_file`.
 </span><span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
-</span><span class="kw">fn </span>handle_tunerset(input: Vec&lt;<span class="kw-2">&amp;</span>str&gt;) {
+</span><span class="kw">fn </span>handle_dataset(input: Vec&lt;<span class="kw-2">&amp;</span>str&gt;) {
     <span class="kw">if </span>input.len() &lt; <span class="number">2 </span>{
         <span class="macro">println!</span>(<span class="string">"PGN filename parameter not found"</span>);
         <span class="kw">return</span>;
@@ -1520,7 +1574,7 @@
         }
     };
 
-    tunerset::run(input[<span class="number">1</span>], input[<span class="number">2</span>], min_ply, max_score, max_diff, density);
+    dataset::run(input[<span class="number">1</span>], input[<span class="number">2</span>], min_ply, max_score, max_diff, density);
 }
 
 <span class="doccomment">/// Handles `uci` command by entering into the UCI (Universal Chess Interface) mode.

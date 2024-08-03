@@ -268,14 +268,6 @@
 <a href="#266" id="266">266</a>
 <a href="#267" id="267">267</a>
 <a href="#268" id="268">268</a>
-<a href="#269" id="269">269</a>
-<a href="#270" id="270">270</a>
-<a href="#271" id="271">271</a>
-<a href="#272" id="272">272</a>
-<a href="#273" id="273">273</a>
-<a href="#274" id="274">274</a>
-<a href="#275" id="275">275</a>
-<a href="#276" id="276">276</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::engine;
 <span class="kw">use </span><span class="kw">crate</span>::state::movescan::Move;
 <span class="kw">use </span><span class="kw">crate</span>::state::representation::Board;
@@ -299,8 +291,7 @@
     table: Vec&lt;TranspositionTableBucket&gt;,
 }
 
-<span class="attr">#[derive(Clone)]
-#[repr(align(<span class="number">64</span>))]
+<span class="attr">#[repr(align(<span class="number">64</span>))]
 </span><span class="kw">pub struct </span>TranspositionTableBucket {
     <span class="kw">pub </span>entries: [TranspositionTableEntry; BUCKET_SLOTS],
 }
@@ -326,7 +317,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>hashtable = <span class="self">Self </span>{ table: Vec::with_capacity(aligned_size / bucket_size) };
 
         <span class="kw">if </span>aligned_size != <span class="number">0 </span>{
-            hashtable.table.resize(hashtable.table.capacity(), Default::default());
+            hashtable.table.resize_with(hashtable.table.capacity(), Default::default);
         }
 
         hashtable
@@ -536,13 +527,6 @@
     <span class="doccomment">/// Constructs a default instance of [TranspositionTableEntry] with zeroed elements.
     </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         TranspositionTableEntry { key_data: AtomicU64::new(<span class="number">0</span>) }
-    }
-}
-
-<span class="kw">impl </span>Clone <span class="kw">for </span>TranspositionTableEntry {
-    <span class="doccomment">/// Clones [TranspositionTableEntry] by creating a new atomics (with the original values).
-    </span><span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ key_data: AtomicU64::new(<span class="self">self</span>.key_data.load(Ordering::Relaxed)) }
     }
 }
 

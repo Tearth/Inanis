@@ -905,6 +905,63 @@
 <a href="#903" id="903">903</a>
 <a href="#904" id="904">904</a>
 <a href="#905" id="905">905</a>
+<a href="#906" id="906">906</a>
+<a href="#907" id="907">907</a>
+<a href="#908" id="908">908</a>
+<a href="#909" id="909">909</a>
+<a href="#910" id="910">910</a>
+<a href="#911" id="911">911</a>
+<a href="#912" id="912">912</a>
+<a href="#913" id="913">913</a>
+<a href="#914" id="914">914</a>
+<a href="#915" id="915">915</a>
+<a href="#916" id="916">916</a>
+<a href="#917" id="917">917</a>
+<a href="#918" id="918">918</a>
+<a href="#919" id="919">919</a>
+<a href="#920" id="920">920</a>
+<a href="#921" id="921">921</a>
+<a href="#922" id="922">922</a>
+<a href="#923" id="923">923</a>
+<a href="#924" id="924">924</a>
+<a href="#925" id="925">925</a>
+<a href="#926" id="926">926</a>
+<a href="#927" id="927">927</a>
+<a href="#928" id="928">928</a>
+<a href="#929" id="929">929</a>
+<a href="#930" id="930">930</a>
+<a href="#931" id="931">931</a>
+<a href="#932" id="932">932</a>
+<a href="#933" id="933">933</a>
+<a href="#934" id="934">934</a>
+<a href="#935" id="935">935</a>
+<a href="#936" id="936">936</a>
+<a href="#937" id="937">937</a>
+<a href="#938" id="938">938</a>
+<a href="#939" id="939">939</a>
+<a href="#940" id="940">940</a>
+<a href="#941" id="941">941</a>
+<a href="#942" id="942">942</a>
+<a href="#943" id="943">943</a>
+<a href="#944" id="944">944</a>
+<a href="#945" id="945">945</a>
+<a href="#946" id="946">946</a>
+<a href="#947" id="947">947</a>
+<a href="#948" id="948">948</a>
+<a href="#949" id="949">949</a>
+<a href="#950" id="950">950</a>
+<a href="#951" id="951">951</a>
+<a href="#952" id="952">952</a>
+<a href="#953" id="953">953</a>
+<a href="#954" id="954">954</a>
+<a href="#955" id="955">955</a>
+<a href="#956" id="956">956</a>
+<a href="#957" id="957">957</a>
+<a href="#958" id="958">958</a>
+<a href="#959" id="959">959</a>
+<a href="#960" id="960">960</a>
+<a href="#961" id="961">961</a>
+<a href="#962" id="962">962</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::movegen::MagicContainer;
 <span class="kw">use </span><span class="kw">super</span>::movescan;
 <span class="kw">use </span><span class="kw">super</span>::movescan::Move;
@@ -962,6 +1019,7 @@
     <span class="kw">pub </span>state_stack: Vec&lt;BoardState&gt;,
     <span class="kw">pub </span>material_scores: [i16; <span class="number">2</span>],
     <span class="kw">pub </span>pst_scores: [[i16; <span class="number">2</span>]; <span class="number">2</span>],
+    <span class="kw">pub </span>pawn_attacks: [u64; <span class="number">2</span>],
     <span class="kw">pub </span>evaluation_parameters: Arc&lt;EvaluationParameters&gt;,
     <span class="kw">pub </span>zobrist: Arc&lt;ZobristContainer&gt;,
     <span class="kw">pub </span>patterns: Arc&lt;PatternsContainer&gt;,
@@ -977,6 +1035,7 @@
     <span class="kw">pub </span>hash: u64,
     <span class="kw">pub </span>pawn_hash: u64,
     <span class="kw">pub </span>captured_piece: usize,
+    <span class="kw">pub </span>pst_scores: [[i16; <span class="number">2</span>]; <span class="number">2</span>],
 }
 
 <span class="kw">impl </span>Board {
@@ -1011,6 +1070,7 @@
             state_stack: Vec::new(),
             material_scores: [<span class="number">0</span>; <span class="number">2</span>],
             pst_scores: [[<span class="number">0</span>, <span class="number">2</span>]; <span class="number">2</span>],
+            pawn_attacks: [<span class="number">0</span>; <span class="number">2</span>],
             evaluation_parameters,
             zobrist: zobrist_container,
             patterns: patterns_container,
@@ -1122,17 +1182,18 @@
 
         <span class="kw">match </span>flags {
             MoveFlags::SINGLE_PUSH =&gt; {
-                <span class="self">self</span>.move_piece(color, piece, from, to);
+                <span class="self">self</span>.move_piece::&lt;<span class="bool-val">false</span>&gt;(color, piece, from, to);
                 <span class="self">self</span>.hash ^= <span class="self">self</span>.zobrist.get_piece_hash(color, piece, from);
                 <span class="self">self</span>.hash ^= <span class="self">self</span>.zobrist.get_piece_hash(color, piece, to);
 
                 <span class="kw">if </span>piece == PAWN {
                     <span class="self">self</span>.pawn_hash ^= <span class="self">self</span>.zobrist.get_piece_hash(color, piece, from);
                     <span class="self">self</span>.pawn_hash ^= <span class="self">self</span>.zobrist.get_piece_hash(color, piece, to);
+                    <span class="self">self</span>.recalculate_pawn_attacks(color);
                 }
             }
             MoveFlags::DOUBLE_PUSH =&gt; {
-                <span class="self">self</span>.move_piece(color, piece, from, to);
+                <span class="self">self</span>.move_piece::&lt;<span class="bool-val">false</span>&gt;(color, piece, from, to);
                 <span class="self">self</span>.hash ^= <span class="self">self</span>.zobrist.get_piece_hash(color, piece, from);
                 <span class="self">self</span>.hash ^= <span class="self">self</span>.zobrist.get_piece_hash(color, piece, to);
 
@@ -1142,37 +1203,41 @@
                 <span class="kw">let </span>sign = (color <span class="kw">as </span>i8) * <span class="number">2 </span>- <span class="number">1</span>;
                 <span class="self">self</span>.en_passant = <span class="number">1u64 </span>&lt;&lt; ((to <span class="kw">as </span>i8) + sign * <span class="number">8</span>);
                 <span class="self">self</span>.hash ^= <span class="self">self</span>.zobrist.get_en_passant_hash(<span class="self">self</span>.en_passant.bit_scan() &amp; <span class="number">7</span>);
+
+                <span class="self">self</span>.recalculate_pawn_attacks(color);
             }
             MoveFlags::CAPTURE =&gt; {
                 <span class="self">self</span>.captured_piece = <span class="self">self</span>.get_piece(to);
-                <span class="self">self</span>.remove_piece(enemy_color, <span class="self">self</span>.captured_piece, to);
+                <span class="self">self</span>.remove_piece::&lt;<span class="bool-val">false</span>&gt;(enemy_color, <span class="self">self</span>.captured_piece, to);
                 <span class="self">self</span>.hash ^= <span class="self">self</span>.zobrist.get_piece_hash(enemy_color, <span class="self">self</span>.captured_piece, to);
 
                 <span class="kw">if </span><span class="self">self</span>.captured_piece == PAWN {
                     <span class="self">self</span>.pawn_hash ^= <span class="self">self</span>.zobrist.get_piece_hash(enemy_color, <span class="self">self</span>.captured_piece, to);
+                    <span class="self">self</span>.recalculate_pawn_attacks(enemy_color);
                 }
 
-                <span class="self">self</span>.move_piece(color, piece, from, to);
+                <span class="self">self</span>.move_piece::&lt;<span class="bool-val">false</span>&gt;(color, piece, from, to);
                 <span class="self">self</span>.hash ^= <span class="self">self</span>.zobrist.get_piece_hash(color, piece, from);
                 <span class="self">self</span>.hash ^= <span class="self">self</span>.zobrist.get_piece_hash(color, piece, to);
 
                 <span class="kw">if </span>piece == PAWN {
                     <span class="self">self</span>.pawn_hash ^= <span class="self">self</span>.zobrist.get_piece_hash(color, piece, from);
                     <span class="self">self</span>.pawn_hash ^= <span class="self">self</span>.zobrist.get_piece_hash(color, piece, to);
+                    <span class="self">self</span>.recalculate_pawn_attacks(color);
                 }
             }
             MoveFlags::SHORT_CASTLING =&gt; {
                 <span class="kw">let </span>king_from = <span class="number">3 </span>+ <span class="number">56 </span>* color;
                 <span class="kw">let </span>king_to = <span class="number">1 </span>+ <span class="number">56 </span>* color;
 
-                <span class="self">self</span>.move_piece(color, KING, king_from, king_to);
+                <span class="self">self</span>.move_piece::&lt;<span class="bool-val">false</span>&gt;(color, KING, king_from, king_to);
                 <span class="self">self</span>.hash ^= <span class="self">self</span>.zobrist.get_piece_hash(color, KING, king_from);
                 <span class="self">self</span>.hash ^= <span class="self">self</span>.zobrist.get_piece_hash(color, KING, king_to);
 
                 <span class="kw">let </span>rook_from = <span class="number">0 </span>+ <span class="number">56 </span>* color;
                 <span class="kw">let </span>rook_to = <span class="number">2 </span>+ <span class="number">56 </span>* color;
 
-                <span class="self">self</span>.move_piece(color, ROOK, rook_from, rook_to);
+                <span class="self">self</span>.move_piece::&lt;<span class="bool-val">false</span>&gt;(color, ROOK, rook_from, rook_to);
                 <span class="self">self</span>.hash ^= <span class="self">self</span>.zobrist.get_piece_hash(color, ROOK, rook_from);
                 <span class="self">self</span>.hash ^= <span class="self">self</span>.zobrist.get_piece_hash(color, ROOK, rook_to);
             }
@@ -1180,19 +1245,19 @@
                 <span class="kw">let </span>king_from = <span class="number">3 </span>+ <span class="number">56 </span>* color;
                 <span class="kw">let </span>king_to = <span class="number">5 </span>+ <span class="number">56 </span>* color;
 
-                <span class="self">self</span>.move_piece(color, KING, king_from, king_to);
+                <span class="self">self</span>.move_piece::&lt;<span class="bool-val">false</span>&gt;(color, KING, king_from, king_to);
                 <span class="self">self</span>.hash ^= <span class="self">self</span>.zobrist.get_piece_hash(color, KING, king_from);
                 <span class="self">self</span>.hash ^= <span class="self">self</span>.zobrist.get_piece_hash(color, KING, king_to);
 
                 <span class="kw">let </span>rook_from = <span class="number">7 </span>+ <span class="number">56 </span>* color;
                 <span class="kw">let </span>rook_to = <span class="number">4 </span>+ <span class="number">56 </span>* color;
 
-                <span class="self">self</span>.move_piece(color, ROOK, rook_from, rook_to);
+                <span class="self">self</span>.move_piece::&lt;<span class="bool-val">false</span>&gt;(color, ROOK, rook_from, rook_to);
                 <span class="self">self</span>.hash ^= <span class="self">self</span>.zobrist.get_piece_hash(color, ROOK, rook_from);
                 <span class="self">self</span>.hash ^= <span class="self">self</span>.zobrist.get_piece_hash(color, ROOK, rook_to);
             }
             MoveFlags::EN_PASSANT =&gt; {
-                <span class="self">self</span>.move_piece(color, piece, from, to);
+                <span class="self">self</span>.move_piece::&lt;<span class="bool-val">false</span>&gt;(color, piece, from, to);
                 <span class="self">self</span>.hash ^= <span class="self">self</span>.zobrist.get_piece_hash(color, piece, from);
                 <span class="self">self</span>.hash ^= <span class="self">self</span>.zobrist.get_piece_hash(color, piece, to);
 
@@ -1202,24 +1267,29 @@
                 <span class="kw">let </span>sign = (color <span class="kw">as </span>isize) * <span class="number">2 </span>- <span class="number">1</span>;
                 <span class="kw">let </span>enemy_pawn_square = ((to <span class="kw">as </span>isize) + sign * <span class="number">8</span>) <span class="kw">as </span>usize;
 
-                <span class="self">self</span>.remove_piece(enemy_color, PAWN, enemy_pawn_square);
+                <span class="self">self</span>.remove_piece::&lt;<span class="bool-val">false</span>&gt;(enemy_color, PAWN, enemy_pawn_square);
                 <span class="self">self</span>.hash ^= <span class="self">self</span>.zobrist.get_piece_hash(enemy_color, piece, enemy_pawn_square);
                 <span class="self">self</span>.pawn_hash ^= <span class="self">self</span>.zobrist.get_piece_hash(enemy_color, piece, enemy_pawn_square);
+
+                <span class="self">self</span>.recalculate_pawn_attacks(color);
+                <span class="self">self</span>.recalculate_pawn_attacks(enemy_color);
             }
             <span class="kw">_ </span>=&gt; {
                 <span class="kw">let </span>promotion_piece = r#move.get_promotion_piece();
                 <span class="kw">if </span>flags.contains(MoveFlags::CAPTURE) {
                     <span class="self">self</span>.captured_piece = <span class="self">self</span>.get_piece(to);
-                    <span class="self">self</span>.remove_piece(enemy_color, <span class="self">self</span>.captured_piece, to);
+                    <span class="self">self</span>.remove_piece::&lt;<span class="bool-val">false</span>&gt;(enemy_color, <span class="self">self</span>.captured_piece, to);
                     <span class="self">self</span>.hash ^= <span class="self">self</span>.zobrist.get_piece_hash(enemy_color, <span class="self">self</span>.captured_piece, to);
                 }
 
-                <span class="self">self</span>.remove_piece(color, PAWN, from);
+                <span class="self">self</span>.remove_piece::&lt;<span class="bool-val">false</span>&gt;(color, PAWN, from);
                 <span class="self">self</span>.hash ^= <span class="self">self</span>.zobrist.get_piece_hash(color, PAWN, from);
                 <span class="self">self</span>.pawn_hash ^= <span class="self">self</span>.zobrist.get_piece_hash(color, PAWN, from);
 
-                <span class="self">self</span>.add_piece(color, promotion_piece, to);
+                <span class="self">self</span>.add_piece::&lt;<span class="bool-val">false</span>&gt;(color, promotion_piece, to);
                 <span class="self">self</span>.hash ^= <span class="self">self</span>.zobrist.get_piece_hash(color, promotion_piece, to);
+
+                <span class="self">self</span>.recalculate_pawn_attacks(color);
             }
         }
 
@@ -1242,6 +1312,8 @@
 
             <span class="self">self</span>.pawn_hash ^= <span class="self">self</span>.zobrist.get_piece_hash(color, KING, from);
             <span class="self">self</span>.pawn_hash ^= <span class="self">self</span>.zobrist.get_piece_hash(color, KING, to);
+
+            pst::recalculate_incremental_values(<span class="self">self</span>);
         } <span class="kw">else if </span>piece == ROOK {
             <span class="kw">match </span>color {
                 WHITE =&gt; <span class="kw">match </span>from {
@@ -1330,36 +1402,52 @@
 
         <span class="kw">match </span>flags {
             MoveFlags::SINGLE_PUSH =&gt; {
-                <span class="self">self</span>.move_piece(color, piece, to, from);
+                <span class="self">self</span>.move_piece::&lt;<span class="bool-val">true</span>&gt;(color, piece, to, from);
+
+                <span class="kw">if </span>piece == PAWN {
+                    <span class="self">self</span>.recalculate_pawn_attacks(color);
+                }
             }
             MoveFlags::DOUBLE_PUSH =&gt; {
-                <span class="self">self</span>.move_piece(color, piece, to, from);
+                <span class="self">self</span>.move_piece::&lt;<span class="bool-val">true</span>&gt;(color, piece, to, from);
+                <span class="self">self</span>.recalculate_pawn_attacks(color);
             }
             MoveFlags::CAPTURE =&gt; {
-                <span class="self">self</span>.move_piece(color, piece, to, from);
-                <span class="self">self</span>.add_piece(enemy_color, <span class="self">self</span>.captured_piece, to);
+                <span class="self">self</span>.move_piece::&lt;<span class="bool-val">true</span>&gt;(color, piece, to, from);
+                <span class="self">self</span>.add_piece::&lt;<span class="bool-val">true</span>&gt;(enemy_color, <span class="self">self</span>.captured_piece, to);
+
+                <span class="kw">if </span>piece == PAWN {
+                    <span class="self">self</span>.recalculate_pawn_attacks(color);
+                }
+
+                <span class="kw">if </span><span class="self">self</span>.captured_piece == PAWN {
+                    <span class="self">self</span>.recalculate_pawn_attacks(enemy_color);
+                }
             }
             MoveFlags::SHORT_CASTLING =&gt; {
-                <span class="self">self</span>.move_piece(color, KING, <span class="number">1 </span>+ <span class="number">56 </span>* color, <span class="number">3 </span>+ <span class="number">56 </span>* color);
-                <span class="self">self</span>.move_piece(color, ROOK, <span class="number">2 </span>+ <span class="number">56 </span>* color, <span class="number">0 </span>+ <span class="number">56 </span>* color);
+                <span class="self">self</span>.move_piece::&lt;<span class="bool-val">true</span>&gt;(color, KING, <span class="number">1 </span>+ <span class="number">56 </span>* color, <span class="number">3 </span>+ <span class="number">56 </span>* color);
+                <span class="self">self</span>.move_piece::&lt;<span class="bool-val">true</span>&gt;(color, ROOK, <span class="number">2 </span>+ <span class="number">56 </span>* color, <span class="number">0 </span>+ <span class="number">56 </span>* color);
             }
             MoveFlags::LONG_CASTLING =&gt; {
-                <span class="self">self</span>.move_piece(color, KING, <span class="number">5 </span>+ <span class="number">56 </span>* color, <span class="number">3 </span>+ <span class="number">56 </span>* color);
-                <span class="self">self</span>.move_piece(color, ROOK, <span class="number">4 </span>+ <span class="number">56 </span>* color, <span class="number">7 </span>+ <span class="number">56 </span>* color);
+                <span class="self">self</span>.move_piece::&lt;<span class="bool-val">true</span>&gt;(color, KING, <span class="number">5 </span>+ <span class="number">56 </span>* color, <span class="number">3 </span>+ <span class="number">56 </span>* color);
+                <span class="self">self</span>.move_piece::&lt;<span class="bool-val">true</span>&gt;(color, ROOK, <span class="number">4 </span>+ <span class="number">56 </span>* color, <span class="number">7 </span>+ <span class="number">56 </span>* color);
             }
             MoveFlags::EN_PASSANT =&gt; {
                 <span class="kw">let </span>sign = (color <span class="kw">as </span>isize) * <span class="number">2 </span>- <span class="number">1</span>;
                 <span class="kw">let </span>enemy_pawn_square = ((to <span class="kw">as </span>isize) + sign * <span class="number">8</span>) <span class="kw">as </span>usize;
 
-                <span class="self">self</span>.move_piece(color, piece, to, from);
-                <span class="self">self</span>.add_piece(enemy_color, PAWN, enemy_pawn_square);
+                <span class="self">self</span>.move_piece::&lt;<span class="bool-val">true</span>&gt;(color, piece, to, from);
+                <span class="self">self</span>.add_piece::&lt;<span class="bool-val">true</span>&gt;(enemy_color, PAWN, enemy_pawn_square);
+                <span class="self">self</span>.recalculate_pawn_attacks(color);
+                <span class="self">self</span>.recalculate_pawn_attacks(enemy_color);
             }
             <span class="kw">_ </span>=&gt; {
-                <span class="self">self</span>.add_piece(color, PAWN, from);
-                <span class="self">self</span>.remove_piece(color, piece, to);
+                <span class="self">self</span>.add_piece::&lt;<span class="bool-val">true</span>&gt;(color, PAWN, from);
+                <span class="self">self</span>.remove_piece::&lt;<span class="bool-val">true</span>&gt;(color, piece, to);
+                <span class="self">self</span>.recalculate_pawn_attacks(color);
 
                 <span class="kw">if </span>flags.contains(MoveFlags::CAPTURE) {
-                    <span class="self">self</span>.add_piece(enemy_color, <span class="self">self</span>.captured_piece, to);
+                    <span class="self">self</span>.add_piece::&lt;<span class="bool-val">true</span>&gt;(enemy_color, <span class="self">self</span>.captured_piece, to);
                 }
             }
         }
@@ -1416,7 +1504,15 @@
 
     <span class="doccomment">/// Preserves halfmove clock, castling rights, en passant bitboard, board hash, pawn hash and captured piece on the stack
     </span><span class="kw">pub fn </span>push_state(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="self">self</span>.state_stack.push(BoardState::new(<span class="self">self</span>.halfmove_clock, <span class="self">self</span>.castling_rights, <span class="self">self</span>.en_passant, <span class="self">self</span>.hash, <span class="self">self</span>.pawn_hash, <span class="self">self</span>.captured_piece));
+        <span class="self">self</span>.state_stack.push(BoardState::new(
+            <span class="self">self</span>.halfmove_clock,
+            <span class="self">self</span>.castling_rights,
+            <span class="self">self</span>.en_passant,
+            <span class="self">self</span>.hash,
+            <span class="self">self</span>.pawn_hash,
+            <span class="self">self</span>.captured_piece,
+            <span class="self">self</span>.pst_scores,
+        ));
     }
 
     <span class="doccomment">/// Restores halfmove clock, castling rights, en passant bitboard, board hash, pawn hash and captured piece from the stack
@@ -1428,6 +1524,7 @@
         <span class="self">self</span>.hash = state.hash;
         <span class="self">self</span>.pawn_hash = state.pawn_hash;
         <span class="self">self</span>.captured_piece = state.captured_piece;
+        <span class="self">self</span>.pst_scores = state.pst_scores;
     }
 
     <span class="doccomment">/// Checks if the square specified by `square` is attacked by enemy, from the `color` perspective.
@@ -1460,14 +1557,7 @@
         }
 
         <span class="kw">let </span>square_bb = <span class="number">1u64 </span>&lt;&lt; square;
-        <span class="kw">let </span>potential_enemy_pawns_bb = king_attacks_bb &amp; <span class="self">self</span>.pieces[enemy_color][PAWN];
-        <span class="kw">let </span>attacking_enemy_pawns_bb = <span class="kw">match </span>color {
-            WHITE =&gt; square_bb &amp; ((potential_enemy_pawns_bb &gt;&gt; <span class="number">7</span>) | (potential_enemy_pawns_bb &gt;&gt; <span class="number">9</span>)),
-            BLACK =&gt; square_bb &amp; ((potential_enemy_pawns_bb &lt;&lt; <span class="number">7</span>) | (potential_enemy_pawns_bb &lt;&lt; <span class="number">9</span>)),
-            <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">"Invalid parameter: fen={}, color={}"</span>, <span class="self">self</span>, color),
-        };
-
-        <span class="kw">if </span>attacking_enemy_pawns_bb != <span class="number">0 </span>{
+        <span class="kw">if </span>(<span class="self">self</span>.pawn_attacks[enemy_color] &amp; square_bb) != <span class="number">0 </span>{
             <span class="kw">return </span><span class="bool-val">true</span>;
         }
 
@@ -1525,12 +1615,7 @@
         result |= attacking_queens_count &lt;&lt; <span class="number">6</span>;
 
         <span class="kw">let </span>square_bb = <span class="number">1u64 </span>&lt;&lt; square;
-        <span class="kw">let </span>potential_enemy_pawns_bb = king_attacks_bb &amp; <span class="self">self</span>.pieces[enemy_color][PAWN];
-        <span class="kw">let </span>attacking_pawns_count = (<span class="kw">match </span>color {
-            WHITE =&gt; square_bb &amp; ((potential_enemy_pawns_bb &gt;&gt; <span class="number">7</span>) | (potential_enemy_pawns_bb &gt;&gt; <span class="number">9</span>)),
-            BLACK =&gt; square_bb &amp; ((potential_enemy_pawns_bb &lt;&lt; <span class="number">7</span>) | (potential_enemy_pawns_bb &lt;&lt; <span class="number">9</span>)),
-            <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">"Invalid parameter: fen={}, color={}"</span>, <span class="self">self</span>, color),
-        } != <span class="number">0</span>) <span class="kw">as </span>usize;
+        <span class="kw">let </span>attacking_pawns_count = ((<span class="self">self</span>.pawn_attacks[enemy_color] &amp; square_bb) != <span class="number">0</span>) <span class="kw">as </span>usize;
 
         result |= attacking_pawns_count;
         result
@@ -1566,41 +1651,50 @@
     }
 
     <span class="doccomment">/// Adds `piece` on the `square` with the specified `color`, also updates occupancy and incremental values.
-    </span><span class="kw">pub fn </span>add_piece(<span class="kw-2">&amp;mut </span><span class="self">self</span>, color: usize, piece: usize, square: usize) {
+    </span><span class="kw">pub fn </span>add_piece&lt;<span class="kw">const </span>UNDO: bool&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, color: usize, piece: usize, square: usize) {
         <span class="self">self</span>.pieces[color][piece] |= <span class="number">1u64 </span>&lt;&lt; square;
         <span class="self">self</span>.occupancy[color] |= <span class="number">1u64 </span>&lt;&lt; square;
         <span class="self">self</span>.piece_table[square] = piece <span class="kw">as </span>u8;
         <span class="self">self</span>.material_scores[color] += <span class="self">self</span>.evaluation_parameters.piece_value[piece];
         <span class="self">self</span>.game_phase += <span class="self">self</span>.evaluation_parameters.piece_phase_value[piece];
 
-        <span class="self">self</span>.pst_scores[color][OPENING] += <span class="self">self</span>.evaluation_parameters.get_pst_value(color, piece, OPENING, square);
-        <span class="self">self</span>.pst_scores[color][ENDING] += <span class="self">self</span>.evaluation_parameters.get_pst_value(color, piece, ENDING, square);
+        <span class="kw">if </span>!UNDO {
+            <span class="kw">let </span>king_file = <span class="self">self</span>.pieces[color][KING].bit_scan() &amp; <span class="number">7</span>;
+            <span class="self">self</span>.pst_scores[color][OPENING] += <span class="self">self</span>.evaluation_parameters.get_pst_value(color, piece, king_file, OPENING, square);
+            <span class="self">self</span>.pst_scores[color][ENDING] += <span class="self">self</span>.evaluation_parameters.get_pst_value(color, piece, king_file, ENDING, square);
+        }
     }
 
     <span class="doccomment">/// Removes `piece` on the `square` with the specified `color`, also updates occupancy and incremental values.
-    </span><span class="kw">pub fn </span>remove_piece(<span class="kw-2">&amp;mut </span><span class="self">self</span>, color: usize, piece: usize, square: usize) {
+    </span><span class="kw">pub fn </span>remove_piece&lt;<span class="kw">const </span>UNDO: bool&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, color: usize, piece: usize, square: usize) {
         <span class="self">self</span>.pieces[color][piece] &amp;= !(<span class="number">1u64 </span>&lt;&lt; square);
         <span class="self">self</span>.occupancy[color] &amp;= !(<span class="number">1u64 </span>&lt;&lt; square);
         <span class="self">self</span>.piece_table[square] = u8::MAX;
         <span class="self">self</span>.material_scores[color] -= <span class="self">self</span>.evaluation_parameters.piece_value[piece];
         <span class="self">self</span>.game_phase -= <span class="self">self</span>.evaluation_parameters.piece_phase_value[piece];
 
-        <span class="self">self</span>.pst_scores[color][OPENING] -= <span class="self">self</span>.evaluation_parameters.get_pst_value(color, piece, OPENING, square);
-        <span class="self">self</span>.pst_scores[color][ENDING] -= <span class="self">self</span>.evaluation_parameters.get_pst_value(color, piece, ENDING, square);
+        <span class="kw">if </span>!UNDO {
+            <span class="kw">let </span>king_file = <span class="self">self</span>.pieces[color][KING].bit_scan() &amp; <span class="number">7</span>;
+            <span class="self">self</span>.pst_scores[color][OPENING] -= <span class="self">self</span>.evaluation_parameters.get_pst_value(color, piece, king_file, OPENING, square);
+            <span class="self">self</span>.pst_scores[color][ENDING] -= <span class="self">self</span>.evaluation_parameters.get_pst_value(color, piece, king_file, ENDING, square);
+        }
     }
 
     <span class="doccomment">/// Moves `piece` from the square specified by `from` to the square specified by `to` with the specified `color`, also updates occupancy and incremental values.
-    </span><span class="kw">pub fn </span>move_piece(<span class="kw-2">&amp;mut </span><span class="self">self</span>, color: usize, piece: usize, from: usize, to: usize) {
+    </span><span class="kw">pub fn </span>move_piece&lt;<span class="kw">const </span>UNDO: bool&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, color: usize, piece: usize, from: usize, to: usize) {
         <span class="self">self</span>.pieces[color][piece] ^= (<span class="number">1u64 </span>&lt;&lt; from) | (<span class="number">1u64 </span>&lt;&lt; to);
         <span class="self">self</span>.occupancy[color] ^= (<span class="number">1u64 </span>&lt;&lt; from) | (<span class="number">1u64 </span>&lt;&lt; to);
 
         <span class="self">self</span>.piece_table[to] = <span class="self">self</span>.piece_table[from];
         <span class="self">self</span>.piece_table[from] = u8::MAX;
 
-        <span class="self">self</span>.pst_scores[color][OPENING] -= <span class="self">self</span>.evaluation_parameters.get_pst_value(color, piece, OPENING, from);
-        <span class="self">self</span>.pst_scores[color][ENDING] -= <span class="self">self</span>.evaluation_parameters.get_pst_value(color, piece, ENDING, from);
-        <span class="self">self</span>.pst_scores[color][OPENING] += <span class="self">self</span>.evaluation_parameters.get_pst_value(color, piece, OPENING, to);
-        <span class="self">self</span>.pst_scores[color][ENDING] += <span class="self">self</span>.evaluation_parameters.get_pst_value(color, piece, ENDING, to);
+        <span class="kw">if </span>!UNDO {
+            <span class="kw">let </span>king_file = <span class="self">self</span>.pieces[color][KING].bit_scan() &amp; <span class="number">7</span>;
+            <span class="self">self</span>.pst_scores[color][OPENING] -= <span class="self">self</span>.evaluation_parameters.get_pst_value(color, piece, king_file, OPENING, from);
+            <span class="self">self</span>.pst_scores[color][ENDING] -= <span class="self">self</span>.evaluation_parameters.get_pst_value(color, piece, king_file, ENDING, from);
+            <span class="self">self</span>.pst_scores[color][OPENING] += <span class="self">self</span>.evaluation_parameters.get_pst_value(color, piece, king_file, OPENING, to);
+            <span class="self">self</span>.pst_scores[color][ENDING] += <span class="self">self</span>.evaluation_parameters.get_pst_value(color, piece, king_file, ENDING, to);
+        }
     }
 
     <span class="doccomment">/// Recalculates board's hashes entirely.
@@ -1609,21 +1703,33 @@
         zobrist::recalculate_pawn_hash(<span class="self">self</span>);
     }
 
+    <span class="doccomment">/// Recalculate pawn attacks for the specific `color`.
+    </span><span class="kw">pub fn </span>recalculate_pawn_attacks(<span class="kw-2">&amp;mut </span><span class="self">self</span>, color: usize) {
+        <span class="kw">let </span>pawns_bb = <span class="self">self</span>.pieces[color][PAWN];
+        <span class="self">self</span>.pawn_attacks[color] = <span class="kw">match </span>color {
+            WHITE =&gt; ((pawns_bb &amp; !FILE_A_BB) &lt;&lt; <span class="number">9</span>) | ((pawns_bb &amp; !FILE_H_BB) &lt;&lt; <span class="number">7</span>),
+            BLACK =&gt; ((pawns_bb &amp; !FILE_A_BB) &gt;&gt; <span class="number">7</span>) | ((pawns_bb &amp; !FILE_H_BB) &gt;&gt; <span class="number">9</span>),
+            <span class="kw">_ </span>=&gt; {
+                <span class="macro">panic!</span>(<span class="string">"Invalid value: color={}"</span>, color);
+            }
+        };
+    }
+
     <span class="doccomment">/// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position, using `pawn_hashtable` to store pawn
     /// evaluations and `statistics` to gather diagnostic data. Returns score from the `color` perspective (more than 0 when advantage, less than 0 when disadvantage).
     </span><span class="kw">pub fn </span>evaluate&lt;<span class="kw">const </span>DIAG: bool&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, color: usize, pawn_hashtable: <span class="kw-2">&amp;</span>PawnHashTable, statistics: <span class="kw-2">&amp;mut </span>SearchStatistics) -&gt; i16 {
-        <span class="kw">let </span><span class="kw-2">mut </span>dangered_white_king_squares = <span class="number">0</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>dangered_black_king_squares = <span class="number">0</span>;
-        <span class="kw">let </span>mobility_score = mobility::evaluate(<span class="self">self</span>, <span class="kw-2">&amp;mut </span>dangered_white_king_squares, <span class="kw-2">&amp;mut </span>dangered_black_king_squares);
-
         <span class="kw">let </span>game_phase = <span class="self">self</span>.game_phase;
         <span class="kw">let </span>initial_game_phase = <span class="self">self</span>.evaluation_parameters.initial_game_phase;
-        <span class="kw">let </span>evaluation = <span class="number">0
-            </span>+ material::evaluate(<span class="self">self</span>)
-            + pst::evaluate(<span class="self">self</span>)
-            + pawns::evaluate::&lt;DIAG&gt;(<span class="self">self</span>, pawn_hashtable, statistics)
-            + safety::evaluate(<span class="self">self</span>, dangered_white_king_squares, dangered_black_king_squares)
-            + mobility_score;
+        <span class="kw">let </span><span class="kw-2">mut </span>dangered_white_king_squares = <span class="number">0</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>dangered_black_king_squares = <span class="number">0</span>;
+
+        <span class="kw">let </span>material_evaluation = material::evaluate(<span class="self">self</span>);
+        <span class="kw">let </span>pst_evaluation = pst::evaluate(<span class="self">self</span>);
+        <span class="kw">let </span>mobility_evaluation = mobility::evaluate(<span class="self">self</span>, <span class="kw-2">&amp;mut </span>dangered_white_king_squares, <span class="kw-2">&amp;mut </span>dangered_black_king_squares);
+        <span class="kw">let </span>safety_evaluation = safety::evaluate(<span class="self">self</span>, dangered_white_king_squares, dangered_black_king_squares);
+        <span class="kw">let </span>pawns_evaluation = pawns::evaluate::&lt;DIAG&gt;(<span class="self">self</span>, pawn_hashtable, statistics);
+
+        <span class="kw">let </span>evaluation = material_evaluation + pst_evaluation + mobility_evaluation + safety_evaluation + pawns_evaluation;
         <span class="kw">let </span>sign = -((color <span class="kw">as </span>i16) * <span class="number">2 </span>- <span class="number">1</span>);
 
         sign * evaluation.taper_score(game_phase, initial_game_phase)
@@ -1632,18 +1738,18 @@
     <span class="doccomment">/// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position.
     /// Returns score from the `color` perspective (more than 0 when advantage, less than 0 when disadvantage).
     </span><span class="kw">pub fn </span>evaluate_without_cache(<span class="kw-2">&amp;</span><span class="self">self</span>, color: usize) -&gt; i16 {
-        <span class="kw">let </span><span class="kw-2">mut </span>dangered_white_king_squares = <span class="number">0</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>dangered_black_king_squares = <span class="number">0</span>;
-        <span class="kw">let </span>mobility_score = mobility::evaluate(<span class="self">self</span>, <span class="kw-2">&amp;mut </span>dangered_white_king_squares, <span class="kw-2">&amp;mut </span>dangered_black_king_squares);
-
         <span class="kw">let </span>game_phase = <span class="self">self</span>.game_phase;
         <span class="kw">let </span>initial_game_phase = <span class="self">self</span>.evaluation_parameters.initial_game_phase;
-        <span class="kw">let </span>evaluation = <span class="number">0
-            </span>+ material::evaluate(<span class="self">self</span>)
-            + pst::evaluate(<span class="self">self</span>)
-            + pawns::evaluate_without_cache(<span class="self">self</span>)
-            + safety::evaluate(<span class="self">self</span>, dangered_white_king_squares, dangered_black_king_squares)
-            + mobility_score;
+        <span class="kw">let </span><span class="kw-2">mut </span>dangered_white_king_squares = <span class="number">0</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>dangered_black_king_squares = <span class="number">0</span>;
+
+        <span class="kw">let </span>material_evaluation = material::evaluate(<span class="self">self</span>);
+        <span class="kw">let </span>pst_evaluation = pst::evaluate(<span class="self">self</span>);
+        <span class="kw">let </span>mobility_evaluation = mobility::evaluate(<span class="self">self</span>, <span class="kw-2">&amp;mut </span>dangered_white_king_squares, <span class="kw-2">&amp;mut </span>dangered_black_king_squares);
+        <span class="kw">let </span>safety_evaluation = safety::evaluate(<span class="self">self</span>, dangered_white_king_squares, dangered_black_king_squares);
+        <span class="kw">let </span>pawns_evaluation = pawns::evaluate_without_cache(<span class="self">self</span>);
+
+        <span class="kw">let </span>evaluation = material_evaluation + pst_evaluation + mobility_evaluation + safety_evaluation + pawns_evaluation;
         <span class="kw">let </span>sign = -((color <span class="kw">as </span>i16) * <span class="number">2 </span>- <span class="number">1</span>);
 
         sign * evaluation.taper_score(game_phase, initial_game_phase)
@@ -1806,8 +1912,16 @@
 
 <span class="kw">impl </span>BoardState {
     <span class="doccomment">/// Constructs a new instance of [BoardState] with stored `halfmove_clock`, `castling_rights`, `en_passant`, `hash`, `pawn_hash` and `captured_piece`.
-    </span><span class="kw">pub fn </span>new(halfmove_clock: u16, castling_rights: u8, en_passant: u64, hash: u64, pawn_hash: u64, captured_piece: usize) -&gt; BoardState {
-        BoardState { halfmove_clock, castling_rights, en_passant, hash, pawn_hash, captured_piece }
+    </span><span class="kw">pub fn </span>new(
+        halfmove_clock: u16,
+        castling_rights: u8,
+        en_passant: u64,
+        hash: u64,
+        pawn_hash: u64,
+        captured_piece: usize,
+        pst_scores: [[i16; <span class="number">2</span>]; <span class="number">2</span>],
+    ) -&gt; BoardState {
+        BoardState { halfmove_clock, castling_rights, en_passant, hash, pawn_hash, captured_piece, pst_scores }
     }
 }
 </code></pre></div></section></main></body></html>

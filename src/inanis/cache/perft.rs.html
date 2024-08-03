@@ -127,14 +127,6 @@
 <a href="#125" id="125">125</a>
 <a href="#126" id="126">126</a>
 <a href="#127" id="127">127</a>
-<a href="#128" id="128">128</a>
-<a href="#129" id="129">129</a>
-<a href="#130" id="130">130</a>
-<a href="#131" id="131">131</a>
-<a href="#132" id="132">132</a>
-<a href="#133" id="133">133</a>
-<a href="#134" id="134">134</a>
-<a href="#135" id="135">135</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::utils::percent;
 <span class="kw">use </span>std::mem;
 <span class="kw">use </span>std::sync::atomic::AtomicU64;
@@ -147,8 +139,7 @@
     <span class="kw">pub </span>table: Vec&lt;PerftHashTableBucket&gt;,
 }
 
-<span class="attr">#[derive(Clone)]
-#[repr(align(<span class="number">64</span>))]
+<span class="attr">#[repr(align(<span class="number">64</span>))]
 </span><span class="kw">pub struct </span>PerftHashTableBucket {
     <span class="kw">pub </span>entries: [PerftHashTableEntry; BUCKET_SLOTS],
 }
@@ -170,7 +161,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>hashtable = <span class="self">Self </span>{ table: Vec::with_capacity(aligned_size / bucket_size) };
 
         <span class="kw">if </span>aligned_size != <span class="number">0 </span>{
-            hashtable.table.resize(hashtable.table.capacity(), Default::default());
+            hashtable.table.resize_with(hashtable.table.capacity(), Default::default);
         }
 
         hashtable
@@ -254,13 +245,6 @@
     <span class="doccomment">/// Constructs a default instance of [PerftHashTableEntry] with zeroed elements.
     </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ key: AtomicU64::new(<span class="number">0</span>), data: AtomicU64::new(<span class="number">0</span>) }
-    }
-}
-
-<span class="kw">impl </span>Clone <span class="kw">for </span>PerftHashTableEntry {
-    <span class="doccomment">/// Clones [PerftHashTableEntry] by creating a new atomics (with the original values).
-    </span><span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ key: AtomicU64::new(<span class="self">self</span>.key.load(Ordering::Relaxed)), data: AtomicU64::new(<span class="self">self</span>.data.load(Ordering::Relaxed)) }
     }
 }
 

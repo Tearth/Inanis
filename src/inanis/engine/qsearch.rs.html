@@ -148,12 +148,14 @@
 <a href="#146" id="146">146</a>
 <a href="#147" id="147">147</a>
 <a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::context::SearchContext;
 <span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::state::movescan::Move;
 <span class="kw">use </span><span class="kw">crate</span>::state::movescan::MoveFlags;
 <span class="kw">use </span><span class="kw">crate</span>::state::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::utils::conditional_expression;
+<span class="kw">use </span><span class="kw">crate</span>::utils::parameter;
 <span class="kw">use </span>std::cmp;
 <span class="kw">use </span>std::mem::MaybeUninit;
 
@@ -287,13 +289,13 @@
 <span class="doccomment">/// Checks if the score pruning can be applied for `move_score`. The main idea here is to omit all capture sequances, which are clearly
 /// loosing material (`move_score` is less than [q_score_pruning_treshold]) and with high probability won't improve alpha.
 </span><span class="kw">fn </span>score_pruning_can_be_applied(context: <span class="kw-2">&amp;</span>SearchContext, move_score: i16) -&gt; bool {
-    move_score &lt; context.parameters.q_score_pruning_treshold
+    move_score &lt; <span class="macro">parameter!</span>(context.parameters.q_score_pruning_treshold)
 }
 
 <span class="doccomment">/// Checks if the futility pruning can be applied for `move_score`. The main idea here is similar to score pruning, but instead of checking
 /// if the specified capture sequence loses some material or not, it checks if the final result added to the `stand_pat` and [q_futility_pruning_margin]
 /// will be below alpha - if yes, then we can safely assume that this move is not enough good to be relevant for the search.
 </span><span class="kw">fn </span>futility_pruning_can_be_applied(context: <span class="kw-2">&amp;</span>SearchContext, move_score: i16, stand_pat: i16, alpha: i16) -&gt; bool {
-    stand_pat + move_score + context.parameters.q_futility_pruning_margin &lt; alpha
+    stand_pat + move_score + <span class="macro">parameter!</span>(context.parameters.q_futility_pruning_margin) &lt; alpha
 }
 </code></pre></div></section></main></body></html>

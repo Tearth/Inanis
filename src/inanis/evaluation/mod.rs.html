@@ -156,6 +156,8 @@
 <a href="#154" id="154">154</a>
 <a href="#155" id="155">155</a>
 <a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::state::<span class="kw-2">*</span>;
 <span class="kw">use </span>std::ops;
 
@@ -200,8 +202,8 @@
     <span class="kw">pub </span>king_attacked_squares_opening: [i16; <span class="number">8</span>],
     <span class="kw">pub </span>king_attacked_squares_ending: [i16; <span class="number">8</span>],
 
-    <span class="kw">pub </span>pst: [[[[i16; <span class="number">64</span>]; <span class="number">2</span>]; <span class="number">6</span>]; <span class="number">2</span>],
-    <span class="kw">pub </span>pst_patterns: [[[i16; <span class="number">64</span>]; <span class="number">2</span>]; <span class="number">6</span>],
+    <span class="kw">pub </span>pst: Box&lt;[[[[[i16; <span class="number">64</span>]; <span class="number">2</span>]; <span class="number">8</span>]; <span class="number">6</span>]; <span class="number">2</span>]&gt;,
+    <span class="kw">pub </span>pst_patterns: Box&lt;[[[[i16; <span class="number">64</span>]; <span class="number">2</span>]; <span class="number">8</span>]; <span class="number">6</span>]&gt;,
 
     <span class="kw">pub </span>piece_phase_value: [u8; <span class="number">6</span>],
     <span class="kw">pub </span>initial_game_phase: u8,
@@ -215,20 +217,22 @@
 <span class="kw">impl </span>EvaluationParameters {
     <span class="doccomment">/// Initializes PST patterns with used by default during search.
     </span><span class="kw">fn </span>set_default_pst_patterns(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="self">self</span>.pst_patterns[PAWN] = <span class="self">self</span>.get_pawn_pst_pattern();
-        <span class="self">self</span>.pst_patterns[KNIGHT] = <span class="self">self</span>.get_knight_pst_pattern();
-        <span class="self">self</span>.pst_patterns[BISHOP] = <span class="self">self</span>.get_bishop_pst_pattern();
-        <span class="self">self</span>.pst_patterns[ROOK] = <span class="self">self</span>.get_rook_pst_pattern();
-        <span class="self">self</span>.pst_patterns[QUEEN] = <span class="self">self</span>.get_queen_pst_pattern();
-        <span class="self">self</span>.pst_patterns[KING] = <span class="self">self</span>.get_king_pst_pattern();
+        <span class="self">self</span>.pst_patterns[PAWN] = <span class="self">Self</span>::PAWN_PST_PATTERN;
+        <span class="self">self</span>.pst_patterns[KNIGHT] = <span class="self">Self</span>::KNIGHT_PST_PATTERN;
+        <span class="self">self</span>.pst_patterns[BISHOP] = <span class="self">Self</span>::BISHOP_PST_PATTERN;
+        <span class="self">self</span>.pst_patterns[ROOK] = <span class="self">Self</span>::ROOK_PST_PATTERN;
+        <span class="self">self</span>.pst_patterns[QUEEN] = <span class="self">Self</span>::QUEEN_PST_PATTERN;
+        <span class="self">self</span>.pst_patterns[KING] = <span class="self">Self</span>::KING_PST_PATTERN;
     }
 
     <span class="doccomment">/// Recalculates initial material and PST tables.
     </span><span class="kw">pub fn </span>recalculate(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">for </span>color <span class="kw">in </span>ALL_COLORS {
             <span class="kw">for </span>piece <span class="kw">in </span>ALL_PIECES {
-                <span class="kw">for </span>phase <span class="kw">in </span>ALL_PHASES {
-                    <span class="self">self</span>.pst[color][piece][phase] = <span class="self">self</span>.calculate_pst(color, <span class="kw-2">&amp;</span><span class="self">self</span>.pst_patterns[piece][phase]);
+                <span class="kw">for </span>king_file <span class="kw">in </span>ALL_FILES {
+                    <span class="kw">for </span>phase <span class="kw">in </span>ALL_PHASES {
+                        <span class="self">self</span>.pst[color][piece][king_file][phase] = <span class="self">self</span>.calculate_pst(color, <span class="kw-2">&amp;</span><span class="self">self</span>.pst_patterns[piece][king_file][phase]);
+                    }
                 }
             }
         }
@@ -258,8 +262,8 @@
     }
 
     <span class="doccomment">/// Gets a PST value for the specified `color`, `piece`, `phase` and `square`.
-    </span><span class="kw">pub fn </span>get_pst_value(<span class="kw-2">&amp;</span><span class="self">self</span>, color: usize, piece: usize, phase: usize, square: usize) -&gt; i16 {
-        <span class="self">self</span>.pst[color][piece][phase][square]
+    </span><span class="kw">pub fn </span>get_pst_value(<span class="kw-2">&amp;</span><span class="self">self</span>, color: usize, piece: usize, king_file: usize, phase: usize, square: usize) -&gt; i16 {
+        <span class="self">self</span>.pst[color][piece][king_file][phase][square]
     }
 }
 

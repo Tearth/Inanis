@@ -90,6 +90,50 @@
 <a href="#88" id="88">88</a>
 <a href="#89" id="89">89</a>
 <a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
 </pre></div><pre class="rust"><code><span class="attr">#[derive(Clone)]
 </span><span class="kw">pub struct </span>SearchParameters {
     <span class="kw">pub </span>iir_min_depth: i8,
@@ -134,49 +178,93 @@
     <span class="kw">pub </span>q_futility_pruning_margin: i16,
 }
 
+<span class="attr">#[allow(non_upper_case_globals)]
+</span><span class="kw">impl </span>SearchParameters {
+    <span class="kw">pub const </span>iir_min_depth: i8 = <span class="number">4</span>;
+    <span class="kw">pub const </span>iir_reduction_base: i8 = <span class="number">1</span>;
+    <span class="kw">pub const </span>iir_reduction_step: i8 = <span class="number">99</span>;
+    <span class="kw">pub const </span>iir_max_reduction: i8 = <span class="number">3</span>;
+
+    <span class="kw">pub const </span>razoring_min_depth: i8 = <span class="number">1</span>;
+    <span class="kw">pub const </span>razoring_max_depth: i8 = <span class="number">5</span>;
+    <span class="kw">pub const </span>razoring_depth_margin_base: i16 = <span class="number">260</span>;
+    <span class="kw">pub const </span>razoring_depth_margin_multiplier: i16 = <span class="number">260</span>;
+
+    <span class="kw">pub const </span>snmp_min_depth: i8 = <span class="number">1</span>;
+    <span class="kw">pub const </span>snmp_max_depth: i8 = <span class="number">8</span>;
+    <span class="kw">pub const </span>snmp_depth_margin_base: i16 = <span class="number">135</span>;
+    <span class="kw">pub const </span>snmp_depth_margin_multiplier: i16 = <span class="number">55</span>;
+
+    <span class="kw">pub const </span>nmp_min_depth: i8 = <span class="number">2</span>;
+    <span class="kw">pub const </span>nmp_min_game_phase: u8 = <span class="number">3</span>;
+    <span class="kw">pub const </span>nmp_margin: i16 = <span class="number">60</span>;
+    <span class="kw">pub const </span>nmp_depth_base: i8 = <span class="number">2</span>;
+    <span class="kw">pub const </span>nmp_depth_divider: i8 = <span class="number">5</span>;
+
+    <span class="kw">pub const </span>lmp_min_depth: i8 = <span class="number">1</span>;
+    <span class="kw">pub const </span>lmp_max_depth: i8 = <span class="number">3</span>;
+    <span class="kw">pub const </span>lmp_move_index_margin_base: usize = <span class="number">2</span>;
+    <span class="kw">pub const </span>lmp_move_index_margin_multiplier: usize = <span class="number">5</span>;
+    <span class="kw">pub const </span>lmp_max_score: i16 = -<span class="number">55</span>;
+
+    <span class="kw">pub const </span>lmr_min_depth: i8 = <span class="number">2</span>;
+    <span class="kw">pub const </span>lmr_max_score: i16 = <span class="number">90</span>;
+    <span class="kw">pub const </span>lmr_min_move_index: usize = <span class="number">2</span>;
+    <span class="kw">pub const </span>lmr_reduction_base: usize = <span class="number">1</span>;
+    <span class="kw">pub const </span>lmr_reduction_step: usize = <span class="number">4</span>;
+    <span class="kw">pub const </span>lmr_max_reduction: i8 = <span class="number">3</span>;
+    <span class="kw">pub const </span>lmr_pv_min_move_index: usize = <span class="number">2</span>;
+    <span class="kw">pub const </span>lmr_pv_reduction_base: usize = <span class="number">1</span>;
+    <span class="kw">pub const </span>lmr_pv_reduction_step: usize = <span class="number">8</span>;
+    <span class="kw">pub const </span>lmr_pv_max_reduction: i8 = <span class="number">2</span>;
+
+    <span class="kw">pub const </span>q_score_pruning_treshold: i16 = <span class="number">0</span>;
+    <span class="kw">pub const </span>q_futility_pruning_margin: i16 = <span class="number">100</span>;
+}
+
 <span class="kw">impl </span>Default <span class="kw">for </span>SearchParameters {
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            iir_min_depth: <span class="number">4</span>,
-            iir_reduction_base: <span class="number">1</span>,
-            iir_reduction_step: <span class="number">99</span>,
-            iir_max_reduction: <span class="number">3</span>,
+            iir_min_depth: <span class="self">Self</span>::iir_min_depth,
+            iir_reduction_base: <span class="self">Self</span>::iir_reduction_base,
+            iir_reduction_step: <span class="self">Self</span>::iir_reduction_step,
+            iir_max_reduction: <span class="self">Self</span>::iir_max_reduction,
 
-            razoring_min_depth: <span class="number">1</span>,
-            razoring_max_depth: <span class="number">5</span>,
-            razoring_depth_margin_base: <span class="number">260</span>,
-            razoring_depth_margin_multiplier: <span class="number">260</span>,
+            razoring_min_depth: <span class="self">Self</span>::razoring_min_depth,
+            razoring_max_depth: <span class="self">Self</span>::razoring_max_depth,
+            razoring_depth_margin_base: <span class="self">Self</span>::razoring_depth_margin_base,
+            razoring_depth_margin_multiplier: <span class="self">Self</span>::razoring_depth_margin_multiplier,
 
-            snmp_min_depth: <span class="number">1</span>,
-            snmp_max_depth: <span class="number">8</span>,
-            snmp_depth_margin_base: <span class="number">135</span>,
-            snmp_depth_margin_multiplier: <span class="number">55</span>,
+            snmp_min_depth: <span class="self">Self</span>::snmp_min_depth,
+            snmp_max_depth: <span class="self">Self</span>::snmp_max_depth,
+            snmp_depth_margin_base: <span class="self">Self</span>::snmp_depth_margin_base,
+            snmp_depth_margin_multiplier: <span class="self">Self</span>::snmp_depth_margin_multiplier,
 
-            nmp_min_depth: <span class="number">2</span>,
-            nmp_min_game_phase: <span class="number">3</span>,
-            nmp_margin: <span class="number">60</span>,
-            nmp_depth_base: <span class="number">2</span>,
-            nmp_depth_divider: <span class="number">5</span>,
+            nmp_min_depth: <span class="self">Self</span>::nmp_min_depth,
+            nmp_min_game_phase: <span class="self">Self</span>::nmp_min_game_phase,
+            nmp_margin: <span class="self">Self</span>::nmp_margin,
+            nmp_depth_base: <span class="self">Self</span>::nmp_depth_base,
+            nmp_depth_divider: <span class="self">Self</span>::nmp_depth_divider,
 
-            lmp_min_depth: <span class="number">1</span>,
-            lmp_max_depth: <span class="number">3</span>,
-            lmp_move_index_margin_base: <span class="number">2</span>,
-            lmp_move_index_margin_multiplier: <span class="number">5</span>,
-            lmp_max_score: -<span class="number">55</span>,
+            lmp_min_depth: <span class="self">Self</span>::lmp_min_depth,
+            lmp_max_depth: <span class="self">Self</span>::lmp_max_depth,
+            lmp_move_index_margin_base: <span class="self">Self</span>::lmp_move_index_margin_base,
+            lmp_move_index_margin_multiplier: <span class="self">Self</span>::lmp_move_index_margin_multiplier,
+            lmp_max_score: <span class="self">Self</span>::lmp_max_score,
 
-            lmr_min_depth: <span class="number">2</span>,
-            lmr_max_score: <span class="number">90</span>,
-            lmr_min_move_index: <span class="number">2</span>,
-            lmr_reduction_base: <span class="number">1</span>,
-            lmr_reduction_step: <span class="number">4</span>,
-            lmr_max_reduction: <span class="number">3</span>,
-            lmr_pv_min_move_index: <span class="number">2</span>,
-            lmr_pv_reduction_base: <span class="number">1</span>,
-            lmr_pv_reduction_step: <span class="number">8</span>,
-            lmr_pv_max_reduction: <span class="number">2</span>,
+            lmr_min_depth: <span class="self">Self</span>::lmr_min_depth,
+            lmr_max_score: <span class="self">Self</span>::lmr_max_score,
+            lmr_min_move_index: <span class="self">Self</span>::lmr_min_move_index,
+            lmr_reduction_base: <span class="self">Self</span>::lmr_reduction_base,
+            lmr_reduction_step: <span class="self">Self</span>::lmr_reduction_step,
+            lmr_max_reduction: <span class="self">Self</span>::lmr_max_reduction,
+            lmr_pv_min_move_index: <span class="self">Self</span>::lmr_pv_min_move_index,
+            lmr_pv_reduction_base: <span class="self">Self</span>::lmr_pv_reduction_base,
+            lmr_pv_reduction_step: <span class="self">Self</span>::lmr_pv_reduction_step,
+            lmr_pv_max_reduction: <span class="self">Self</span>::lmr_pv_max_reduction,
 
-            q_score_pruning_treshold: <span class="number">0</span>,
-            q_futility_pruning_margin: <span class="number">100</span>,
+            q_score_pruning_treshold: <span class="self">Self</span>::q_score_pruning_treshold,
+            q_futility_pruning_margin: <span class="self">Self</span>::q_futility_pruning_margin,
         }
     }
 }

@@ -377,9 +377,14 @@
 <a href="#375" id="375">375</a>
 <a href="#376" id="376">376</a>
 <a href="#377" id="377">377</a>
+<a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="self">self</span>::parameters::SearchParameters;
 <span class="kw">use </span><span class="kw">super</span>::statistics::SearchStatistics;
 <span class="kw">use super</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::cache::counters::CountermovesTable;
 <span class="kw">use </span><span class="kw">crate</span>::cache::history::HistoryTable;
 <span class="kw">use </span><span class="kw">crate</span>::cache::killers::KillersTable;
 <span class="kw">use </span><span class="kw">crate</span>::cache::pawns::PawnHashTable;
@@ -427,6 +432,7 @@
     <span class="kw">pub </span>pawn_hashtable: Arc&lt;PawnHashTable&gt;,
     <span class="kw">pub </span>killers_table: Arc&lt;KillersTable&gt;,
     <span class="kw">pub </span>history_table: Arc&lt;HistoryTable&gt;,
+    <span class="kw">pub </span>countermoves_table: Arc&lt;CountermovesTable&gt;,
     <span class="kw">pub </span>helper_contexts: Vec&lt;HelperThreadContext&gt;,
     <span class="kw">pub </span>abort_flag: Arc&lt;AtomicBool&gt;,
     <span class="kw">pub </span>ponder_flag: Arc&lt;AtomicBool&gt;,
@@ -435,9 +441,6 @@
 
 <span class="kw">pub struct </span>HelperThreadContext {
     <span class="kw">pub </span>board: Board,
-    <span class="kw">pub </span>pawn_hashtable: Arc&lt;PawnHashTable&gt;,
-    <span class="kw">pub </span>killers_table: Arc&lt;KillersTable&gt;,
-    <span class="kw">pub </span>history_table: Arc&lt;HistoryTable&gt;,
     <span class="kw">pub </span>context: SearchContext,
 }
 
@@ -475,7 +478,7 @@
     ///  - `syzygy_enabled` - enables or disables Syzygy probing
     ///  - `syzygy_probe_limit` - number of pieces for which the probing should be started
     ///  - `syzygy_probe_depth` - minimal depth at which the probing will be started
-    ///  - `transposition_table`, `pawn_hashtable`, `killers_table`, `history_table` - hashtables used during search
+    ///  - `transposition_table`, `pawn_hashtable`, `killers_table`, `history_table`, `countermoves_table` - hashtables used during search
     ///  - `abort_flag` - flag used to abort search from the outside of the context
     ///  - `ponder_flag` - flag used to change a search mode from pondering to the regular one
     </span><span class="kw">pub fn </span>new(
@@ -501,6 +504,7 @@
         pawn_hashtable: Arc&lt;PawnHashTable&gt;,
         killers_table: Arc&lt;KillersTable&gt;,
         history_table: Arc&lt;HistoryTable&gt;,
+        countermoves_table: Arc&lt;CountermovesTable&gt;,
         abort_flag: Arc&lt;AtomicBool&gt;,
         ponder_flag: Arc&lt;AtomicBool&gt;,
     ) -&gt; <span class="self">Self </span>{
@@ -532,6 +536,7 @@
             pawn_hashtable,
             killers_table,
             history_table,
+            countermoves_table,
             helper_contexts: Vec::new(),
             abort_flag,
             ponder_flag,
@@ -642,10 +647,14 @@
 
             <span class="self">self</span>.multipv_lines.clear();
 
-            <span class="kw">match </span><span class="self">self</span>.diagnostic_mode {
-                <span class="bool-val">true </span>=&gt; search::run::&lt;<span class="bool-val">true</span>&gt;(<span class="self">self</span>, <span class="self">self</span>.current_depth),
-                <span class="bool-val">false </span>=&gt; search::run::&lt;<span class="bool-val">false</span>&gt;(<span class="self">self</span>, <span class="self">self</span>.current_depth),
-            };
+            <span class="kw">if </span><span class="macro">cfg!</span>(feature = <span class="string">"dev"</span>) {
+                <span class="kw">match </span><span class="self">self</span>.diagnostic_mode {
+                    <span class="bool-val">true </span>=&gt; search::run::&lt;<span class="bool-val">true</span>&gt;(<span class="self">self</span>, <span class="self">self</span>.current_depth),
+                    <span class="bool-val">false </span>=&gt; search::run::&lt;<span class="bool-val">false</span>&gt;(<span class="self">self</span>, <span class="self">self</span>.current_depth),
+                };
+            } <span class="kw">else </span>{
+                search::run::&lt;<span class="bool-val">false</span>&gt;(<span class="self">self</span>, <span class="self">self</span>.current_depth);
+            }
 
             <span class="kw">let </span>search_time = <span class="self">self</span>.search_time_start.elapsed().unwrap().as_millis() <span class="kw">as </span>u32;
             <span class="kw">if </span><span class="self">self</span>.uci_debug {
@@ -707,6 +716,11 @@
                 <span class="kw">return </span><span class="prelude-val">None</span>;
             }
 
+            <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
+            </span><span class="kw">if </span><span class="self">self</span>.multipv_lines[<span class="number">0</span>].pv_line[<span class="number">0</span>] == Default::default() {
+                <span class="macro">panic!</span>(<span class="string">"Invalid PV move: {}"</span>, <span class="self">self</span>.multipv_lines[<span class="number">0</span>].pv_line[<span class="number">0</span>]);
+            }
+
             <span class="kw">if </span><span class="self">self</span>.forced_depth == <span class="number">0 </span>&amp;&amp; <span class="self">self</span>.max_nodes_count == <span class="number">0 </span>{
                 <span class="kw">if </span>search_time &gt; ((desired_time <span class="kw">as </span>f32) * TIME_THRESHOLD_RATIO) <span class="kw">as </span>u32 {
                     <span class="self">self</span>.search_done = <span class="bool-val">true</span>;
@@ -730,14 +744,8 @@
 
 <span class="kw">impl </span>HelperThreadContext {
     <span class="doccomment">/// Constructs a new instance of [HelperThreadContext] with stored `board`, `pawn_hashtable`, `killers_table`, `history_table` and `context`.
-    </span><span class="kw">pub fn </span>new(
-        board: Board,
-        pawn_hashtable: Arc&lt;PawnHashTable&gt;,
-        killers_table: Arc&lt;KillersTable&gt;,
-        history_table: Arc&lt;HistoryTable&gt;,
-        context: SearchContext,
-    ) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ board, pawn_hashtable, killers_table, history_table, context }
+    </span><span class="kw">pub fn </span>new(board: Board, context: SearchContext) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ board, context }
     }
 }
 
