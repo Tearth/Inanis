@@ -1,6 +1,6 @@
 [package]
 name = "inanis"
-version = "1.4.0"
+version = "1.5.0"
 authors = [ "Pawel Osikowski" ]
 repository = "https://github.com/Tearth/Inanis"
 edition = "2021"
