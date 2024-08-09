@@ -12,6 +12,7 @@ use crate::state::zobrist::ZobristContainer;
 use crate::state::*;
 use crate::utils::rand;
 use common::time::DateTime;
+use std::collections::HashSet;
 use std::fmt::Display;
 use std::fs;
 use std::fs::File;
@@ -38,6 +39,7 @@ pub struct TunerContext {
 }
 
 pub struct TunerPosition {
+    evaluation: f32,
     result: f32,
     phase: f32,
     coefficients: Vec<TunerCoefficient>,
@@ -68,8 +70,8 @@ impl TunerContext {
 
 impl TunerPosition {
     /// Constructs a new instance of [TunerPosition] with stored `board` and `result`.
-    pub fn new(result: f32, phase: f32, coefficients: Vec<TunerCoefficient>) -> Self {
-        Self { result, phase, coefficients }
+    pub fn new(evaluation: f32, result: f32, phase: f32, coefficients: Vec<TunerCoefficient>) -> Self {
+        Self { evaluation, result, phase, coefficients }
     }
 }
 
@@ -144,9 +146,10 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
 
                         let sig = sigmoid(evaluation, k);
                         let a = position.result - sig;
+                        // let a = (0.5 * sigmoid(position.evaluation * 100.0, k) + 0.5 * position.result) - sig;
                         let b = sig * (1.0 - sig);
 
-                        for coefficient in &position.coefficients {
+                        for coefficient in position.coefficients.iter() {
                             // Ignore pawn and king values
                             if coefficient.index == 0 || coefficient.index == 5 {
                                 continue;
@@ -172,12 +175,12 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
 
         // Apply gradients and calculate new weights
         for i in 0..context.weights.len() {
-            let gradient = -2.0 * context.gradients[i] / context.positions.len() as f32;
-            m[i] = B1 * m[i] + (1.0 - B1) * gradient;
-            v[i] = B2 * v[i] + (1.0 - B2) * gradient.powi(2);
+                let gradient = -2.0 * context.gradients[i] / context.positions.len() as f32;
+                m[i] = B1 * m[i] + (1.0 - B1) * gradient;
+                v[i] = B2 * v[i] + (1.0 - B2) * gradient.powi(2);
 
-            context.weights[i] -= LEARNING_RATE * m[i] / (v[i] + 0.00000001).sqrt();
-            context.weights[i] = context.weights[i].clamp(parameters[i].min as f32, parameters[i].max as f32);
+                context.weights[i] -= LEARNING_RATE * m[i] / (v[i] + 0.00000001).sqrt();
+                context.weights[i] = context.weights[i].clamp(parameters[i].min as f32, parameters[i].max as f32);
         }
 
         if iterations_count % OUTPUT_INTERVAL == 0 {
@@ -246,6 +249,9 @@ fn calculate_error(context: &mut TunerContext, scaling_constant: f32, threads_co
                 for position in chunk {
                     let evaluation = evaluate_position(position, &weights);
                     error += (position.result - sigmoid(evaluation, scaling_constant)).powi(2);
+
+                    // error += ((0.5 * sigmoid(position.evaluation * 100.0, scaling_constant) + 0.5 * position.result) - sigmoid(evaluation, scaling_constant))
+                    //     .powi(2);
                 }
 
                 error
@@ -318,7 +324,9 @@ fn load_positions(epd_filename: &str) -> Result<Vec<TunerPosition>, String> {
         }
 
         let comment = parsed_epd.comment.unwrap();
-        let result = match comment.as_str() {
+        let comment_tokens = comment.split('|').collect::<Vec<&str>>();
+        let evaluation = comment_tokens[0].parse::<f32>().unwrap();
+        let result = match comment_tokens[1] {
             "1-0" => 1.0,
             "1/2-1/2" => 0.5,
             "0-1" => 0.0,
@@ -342,7 +350,7 @@ fn load_positions(epd_filename: &str) -> Result<Vec<TunerPosition>, String> {
         coefficients.append(&mut pst::get_coefficients(&parsed_epd.board, KING, &mut index));
 
         let game_phase = parsed_epd.board.game_phase as f32 / parsed_epd.board.evaluation_parameters.initial_game_phase as f32;
-        positions.push(TunerPosition::new(result, game_phase, coefficients));
+        positions.push(TunerPosition::new(evaluation, result, game_phase, coefficients));
     }
 
     Ok(positions)
