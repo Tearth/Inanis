@@ -118,6 +118,20 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
     let mut v = Vec::new();
     v.resize(context.weights.len(), 0.0);
 
+    let mut weights_enabled = Vec::new();
+    let mut weights_enabled_indices = HashSet::new();
+    weights_enabled.resize(context.weights.len(), false);
+
+    for position in &context.positions {
+        for coefficient in &position.coefficients {
+            weights_enabled_indices.insert(coefficient.index);
+        }
+    }
+
+    for i in 0..weights_enabled.len() {
+        weights_enabled[i] = i == 0 || i == 5 || weights_enabled_indices.contains(&(i as u16));
+    }
+
     let mut k = K_DEFAULT;
     let mut last_error = calculate_error(&mut context, k, threads_count);
     let mut iterations_count = 0;
@@ -175,12 +189,16 @@ pub fn run(epd_filename: &str, output_directory: &str, lock_material: bool, rand
 
         // Apply gradients and calculate new weights
         for i in 0..context.weights.len() {
+            if weights_enabled[i] {
                 let gradient = -2.0 * context.gradients[i] / context.positions.len() as f32;
                 m[i] = B1 * m[i] + (1.0 - B1) * gradient;
                 v[i] = B2 * v[i] + (1.0 - B2) * gradient.powi(2);
 
                 context.weights[i] -= LEARNING_RATE * m[i] / (v[i] + 0.00000001).sqrt();
                 context.weights[i] = context.weights[i].clamp(parameters[i].min as f32, parameters[i].max as f32);
+            } else {
+                context.weights[i] = 0.0;
+            }
         }
 
         if iterations_count % OUTPUT_INTERVAL == 0 {
