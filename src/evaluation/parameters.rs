@@ -1,5 +1,5 @@
 // --------------------------------------------------- //
-// Generated at 27-07-2024 15:56:27 UTC (e = 0.076543) //
+// Generated at 09-08-2024 10:19:09 UTC (e = 0.114457) //
 // --------------------------------------------------- //
 
 use super::*;
@@ -7,37 +7,37 @@ use super::*;
 impl Default for EvaluationParameters {
     fn default() -> Self {
         let mut evaluation_parameters = Self {
-            piece_value: [100, 339, 344, 534, 1065, 10000],
+            piece_value: [100, 337, 338, 521, 1050, 10000],
 
-            bishop_pair_opening: 23,
-            bishop_pair_ending: 70,
+            bishop_pair_opening: 22,
+            bishop_pair_ending: 61,
 
-            mobility_inner_opening: [5, 12, 12, 9, 3, 4],
-            mobility_inner_ending: [4, 5, 10, 5, 10, 3],
+            mobility_inner_opening: [0, 11, 10, 10, 4, 0],
+            mobility_inner_ending: [0, 3, 12, 3, 8, 0],
 
-            mobility_outer_opening: [6, 4, 3, 4, 1, 4],
-            mobility_outer_ending: [6, 5, 4, 5, 4, 5],
+            mobility_outer_opening: [0, 3, 2, 5, 1, 0],
+            mobility_outer_ending: [0, 3, 3, 3, 2, 0],
 
-            doubled_pawn_opening: [-13, -19, -26, -39, -21, -38, -24, -36],
-            doubled_pawn_ending: [-5, -22, -44, -47, -38, -19, -23, -19],
+            doubled_pawn_opening: [-6, -18, -24, -49, -21, 0, 0, 0],
+            doubled_pawn_ending: [-5, -18, -39, -54, -38, 0, 0, 0],
 
-            isolated_pawn_opening: [3, -12, -24, -36, -38, -38, -11, -23],
-            isolated_pawn_ending: [-6, -17, -32, -42, -61, -34, -23, -14],
+            isolated_pawn_opening: [-3, -14, -24, -36, -29, 0, 0, 0],
+            isolated_pawn_ending: [-6, -17, -32, -40, -62, 0, 0, 0],
 
-            chained_pawn_opening: [-5, 5, 16, 25, 32, 41, 52, 20],
-            chained_pawn_ending: [6, 8, 18, 35, 51, 61, 33, 18],
+            chained_pawn_opening: [-5, 5, 17, 26, 34, 40, 51, 20],
+            chained_pawn_ending: [11, 12, 19, 30, 45, 58, 37, 18],
 
-            passed_pawn_opening: [18, 21, 23, 16, 18, 39, 28, 37],
-            passed_pawn_ending: [-33, 9, 50, 68, 50, 42, 17, 26],
+            passed_pawn_opening: [18, 22, 22, 21, 17, 37, 28, 37],
+            passed_pawn_ending: [-36, 8, 61, 68, 46, 42, 15, 26],
 
-            pawn_shield_opening: [-3, 10, 23, 29, 62, 19, 25, 29],
-            pawn_shield_ending: [10, 16, 18, 17, 30, 20, 34, 17],
+            pawn_shield_opening: [10, 18, 22, 21, 51, 19, 0, 0],
+            pawn_shield_ending: [10, 16, 19, 22, 23, 20, 0, 0],
 
-            pawn_shield_open_file_opening: [-9, -21, -35, -39, -13, -22, -12, -33],
-            pawn_shield_open_file_ending: [-29, -20, -15, -23, -22, -40, -36, -10],
+            pawn_shield_open_file_opening: [-16, -21, -33, -34, 0, 0, 0, 0],
+            pawn_shield_open_file_ending: [-27, -20, -14, -25, 0, 0, 0, 0],
 
-            king_attacked_squares_opening: [84, 81, 69, 45, -1, -46, -115, -223],
-            king_attacked_squares_ending: [-46, -43, -36, -35, -23, -6, 25, 80],
+            king_attacked_squares_opening: [82, 79, 67, 40, -7, -56, -112, -200],
+            king_attacked_squares_ending: [-49, -44, -39, -36, -14, 3, 29, 65],
 
             pst: Box::new([[[[[0; 64]; 2]; 8]; 6]; 2]),
             pst_patterns: Box::new([[[[0; 64]; 2]; 8]; 6]),
