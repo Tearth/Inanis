@@ -652,7 +652,7 @@ fn write_piece_square_table(output_directory: &str, best_error: f32, name: &str,
     let path = Path::new(output_directory).join("pst");
     fs::create_dir_all(path).unwrap();
 
-    let path = Path::new(output_directory).join("pst").join(format!("{}.rs", name));
+    let path = Path::new(output_directory).join("pst").join(format!("{}.rs", name.to_lowercase()));
     write!(&mut File::create(path).unwrap(), "{}", output).unwrap();
 }
 
