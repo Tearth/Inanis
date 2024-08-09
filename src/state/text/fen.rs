@@ -64,8 +64,8 @@ pub fn epd_to_board(
     board.recalculate_pawn_attacks(BLACK);
 
     if tokens.len() > 4 {
-        fen_to_halfmove_clock(&mut board, tokens[4])?;
-        fen_to_fullmove_number(&mut board, tokens[5])?;
+        let _ = fen_to_halfmove_clock(&mut board, tokens[4]);
+        let _ = fen_to_fullmove_number(&mut board, tokens[5]);
 
         let mut parsed_epd = ParsedEPD::new(board);
         parsed_epd.id = get_epd_parameter(epd, &["id"]);
