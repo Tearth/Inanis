@@ -120,7 +120,7 @@ fn handle_help() {
     #[cfg(feature = "dev")]
     println!(" testset [epd] [depth] [transposition_table_size] [threads_count] - run test of positions");
     #[cfg(feature = "dev")]
-    println!(" tuner [epd] [output] [lock_material] [randomize] [threads_count] - run tuning");
+    println!(" tuner [epd] [output] [randomize] [k] [wdl_ratio] [threads_count] - run tuning");
     #[cfg(feature = "dev")]
     println!();
 
@@ -658,29 +658,26 @@ fn handle_tuner(input: Vec<&str>) {
     }
 
     if input.len() < 4 {
-        println!("Lock material parameter not found");
-        return;
-    }
-
-    if input.len() < 5 {
         println!("Random values parameter not found");
         return;
     }
 
+    if input.len() < 5 {
+        println!("Scaling constant parameter not found");
+        return;
+    }
+
     if input.len() < 6 {
+        println!("WDL ratio parameter not found");
+        return;
+    }
+
+    if input.len() < 7 {
         println!("Threads count parameter not found");
         return;
     }
 
-    let lock_material = match input[3].parse() {
-        Ok(value) => value,
-        Err(error) => {
-            println!("Invalid lock material parameter: {}", error);
-            return;
-        }
-    };
-
-    let random_values = match input[4].parse() {
+    let random_values = match input[3].parse() {
         Ok(value) => value,
         Err(error) => {
             println!("Invalid random values parameter: {}", error);
@@ -688,7 +685,27 @@ fn handle_tuner(input: Vec<&str>) {
         }
     };
 
-    let threads_count = match input[5].parse() {
+    let k = if input[4] == "None" {
+        None
+    } else {
+        match input[4].parse() {
+            Ok(value) => Some(value),
+            Err(error) => {
+                println!("Invalid scaling constant parameter: {}", error);
+                return;
+            }
+        }
+    };
+
+    let wdl_ratio = match input[5].parse() {
+        Ok(value) => value,
+        Err(error) => {
+            println!("Invalid WDL ratio parameter: {}", error);
+            return;
+        }
+    };
+
+    let threads_count = match input[6].parse() {
         Ok(value) => value,
         Err(error) => {
             println!("Invalid threads count parameter: {}", error);
@@ -696,7 +713,7 @@ fn handle_tuner(input: Vec<&str>) {
         }
     };
 
-    tuner::run(input[1], input[2], lock_material, random_values, threads_count);
+    tuner::run(input[1], input[2], random_values, k, wdl_ratio, threads_count);
 }
 
 /// Handles `dataset [pgn] [output] [min_ply] [max_score] [max_diff] [density]` command by running generator of the dataset for the tuner.

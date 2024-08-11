@@ -66,9 +66,9 @@ r4rk1/1Qpbq1bp/p1n2np1/3p1p2/3P1P2/P1NBPN1P/1P1B2P1/R4RK1 b - - c9 "0-1";
 
 Examples of running the tuner:
 
- - `tuner ./input/quiet.epd ./output/ false false 1` - run single-threaded tuning (including piece values) for positions stored in `quiet.epd`, starting from the random values, and saving the result in the `output` directory
+ - `tuner ./input/quiet.epd ./output/ true 0.007 0.75 1` - run single-threaded tuning for positions stored in `quiet.epd`, starting from the random values, with scaling constant 0.007, WDL ratio 0.75 and saving the result in the `output` directory
 
- - `tuner ./input/quiet.epd ./output/ true true 4` - run tuning with 4 threads (excluding piece values) for positions stored in `quiet.epd`, starting from the values already set in the engine, and saving the result in the `output` directory
+ - `tuner ./input/quiet.epd ./output/ false None 1.0 4` - run tuning with 4 threads for positions stored in `quiet.epd`, starting from the values already set in the engine, with scaling constant determined before tuning, WDL ratio 1.0 and saving the result in the `output` directory
 
 Since version 1.1.0, Inanis also has a command to generate epd files with quiet positions, based on provided PGN input:
  - `dataset ./input/games.pgn ./output/quiet.epd 16 250 50 3 0.5` -  generate a new `quiet.epd` file, by parsing `games.pgn` and taking 3 random positions from each of the game, ignoring these with a ply less than 16, evaluation score bigger than 250, and the difference between evaluation score and quiescence search score bigger than 50. The average game phase 0.5 means that the positions will be balanced (> 0.5 = near opening, < 0.5 = near ending)
@@ -119,7 +119,7 @@ All commands listed below can be executed both in interactive mode and directly 
  [DEV] dataset [pgn] [output] [min_ply] [max_score] [max_diff] [density] - dataset generator
  [DEV] magic - generate magic numbers
  [DEV] testset [epd] [depth] [transposition_table_size] [threads_count] - run test of positions
- [DEV] tuner [epd] [output] [lock_material] [randomize] [threads_count] - run tuning
+ [DEV] tuner [epd] [output] [randomize] [k] [wdl_ratio] [threads_count] - run tuning
 
 === Perft ===
  perft [depth]
