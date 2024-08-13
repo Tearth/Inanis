@@ -354,6 +354,7 @@ fn load_positions(epd_filename: &str, weights_indices: &mut HashSet<u16>) -> Res
         pst::get_coefficients(&parsed_epd.board, ROOK, &mut index, &mut coefficients);
         pst::get_coefficients(&parsed_epd.board, QUEEN, &mut index, &mut coefficients);
         pst::get_coefficients(&parsed_epd.board, KING, &mut index, &mut coefficients);
+        coefficients.shrink_to_fit();
 
         for coefficient in &coefficients {
             weights_indices.insert(coefficient.index);
