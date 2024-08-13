@@ -94,14 +94,18 @@ impl TunerCoefficient {
 /// using gradient descent and Adam optimizer. The result (Rust sources with the calculated values) are saved every iteration, and can be put directly into the code.
 pub fn run(epd_filename: &str, output_directory: &str, random_values: bool, k: Option<f32>, wdl_ratio: f32, threads_count: usize) {
     println!("Loading EPD file...");
-    let positions = match load_positions(epd_filename) {
+
+    let start_time = SystemTime::now();
+    let mut weights_indices = HashSet::new();
+
+    let positions = match load_positions(epd_filename, &mut weights_indices) {
         Ok(value) => value,
         Err(error) => {
             println!("Invalid EPD file: {}", error);
             return;
         }
     };
-    println!("Loaded {} positions, starting tuner", positions.len());
+    println!("Loaded {} positions in {} seconds, starting tuner", positions.len(), (start_time.elapsed().unwrap().as_millis() as f32) / 1000.0);
 
     let mut context = TunerContext::new(positions);
     let mut parameters = load_values(&context, random_values);
@@ -118,17 +122,10 @@ pub fn run(epd_filename: &str, output_directory: &str, random_values: bool, k: O
     v.resize(context.weights.len(), 0.0);
 
     let mut weights_enabled = Vec::new();
-    let mut weights_enabled_indices = HashSet::new();
     weights_enabled.resize(context.weights.len(), false);
 
-    for position in &context.positions {
-        for coefficient in &position.coefficients {
-            weights_enabled_indices.insert(coefficient.index);
-        }
-    }
-
     for i in 0..weights_enabled.len() {
-        weights_enabled[i] = i == 5 || weights_enabled_indices.contains(&(i as u16));
+        weights_enabled[i] = i == 5 || weights_indices.contains(&(i as u16));
     }
 
     let k = k.unwrap_or_else(|| calculate_k(&mut context, wdl_ratio, threads_count));
@@ -304,7 +301,7 @@ fn sigmoid(e: f32, k: f32) -> f32 {
 
 /// Loads positions from the `epd_filename` and parses them into a list of [TunerPosition]. Returns [Err] with a proper error message if the
 /// file couldn't be parsed.
-fn load_positions(epd_filename: &str) -> Result<Vec<TunerPosition>, String> {
+fn load_positions(epd_filename: &str, weights_indices: &mut HashSet<u16>) -> Result<Vec<TunerPosition>, String> {
     let mut positions = Vec::new();
     let file = match File::open(epd_filename) {
         Ok(value) => value,
@@ -347,16 +344,20 @@ fn load_positions(epd_filename: &str) -> Result<Vec<TunerPosition>, String> {
         let mut dangered_white_king_squares = 0;
         let mut dangered_black_king_squares = 0;
 
-        coefficients.append(&mut material::get_coefficients(&parsed_epd.board, &mut index));
-        coefficients.append(&mut mobility::get_coefficients(&parsed_epd.board, &mut dangered_white_king_squares, &mut dangered_black_king_squares, &mut index));
-        coefficients.append(&mut pawns::get_coefficients(&parsed_epd.board, &mut index));
-        coefficients.append(&mut safety::get_coefficients(dangered_white_king_squares, dangered_black_king_squares, &mut index));
-        coefficients.append(&mut pst::get_coefficients(&parsed_epd.board, PAWN, &mut index));
-        coefficients.append(&mut pst::get_coefficients(&parsed_epd.board, KNIGHT, &mut index));
-        coefficients.append(&mut pst::get_coefficients(&parsed_epd.board, BISHOP, &mut index));
-        coefficients.append(&mut pst::get_coefficients(&parsed_epd.board, ROOK, &mut index));
-        coefficients.append(&mut pst::get_coefficients(&parsed_epd.board, QUEEN, &mut index));
-        coefficients.append(&mut pst::get_coefficients(&parsed_epd.board, KING, &mut index));
+        material::get_coefficients(&parsed_epd.board, &mut index, &mut coefficients);
+        mobility::get_coefficients(&parsed_epd.board, &mut dangered_white_king_squares, &mut dangered_black_king_squares, &mut index, &mut coefficients);
+        pawns::get_coefficients(&parsed_epd.board, &mut index, &mut coefficients);
+        safety::get_coefficients(dangered_white_king_squares, dangered_black_king_squares, &mut index, &mut coefficients);
+        pst::get_coefficients(&parsed_epd.board, PAWN, &mut index, &mut coefficients);
+        pst::get_coefficients(&parsed_epd.board, KNIGHT, &mut index, &mut coefficients);
+        pst::get_coefficients(&parsed_epd.board, BISHOP, &mut index, &mut coefficients);
+        pst::get_coefficients(&parsed_epd.board, ROOK, &mut index, &mut coefficients);
+        pst::get_coefficients(&parsed_epd.board, QUEEN, &mut index, &mut coefficients);
+        pst::get_coefficients(&parsed_epd.board, KING, &mut index, &mut coefficients);
+
+        for coefficient in &coefficients {
+            weights_indices.insert(coefficient.index);
+        }
 
         let game_phase = parsed_epd.board.game_phase as f32 / parsed_epd.board.evaluation_parameters.initial_game_phase as f32;
         positions.push(TunerPosition::new(evaluation, result, game_phase, coefficients));

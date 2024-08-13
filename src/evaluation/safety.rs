@@ -24,6 +24,6 @@ fn evaluate_color(board: &Board, dangered_king_squares: u32) -> EvaluationResult
 }
 
 #[cfg(feature = "dev")]
-pub fn get_coefficients(dangered_white_king_squares: u32, dangered_black_king_squares: u32, index: &mut u16) -> Vec<TunerCoefficient> {
-    get_array_coefficients(dangered_white_king_squares as u8, dangered_black_king_squares as u8, 8, index)
+pub fn get_coefficients(dangered_white_king_squares: u32, dangered_black_king_squares: u32, index: &mut u16, coefficients: &mut Vec<TunerCoefficient>) {
+    get_array_coefficients(dangered_white_king_squares as u8, dangered_black_king_squares as u8, 8, index, coefficients)
 }

@@ -33,8 +33,8 @@ pub fn recalculate_incremental_values(board: &mut Board) {
 
 /// Gets coefficients of material on `board` and assigns indexes starting from `index`.
 #[cfg(feature = "dev")]
-pub fn get_coefficients(board: &Board, index: &mut u16) -> Vec<TunerCoefficient> {
-    let mut coefficients = vec![
+pub fn get_coefficients(board: &Board, index: &mut u16, coefficients: &mut Vec<TunerCoefficient>) {
+    let mut data = [
         TunerCoefficient::new(board.pieces[WHITE][PAWN].bit_count() as i8 - board.pieces[BLACK][PAWN].bit_count() as i8, OPENING, 0),
         TunerCoefficient::new(board.pieces[WHITE][KNIGHT].bit_count() as i8 - board.pieces[BLACK][KNIGHT].bit_count() as i8, OPENING, 0),
         TunerCoefficient::new(board.pieces[WHITE][BISHOP].bit_count() as i8 - board.pieces[BLACK][BISHOP].bit_count() as i8, OPENING, 0),
@@ -42,12 +42,11 @@ pub fn get_coefficients(board: &Board, index: &mut u16) -> Vec<TunerCoefficient>
         TunerCoefficient::new(board.pieces[WHITE][QUEEN].bit_count() as i8 - board.pieces[BLACK][QUEEN].bit_count() as i8, OPENING, 0),
         TunerCoefficient::new(board.pieces[WHITE][KING].bit_count() as i8 - board.pieces[BLACK][KING].bit_count() as i8, OPENING, 0),
     ];
-    let mut coefficients_filtered = Vec::new();
 
-    for coefficient in &mut coefficients {
+    for coefficient in &mut data {
         if coefficient.value != 0 {
             coefficient.index = *index;
-            coefficients_filtered.push(coefficient.clone());
+            coefficients.push(coefficient.clone());
         }
 
         *index += 1;
@@ -58,14 +57,12 @@ pub fn get_coefficients(board: &Board, index: &mut u16) -> Vec<TunerCoefficient>
     let bishop_pair_diff = white_has_bishop_pair - black_has_bishop_pair;
 
     if bishop_pair_diff != 0 {
-        coefficients_filtered.push(TunerCoefficient::new(bishop_pair_diff, OPENING, *index));
+        coefficients.push(TunerCoefficient::new(bishop_pair_diff, OPENING, *index));
         *index += 1;
 
-        coefficients_filtered.push(TunerCoefficient::new(bishop_pair_diff, ENDING, *index));
+        coefficients.push(TunerCoefficient::new(bishop_pair_diff, ENDING, *index));
         *index += 1;
     } else {
         *index += 2;
     }
-
-    coefficients_filtered
 }

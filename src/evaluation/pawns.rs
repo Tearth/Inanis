@@ -135,17 +135,14 @@ fn get_pawns_data(board: &Board, color: usize) -> PawnsData {
 
 /// Gets coefficients of pawn structure on `board` and assigns indexes starting from `index`.
 #[cfg(feature = "dev")]
-pub fn get_coefficients(board: &Board, index: &mut u16) -> Vec<TunerCoefficient> {
+pub fn get_coefficients(board: &Board, index: &mut u16, coefficients: &mut Vec<TunerCoefficient>) {
     let white_pawns_data = get_pawns_data(board, WHITE);
     let black_pawns_data = get_pawns_data(board, BLACK);
-    let mut coefficients = Vec::new();
 
-    coefficients.append(&mut get_array_coefficients(white_pawns_data.doubled_pawns, black_pawns_data.doubled_pawns, 8, index));
-    coefficients.append(&mut get_array_coefficients(white_pawns_data.isolated_pawns, black_pawns_data.isolated_pawns, 8, index));
-    coefficients.append(&mut get_array_coefficients(white_pawns_data.chained_pawns, black_pawns_data.chained_pawns, 8, index));
-    coefficients.append(&mut get_array_coefficients(white_pawns_data.passed_pawns, black_pawns_data.passed_pawns, 8, index));
-    coefficients.append(&mut get_array_coefficients(white_pawns_data.pawn_shield, black_pawns_data.pawn_shield, 8, index));
-    coefficients.append(&mut get_array_coefficients(white_pawns_data.opened_files, black_pawns_data.opened_files, 8, index));
-
-    coefficients
+    get_array_coefficients(white_pawns_data.doubled_pawns, black_pawns_data.doubled_pawns, 8, index, coefficients);
+    get_array_coefficients(white_pawns_data.isolated_pawns, black_pawns_data.isolated_pawns, 8, index, coefficients);
+    get_array_coefficients(white_pawns_data.chained_pawns, black_pawns_data.chained_pawns, 8, index, coefficients);
+    get_array_coefficients(white_pawns_data.passed_pawns, black_pawns_data.passed_pawns, 8, index, coefficients);
+    get_array_coefficients(white_pawns_data.pawn_shield, black_pawns_data.pawn_shield, 8, index, coefficients);
+    get_array_coefficients(white_pawns_data.opened_files, black_pawns_data.opened_files, 8, index, coefficients);
 }

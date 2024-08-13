@@ -45,9 +45,7 @@ pub fn recalculate_incremental_values(board: &mut Board) {
 
 /// Gets coefficients of piece-square table for `piece` on `board` and assigns indexes starting from `index`.
 #[cfg(feature = "dev")]
-pub fn get_coefficients(board: &Board, piece: usize, index: &mut u16) -> Vec<TunerCoefficient> {
-    let mut coefficients = Vec::new();
-
+pub fn get_coefficients(board: &Board, piece: usize, index: &mut u16, coefficients: &mut Vec<TunerCoefficient>) {
     for king_file in ALL_FILES {
         let valid_for_white = king_file == board.pieces[WHITE][KING].bit_scan() & 7;
         let valid_for_black = king_file == board.pieces[BLACK][KING].bit_scan() & 7;
@@ -83,14 +81,10 @@ pub fn get_coefficients(board: &Board, piece: usize, index: &mut u16) -> Vec<Tun
             }
         }
     }
-
-    coefficients
 }
 
 #[cfg(feature = "dev")]
-pub fn get_array_coefficients(white_feature: u8, black_feature: u8, max: u8, index: &mut u16) -> Vec<TunerCoefficient> {
-    let mut coefficients = Vec::new();
-
+pub fn get_array_coefficients(white_feature: u8, black_feature: u8, max: u8, index: &mut u16, coefficients: &mut Vec<TunerCoefficient>) {
     for game_phase in ALL_PHASES {
         for i in 0..max {
             let mut sum = 0;
@@ -109,6 +103,4 @@ pub fn get_array_coefficients(white_feature: u8, black_feature: u8, max: u8, ind
             *index += 1;
         }
     }
-
-    coefficients
 }

@@ -88,11 +88,17 @@ fn get_mobility_data(board: &Board, color: usize, dangered_king_squares: &mut u3
 /// Gets coefficients of mobility on `board` and assigns indexes starting from `index`. Similarly to [evaluate], both `dangered_white_king_squares` and
 /// `dangered_black_king_squares` are accordingly updated.
 #[cfg(feature = "dev")]
-pub fn get_coefficients(board: &Board, dangered_white_king_squares: &mut u32, dangered_black_king_squares: &mut u32, index: &mut u16) -> Vec<TunerCoefficient> {
+pub fn get_coefficients(
+    board: &Board,
+    dangered_white_king_squares: &mut u32,
+    dangered_black_king_squares: &mut u32,
+    index: &mut u16,
+    coefficients: &mut Vec<TunerCoefficient>,
+) {
     let white_mobility_data = get_mobility_data(board, WHITE, dangered_black_king_squares);
     let black_mobility_data = get_mobility_data(board, BLACK, dangered_white_king_squares);
 
-    let mut coefficients = [
+    let mut data = [
         TunerCoefficient::new(0, OPENING, *index),
         TunerCoefficient::new(white_mobility_data.knight_mobility.inner - black_mobility_data.knight_mobility.inner, OPENING, 0),
         TunerCoefficient::new(white_mobility_data.bishop_mobility.inner - black_mobility_data.bishop_mobility.inner, OPENING, 0),
@@ -119,16 +125,13 @@ pub fn get_coefficients(board: &Board, dangered_white_king_squares: &mut u32, da
         TunerCoefficient::new(white_mobility_data.queen_mobility.outer - black_mobility_data.queen_mobility.outer, ENDING, 0),
         TunerCoefficient::new(0, ENDING, *index),
     ];
-    let mut coefficients_filtered = Vec::new();
 
-    for coefficient in &mut coefficients {
+    for coefficient in &mut data {
         coefficient.index = *index;
         *index += 1;
 
         if coefficient.value != 0 {
-            coefficients_filtered.push(coefficient.clone());
+            coefficients.push(coefficient.clone());
         }
     }
-
-    coefficients_filtered
 }
