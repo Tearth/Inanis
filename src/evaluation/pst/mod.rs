@@ -45,7 +45,7 @@ pub fn recalculate_incremental_values(board: &mut Board) {
 
 /// Gets coefficients of piece-square table for `piece` on `board` and assigns indexes starting from `index`.
 #[cfg(feature = "dev")]
-pub fn get_coefficients(board: &Board, piece: usize, index: &mut u16, coefficients: &mut Vec<TunerCoefficient>) {
+pub fn get_coefficients(board: &Board, piece: usize, index: &mut u16, coefficients: &mut Vec<TunerCoefficient>, indices: &mut Vec<u16>) {
     for king_file in ALL_FILES {
         let valid_for_white = king_file == board.pieces[WHITE][KING].bit_scan() & 7;
         let valid_for_black = king_file == board.pieces[BLACK][KING].bit_scan() & 7;
@@ -63,17 +63,21 @@ pub fn get_coefficients(board: &Board, piece: usize, index: &mut u16, coefficien
 
                 if valid_for_white && !valid_for_black {
                     if current_piece == piece as u8 && current_color == WHITE {
-                        coefficients.push(TunerCoefficient::new(1, game_phase, *index));
+                        indices.push(*index);
+                        coefficients.push(TunerCoefficient::new(1, game_phase));
                     }
                 } else if !valid_for_white && valid_for_black {
                     if opposite_piece == piece as u8 && opposite_color == BLACK {
-                        coefficients.push(TunerCoefficient::new(-1, game_phase, *index));
+                        indices.push(*index);
+                        coefficients.push(TunerCoefficient::new(-1, game_phase));
                     }
                 } else if valid_for_white && valid_for_black {
                     if current_piece == piece as u8 && opposite_piece != piece as u8 && current_color == WHITE {
-                        coefficients.push(TunerCoefficient::new(1, game_phase, *index));
+                        indices.push(*index);
+                        coefficients.push(TunerCoefficient::new(1, game_phase));
                     } else if opposite_piece == piece as u8 && current_piece != piece as u8 && opposite_color == BLACK {
-                        coefficients.push(TunerCoefficient::new(-1, game_phase, *index));
+                        indices.push(*index);
+                        coefficients.push(TunerCoefficient::new(-1, game_phase));
                     }
                 }
 
@@ -84,7 +88,14 @@ pub fn get_coefficients(board: &Board, piece: usize, index: &mut u16, coefficien
 }
 
 #[cfg(feature = "dev")]
-pub fn get_array_coefficients(white_feature: u8, black_feature: u8, max: u8, index: &mut u16, coefficients: &mut Vec<TunerCoefficient>) {
+pub fn get_array_coefficients(
+    white_feature: u8,
+    black_feature: u8,
+    max: u8,
+    index: &mut u16,
+    coefficients: &mut Vec<TunerCoefficient>,
+    indices: &mut Vec<u16>,
+) {
     for game_phase in ALL_PHASES {
         for i in 0..max {
             let mut sum = 0;
@@ -97,7 +108,8 @@ pub fn get_array_coefficients(white_feature: u8, black_feature: u8, max: u8, ind
             }
 
             if sum != 0 {
-                coefficients.push(TunerCoefficient::new(sum, game_phase, *index));
+                indices.push(*index);
+                coefficients.push(TunerCoefficient::new(sum, game_phase));
             }
 
             *index += 1;

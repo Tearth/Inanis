@@ -42,6 +42,7 @@ pub struct TunerPosition {
     result: f32,
     phase: f32,
     coefficients: Vec<TunerCoefficient>,
+    indices: Vec<u16>,
 }
 
 #[derive(Clone, Copy)]
@@ -55,9 +56,7 @@ pub struct TunerParameter {
 
 #[derive(Clone)]
 pub struct TunerCoefficient {
-    pub value: i8,
-    pub phase: u8,
-    pub index: u16,
+    pub data: u8,
 }
 
 impl TunerContext {
@@ -69,8 +68,8 @@ impl TunerContext {
 
 impl TunerPosition {
     /// Constructs a new instance of [TunerPosition] with stored `board` and `result`.
-    pub fn new(evaluation: f32, result: f32, phase: f32, coefficients: Vec<TunerCoefficient>) -> Self {
-        Self { evaluation, result, phase, coefficients }
+    pub fn new(evaluation: f32, result: f32, phase: f32, coefficients: Vec<TunerCoefficient>, indices: Vec<u16>) -> Self {
+        Self { evaluation, result, phase, coefficients, indices }
     }
 }
 
@@ -83,8 +82,12 @@ impl TunerParameter {
 
 impl TunerCoefficient {
     /// Constructs a new instance of [TunerCoefficient] with stored `value`, `phase` and `index`.
-    pub fn new(value: i8, phase: usize, index: u16) -> Self {
-        Self { value, phase: phase as u8, index }
+    pub fn new(value: i8, phase: usize) -> Self {
+        Self { data: (((value + 32) as u8) << 1) | (phase as u8) }
+    }
+
+    pub fn get_data(&self) -> (i8, usize) {
+        ((self.data as i8 >> 1) - 32, (self.data & 1) as usize)
     }
 }
 
@@ -128,6 +131,8 @@ pub fn run(epd_filename: &str, output_directory: &str, random_values: bool, k: O
         weights_enabled[i] = i == 5 || weights_indices.contains(&(i as u16));
     }
 
+    drop(weights_indices);
+
     let k = k.unwrap_or_else(|| calculate_k(&mut context, wdl_ratio, threads_count));
     let mut last_error = calculate_error(&mut context, k, wdl_ratio, threads_count);
     let mut iterations_count = 0;
@@ -154,16 +159,17 @@ pub fn run(epd_filename: &str, output_directory: &str, random_values: bool, k: O
                         let a = ((1.0 - wdl_ratio) * sigmoid(position.evaluation * 100.0, k) + wdl_ratio * position.result) - sig;
                         let b = sig * (1.0 - sig);
 
-                        for coefficient in position.coefficients.iter() {
+                        for i in 0..position.coefficients.len() {
                             // Ignore pawn and king values
-                            if coefficient.index == 5 {
+                            if position.indices[i] == 5 {
                                 continue;
                             }
 
-                            let phase = if coefficient.phase == OPENING as u8 { position.phase } else { 1.0 - position.phase };
-                            let c = phase * coefficient.value as f32;
+                            let (value, phase) = position.coefficients[i].get_data();
+                            let phase = if phase == OPENING { position.phase } else { 1.0 - position.phase };
+                            let c = phase * value as f32;
 
-                            gradients[coefficient.index as usize] += a * b * c;
+                            gradients[position.indices[i] as usize] += a * b * c;
                         }
                     }
 
@@ -277,13 +283,15 @@ fn evaluate_position(position: &TunerPosition, weights: &[f32]) -> f32 {
     let mut opening_score = 0.0;
     let mut ending_score = 0.0;
 
-    for coefficient in &position.coefficients {
-        let value = weights[coefficient.index as usize] * coefficient.value as f32;
-        if coefficient.index < 6 {
+    for i in 0..position.coefficients.len() {
+        let (value, phase) = position.coefficients[i].get_data();
+        let value = weights[position.indices[i] as usize] * value as f32;
+
+        if position.indices[i] < 6 {
             opening_score += value;
             ending_score += value;
         } else {
-            if coefficient.phase == OPENING as u8 {
+            if phase == OPENING {
                 opening_score += value;
             } else {
                 ending_score += value;
@@ -340,28 +348,37 @@ fn load_positions(epd_filename: &str, weights_indices: &mut HashSet<u16>) -> Res
         };
 
         let mut coefficients = Vec::new();
+        let mut indices = Vec::new();
         let mut index = 0;
         let mut dangered_white_king_squares = 0;
         let mut dangered_black_king_squares = 0;
 
-        material::get_coefficients(&parsed_epd.board, &mut index, &mut coefficients);
-        mobility::get_coefficients(&parsed_epd.board, &mut dangered_white_king_squares, &mut dangered_black_king_squares, &mut index, &mut coefficients);
-        pawns::get_coefficients(&parsed_epd.board, &mut index, &mut coefficients);
-        safety::get_coefficients(dangered_white_king_squares, dangered_black_king_squares, &mut index, &mut coefficients);
-        pst::get_coefficients(&parsed_epd.board, PAWN, &mut index, &mut coefficients);
-        pst::get_coefficients(&parsed_epd.board, KNIGHT, &mut index, &mut coefficients);
-        pst::get_coefficients(&parsed_epd.board, BISHOP, &mut index, &mut coefficients);
-        pst::get_coefficients(&parsed_epd.board, ROOK, &mut index, &mut coefficients);
-        pst::get_coefficients(&parsed_epd.board, QUEEN, &mut index, &mut coefficients);
-        pst::get_coefficients(&parsed_epd.board, KING, &mut index, &mut coefficients);
+        material::get_coefficients(&parsed_epd.board, &mut index, &mut coefficients, &mut indices);
+        mobility::get_coefficients(
+            &parsed_epd.board,
+            &mut dangered_white_king_squares,
+            &mut dangered_black_king_squares,
+            &mut index,
+            &mut coefficients,
+            &mut indices,
+        );
+        pawns::get_coefficients(&parsed_epd.board, &mut index, &mut coefficients, &mut indices);
+        safety::get_coefficients(dangered_white_king_squares, dangered_black_king_squares, &mut index, &mut coefficients, &mut indices);
+        pst::get_coefficients(&parsed_epd.board, PAWN, &mut index, &mut coefficients, &mut indices);
+        pst::get_coefficients(&parsed_epd.board, KNIGHT, &mut index, &mut coefficients, &mut indices);
+        pst::get_coefficients(&parsed_epd.board, BISHOP, &mut index, &mut coefficients, &mut indices);
+        pst::get_coefficients(&parsed_epd.board, ROOK, &mut index, &mut coefficients, &mut indices);
+        pst::get_coefficients(&parsed_epd.board, QUEEN, &mut index, &mut coefficients, &mut indices);
+        pst::get_coefficients(&parsed_epd.board, KING, &mut index, &mut coefficients, &mut indices);
         coefficients.shrink_to_fit();
+        indices.shrink_to_fit();
 
-        for coefficient in &coefficients {
-            weights_indices.insert(coefficient.index);
+        for index in &indices {
+            weights_indices.insert(*index);
         }
 
         let game_phase = parsed_epd.board.game_phase as f32 / parsed_epd.board.evaluation_parameters.initial_game_phase as f32;
-        positions.push(TunerPosition::new(evaluation, result, game_phase, coefficients));
+        positions.push(TunerPosition::new(evaluation, result, game_phase, coefficients, indices));
     }
 
     Ok(positions)

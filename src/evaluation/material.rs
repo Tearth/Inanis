@@ -33,19 +33,20 @@ pub fn recalculate_incremental_values(board: &mut Board) {
 
 /// Gets coefficients of material on `board` and assigns indexes starting from `index`.
 #[cfg(feature = "dev")]
-pub fn get_coefficients(board: &Board, index: &mut u16, coefficients: &mut Vec<TunerCoefficient>) {
+pub fn get_coefficients(board: &Board, index: &mut u16, coefficients: &mut Vec<TunerCoefficient>, indices: &mut Vec<u16>) {
     let mut data = [
-        TunerCoefficient::new(board.pieces[WHITE][PAWN].bit_count() as i8 - board.pieces[BLACK][PAWN].bit_count() as i8, OPENING, 0),
-        TunerCoefficient::new(board.pieces[WHITE][KNIGHT].bit_count() as i8 - board.pieces[BLACK][KNIGHT].bit_count() as i8, OPENING, 0),
-        TunerCoefficient::new(board.pieces[WHITE][BISHOP].bit_count() as i8 - board.pieces[BLACK][BISHOP].bit_count() as i8, OPENING, 0),
-        TunerCoefficient::new(board.pieces[WHITE][ROOK].bit_count() as i8 - board.pieces[BLACK][ROOK].bit_count() as i8, OPENING, 0),
-        TunerCoefficient::new(board.pieces[WHITE][QUEEN].bit_count() as i8 - board.pieces[BLACK][QUEEN].bit_count() as i8, OPENING, 0),
-        TunerCoefficient::new(board.pieces[WHITE][KING].bit_count() as i8 - board.pieces[BLACK][KING].bit_count() as i8, OPENING, 0),
+        TunerCoefficient::new(board.pieces[WHITE][PAWN].bit_count() as i8 - board.pieces[BLACK][PAWN].bit_count() as i8, OPENING),
+        TunerCoefficient::new(board.pieces[WHITE][KNIGHT].bit_count() as i8 - board.pieces[BLACK][KNIGHT].bit_count() as i8, OPENING),
+        TunerCoefficient::new(board.pieces[WHITE][BISHOP].bit_count() as i8 - board.pieces[BLACK][BISHOP].bit_count() as i8, OPENING),
+        TunerCoefficient::new(board.pieces[WHITE][ROOK].bit_count() as i8 - board.pieces[BLACK][ROOK].bit_count() as i8, OPENING),
+        TunerCoefficient::new(board.pieces[WHITE][QUEEN].bit_count() as i8 - board.pieces[BLACK][QUEEN].bit_count() as i8, OPENING),
+        TunerCoefficient::new(board.pieces[WHITE][KING].bit_count() as i8 - board.pieces[BLACK][KING].bit_count() as i8, OPENING),
     ];
 
     for coefficient in &mut data {
-        if coefficient.value != 0 {
-            coefficient.index = *index;
+        let (value, _) = coefficient.get_data();
+        if value != 0 {
+            indices.push(*index);
             coefficients.push(coefficient.clone());
         }
 
@@ -57,10 +58,12 @@ pub fn get_coefficients(board: &Board, index: &mut u16, coefficients: &mut Vec<T
     let bishop_pair_diff = white_has_bishop_pair - black_has_bishop_pair;
 
     if bishop_pair_diff != 0 {
-        coefficients.push(TunerCoefficient::new(bishop_pair_diff, OPENING, *index));
+        indices.push(*index);
+        coefficients.push(TunerCoefficient::new(bishop_pair_diff, OPENING));
         *index += 1;
 
-        coefficients.push(TunerCoefficient::new(bishop_pair_diff, ENDING, *index));
+        indices.push(*index);
+        coefficients.push(TunerCoefficient::new(bishop_pair_diff, ENDING));
         *index += 1;
     } else {
         *index += 2;
