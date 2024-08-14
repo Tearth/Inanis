@@ -4,6 +4,8 @@
 
 use super::*;
 
+pub const INITIAL_GAME_PHASE: u8 = 24;
+
 impl Default for EvaluationParameters {
     fn default() -> Self {
         let mut evaluation_parameters = Self {
