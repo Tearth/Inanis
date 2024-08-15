@@ -153,7 +153,7 @@ pub fn run(epd_filename: &str, output_directory: &str, random_values: bool, k: O
             let mut threads = Vec::new();
             let weights = Arc::new(weights.clone());
 
-            for chunk in positions.chunks(positions.len() / threads_count) {
+            for chunk in positions.chunks_exact(positions.len() / threads_count) {
                 let weights = weights.clone();
                 let coefficients = coefficients.clone();
                 let indices = indices.clone();
@@ -277,7 +277,7 @@ fn calculate_error(
         let mut threads = Vec::new();
         let weights = Arc::new(weights);
 
-        for chunk in positions.chunks(positions_count / threads_count) {
+        for chunk in positions.chunks_exact(positions_count / threads_count) {
             let weights = weights.clone();
             threads.push(scope.spawn(move || {
                 let mut error = 0.0;
