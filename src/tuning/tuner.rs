@@ -594,6 +594,8 @@ fn write_evaluation_parameters(evaluation_parameters: &EvaluationParameters, out
     output.push('\n');
     output.push_str("use super::*;\n");
     output.push('\n');
+    output.push_str("pub const INITIAL_GAME_PHASE: u8 = 24;");
+    output.push('\n');
     output.push_str("impl Default for EvaluationParameters {\n");
     output.push_str("    fn default() -> Self {\n");
     output.push_str("        let mut evaluation_parameters = Self {\n");
@@ -689,9 +691,9 @@ fn get_header(best_error: f32, k: f32, wdl_ratio: f32) -> String {
     let datetime = DateTime::now();
     let datetime = format!("{:0>2}-{:0>2}-{} {:0>2}:{:0>2}:{:0>2}", datetime.day, datetime.month, datetime.year, datetime.hour, datetime.minute, datetime.day);
 
-    output.push_str("// ----------------------------------------------------------------------- //\n");
+    output.push_str("// ------------------------------------------------------------------------- //\n");
     output.push_str(format!("// Generated at {} UTC (e = {:.6}, k = {:.4}, r = {:.2}) //\n", datetime, best_error, k, wdl_ratio).as_str());
-    output.push_str("// ----------------------------------------------------------------------- //\n");
+    output.push_str("// ------------------------------------------------------------------------- //\n");
     output
 }
 
