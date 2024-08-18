@@ -9,6 +9,7 @@ use crate::engine::see::SEEContainer;
 use crate::engine::*;
 use crate::evaluation::material;
 use crate::evaluation::EvaluationParameters;
+use crate::evaluation::*;
 use crate::state::movegen::MagicContainer;
 use crate::state::patterns::PatternsContainer;
 use crate::state::representation::Board;
@@ -153,7 +154,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
             }
 
             let material_evaluation = material::evaluate(&context.board);
-            if material_evaluation.taper_score(context.board.game_phase, context.board.evaluation_parameters.initial_game_phase).abs() > max_score {
+            if material_evaluation.taper_score(context.board.game_phase).abs() > max_score {
                 ignored_positions += 1;
                 continue;
             }
@@ -167,7 +168,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
             }
 
             let epd = format!("{} c9 \"{:.2}|{}\";", context.board.to_epd(), data.evaluation, pgn.result);
-            let game_phase = (context.board.game_phase as f32) / (evaluation_parameters.initial_game_phase as f32);
+            let game_phase = (context.board.game_phase as f32) / (INITIAL_GAME_PHASE as f32);
 
             viable_positions.push((epd, game_phase));
             total_viable_positions += 1;

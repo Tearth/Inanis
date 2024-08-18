@@ -391,7 +391,6 @@ fn handle_evaluate(input: Vec<&str>) {
     let mut dangered_black_king_squares = 0;
 
     let game_phase = board.game_phase;
-    let initial_game_phase = board.evaluation_parameters.initial_game_phase;
 
     let material_evaluation = material::evaluate(&board);
     let pst_evaluation = pst::evaluate(&board);
@@ -399,14 +398,14 @@ fn handle_evaluate(input: Vec<&str>) {
     let safety_evaluation = safety::evaluate(&board, dangered_white_king_squares, dangered_black_king_squares);
     let pawns_evaluation = pawns::evaluate_without_cache(&board);
 
-    println!("Material: {}", material_evaluation.taper_score(game_phase, initial_game_phase));
-    println!("Piece-square tables: {}", pst_evaluation.taper_score(game_phase, initial_game_phase));
-    println!("Mobility: {}", mobility_evaluation.taper_score(game_phase, initial_game_phase));
-    println!("Safety: {}", safety_evaluation.taper_score(game_phase, initial_game_phase));
-    println!("Pawns: {}", pawns_evaluation.taper_score(game_phase, initial_game_phase));
+    println!("Material: {}", material_evaluation.taper_score(game_phase));
+    println!("Piece-square tables: {}", pst_evaluation.taper_score(game_phase));
+    println!("Mobility: {}", mobility_evaluation.taper_score(game_phase));
+    println!("Safety: {}", safety_evaluation.taper_score(game_phase));
+    println!("Pawns: {}", pawns_evaluation.taper_score(game_phase));
 
     let sum = material_evaluation + pst_evaluation + mobility_evaluation + safety_evaluation + pawns_evaluation;
-    println!(" --- Total: {} --- ", sum.taper_score(game_phase, initial_game_phase));
+    println!(" --- Total: {} --- ", sum.taper_score(game_phase));
 }
 
 /// Handles `magic` command by printing a fresh set of magic numbers.

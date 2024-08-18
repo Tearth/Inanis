@@ -34,7 +34,7 @@ pub fn recalculate_incremental_values(board: &mut Board) {
                     let square = square_bb.bit_scan();
                     pieces_bb = pieces_bb.pop_lsb();
 
-                    score += board.evaluation_parameters.pst[color_index][piece_index][king_file][phase][square];
+                    score += board.evaluation_parameters.get_pst_value(color_index, piece_index, king_file, phase, square);
                 }
             }
 

@@ -279,7 +279,6 @@ impl Iterator for SearchContext {
                 let mut dangered_black_king_squares = 0;
 
                 let game_phase = self.board.game_phase;
-                let initial_game_phase = self.board.evaluation_parameters.initial_game_phase;
 
                 let material_evaluation = material::evaluate(&self.board);
                 let pst_evaluation = pst::evaluate(&self.board);
@@ -292,11 +291,11 @@ impl Iterator for SearchContext {
                     search_time,
                     desired_time,
                     game_phase,
-                    material_evaluation.taper_score(game_phase, initial_game_phase),
-                    pst_evaluation.taper_score(game_phase, initial_game_phase),
-                    mobility_evaluation.taper_score(game_phase, initial_game_phase),
-                    safety_evaluation.taper_score(game_phase, initial_game_phase),
-                    pawns_evaluation.taper_score(game_phase, initial_game_phase)
+                    material_evaluation.taper_score(game_phase),
+                    pst_evaluation.taper_score(game_phase),
+                    mobility_evaluation.taper_score(game_phase),
+                    safety_evaluation.taper_score(game_phase),
+                    pawns_evaluation.taper_score(game_phase)
                 );
             }
 

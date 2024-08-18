@@ -4,11 +4,9 @@
 
 use super::*;
 
-pub const INITIAL_GAME_PHASE: u8 = 24;
-
 impl Default for EvaluationParameters {
     fn default() -> Self {
-        let mut evaluation_parameters = Self {
+        Self {
             piece_value: [100, 337, 338, 521, 1050, 10000],
 
             bishop_pair_opening: 22,
@@ -40,16 +38,6 @@ impl Default for EvaluationParameters {
 
             king_attacked_squares_opening: [82, 79, 67, 40, -7, -56, -112, -200],
             king_attacked_squares_ending: [-49, -44, -39, -36, -14, 3, 29, 65],
-
-            pst: Box::new([[[[[0; 64]; 2]; 8]; 6]; 2]),
-            pst_patterns: Box::new([[[[0; 64]; 2]; 8]; 6]),
-
-            piece_phase_value: [0, 1, 1, 2, 4, 0],
-            initial_game_phase: 24,
-        };
-
-        evaluation_parameters.set_default_pst_patterns();
-        evaluation_parameters.recalculate();
-        evaluation_parameters
+        }
     }
 }

@@ -1,11 +1,11 @@
 use crate::engine::see::SEEContainer;
 use crate::evaluation::material;
 use crate::evaluation::mobility;
-use crate::evaluation::parameters::*;
 use crate::evaluation::pawns;
 use crate::evaluation::pst;
 use crate::evaluation::safety;
 use crate::evaluation::EvaluationParameters;
+use crate::evaluation::*;
 use crate::state::movegen::MagicContainer;
 use crate::state::patterns::PatternsContainer;
 use crate::state::text::fen;
@@ -14,13 +14,13 @@ use crate::state::*;
 use crate::utils::rand;
 use common::time::DateTime;
 use std::collections::HashSet;
-use std::fmt::Display;
 use std::fs;
 use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
 use std::io::Write;
 use std::path::Path;
+use std::slice::Iter;
 use std::sync::Arc;
 use std::thread;
 use std::time::SystemTime;
@@ -115,8 +115,7 @@ pub fn run(epd_filename: &str, output_directory: &str, random_values: bool, k: O
     let indices = Arc::new(indices);
     println!("Loaded {} positions in {} seconds, starting tuner", positions.len(), (start_time.elapsed().unwrap().as_millis() as f32) / 1000.0);
 
-    let mut evaluation_parameters = EvaluationParameters::default();
-    let mut tuner_parameters = load_values(&evaluation_parameters, random_values);
+    let mut tuner_parameters = load_values(random_values);
 
     for parameter in &tuner_parameters {
         weights.push(parameter.value as f32);
@@ -215,16 +214,20 @@ pub fn run(epd_filename: &str, output_directory: &str, random_values: bool, k: O
                 tuner_parameters[i].value = weights[i].round() as i16;
             }
 
-            save_values(&mut evaluation_parameters, &mut tuner_parameters);
-
+            let mut weights_iter = weights.iter();
             let error = calculate_error(&positions, &coefficients, &indices, &weights, k, wdl_ratio, threads_count);
-            write_evaluation_parameters(&evaluation_parameters, output_directory, error, k, wdl_ratio);
-            write_piece_square_table(output_directory, error, k, wdl_ratio, "PAWN", &evaluation_parameters.pst_patterns[PAWN]);
-            write_piece_square_table(output_directory, error, k, wdl_ratio, "KNIGHT", &evaluation_parameters.pst_patterns[KNIGHT]);
-            write_piece_square_table(output_directory, error, k, wdl_ratio, "BISHOP", &evaluation_parameters.pst_patterns[BISHOP]);
-            write_piece_square_table(output_directory, error, k, wdl_ratio, "ROOK", &evaluation_parameters.pst_patterns[ROOK]);
-            write_piece_square_table(output_directory, error, k, wdl_ratio, "QUEEN", &evaluation_parameters.pst_patterns[QUEEN]);
-            write_piece_square_table(output_directory, error, k, wdl_ratio, "KING", &evaluation_parameters.pst_patterns[KING]);
+
+            write_evaluation_parameters(&mut weights_iter, output_directory, error, k, wdl_ratio);
+            write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "PAWN");
+            write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "KNIGHT");
+            write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "BISHOP");
+            write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "ROOK");
+            write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "QUEEN");
+            write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "KING");
+
+            if weights_iter.next().is_some() {
+                panic!("Weights iterator has not ended properly");
+            }
 
             println!(
                 "Iteration {} done in {} seconds, error reduced from {:.6} to {:.6} ({:.6})",
@@ -404,7 +407,8 @@ fn load_positions(
 
 /// Transforms the current evaluation values into a list of [TunerParameter]. Use `lock_material` if the parameters related to piece values should
 /// be skipped, and `random_values` if the parameters should have random values (useful when initializing tuner).
-fn load_values(evaluation_parameters: &EvaluationParameters, random_values: bool) -> Vec<TunerParameter> {
+fn load_values(random_values: bool) -> Vec<TunerParameter> {
+    let evaluation_parameters = EvaluationParameters::default();
     let mut parameters = vec![
         TunerParameter::new(evaluation_parameters.piece_value[PAWN], 100, 100, 100, 100),
         TunerParameter::new(evaluation_parameters.piece_value[KNIGHT], 0, 300, 400, 9999),
@@ -443,38 +447,38 @@ fn load_values(evaluation_parameters: &EvaluationParameters, random_values: bool
     parameters.append(&mut evaluation_parameters.king_attacked_squares_opening.iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
     parameters.append(&mut evaluation_parameters.king_attacked_squares_ending.iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
 
-    let pawn_pst = &evaluation_parameters.pst_patterns[PAWN];
+    let pawn_pst = &EvaluationParameters::PAWN_PST_PATTERN;
     for king_file in ALL_FILES {
         parameters.append(&mut pawn_pst[king_file][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
         parameters.append(&mut pawn_pst[king_file][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
     }
 
+    let knight_pst = &EvaluationParameters::KNIGHT_PST_PATTERN;
     for king_file in ALL_FILES {
-        let knight_pst = &evaluation_parameters.pst_patterns[KNIGHT];
         parameters.append(&mut knight_pst[king_file][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
         parameters.append(&mut knight_pst[king_file][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
     }
 
+    let bishop_pst = &EvaluationParameters::BISHOP_PST_PATTERN;
     for king_file in ALL_FILES {
-        let bishop_pst = &evaluation_parameters.pst_patterns[BISHOP];
         parameters.append(&mut bishop_pst[king_file][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
         parameters.append(&mut bishop_pst[king_file][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
     }
 
+    let rook_pst = &EvaluationParameters::ROOK_PST_PATTERN;
     for king_file in ALL_FILES {
-        let rook_pst = &evaluation_parameters.pst_patterns[ROOK];
         parameters.append(&mut rook_pst[king_file][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
         parameters.append(&mut rook_pst[king_file][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
     }
 
+    let queen_pst = &EvaluationParameters::QUEEN_PST_PATTERN;
     for king_file in ALL_FILES {
-        let queen_pst = &evaluation_parameters.pst_patterns[QUEEN];
         parameters.append(&mut queen_pst[king_file][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
         parameters.append(&mut queen_pst[king_file][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
     }
 
+    let king_pst = &EvaluationParameters::KING_PST_PATTERN;
     for king_file in ALL_FILES {
-        let king_pst = &evaluation_parameters.pst_patterns[KING];
         parameters.append(&mut king_pst[king_file][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
         parameters.append(&mut king_pst[king_file][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
     }
@@ -493,154 +497,49 @@ fn load_values(evaluation_parameters: &EvaluationParameters, random_values: bool
     parameters
 }
 
-/// Transforms `values` into the evaluation parameters, which can be used during real evaluation. Use `lock_material` if the parameters
-/// related to piece values should be skipped.
-fn save_values(evaluation_parameters: &mut EvaluationParameters, values: &mut [TunerParameter]) {
-    let mut index = 0;
-
-    save_values_to_i16_array_internal(values, &mut evaluation_parameters.piece_value, &mut index);
-
-    save_values_internal(values, &mut evaluation_parameters.bishop_pair_opening, &mut index);
-    save_values_internal(values, &mut evaluation_parameters.bishop_pair_ending, &mut index);
-
-    save_values_to_i16_array_internal(values, &mut evaluation_parameters.mobility_inner_opening, &mut index);
-    save_values_to_i16_array_internal(values, &mut evaluation_parameters.mobility_inner_ending, &mut index);
-    save_values_to_i16_array_internal(values, &mut evaluation_parameters.mobility_outer_opening, &mut index);
-    save_values_to_i16_array_internal(values, &mut evaluation_parameters.mobility_outer_ending, &mut index);
-
-    save_values_to_i16_array_internal(values, &mut evaluation_parameters.doubled_pawn_opening, &mut index);
-    save_values_to_i16_array_internal(values, &mut evaluation_parameters.doubled_pawn_ending, &mut index);
-
-    save_values_to_i16_array_internal(values, &mut evaluation_parameters.isolated_pawn_opening, &mut index);
-    save_values_to_i16_array_internal(values, &mut evaluation_parameters.isolated_pawn_ending, &mut index);
-
-    save_values_to_i16_array_internal(values, &mut evaluation_parameters.chained_pawn_opening, &mut index);
-    save_values_to_i16_array_internal(values, &mut evaluation_parameters.chained_pawn_ending, &mut index);
-
-    save_values_to_i16_array_internal(values, &mut evaluation_parameters.passed_pawn_opening, &mut index);
-    save_values_to_i16_array_internal(values, &mut evaluation_parameters.passed_pawn_ending, &mut index);
-
-    save_values_to_i16_array_internal(values, &mut evaluation_parameters.pawn_shield_opening, &mut index);
-    save_values_to_i16_array_internal(values, &mut evaluation_parameters.pawn_shield_ending, &mut index);
-
-    save_values_to_i16_array_internal(values, &mut evaluation_parameters.pawn_shield_open_file_opening, &mut index);
-    save_values_to_i16_array_internal(values, &mut evaluation_parameters.pawn_shield_open_file_ending, &mut index);
-
-    save_values_to_i16_array_internal(values, &mut evaluation_parameters.king_attacked_squares_opening, &mut index);
-    save_values_to_i16_array_internal(values, &mut evaluation_parameters.king_attacked_squares_ending, &mut index);
-
-    let pawn_pst = &mut evaluation_parameters.pst_patterns[PAWN];
-    for king_file in ALL_FILES {
-        save_values_to_i8_array_internal(values, &mut pawn_pst[king_file][0], &mut index);
-        save_values_to_i8_array_internal(values, &mut pawn_pst[king_file][1], &mut index);
-    }
-
-    for king_file in ALL_FILES {
-        let knight_pst = &mut evaluation_parameters.pst_patterns[KNIGHT];
-        save_values_to_i8_array_internal(values, &mut knight_pst[king_file][0], &mut index);
-        save_values_to_i8_array_internal(values, &mut knight_pst[king_file][1], &mut index);
-    }
-
-    for king_file in ALL_FILES {
-        let bishop_pst = &mut evaluation_parameters.pst_patterns[BISHOP];
-        save_values_to_i8_array_internal(values, &mut bishop_pst[king_file][0], &mut index);
-        save_values_to_i8_array_internal(values, &mut bishop_pst[king_file][1], &mut index);
-    }
-
-    for king_file in ALL_FILES {
-        let rook_pst = &mut evaluation_parameters.pst_patterns[ROOK];
-        save_values_to_i8_array_internal(values, &mut rook_pst[king_file][0], &mut index);
-        save_values_to_i8_array_internal(values, &mut rook_pst[king_file][1], &mut index);
-    }
-
-    for king_file in ALL_FILES {
-        let queen_pst = &mut evaluation_parameters.pst_patterns[QUEEN];
-        save_values_to_i8_array_internal(values, &mut queen_pst[king_file][0], &mut index);
-        save_values_to_i8_array_internal(values, &mut queen_pst[king_file][1], &mut index);
-    }
-
-    for king_file in ALL_FILES {
-        let king_pst = &mut evaluation_parameters.pst_patterns[KING];
-        save_values_to_i8_array_internal(values, &mut king_pst[king_file][0], &mut index);
-        save_values_to_i8_array_internal(values, &mut king_pst[king_file][1], &mut index);
-    }
-
-    evaluation_parameters.recalculate();
-}
-
-/// Saves `index`-th evaluation parameter stored in `values` in the `destination`.
-fn save_values_internal(values: &mut [TunerParameter], destination: &mut i16, index: &mut usize) {
-    *destination = values[*index].value;
-    *index += 1;
-}
-
-/// Saves [i8] array starting at the `index` of `values` in the `array`.
-fn save_values_to_i8_array_internal(values: &mut [TunerParameter], array: &mut [i16], index: &mut usize) {
-    array.copy_from_slice(&values[*index..(*index + array.len())].iter().map(|v| v.value).collect::<Vec<i16>>());
-    *index += array.len();
-}
-
-/// Saves [i16] array starting at the `index` of `values` in the `array`.
-fn save_values_to_i16_array_internal(values: &mut [TunerParameter], array: &mut [i16], index: &mut usize) {
-    array.copy_from_slice(&values[*index..(*index + array.len())].iter().map(|v| v.value).collect::<Vec<i16>>());
-    *index += array.len();
-}
-
 /// Generates `parameters.rs` file with current evaluation parameters, and saves it into the `output_directory`.
-fn write_evaluation_parameters(evaluation_parameters: &EvaluationParameters, output_directory: &str, best_error: f32, k: f32, wdl_ratio: f32) {
+fn write_evaluation_parameters(weights: &mut Iter<f32>, output_directory: &str, best_error: f32, k: f32, wdl_ratio: f32) {
     let mut output = String::new();
 
     output.push_str(get_header(best_error, k, wdl_ratio).as_str());
     output.push('\n');
     output.push_str("use super::*;\n");
     output.push('\n');
-    output.push_str("pub const INITIAL_GAME_PHASE: u8 = 24;");
-    output.push('\n');
     output.push_str("impl Default for EvaluationParameters {\n");
     output.push_str("    fn default() -> Self {\n");
-    output.push_str("        let mut evaluation_parameters = Self {\n");
-    output.push_str(get_array("piece_value", &evaluation_parameters.piece_value).as_str());
+    output.push_str("        Self {\n");
+    output.push_str(get_array("piece_value", weights, 6).as_str());
     output.push('\n');
-    output.push_str(get_parameter("bishop_pair_opening", evaluation_parameters.bishop_pair_opening).as_str());
-    output.push_str(get_parameter("bishop_pair_ending", evaluation_parameters.bishop_pair_ending).as_str());
+    output.push_str(get_parameter("bishop_pair_opening", weights).as_str());
+    output.push_str(get_parameter("bishop_pair_ending", weights).as_str());
     output.push('\n');
-    output.push_str(get_array("mobility_inner_opening", &evaluation_parameters.mobility_inner_opening).as_str());
-    output.push_str(get_array("mobility_inner_ending", &evaluation_parameters.mobility_inner_ending).as_str());
+    output.push_str(get_array("mobility_inner_opening", weights, 6).as_str());
+    output.push_str(get_array("mobility_inner_ending", weights, 6).as_str());
     output.push('\n');
-    output.push_str(get_array("mobility_outer_opening", &evaluation_parameters.mobility_outer_opening).as_str());
-    output.push_str(get_array("mobility_outer_ending", &evaluation_parameters.mobility_outer_ending).as_str());
+    output.push_str(get_array("mobility_outer_opening", weights, 6).as_str());
+    output.push_str(get_array("mobility_outer_ending", weights, 6).as_str());
     output.push('\n');
-    output.push_str(get_array("doubled_pawn_opening", &evaluation_parameters.doubled_pawn_opening).as_str());
-    output.push_str(get_array("doubled_pawn_ending", &evaluation_parameters.doubled_pawn_ending).as_str());
+    output.push_str(get_array("doubled_pawn_opening", weights, 8).as_str());
+    output.push_str(get_array("doubled_pawn_ending", weights, 8).as_str());
     output.push('\n');
-    output.push_str(get_array("isolated_pawn_opening", &evaluation_parameters.isolated_pawn_opening).as_str());
-    output.push_str(get_array("isolated_pawn_ending", &evaluation_parameters.isolated_pawn_ending).as_str());
+    output.push_str(get_array("isolated_pawn_opening", weights, 8).as_str());
+    output.push_str(get_array("isolated_pawn_ending", weights, 8).as_str());
     output.push('\n');
-    output.push_str(get_array("chained_pawn_opening", &evaluation_parameters.chained_pawn_opening).as_str());
-    output.push_str(get_array("chained_pawn_ending", &evaluation_parameters.chained_pawn_ending).as_str());
+    output.push_str(get_array("chained_pawn_opening", weights, 8).as_str());
+    output.push_str(get_array("chained_pawn_ending", weights, 8).as_str());
     output.push('\n');
-    output.push_str(get_array("passed_pawn_opening", &evaluation_parameters.passed_pawn_opening).as_str());
-    output.push_str(get_array("passed_pawn_ending", &evaluation_parameters.passed_pawn_ending).as_str());
+    output.push_str(get_array("passed_pawn_opening", weights, 8).as_str());
+    output.push_str(get_array("passed_pawn_ending", weights, 8).as_str());
     output.push('\n');
-    output.push_str(get_array("pawn_shield_opening", &evaluation_parameters.pawn_shield_opening).as_str());
-    output.push_str(get_array("pawn_shield_ending", &evaluation_parameters.pawn_shield_ending).as_str());
+    output.push_str(get_array("pawn_shield_opening", weights, 8).as_str());
+    output.push_str(get_array("pawn_shield_ending", weights, 8).as_str());
     output.push('\n');
-    output.push_str(get_array("pawn_shield_open_file_opening", &evaluation_parameters.pawn_shield_open_file_opening).as_str());
-    output.push_str(get_array("pawn_shield_open_file_ending", &evaluation_parameters.pawn_shield_open_file_ending).as_str());
+    output.push_str(get_array("pawn_shield_open_file_opening", weights, 8).as_str());
+    output.push_str(get_array("pawn_shield_open_file_ending", weights, 8).as_str());
     output.push('\n');
-    output.push_str(get_array("king_attacked_squares_opening", &evaluation_parameters.king_attacked_squares_opening).as_str());
-    output.push_str(get_array("king_attacked_squares_ending", &evaluation_parameters.king_attacked_squares_ending).as_str());
-    output.push('\n');
-    output.push_str("            pst: Box::new([[[[[0; 64]; 2]; 8]; 6]; 2]),\n");
-    output.push_str("            pst_patterns: Box::new([[[[0; 64]; 2]; 8]; 6]),\n");
-    output.push('\n');
-    output.push_str(get_array("piece_phase_value", &evaluation_parameters.piece_phase_value).as_str());
-    output.push_str(get_parameter("initial_game_phase", evaluation_parameters.initial_game_phase).as_str());
-    output.push_str("        };\n");
-    output.push('\n');
-    output.push_str("        evaluation_parameters.set_default_pst_patterns();\n");
-    output.push_str("        evaluation_parameters.recalculate();\n");
-    output.push_str("        evaluation_parameters\n");
+    output.push_str(get_array("king_attacked_squares_opening", weights, 8).as_str());
+    output.push_str(get_array("king_attacked_squares_ending", weights, 8).as_str());
+    output.push_str("        }\n");
     output.push_str("    }\n");
     output.push_str("}\n");
 
@@ -652,7 +551,7 @@ fn write_evaluation_parameters(evaluation_parameters: &EvaluationParameters, out
 }
 
 /// Generates piece-square tables (Rust source file with current evaluation parameters), and saves it into the `output_directory`.
-fn write_piece_square_table(output_directory: &str, best_error: f32, k: f32, wdl_ratio: f32, name: &str, patterns: &[[[i16; 64]; 2]; 8]) {
+fn write_piece_square_table(weights: &mut Iter<f32>, output_directory: &str, best_error: f32, k: f32, wdl_ratio: f32, name: &str) {
     let mut output = String::new();
 
     output.push_str(get_header(best_error, k, wdl_ratio).as_str());
@@ -664,13 +563,13 @@ fn write_piece_square_table(output_directory: &str, best_error: f32, k: f32, wdl
     output.push_str(&format!("    pub const {}_PST_PATTERN: [[[i16; 64]; 2]; 8] =\n", name));
     output.push_str("    [\n");
 
-    for king_file in ALL_FILES {
+    for _ in ALL_FILES {
         output.push_str("        [\n");
         output.push_str("            [\n");
-        output.push_str(get_piece_square_table(&patterns[king_file][0]).as_str());
+        output.push_str(get_piece_square_table(weights).as_str());
         output.push_str("            ],\n");
         output.push_str("            [\n");
-        output.push_str(get_piece_square_table(&patterns[king_file][1]).as_str());
+        output.push_str(get_piece_square_table(weights).as_str());
         output.push_str("            ],\n");
         output.push_str("        ],\n");
     }
@@ -698,28 +597,32 @@ fn get_header(best_error: f32, k: f32, wdl_ratio: f32) -> String {
 }
 
 /// Gets a Rust representation of the piece `values` array.
-fn get_array<T>(name: &str, values: &[T]) -> String
-where
-    T: Display,
-{
-    format!("            {}: [{}],\n", name, values.iter().map(|p| p.to_string()).collect::<Vec<String>>().join(", "))
+fn get_array(name: &str, weights: &mut Iter<f32>, length: usize) -> String {
+    let mut output = format!("            {}: [", name);
+    for i in 0..length {
+        if i > 0 {
+            output += ", ";
+        }
+
+        output += &weights.next().unwrap().round().to_string();
+    }
+
+    output += "],\n";
+    output
 }
 
 /// Gets a Rust representation of the parameter with the specified `name` and `value`.
-fn get_parameter<T>(name: &str, value: T) -> String
-where
-    T: Display,
-{
-    format!("            {}: {},\n", name, value)
+fn get_parameter(name: &str, weights: &mut Iter<f32>) -> String {
+    format!("            {}: {},\n", name, weights.next().unwrap().round())
 }
 
 /// Gets a Rust representation of the piece-square tables with the specified `values`.
-fn get_piece_square_table(values: &[i16]) -> String {
+fn get_piece_square_table(weights: &mut Iter<f32>) -> String {
     let mut output = String::new();
 
     output.push_str("                ");
     for index in ALL_SQUARES {
-        output.push_str(format!("{:4}", values[index]).as_str());
+        output.push_str(format!("{:4}", weights.next().unwrap().round()).as_str());
         if index % 8 == 7 {
             output.push_str(",\n");
             if index != 63 {
@@ -731,17 +634,4 @@ fn get_piece_square_table(values: &[i16]) -> String {
     }
 
     output
-}
-
-/// Tests the correctness of [load_values] and [save_values] methods.
-pub fn validate() -> bool {
-    /* let mut context = TunerContext::new(Vec::new());
-    let mut values = load_values(&context, false);
-    save_values(&mut context, &mut values);
-
-    let values_after_save = load_values(&context, false);
-    values.iter().zip(&values_after_save).all(|(a, b)| a.value == b.value)
-    */
-
-    true
 }

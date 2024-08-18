@@ -1,4 +1,5 @@
 use crate::state::*;
+use crate::utils::bithelpers::BitHelpers;
 use std::ops;
 
 pub mod material;
@@ -7,6 +8,9 @@ pub mod parameters;
 pub mod pawns;
 pub mod pst;
 pub mod safety;
+
+pub const INITIAL_GAME_PHASE: u8 = 24;
+pub const PIECE_PHASE_VALUE: [u8; 6] = [0, 1, 1, 2, 4, 0];
 
 #[derive(Clone)]
 pub struct EvaluationParameters {
@@ -41,12 +45,6 @@ pub struct EvaluationParameters {
 
     pub king_attacked_squares_opening: [i16; 8],
     pub king_attacked_squares_ending: [i16; 8],
-
-    pub pst: Box<[[[[[i16; 64]; 2]; 8]; 6]; 2]>,
-    pub pst_patterns: Box<[[[[i16; 64]; 2]; 8]; 6]>,
-
-    pub piece_phase_value: [u8; 6],
-    pub initial_game_phase: u8,
 }
 
 pub struct EvaluationResult {
@@ -55,55 +53,24 @@ pub struct EvaluationResult {
 }
 
 impl EvaluationParameters {
-    /// Initializes PST patterns with used by default during search.
-    fn set_default_pst_patterns(&mut self) {
-        self.pst_patterns[PAWN] = Self::PAWN_PST_PATTERN;
-        self.pst_patterns[KNIGHT] = Self::KNIGHT_PST_PATTERN;
-        self.pst_patterns[BISHOP] = Self::BISHOP_PST_PATTERN;
-        self.pst_patterns[ROOK] = Self::ROOK_PST_PATTERN;
-        self.pst_patterns[QUEEN] = Self::QUEEN_PST_PATTERN;
-        self.pst_patterns[KING] = Self::KING_PST_PATTERN;
-    }
-
-    /// Recalculates initial material and PST tables.
-    pub fn recalculate(&mut self) {
-        for color in ALL_COLORS {
-            for piece in ALL_PIECES {
-                for king_file in ALL_FILES {
-                    for phase in ALL_PHASES {
-                        self.pst[color][piece][king_file][phase] = self.calculate_pst(color, &self.pst_patterns[piece][king_file][phase]);
-                    }
-                }
-            }
-        }
-    }
-
-    /// Calculates PST table for the specified `color` and `pattern`.
-    fn calculate_pst(&self, color: usize, pattern: &[i16; 64]) -> [i16; 64] {
-        let mut array = [0; 64];
-
-        match color {
-            WHITE => {
-                for square in ALL_SQUARES {
-                    array[square] = pattern[63 - square];
-                }
-            }
-            BLACK => {
-                for file in ALL_FILES {
-                    for rank in ALL_RANKS {
-                        array[file + rank * 8] = pattern[(7 - file) + rank * 8];
-                    }
-                }
-            }
-            _ => panic!("Invalid parameter: color={}", color),
-        }
-
-        array
-    }
-
     /// Gets a PST value for the specified `color`, `piece`, `phase` and `square`.
-    pub fn get_pst_value(&self, color: usize, piece: usize, king_file: usize, phase: usize, square: usize) -> i16 {
-        self.pst[color][piece][king_file][phase][square]
+    pub fn get_pst_value(&self, color: usize, piece: usize, king_file: usize, phase: usize, mut square: usize) -> i16 {
+        if color == BLACK {
+            // king_file = (1u64 << (king_file & 0x3f)).swap_bytes().bit_scan();
+            square = (1u64 << square).swap_bytes().bit_scan();
+        }
+
+        let pst = match piece {
+            PAWN => &Self::PAWN_PST_PATTERN,
+            KNIGHT => &Self::KNIGHT_PST_PATTERN,
+            BISHOP => &Self::BISHOP_PST_PATTERN,
+            ROOK => &Self::ROOK_PST_PATTERN,
+            QUEEN => &Self::QUEEN_PST_PATTERN,
+            KING => &Self::KING_PST_PATTERN,
+            _ => panic!("Invalid value: piece={}", piece),
+        };
+
+        pst[king_file & 0x3f][phase][63 - square]
     }
 }
 
@@ -117,11 +84,11 @@ impl EvaluationResult {
     ///  - `max_game_phase` represents a board with the initial state set (opening phase)
     ///  - 0 represents a board without any piece (ending phase)
     ///  - every value between them represents a board state somewhere in the middle game
-    pub fn taper_score(&self, game_phase: u8, max_game_phase: u8) -> i16 {
+    pub fn taper_score(&self, game_phase: u8) -> i16 {
         let opening_score = (self.opening_score as i32) * (game_phase as i32);
-        let ending_score = (self.ending_score as i32) * ((max_game_phase as i32) - (game_phase as i32));
+        let ending_score = (self.ending_score as i32) * ((INITIAL_GAME_PHASE as i32) - (game_phase as i32));
 
-        ((opening_score + ending_score) / (max_game_phase as i32)) as i16
+        ((opening_score + ending_score) / (INITIAL_GAME_PHASE as i32)) as i16
     }
 }
 

@@ -16,6 +16,7 @@ use crate::evaluation::pawns;
 use crate::evaluation::pst;
 use crate::evaluation::safety;
 use crate::evaluation::EvaluationParameters;
+use crate::evaluation::*;
 use crate::tablebases;
 use crate::utils::bitflags::BitFlags;
 use crate::utils::bithelpers::BitHelpers;
@@ -692,7 +693,7 @@ impl Board {
         self.occupancy[color] |= 1u64 << square;
         self.piece_table[square] = piece as u8;
         self.material_scores[color] += self.evaluation_parameters.piece_value[piece];
-        self.game_phase += self.evaluation_parameters.piece_phase_value[piece];
+        self.game_phase += PIECE_PHASE_VALUE[piece];
 
         if !UNDO {
             let king_file = self.pieces[color][KING].bit_scan() & 7;
@@ -707,7 +708,7 @@ impl Board {
         self.occupancy[color] &= !(1u64 << square);
         self.piece_table[square] = u8::MAX;
         self.material_scores[color] -= self.evaluation_parameters.piece_value[piece];
-        self.game_phase -= self.evaluation_parameters.piece_phase_value[piece];
+        self.game_phase -= PIECE_PHASE_VALUE[piece];
 
         if !UNDO {
             let king_file = self.pieces[color][KING].bit_scan() & 7;
@@ -755,7 +756,6 @@ impl Board {
     /// evaluations and `statistics` to gather diagnostic data. Returns score from the `color` perspective (more than 0 when advantage, less than 0 when disadvantage).
     pub fn evaluate<const DIAG: bool>(&self, color: usize, pawn_hashtable: &PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
         let game_phase = self.game_phase;
-        let initial_game_phase = self.evaluation_parameters.initial_game_phase;
         let mut dangered_white_king_squares = 0;
         let mut dangered_black_king_squares = 0;
 
@@ -768,14 +768,13 @@ impl Board {
         let evaluation = material_evaluation + pst_evaluation + mobility_evaluation + safety_evaluation + pawns_evaluation;
         let sign = -((color as i16) * 2 - 1);
 
-        sign * evaluation.taper_score(game_phase, initial_game_phase)
+        sign * evaluation.taper_score(game_phase)
     }
 
     /// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position.
     /// Returns score from the `color` perspective (more than 0 when advantage, less than 0 when disadvantage).
     pub fn evaluate_without_cache(&self, color: usize) -> i16 {
         let game_phase = self.game_phase;
-        let initial_game_phase = self.evaluation_parameters.initial_game_phase;
         let mut dangered_white_king_squares = 0;
         let mut dangered_black_king_squares = 0;
 
@@ -788,18 +787,17 @@ impl Board {
         let evaluation = material_evaluation + pst_evaluation + mobility_evaluation + safety_evaluation + pawns_evaluation;
         let sign = -((color as i16) * 2 - 1);
 
-        sign * evaluation.taper_score(game_phase, initial_game_phase)
+        sign * evaluation.taper_score(game_phase)
     }
 
     /// Runs lazy (fast) evaluations, considering only material and piece-square tables. Returns score from the `color` perspective (more than 0 when
     /// advantage, less than 0 when disadvantage).
     pub fn evaluate_lazy(&self, color: usize) -> i16 {
         let game_phase = self.game_phase;
-        let initial_game_phase = self.evaluation_parameters.initial_game_phase;
         let evaluation = material::evaluate(self) + pst::evaluate(self);
         let sign = -((color as i16) * 2 - 1);
 
-        sign * evaluation.taper_score(game_phase, initial_game_phase)
+        sign * evaluation.taper_score(game_phase)
     }
 
     /// Recalculates incremental values (material and piece-square tables) entirely.
