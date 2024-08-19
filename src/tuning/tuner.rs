@@ -3,6 +3,7 @@ use crate::evaluation::material;
 use crate::evaluation::mobility;
 use crate::evaluation::pawns;
 use crate::evaluation::pst;
+use crate::evaluation::pst::*;
 use crate::evaluation::safety;
 use crate::evaluation::EvaluationParameters;
 use crate::evaluation::*;
@@ -448,39 +449,39 @@ fn load_values(random_values: bool) -> Vec<TunerParameter> {
     parameters.append(&mut evaluation_parameters.king_attacked_squares_ending.iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
 
     let pawn_pst = &EvaluationParameters::PAWN_PST_PATTERN;
-    for king_file in ALL_FILES {
-        parameters.append(&mut pawn_pst[king_file][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
-        parameters.append(&mut pawn_pst[king_file][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+    for king_bucket in 0..KING_BUCKETS_COUNT {
+        parameters.append(&mut pawn_pst[king_bucket][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+        parameters.append(&mut pawn_pst[king_bucket][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
     }
 
     let knight_pst = &EvaluationParameters::KNIGHT_PST_PATTERN;
-    for king_file in ALL_FILES {
-        parameters.append(&mut knight_pst[king_file][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
-        parameters.append(&mut knight_pst[king_file][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+    for king_bucket in 0..KING_BUCKETS_COUNT {
+        parameters.append(&mut knight_pst[king_bucket][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+        parameters.append(&mut knight_pst[king_bucket][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
     }
 
     let bishop_pst = &EvaluationParameters::BISHOP_PST_PATTERN;
-    for king_file in ALL_FILES {
-        parameters.append(&mut bishop_pst[king_file][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
-        parameters.append(&mut bishop_pst[king_file][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+    for king_bucket in 0..KING_BUCKETS_COUNT {
+        parameters.append(&mut bishop_pst[king_bucket][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+        parameters.append(&mut bishop_pst[king_bucket][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
     }
 
     let rook_pst = &EvaluationParameters::ROOK_PST_PATTERN;
-    for king_file in ALL_FILES {
-        parameters.append(&mut rook_pst[king_file][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
-        parameters.append(&mut rook_pst[king_file][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+    for king_bucket in 0..KING_BUCKETS_COUNT {
+        parameters.append(&mut rook_pst[king_bucket][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+        parameters.append(&mut rook_pst[king_bucket][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
     }
 
     let queen_pst = &EvaluationParameters::QUEEN_PST_PATTERN;
-    for king_file in ALL_FILES {
-        parameters.append(&mut queen_pst[king_file][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
-        parameters.append(&mut queen_pst[king_file][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+    for king_bucket in 0..KING_BUCKETS_COUNT {
+        parameters.append(&mut queen_pst[king_bucket][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+        parameters.append(&mut queen_pst[king_bucket][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
     }
 
     let king_pst = &EvaluationParameters::KING_PST_PATTERN;
-    for king_file in ALL_FILES {
-        parameters.append(&mut king_pst[king_file][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
-        parameters.append(&mut king_pst[king_file][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+    for king_bucket in 0..KING_BUCKETS_COUNT {
+        parameters.append(&mut king_pst[king_bucket][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+        parameters.append(&mut king_pst[king_bucket][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
     }
 
     if random_values {
@@ -560,10 +561,10 @@ fn write_piece_square_table(weights: &mut Iter<f32>, output_directory: &str, bes
     output.push('\n');
     output.push_str("impl EvaluationParameters {\n");
     output.push_str("    #[rustfmt::skip]\n");
-    output.push_str(&format!("    pub const {}_PST_PATTERN: [[[i16; 64]; 2]; 8] =\n", name));
+    output.push_str(&format!("    pub const {}_PST_PATTERN: [[[i16; 64]; 2]; KING_BUCKETS_COUNT] =\n", name));
     output.push_str("    [\n");
 
-    for _ in ALL_FILES {
+    for _ in 0..KING_BUCKETS_COUNT {
         output.push_str("        [\n");
         output.push_str("            [\n");
         output.push_str(get_piece_square_table(weights).as_str());

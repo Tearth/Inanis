@@ -6,7 +6,7 @@ use super::*;
 
 impl EvaluationParameters {
     #[rustfmt::skip]
-    pub const QUEEN_PST_PATTERN: [[[i16; 64]; 2]; 8] =
+    pub const QUEEN_PST_PATTERN: [[[i16; 64]; 2]; KING_BUCKETS_COUNT] =
     [
         [
             [

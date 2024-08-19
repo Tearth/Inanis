@@ -2,9 +2,6 @@ use super::*;
 use crate::state::representation::Board;
 
 #[cfg(feature = "dev")]
-use pst::*;
-
-#[cfg(feature = "dev")]
 use crate::tuning::tuner::TunerCoefficient;
 
 /// Evaluates king safety on the `board` and returns score from the white color perspective (more than 0 when advantage,

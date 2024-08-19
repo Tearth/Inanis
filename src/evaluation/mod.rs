@@ -1,5 +1,6 @@
 use crate::state::*;
-use crate::utils::bithelpers::BitHelpers;
+use pst::*;
+use std::hint::unreachable_unchecked;
 use std::ops;
 
 pub mod material;
@@ -54,12 +55,7 @@ pub struct EvaluationResult {
 
 impl EvaluationParameters {
     /// Gets a PST value for the specified `color`, `piece`, `phase` and `square`.
-    pub fn get_pst_value(&self, color: usize, piece: usize, king_file: usize, phase: usize, mut square: usize) -> i16 {
-        if color == BLACK {
-            // king_file = (1u64 << (king_file & 0x3f)).swap_bytes().bit_scan();
-            square = (1u64 << square).swap_bytes().bit_scan();
-        }
-
+    pub fn get_pst_value(&self, piece: usize, king_square: usize, phase: usize, square: usize) -> i16 {
         let pst = match piece {
             PAWN => &Self::PAWN_PST_PATTERN,
             KNIGHT => &Self::KNIGHT_PST_PATTERN,
@@ -67,10 +63,10 @@ impl EvaluationParameters {
             ROOK => &Self::ROOK_PST_PATTERN,
             QUEEN => &Self::QUEEN_PST_PATTERN,
             KING => &Self::KING_PST_PATTERN,
-            _ => panic!("Invalid value: piece={}", piece),
+            _ => unsafe { unreachable_unchecked() },
         };
 
-        pst[king_file & 0x3f][phase][63 - square]
+        pst[KING_BUCKETS[63 - king_square]][phase][63 - square]
     }
 }
 

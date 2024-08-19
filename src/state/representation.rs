@@ -14,6 +14,7 @@ use crate::evaluation::material;
 use crate::evaluation::mobility;
 use crate::evaluation::pawns;
 use crate::evaluation::pst;
+use crate::evaluation::pst::*;
 use crate::evaluation::safety;
 use crate::evaluation::EvaluationParameters;
 use crate::evaluation::*;
@@ -350,7 +351,12 @@ impl Board {
             self.pawn_hash ^= self.zobrist.get_piece_hash(color, KING, from);
             self.pawn_hash ^= self.zobrist.get_piece_hash(color, KING, to);
 
-            pst::recalculate_incremental_values(self);
+            let from = if color == WHITE { from } else { (1u64 << from).swap_bytes().bit_scan() };
+            let to = if color == WHITE { to } else { (1u64 << to).swap_bytes().bit_scan() };
+            
+            if KING_BUCKETS[from] != KING_BUCKETS[to] {
+                pst::recalculate_incremental_values(self);
+            }
         } else if piece == ROOK {
             match color {
                 WHITE => match from {
@@ -688,7 +694,7 @@ impl Board {
     }
 
     /// Adds `piece` on the `square` with the specified `color`, also updates occupancy and incremental values.
-    pub fn add_piece<const UNDO: bool>(&mut self, color: usize, piece: usize, square: usize) {
+    pub fn add_piece<const UNDO: bool>(&mut self, color: usize, piece: usize, mut square: usize) {
         self.pieces[color][piece] |= 1u64 << square;
         self.occupancy[color] |= 1u64 << square;
         self.piece_table[square] = piece as u8;
@@ -696,14 +702,20 @@ impl Board {
         self.game_phase += PIECE_PHASE_VALUE[piece];
 
         if !UNDO {
-            let king_file = self.pieces[color][KING].bit_scan() & 7;
-            self.pst_scores[color][OPENING] += self.evaluation_parameters.get_pst_value(color, piece, king_file, OPENING, square);
-            self.pst_scores[color][ENDING] += self.evaluation_parameters.get_pst_value(color, piece, king_file, ENDING, square);
+            let mut king_square = self.pieces[color][KING].bit_scan() & 0x3f;
+
+            if color == BLACK {
+                king_square = (1u64 << king_square).swap_bytes().bit_scan();
+                square = (1u64 << square).swap_bytes().bit_scan();
+            }
+
+            self.pst_scores[color][OPENING] += self.evaluation_parameters.get_pst_value(piece, king_square, OPENING, square);
+            self.pst_scores[color][ENDING] += self.evaluation_parameters.get_pst_value(piece, king_square, ENDING, square);
         }
     }
 
     /// Removes `piece` on the `square` with the specified `color`, also updates occupancy and incremental values.
-    pub fn remove_piece<const UNDO: bool>(&mut self, color: usize, piece: usize, square: usize) {
+    pub fn remove_piece<const UNDO: bool>(&mut self, color: usize, piece: usize, mut square: usize) {
         self.pieces[color][piece] &= !(1u64 << square);
         self.occupancy[color] &= !(1u64 << square);
         self.piece_table[square] = u8::MAX;
@@ -711,14 +723,20 @@ impl Board {
         self.game_phase -= PIECE_PHASE_VALUE[piece];
 
         if !UNDO {
-            let king_file = self.pieces[color][KING].bit_scan() & 7;
-            self.pst_scores[color][OPENING] -= self.evaluation_parameters.get_pst_value(color, piece, king_file, OPENING, square);
-            self.pst_scores[color][ENDING] -= self.evaluation_parameters.get_pst_value(color, piece, king_file, ENDING, square);
+            let mut king_square = self.pieces[color][KING].bit_scan() & 0x3f;
+
+            if color == BLACK {
+                king_square = (1u64 << king_square).swap_bytes().bit_scan();
+                square = (1u64 << square).swap_bytes().bit_scan();
+            }
+
+            self.pst_scores[color][OPENING] -= self.evaluation_parameters.get_pst_value(piece, king_square, OPENING, square);
+            self.pst_scores[color][ENDING] -= self.evaluation_parameters.get_pst_value(piece, king_square, ENDING, square);
         }
     }
 
     /// Moves `piece` from the square specified by `from` to the square specified by `to` with the specified `color`, also updates occupancy and incremental values.
-    pub fn move_piece<const UNDO: bool>(&mut self, color: usize, piece: usize, from: usize, to: usize) {
+    pub fn move_piece<const UNDO: bool>(&mut self, color: usize, piece: usize, mut from: usize, mut to: usize) {
         self.pieces[color][piece] ^= (1u64 << from) | (1u64 << to);
         self.occupancy[color] ^= (1u64 << from) | (1u64 << to);
 
@@ -726,11 +744,18 @@ impl Board {
         self.piece_table[from] = u8::MAX;
 
         if !UNDO {
-            let king_file = self.pieces[color][KING].bit_scan() & 7;
-            self.pst_scores[color][OPENING] -= self.evaluation_parameters.get_pst_value(color, piece, king_file, OPENING, from);
-            self.pst_scores[color][ENDING] -= self.evaluation_parameters.get_pst_value(color, piece, king_file, ENDING, from);
-            self.pst_scores[color][OPENING] += self.evaluation_parameters.get_pst_value(color, piece, king_file, OPENING, to);
-            self.pst_scores[color][ENDING] += self.evaluation_parameters.get_pst_value(color, piece, king_file, ENDING, to);
+            let mut king_square = self.pieces[color][KING].bit_scan() & 0x3f;
+
+            if color == BLACK {
+                king_square = (1u64 << king_square).swap_bytes().bit_scan();
+                from = (1u64 << from).swap_bytes().bit_scan();
+                to = (1u64 << to).swap_bytes().bit_scan();
+            }
+
+            self.pst_scores[color][OPENING] -= self.evaluation_parameters.get_pst_value(piece, king_square, OPENING, from);
+            self.pst_scores[color][ENDING] -= self.evaluation_parameters.get_pst_value(piece, king_square, ENDING, from);
+            self.pst_scores[color][OPENING] += self.evaluation_parameters.get_pst_value(piece, king_square, OPENING, to);
+            self.pst_scores[color][ENDING] += self.evaluation_parameters.get_pst_value(piece, king_square, ENDING, to);
         }
     }
 
