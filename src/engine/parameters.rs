@@ -1,5 +1,9 @@
 #[derive(Clone)]
 pub struct SearchParameters {
+    pub aspwin_delta: i16,
+    pub aspwin_min_depth: i8,
+    pub aspwin_max_width: i16,
+
     pub iir_min_depth: i8,
     pub iir_reduction_base: i8,
     pub iir_reduction_step: i8,
@@ -44,6 +48,10 @@ pub struct SearchParameters {
 
 #[allow(non_upper_case_globals)]
 impl SearchParameters {
+    pub const aspwin_delta: i16 = 25;
+    pub const aspwin_min_depth: i8 = 5;
+    pub const aspwin_max_width: i16 = 400;
+
     pub const iir_min_depth: i8 = 4;
     pub const iir_reduction_base: i8 = 1;
     pub const iir_reduction_step: i8 = 99;
@@ -89,6 +97,10 @@ impl SearchParameters {
 impl Default for SearchParameters {
     fn default() -> Self {
         Self {
+            aspwin_delta: Self::aspwin_delta,
+            aspwin_min_depth: Self::aspwin_min_depth,
+            aspwin_max_width: Self::aspwin_max_width,
+
             iir_min_depth: Self::iir_min_depth,
             iir_reduction_base: Self::iir_reduction_base,
             iir_reduction_step: Self::iir_reduction_step,

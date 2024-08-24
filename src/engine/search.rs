@@ -47,7 +47,37 @@ enum MoveGeneratorStage {
 /// Wrapper for the entry point of the regular search, look at `run_internal` for more information.
 pub fn run<const DIAG: bool>(context: &mut SearchContext, depth: i8) {
     let king_checked = context.board.is_king_checked(context.board.active_color);
-    run_internal::<true, true, DIAG>(context, depth, 0, MIN_ALPHA, MIN_BETA, true, king_checked, Move::default());
+    if depth < parameter!(context.parameters.aspwin_min_depth) {
+        context.last_score = run_internal::<true, true, DIAG>(context, depth, 0, MIN_ALPHA, MIN_BETA, true, king_checked, Move::default());
+    } else {
+        let mut delta = parameter!(context.parameters.aspwin_delta);
+        let mut alpha = context.last_score - delta;
+        let mut beta = context.last_score + delta;
+
+        loop {
+            let score = run_internal::<true, true, DIAG>(context, depth, 0, alpha, beta, true, king_checked, Move::default());
+            if score.abs() == INVALID_SCORE.abs() {
+                break;
+            }
+
+            if score <= alpha {
+                alpha -= delta;
+            } else if score >= beta {
+                beta += delta;
+            } else {
+                context.last_score = score;
+                break;
+            }
+
+            delta *= 2;
+            if delta >= parameter!(context.parameters.aspwin_max_width) {
+                alpha = MIN_ALPHA;
+                beta = MIN_BETA;
+            }
+
+            context.multipv_lines.clear();
+        }
+    }
 }
 
 /// Entry point of the regular search, with generic `ROOT` parameter indicating if this is the root node where the moves filterigh might happen, and `PV` parameter

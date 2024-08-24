@@ -148,6 +148,10 @@ pub fn run() {
     #[cfg(feature = "dev")]
     {
         let parameters = SearchParameters::default();
+        state_lock.options.insert("aspwin_delta".to_string(), UciOption::new_wide(99, parameters.aspwin_delta));
+        state_lock.options.insert("aspwin_min_depth".to_string(), UciOption::new_wide(99, parameters.aspwin_min_depth));
+        state_lock.options.insert("aspwin_max_width".to_string(), UciOption::new_wide(99, parameters.aspwin_max_width));
+
         state_lock.options.insert("iir_min_depth".to_string(), UciOption::new_wide(99, parameters.iir_min_depth));
         state_lock.options.insert("iir_reduction_base".to_string(), UciOption::new_wide(99, parameters.iir_reduction_base));
         state_lock.options.insert("iir_reduction_step".to_string(), UciOption::new_wide(99, parameters.iir_reduction_step));
@@ -408,6 +412,10 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
 
         #[cfg(feature = "dev")]
         let search_parameters = SearchParameters {
+            aspwin_delta: state_lock.options["aspwin_delta"].value.parse().unwrap(),
+            aspwin_min_depth: state_lock.options["aspwin_min_depth"].value.parse().unwrap(),
+            aspwin_max_width: state_lock.options["aspwin_max_width"].value.parse().unwrap(),
+
             iir_min_depth: state_lock.options["iir_min_depth"].value.parse().unwrap(),
             iir_reduction_base: state_lock.options["iir_reduction_base"].value.parse().unwrap(),
             iir_reduction_step: state_lock.options["iir_reduction_step"].value.parse().unwrap(),

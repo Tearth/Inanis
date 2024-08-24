@@ -54,6 +54,7 @@ pub struct SearchContext {
     pub abort_flag: Arc<AtomicBool>,
     pub ponder_flag: Arc<AtomicBool>,
     pub statistics: SearchStatistics,
+    pub last_score: i16,
 }
 
 pub struct HelperThreadContext {
@@ -158,6 +159,7 @@ impl SearchContext {
             abort_flag,
             ponder_flag,
             statistics: Default::default(),
+            last_score: 0,
         }
     }
 }
