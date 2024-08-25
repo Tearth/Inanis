@@ -12,6 +12,7 @@ use crate::state::patterns::PatternsContainer;
 use crate::state::text::fen;
 use crate::state::zobrist::ZobristContainer;
 use crate::state::*;
+use crate::utils::panic_unchecked;
 use crate::utils::rand;
 use common::time::DateTime;
 use std::collections::HashSet;
@@ -227,7 +228,7 @@ pub fn run(epd_filename: &str, output_directory: &str, random_values: bool, k: O
             write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "KING");
 
             if weights_iter.next().is_some() {
-                panic!("Weights iterator has not ended properly");
+                panic_unchecked!("Weights iterator has not ended properly");
             }
 
             println!(

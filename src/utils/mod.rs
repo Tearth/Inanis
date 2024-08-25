@@ -28,6 +28,25 @@ macro_rules! parameter {
     };
 }
 
+macro_rules! panic_unchecked {
+    ($fmt:expr) => ({
+        if cfg!(feature = "dev") {
+            panic!(concat!($fmt, "\n"));
+        } else {
+            unsafe { std::hint::unreachable_unchecked(); }
+        }
+    });
+    ($fmt:expr, $($arg:tt)*) => (
+    {
+        if cfg!(feature = "dev") {
+            panic!(concat!($fmt, "\n"), $($arg)*);
+        } else {
+            unsafe { std::hint::unreachable_unchecked(); }
+        }
+    });
+}
+
 pub(crate) use conditional_expression;
+pub(crate) use panic_unchecked;
 pub(crate) use parameter;
 pub(crate) use percent;

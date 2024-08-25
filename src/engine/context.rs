@@ -14,6 +14,7 @@ use crate::evaluation::pst;
 use crate::evaluation::safety;
 use crate::state::movescan::Move;
 use crate::state::representation::Board;
+use crate::utils::panic_unchecked;
 use std::cmp;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
@@ -334,9 +335,8 @@ impl Iterator for SearchContext {
                 return None;
             }
 
-            #[cfg(feature = "dev")]
             if self.multipv_lines[0].pv_line[0] == Default::default() {
-                panic!("Invalid PV move: {}", self.multipv_lines[0].pv_line[0]);
+                panic_unchecked!("Invalid PV move: {}", self.multipv_lines[0].pv_line[0]);
             }
 
             if self.forced_depth == 0 && self.max_nodes_count == 0 {

@@ -16,6 +16,7 @@ use crate::state::representation::Board;
 use crate::state::*;
 use crate::tablebases::syzygy;
 use crate::utils::minmax::MinMax;
+use crate::utils::panic_unchecked;
 use movegen::MagicContainer;
 use patterns::PatternsContainer;
 use std::cmp;
@@ -203,7 +204,7 @@ pub fn run() {
             "string" => println!("option name {} type {} default {}", name, option.r#type, option.default),
             "check" => println!("option name {} type {} default {}", name, option.r#type, option.default),
             "button" => println!("option name {} type {}", name, option.r#type),
-            _ => panic!("Invalid value: option.r#type={}", option.r#type),
+            _ => panic_unchecked!("Invalid value: option.r#type={}", option.r#type),
         };
     }
 
@@ -381,14 +382,14 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
     let mut time = match state_lock.board.active_color {
         WHITE => white_time,
         BLACK => black_time,
-        _ => panic!("Invalid value: state_lock.board.active_color={}", state_lock.board.active_color),
+        _ => panic_unchecked!("Invalid value: state_lock.board.active_color={}", state_lock.board.active_color),
     };
     time -= cmp::min(time, state_lock.options["Move Overhead"].value.parse::<u32>().unwrap());
 
     let inc_time = match state_lock.board.active_color {
         WHITE => white_inc_time,
         BLACK => black_inc_time,
-        _ => panic!("Invalid value: state_lock.board.active_color={}", state_lock.board.active_color),
+        _ => panic_unchecked!("Invalid value: state_lock.board.active_color={}", state_lock.board.active_color),
     };
 
     state_lock.abort_flag.store(false, Ordering::Relaxed);
@@ -704,7 +705,7 @@ fn handle_setoption(parameters: &[String], state: Arc<Mutex<UciState>>) {
             option.value = value.to_string();
         } else {
             #[cfg(feature = "dev")]
-            panic!("Invalid value: name={}, value={}", name, value);
+            panic_unchecked!("Invalid value: name={}, value={}", name, value);
         }
     }
 

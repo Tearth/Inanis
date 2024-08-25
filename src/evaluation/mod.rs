@@ -1,6 +1,6 @@
 use crate::state::*;
+use crate::utils::panic_unchecked;
 use pst::*;
-use std::hint::unreachable_unchecked;
 use std::ops;
 
 pub mod material;
@@ -63,7 +63,7 @@ impl EvaluationParameters {
             ROOK => &Self::ROOK_PST_PATTERN,
             QUEEN => &Self::QUEEN_PST_PATTERN,
             KING => &Self::KING_PST_PATTERN,
-            _ => unsafe { unreachable_unchecked() },
+            _ => panic_unchecked!("Invalid value: piece={}", piece),
         };
 
         pst[KING_BUCKETS[63 - king_square]][phase][63 - square]

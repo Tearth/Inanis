@@ -5,6 +5,7 @@ use crate::engine;
 use crate::evaluation::mobility::PieceMobility;
 use crate::utils::bitflags::BitFlags;
 use crate::utils::bithelpers::BitHelpers;
+use crate::utils::panic_unchecked;
 use crate::utils::rand;
 use std::cmp;
 use std::fmt::Display;
@@ -92,7 +93,7 @@ impl Move {
             MoveFlags::BISHOP_PROMOTION | MoveFlags::BISHOP_PROMOTION_CAPTURE => BISHOP,
             MoveFlags::ROOK_PROMOTION | MoveFlags::ROOK_PROMOTION_CAPTURE => ROOK,
             MoveFlags::QUEEN_PROMOTION | MoveFlags::QUEEN_PROMOTION_CAPTURE => QUEEN,
-            _ => panic!("Invalid value: flags={:?}", flags),
+            _ => panic_unchecked!("Invalid value: flags={:?}", flags),
         }
     }
 
@@ -167,13 +168,13 @@ impl Move {
                 MoveFlags::DOUBLE_PUSH => match board.active_color {
                     WHITE => from_bb << 16,
                     BLACK => from_bb >> 16,
-                    _ => panic!("Invalid value: board.active_color={}", board.active_color),
+                    _ => panic_unchecked!("Invalid value: board.active_color={}", board.active_color),
                 },
                 MoveFlags::EN_PASSANT => board.en_passant,
                 _ => match board.active_color {
                     WHITE => ((from_bb & !FILE_H_BB) << 7) | ((from_bb & !RANK_8_BB) << 8) | ((from_bb & !FILE_A_BB) << 9),
                     BLACK => ((from_bb & !FILE_A_BB) >> 7) | ((from_bb & !RANK_1_BB) >> 8) | ((from_bb & !FILE_H_BB) >> 9),
-                    _ => panic!("Invalid value: board.active_color={}", board.active_color),
+                    _ => panic_unchecked!("Invalid value: board.active_color={}", board.active_color),
                 },
             },
             KNIGHT => board.magic.get_knight_moves(from, &board.patterns),
@@ -185,7 +186,7 @@ impl Move {
                 MoveFlags::LONG_CASTLING => 1u64 << (from + 2),
                 _ => board.magic.get_king_moves(from, &board.patterns),
             },
-            _ => panic!("Invalid value: fen={}, piece={}", board, piece),
+            _ => panic_unchecked!("Invalid value: fen={}, piece={}", board, piece),
         };
 
         // Target square must be valid in this position
@@ -274,14 +275,14 @@ impl Move {
                 MoveFlags::SHORT_CASTLING => match piece_color {
                     WHITE => CastlingRights::WHITE_SHORT_CASTLING,
                     BLACK => CastlingRights::BLACK_SHORT_CASTLING,
-                    _ => panic!("Invalid value: fen={}, piece_color={}", board, piece_color),
+                    _ => panic_unchecked!("Invalid value: fen={}, piece_color={}", board, piece_color),
                 },
                 MoveFlags::LONG_CASTLING => match piece_color {
                     WHITE => CastlingRights::WHITE_LONG_CASTLING,
                     BLACK => CastlingRights::BLACK_LONG_CASTLING,
-                    _ => panic!("Invalid value: fen={}, piece_color={}", board, piece_color),
+                    _ => panic_unchecked!("Invalid value: fen={}, piece_color={}", board, piece_color),
                 },
-                _ => panic!("Invalid value: fen={}, flags={:?}", board, flags),
+                _ => panic_unchecked!("Invalid value: fen={}, flags={:?}", board, flags),
             };
 
             // There must be a proper castling right to perform it
@@ -293,14 +294,14 @@ impl Move {
                 MoveFlags::SHORT_CASTLING => match piece_color {
                     WHITE => H1_BB,
                     BLACK => H8_BB,
-                    _ => panic!("Invalid value: fen={}, piece_color={}", board, piece_color),
+                    _ => panic_unchecked!("Invalid value: fen={}, piece_color={}", board, piece_color),
                 },
                 MoveFlags::LONG_CASTLING => match piece_color {
                     WHITE => A1_BB,
                     BLACK => A8_BB,
-                    _ => panic!("Invalid value: fen={}, piece_color={}", board, piece_color),
+                    _ => panic_unchecked!("Invalid value: fen={}, piece_color={}", board, piece_color),
                 },
-                _ => panic!("Invalid value: fen={}, flags={:?}", board, flags),
+                _ => panic_unchecked!("Invalid value: fen={}, flags={:?}", board, flags),
             };
 
             // There must be a rook on the specific square
@@ -312,14 +313,14 @@ impl Move {
                 MoveFlags::SHORT_CASTLING => match piece_color {
                     WHITE => F1_BB | G1_BB,
                     BLACK => F8_BB | G8_BB,
-                    _ => panic!("Invalid value: fen={}, piece_color={}", board, piece_color),
+                    _ => panic_unchecked!("Invalid value: fen={}, piece_color={}", board, piece_color),
                 },
                 MoveFlags::LONG_CASTLING => match piece_color {
                     WHITE => B1_BB | C1_BB | D1_BB,
                     BLACK => B8_BB | C8_BB | D8_BB,
-                    _ => panic!("Invalid value: fen={}, piece_color={}", board, piece_color),
+                    _ => panic_unchecked!("Invalid value: fen={}, piece_color={}", board, piece_color),
                 },
-                _ => panic!("Invalid value: fen={}, flags={:?}", board, flags),
+                _ => panic_unchecked!("Invalid value: fen={}, flags={:?}", board, flags),
             };
 
             // There must be a free space for castling
@@ -329,7 +330,7 @@ impl Move {
 
             true
         } else {
-            panic!("Move legality check failed: fen={}, self.data={}", board, self.data);
+            panic_unchecked!("Move legality check failed: fen={}, self.data={}", board, self.data);
         }
     }
 }
@@ -371,7 +372,7 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(
             ROOK => board.magic.get_rook_moves(occupancy_bb, from),
             QUEEN => board.magic.get_queen_moves(occupancy_bb, from),
             KING => board.magic.get_king_moves(from, &board.patterns),
-            _ => panic!("Invalid parameter: fen={}, PIECE={}", board, PIECE),
+            _ => panic_unchecked!("Invalid parameter: fen={}, PIECE={}", board, PIECE),
         };
         piece_moves_bb &= !board.occupancy[board.active_color] & evasion_mask;
 
@@ -429,7 +430,7 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(
                         }
                     }
                 }
-                _ => panic!("Invalid value: board.active_color={}", board.active_color),
+                _ => panic_unchecked!("Invalid value: board.active_color={}", board.active_color),
             }
         }
     }
@@ -467,7 +468,7 @@ pub fn get_piece_mobility<const PIECE: usize>(board: &Board, color: usize, dange
             ROOK => board.magic.get_rook_moves(occupancy_bb, from),
             QUEEN => board.magic.get_queen_moves(occupancy_bb, from),
             KING => board.magic.get_king_moves(from, &board.patterns),
-            _ => panic!("Invalid parameter: fen={}, PIECE={}", board, PIECE),
+            _ => panic_unchecked!("Invalid parameter: fen={}, PIECE={}", board, PIECE),
         };
 
         *dangered_king_squares += (enemy_king_box_bb & (piece_moves_bb | from_bb)).bit_count() as u32;
@@ -513,7 +514,7 @@ fn scan_pawn_moves_single_push(board: &Board, moves: &mut [MaybeUninit<Move>; en
         WHITE => pieces_bb << 8,
         BLACK => pieces_bb >> 8,
         _ => {
-            panic!("Invalid value: board.active_color={}", board.active_color);
+            panic_unchecked!("Invalid value: board.active_color={}", board.active_color);
         }
     };
     target_squares_bb &= !occupancy_bb & evasion_mask;
@@ -551,7 +552,7 @@ fn scan_pawn_moves_double_push(board: &Board, moves: &mut [MaybeUninit<Move>; en
         WHITE => (((pieces_bb & RANK_2_BB) << 8) & !occupancy_bb) << 8,
         BLACK => (((pieces_bb & RANK_7_BB) >> 8) & !occupancy_bb) >> 8,
         _ => {
-            panic!("Invalid value: board.active_color={}", board.active_color);
+            panic_unchecked!("Invalid value: board.active_color={}", board.active_color);
         }
     };
     target_squares_bb &= !occupancy_bb & evasion_mask;
@@ -590,7 +591,7 @@ fn scan_pawn_moves_diagonal_attacks<const DIR: usize>(
         WHITE => (pieces_bb & !forbidden_file_bb) << shift,
         BLACK => (pieces_bb & !forbidden_file_bb) >> shift,
         _ => {
-            panic!("Invalid value: board.active_color={}", board.active_color);
+            panic_unchecked!("Invalid value: board.active_color={}", board.active_color);
         }
     };
     target_squares_bb &= (board.occupancy[enemy_color] | board.en_passant) & evasion_mask;
