@@ -21,12 +21,8 @@ use movegen::MagicContainer;
 use patterns::PatternsContainer;
 use std::cmp;
 use std::collections::HashMap;
-use std::fs;
-use std::fs::File;
 use std::io;
-use std::io::Write;
 use std::panic;
-use std::path::Path;
 use std::process;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
@@ -143,8 +139,10 @@ pub fn run() {
     state_lock.options.insert("SyzygyProbeLimit".to_string(), UciOption::new(5, "spin", 1, 9, 8));
     state_lock.options.insert("SyzygyProbeDepth".to_string(), UciOption::new(6, "spin", 1, 32, 6));
     state_lock.options.insert("Ponder".to_string(), UciOption::new(7, "check", false, false, false));
-    state_lock.options.insert("Crash Files".to_string(), UciOption::new(8, "check", false, false, false));
-    state_lock.options.insert("Clear Hash".to_string(), UciOption::new(9, "button", "", "", ""));
+    state_lock.options.insert("Clear Hash".to_string(), UciOption::new(8, "button", "", "", ""));
+
+    #[cfg(feature = "dev")]
+    state_lock.options.insert("Crash Files".to_string(), UciOption::new(50, "check", false, false, false));
 
     #[cfg(feature = "dev")]
     {
@@ -724,6 +722,7 @@ fn handle_setoption(parameters: &[String], state: Arc<Mutex<UciState>>) {
         "Clear Hash" => {
             recreate_state_tables(state);
         }
+        #[cfg(feature = "dev")]
         "Crash Files" => match value.parse::<bool>().unwrap() {
             true => enable_crash_files(),
             false => disable_crash_files(),
@@ -776,7 +775,13 @@ fn recreate_state_tables(state: Arc<Mutex<UciState>>) {
 }
 
 /// Enables saving of crash files by setting a custom panic hook.
+#[cfg(feature = "dev")]
 fn enable_crash_files() {
+    use std::fs;
+    use std::fs::File;
+    use std::io::Write;
+    use std::path::Path;
+
     panic::set_hook(Box::new(|panic| {
         let path = Path::new("./crash");
         fs::create_dir_all(path).unwrap();
@@ -790,6 +795,7 @@ fn enable_crash_files() {
 }
 
 /// Disables saving of crash files by reverting a panic hook to the default one.
+#[cfg(feature = "dev")]
 fn disable_crash_files() {
     let _ = panic::take_hook();
 }
