@@ -28,12 +28,12 @@ macro_rules! parameter {
     };
 }
 
-macro_rules! panic_unchecked {
+macro_rules! panic_fast {
     ($fmt:expr) => ({
         if cfg!(feature = "dev") {
             panic!(concat!($fmt, "\n"));
         } else {
-            unsafe { std::hint::unreachable_unchecked(); }
+            std::process::abort();
         }
     });
     ($fmt:expr, $($arg:tt)*) => (
@@ -41,12 +41,12 @@ macro_rules! panic_unchecked {
         if cfg!(feature = "dev") {
             panic!(concat!($fmt, "\n"), $($arg)*);
         } else {
-            unsafe { std::hint::unreachable_unchecked(); }
+            std::process::abort();
         }
     });
 }
 
 pub(crate) use conditional_expression;
-pub(crate) use panic_unchecked;
+pub(crate) use panic_fast;
 pub(crate) use parameter;
 pub(crate) use percent;

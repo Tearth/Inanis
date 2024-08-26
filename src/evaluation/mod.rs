@@ -1,5 +1,5 @@
 use crate::state::*;
-use crate::utils::panic_unchecked;
+use crate::utils::panic_fast;
 use pst::*;
 use std::ops;
 
@@ -63,7 +63,7 @@ impl EvaluationParameters {
             ROOK => &Self::ROOK_PST_PATTERN,
             QUEEN => &Self::QUEEN_PST_PATTERN,
             KING => &Self::KING_PST_PATTERN,
-            _ => panic_unchecked!("Invalid value: piece={}", piece),
+            _ => panic_fast!("Invalid value: piece={}", piece),
         };
 
         pst[KING_BUCKETS[63 - king_square]][phase][63 - square]

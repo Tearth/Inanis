@@ -4,7 +4,7 @@ use crate::state::movescan::MoveFlags;
 use crate::state::representation::Board;
 use crate::state::*;
 use crate::utils::bitflags::BitFlags;
-use crate::utils::panic_unchecked;
+use crate::utils::panic_fast;
 use std::mem::MaybeUninit;
 
 impl Move {
@@ -296,7 +296,7 @@ impl Move {
                 MoveFlags::BISHOP_PROMOTION | MoveFlags::BISHOP_PROMOTION_CAPTURE => 'b',
                 MoveFlags::ROOK_PROMOTION | MoveFlags::ROOK_PROMOTION_CAPTURE => 'r',
                 MoveFlags::QUEEN_PROMOTION | MoveFlags::QUEEN_PROMOTION_CAPTURE => 'q',
-                _ => panic_unchecked!("Invalid value: flags={:?}", flags),
+                _ => panic_fast!("Invalid value: flags={:?}", flags),
             });
         }
 

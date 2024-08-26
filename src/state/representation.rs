@@ -21,7 +21,7 @@ use crate::evaluation::*;
 use crate::tablebases;
 use crate::utils::bitflags::BitFlags;
 use crate::utils::bithelpers::BitHelpers;
-use crate::utils::panic_unchecked;
+use crate::utils::panic_fast;
 use std::fmt::Display;
 use std::fmt::Formatter;
 use std::mem::MaybeUninit;
@@ -346,7 +346,7 @@ impl Board {
 
                     !CastlingRights::BLACK_CASTLING
                 }
-                _ => panic_unchecked!("Invalid parameter: fen={}, color={}", self, color),
+                _ => panic_fast!("Invalid parameter: fen={}, color={}", self, color),
             };
 
             self.pawn_hash ^= self.zobrist.get_piece_hash(color, KING, from);
@@ -382,7 +382,7 @@ impl Board {
                     }
                     _ => {}
                 },
-                _ => panic_unchecked!("Invalid parameter: fen={}, color={}", self, color),
+                _ => panic_fast!("Invalid parameter: fen={}, color={}", self, color),
             }
         }
 
@@ -410,7 +410,7 @@ impl Board {
                     }
                     _ => {}
                 },
-                _ => panic_unchecked!("Invalid parameter: fen={}, color={}", self, color),
+                _ => panic_fast!("Invalid parameter: fen={}, color={}", self, color),
             }
         }
 
@@ -773,7 +773,7 @@ impl Board {
             WHITE => ((pawns_bb & !FILE_A_BB) << 9) | ((pawns_bb & !FILE_H_BB) << 7),
             BLACK => ((pawns_bb & !FILE_A_BB) >> 7) | ((pawns_bb & !FILE_H_BB) >> 9),
             _ => {
-                panic_unchecked!("Invalid value: color={}", color);
+                panic_fast!("Invalid value: color={}", color);
             }
         };
     }

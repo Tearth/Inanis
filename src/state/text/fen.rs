@@ -8,7 +8,7 @@ use crate::state::zobrist::ZobristContainer;
 use crate::state::*;
 use crate::utils::bitflags::BitFlags;
 use crate::utils::bithelpers::BitHelpers;
-use crate::utils::panic_unchecked;
+use crate::utils::panic_fast;
 use std::sync::Arc;
 
 pub struct ParsedEPD {
@@ -202,7 +202,7 @@ fn active_color_to_fen(board: &Board) -> String {
     match board.active_color {
         WHITE => "w".to_string(),
         BLACK => "b".to_string(),
-        _ => panic_unchecked!("Invalid value: board.active_color={}", board.active_color),
+        _ => panic_fast!("Invalid value: board.active_color={}", board.active_color),
     }
 }
 

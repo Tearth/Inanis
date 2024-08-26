@@ -1,7 +1,7 @@
 use crate::evaluation::EvaluationParameters;
 use crate::state::*;
 use crate::utils::bithelpers::BitHelpers;
-use crate::utils::panic_unchecked;
+use crate::utils::panic_fast;
 use std::cmp;
 use std::sync::Arc;
 
@@ -80,7 +80,7 @@ impl SEEContainer {
             ROOK => 4,
             QUEEN => 6,
             KING => 7,
-            _ => panic_unchecked!("Invalid value: piece={}", piece),
+            _ => panic_fast!("Invalid value: piece={}", piece),
         }
     }
 
@@ -92,7 +92,7 @@ impl SEEContainer {
             4 | 5 => self.evaluation_parameters.piece_value[ROOK],       // 2x Rook
             6 => self.evaluation_parameters.piece_value[QUEEN],          // Queen
             7 => self.evaluation_parameters.piece_value[KING],           // King
-            _ => panic_unchecked!("Invalid value: piece_index={}", piece_index),
+            _ => panic_fast!("Invalid value: piece_index={}", piece_index),
         }
     }
 }

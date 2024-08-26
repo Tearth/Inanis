@@ -8,7 +8,7 @@ use crate::tablebases::syzygy;
 use crate::tablebases::WdlResult;
 use crate::utils::bithelpers::BitHelpers;
 use crate::utils::conditional_expression;
-use crate::utils::panic_unchecked;
+use crate::utils::panic_fast;
 use crate::utils::parameter;
 use crate::utils::rand;
 use std::cmp;
@@ -590,7 +590,7 @@ fn assign_quiet_scores(
                 ROOK => MOVE_ORDERING_ROOK_PROMOTION,
                 BISHOP => MOVE_ORDERING_BISHOP_PROMOTION,
                 KNIGHT => MOVE_ORDERING_KNIGHT_PROMOTION,
-                _ => panic_unchecked!("Invalid value: fen={}, r#move.data={}", context.board, r#move.data),
+                _ => panic_fast!("Invalid value: fen={}, r#move.data={}", context.board, r#move.data),
             });
 
             continue;
@@ -599,7 +599,7 @@ fn assign_quiet_scores(
             continue;
         }
 
-        panic_unchecked!("Sorting rule missing: fen={}, r#move.data={}", context.board, r#move.data);
+        panic_fast!("Sorting rule missing: fen={}, r#move.data={}", context.board, r#move.data);
     }
 }
 
