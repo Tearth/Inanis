@@ -143,6 +143,22 @@ impl TranspositionTable {
         None
     }
 
+    pub fn prefetch(&self, hash: u64) {
+        unsafe {
+            let index = self.get_index(hash);
+            let addr = self.table.as_ptr().add(index) as *const i8;
+
+            #[cfg(target_arch = "x86")]
+            std::arch::x86::_mm_prefetch::<{ std::arch::x86::_MM_HINT_T0 }>(addr);
+
+            #[cfg(target_arch = "x86_64")]
+            std::arch::x86_64::_mm_prefetch::<{ std::arch::x86_64::_MM_HINT_T0 }>(addr);
+
+            #[cfg(any(target_arch = "arm", target_arch = "aarch64"))]
+            std::arch::asm!("prfm PSTL1KEEP, [{}]", in(reg) addr);
+        }
+    }
+
     /// Gets an entry's best move using `hash & (self.table.len() - 1)` formula to calculate an index of the bucket.
     /// Returns [None] if `hash` is incompatible with the stored key.
     pub fn get_best_move(&self, hash: u64) -> Option<Move> {

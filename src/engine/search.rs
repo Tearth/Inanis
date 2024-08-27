@@ -364,6 +364,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
         }
 
         context.board.make_move(r#move);
+        context.transposition_table.prefetch(context.board.state.hash);
 
         let king_checked = context.board.is_king_checked(context.board.active_color);
         let r = if lmr_can_be_applied::<PV>(context, depth, r#move, move_number, score, friendly_king_checked, king_checked) {
