@@ -29,7 +29,7 @@ pub struct PawnsData {
 /// To improve performance (using the fact that structure of pawns changes relatively rare), each evaluation is saved in the pawn hashtable,
 /// and used again if possible.
 pub fn evaluate<const DIAG: bool>(board: &Board, pawn_hashtable: &PawnHashTable, statistics: &mut SearchStatistics) -> EvaluationResult {
-    match pawn_hashtable.get(board.pawn_hash) {
+    match pawn_hashtable.get(board.state.pawn_hash) {
         Some(entry) => {
             conditional_expression!(DIAG, statistics.pawn_hashtable_hits += 1);
             return EvaluationResult::new(entry.score_opening, entry.score_ending);
@@ -44,7 +44,7 @@ pub fn evaluate<const DIAG: bool>(board: &Board, pawn_hashtable: &PawnHashTable,
     let score_opening = white_evaluation.opening_score - black_evaluation.opening_score;
     let score_ending = white_evaluation.ending_score - black_evaluation.ending_score;
 
-    pawn_hashtable.add(board.pawn_hash, score_opening, score_ending);
+    pawn_hashtable.add(board.state.pawn_hash, score_opening, score_ending);
     conditional_expression!(DIAG, statistics.pawn_hashtable_added += 1);
 
     EvaluationResult::new(score_opening, score_ending)

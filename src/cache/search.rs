@@ -157,7 +157,7 @@ impl TranspositionTable {
         }
 
         let mut pv_line = Vec::new();
-        match self.get(board.hash, 0) {
+        match self.get(board.state.hash, 0) {
             Some(entry) => {
                 if entry.r#type != TranspositionTableScoreType::EXACT_SCORE {
                     return Vec::new();

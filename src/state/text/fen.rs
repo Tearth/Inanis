@@ -213,7 +213,7 @@ fn fen_to_castling(board: &mut Board, castling: &str) -> Result<(), String> {
     }
 
     for right in castling.chars() {
-        board.castling_rights |= match right {
+        board.state.castling_rights |= match right {
             'K' => CastlingRights::WHITE_SHORT_CASTLING,
             'Q' => CastlingRights::WHITE_LONG_CASTLING,
             'k' => CastlingRights::BLACK_SHORT_CASTLING,
@@ -227,22 +227,22 @@ fn fen_to_castling(board: &mut Board, castling: &str) -> Result<(), String> {
 
 /// Converts castling rights from the `board` into the FEN chunk.
 fn castling_to_fen(board: &Board) -> String {
-    if board.castling_rights == CastlingRights::NONE {
+    if board.state.castling_rights == CastlingRights::NONE {
         return "-".to_string();
     }
 
     let mut result = String::new();
 
-    if board.castling_rights.contains(CastlingRights::WHITE_SHORT_CASTLING) {
+    if board.state.castling_rights.contains(CastlingRights::WHITE_SHORT_CASTLING) {
         result.push('K');
     }
-    if board.castling_rights.contains(CastlingRights::WHITE_LONG_CASTLING) {
+    if board.state.castling_rights.contains(CastlingRights::WHITE_LONG_CASTLING) {
         result.push('Q');
     }
-    if board.castling_rights.contains(CastlingRights::BLACK_SHORT_CASTLING) {
+    if board.state.castling_rights.contains(CastlingRights::BLACK_SHORT_CASTLING) {
         result.push('k');
     }
-    if board.castling_rights.contains(CastlingRights::BLACK_LONG_CASTLING) {
+    if board.state.castling_rights.contains(CastlingRights::BLACK_LONG_CASTLING) {
         result.push('q');
     }
 
@@ -260,18 +260,18 @@ fn fen_to_en_passant(board: &mut Board, en_passant: &str) -> Result<(), String> 
     let rank = chars.next().ok_or(format!("Invalid FEN, bad en passant rank: en_passant={}", en_passant))? as u8;
 
     let square = (7 - (file - b'a')) + 8 * (rank - b'1');
-    board.en_passant = 1u64 << square;
+    board.state.en_passant = 1u64 << square;
 
     Ok(())
 }
 
 /// Converts en passant from the `board` into the FEN chunk.
 fn en_passant_to_fen(board: &Board) -> String {
-    if board.en_passant == 0 {
+    if board.state.en_passant == 0 {
         return "-".to_string();
     }
 
-    let square = board.en_passant.bit_scan();
+    let square = board.state.en_passant.bit_scan();
     let file = square % 8;
     let rank = square / 8;
 
@@ -281,7 +281,7 @@ fn en_passant_to_fen(board: &Board) -> String {
 
 /// Parses FEN's halfmove clock and stores it into the `board`. Returns [Err] with the proper error message if `halfmove_clock` couldn't be parsed.
 fn fen_to_halfmove_clock(board: &mut Board, halfmove_clock: &str) -> Result<(), String> {
-    board.halfmove_clock = match halfmove_clock.parse::<u16>() {
+    board.state.halfmove_clock = match halfmove_clock.parse::<u16>() {
         Ok(value) => value,
         Err(error) => return Err(format!("Invalid FEN, bad halfmove clock: {}", error)),
     };
@@ -291,7 +291,7 @@ fn fen_to_halfmove_clock(board: &mut Board, halfmove_clock: &str) -> Result<(), 
 
 /// Converts halfmove clock from the `board` into the FEN chunk.
 fn halfmove_clock_to_fen(board: &Board) -> String {
-    board.halfmove_clock.to_string()
+    board.state.halfmove_clock.to_string()
 }
 
 /// Parses FEN's fullmove number and stores it into the `board`. Returns [Err] with the proper error message if `fullmove_number` couldn't be parsed.

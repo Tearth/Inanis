@@ -29,8 +29,8 @@ pub const KING_BUCKETS: [usize; 64] = [
 /// Evaluates piece-square table value on the `board` and returns score from the white color perspective (more than 0 when advantage, less than 0 when disadvantage).
 /// This evaluator sums all values of the pieces for the specified squares, using incremental counters in `board`.
 pub fn evaluate(board: &Board) -> EvaluationResult {
-    let opening_score = board.pst_scores[WHITE][OPENING] - board.pst_scores[BLACK][OPENING];
-    let ending_score = board.pst_scores[WHITE][ENDING] - board.pst_scores[BLACK][ENDING];
+    let opening_score = board.state.pst_scores[WHITE][OPENING] - board.state.pst_scores[BLACK][OPENING];
+    let ending_score = board.state.pst_scores[WHITE][ENDING] - board.state.pst_scores[BLACK][ENDING];
 
     EvaluationResult::new(opening_score, ending_score)
 }
@@ -60,7 +60,7 @@ pub fn recalculate_incremental_values(board: &mut Board) {
                 }
             }
 
-            board.pst_scores[color_index][phase] = score;
+            board.state.pst_scores[color_index][phase] = score;
         }
     }
 }

@@ -194,7 +194,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
     let mut tt_entry_found = false;
     let mut hash_move = Default::default();
 
-    match context.transposition_table.get(context.board.hash, ply) {
+    match context.transposition_table.get(context.board.state.hash, ply) {
         Some(entry) => {
             conditional_expression!(DIAG, context.statistics.tt_hits += 1);
 
@@ -466,7 +466,7 @@ fn run_internal<const ROOT: bool, const PV: bool, const DIAG: bool>(
             TranspositionTableScoreType::EXACT_SCORE
         };
 
-        context.transposition_table.add(context.board.hash, alpha, best_move, depth, ply, score_type, context.search_id);
+        context.transposition_table.add(context.board.state.hash, alpha, best_move, depth, ply, score_type, context.search_id);
         conditional_expression!(DIAG, context.statistics.tt_added += 1);
     }
 

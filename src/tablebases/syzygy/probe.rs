@@ -72,7 +72,7 @@ pub fn get_root_wdl_dtz(board: &Board) -> Option<WdlDtzResult> {
             board.pieces[WHITE][BISHOP] | board.pieces[BLACK][BISHOP],
             board.pieces[WHITE][KNIGHT] | board.pieces[BLACK][KNIGHT],
             board.pieces[WHITE][PAWN] | board.pieces[BLACK][PAWN],
-            board.halfmove_clock as u32,
+            board.state.halfmove_clock as u32,
             0,
             0,
             board.active_color == WHITE,

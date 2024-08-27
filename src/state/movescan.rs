@@ -170,7 +170,7 @@ impl Move {
                     BLACK => from_bb >> 16,
                     _ => panic_fast!("Invalid value: board.active_color={}", board.active_color),
                 },
-                MoveFlags::EN_PASSANT => board.en_passant,
+                MoveFlags::EN_PASSANT => board.state.en_passant,
                 _ => match board.active_color {
                     WHITE => ((from_bb & !FILE_H_BB) << 7) | ((from_bb & !RANK_8_BB) << 8) | ((from_bb & !FILE_A_BB) << 9),
                     BLACK => ((from_bb & !FILE_A_BB) >> 7) | ((from_bb & !RANK_1_BB) >> 8) | ((from_bb & !FILE_H_BB) >> 9),
@@ -286,7 +286,7 @@ impl Move {
             };
 
             // There must be a proper castling right to perform it
-            if !board.castling_rights.contains(castling_right) {
+            if !board.state.castling_rights.contains(castling_right) {
                 return false;
             }
 
@@ -397,7 +397,7 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(
         if PIECE == KING && !CAPTURES {
             match board.active_color {
                 WHITE => {
-                    let king_side_castling_rights = board.castling_rights.contains(CastlingRights::WHITE_SHORT_CASTLING);
+                    let king_side_castling_rights = board.state.castling_rights.contains(CastlingRights::WHITE_SHORT_CASTLING);
                     if king_side_castling_rights && (occupancy_bb & (F1_BB | G1_BB)) == 0 {
                         if !board.are_squares_attacked(board.active_color, &[E1, F1, G1]) {
                             moves[index].write(Move::new(E1, G1, MoveFlags::SHORT_CASTLING));
@@ -405,7 +405,7 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(
                         }
                     }
 
-                    let queen_side_castling_rights = board.castling_rights.contains(CastlingRights::WHITE_LONG_CASTLING);
+                    let queen_side_castling_rights = board.state.castling_rights.contains(CastlingRights::WHITE_LONG_CASTLING);
                     if queen_side_castling_rights && (occupancy_bb & (B1_BB | C1_BB | D1_BB)) == 0 {
                         if !board.are_squares_attacked(board.active_color, &[C1, D1, E1]) {
                             moves[index].write(Move::new(E1, C1, MoveFlags::LONG_CASTLING));
@@ -414,7 +414,7 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(
                     }
                 }
                 BLACK => {
-                    let king_side_castling_rights = board.castling_rights.contains(CastlingRights::BLACK_SHORT_CASTLING);
+                    let king_side_castling_rights = board.state.castling_rights.contains(CastlingRights::BLACK_SHORT_CASTLING);
                     if king_side_castling_rights && (occupancy_bb & (F8_BB | G8_BB)) == 0 {
                         if !board.are_squares_attacked(board.active_color, &[E8, F8, G8]) {
                             moves[index].write(Move::new(E8, G8, MoveFlags::SHORT_CASTLING));
@@ -422,7 +422,7 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(
                         }
                     }
 
-                    let queen_side_castling_rights = board.castling_rights.contains(CastlingRights::BLACK_LONG_CASTLING);
+                    let queen_side_castling_rights = board.state.castling_rights.contains(CastlingRights::BLACK_LONG_CASTLING);
                     if queen_side_castling_rights && (occupancy_bb & (B8_BB | C8_BB | D8_BB)) == 0 {
                         if !board.are_squares_attacked(board.active_color, &[C8, D8, E8]) {
                             moves[index].write(Move::new(E8, C8, MoveFlags::LONG_CASTLING));
@@ -594,7 +594,7 @@ fn scan_pawn_moves_diagonal_attacks<const DIR: usize>(
             panic_fast!("Invalid value: board.active_color={}", board.active_color);
         }
     };
-    target_squares_bb &= (board.occupancy[enemy_color] | board.en_passant) & evasion_mask;
+    target_squares_bb &= (board.occupancy[enemy_color] | board.state.en_passant) & evasion_mask;
 
     while target_squares_bb != 0 {
         let to_bb = target_squares_bb.get_lsb();
@@ -609,7 +609,7 @@ fn scan_pawn_moves_diagonal_attacks<const DIR: usize>(
             moves[index + 3].write(Move::new(from, to, MoveFlags::KNIGHT_PROMOTION_CAPTURE));
             index += 4;
         } else {
-            let en_passant = (to_bb & board.en_passant) != 0;
+            let en_passant = (to_bb & board.state.en_passant) != 0;
             let flags = if en_passant { MoveFlags::EN_PASSANT } else { MoveFlags::CAPTURE };
 
             moves[index].write(Move::new(from, to, flags));

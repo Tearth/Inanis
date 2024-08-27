@@ -13,28 +13,28 @@ pub mod normal;
 /// Internal perft function, common for every mode.
 pub fn run_internal(context: &mut PerftContext, depth: i32) -> u64 {
     if context.check_integrity {
-        let original_hash = context.board.hash;
-        let original_pawn_hash = context.board.pawn_hash;
+        let original_hash = context.board.state.hash;
+        let original_pawn_hash = context.board.state.pawn_hash;
         let original_evaluation = context.board.evaluate_without_cache(WHITE);
 
         context.board.recalculate_hashes();
         context.board.recalculate_incremental_values();
 
-        if original_hash != context.board.hash {
+        if original_hash != context.board.state.hash {
             panic_fast!(
-                "Integrity check failed, invalid hash: fen={}, original_hash={}, context.board.hash={}",
+                "Integrity check failed, invalid hash: fen={}, original_hash={}, context.board.state.hash={}",
                 context.board,
                 original_hash,
-                context.board.hash
+                context.board.state.hash
             );
         }
 
-        if original_pawn_hash != context.board.pawn_hash {
+        if original_pawn_hash != context.board.state.pawn_hash {
             panic_fast!(
-                "Integrity check failed, invalid pawn hash: fen={}, original_pawn_hash={}, context.board.pawn_hash={}",
+                "Integrity check failed, invalid pawn hash: fen={}, original_pawn_hash={}, context.board.state.pawn_hash={}",
                 context.board,
                 original_pawn_hash,
-                context.board.pawn_hash
+                context.board.state.pawn_hash
             );
         }
 
@@ -54,7 +54,7 @@ pub fn run_internal(context: &mut PerftContext, depth: i32) -> u64 {
     }
 
     if context.fast {
-        if let Some(entry) = context.hashtable.get(context.board.hash, depth as u8) {
+        if let Some(entry) = context.hashtable.get(context.board.state.hash, depth as u8) {
             return entry.leafs_count;
         }
     }
@@ -101,7 +101,7 @@ pub fn run_internal(context: &mut PerftContext, depth: i32) -> u64 {
     }
 
     if context.fast {
-        context.hashtable.add(context.board.hash, depth as u8, count);
+        context.hashtable.add(context.board.state.hash, depth as u8, count);
     }
 
     count
