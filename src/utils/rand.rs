@@ -61,13 +61,14 @@ pub fn seed(seed: u64) {
 }
 
 fn rand_internal() -> u64 {
+    // https://en.wikipedia.org/wiki/Xorshift#xorshift*
     SEED.with(|state| {
         let mut x = state.seed.get();
-        x ^= x << 13;
-        x ^= x >> 7;
-        x ^= x << 17;
-
+        x ^= x >> 12;
+        x ^= x << 25;
+        x ^= x >> 27;
         state.seed.set(x);
-        x
+
+        x.wrapping_mul(0x2545f4914f6cdd1d)
     })
 }
