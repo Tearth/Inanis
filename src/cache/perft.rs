@@ -28,10 +28,9 @@ impl PerftHashTable {
     /// Constructs a new instance of [PerftHashTable] by allocating `size` bytes of memory.
     pub fn new(size: usize) -> Self {
         let bucket_size = mem::size_of::<PerftHashTableBucket>();
-        let aligned_size = if size != 0 { 1 << (63 - size.leading_zeros()) } else { 0 };
-        let mut hashtable = Self { table: Vec::with_capacity(aligned_size / bucket_size) };
+        let mut hashtable = Self { table: Vec::with_capacity(size / bucket_size) };
 
-        if aligned_size != 0 {
+        if size != 0 {
             hashtable.table.resize_with(hashtable.table.capacity(), Default::default);
         }
 
@@ -101,7 +100,7 @@ impl PerftHashTable {
 
     /// Calculates an index for the `hash`.
     fn get_index(&self, hash: u64) -> usize {
-        (hash as usize) & (self.table.len() - 1)
+        (((hash as u128).wrapping_mul(self.table.len() as u128)) >> 64) as usize
     }
 }
 
