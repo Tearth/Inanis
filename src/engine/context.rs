@@ -51,16 +51,11 @@ pub struct SearchContext {
     pub killers_table: Arc<KillersTable>,
     pub history_table: Arc<HistoryTable>,
     pub countermoves_table: Arc<CountermovesTable>,
-    pub helper_contexts: Vec<HelperThreadContext>,
+    pub helper_contexts: Vec<SearchContext>,
     pub abort_flag: Arc<AtomicBool>,
     pub ponder_flag: Arc<AtomicBool>,
     pub statistics: SearchStatistics,
     pub last_score: i16,
-}
-
-pub struct HelperThreadContext {
-    pub board: Board,
-    pub context: SearchContext,
 }
 
 pub struct SearchResult {
@@ -252,10 +247,10 @@ impl Iterator for SearchContext {
                     let mut threads = Vec::new();
 
                     for helper_context in &mut self.helper_contexts {
-                        helper_context.context.deadline = self.deadline;
+                        helper_context.deadline = self.deadline;
                         threads.push(scope.spawn(move || {
-                            search::run::<false>(&mut helper_context.context, depth);
-                            helper_context.context.statistics
+                            search::run::<false>(helper_context, depth);
+                            helper_context.statistics
                         }));
                     }
 
@@ -311,10 +306,10 @@ impl Iterator for SearchContext {
                     self.statistics = Default::default();
 
                     for helper_context in &mut self.helper_contexts {
-                        helper_context.context.current_depth = 1;
-                        helper_context.context.forced_depth = 0;
-                        helper_context.context.search_time_start = SystemTime::now();
-                        helper_context.context.statistics = Default::default();
+                        helper_context.current_depth = 1;
+                        helper_context.forced_depth = 0;
+                        helper_context.search_time_start = SystemTime::now();
+                        helper_context.statistics = Default::default();
                     }
 
                     self.ponder_flag.store(false, Ordering::Relaxed);
@@ -357,13 +352,6 @@ impl Iterator for SearchContext {
 
             return Some(SearchResult::new(search_time, self.current_depth - 1, self.transposition_table.get_usage(1000), multipv_result, self.statistics));
         }
-    }
-}
-
-impl HelperThreadContext {
-    /// Constructs a new instance of [HelperThreadContext] with stored `board`, `pawn_hashtable`, `killers_table`, `history_table` and `context`.
-    pub fn new(board: Board, context: SearchContext) -> Self {
-        Self { board, context }
     }
 }
 

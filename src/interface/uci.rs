@@ -5,7 +5,6 @@ use crate::cache::killers::KillersTable;
 use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
 use crate::engine;
-use crate::engine::context::HelperThreadContext;
 use crate::engine::context::SearchContext;
 use crate::engine::parameters::SearchParameters;
 use crate::engine::see::SEEContainer;
@@ -518,7 +517,7 @@ fn handle_go(parameters: &[String], state: Arc<Mutex<UciState>>) {
                 );
                 drop(state_lock);
 
-                context.helper_contexts.push(HelperThreadContext::new(context.board.clone(), helper_context));
+                context.helper_contexts.push(helper_context);
             }
         }
 
