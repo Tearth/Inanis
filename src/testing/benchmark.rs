@@ -132,25 +132,11 @@ pub fn run() -> BenchmarkResult {
         rand::seed(584578);
 
         let board = Board::new_from_fen(fen, None, None, None, None, None).unwrap();
-        let context = SearchContext::new(
+        let mut context = SearchContext::new(
             board,
             Default::default(),
-            0,
-            0,
-            0,
-            16,
-            0,
-            0,
-            0,
-            Vec::new(),
-            false,
-            false,
-            false,
             true,
             false,
-            false,
-            0,
-            0,
             transposition_table.clone(),
             pawn_hashtable.clone(),
             killers_table,
@@ -159,6 +145,7 @@ pub fn run() -> BenchmarkResult {
             abort_flag.clone(),
             ponder_flag.clone(),
         );
+        context.forced_depth = 16;
 
         let result = context.last().unwrap();
 

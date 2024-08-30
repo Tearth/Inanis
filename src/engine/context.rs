@@ -19,6 +19,7 @@ use std::cmp;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
+use std::sync::RwLock;
 use std::thread;
 use std::time::SystemTime;
 
@@ -51,7 +52,7 @@ pub struct SearchContext {
     pub killers_table: KillersTable,
     pub history_table: HistoryTable,
     pub countermoves_table: CountermovesTable,
-    pub helper_contexts: Vec<SearchContext>,
+    pub helper_contexts: Arc<RwLock<Vec<SearchContext>>>,
     pub abort_flag: Arc<AtomicBool>,
     pub ponder_flag: Arc<AtomicBool>,
     pub statistics: SearchStatistics,
@@ -75,18 +76,7 @@ pub struct SearchResultLine {
 impl SearchContext {
     /// Constructs a new instance of [SearchContext] with parameters as follows:
     ///  - `board` - initial position of the board
-    ///  - `search_id` - search identificator used to recognize old transposition table entries
-    ///  - `time` - total time for the color in a move (in milliseconds)
-    ///  - `inc_time` - incremental time for the color in a move (in milliseconds)
-    ///  - `forced_depth` - depth at which the search will stop (might happen earlier if mate is detected), 0 if there is no constraint
-    ///  - `max_nodes_count` - total nodes count at which the search will top (might happen earlier if mate is detected), 0 if there is no constraint
-    /// This value can possibly not be strictly respected due to way of how the check is performed, so expect a bit more nodes count before stop
-    ///  - `max_move_time` - allocated amount of time for the search (in milliseconds), 0 if we want to use default time allocator
-    ///  - `moves_to_go` - moves count, after which the time will be increased
-    ///  - `moves_to_search` - a list of moves to which the root node will be restricted
-    ///  - `multipv` - enables or disables analyzing multiple PV lines (might slow down search)
-    ///  - `uci_debug` - enables or disables additional debug info sent to GUI by `info string` command
-    ///  - `ponder_mode` - prevents search from being stopped after detecting a checkmate (ponder mode requirement)
+    ///  - `parameters` - structure with all search parameters
     ///  - `diagnostic_mode` - enables gathering of additional statistics, useful for benchmarks
     ///  - `helper_thread` - enables additional features when the thread is a helper in Lazy SMP (like random noise in move ordering)
     ///  - `syzygy_enabled` - enables or disables Syzygy probing
@@ -98,22 +88,8 @@ impl SearchContext {
     pub fn new(
         board: Board,
         parameters: SearchParameters,
-        search_id: u8,
-        time: u32,
-        inc_time: u32,
-        forced_depth: i8,
-        max_nodes_count: u64,
-        max_move_time: u32,
-        moves_to_go: u32,
-        moves_to_search: Vec<Move>,
-        multipv: bool,
-        uci_debug: bool,
-        ponder_mode: bool,
         diagnostic_mode: bool,
         helper_thread: bool,
-        syzygy_enabled: bool,
-        syzygy_probe_limit: u32,
-        syzygy_probe_depth: i8,
         transposition_table: Arc<TranspositionTable>,
         pawn_hashtable: Arc<PawnHashTable>,
         killers_table: KillersTable,
@@ -125,33 +101,33 @@ impl SearchContext {
         Self {
             board,
             parameters,
-            search_id,
-            time,
-            inc_time,
+            search_id: 0,
+            time: 0,
+            inc_time: 0,
             current_depth: 1,
-            forced_depth,
-            max_nodes_count,
-            max_move_time,
-            moves_to_go,
-            moves_to_search,
+            forced_depth: 0,
+            max_nodes_count: 0,
+            max_move_time: 0,
+            moves_to_go: 0,
+            moves_to_search: Vec::new(),
             search_time_start: SystemTime::now(),
             deadline: 0,
-            multipv,
+            multipv: false,
             multipv_lines: Vec::new(),
             search_done: false,
-            uci_debug,
-            ponder_mode,
+            uci_debug: false,
+            ponder_mode: false,
             diagnostic_mode,
             helper_thread,
-            syzygy_enabled,
-            syzygy_probe_limit,
-            syzygy_probe_depth,
+            syzygy_enabled: false,
+            syzygy_probe_limit: 0,
+            syzygy_probe_depth: 0,
             transposition_table,
             pawn_hashtable,
             killers_table,
             history_table,
             countermoves_table,
-            helper_contexts: Vec::new(),
+            helper_contexts: Arc::new(RwLock::new(Vec::new())),
             abort_flag,
             ponder_flag,
             statistics: Default::default(),
@@ -241,35 +217,39 @@ impl Iterator for SearchContext {
                 u32::MAX
             };
 
-            if !self.helper_contexts.is_empty() {
-                thread::scope(|scope| {
-                    let depth = self.current_depth;
-                    let mut threads = Vec::new();
-
-                    for helper_context in &mut self.helper_contexts {
-                        helper_context.deadline = self.deadline;
-                        threads.push(scope.spawn(move || {
-                            search::run::<false>(helper_context, depth);
-                            helper_context.statistics
-                        }));
-                    }
-
-                    for thread in threads {
-                        self.statistics += thread.join().unwrap();
-                    }
-                });
-            }
-
             self.multipv_lines.clear();
 
-            if cfg!(feature = "dev") {
-                match self.diagnostic_mode {
-                    true => search::run::<true>(self, self.current_depth),
-                    false => search::run::<false>(self, self.current_depth),
-                };
-            } else {
-                search::run::<false>(self, self.current_depth);
-            }
+            let helper_contexts_arc = self.helper_contexts.clone();
+            let mut helper_contexts_lock = helper_contexts_arc.write().unwrap();
+
+            thread::scope(|scope| {
+                let depth = self.current_depth;
+                let mut threads = Vec::new();
+
+                for helper_context in helper_contexts_lock.iter_mut() {
+                    helper_context.forced_depth = depth;
+                    threads.push(scope.spawn(move || {
+                        search::run::<false>(helper_context, depth);
+                        helper_context.statistics
+                    }));
+                }
+
+                if cfg!(feature = "dev") {
+                    match self.diagnostic_mode {
+                        true => search::run::<true>(self, self.current_depth),
+                        false => search::run::<false>(self, self.current_depth),
+                    };
+                } else {
+                    search::run::<false>(self, self.current_depth);
+                }
+
+                self.abort_flag.store(true, Ordering::Relaxed);
+                for thread in threads {
+                    self.statistics += thread.join().unwrap();
+                }
+
+                self.abort_flag.store(false, Ordering::Relaxed);
+            });
 
             let search_time = self.search_time_start.elapsed().unwrap().as_millis() as u32;
             if self.uci_debug {
@@ -304,13 +284,6 @@ impl Iterator for SearchContext {
                     self.forced_depth = 0;
                     self.search_time_start = SystemTime::now();
                     self.statistics = Default::default();
-
-                    for helper_context in &mut self.helper_contexts {
-                        helper_context.current_depth = 1;
-                        helper_context.forced_depth = 0;
-                        helper_context.search_time_start = SystemTime::now();
-                        helper_context.statistics = Default::default();
-                    }
 
                     self.ponder_flag.store(false, Ordering::Relaxed);
                     self.abort_flag.store(false, Ordering::Relaxed);

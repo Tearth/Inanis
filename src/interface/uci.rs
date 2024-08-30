@@ -100,22 +100,8 @@ impl Default for UciState {
                     Some(magic_container.clone()),
                 ),
                 Default::default(),
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                Vec::new(),
                 false,
                 false,
-                false,
-                false,
-                false,
-                false,
-                0,
-                0,
                 Arc::new(TranspositionTable::new(1 * 1024 * 1024)),
                 Arc::new(PawnHashTable::new(1 * 1024 * 1024)),
                 Default::default(),
@@ -502,40 +488,23 @@ fn handle_go(parameters: &[String], state: &UciState) {
         context_lock.statistics = Default::default();
 
         context_lock.multipv_lines.clear();
-        context_lock.helper_contexts.clear();
+        context_lock.helper_contexts.write().unwrap().clear();
 
-        if threads > 1 {
-            for _ in 0..threads {
-                let helper_context = SearchContext::new(
-                    context_lock.board.clone(),
-                    search_parameters.clone(),
-                    context_lock.board.state_stack.len() as u8,
-                    time,
-                    inc_time,
-                    forced_depth,
-                    max_nodes_count,
-                    max_move_time,
-                    moves_to_go,
-                    moves_to_search.clone(),
-                    false,
-                    debug_mode,
-                    false,
-                    false,
-                    true,
-                    false,
-                    0,
-                    0,
-                    context_lock.transposition_table.clone(),
-                    context_lock.pawn_hashtable.clone(),
-                    Default::default(),
-                    Default::default(),
-                    Default::default(),
-                    context_lock.abort_flag.clone(),
-                    context_lock.ponder_flag.clone(),
-                );
-
-                context_lock.helper_contexts.push(helper_context);
-            }
+        for _ in 0..threads - 1 {
+            let helper_context = SearchContext::new(
+                context_lock.board.clone(),
+                search_parameters.clone(),
+                false,
+                true,
+                context_lock.transposition_table.clone(),
+                context_lock.pawn_hashtable.clone(),
+                Default::default(),
+                Default::default(),
+                Default::default(),
+                context_lock.abort_flag.clone(),
+                context_lock.ponder_flag.clone(),
+            );
+            context_lock.helper_contexts.write().unwrap().push(helper_context);
         }
 
         let mut best_move = Default::default();

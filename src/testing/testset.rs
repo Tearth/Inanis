@@ -91,25 +91,11 @@ fn run_internal(context: &mut TestContext, depth: i8, transposition_table_size: 
                     let ponder_flag = Arc::new(AtomicBool::new(false));
 
                     let board_clone = position.board.clone();
-                    let context = SearchContext::new(
+                    let mut context = SearchContext::new(
                         board_clone,
                         Default::default(),
-                        0,
-                        0,
-                        0,
-                        depth,
-                        0,
-                        0,
-                        0,
-                        Vec::new(),
                         false,
                         false,
-                        false,
-                        false,
-                        false,
-                        false,
-                        0,
-                        0,
                         transposition_table.clone(),
                         pawn_hashtable.clone(),
                         killers_table,
@@ -118,6 +104,7 @@ fn run_internal(context: &mut TestContext, depth: i8, transposition_table_size: 
                         abort_flag.clone(),
                         ponder_flag.clone(),
                     );
+                    context.forced_depth = depth;
 
                     let mut last_best_move = Default::default();
                     let mut best_moves_count = 0;
