@@ -1,7 +1,5 @@
 use crate::engine::*;
 use crate::state::movescan::Move;
-use std::sync::atomic::AtomicU16;
-use std::sync::atomic::Ordering;
 
 const KILLER_SLOTS: usize = 2;
 
@@ -10,30 +8,24 @@ pub struct KillersTable {
 }
 
 pub struct KillersTableEntry {
-    pub data: AtomicU16,
-}
-
-pub struct KillersTableResult {
-    pub r#move: Move,
+    pub data: Move,
 }
 
 impl KillersTable {
     /// Adds a new killer `r#move` at the level specified by `ply` value. Maximal amount of slots for each of them is set by
     /// [KILLER_SLOTS] constant, and newer entries have always a priority over old ones. If there's already exactly the same
     /// move in the slot 0, the table is not changed.
-    pub fn add(&self, ply: u16, r#move: Move) {
-        if ply >= MAX_DEPTH as u16 || self.table[ply as usize][0].get_data().r#move == r#move {
+    pub fn add(&mut self, ply: u16, r#move: Move) {
+        if ply >= MAX_DEPTH as u16 || self.table[ply as usize][0].data == r#move {
             return;
         }
 
         for slot_index in (1..KILLER_SLOTS).rev() {
-            let entry = &self.table[ply as usize][slot_index - 1];
-            let entry_data = entry.get_data();
-
-            self.table[ply as usize][slot_index].set_data(entry_data.r#move);
+            let entry = &mut self.table[ply as usize][slot_index - 1];
+            self.table[ply as usize][slot_index].data = entry.data;
         }
 
-        self.table[ply as usize][0].set_data(r#move);
+        self.table[ply as usize][0].data = r#move;
     }
 
     /// Gets all killer moves at the level specified by `ply`.
@@ -45,26 +37,24 @@ impl KillersTable {
         }
 
         for (index, slot) in self.table[ply as usize].iter().enumerate() {
-            result[index] = slot.get_data().r#move;
+            result[index] = slot.data
         }
 
         result
     }
 
     /// Ages killer table by shifting all ply levels by two positions up, to ensure that killer moves inside match board after two halfmoves.
-    pub fn age_moves(&self) {
+    pub fn age_moves(&mut self) {
         for row in 2..MAX_DEPTH {
             for slot_index in 0..KILLER_SLOTS {
                 let entry = &self.table[row as usize][slot_index];
-                let entry_data = entry.get_data();
-
-                self.table[(row as usize) - 2][slot_index].set_data(entry_data.r#move);
+                self.table[(row as usize) - 2][slot_index].data = entry.data;
             }
         }
 
         for ply in MAX_DEPTH - 2..MAX_DEPTH {
-            for entry in &self.table[ply as usize] {
-                entry.set_data(Default::default());
+            for entry in &mut self.table[ply as usize] {
+                entry.data = Default::default();
             }
         }
     }
@@ -83,30 +73,13 @@ impl Default for KillersTable {
 impl KillersTableEntry {
     /// Constructs a new instance of [KillersTableEntry] with zeroed values.
     pub const fn new_const() -> Self {
-        Self { data: AtomicU16::new(0) }
-    }
-
-    /// Converts `r#move` into an atomic word, and stores it.
-    pub fn set_data(&self, r#move: Move) {
-        self.data.store(r#move.data, Ordering::Relaxed);
-    }
-
-    /// Loads and parses atomic value into a [KillersTableEntry] struct.
-    pub fn get_data(&self) -> KillersTableResult {
-        KillersTableResult::new(Move::new_from_raw(self.data.load(Ordering::Relaxed)))
+        Self { data: Move::new_from_raw(0) }
     }
 }
 
 impl Default for KillersTableEntry {
     /// Constructs a default instance of [KillersTableEntry] with zeroed elements.
     fn default() -> Self {
-        Self { data: AtomicU16::new(0) }
-    }
-}
-
-impl KillersTableResult {
-    /// Constructs a new instance of [KillersTableResult] with stored `r#move`.
-    pub fn new(r#move: Move) -> Self {
-        Self { r#move }
+        Self { data: Move::new_from_raw(0) }
     }
 }

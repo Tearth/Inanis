@@ -1,70 +1,54 @@
 use crate::utils::divceil::DivCeil;
 use std::cmp;
-use std::sync::atomic::AtomicU32;
-use std::sync::atomic::Ordering;
 
 const AGING_DIVISOR: u32 = 16;
 
 pub struct HistoryTable {
     pub table: [[HistoryTableEntry; 64]; 64],
-    pub max: AtomicU32,
+    pub max: u32,
 }
 
 pub struct HistoryTableEntry {
-    pub data: AtomicU32,
-}
-
-pub struct HistoryTableResult {
-    pub value: u32,
+    pub data: u32,
 }
 
 impl HistoryTable {
     /// Increases `[from][to]` history slot value based on `depth`.
-    pub fn add(&self, from: usize, to: usize, depth: u8) {
-        let entry = &self.table[from][to];
-        let entry_data = entry.get_data();
-        let updated_value = entry_data.value + (depth as u32).pow(2);
+    pub fn add(&mut self, from: usize, to: usize, depth: u8) {
+        let entry = &mut self.table[from][to];
+        let updated_value = entry.data + (depth as u32).pow(2);
+        self.max = cmp::max(self.max, updated_value);
 
-        let max = self.max.load(Ordering::Relaxed);
-        self.max.store(cmp::max(max, updated_value), Ordering::Relaxed);
-
-        entry.set_data(updated_value);
+        entry.data = updated_value;
     }
 
     /// Punishes `[from][to]` history slot value based on `depth`.
-    pub fn punish(&self, from: usize, to: usize, depth: u8) {
-        let entry = &self.table[from][to];
-        let entry_data = entry.get_data();
+    pub fn punish(&mut self, from: usize, to: usize, depth: u8) {
+        let entry = &mut self.table[from][to];
 
         let value = depth as u32;
-        let updated_value = if value > entry_data.value { 0 } else { entry_data.value - value };
+        let updated_value = if value > entry.data { 0 } else { entry.data - value };
 
-        entry.set_data(updated_value);
+        entry.data = updated_value;
     }
 
     /// Gets `[from][to]` history slot value, relative to `max`.
     pub fn get(&self, from: usize, to: usize, max: u8) -> u8 {
         let entry = &self.table[from][to];
-        let entry_data = entry.get_data();
-        let max_value = self.max.load(Ordering::Relaxed);
+        let max_value = self.max;
 
-        (entry_data.value * (max as u32)).div_ceil_stable(max_value) as u8
+        (entry.data * (max as u32)).div_ceil_stable(max_value) as u8
     }
 
     /// Ages all values in the history table by dividing them by the [AGING_DIVISOR].
-    pub fn age_values(&self) {
-        for row in &self.table {
+    pub fn age_values(&mut self) {
+        for row in &mut self.table {
             for entry in row {
-                let entry_data = entry.get_data();
-                let value_aged = self.age_value(entry_data.value);
-
-                entry.set_data(value_aged);
+                entry.data = entry.data.div_ceil_stable(AGING_DIVISOR);
             }
         }
 
-        let max = self.max.load(Ordering::Relaxed);
-        let max_aged = self.age_value(max);
-        self.max.store(max_aged, Ordering::Relaxed);
+        self.max = self.age_value(self.max);
     }
 
     /// Ages a single value by dividing value by the [AGING_DIVISOR].
@@ -79,37 +63,20 @@ impl Default for HistoryTable {
         const INIT_1: HistoryTableEntry = HistoryTableEntry::new_const();
         const INIT_2: [HistoryTableEntry; 64] = [INIT_1; 64];
 
-        HistoryTable { table: [INIT_2; 64], max: AtomicU32::new(1) }
+        HistoryTable { table: [INIT_2; 64], max: 1 }
     }
 }
 
 impl HistoryTableEntry {
     /// Constructs a new instance of [HistoryTableEntry] with zeroed values.
     pub const fn new_const() -> Self {
-        Self { data: AtomicU32::new(0) }
-    }
-
-    /// Converts `value` into an atomic word, and stores it.
-    pub fn set_data(&self, value: u32) {
-        self.data.store(value, Ordering::Relaxed);
-    }
-
-    /// Loads and parses atomic value into a [HistoryTableEntry] struct.
-    pub fn get_data(&self) -> HistoryTableResult {
-        HistoryTableResult::new(self.data.load(Ordering::Relaxed))
+        Self { data: 0 }
     }
 }
 
 impl Default for HistoryTableEntry {
     /// Constructs a default instance of [HistoryTableEntry] with zeroed elements.
     fn default() -> Self {
-        Self { data: AtomicU32::new(0) }
-    }
-}
-
-impl HistoryTableResult {
-    /// Constructs a new instance of [HistoryTableResult] with stored `value`.
-    pub fn new(value: u32) -> Self {
-        Self { value }
+        Self { data: 0 }
     }
 }

@@ -49,7 +49,7 @@ impl Move {
     }
 
     /// Constructs a new instance of [Move] using raw bits, which will be directly used as a data.
-    pub fn new_from_raw(data: u16) -> Self {
+    pub const fn new_from_raw(data: u16) -> Self {
         Self { data }
     }
 

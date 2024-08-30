@@ -123,9 +123,9 @@ pub fn run() -> BenchmarkResult {
 
         let transposition_table = Arc::new(TranspositionTable::new(64 * 1024 * 1024));
         let pawn_hashtable = Arc::new(PawnHashTable::new(2 * 1024 * 1024));
-        let killers_table = Arc::new(KillersTable::default());
-        let history_table = Arc::new(HistoryTable::default());
-        let countermoves_table = Arc::new(CountermovesTable::default());
+        let killers_table = KillersTable::default();
+        let history_table = HistoryTable::default();
+        let countermoves_table = CountermovesTable::default();
         let abort_flag = Arc::new(AtomicBool::new(false));
         let ponder_flag = Arc::new(AtomicBool::new(false));
 
@@ -153,9 +153,9 @@ pub fn run() -> BenchmarkResult {
             0,
             transposition_table.clone(),
             pawn_hashtable.clone(),
-            killers_table.clone(),
-            history_table.clone(),
-            countermoves_table.clone(),
+            killers_table,
+            history_table,
+            countermoves_table,
             abort_flag.clone(),
             ponder_flag.clone(),
         );
