@@ -1,4 +1,3 @@
-use crate::cache::allocator;
 use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
 use crate::engine;
@@ -30,6 +29,7 @@ use zobrist::ZobristContainer;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
+const PAWN_HASHTABLE_SIZE: usize = 1 * 1024 * 1024;
 
 pub struct UciState {
     context: Arc<RwLock<SearchContext>>,
@@ -752,11 +752,10 @@ fn recreate_state_tables(state: &mut UciState) {
     let mut context_lock = state.context.write().unwrap();
     let options_lock = state.options.read().unwrap();
 
-    let total_size = options_lock["Hash"].value.parse::<usize>().unwrap();
-    let allocation_result = allocator::get_allocation(total_size);
+    let transposition_table_size = options_lock["Hash"].value.parse::<usize>().unwrap();
 
-    context_lock.transposition_table = Arc::new(TranspositionTable::new(allocation_result.transposition_table_size * 1024 * 1024));
-    context_lock.pawn_hashtable = Arc::new(PawnHashTable::new(allocation_result.pawn_hashtable_size * 1024 * 1024));
+    context_lock.transposition_table = Arc::new(TranspositionTable::new(transposition_table_size * 1024 * 1024));
+    context_lock.pawn_hashtable = Arc::new(PawnHashTable::new(PAWN_HASHTABLE_SIZE));
     context_lock.killers_table = Default::default();
     context_lock.history_table = Default::default();
     context_lock.countermoves_table = Default::default();
