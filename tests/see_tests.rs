@@ -31,7 +31,7 @@ mod see_tests {
                     let mut moves = [MaybeUninit::uninit(); engine::MAX_MOVES_COUNT];
                     let moves_count = board.get_all_moves(&mut moves, u64::MAX);
 
-                    let see = SEEContainer::new(Some(evaluation_parameters.clone()));
+                    let see = SEEContainer::default();
                     for move_index in 0..moves_count {
                         let r#move = unsafe { moves[move_index].assume_init() };
                         if r#move.to_long_notation() == $move {

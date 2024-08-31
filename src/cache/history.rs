@@ -4,7 +4,7 @@ use std::cmp;
 const AGING_DIVISOR: u32 = 16;
 
 pub struct HistoryTable {
-    pub table: [[HistoryTableEntry; 64]; 64],
+    pub table: Box<[[HistoryTableEntry; 64]; 64]>,
     pub max: u32,
 }
 
@@ -42,7 +42,7 @@ impl HistoryTable {
 
     /// Ages all values in the history table by dividing them by the [AGING_DIVISOR].
     pub fn age_values(&mut self) {
-        for row in &mut self.table {
+        for row in self.table.iter_mut() {
             for entry in row {
                 entry.data = entry.data.div_ceil_stable(AGING_DIVISOR);
             }
@@ -63,7 +63,7 @@ impl Default for HistoryTable {
         const INIT_1: HistoryTableEntry = HistoryTableEntry::new_const();
         const INIT_2: [HistoryTableEntry; 64] = [INIT_1; 64];
 
-        HistoryTable { table: [INIT_2; 64], max: 1 }
+        HistoryTable { table: Box::new([INIT_2; 64]), max: 1 }
     }
 }
 

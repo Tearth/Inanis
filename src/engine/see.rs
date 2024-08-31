@@ -1,36 +1,19 @@
-use crate::evaluation::EvaluationParameters;
 use crate::state::*;
 use crate::utils::bithelpers::BitHelpers;
 use crate::utils::panic_fast;
 use std::cmp;
-use std::sync::Arc;
+
+pub const SEE_PAWN_VALUE: i8 = 2;
+pub const SEE_KNISHOP_VALUE: i8 = 7;
+pub const SEE_ROOK_VALUE: i8 = 10;
+pub const SEE_QUEEN_VALUE: i8 = 22;
+pub const SEE_KING_VALUE: i8 = 60;
 
 pub struct SEEContainer {
-    pub table: Vec<[[i16; 256]; 256]>,
-    pub evaluation_parameters: Arc<EvaluationParameters>,
+    pub table: Box<[[[i8; 256]; 256]; 6]>,
 }
 
 impl SEEContainer {
-    /// Constructs a default instance of [SEEContainer] with zeroed elements.
-    pub fn new(evaluation_parameters: Option<Arc<EvaluationParameters>>) -> Self {
-        let mut table = Vec::new();
-        table.resize(6, [[0; 256]; 256]);
-
-        let evaluation_parameters = evaluation_parameters.unwrap_or_else(|| Arc::new(Default::default()));
-        let mut result = Self { table, evaluation_parameters };
-
-        for target_piece in ALL_PIECES {
-            for attackers in 0..256 {
-                for defenders in 0..256 {
-                    let see = result.evaluate(target_piece, attackers, defenders);
-                    result.table[target_piece][attackers][defenders] = see;
-                }
-            }
-        }
-
-        result
-    }
-
     /// Gets a result of the static exchange evaluation, based on `attacking_piece`, `target_piece`, `attackers` and `defenders`.
     pub fn get(&self, attacking_piece: usize, target_piece: usize, attackers: usize, defenders: usize) -> i16 {
         let attacking_piece_index = self.get_see_piece_index(attacking_piece);
@@ -38,11 +21,11 @@ impl SEEContainer {
         let updated_attackers = attackers & !(1 << attacking_piece_index);
 
         let see = self.table[attacking_piece][defenders][updated_attackers];
-        self.get_piece_value(target_piece_index) - see
+        (self.get_piece_value(target_piece_index) - see) as i16 * 50
     }
 
     /// Evaluates a static exchange evaluation result, based on `target_piece`, `attackers`, `defenders`.
-    fn evaluate(&self, target_piece: usize, attackers: usize, defenders: usize) -> i16 {
+    fn evaluate(&self, target_piece: usize, attackers: usize, defenders: usize) -> i8 {
         if attackers == 0 {
             return 0;
         }
@@ -54,7 +37,7 @@ impl SEEContainer {
     }
 
     /// Recursive function called by `evaluate` to help evaluate a static exchange evaluation result.
-    fn evaluate_internal(&self, attacking_piece: usize, target_piece: usize, attackers: usize, defenders: usize) -> i16 {
+    fn evaluate_internal(&self, attacking_piece: usize, target_piece: usize, attackers: usize, defenders: usize) -> i8 {
         if attackers == 0 {
             return 0;
         }
@@ -88,14 +71,32 @@ impl SEEContainer {
     }
 
     /// Gets a piece value based on `piece_index` saved in SEE format (look `get_see_piece_index`).
-    fn get_piece_value(&self, piece_index: usize) -> i16 {
+    fn get_piece_value(&self, piece_index: usize) -> i8 {
         match piece_index {
-            0 => self.evaluation_parameters.piece_value[PAWN],           // Pawn
-            1 | 2 | 3 => self.evaluation_parameters.piece_value[BISHOP], // 3x Knight/bishop
-            4 | 5 => self.evaluation_parameters.piece_value[ROOK],       // 2x Rook
-            6 => self.evaluation_parameters.piece_value[QUEEN],          // Queen
-            7 => self.evaluation_parameters.piece_value[KING],           // King
+            0 => SEE_PAWN_VALUE,            // Pawn
+            1 | 2 | 3 => SEE_KNISHOP_VALUE, // 3x Knight/bishop
+            4 | 5 => SEE_ROOK_VALUE,        // 2x Rook
+            6 => SEE_QUEEN_VALUE,           // Queen
+            7 => SEE_KING_VALUE,            // King
             _ => panic_fast!("Invalid value: piece_index={}", piece_index),
         }
+    }
+}
+
+impl Default for SEEContainer {
+    /// Constructs a default instance of [SEEContainer] with zeroed elements.
+    fn default() -> Self {
+        let mut result = Self { table: Box::new([[[0; 256]; 256]; 6]) };
+
+        for target_piece in ALL_PIECES {
+            for attackers in 0..256 {
+                for defenders in 0..256 {
+                    let see = result.evaluate(target_piece, attackers, defenders);
+                    result.table[target_piece][attackers][defenders] = see;
+                }
+            }
+        }
+
+        result
     }
 }

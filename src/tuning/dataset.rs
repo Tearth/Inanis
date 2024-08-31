@@ -47,7 +47,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
     let evaluation_parameters = Arc::new(EvaluationParameters::default());
     let zobrist_container = Arc::new(ZobristContainer::default());
     let patterns_container = Arc::new(PatternsContainer::default());
-    let see_container = Arc::new(SEEContainer::new(Some(evaluation_parameters.clone())));
+    let see_container = Arc::new(SEEContainer::default());
     let magic_container = Arc::new(MagicContainer::default());
 
     let transposition_table = Arc::new(TranspositionTable::new(1 * 1024 * 1024));

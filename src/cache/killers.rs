@@ -4,7 +4,7 @@ use crate::state::movescan::Move;
 const KILLER_SLOTS: usize = 2;
 
 pub struct KillersTable {
-    pub table: [[KillersTableEntry; KILLER_SLOTS]; MAX_DEPTH as usize],
+    pub table: Box<[[KillersTableEntry; KILLER_SLOTS]; MAX_DEPTH as usize]>,
 }
 
 pub struct KillersTableEntry {
@@ -66,7 +66,7 @@ impl Default for KillersTable {
         const INIT_1: KillersTableEntry = KillersTableEntry::new_const();
         const INIT_2: [KillersTableEntry; KILLER_SLOTS] = [INIT_1; KILLER_SLOTS];
 
-        Self { table: [INIT_2; MAX_DEPTH as usize] }
+        Self { table: Box::new([INIT_2; MAX_DEPTH as usize]) }
     }
 }
 

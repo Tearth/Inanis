@@ -83,7 +83,7 @@ impl Board {
         let evaluation_parameters = evaluation_parameters.unwrap_or_else(|| Arc::new(Default::default()));
         let zobrist_container = zobrist_container.unwrap_or_else(|| Arc::new(Default::default()));
         let patterns_container = patterns_container.unwrap_or_else(|| Arc::new(Default::default()));
-        let see_container = see_container.unwrap_or_else(|| Arc::new(SEEContainer::new(Some(evaluation_parameters.clone()))));
+        let see_container = see_container.unwrap_or_else(|| Arc::new(SEEContainer::default()));
         let magic_container = magic_container.unwrap_or_else(|| Arc::new(Default::default()));
 
         Board {

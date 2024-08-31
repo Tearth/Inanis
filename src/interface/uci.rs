@@ -84,7 +84,7 @@ impl Default for UciState {
         let evaluation_parameters = Arc::new(EvaluationParameters::default());
         let zobrist_container = Arc::new(ZobristContainer::default());
         let patterns_container = Arc::new(PatternsContainer::default());
-        let see_container = Arc::new(SEEContainer::new(Some(evaluation_parameters.clone())));
+        let see_container = Arc::new(SEEContainer::default());
         let magic_container = Arc::new(MagicContainer::default());
 
         let abort_flag = Arc::new(AtomicBool::new(false));
