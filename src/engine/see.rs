@@ -6,15 +6,18 @@ use std::cmp;
 use std::sync::Arc;
 
 pub struct SEEContainer {
-    pub table: Box<[[[i16; 256]; 256]; 6]>,
+    pub table: Vec<[[i16; 256]; 256]>,
     pub evaluation_parameters: Arc<EvaluationParameters>,
 }
 
 impl SEEContainer {
     /// Constructs a default instance of [SEEContainer] with zeroed elements.
     pub fn new(evaluation_parameters: Option<Arc<EvaluationParameters>>) -> Self {
+        let mut table = Vec::new();
+        table.resize(6, [[0; 256]; 256]);
+
         let evaluation_parameters = evaluation_parameters.unwrap_or_else(|| Arc::new(Default::default()));
-        let mut result = Self { table: Box::new([[[0; 256]; 256]; 6]), evaluation_parameters };
+        let mut result = Self { table, evaluation_parameters };
 
         for target_piece in ALL_PIECES {
             for attackers in 0..256 {
