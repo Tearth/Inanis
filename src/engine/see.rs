@@ -1,7 +1,10 @@
 use crate::state::*;
 use crate::utils::bithelpers::BitHelpers;
 use crate::utils::panic_fast;
+use std::alloc;
+use std::alloc::Layout;
 use std::cmp;
+use std::mem;
 
 pub const SEE_PAWN_VALUE: i8 = 2;
 pub const SEE_KNISHOP_VALUE: i8 = 7;
@@ -86,17 +89,21 @@ impl SEEContainer {
 impl Default for SEEContainer {
     /// Constructs a default instance of [SEEContainer] with zeroed elements.
     fn default() -> Self {
-        let mut result = Self { table: Box::new([[[0; 256]; 256]; 6]) };
+        unsafe {
+            let size = mem::size_of::<i8>();
+            let ptr = alloc::alloc_zeroed(Layout::from_size_align(256 * 256 * 6 * size, size).unwrap());
+            let mut result = Self { table: Box::from_raw(ptr as *mut [[[i8; 256]; 256]; 6]) };
 
-        for target_piece in ALL_PIECES {
-            for attackers in 0..256 {
-                for defenders in 0..256 {
-                    let see = result.evaluate(target_piece, attackers, defenders);
-                    result.table[target_piece][attackers][defenders] = see;
+            for target_piece in ALL_PIECES {
+                for attackers in 0..256 {
+                    for defenders in 0..256 {
+                        let see = result.evaluate(target_piece, attackers, defenders);
+                        result.table[target_piece][attackers][defenders] = see;
+                    }
                 }
             }
-        }
 
-        result
+            result
+        }
     }
 }

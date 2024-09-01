@@ -1,5 +1,8 @@
 use crate::engine::*;
 use crate::state::movescan::Move;
+use std::alloc;
+use std::alloc::Layout;
+use std::mem;
 
 const KILLER_SLOTS: usize = 2;
 
@@ -63,23 +66,10 @@ impl KillersTable {
 impl Default for KillersTable {
     /// Constructs a default instance of [KillersTable] with zeroed elements.
     fn default() -> Self {
-        const INIT_1: KillersTableEntry = KillersTableEntry::new_const();
-        const INIT_2: [KillersTableEntry; KILLER_SLOTS] = [INIT_1; KILLER_SLOTS];
-
-        Self { table: Box::new([INIT_2; MAX_DEPTH as usize]) }
-    }
-}
-
-impl KillersTableEntry {
-    /// Constructs a new instance of [KillersTableEntry] with zeroed values.
-    pub const fn new_const() -> Self {
-        Self { data: Move::new_from_raw(0) }
-    }
-}
-
-impl Default for KillersTableEntry {
-    /// Constructs a default instance of [KillersTableEntry] with zeroed elements.
-    fn default() -> Self {
-        Self { data: Move::new_from_raw(0) }
+        unsafe {
+            let size = mem::size_of::<KillersTableEntry>();
+            let ptr = alloc::alloc_zeroed(Layout::from_size_align(KILLER_SLOTS * MAX_DEPTH as usize * size, size).unwrap());
+            Self { table: Box::from_raw(ptr as *mut [[KillersTableEntry; KILLER_SLOTS]; MAX_DEPTH as usize]) }
+        }
     }
 }

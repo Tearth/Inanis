@@ -1,5 +1,8 @@
 use crate::utils::divceil::DivCeil;
+use std::alloc;
+use std::alloc::Layout;
 use std::cmp;
+use std::mem;
 
 const AGING_DIVISOR: u32 = 16;
 
@@ -25,7 +28,6 @@ impl HistoryTable {
     /// Punishes `[from][to]` history slot value based on `depth`.
     pub fn punish(&mut self, from: usize, to: usize, depth: u8) {
         let entry = &mut self.table[from][to];
-
         let value = depth as u32;
         let updated_value = if value > entry.data { 0 } else { entry.data - value };
 
@@ -34,10 +36,7 @@ impl HistoryTable {
 
     /// Gets `[from][to]` history slot value, relative to `max`.
     pub fn get(&self, from: usize, to: usize, max: u8) -> u8 {
-        let entry = &self.table[from][to];
-        let max_value = self.max;
-
-        (entry.data * (max as u32)).div_ceil_stable(max_value) as u8
+        (self.table[from][to].data * (max as u32)).div_ceil_stable(self.max) as u8
     }
 
     /// Ages all values in the history table by dividing them by the [AGING_DIVISOR].
@@ -60,23 +59,10 @@ impl HistoryTable {
 impl Default for HistoryTable {
     /// Constructs a default instance of [HistoryTable] with zeroed elements (except `max`).
     fn default() -> Self {
-        const INIT_1: HistoryTableEntry = HistoryTableEntry::new_const();
-        const INIT_2: [HistoryTableEntry; 64] = [INIT_1; 64];
-
-        HistoryTable { table: Box::new([INIT_2; 64]), max: 1 }
-    }
-}
-
-impl HistoryTableEntry {
-    /// Constructs a new instance of [HistoryTableEntry] with zeroed values.
-    pub const fn new_const() -> Self {
-        Self { data: 0 }
-    }
-}
-
-impl Default for HistoryTableEntry {
-    /// Constructs a default instance of [HistoryTableEntry] with zeroed elements.
-    fn default() -> Self {
-        Self { data: 0 }
+        unsafe {
+            let size = mem::size_of::<HistoryTableEntry>();
+            let ptr = alloc::alloc_zeroed(Layout::from_size_align(64 * 64 * size, size).unwrap());
+            Self { table: Box::from_raw(ptr as *mut [[HistoryTableEntry; 64]; 64]), max: 1 }
+        }
     }
 }

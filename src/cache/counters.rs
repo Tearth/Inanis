@@ -1,4 +1,7 @@
 use crate::state::movescan::Move;
+use std::alloc;
+use std::alloc::Layout;
+use std::mem;
 
 pub struct CountermovesTable {
     pub table: Box<[[CountermovesTableEntry; 64]; 64]>,
@@ -16,31 +19,17 @@ impl CountermovesTable {
 
     /// Gets countermove for `previous_move`.
     pub fn get(&self, previous_move: Move) -> Move {
-        let entry = &self.table[previous_move.get_from()][previous_move.get_to()];
-        entry.r#move
+        self.table[previous_move.get_from()][previous_move.get_to()].r#move
     }
 }
 
 impl Default for CountermovesTable {
     /// Constructs a default instance of [CountermovesTable] with zeroed elements.
     fn default() -> Self {
-        const INIT_1: CountermovesTableEntry = CountermovesTableEntry::new_const();
-        const INIT_2: [CountermovesTableEntry; 64] = [INIT_1; 64];
-
-        CountermovesTable { table: Box::new([INIT_2; 64]) }
-    }
-}
-
-impl CountermovesTableEntry {
-    /// Constructs a new instance of [CountermovesTableEntry] with zeroed values.
-    pub const fn new_const() -> Self {
-        Self { r#move: Move::new_from_raw(0) }
-    }
-}
-
-impl Default for CountermovesTableEntry {
-    /// Constructs a default instance of [CountermovesTableEntry] with zeroed elements.
-    fn default() -> Self {
-        Self { r#move: Default::default() }
+        unsafe {
+            let size = mem::size_of::<CountermovesTableEntry>();
+            let ptr = alloc::alloc_zeroed(Layout::from_size_align(64 * 64 * size, size).unwrap());
+            Self { table: Box::from_raw(ptr as *mut [[CountermovesTableEntry; 64]; 64]) }
+        }
     }
 }
