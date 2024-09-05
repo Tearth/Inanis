@@ -1,5 +1,5 @@
-use self::parameters::SearchParameters;
-use super::statistics::SearchStatistics;
+use self::params::SearchParameters;
+use super::stats::SearchStatistics;
 use super::*;
 use crate::cache::counters::CountermovesTable;
 use crate::cache::history::HistoryTable;
@@ -7,11 +7,6 @@ use crate::cache::killers::KillersTable;
 use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
 use crate::engine::clock;
-use crate::evaluation::material;
-use crate::evaluation::mobility;
-use crate::evaluation::pawns;
-use crate::evaluation::pst;
-use crate::evaluation::safety;
 use crate::state::movescan::Move;
 use crate::state::representation::Board;
 use crate::utils::panic_fast;
@@ -38,11 +33,10 @@ pub struct SearchContext {
     pub search_time_start: SystemTime,
     pub deadline: u32,
     pub multipv: bool,
-    pub multipv_lines: Vec<SearchResultLine>,
+    pub lines: Vec<SearchResultLine>,
     pub search_done: bool,
     pub uci_debug: bool,
     pub ponder_mode: bool,
-    pub diagnostic_mode: bool,
     pub helper_thread: bool,
     pub syzygy_enabled: bool,
     pub syzygy_probe_limit: u32,
@@ -62,12 +56,8 @@ pub struct SearchContext {
 pub struct SearchResult {
     pub time: u32,
     pub depth: i8,
-    pub transposition_table_usage: f32,
-    pub lines: Vec<SearchResultLine>,
-    pub statistics: SearchStatistics,
 }
 
-#[derive(Clone)]
 pub struct SearchResultLine {
     pub score: i16,
     pub pv_line: Vec<Move>,
@@ -77,7 +67,6 @@ impl SearchContext {
     /// Constructs a new instance of [SearchContext] with parameters as follows:
     ///  - `board` - initial position of the board
     ///  - `parameters` - structure with all search parameters
-    ///  - `diagnostic_mode` - enables gathering of additional statistics, useful for benchmarks
     ///  - `helper_thread` - enables additional features when the thread is a helper in Lazy SMP (like random noise in move ordering)
     ///  - `syzygy_enabled` - enables or disables Syzygy probing
     ///  - `syzygy_probe_limit` - number of pieces for which the probing should be started
@@ -88,7 +77,6 @@ impl SearchContext {
     pub fn new(
         board: Board,
         parameters: SearchParameters,
-        diagnostic_mode: bool,
         helper_thread: bool,
         transposition_table: Arc<TranspositionTable>,
         pawn_hashtable: Arc<PawnHashTable>,
@@ -113,11 +101,10 @@ impl SearchContext {
             search_time_start: SystemTime::now(),
             deadline: 0,
             multipv: false,
-            multipv_lines: Vec::new(),
+            lines: Vec::new(),
             search_done: false,
             uci_debug: false,
             ponder_mode: false,
-            diagnostic_mode,
             helper_thread,
             syzygy_enabled: false,
             syzygy_probe_limit: 0,
@@ -171,28 +158,18 @@ impl Iterator for SearchContext {
             if self.forced_depth == 0 && self.current_depth == 1 {
                 if let Some(r#move) = self.board.get_instant_move() {
                     self.search_done = true;
+                    self.lines.push(SearchResultLine::new(0, vec![r#move]));
 
-                    return Some(SearchResult::new(
-                        0,
-                        self.current_depth,
-                        self.transposition_table.get_usage(1000),
-                        vec![SearchResultLine::new(0, vec![r#move])],
-                        self.statistics,
-                    ));
+                    return Some(SearchResult::new(0, self.current_depth));
                 }
 
                 if self.syzygy_enabled {
                     if let Some((r#move, score)) = self.board.get_tablebase_move(self.syzygy_probe_limit) {
                         self.search_done = true;
                         self.statistics.tb_hits = 1;
+                        self.lines.push(SearchResultLine::new(score, vec![r#move]));
 
-                        return Some(SearchResult::new(
-                            0,
-                            self.current_depth,
-                            self.transposition_table.get_usage(1000),
-                            vec![SearchResultLine::new(score, vec![r#move])],
-                            self.statistics,
-                        ));
+                        return Some(SearchResult::new(0, self.current_depth));
                     }
                 }
             }
@@ -217,7 +194,7 @@ impl Iterator for SearchContext {
                 u32::MAX
             };
 
-            self.multipv_lines.clear();
+            self.lines.clear();
 
             let helper_contexts_arc = self.helper_contexts.clone();
             let mut helper_contexts_lock = helper_contexts_arc.write().unwrap();
@@ -229,59 +206,32 @@ impl Iterator for SearchContext {
                 for helper_context in helper_contexts_lock.iter_mut() {
                     helper_context.forced_depth = depth;
                     threads.push(scope.spawn(move || {
-                        search::run::<false>(helper_context, depth);
-                        helper_context.statistics
+                        search::run(helper_context, depth);
                     }));
                 }
 
-                if cfg!(feature = "dev") {
-                    match self.diagnostic_mode {
-                        true => search::run::<true>(self, self.current_depth),
-                        false => search::run::<false>(self, self.current_depth),
-                    };
-                } else {
-                    search::run::<false>(self, self.current_depth);
-                }
+                search::run(self, self.current_depth);
 
+                let reset_abort_flag = !self.abort_flag.load(Ordering::Relaxed);
                 self.abort_flag.store(true, Ordering::Relaxed);
+
                 for thread in threads {
-                    self.statistics += thread.join().unwrap();
+                    thread.join().unwrap();
                 }
 
-                self.abort_flag.store(false, Ordering::Relaxed);
+                if reset_abort_flag {
+                    self.abort_flag.store(false, Ordering::Relaxed);
+                }
             });
 
-            let search_time = self.search_time_start.elapsed().unwrap().as_millis() as u32;
-            if self.uci_debug {
-                let mut dangered_white_king_squares = 0;
-                let mut dangered_black_king_squares = 0;
-
-                let game_phase = self.board.game_phase;
-
-                let material_evaluation = material::evaluate(&self.board);
-                let pst_evaluation = pst::evaluate(&self.board);
-                let mobility_evaluation = mobility::evaluate(&self.board, &mut dangered_white_king_squares, &mut dangered_black_king_squares);
-                let safety_evaluation = safety::evaluate(&self.board, dangered_white_king_squares, dangered_black_king_squares);
-                let pawns_evaluation = pawns::evaluate_without_cache(&self.board);
-
-                println!(
-                    "info string search_time={}, desired_time={}, game_phase={}, material={}, pst={}, mobility={}, safety={}, pawns={}",
-                    search_time,
-                    desired_time,
-                    game_phase,
-                    material_evaluation.taper_score(game_phase),
-                    pst_evaluation.taper_score(game_phase),
-                    mobility_evaluation.taper_score(game_phase),
-                    safety_evaluation.taper_score(game_phase),
-                    pawns_evaluation.taper_score(game_phase)
-                );
+            for helper_context in helper_contexts_lock.iter() {
+                self.statistics += &helper_context.statistics;
             }
 
             if self.abort_flag.load(Ordering::Relaxed) {
                 // If ponder flag is set, the search is completly restarted within the same iteration
                 if self.ponder_flag.load(Ordering::Relaxed) {
                     self.current_depth = 1;
-                    self.forced_depth = 0;
                     self.search_time_start = SystemTime::now();
                     self.statistics = Default::default();
 
@@ -298,14 +248,19 @@ impl Iterator for SearchContext {
                 }
             }
 
-            if self.multipv_lines.is_empty() || self.multipv_lines[0].pv_line.is_empty() {
+            if self.lines.is_empty() || self.lines[0].pv_line.is_empty() {
                 println!("info string Invalid position");
                 return None;
             }
 
-            if self.multipv_lines[0].pv_line[0] == Default::default() {
-                panic_fast!("Invalid PV move: {}", self.multipv_lines[0].pv_line[0]);
+            if self.lines[0].pv_line[0].is_empty() {
+                panic_fast!("Invalid PV move: {}", self.lines[0].pv_line[0]);
             }
+
+            let search_time = self.search_time_start.elapsed().unwrap().as_millis() as u32;
+
+            self.lines.sort_by(|a, b| a.score.cmp(&b.score).reverse());
+            self.current_depth += 1;
 
             if self.forced_depth == 0 && self.max_nodes_count == 0 {
                 if search_time > ((desired_time as f32) * TIME_THRESHOLD_RATIO) as u32 {
@@ -313,25 +268,20 @@ impl Iterator for SearchContext {
                 }
 
                 // Checkmate score must indicate that the depth it was found is equal or smaller than the current one, to prevent endless move sequences
-                if is_score_near_checkmate(self.multipv_lines[0].score) && self.current_depth >= (CHECKMATE_SCORE - self.multipv_lines[0].score.abs()) as i8 {
+                if is_score_near_checkmate(self.lines[0].score) && self.current_depth >= (CHECKMATE_SCORE - self.lines[0].score.abs()) as i8 {
                     self.search_done = true;
                 }
             }
 
-            self.current_depth += 1;
-
-            let mut multipv_result = self.multipv_lines.clone();
-            multipv_result.sort_by(|a, b| a.score.cmp(&b.score).reverse());
-
-            return Some(SearchResult::new(search_time, self.current_depth - 1, self.transposition_table.get_usage(1000), multipv_result, self.statistics));
+            return Some(SearchResult::new(search_time, self.current_depth - 1));
         }
     }
 }
 
 impl SearchResult {
-    /// Constructs a new instance of [SearchResult] with stored `time`, `depth`, `lines` and `statistics`.
-    pub fn new(time: u32, depth: i8, transposition_table_usage: f32, lines: Vec<SearchResultLine>, statistics: SearchStatistics) -> Self {
-        Self { time, depth, transposition_table_usage, lines, statistics }
+    /// Constructs a new instance of [SearchResult] with stored `time` and `depth`.
+    pub fn new(time: u32, depth: i8) -> Self {
+        Self { time, depth }
     }
 }
 

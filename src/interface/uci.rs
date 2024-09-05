@@ -2,7 +2,7 @@ use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
 use crate::engine;
 use crate::engine::context::SearchContext;
-use crate::engine::parameters::SearchParameters;
+use crate::engine::params::SearchParameters;
 use crate::engine::see::SEEContainer;
 use crate::evaluation::EvaluationParameters;
 use crate::perft;
@@ -100,7 +100,6 @@ impl Default for UciState {
                     Some(magic_container.clone()),
                 ),
                 Default::default(),
-                false,
                 false,
                 Arc::new(TranspositionTable::new(1 * 1024 * 1024)),
                 Arc::new(PawnHashTable::new(1 * 1024 * 1024)),
@@ -487,14 +486,13 @@ fn handle_go(parameters: &[String], state: &UciState) {
         context_lock.syzygy_probe_depth = syzygy_probe_depth;
         context_lock.statistics = Default::default();
 
-        context_lock.multipv_lines.clear();
+        context_lock.lines.clear();
         context_lock.helper_contexts.write().unwrap().clear();
 
         for _ in 0..threads - 1 {
             let helper_context = SearchContext::new(
                 context_lock.board.clone(),
                 search_parameters.clone(),
-                false,
                 true,
                 context_lock.transposition_table.clone(),
                 context_lock.pawn_hashtable.clone(),
@@ -511,15 +509,15 @@ fn handle_go(parameters: &[String], state: &UciState) {
         let mut ponder_move = Default::default();
 
         while let Some(depth_result) = context_lock.next() {
-            for (multipv_index, multipv_entry) in depth_result.lines.iter().take(multipv as usize).enumerate() {
-                let pv_line: Vec<String> = multipv_entry.pv_line.iter().map(|v| v.to_long_notation()).collect();
-                let formatted_score = if engine::is_score_near_checkmate(multipv_entry.score) {
-                    let mut moves_to_mate = (multipv_entry.score.abs() - engine::CHECKMATE_SCORE).abs() / 2;
-                    moves_to_mate *= multipv_entry.score.signum();
+            for (line_index, line) in context_lock.lines.iter().take(multipv as usize).enumerate() {
+                let pv_line: Vec<String> = line.pv_line.iter().map(|v| v.to_long_notation()).collect();
+                let formatted_score = if engine::is_score_near_checkmate(line.score) {
+                    let mut moves_to_mate = (line.score.abs() - engine::CHECKMATE_SCORE).abs() / 2;
+                    moves_to_mate *= line.score.signum();
 
                     format!("score mate {}", moves_to_mate).to_string()
                 } else {
-                    format!("score cp {}", multipv_entry.score).to_string()
+                    format!("score cp {}", line.score).to_string()
                 };
 
                 println!(
@@ -529,30 +527,30 @@ fn handle_go(parameters: &[String], state: &UciState) {
                         depth_result.time,
                         formatted_score,
                         depth_result.depth,
-                        depth_result.statistics.max_ply,
-                        multipv_index + 1,
-                        depth_result.statistics.nodes_count + depth_result.statistics.q_nodes_count,
-                        (depth_result.transposition_table_usage * 10.0) as u32,
-                        depth_result.statistics.tb_hits,
+                        context_lock.statistics.max_ply,
+                        line_index + 1,
+                        context_lock.statistics.nodes_count + context_lock.statistics.q_nodes_count,
+                        (context_lock.transposition_table.get_usage(1000) * 10.0) as u32,
+                        context_lock.statistics.tb_hits,
                         pv_line.join(" ").as_str()
                     )
                 );
             }
 
             // Ignore result when no legal move was found, to prevent crash further
-            if depth_result.lines[0].pv_line.is_empty() {
+            if context_lock.lines[0].pv_line.is_empty() {
                 continue;
             }
 
-            best_move = depth_result.lines[0].pv_line[0];
+            best_move = context_lock.lines[0].pv_line[0];
 
             // Check if the ponder move is legal
-            if ponder && depth_result.lines[0].pv_line.len() >= 2 {
+            if ponder && context_lock.lines[0].pv_line.len() >= 2 {
                 let mut board = context_lock.board.clone();
                 let mut allow_ponder = true;
 
-                board.make_move(depth_result.lines[0].pv_line[0]);
-                board.make_move(depth_result.lines[0].pv_line[1]);
+                board.make_move(context_lock.lines[0].pv_line[0]);
+                board.make_move(context_lock.lines[0].pv_line[1]);
 
                 if board.is_king_checked(board.active_color ^ 1) {
                     allow_ponder = false;
@@ -562,11 +560,11 @@ fn handle_go(parameters: &[String], state: &UciState) {
                     allow_ponder = false;
                 }
 
-                board.undo_move(depth_result.lines[0].pv_line[1]);
-                board.undo_move(depth_result.lines[0].pv_line[0]);
+                board.undo_move(context_lock.lines[0].pv_line[1]);
+                board.undo_move(context_lock.lines[0].pv_line[0]);
 
                 if allow_ponder {
-                    ponder_move = depth_result.lines[0].pv_line[1];
+                    ponder_move = context_lock.lines[0].pv_line[1];
                 } else {
                     ponder_move = Default::default();
                 }
@@ -575,7 +573,7 @@ fn handle_go(parameters: &[String], state: &UciState) {
             }
         }
 
-        if ponder && ponder_move != Default::default() {
+        if ponder && ponder_move.is_some() {
             println!("bestmove {} ponder {}", best_move, ponder_move);
         } else {
             println!("bestmove {}", best_move);

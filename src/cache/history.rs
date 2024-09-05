@@ -18,6 +18,9 @@ pub struct HistoryTableEntry {
 impl HistoryTable {
     /// Increases `[from][to]` history slot value based on `depth`.
     pub fn add(&mut self, from: usize, to: usize, depth: u8) {
+        debug_assert!(from < 64);
+        debug_assert!(to < 64);
+
         let entry = &mut self.table[from][to];
         let updated_value = entry.data + (depth as u32).pow(2);
         self.max = cmp::max(self.max, updated_value);
@@ -27,6 +30,9 @@ impl HistoryTable {
 
     /// Punishes `[from][to]` history slot value based on `depth`.
     pub fn punish(&mut self, from: usize, to: usize, depth: u8) {
+        debug_assert!(from < 64);
+        debug_assert!(to < 64);
+
         let entry = &mut self.table[from][to];
         let value = depth as u32;
         let updated_value = if value > entry.data { 0 } else { entry.data - value };
@@ -36,6 +42,9 @@ impl HistoryTable {
 
     /// Gets `[from][to]` history slot value, relative to `max`.
     pub fn get(&self, from: usize, to: usize, max: u8) -> u8 {
+        debug_assert!(from < 64);
+        debug_assert!(to < 64);
+
         (self.table[from][to].data * (max as u32)).div_ceil_stable(self.max) as u8
     }
 
@@ -59,9 +68,9 @@ impl HistoryTable {
 impl Default for HistoryTable {
     /// Constructs a default instance of [HistoryTable] with zeroed elements (except `max`).
     fn default() -> Self {
+        const SIZE: usize = mem::size_of::<HistoryTableEntry>();
         unsafe {
-            let size = mem::size_of::<HistoryTableEntry>();
-            let ptr = alloc::alloc_zeroed(Layout::from_size_align(64 * 64 * size, size).unwrap());
+            let ptr = alloc::alloc_zeroed(Layout::from_size_align(64 * 64 * SIZE, SIZE).unwrap());
             Self { table: Box::from_raw(ptr as *mut [[HistoryTableEntry; 64]; 64]), max: 1 }
         }
     }

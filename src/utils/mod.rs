@@ -4,9 +4,9 @@ pub mod divceil;
 pub mod minmax;
 pub mod rand;
 
-macro_rules! conditional_expression {
-    ($condition: expr, $expression: expr) => {
-        if $condition {
+macro_rules! dev {
+    ($expression: expr) => {
+        if cfg!(feature = "dev") {
             $expression;
         }
     };
@@ -18,12 +18,12 @@ macro_rules! percent {
     };
 }
 
-macro_rules! parameter {
+macro_rules! param {
     ($a : ident . $b : ident . $c : ident) => {
         if cfg!(feature = "dev") {
             $a.$b.$c
         } else {
-            crate::engine::parameters::SearchParameters::$c
+            crate::engine::params::SearchParameters::$c
         }
     };
 }
@@ -46,7 +46,7 @@ macro_rules! panic_fast {
     });
 }
 
-pub(crate) use conditional_expression;
+pub(crate) use dev;
 pub(crate) use panic_fast;
-pub(crate) use parameter;
+pub(crate) use param;
 pub(crate) use percent;

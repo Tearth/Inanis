@@ -9,7 +9,7 @@ use super::*;
 use crate::cache::pawns::PawnHashTable;
 use crate::engine;
 use crate::engine::see::SEEContainer;
-use crate::engine::statistics::SearchStatistics;
+use crate::engine::stats::SearchStatistics;
 use crate::evaluation::material;
 use crate::evaluation::mobility;
 use crate::evaluation::pawns;
@@ -773,7 +773,7 @@ impl Board {
 
     /// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position, using `pawn_hashtable` to store pawn
     /// evaluations and `statistics` to gather diagnostic data. Returns score from the `color` perspective (more than 0 when advantage, less than 0 when disadvantage).
-    pub fn evaluate<const DIAG: bool>(&self, color: usize, pawn_hashtable: &PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
+    pub fn evaluate(&self, color: usize, pawn_hashtable: &PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
         let game_phase = self.game_phase;
         let mut dangered_white_king_squares = 0;
         let mut dangered_black_king_squares = 0;
@@ -782,7 +782,7 @@ impl Board {
         let pst_evaluation = pst::evaluate(self);
         let mobility_evaluation = mobility::evaluate(self, &mut dangered_white_king_squares, &mut dangered_black_king_squares);
         let safety_evaluation = safety::evaluate(self, dangered_white_king_squares, dangered_black_king_squares);
-        let pawns_evaluation = pawns::evaluate::<DIAG>(self, pawn_hashtable, statistics);
+        let pawns_evaluation = pawns::evaluate(self, pawn_hashtable, statistics);
 
         let evaluation = material_evaluation + pst_evaluation + mobility_evaluation + safety_evaluation + pawns_evaluation;
         let sign = -((color as i16) * 2 - 1);

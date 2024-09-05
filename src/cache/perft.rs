@@ -11,10 +11,12 @@ pub struct PerftHashTable {
 }
 
 #[repr(align(64))]
+#[derive(Default)]
 pub struct PerftHashTableBucket {
     pub entries: [PerftHashTableEntry; BUCKET_SLOTS],
 }
 
+#[derive(Default)]
 pub struct PerftHashTableEntry {
     pub key: AtomicU64,
     pub data: AtomicU64,
@@ -27,17 +29,17 @@ pub struct PerftHashTableResult {
 impl PerftHashTable {
     /// Constructs a new instance of [PerftHashTable] by allocating `size` bytes of memory.
     pub fn new(size: usize) -> Self {
-        let bucket_size = mem::size_of::<PerftHashTableBucket>();
-        let mut hashtable = Self { table: Vec::with_capacity(size / bucket_size) };
+        const BUCKET_SIZE: usize = mem::size_of::<PerftHashTableBucket>();
+        let mut hashtable = Self { table: Vec::with_capacity(size / BUCKET_SIZE) };
 
-        if size != 0 {
+        if BUCKET_SIZE != 0 {
             hashtable.table.resize_with(hashtable.table.capacity(), Default::default);
         }
 
         hashtable
     }
 
-    /// Adds a new entry (storing `hash`, `depth` and `leafs_count`) using `hash & (self.table.len() - 1)` formula to calculate an index of the bucket.
+    /// Adds a new entry (storing `hash`, `depth` and `leafs_count`) using `hash` to calculate an index of the bucket.
     pub fn add(&self, hash: u64, depth: u8, leafs_count: u64) {
         let index = self.get_index(hash);
         let bucket = &self.table[index];
@@ -63,7 +65,7 @@ impl PerftHashTable {
         bucket.entries[smallest_depth_index].data.store(data, Ordering::Relaxed);
     }
 
-    /// Gets a wanted entry from the specified `depth` using `hash & (self.table.len() - 1)` formula to calculate an index of the bucket.
+    /// Gets a wanted entry from the specified `depth` using `hash` to calculate an index of the bucket.
     /// Returns [None] if `hash` is incompatible with the stored key.
     pub fn get(&self, hash: u64, depth: u8) -> Option<PerftHashTableResult> {
         let index = self.get_index(hash);
@@ -101,20 +103,6 @@ impl PerftHashTable {
     /// Calculates an index for the `hash`.
     fn get_index(&self, hash: u64) -> usize {
         (((hash as u128).wrapping_mul(self.table.len() as u128)) >> 64) as usize
-    }
-}
-
-impl Default for PerftHashTableBucket {
-    /// Constructs a default instance of [PerftHashTableBucket] with zeroed elements.
-    fn default() -> Self {
-        PerftHashTableBucket { entries: Default::default() }
-    }
-}
-
-impl Default for PerftHashTableEntry {
-    /// Constructs a default instance of [PerftHashTableEntry] with zeroed elements.
-    fn default() -> Self {
-        Self { key: AtomicU64::new(0), data: AtomicU64::new(0) }
     }
 }
 

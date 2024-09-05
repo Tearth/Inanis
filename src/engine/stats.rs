@@ -1,7 +1,7 @@
 use std::cmp;
 use std::ops;
 
-#[derive(Default, Copy, Clone)]
+#[derive(Default)]
 pub struct SearchStatistics {
     pub nodes_count: u64,
     pub q_nodes_count: u64,
@@ -67,9 +67,9 @@ pub struct SearchStatistics {
     pub max_ply: u16,
 }
 
-impl ops::AddAssign<SearchStatistics> for SearchStatistics {
+impl ops::AddAssign<&SearchStatistics> for SearchStatistics {
     /// Implements `+=` operator for [SearchStatistics] by adding all corresponding squares together (except `max_ply`, where the highest value is taken).
-    fn add_assign(&mut self, rhs: SearchStatistics) {
+    fn add_assign(&mut self, rhs: &SearchStatistics) {
         self.nodes_count += rhs.nodes_count;
         self.q_nodes_count += rhs.q_nodes_count;
         self.leafs_count += rhs.leafs_count;

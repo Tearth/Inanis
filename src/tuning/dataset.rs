@@ -106,7 +106,6 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
             board,
             Default::default(),
             false,
-            false,
             transposition_table.clone(),
             pawn_hashtable.clone(),
             KillersTable::default(),
@@ -143,7 +142,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
             }
 
             let score = context.board.evaluate_without_cache(context.board.active_color);
-            let q_score = qsearch::run::<false>(&mut context, 0, MIN_ALPHA, MIN_BETA);
+            let q_score = qsearch::run(&mut context, 0, MIN_ALPHA, MIN_BETA);
 
             if score.abs_diff(q_score) > max_diff {
                 ignored_positions += 1;

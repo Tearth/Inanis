@@ -19,6 +19,8 @@ impl KillersTable {
     /// [KILLER_SLOTS] constant, and newer entries have always a priority over old ones. If there's already exactly the same
     /// move in the slot 0, the table is not changed.
     pub fn add(&mut self, ply: u16, r#move: Move) {
+        debug_assert!(r#move.is_some());
+
         if ply >= MAX_DEPTH as u16 || self.table[ply as usize][0].data == r#move {
             return;
         }
@@ -66,9 +68,9 @@ impl KillersTable {
 impl Default for KillersTable {
     /// Constructs a default instance of [KillersTable] with zeroed elements.
     fn default() -> Self {
+        const SIZE: usize = mem::size_of::<KillersTableEntry>();
         unsafe {
-            let size = mem::size_of::<KillersTableEntry>();
-            let ptr = alloc::alloc_zeroed(Layout::from_size_align(KILLER_SLOTS * MAX_DEPTH as usize * size, size).unwrap());
+            let ptr = alloc::alloc_zeroed(Layout::from_size_align(KILLER_SLOTS * MAX_DEPTH as usize * SIZE, SIZE).unwrap());
             Self { table: Box::from_raw(ptr as *mut [[KillersTableEntry; KILLER_SLOTS]; MAX_DEPTH as usize]) }
         }
     }

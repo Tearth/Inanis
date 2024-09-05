@@ -19,6 +19,10 @@ pub struct SEEContainer {
 impl SEEContainer {
     /// Gets a result of the static exchange evaluation, based on `attacking_piece`, `target_piece`, `attackers` and `defenders`.
     pub fn get(&self, attacking_piece: usize, target_piece: usize, attackers: usize, defenders: usize) -> i16 {
+        debug_assert!(attacking_piece <= 6);
+        debug_assert!(target_piece <= 6);
+        debug_assert!(attackers != 0);
+
         let attacking_piece_index = self.get_see_piece_index(attacking_piece);
         let target_piece_index = self.get_see_piece_index(target_piece);
         let updated_attackers = attackers & !(1 << attacking_piece_index);
@@ -29,6 +33,8 @@ impl SEEContainer {
 
     /// Evaluates a static exchange evaluation result, based on `target_piece`, `attackers`, `defenders`.
     fn evaluate(&self, target_piece: usize, attackers: usize, defenders: usize) -> i8 {
+        debug_assert!(target_piece <= 6);
+
         if attackers == 0 {
             return 0;
         }
@@ -41,6 +47,8 @@ impl SEEContainer {
 
     /// Recursive function called by `evaluate` to help evaluate a static exchange evaluation result.
     fn evaluate_internal(&self, attacking_piece: usize, target_piece: usize, attackers: usize, defenders: usize) -> i8 {
+        debug_assert!(target_piece <= 7);
+
         if attackers == 0 {
             return 0;
         }
@@ -62,6 +70,8 @@ impl SEEContainer {
     ///  - 1 queen (index 6)
     ///  - 1 king (index 7)
     fn get_see_piece_index(&self, piece: usize) -> usize {
+        debug_assert!(piece <= 6);
+
         match piece {
             PAWN => 0,
             KNIGHT => 1,
@@ -75,6 +85,8 @@ impl SEEContainer {
 
     /// Gets a piece value based on `piece_index` saved in SEE format (look `get_see_piece_index`).
     fn get_piece_value(&self, piece_index: usize) -> i8 {
+        debug_assert!(piece_index <= 7);
+
         match piece_index {
             0 => SEE_PAWN_VALUE,            // Pawn
             1 | 2 | 3 => SEE_KNISHOP_VALUE, // 3x Knight/bishop
@@ -89,16 +101,15 @@ impl SEEContainer {
 impl Default for SEEContainer {
     /// Constructs a default instance of [SEEContainer] with zeroed elements.
     fn default() -> Self {
+        const SIZE: usize = mem::size_of::<i8>();
         unsafe {
-            let size = mem::size_of::<i8>();
-            let ptr = alloc::alloc_zeroed(Layout::from_size_align(256 * 256 * 6 * size, size).unwrap());
+            let ptr = alloc::alloc_zeroed(Layout::from_size_align(256 * 256 * 6 * SIZE, SIZE).unwrap());
             let mut result = Self { table: Box::from_raw(ptr as *mut [[[i8; 256]; 256]; 6]) };
 
             for target_piece in ALL_PIECES {
                 for attackers in 0..256 {
                     for defenders in 0..256 {
-                        let see = result.evaluate(target_piece, attackers, defenders);
-                        result.table[target_piece][attackers][defenders] = see;
+                        result.table[target_piece][attackers][defenders] = result.evaluate(target_piece, attackers, defenders);
                     }
                 }
             }

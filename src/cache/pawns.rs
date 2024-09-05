@@ -24,8 +24,8 @@ pub struct PawnHashTableResult {
 impl PawnHashTable {
     /// Constructs a new instance of [PawnHashTable] by allocating `size` bytes of memory.
     pub fn new(size: usize) -> Self {
-        let bucket_size = mem::size_of::<PawnHashTableEntry>();
-        let mut hashtable = Self { table: Vec::with_capacity(size / bucket_size) };
+        const SIZE: usize = mem::size_of::<PawnHashTableEntry>();
+        let mut hashtable = Self { table: Vec::with_capacity(size / SIZE) };
 
         if size != 0 {
             hashtable.table.resize_with(hashtable.table.capacity(), Default::default);
@@ -34,7 +34,7 @@ impl PawnHashTable {
         hashtable
     }
 
-    /// Adds a new entry (storing the key, `score_opening` and `score_ending`) using `hash & (self.table.len() - 1)` formula to calculate an index.
+    /// Adds a new entry (storing the key, `score_opening` and `score_ending`) using `hash` to calculate an index.
     pub fn add(&self, hash: u64, score_opening: i16, score_ending: i16) {
         let key = self.get_key(hash);
         let index = self.get_index(hash);
@@ -42,7 +42,7 @@ impl PawnHashTable {
         self.table[index].set_data(key, score_opening, score_ending);
     }
 
-    /// Gets a wanted entry using `hash & (self.table.len() - 1)` formula to calculate an index. Returns [None] if `hash` is incompatible with the stored key.
+    /// Gets a wanted entry using `hash` to calculate an index. Returns [None] if `hash` is incompatible with the stored key.
     pub fn get(&self, hash: u64) -> Option<PawnHashTableResult> {
         let index = self.get_index(hash);
         let entry = &self.table[index];
@@ -80,13 +80,6 @@ impl PawnHashTable {
 }
 
 impl PawnHashTableEntry {
-    /// Converts `key`, `score_opening` and `score_ending` into an atomic word, and stores it.
-    pub fn set_data(&self, key: u16, score_opening: i16, score_ending: i16) {
-        self.key.store(key, Ordering::Relaxed);
-        self.score_opening.store(score_opening, Ordering::Relaxed);
-        self.score_ending.store(score_ending, Ordering::Relaxed);
-    }
-
     /// Loads and parses atomic value into a [PawnHashTableResult] struct.
     pub fn get_data(&self) -> PawnHashTableResult {
         let key = self.key.load(Ordering::Relaxed);
@@ -94,6 +87,13 @@ impl PawnHashTableEntry {
         let score_ending = self.score_ending.load(Ordering::Relaxed);
 
         PawnHashTableResult::new(key, score_opening, score_ending)
+    }
+
+    /// Converts `key`, `score_opening` and `score_ending` into an atomic word, and stores it.
+    pub fn set_data(&self, key: u16, score_opening: i16, score_ending: i16) {
+        self.key.store(key, Ordering::Relaxed);
+        self.score_opening.store(score_opening, Ordering::Relaxed);
+        self.score_ending.store(score_ending, Ordering::Relaxed);
     }
 }
 

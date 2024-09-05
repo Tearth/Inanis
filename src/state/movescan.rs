@@ -97,6 +97,14 @@ impl Move {
         }
     }
 
+    pub fn is_some(&self) -> bool {
+        self.data != 0
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.data == 0
+    }
+
     /// Checks if the move is a single push.
     pub fn is_single_push(&self) -> bool {
         self.get_flags() == MoveFlags::SINGLE_PUSH

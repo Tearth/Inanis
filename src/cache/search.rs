@@ -22,10 +22,12 @@ pub struct TranspositionTable {
 }
 
 #[repr(align(64))]
+#[derive(Default)]
 pub struct TranspositionTableBucket {
     pub entries: [TranspositionTableEntry; BUCKET_SLOTS],
 }
 
+#[derive(Default)]
 pub struct TranspositionTableEntry {
     pub key_data: AtomicU64,
 }
@@ -42,8 +44,8 @@ pub struct TranspositionTableResult {
 impl TranspositionTable {
     /// Constructs a new instance of [TranspositionTable] by allocating `size` bytes of memory.
     pub fn new(size: usize) -> Self {
-        let bucket_size = mem::size_of::<TranspositionTableBucket>();
-        let mut hashtable = Self { table: Vec::with_capacity(size / bucket_size) };
+        const BUCKET_SIZE: usize = mem::size_of::<TranspositionTableBucket>();
+        let mut hashtable = Self { table: Vec::with_capacity(size / BUCKET_SIZE) };
 
         if size != 0 {
             hashtable.table.resize_with(hashtable.table.capacity(), Default::default);
@@ -52,8 +54,8 @@ impl TranspositionTable {
         hashtable
     }
 
-    /// Adds a new entry (storing the key, `score`, `best_move`, `depth`, `ply`, `score_type` and `age`) using `hash & (self.table.len() - 1)` formula
-    /// to calculate an index of the bucket. Replacement strategy considers a few elements to optimize memory usage and prioritizes slots to replace as follows:
+    /// Adds a new entry (storing the key, `score`, `best_move`, `depth`, `ply`, `score_type` and `age`) using `hash` to calculate an index of the bucket.
+    /// Replacement strategy considers a few elements to optimize memory usage and prioritizes slots to replace as follows:
     ///  - empty slots or slots with the same key as the new entry
     ///  - slots with the smallest depth (if there are some old entries, prioritize them)
     ///
@@ -108,7 +110,7 @@ impl TranspositionTable {
         bucket.entries[desired_index].set_data(key, score, best_move, depth, score_type, age);
     }
 
-    /// Gets a wanted entry using `hash & (self.table.len() - 1)` formula to calculate an index of the bucket. This function takes care of converting
+    /// Gets a wanted entry using `hash` to calculate an index of the bucket. This function takes care of converting
     /// mate `score` using passed `ply`. Returns [None] if `hash` is incompatible with the stored key.
     pub fn get(&self, hash: u64, ply: u16) -> Option<TranspositionTableResult> {
         let key = self.get_key(hash);
@@ -158,11 +160,10 @@ impl TranspositionTable {
         }
     }
 
-    /// Gets an entry's best move using `hash & (self.table.len() - 1)` formula to calculate an index of the bucket.
+    /// Gets an entry's best move using `hash` to calculate an index of the bucket.
     /// Returns [None] if `hash` is incompatible with the stored key.
     pub fn get_best_move(&self, hash: u64) -> Option<Move> {
-        let entry = self.get(hash, 0);
-        entry.map(|entry| entry.best_move)
+        self.get(hash, 0).map(|entry| entry.best_move)
     }
 
     /// Retrieves PV line from the transposition table, using `board` position and the current `ply`.
@@ -232,27 +233,7 @@ impl TranspositionTable {
     }
 }
 
-impl Default for TranspositionTableBucket {
-    /// Constructs a default instance of [TranspositionTableBucket] with zeroed elements.
-    fn default() -> Self {
-        Self { entries: Default::default() }
-    }
-}
-
 impl TranspositionTableEntry {
-    /// Converts `key`, `score`, `best_move`, `depth`, `r#type` and `age` into an atomic word, and stores it.
-    pub fn set_data(&self, key: u16, score: i16, best_move: Move, depth: i8, r#type: u8, age: u8) {
-        let key_data = 0
-            | (key as u64)
-            | (((score as u16) as u64) << 16)
-            | ((best_move.data as u64) << 32)
-            | (((depth as u8) as u64) << 48)
-            | ((r#type as u64) << 56)
-            | ((age as u64) << 59);
-
-        self.key_data.store(key_data, Ordering::Relaxed);
-    }
-
     /// Loads and parses atomic value into a [TranspositionTableResult] struct.
     pub fn get_data(&self) -> TranspositionTableResult {
         let key_data = self.key_data.load(Ordering::Relaxed);
@@ -266,12 +247,18 @@ impl TranspositionTableEntry {
 
         TranspositionTableResult::new(key, score, best_move, depth, r#type, age)
     }
-}
 
-impl Default for TranspositionTableEntry {
-    /// Constructs a default instance of [TranspositionTableEntry] with zeroed elements.
-    fn default() -> Self {
-        TranspositionTableEntry { key_data: AtomicU64::new(0) }
+    /// Converts `key`, `score`, `best_move`, `depth`, `r#type` and `age` into an atomic word, and stores it.
+    pub fn set_data(&self, key: u16, score: i16, best_move: Move, depth: i8, r#type: u8, age: u8) {
+        let key_data = 0
+            | (key as u64)
+            | (((score as u16) as u64) << 16)
+            | ((best_move.data as u64) << 32)
+            | (((depth as u8) as u64) << 48)
+            | ((r#type as u64) << 56)
+            | ((age as u64) << 59);
+
+        self.key_data.store(key_data, Ordering::Relaxed);
     }
 }
 
