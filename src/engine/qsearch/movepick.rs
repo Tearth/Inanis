@@ -1,5 +1,6 @@
 use crate::engine::context::SearchContext;
 use crate::engine::*;
+use crate::evaluation::*;
 use crate::state::movescan::Move;
 use crate::state::movescan::MoveFlags;
 use crate::state::*;
@@ -27,11 +28,7 @@ pub fn assign_move_scores(
         if r#move.get_flags() == MoveFlags::EN_PASSANT {
             move_scores[move_index].write(0);
         } else if r#move.is_promotion() {
-            move_scores[move_index].write(if r#move.get_promotion_piece() == QUEEN {
-                context.board.evaluation_parameters.piece_value[r#move.get_promotion_piece()]
-            } else {
-                -9999
-            });
+            move_scores[move_index].write(if r#move.get_promotion_piece() == QUEEN { PIECE_VALUE[QUEEN] } else { -9999 });
         } else {
             let square = r#move.get_to();
             let attacking_piece = context.board.get_piece(r#move.get_from());

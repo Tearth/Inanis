@@ -13,22 +13,8 @@ pub fn evaluate(board: &Board) -> EvaluationResult {
     let black_has_bishop_pair = if board.pieces[BLACK][BISHOP].bit_count() == 2 { 1 } else { 0 };
     let bishop_pair_opening = (white_has_bishop_pair - black_has_bishop_pair) * board.evaluation_parameters.bishop_pair_opening;
     let bishop_pair_ending = (white_has_bishop_pair - black_has_bishop_pair) * board.evaluation_parameters.bishop_pair_ending;
-    let material = board.material_scores[WHITE] - board.material_scores[BLACK];
 
-    EvaluationResult::new(material + bishop_pair_opening, material + bishop_pair_ending)
-}
-
-/// Recalculates incremental counters on the `board`. This function should be called only once during board initialization, as it's too slow in regular search.
-pub fn recalculate_incremental_values(board: &mut Board) {
-    for color_index in ALL_COLORS {
-        let mut score = 0;
-        for piece_index in ALL_PIECES {
-            let pieces_count = board.pieces[color_index][piece_index].bit_count();
-            score += (pieces_count as i16) * board.evaluation_parameters.piece_value[piece_index];
-        }
-
-        board.material_scores[color_index] = score;
-    }
+    EvaluationResult::new(bishop_pair_opening, bishop_pair_ending)
 }
 
 /// Gets coefficients of material on `board` and assigns indexes starting from `index`.

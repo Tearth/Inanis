@@ -11,12 +11,11 @@ pub mod pst;
 pub mod safety;
 
 pub const INITIAL_GAME_PHASE: u8 = 24;
+pub const PIECE_VALUE: [i16; 6] = [100, 337, 338, 521, 1050, 10000];
 pub const PIECE_PHASE_VALUE: [u8; 6] = [0, 1, 1, 2, 4, 0];
 
 #[derive(Clone)]
 pub struct EvaluationParameters {
-    pub piece_value: [i16; 6],
-
     pub bishop_pair_opening: i16,
     pub bishop_pair_ending: i16,
 

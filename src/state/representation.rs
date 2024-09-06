@@ -51,7 +51,6 @@ pub struct Board {
     pub game_phase: u8,
     pub state: BoardState,
     pub state_stack: Vec<BoardState>,
-    pub material_scores: [i16; 2],
     pub pawn_attacks: [u64; 2],
     pub evaluation_parameters: Arc<EvaluationParameters>,
     pub zobrist: Arc<ZobristContainer>,
@@ -104,7 +103,6 @@ impl Board {
                 pst_scores: [[0, 2]; 2],
             },
             state_stack: Vec::new(),
-            material_scores: [0; 2],
             pawn_attacks: [0; 2],
             evaluation_parameters,
             zobrist: zobrist_container,
@@ -692,7 +690,6 @@ impl Board {
         self.pieces[color][piece] |= 1u64 << square;
         self.occupancy[color] |= 1u64 << square;
         self.piece_table[square] = piece as u8;
-        self.material_scores[color] += self.evaluation_parameters.piece_value[piece];
         self.game_phase += PIECE_PHASE_VALUE[piece];
 
         if !UNDO {
@@ -713,7 +710,6 @@ impl Board {
         self.pieces[color][piece] &= !(1u64 << square);
         self.occupancy[color] &= !(1u64 << square);
         self.piece_table[square] = u8::MAX;
-        self.material_scores[color] -= self.evaluation_parameters.piece_value[piece];
         self.game_phase -= PIECE_PHASE_VALUE[piece];
 
         if !UNDO {
@@ -821,7 +817,6 @@ impl Board {
 
     /// Recalculates incremental values (material and piece-square tables) entirely.
     pub fn recalculate_incremental_values(&mut self) {
-        material::recalculate_incremental_values(self);
         pst::recalculate_incremental_values(self);
     }
 
@@ -862,16 +857,12 @@ impl Board {
     ///  - King + Knight/Bishop vs King
     ///  - King + Bishop (same color) vs King + Bishop (same color)
     pub fn is_insufficient_material_draw(&self) -> bool {
-        let white_material = self.material_scores[WHITE] - self.evaluation_parameters.piece_value[KING];
-        let black_material = self.material_scores[BLACK] - self.evaluation_parameters.piece_value[KING];
-        let bishop_value = self.evaluation_parameters.piece_value[BISHOP];
-
         let pawns_bb = self.pieces[WHITE][PAWN] | self.pieces[BLACK][PAWN];
         let pawns_count = pawns_bb.bit_count();
 
-        if white_material <= bishop_value && black_material <= bishop_value && pawns_count == 0 {
+        if self.game_phase <= 2 && pawns_count == 0 {
             // King vs King
-            if white_material == 0 && black_material == 0 {
+            if (self.occupancy[WHITE] | self.occupancy[BLACK]).bit_count() == 2 {
                 return true;
             }
 

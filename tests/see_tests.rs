@@ -23,7 +23,6 @@ mod see_tests {
                 #[test]
                 fn $name() {
                     let mut evaluation_parameters = EvaluationParameters::default();
-                    evaluation_parameters.piece_value = [P, N, B, R, Q, K];
 
                     let evaluation_parameters = Arc::new(evaluation_parameters);
                     let board = Board::new_from_fen($fen, Some(evaluation_parameters.clone()), None, None, None, None).unwrap();

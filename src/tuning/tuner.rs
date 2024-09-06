@@ -22,7 +22,6 @@ use std::io::BufRead;
 use std::io::BufReader;
 use std::io::Write;
 use std::path::Path;
-use std::slice::Iter;
 use std::sync::Arc;
 use std::thread;
 use std::time::SystemTime;
@@ -173,8 +172,8 @@ pub fn run(epd_filename: &str, output_directory: &str, random_values: bool, k: O
                         for i in 0..position.coefficients_count {
                             let index = position.base_index as usize + i as usize;
 
-                            // Ignore pawn and king values
-                            if indices[index] == 5 {
+                            // Skip material weights
+                            if indices[index] < 6 {
                                 continue;
                             }
 
@@ -197,8 +196,8 @@ pub fn run(epd_filename: &str, output_directory: &str, random_values: bool, k: O
             }
         });
 
-        // Apply gradients and calculate new weights
-        for i in 0..weights.len() {
+        // Apply gradients and calculate new weights but exclude material ones
+        for i in 6..weights.len() {
             if weights_enabled[i] {
                 let gradient = -2.0 * gradients[i] / positions.len() as f32;
                 m[i] = B1 * m[i] + (1.0 - B1) * gradient;
@@ -207,7 +206,7 @@ pub fn run(epd_filename: &str, output_directory: &str, random_values: bool, k: O
                 weights[i] -= LEARNING_RATE * m[i] / (v[i] + 0.00000001).sqrt();
                 weights[i] = weights[i].clamp(tuner_parameters[i].min as f32, tuner_parameters[i].max as f32);
             } else {
-                weights[i] = 0.0;
+                weights[i] = f32::MIN;
             }
         }
 
@@ -216,16 +215,16 @@ pub fn run(epd_filename: &str, output_directory: &str, random_values: bool, k: O
                 tuner_parameters[i].value = weights[i].round() as i16;
             }
 
-            let mut weights_iter = weights.iter();
+            let mut weights_iter = weights.iter().skip(6);
             let error = calculate_error(&positions, &coefficients, &indices, &weights, k, wdl_ratio, threads_count);
 
             write_evaluation_parameters(&mut weights_iter, output_directory, error, k, wdl_ratio);
-            write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "PAWN");
-            write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "KNIGHT");
-            write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "BISHOP");
-            write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "ROOK");
-            write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "QUEEN");
-            write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "KING");
+            write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "PAWN", PIECE_VALUE[PAWN]);
+            write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "KNIGHT", PIECE_VALUE[KNIGHT]);
+            write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "BISHOP", PIECE_VALUE[BISHOP]);
+            write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "ROOK", PIECE_VALUE[ROOK]);
+            write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "QUEEN", PIECE_VALUE[QUEEN]);
+            write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "KING", 0);
 
             if weights_iter.next().is_some() {
                 panic_fast!("Weights iterator has not ended properly");
@@ -412,12 +411,12 @@ fn load_positions(
 fn load_values(random_values: bool) -> Vec<TunerParameter> {
     let evaluation_parameters = EvaluationParameters::default();
     let mut parameters = vec![
-        TunerParameter::new(evaluation_parameters.piece_value[PAWN], 100, 100, 100, 100),
-        TunerParameter::new(evaluation_parameters.piece_value[KNIGHT], 0, 300, 400, 9999),
-        TunerParameter::new(evaluation_parameters.piece_value[BISHOP], 0, 300, 400, 9999),
-        TunerParameter::new(evaluation_parameters.piece_value[ROOK], 0, 400, 600, 9999),
-        TunerParameter::new(evaluation_parameters.piece_value[QUEEN], 0, 900, 1200, 9999),
-        TunerParameter::new(evaluation_parameters.piece_value[KING], 10000, 10000, 10000, 10000),
+        TunerParameter::new(PIECE_VALUE[PAWN], PIECE_VALUE[PAWN], PIECE_VALUE[PAWN], PIECE_VALUE[PAWN], PIECE_VALUE[PAWN]),
+        TunerParameter::new(PIECE_VALUE[KNIGHT], PIECE_VALUE[KNIGHT], PIECE_VALUE[KNIGHT], PIECE_VALUE[KNIGHT], PIECE_VALUE[KNIGHT]),
+        TunerParameter::new(PIECE_VALUE[BISHOP], PIECE_VALUE[BISHOP], PIECE_VALUE[BISHOP], PIECE_VALUE[BISHOP], PIECE_VALUE[BISHOP]),
+        TunerParameter::new(PIECE_VALUE[ROOK], PIECE_VALUE[ROOK], PIECE_VALUE[ROOK], PIECE_VALUE[ROOK], PIECE_VALUE[ROOK]),
+        TunerParameter::new(PIECE_VALUE[QUEEN], PIECE_VALUE[QUEEN], PIECE_VALUE[QUEEN], PIECE_VALUE[QUEEN], PIECE_VALUE[QUEEN]),
+        TunerParameter::new(PIECE_VALUE[KING], PIECE_VALUE[KING], PIECE_VALUE[KING], PIECE_VALUE[KING], PIECE_VALUE[KING]),
         TunerParameter::new(evaluation_parameters.bishop_pair_opening, -99, 10, 40, 99),
         TunerParameter::new(evaluation_parameters.bishop_pair_ending, -99, 10, 40, 99),
     ];
@@ -451,32 +450,32 @@ fn load_values(random_values: bool) -> Vec<TunerParameter> {
 
     let pawn_pst = &EvaluationParameters::PAWN_PST_PATTERN;
     for king_bucket in 0..KING_BUCKETS_COUNT {
-        parameters.append(&mut pawn_pst[king_bucket][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
-        parameters.append(&mut pawn_pst[king_bucket][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+        parameters.append(&mut pawn_pst[king_bucket][0].iter().map(|v| TunerParameter::new(*v - PIECE_VALUE[PAWN], -9999, 50, 150, 9999)).collect());
+        parameters.append(&mut pawn_pst[king_bucket][1].iter().map(|v| TunerParameter::new(*v - PIECE_VALUE[PAWN], -9999, 50, 150, 9999)).collect());
     }
 
     let knight_pst = &EvaluationParameters::KNIGHT_PST_PATTERN;
     for king_bucket in 0..KING_BUCKETS_COUNT {
-        parameters.append(&mut knight_pst[king_bucket][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
-        parameters.append(&mut knight_pst[king_bucket][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+        parameters.append(&mut knight_pst[king_bucket][0].iter().map(|v| TunerParameter::new(*v - PIECE_VALUE[KNIGHT], -9999, 300, 500, 9999)).collect());
+        parameters.append(&mut knight_pst[king_bucket][1].iter().map(|v| TunerParameter::new(*v - PIECE_VALUE[KNIGHT], -9999, 300, 500, 9999)).collect());
     }
 
     let bishop_pst = &EvaluationParameters::BISHOP_PST_PATTERN;
     for king_bucket in 0..KING_BUCKETS_COUNT {
-        parameters.append(&mut bishop_pst[king_bucket][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
-        parameters.append(&mut bishop_pst[king_bucket][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+        parameters.append(&mut bishop_pst[king_bucket][0].iter().map(|v| TunerParameter::new(*v - PIECE_VALUE[BISHOP], -9999, 300, 500, 9999)).collect());
+        parameters.append(&mut bishop_pst[king_bucket][1].iter().map(|v| TunerParameter::new(*v - PIECE_VALUE[BISHOP], -9999, 300, 500, 9999)).collect());
     }
 
     let rook_pst = &EvaluationParameters::ROOK_PST_PATTERN;
     for king_bucket in 0..KING_BUCKETS_COUNT {
-        parameters.append(&mut rook_pst[king_bucket][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
-        parameters.append(&mut rook_pst[king_bucket][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+        parameters.append(&mut rook_pst[king_bucket][0].iter().map(|v| TunerParameter::new(*v - PIECE_VALUE[ROOK], -9999, 400, 600, 9999)).collect());
+        parameters.append(&mut rook_pst[king_bucket][1].iter().map(|v| TunerParameter::new(*v - PIECE_VALUE[ROOK], -9999, 400, 600, 9999)).collect());
     }
 
     let queen_pst = &EvaluationParameters::QUEEN_PST_PATTERN;
     for king_bucket in 0..KING_BUCKETS_COUNT {
-        parameters.append(&mut queen_pst[king_bucket][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
-        parameters.append(&mut queen_pst[king_bucket][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+        parameters.append(&mut queen_pst[king_bucket][0].iter().map(|v| TunerParameter::new(*v - PIECE_VALUE[QUEEN], -9999, 800, 1400, 9999)).collect());
+        parameters.append(&mut queen_pst[king_bucket][1].iter().map(|v| TunerParameter::new(*v - PIECE_VALUE[QUEEN], -9999, 800, 1400, 9999)).collect());
     }
 
     let king_pst = &EvaluationParameters::KING_PST_PATTERN;
@@ -500,7 +499,10 @@ fn load_values(random_values: bool) -> Vec<TunerParameter> {
 }
 
 /// Generates `parameters.rs` file with current evaluation parameters, and saves it into the `output_directory`.
-fn write_evaluation_parameters(weights: &mut Iter<f32>, output_directory: &str, best_error: f32, k: f32, wdl_ratio: f32) {
+fn write_evaluation_parameters<'a, I>(weights: &mut I, output_directory: &str, best_error: f32, k: f32, wdl_ratio: f32)
+where
+    I: Iterator<Item = &'a f32>,
+{
     let mut output = String::new();
 
     output.push_str(get_header(best_error, k, wdl_ratio).as_str());
@@ -510,8 +512,6 @@ fn write_evaluation_parameters(weights: &mut Iter<f32>, output_directory: &str, 
     output.push_str("impl Default for EvaluationParameters {\n");
     output.push_str("    fn default() -> Self {\n");
     output.push_str("        Self {\n");
-    output.push_str(get_array("piece_value", weights, 6).as_str());
-    output.push('\n');
     output.push_str(get_parameter("bishop_pair_opening", weights).as_str());
     output.push_str(get_parameter("bishop_pair_ending", weights).as_str());
     output.push('\n');
@@ -553,7 +553,10 @@ fn write_evaluation_parameters(weights: &mut Iter<f32>, output_directory: &str, 
 }
 
 /// Generates piece-square tables (Rust source file with current evaluation parameters), and saves it into the `output_directory`.
-fn write_piece_square_table(weights: &mut Iter<f32>, output_directory: &str, best_error: f32, k: f32, wdl_ratio: f32, name: &str) {
+fn write_piece_square_table<'a, I>(weights: &mut I, output_directory: &str, best_error: f32, k: f32, wdl_ratio: f32, name: &str, piece_value: i16)
+where
+    I: Iterator<Item = &'a f32>,
+{
     let mut output = String::new();
 
     output.push_str(get_header(best_error, k, wdl_ratio).as_str());
@@ -568,10 +571,10 @@ fn write_piece_square_table(weights: &mut Iter<f32>, output_directory: &str, bes
     for _ in 0..KING_BUCKETS_COUNT {
         output.push_str("        [\n");
         output.push_str("            [\n");
-        output.push_str(get_piece_square_table(weights).as_str());
+        output.push_str(get_piece_square_table(weights, piece_value).as_str());
         output.push_str("            ],\n");
         output.push_str("            [\n");
-        output.push_str(get_piece_square_table(weights).as_str());
+        output.push_str(get_piece_square_table(weights, piece_value).as_str());
         output.push_str("            ],\n");
         output.push_str("        ],\n");
     }
@@ -599,14 +602,20 @@ fn get_header(best_error: f32, k: f32, wdl_ratio: f32) -> String {
 }
 
 /// Gets a Rust representation of the piece `values` array.
-fn get_array(name: &str, weights: &mut Iter<f32>, length: usize) -> String {
+fn get_array<'a, I>(name: &str, weights: &mut I, length: usize) -> String
+where
+    I: Iterator<Item = &'a f32>,
+{
     let mut output = format!("            {}: [", name);
     for i in 0..length {
         if i > 0 {
             output += ", ";
         }
 
-        output += &weights.next().unwrap().round().to_string();
+        let value = *weights.next().unwrap();
+        let value = if value != f32::MIN { value } else { 0.0 };
+
+        output += &value.round().to_string();
     }
 
     output += "],\n";
@@ -614,17 +623,26 @@ fn get_array(name: &str, weights: &mut Iter<f32>, length: usize) -> String {
 }
 
 /// Gets a Rust representation of the parameter with the specified `name` and `value`.
-fn get_parameter(name: &str, weights: &mut Iter<f32>) -> String {
+fn get_parameter<'a, I>(name: &str, weights: &mut I) -> String
+where
+    I: Iterator<Item = &'a f32>,
+{
     format!("            {}: {},\n", name, weights.next().unwrap().round())
 }
 
 /// Gets a Rust representation of the piece-square tables with the specified `values`.
-fn get_piece_square_table(weights: &mut Iter<f32>) -> String {
+fn get_piece_square_table<'a, I>(weights: &mut I, piece_value: i16) -> String
+where
+    I: Iterator<Item = &'a f32>,
+{
     let mut output = String::new();
 
     output.push_str("                ");
     for index in ALL_SQUARES {
-        output.push_str(format!("{:4}", weights.next().unwrap().round()).as_str());
+        let value = *weights.next().unwrap();
+        let value = if value != f32::MIN { value + piece_value as f32 } else { 0.0 };
+
+        output.push_str(format!("{:4}", value.round()).as_str());
         if index % 8 == 7 {
             output.push_str(",\n");
             if index != 63 {

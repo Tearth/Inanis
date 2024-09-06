@@ -1,14 +1,12 @@
-// --------------------------------------------------- //
-// Generated at 09-08-2024 10:19:09 UTC (e = 0.114457) //
-// --------------------------------------------------- //
+// ------------------------------------------------------------------------- //
+// Generated at 06-09-2024 19:43:06 UTC (e = 0.114563, k = 0.0077, r = 1.00) //
+// ------------------------------------------------------------------------- //
 
 use super::*;
 
 impl Default for EvaluationParameters {
     fn default() -> Self {
         Self {
-            piece_value: [100, 337, 338, 521, 1050, 10000],
-
             bishop_pair_opening: 22,
             bishop_pair_ending: 61,
 
@@ -28,7 +26,7 @@ impl Default for EvaluationParameters {
             chained_pawn_ending: [11, 12, 19, 30, 45, 58, 37, 18],
 
             passed_pawn_opening: [18, 22, 22, 21, 17, 37, 28, 37],
-            passed_pawn_ending: [-36, 8, 61, 68, 46, 42, 15, 26],
+            passed_pawn_ending: [-36, 9, 61, 68, 46, 42, 15, 26],
 
             pawn_shield_opening: [10, 18, 22, 21, 51, 19, 0, 0],
             pawn_shield_ending: [10, 16, 19, 22, 23, 20, 0, 0],
