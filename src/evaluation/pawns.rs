@@ -28,11 +28,11 @@ pub struct PawnsData {
 ///
 /// To improve performance (using the fact that structure of pawns changes relatively rare), each evaluation is saved in the pawn hashtable,
 /// and used again if possible.
-pub fn evaluate(board: &Board, pawn_hashtable: &PawnHashTable, statistics: &mut SearchStatistics) -> EvaluationResult {
+pub fn evaluate(board: &Board, pawn_hashtable: &PawnHashTable, statistics: &mut SearchStatistics) -> PackedEval {
     match pawn_hashtable.get(board.state.pawn_hash) {
         Some(entry) => {
             dev!(statistics.pawn_hashtable_hits += 1);
-            return EvaluationResult::new(entry.score_opening, entry.score_ending);
+            return PackedEval::new(entry.score_opening, entry.score_ending);
         }
         None => {
             dev!(statistics.pawn_hashtable_misses += 1);
@@ -41,39 +41,29 @@ pub fn evaluate(board: &Board, pawn_hashtable: &PawnHashTable, statistics: &mut 
 
     let white_evaluation = evaluate_color(board, WHITE);
     let black_evaluation = evaluate_color(board, BLACK);
-    let score_opening = white_evaluation.opening_score - black_evaluation.opening_score;
-    let score_ending = white_evaluation.ending_score - black_evaluation.ending_score;
+    let eval = white_evaluation - black_evaluation;
 
-    pawn_hashtable.add(board.state.pawn_hash, score_opening, score_ending);
+    pawn_hashtable.add(board.state.pawn_hash, eval.get_opening(), eval.get_ending());
     dev!(statistics.pawn_hashtable_added += 1);
 
-    EvaluationResult::new(score_opening, score_ending)
+    eval
 }
 
 /// Does the same thing as [evaluate], but doesn't use pawn hashtable to save evalations.
-pub fn evaluate_without_cache(board: &Board) -> EvaluationResult {
+pub fn evaluate_without_cache(board: &Board) -> PackedEval {
     evaluate_color(board, WHITE) - evaluate_color(board, BLACK)
 }
 
 /// Evaluates pawn structure on the `board` for the specified `color`.
-fn evaluate_color(board: &Board, color: usize) -> EvaluationResult {
+fn evaluate_color(board: &Board, color: usize) -> PackedEval {
     let pawns_data = get_pawns_data(board, color);
-    let opening_score = 0
-        + board.evaluation_parameters.doubled_pawn_opening[pawns_data.doubled_pawns.min(7) as usize]
-        + board.evaluation_parameters.isolated_pawn_opening[pawns_data.isolated_pawns.min(7) as usize]
-        + board.evaluation_parameters.chained_pawn_opening[pawns_data.chained_pawns.min(7) as usize]
-        + board.evaluation_parameters.passed_pawn_opening[pawns_data.passed_pawns.min(7) as usize]
-        + board.evaluation_parameters.pawn_shield_opening[pawns_data.pawn_shield.min(7) as usize]
-        + board.evaluation_parameters.pawn_shield_open_file_opening[pawns_data.opened_files.min(7) as usize];
-    let ending_score = 0
-        + board.evaluation_parameters.doubled_pawn_ending[pawns_data.doubled_pawns.min(7) as usize]
-        + board.evaluation_parameters.isolated_pawn_ending[pawns_data.isolated_pawns.min(7) as usize]
-        + board.evaluation_parameters.chained_pawn_ending[pawns_data.chained_pawns.min(7) as usize]
-        + board.evaluation_parameters.passed_pawn_ending[pawns_data.passed_pawns.min(7) as usize]
-        + board.evaluation_parameters.pawn_shield_ending[pawns_data.pawn_shield.min(7) as usize]
-        + board.evaluation_parameters.pawn_shield_open_file_ending[pawns_data.opened_files.min(7) as usize];
 
-    EvaluationResult::new(opening_score, ending_score)
+    board.evaluation_parameters.doubled_pawn[pawns_data.doubled_pawns.min(7) as usize]
+        + board.evaluation_parameters.isolated_pawn[pawns_data.isolated_pawns.min(7) as usize]
+        + board.evaluation_parameters.chained_pawn[pawns_data.chained_pawns.min(7) as usize]
+        + board.evaluation_parameters.passed_pawn[pawns_data.passed_pawns.min(7) as usize]
+        + board.evaluation_parameters.pawn_shield[pawns_data.pawn_shield.min(7) as usize]
+        + board.evaluation_parameters.pawn_shield_open_file[pawns_data.opened_files.min(7) as usize]
 }
 
 /// Gets all pawn features on `board` for `color`.

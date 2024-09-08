@@ -67,7 +67,7 @@ pub struct BoardState {
     pub hash: u64,
     pub pawn_hash: u64,
     pub captured_piece: u8,
-    pub pst_scores: [[i16; 2]; 2],
+    pub pst_scores: [PackedEval; 2],
 }
 
 impl Board {
@@ -100,7 +100,7 @@ impl Board {
                 hash: 0,
                 pawn_hash: 0,
                 captured_piece: 0,
-                pst_scores: [[0, 2]; 2],
+                pst_scores: [PackedEval::new(0, 0); 2],
             },
             state_stack: Vec::new(),
             pawn_attacks: [0; 2],
@@ -700,8 +700,7 @@ impl Board {
                 square = (1u64 << square).swap_bytes().bit_scan();
             }
 
-            self.state.pst_scores[color][OPENING] += self.evaluation_parameters.get_pst_value(piece, king_square, OPENING, square);
-            self.state.pst_scores[color][ENDING] += self.evaluation_parameters.get_pst_value(piece, king_square, ENDING, square);
+            self.state.pst_scores[color] += self.evaluation_parameters.get_pst_value(piece, king_square, square);
         }
     }
 
@@ -720,8 +719,7 @@ impl Board {
                 square = (1u64 << square).swap_bytes().bit_scan();
             }
 
-            self.state.pst_scores[color][OPENING] -= self.evaluation_parameters.get_pst_value(piece, king_square, OPENING, square);
-            self.state.pst_scores[color][ENDING] -= self.evaluation_parameters.get_pst_value(piece, king_square, ENDING, square);
+            self.state.pst_scores[color] -= self.evaluation_parameters.get_pst_value(piece, king_square, square);
         }
     }
 
@@ -742,10 +740,8 @@ impl Board {
                 to = (1u64 << to).swap_bytes().bit_scan();
             }
 
-            self.state.pst_scores[color][OPENING] -= self.evaluation_parameters.get_pst_value(piece, king_square, OPENING, from);
-            self.state.pst_scores[color][ENDING] -= self.evaluation_parameters.get_pst_value(piece, king_square, ENDING, from);
-            self.state.pst_scores[color][OPENING] += self.evaluation_parameters.get_pst_value(piece, king_square, OPENING, to);
-            self.state.pst_scores[color][ENDING] += self.evaluation_parameters.get_pst_value(piece, king_square, ENDING, to);
+            self.state.pst_scores[color] -= self.evaluation_parameters.get_pst_value(piece, king_square, from);
+            self.state.pst_scores[color] += self.evaluation_parameters.get_pst_value(piece, king_square, to);
         }
     }
 
@@ -963,7 +959,7 @@ impl BoardState {
         hash: u64,
         pawn_hash: u64,
         captured_piece: u8,
-        pst_scores: [[i16; 2]; 2],
+        pst_scores: [PackedEval; 2],
     ) -> BoardState {
         BoardState { halfmove_clock, castling_rights, en_passant, hash, pawn_hash, captured_piece, pst_scores }
     }

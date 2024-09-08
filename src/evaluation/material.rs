@@ -1,4 +1,4 @@
-use super::EvaluationResult;
+use super::PackedEval;
 use crate::state::representation::Board;
 use crate::state::*;
 use crate::utils::bithelpers::BitHelpers;
@@ -8,13 +8,11 @@ use crate::tuning::tuner::TunerCoefficient;
 
 /// Evaluates material on the `board` and returns score from the white color perspective (more than 0 when advantage, less than 0 when disadvantage).
 /// This simple evaluator sums all scores of all present pieces using incremental counters in `board`, without considering the current game phase.
-pub fn evaluate(board: &Board) -> EvaluationResult {
+pub fn evaluate(board: &Board) -> PackedEval {
     let white_has_bishop_pair = if board.pieces[WHITE][BISHOP].bit_count() == 2 { 1 } else { 0 };
     let black_has_bishop_pair = if board.pieces[BLACK][BISHOP].bit_count() == 2 { 1 } else { 0 };
-    let bishop_pair_opening = (white_has_bishop_pair - black_has_bishop_pair) * board.evaluation_parameters.bishop_pair_opening;
-    let bishop_pair_ending = (white_has_bishop_pair - black_has_bishop_pair) * board.evaluation_parameters.bishop_pair_ending;
 
-    EvaluationResult::new(bishop_pair_opening, bishop_pair_ending)
+    (white_has_bishop_pair - black_has_bishop_pair) * board.evaluation_parameters.bishop_pair
 }
 
 /// Gets coefficients of material on `board` and assigns indexes starting from `index`.

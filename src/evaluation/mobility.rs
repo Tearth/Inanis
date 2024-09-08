@@ -21,7 +21,7 @@ pub struct PieceMobility {
 /// less than 0 when disadvantage). This evaluator does two things at once: first, counts all possible moves of knight, bishop, rook, queen
 /// (pawns and king are too slow and not very important), and second, sums how many squares around both kings are dangered by enemy side
 /// (`dangered_white_king_squares` and `dangered_black_king_squares`). This is used in the safety evaluator, to prevent calculating the same thing twice.
-pub fn evaluate(board: &Board, dangered_white_king_squares: &mut u32, dangered_black_king_squares: &mut u32) -> EvaluationResult {
+pub fn evaluate(board: &Board, dangered_white_king_squares: &mut u32, dangered_black_king_squares: &mut u32) -> PackedEval {
     let white_mobility_data = get_mobility_data(board, WHITE, dangered_black_king_squares);
     let black_mobility_data = get_mobility_data(board, BLACK, dangered_white_king_squares);
 
@@ -35,45 +35,24 @@ pub fn evaluate(board: &Board, dangered_white_king_squares: &mut u32, dangered_b
     let rook_mobility_outer = (white_mobility_data.rook_mobility.outer - black_mobility_data.rook_mobility.outer) as i16;
     let queen_mobility_outer = (white_mobility_data.queen_mobility.outer - black_mobility_data.queen_mobility.outer) as i16;
 
-    let knight_mobility_inner_opening = knight_mobility_inner * board.evaluation_parameters.mobility_inner_opening[KNIGHT];
-    let knight_mobility_inner_ending = knight_mobility_inner * board.evaluation_parameters.mobility_inner_ending[KNIGHT];
-    let bishop_mobility_inner_opening = bishop_mobility_inner * board.evaluation_parameters.mobility_inner_opening[BISHOP];
-    let bishop_mobility_inner_ending = bishop_mobility_inner * board.evaluation_parameters.mobility_inner_ending[BISHOP];
-    let rook_mobility_inner_opening = rook_mobility_inner * board.evaluation_parameters.mobility_inner_opening[ROOK];
-    let rook_mobility_inner_ending = rook_mobility_inner * board.evaluation_parameters.mobility_inner_ending[ROOK];
-    let queen_mobility_inner_opening = queen_mobility_inner * board.evaluation_parameters.mobility_inner_opening[QUEEN];
-    let queen_mobility_inner_ending = queen_mobility_inner * board.evaluation_parameters.mobility_inner_ending[QUEEN];
+    let knight_mobility_inner = knight_mobility_inner * board.evaluation_parameters.mobility_inner[KNIGHT];
+    let bishop_mobility_inner = bishop_mobility_inner * board.evaluation_parameters.mobility_inner[BISHOP];
+    let rook_mobility_inner = rook_mobility_inner * board.evaluation_parameters.mobility_inner[ROOK];
+    let queen_mobility_inner = queen_mobility_inner * board.evaluation_parameters.mobility_inner[QUEEN];
 
-    let knight_mobility_outer_opening = knight_mobility_outer * board.evaluation_parameters.mobility_outer_opening[KNIGHT];
-    let knight_mobility_outer_ending = knight_mobility_outer * board.evaluation_parameters.mobility_outer_ending[KNIGHT];
-    let bishop_mobility_outer_opening = bishop_mobility_outer * board.evaluation_parameters.mobility_outer_opening[BISHOP];
-    let bishop_mobility_outer_ending = bishop_mobility_outer * board.evaluation_parameters.mobility_outer_ending[BISHOP];
-    let rook_mobility_outer_opening = rook_mobility_outer * board.evaluation_parameters.mobility_outer_opening[ROOK];
-    let rook_mobility_outer_ending = rook_mobility_outer * board.evaluation_parameters.mobility_outer_ending[ROOK];
-    let queen_mobility_outer_opening = queen_mobility_outer * board.evaluation_parameters.mobility_outer_opening[QUEEN];
-    let queen_mobility_outer_ending = queen_mobility_outer * board.evaluation_parameters.mobility_outer_ending[QUEEN];
+    let knight_mobility_outer = knight_mobility_outer * board.evaluation_parameters.mobility_outer[KNIGHT];
+    let bishop_mobility_outer = bishop_mobility_outer * board.evaluation_parameters.mobility_outer[BISHOP];
+    let rook_mobility_outer = rook_mobility_outer * board.evaluation_parameters.mobility_outer[ROOK];
+    let queen_mobility_outer = queen_mobility_outer * board.evaluation_parameters.mobility_outer[QUEEN];
 
-    let opening_score = 0
-        + knight_mobility_inner_opening
-        + bishop_mobility_inner_opening
-        + rook_mobility_inner_opening
-        + queen_mobility_inner_opening
-        + knight_mobility_outer_opening
-        + bishop_mobility_outer_opening
-        + rook_mobility_outer_opening
-        + queen_mobility_outer_opening;
-
-    let ending_score = 0
-        + knight_mobility_inner_ending
-        + bishop_mobility_inner_ending
-        + rook_mobility_inner_ending
-        + queen_mobility_inner_ending
-        + knight_mobility_outer_ending
-        + bishop_mobility_outer_ending
-        + rook_mobility_outer_ending
-        + queen_mobility_outer_ending;
-
-    EvaluationResult::new(opening_score, ending_score)
+    knight_mobility_inner
+        + bishop_mobility_inner
+        + rook_mobility_inner
+        + queen_mobility_inner
+        + knight_mobility_outer
+        + bishop_mobility_outer
+        + rook_mobility_outer
+        + queen_mobility_outer
 }
 
 fn get_mobility_data(board: &Board, color: usize, dangered_king_squares: &mut u32) -> MobilityData {
@@ -101,29 +80,29 @@ pub fn get_coefficients(
 
     let mut data = [
         TunerCoefficient::new(0, OPENING),
+        TunerCoefficient::new(0, ENDING),
         TunerCoefficient::new(white_mobility_data.knight_mobility.inner - black_mobility_data.knight_mobility.inner, OPENING),
+        TunerCoefficient::new(white_mobility_data.knight_mobility.inner - black_mobility_data.knight_mobility.inner, ENDING),
         TunerCoefficient::new(white_mobility_data.bishop_mobility.inner - black_mobility_data.bishop_mobility.inner, OPENING),
+        TunerCoefficient::new(white_mobility_data.bishop_mobility.inner - black_mobility_data.bishop_mobility.inner, ENDING),
         TunerCoefficient::new(white_mobility_data.rook_mobility.inner - black_mobility_data.rook_mobility.inner, OPENING),
+        TunerCoefficient::new(white_mobility_data.rook_mobility.inner - black_mobility_data.rook_mobility.inner, ENDING),
         TunerCoefficient::new(white_mobility_data.queen_mobility.inner - black_mobility_data.queen_mobility.inner, OPENING),
+        TunerCoefficient::new(white_mobility_data.queen_mobility.inner - black_mobility_data.queen_mobility.inner, ENDING),
         TunerCoefficient::new(0, OPENING),
         TunerCoefficient::new(0, ENDING),
-        TunerCoefficient::new(white_mobility_data.knight_mobility.inner - black_mobility_data.knight_mobility.inner, ENDING),
-        TunerCoefficient::new(white_mobility_data.bishop_mobility.inner - black_mobility_data.bishop_mobility.inner, ENDING),
-        TunerCoefficient::new(white_mobility_data.rook_mobility.inner - black_mobility_data.rook_mobility.inner, ENDING),
-        TunerCoefficient::new(white_mobility_data.queen_mobility.inner - black_mobility_data.queen_mobility.inner, ENDING),
-        TunerCoefficient::new(0, 0),
         //
         TunerCoefficient::new(0, OPENING),
+        TunerCoefficient::new(0, ENDING),
         TunerCoefficient::new(white_mobility_data.knight_mobility.outer - black_mobility_data.knight_mobility.outer, OPENING),
-        TunerCoefficient::new(white_mobility_data.bishop_mobility.outer - black_mobility_data.bishop_mobility.outer, OPENING),
-        TunerCoefficient::new(white_mobility_data.rook_mobility.outer - black_mobility_data.rook_mobility.outer, OPENING),
-        TunerCoefficient::new(white_mobility_data.queen_mobility.outer - black_mobility_data.queen_mobility.outer, OPENING),
-        TunerCoefficient::new(0, OPENING),
-        TunerCoefficient::new(0, 0),
         TunerCoefficient::new(white_mobility_data.knight_mobility.outer - black_mobility_data.knight_mobility.outer, ENDING),
+        TunerCoefficient::new(white_mobility_data.bishop_mobility.outer - black_mobility_data.bishop_mobility.outer, OPENING),
         TunerCoefficient::new(white_mobility_data.bishop_mobility.outer - black_mobility_data.bishop_mobility.outer, ENDING),
+        TunerCoefficient::new(white_mobility_data.rook_mobility.outer - black_mobility_data.rook_mobility.outer, OPENING),
         TunerCoefficient::new(white_mobility_data.rook_mobility.outer - black_mobility_data.rook_mobility.outer, ENDING),
+        TunerCoefficient::new(white_mobility_data.queen_mobility.outer - black_mobility_data.queen_mobility.outer, OPENING),
         TunerCoefficient::new(white_mobility_data.queen_mobility.outer - black_mobility_data.queen_mobility.outer, ENDING),
+        TunerCoefficient::new(0, OPENING),
         TunerCoefficient::new(0, ENDING),
     ];
 

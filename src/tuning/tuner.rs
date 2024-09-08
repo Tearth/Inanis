@@ -406,8 +406,8 @@ fn load_positions(
     Ok(positions)
 }
 
-/// Transforms the current evaluation values into a list of [TunerParameter]. Use `lock_material` if the parameters related to piece values should
-/// be skipped, and `random_values` if the parameters should have random values (useful when initializing tuner).
+/// Transforms the current evaluation values into a list of [TunerParameter]. Use  `random_values` if the parameters should have
+/// random values (useful when initializing tuner).
 fn load_values(random_values: bool) -> Vec<TunerParameter> {
     let evaluation_parameters = EvaluationParameters::default();
     let mut parameters = vec![
@@ -417,71 +417,48 @@ fn load_values(random_values: bool) -> Vec<TunerParameter> {
         TunerParameter::new(PIECE_VALUE[ROOK], PIECE_VALUE[ROOK], PIECE_VALUE[ROOK], PIECE_VALUE[ROOK], PIECE_VALUE[ROOK]),
         TunerParameter::new(PIECE_VALUE[QUEEN], PIECE_VALUE[QUEEN], PIECE_VALUE[QUEEN], PIECE_VALUE[QUEEN], PIECE_VALUE[QUEEN]),
         TunerParameter::new(PIECE_VALUE[KING], PIECE_VALUE[KING], PIECE_VALUE[KING], PIECE_VALUE[KING], PIECE_VALUE[KING]),
-        TunerParameter::new(evaluation_parameters.bishop_pair_opening, -99, 10, 40, 99),
-        TunerParameter::new(evaluation_parameters.bishop_pair_ending, -99, 10, 40, 99),
+        TunerParameter::new(evaluation_parameters.bishop_pair.get_opening(), -99, 10, 40, 99),
+        TunerParameter::new(evaluation_parameters.bishop_pair.get_ending(), -99, 10, 40, 99),
     ];
 
-    parameters.append(&mut evaluation_parameters.mobility_inner_opening.iter().map(|v| TunerParameter::new(*v, 0, 2, 6, 99)).collect());
-    parameters.append(&mut evaluation_parameters.mobility_inner_ending.iter().map(|v| TunerParameter::new(*v, 0, 2, 6, 99)).collect());
-
-    parameters.append(&mut evaluation_parameters.mobility_outer_opening.iter().map(|v| TunerParameter::new(*v, 0, 2, 6, 99)).collect());
-    parameters.append(&mut evaluation_parameters.mobility_outer_ending.iter().map(|v| TunerParameter::new(*v, 0, 2, 6, 99)).collect());
-
-    parameters.append(&mut evaluation_parameters.doubled_pawn_opening.iter().map(|v| TunerParameter::new(*v, -999, -40, -10, 999)).collect());
-    parameters.append(&mut evaluation_parameters.doubled_pawn_ending.iter().map(|v| TunerParameter::new(*v, -999, -40, -10, 999)).collect());
-
-    parameters.append(&mut evaluation_parameters.isolated_pawn_opening.iter().map(|v| TunerParameter::new(*v, -999, -40, -10, 999)).collect());
-    parameters.append(&mut evaluation_parameters.isolated_pawn_ending.iter().map(|v| TunerParameter::new(*v, -999, -40, -10, 999)).collect());
-
-    parameters.append(&mut evaluation_parameters.chained_pawn_opening.iter().map(|v| TunerParameter::new(*v, -999, 10, 40, 999)).collect());
-    parameters.append(&mut evaluation_parameters.chained_pawn_ending.iter().map(|v| TunerParameter::new(*v, -999, 10, 40, 999)).collect());
-
-    parameters.append(&mut evaluation_parameters.passed_pawn_opening.iter().map(|v| TunerParameter::new(*v, -999, 10, 40, 999)).collect());
-    parameters.append(&mut evaluation_parameters.passed_pawn_ending.iter().map(|v| TunerParameter::new(*v, -999, 10, 40, 999)).collect());
-
-    parameters.append(&mut evaluation_parameters.pawn_shield_opening.iter().map(|v| TunerParameter::new(*v, -999, 10, 40, 999)).collect());
-    parameters.append(&mut evaluation_parameters.pawn_shield_ending.iter().map(|v| TunerParameter::new(*v, -999, 10, 40, 999)).collect());
-
-    parameters.append(&mut evaluation_parameters.pawn_shield_open_file_opening.iter().map(|v| TunerParameter::new(*v, -999, -40, -10, 999)).collect());
-    parameters.append(&mut evaluation_parameters.pawn_shield_open_file_ending.iter().map(|v| TunerParameter::new(*v, -999, -40, -10, 999)).collect());
-
-    parameters.append(&mut evaluation_parameters.king_attacked_squares_opening.iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
-    parameters.append(&mut evaluation_parameters.king_attacked_squares_ending.iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+    parameters.append(&mut evaluation_parameters.mobility_inner.iter().flat_map(|v| v.to_tuner_params(0, 2, 6, 99, 0)).collect());
+    parameters.append(&mut evaluation_parameters.mobility_outer.iter().flat_map(|v| v.to_tuner_params(0, 2, 6, 99, 0)).collect());
+    parameters.append(&mut evaluation_parameters.doubled_pawn.iter().flat_map(|v| v.to_tuner_params(-999, -40, -10, 999, 0)).collect());
+    parameters.append(&mut evaluation_parameters.isolated_pawn.iter().flat_map(|v| v.to_tuner_params(-999, -40, -10, 999, 0)).collect());
+    parameters.append(&mut evaluation_parameters.chained_pawn.iter().flat_map(|v| v.to_tuner_params(-999, 10, 40, 999, 0)).collect());
+    parameters.append(&mut evaluation_parameters.passed_pawn.iter().flat_map(|v| v.to_tuner_params(-999, 10, 40, 999, 0)).collect());
+    parameters.append(&mut evaluation_parameters.pawn_shield.iter().flat_map(|v| v.to_tuner_params(-999, 10, 40, 999, 0)).collect());
+    parameters.append(&mut evaluation_parameters.pawn_shield_open_file.iter().flat_map(|v| v.to_tuner_params(-999, -40, -10, 999, 0)).collect());
+    parameters.append(&mut evaluation_parameters.king_attacked_squares.iter().flat_map(|v| v.to_tuner_params(-999, -40, 40, 999, 0)).collect());
 
     let pawn_pst = &EvaluationParameters::PAWN_PST_PATTERN;
     for king_bucket in 0..KING_BUCKETS_COUNT {
-        parameters.append(&mut pawn_pst[king_bucket][0].iter().map(|v| TunerParameter::new(*v - PIECE_VALUE[PAWN], -9999, 50, 150, 9999)).collect());
-        parameters.append(&mut pawn_pst[king_bucket][1].iter().map(|v| TunerParameter::new(*v - PIECE_VALUE[PAWN], -9999, 50, 150, 9999)).collect());
+        parameters.append(&mut pawn_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-9999, 50, 150, 9999, -PIECE_VALUE[PAWN])).collect());
     }
 
     let knight_pst = &EvaluationParameters::KNIGHT_PST_PATTERN;
     for king_bucket in 0..KING_BUCKETS_COUNT {
-        parameters.append(&mut knight_pst[king_bucket][0].iter().map(|v| TunerParameter::new(*v - PIECE_VALUE[KNIGHT], -9999, 300, 500, 9999)).collect());
-        parameters.append(&mut knight_pst[king_bucket][1].iter().map(|v| TunerParameter::new(*v - PIECE_VALUE[KNIGHT], -9999, 300, 500, 9999)).collect());
+        parameters.append(&mut knight_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-9999, 300, 500, 9999, -PIECE_VALUE[KNIGHT])).collect());
     }
 
     let bishop_pst = &EvaluationParameters::BISHOP_PST_PATTERN;
     for king_bucket in 0..KING_BUCKETS_COUNT {
-        parameters.append(&mut bishop_pst[king_bucket][0].iter().map(|v| TunerParameter::new(*v - PIECE_VALUE[BISHOP], -9999, 300, 500, 9999)).collect());
-        parameters.append(&mut bishop_pst[king_bucket][1].iter().map(|v| TunerParameter::new(*v - PIECE_VALUE[BISHOP], -9999, 300, 500, 9999)).collect());
+        parameters.append(&mut bishop_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-9999, 300, 500, 9999, -PIECE_VALUE[BISHOP])).collect());
     }
 
     let rook_pst = &EvaluationParameters::ROOK_PST_PATTERN;
     for king_bucket in 0..KING_BUCKETS_COUNT {
-        parameters.append(&mut rook_pst[king_bucket][0].iter().map(|v| TunerParameter::new(*v - PIECE_VALUE[ROOK], -9999, 400, 600, 9999)).collect());
-        parameters.append(&mut rook_pst[king_bucket][1].iter().map(|v| TunerParameter::new(*v - PIECE_VALUE[ROOK], -9999, 400, 600, 9999)).collect());
+        parameters.append(&mut rook_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-9999, 400, 600, 9999, -PIECE_VALUE[ROOK])).collect());
     }
 
     let queen_pst = &EvaluationParameters::QUEEN_PST_PATTERN;
     for king_bucket in 0..KING_BUCKETS_COUNT {
-        parameters.append(&mut queen_pst[king_bucket][0].iter().map(|v| TunerParameter::new(*v - PIECE_VALUE[QUEEN], -9999, 800, 1400, 9999)).collect());
-        parameters.append(&mut queen_pst[king_bucket][1].iter().map(|v| TunerParameter::new(*v - PIECE_VALUE[QUEEN], -9999, 800, 1400, 9999)).collect());
+        parameters.append(&mut queen_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-9999, 800, 1400, 9999, -PIECE_VALUE[QUEEN])).collect());
     }
 
     let king_pst = &EvaluationParameters::KING_PST_PATTERN;
     for king_bucket in 0..KING_BUCKETS_COUNT {
-        parameters.append(&mut king_pst[king_bucket][0].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
-        parameters.append(&mut king_pst[king_bucket][1].iter().map(|v| TunerParameter::new(*v, -999, -40, 40, 999)).collect());
+        parameters.append(&mut king_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-999, -40, 40, 999, 0)).collect());
     }
 
     if random_values {
@@ -512,35 +489,16 @@ where
     output.push_str("impl Default for EvaluationParameters {\n");
     output.push_str("    fn default() -> Self {\n");
     output.push_str("        Self {\n");
-    output.push_str(get_parameter("bishop_pair_opening", weights).as_str());
-    output.push_str(get_parameter("bishop_pair_ending", weights).as_str());
-    output.push('\n');
-    output.push_str(get_array("mobility_inner_opening", weights, 6).as_str());
-    output.push_str(get_array("mobility_inner_ending", weights, 6).as_str());
-    output.push('\n');
-    output.push_str(get_array("mobility_outer_opening", weights, 6).as_str());
-    output.push_str(get_array("mobility_outer_ending", weights, 6).as_str());
-    output.push('\n');
-    output.push_str(get_array("doubled_pawn_opening", weights, 8).as_str());
-    output.push_str(get_array("doubled_pawn_ending", weights, 8).as_str());
-    output.push('\n');
-    output.push_str(get_array("isolated_pawn_opening", weights, 8).as_str());
-    output.push_str(get_array("isolated_pawn_ending", weights, 8).as_str());
-    output.push('\n');
-    output.push_str(get_array("chained_pawn_opening", weights, 8).as_str());
-    output.push_str(get_array("chained_pawn_ending", weights, 8).as_str());
-    output.push('\n');
-    output.push_str(get_array("passed_pawn_opening", weights, 8).as_str());
-    output.push_str(get_array("passed_pawn_ending", weights, 8).as_str());
-    output.push('\n');
-    output.push_str(get_array("pawn_shield_opening", weights, 8).as_str());
-    output.push_str(get_array("pawn_shield_ending", weights, 8).as_str());
-    output.push('\n');
-    output.push_str(get_array("pawn_shield_open_file_opening", weights, 8).as_str());
-    output.push_str(get_array("pawn_shield_open_file_ending", weights, 8).as_str());
-    output.push('\n');
-    output.push_str(get_array("king_attacked_squares_opening", weights, 8).as_str());
-    output.push_str(get_array("king_attacked_squares_ending", weights, 8).as_str());
+    output.push_str(get_parameter("bishop_pair", weights).as_str());
+    output.push_str(get_array("mobility_inner", weights, 6).as_str());
+    output.push_str(get_array("mobility_outer", weights, 6).as_str());
+    output.push_str(get_array("doubled_pawn", weights, 8).as_str());
+    output.push_str(get_array("isolated_pawn", weights, 8).as_str());
+    output.push_str(get_array("chained_pawn", weights, 8).as_str());
+    output.push_str(get_array("passed_pawn", weights, 8).as_str());
+    output.push_str(get_array("pawn_shield", weights, 8).as_str());
+    output.push_str(get_array("pawn_shield_open_file", weights, 8).as_str());
+    output.push_str(get_array("king_attacked_squares", weights, 8).as_str());
     output.push_str("        }\n");
     output.push_str("    }\n");
     output.push_str("}\n");
@@ -565,17 +523,12 @@ where
     output.push('\n');
     output.push_str("impl EvaluationParameters {\n");
     output.push_str("    #[rustfmt::skip]\n");
-    output.push_str(&format!("    pub const {}_PST_PATTERN: [[[i16; 64]; 2]; KING_BUCKETS_COUNT] =\n", name));
+    output.push_str(&format!("    pub const {}_PST_PATTERN: [[PackedEval; 64]; KING_BUCKETS_COUNT] =\n", name));
     output.push_str("    [\n");
 
     for _ in 0..KING_BUCKETS_COUNT {
         output.push_str("        [\n");
-        output.push_str("            [\n");
         output.push_str(get_piece_square_table(weights, piece_value).as_str());
-        output.push_str("            ],\n");
-        output.push_str("            [\n");
-        output.push_str(get_piece_square_table(weights, piece_value).as_str());
-        output.push_str("            ],\n");
         output.push_str("        ],\n");
     }
 
@@ -612,10 +565,13 @@ where
             output += ", ";
         }
 
-        let value = *weights.next().unwrap();
-        let value = if value != f32::MIN { value } else { 0.0 };
+        let opening_score = *weights.next().unwrap();
+        let opening_score = if opening_score != f32::MIN { opening_score.round() } else { 0.0 };
 
-        output += &value.round().to_string();
+        let ending_score = *weights.next().unwrap();
+        let ending_score = if ending_score != f32::MIN { ending_score.round() } else { 0.0 };
+
+        output += &format!("s!({}, {})", opening_score, ending_score);
     }
 
     output += "],\n";
@@ -627,7 +583,13 @@ fn get_parameter<'a, I>(name: &str, weights: &mut I) -> String
 where
     I: Iterator<Item = &'a f32>,
 {
-    format!("            {}: {},\n", name, weights.next().unwrap().round())
+    let opening_score = *weights.next().unwrap();
+    let opening_score = if opening_score != f32::MIN { opening_score.round() } else { 0.0 };
+
+    let ending_score = *weights.next().unwrap();
+    let ending_score = if ending_score != f32::MIN { ending_score.round() } else { 0.0 };
+
+    format!("            {}: s!({}, {}),\n", name, opening_score, ending_score)
 }
 
 /// Gets a Rust representation of the piece-square tables with the specified `values`.
@@ -636,17 +598,20 @@ where
     I: Iterator<Item = &'a f32>,
 {
     let mut output = String::new();
+    output.push_str("            ");
 
-    output.push_str("                ");
     for index in ALL_SQUARES {
-        let value = *weights.next().unwrap();
-        let value = if value != f32::MIN { value + piece_value as f32 } else { 0.0 };
+        let opening_score = *weights.next().unwrap();
+        let opening_score = if opening_score != f32::MIN { opening_score + piece_value as f32 } else { 0.0 };
 
-        output.push_str(format!("{:4}", value.round()).as_str());
+        let ending_score = *weights.next().unwrap();
+        let ending_score = if ending_score != f32::MIN { ending_score + piece_value as f32 } else { 0.0 };
+
+        output.push_str(format!("s!({:4}, {:4})", opening_score.round(), ending_score.round()).as_str());
         if index % 8 == 7 {
             output.push_str(",\n");
             if index != 63 {
-                output.push_str("                ");
+                output.push_str("            ");
             }
         } else {
             output.push_str(", ");

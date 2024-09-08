@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------- //
-// Generated at 06-09-2024 19:43:06 UTC (e = 0.114563, k = 0.0077, r = 1.00) //
+// Generated at 08-09-2024 18:53:08 UTC (e = 0.114547, k = 0.0077, r = 1.00) //
 // ------------------------------------------------------------------------- //
 
 use super::*;
@@ -7,35 +7,16 @@ use super::*;
 impl Default for EvaluationParameters {
     fn default() -> Self {
         Self {
-            bishop_pair_opening: 22,
-            bishop_pair_ending: 61,
-
-            mobility_inner_opening: [0, 11, 10, 10, 4, 0],
-            mobility_inner_ending: [0, 3, 12, 3, 8, 0],
-
-            mobility_outer_opening: [0, 3, 2, 5, 1, 0],
-            mobility_outer_ending: [0, 3, 3, 3, 2, 0],
-
-            doubled_pawn_opening: [-6, -18, -24, -49, -21, 0, 0, 0],
-            doubled_pawn_ending: [-5, -18, -39, -54, -38, 0, 0, 0],
-
-            isolated_pawn_opening: [-3, -14, -24, -36, -29, 0, 0, 0],
-            isolated_pawn_ending: [-6, -17, -32, -40, -62, 0, 0, 0],
-
-            chained_pawn_opening: [-5, 5, 17, 26, 34, 40, 51, 20],
-            chained_pawn_ending: [11, 12, 19, 30, 45, 58, 37, 18],
-
-            passed_pawn_opening: [18, 22, 22, 21, 17, 37, 28, 37],
-            passed_pawn_ending: [-36, 9, 61, 68, 46, 42, 15, 26],
-
-            pawn_shield_opening: [10, 18, 22, 21, 51, 19, 0, 0],
-            pawn_shield_ending: [10, 16, 19, 22, 23, 20, 0, 0],
-
-            pawn_shield_open_file_opening: [-16, -21, -33, -34, 0, 0, 0, 0],
-            pawn_shield_open_file_ending: [-27, -20, -14, -25, 0, 0, 0, 0],
-
-            king_attacked_squares_opening: [82, 79, 67, 40, -7, -56, -112, -200],
-            king_attacked_squares_ending: [-49, -44, -39, -36, -14, 3, 29, 65],
+            bishop_pair: s!(22, 61),
+            mobility_inner: [s!(0, 0), s!(11, 3), s!(10, 12), s!(10, 3), s!(4, 8), s!(0, 0)],
+            mobility_outer: [s!(0, 0), s!(3, 3), s!(2, 3), s!(5, 3), s!(1, 2), s!(0, 0)],
+            doubled_pawn: [s!(-6, -5), s!(-17, -18), s!(-24, -39), s!(-50, -54), s!(-21, -38), s!(0, 0), s!(0, 0), s!(0, 0)],
+            isolated_pawn: [s!(-3, -6), s!(-14, -17), s!(-24, -32), s!(-36, -40), s!(-29, -62), s!(0, 0), s!(0, 0), s!(0, 0)],
+            chained_pawn: [s!(-5, 12), s!(5, 12), s!(17, 19), s!(26, 30), s!(34, 45), s!(40, 58), s!(51, 37), s!(20, 18)],
+            passed_pawn: [s!(17, -36), s!(22, 9), s!(22, 61), s!(21, 68), s!(17, 46), s!(37, 42), s!(28, 15), s!(37, 26)],
+            pawn_shield: [s!(10, 10), s!(18, 16), s!(22, 19), s!(21, 22), s!(51, 23), s!(19, 20), s!(0, 0), s!(0, 0)],
+            pawn_shield_open_file: [s!(-16, -27), s!(-21, -20), s!(-33, -14), s!(-34, -25), s!(0, 0), s!(0, 0), s!(0, 0), s!(0, 0)],
+            king_attacked_squares: [s!(82, -49), s!(79, -44), s!(67, -39), s!(40, -36), s!(-7, -14), s!(-56, 3), s!(-112, 29), s!(-199, 64)],
         }
     }
 }
