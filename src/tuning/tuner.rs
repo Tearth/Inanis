@@ -5,7 +5,6 @@ use crate::evaluation::pawns;
 use crate::evaluation::pst;
 use crate::evaluation::pst::*;
 use crate::evaluation::safety;
-use crate::evaluation::EvaluationParameters;
 use crate::evaluation::*;
 use crate::state::movegen::MagicContainer;
 use crate::state::patterns::PatternsContainer;
@@ -349,7 +348,6 @@ fn load_positions(
         Err(error) => return Err(format!("Invalid EPD file: {}", error)),
     };
 
-    let evaluation_parameters = Arc::new(EvaluationParameters::default());
     let zobrist_container = Arc::new(ZobristContainer::default());
     let patterns_container = Arc::new(PatternsContainer::default());
     let see_container = Arc::new(SEEContainer::default());
@@ -359,7 +357,6 @@ fn load_positions(
         let position = line.unwrap();
         let parsed_epd = fen::epd_to_board(
             position.as_str(),
-            Some(evaluation_parameters.clone()),
             Some(zobrist_container.clone()),
             Some(patterns_container.clone()),
             Some(see_container.clone()),
@@ -409,7 +406,6 @@ fn load_positions(
 /// Transforms the current evaluation values into a list of [TunerParameter]. Use  `random_values` if the parameters should have
 /// random values (useful when initializing tuner).
 fn load_values(random_values: bool) -> Vec<TunerParameter> {
-    let evaluation_parameters = EvaluationParameters::default();
     let mut parameters = vec![
         TunerParameter::new(PIECE_VALUE[PAWN], PIECE_VALUE[PAWN], PIECE_VALUE[PAWN], PIECE_VALUE[PAWN], PIECE_VALUE[PAWN]),
         TunerParameter::new(PIECE_VALUE[KNIGHT], PIECE_VALUE[KNIGHT], PIECE_VALUE[KNIGHT], PIECE_VALUE[KNIGHT], PIECE_VALUE[KNIGHT]),
@@ -417,46 +413,46 @@ fn load_values(random_values: bool) -> Vec<TunerParameter> {
         TunerParameter::new(PIECE_VALUE[ROOK], PIECE_VALUE[ROOK], PIECE_VALUE[ROOK], PIECE_VALUE[ROOK], PIECE_VALUE[ROOK]),
         TunerParameter::new(PIECE_VALUE[QUEEN], PIECE_VALUE[QUEEN], PIECE_VALUE[QUEEN], PIECE_VALUE[QUEEN], PIECE_VALUE[QUEEN]),
         TunerParameter::new(PIECE_VALUE[KING], PIECE_VALUE[KING], PIECE_VALUE[KING], PIECE_VALUE[KING], PIECE_VALUE[KING]),
-        TunerParameter::new(evaluation_parameters.bishop_pair.get_opening(), -99, 10, 40, 99),
-        TunerParameter::new(evaluation_parameters.bishop_pair.get_ending(), -99, 10, 40, 99),
+        TunerParameter::new(params::BISHOP_PAIR.get_opening(), -99, 10, 40, 99),
+        TunerParameter::new(params::BISHOP_PAIR.get_ending(), -99, 10, 40, 99),
     ];
 
-    parameters.append(&mut evaluation_parameters.mobility_inner.iter().flat_map(|v| v.to_tuner_params(0, 2, 6, 99, 0)).collect());
-    parameters.append(&mut evaluation_parameters.mobility_outer.iter().flat_map(|v| v.to_tuner_params(0, 2, 6, 99, 0)).collect());
-    parameters.append(&mut evaluation_parameters.doubled_pawn.iter().flat_map(|v| v.to_tuner_params(-999, -40, -10, 999, 0)).collect());
-    parameters.append(&mut evaluation_parameters.isolated_pawn.iter().flat_map(|v| v.to_tuner_params(-999, -40, -10, 999, 0)).collect());
-    parameters.append(&mut evaluation_parameters.chained_pawn.iter().flat_map(|v| v.to_tuner_params(-999, 10, 40, 999, 0)).collect());
-    parameters.append(&mut evaluation_parameters.passed_pawn.iter().flat_map(|v| v.to_tuner_params(-999, 10, 40, 999, 0)).collect());
-    parameters.append(&mut evaluation_parameters.pawn_shield.iter().flat_map(|v| v.to_tuner_params(-999, 10, 40, 999, 0)).collect());
-    parameters.append(&mut evaluation_parameters.pawn_shield_open_file.iter().flat_map(|v| v.to_tuner_params(-999, -40, -10, 999, 0)).collect());
-    parameters.append(&mut evaluation_parameters.king_attacked_squares.iter().flat_map(|v| v.to_tuner_params(-999, -40, 40, 999, 0)).collect());
+    parameters.append(&mut params::MOBILITY_INNER.iter().flat_map(|v| v.to_tuner_params(0, 2, 6, 99, 0)).collect());
+    parameters.append(&mut params::MOBILITY_OUTER.iter().flat_map(|v| v.to_tuner_params(0, 2, 6, 99, 0)).collect());
+    parameters.append(&mut params::DOUBLED_PAWN.iter().flat_map(|v| v.to_tuner_params(-999, -40, -10, 999, 0)).collect());
+    parameters.append(&mut params::ISOLATED_PAWN.iter().flat_map(|v| v.to_tuner_params(-999, -40, -10, 999, 0)).collect());
+    parameters.append(&mut params::CHAINED_PAWN.iter().flat_map(|v| v.to_tuner_params(-999, 10, 40, 999, 0)).collect());
+    parameters.append(&mut params::PASSED_PAWN.iter().flat_map(|v| v.to_tuner_params(-999, 10, 40, 999, 0)).collect());
+    parameters.append(&mut params::PAWN_SHIELD.iter().flat_map(|v| v.to_tuner_params(-999, 10, 40, 999, 0)).collect());
+    parameters.append(&mut params::PAWN_SHIELD_OPEN_FILE.iter().flat_map(|v| v.to_tuner_params(-999, -40, -10, 999, 0)).collect());
+    parameters.append(&mut params::KING_ATTACKED_SQUARES.iter().flat_map(|v| v.to_tuner_params(-999, -40, 40, 999, 0)).collect());
 
-    let pawn_pst = &EvaluationParameters::PAWN_PST_PATTERN;
+    let pawn_pst = &pst::PAWN_PST_PATTERN;
     for king_bucket in 0..KING_BUCKETS_COUNT {
         parameters.append(&mut pawn_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-9999, 50, 150, 9999, -PIECE_VALUE[PAWN])).collect());
     }
 
-    let knight_pst = &EvaluationParameters::KNIGHT_PST_PATTERN;
+    let knight_pst = &pst::KNIGHT_PST_PATTERN;
     for king_bucket in 0..KING_BUCKETS_COUNT {
         parameters.append(&mut knight_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-9999, 300, 500, 9999, -PIECE_VALUE[KNIGHT])).collect());
     }
 
-    let bishop_pst = &EvaluationParameters::BISHOP_PST_PATTERN;
+    let bishop_pst = &pst::BISHOP_PST_PATTERN;
     for king_bucket in 0..KING_BUCKETS_COUNT {
         parameters.append(&mut bishop_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-9999, 300, 500, 9999, -PIECE_VALUE[BISHOP])).collect());
     }
 
-    let rook_pst = &EvaluationParameters::ROOK_PST_PATTERN;
+    let rook_pst = &pst::ROOK_PST_PATTERN;
     for king_bucket in 0..KING_BUCKETS_COUNT {
         parameters.append(&mut rook_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-9999, 400, 600, 9999, -PIECE_VALUE[ROOK])).collect());
     }
 
-    let queen_pst = &EvaluationParameters::QUEEN_PST_PATTERN;
+    let queen_pst = &pst::QUEEN_PST_PATTERN;
     for king_bucket in 0..KING_BUCKETS_COUNT {
         parameters.append(&mut queen_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-9999, 800, 1400, 9999, -PIECE_VALUE[QUEEN])).collect());
     }
 
-    let king_pst = &EvaluationParameters::KING_PST_PATTERN;
+    let king_pst = &pst::KING_PST_PATTERN;
     for king_bucket in 0..KING_BUCKETS_COUNT {
         parameters.append(&mut king_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-999, -40, 40, 999, 0)).collect());
     }
@@ -486,22 +482,16 @@ where
     output.push('\n');
     output.push_str("use super::*;\n");
     output.push('\n');
-    output.push_str("impl Default for EvaluationParameters {\n");
-    output.push_str("    fn default() -> Self {\n");
-    output.push_str("        Self {\n");
-    output.push_str(get_parameter("bishop_pair", weights).as_str());
-    output.push_str(get_array("mobility_inner", weights, 6).as_str());
-    output.push_str(get_array("mobility_outer", weights, 6).as_str());
-    output.push_str(get_array("doubled_pawn", weights, 8).as_str());
-    output.push_str(get_array("isolated_pawn", weights, 8).as_str());
-    output.push_str(get_array("chained_pawn", weights, 8).as_str());
-    output.push_str(get_array("passed_pawn", weights, 8).as_str());
-    output.push_str(get_array("pawn_shield", weights, 8).as_str());
-    output.push_str(get_array("pawn_shield_open_file", weights, 8).as_str());
-    output.push_str(get_array("king_attacked_squares", weights, 8).as_str());
-    output.push_str("        }\n");
-    output.push_str("    }\n");
-    output.push_str("}\n");
+    output.push_str(get_parameter("BISHOP_PAIR", weights).as_str());
+    output.push_str(get_array("MOBILITY_INNER", weights, 6).as_str());
+    output.push_str(get_array("MOBILITY_OUTER", weights, 6).as_str());
+    output.push_str(get_array("DOUBLED_PAWN", weights, 8).as_str());
+    output.push_str(get_array("ISOLATED_PAWN", weights, 8).as_str());
+    output.push_str(get_array("CHAINED_PAWN", weights, 8).as_str());
+    output.push_str(get_array("PASSED_PAWN", weights, 8).as_str());
+    output.push_str(get_array("PAWN_SHIELD", weights, 8).as_str());
+    output.push_str(get_array("PAWN_SHIELD_OPEN_FILE", weights, 8).as_str());
+    output.push_str(get_array("KING_ATTACKED_SQUARES", weights, 8).as_str());
 
     let path = Path::new(output_directory);
     fs::create_dir_all(path).unwrap();
@@ -521,19 +511,16 @@ where
     output.push('\n');
     output.push_str("use super::*;\n");
     output.push('\n');
-    output.push_str("impl EvaluationParameters {\n");
-    output.push_str("    #[rustfmt::skip]\n");
-    output.push_str(&format!("    pub const {}_PST_PATTERN: [[PackedEval; 64]; KING_BUCKETS_COUNT] =\n", name));
-    output.push_str("    [\n");
+    output.push_str(&format!("pub const {}_PST_PATTERN: [[PackedEval; 64]; KING_BUCKETS_COUNT] =\n", name));
+    output.push_str("[\n");
 
     for _ in 0..KING_BUCKETS_COUNT {
-        output.push_str("        [\n");
+        output.push_str("    [\n");
         output.push_str(get_piece_square_table(weights, piece_value).as_str());
-        output.push_str("        ],\n");
+        output.push_str("    ],\n");
     }
 
-    output.push_str("    ];\n");
-    output.push_str("}\n");
+    output.push_str("];\n");
 
     let path = Path::new(output_directory).join("pst");
     fs::create_dir_all(path).unwrap();
@@ -559,7 +546,7 @@ fn get_array<'a, I>(name: &str, weights: &mut I, length: usize) -> String
 where
     I: Iterator<Item = &'a f32>,
 {
-    let mut output = format!("            {}: [", name);
+    let mut output = format!("pub const {}: [PackedEval; {}] = [", name, length);
     for i in 0..length {
         if i > 0 {
             output += ", ";
@@ -589,7 +576,7 @@ where
     let ending_score = *weights.next().unwrap();
     let ending_score = if ending_score != f32::MIN { ending_score.round() } else { 0.0 };
 
-    format!("            {}: s!({}, {}),\n", name, opening_score, ending_score)
+    format!("pub const {}: PackedEval = s!({}, {}),\n", name, opening_score, ending_score)
 }
 
 /// Gets a Rust representation of the piece-square tables with the specified `values`.
@@ -598,7 +585,7 @@ where
     I: Iterator<Item = &'a f32>,
 {
     let mut output = String::new();
-    output.push_str("            ");
+    output.push_str("        ");
 
     for index in ALL_SQUARES {
         let opening_score = *weights.next().unwrap();
@@ -611,7 +598,7 @@ where
         if index % 8 == 7 {
             output.push_str(",\n");
             if index != 63 {
-                output.push_str("            ");
+                output.push_str("        ");
             }
         } else {
             output.push_str(", ");

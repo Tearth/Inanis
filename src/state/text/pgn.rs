@@ -1,6 +1,5 @@
 use super::*;
 use crate::engine::see::SEEContainer;
-use crate::evaluation::EvaluationParameters;
 use crate::state::movegen::MagicContainer;
 use crate::state::movescan::Move;
 use crate::state::patterns::PatternsContainer;
@@ -13,7 +12,6 @@ use std::sync::Arc;
 
 pub struct PGNLoader {
     pub file_iterator: Lines<BufReader<File>>,
-    pub evaluation_parameters: Arc<EvaluationParameters>,
     pub zobrist_container: Arc<ZobristContainer>,
     pub patterns_container: Arc<PatternsContainer>,
     pub see_container: Arc<SEEContainer>,
@@ -34,13 +32,12 @@ pub struct ParsedPGNMove {
 impl PGNLoader {
     /// Constructs a new instance of [PGNLoader] with the specified `file_iterator`, which will be used to read input PGN file.
     pub fn new(file_iterator: Lines<BufReader<File>>) -> PGNLoader {
-        let evaluation_parameters = Arc::new(EvaluationParameters::default());
         let zobrist_container = Arc::new(ZobristContainer::default());
         let patterns_container = Arc::new(PatternsContainer::default());
         let see_container = Arc::new(SEEContainer::default());
         let magic_container = Arc::new(MagicContainer::default());
 
-        PGNLoader { file_iterator, evaluation_parameters, zobrist_container, patterns_container, see_container, magic_container }
+        PGNLoader { file_iterator, zobrist_container, patterns_container, see_container, magic_container }
     }
 
     /// Parses a single `pgn` and returns [Some] if it has been done with success, otherwise [Err].
@@ -86,7 +83,6 @@ impl PGNLoader {
                     Some(value) => {
                         let fen_result = Board::new_from_fen(
                             &value,
-                            Some(self.evaluation_parameters.clone()),
                             Some(self.zobrist_container.clone()),
                             Some(self.patterns_container.clone()),
                             Some(self.see_container.clone()),
@@ -100,7 +96,6 @@ impl PGNLoader {
                     }
 
                     None => Board::new_initial_position(
-                        Some(self.evaluation_parameters.clone()),
                         Some(self.zobrist_container.clone()),
                         Some(self.patterns_container.clone()),
                         Some(self.see_container.clone()),

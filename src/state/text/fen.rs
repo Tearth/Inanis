@@ -1,5 +1,4 @@
 use crate::engine::see::SEEContainer;
-use crate::evaluation::EvaluationParameters;
 use crate::state::movegen::MagicContainer;
 use crate::state::patterns::PatternsContainer;
 use crate::state::representation::Board;
@@ -29,20 +28,18 @@ impl ParsedEPD {
 /// Returns [Err] with proper error message if `fen` couldn't be parsed correctly.
 pub fn fen_to_board(
     fen: &str,
-    evaluation_parameters: Option<Arc<EvaluationParameters>>,
     zobrist_container: Option<Arc<ZobristContainer>>,
     patterns_container: Option<Arc<PatternsContainer>>,
     see_container: Option<Arc<SEEContainer>>,
     magic_container: Option<Arc<MagicContainer>>,
 ) -> Result<Board, String> {
-    Ok(epd_to_board(fen, evaluation_parameters, zobrist_container, patterns_container, see_container, magic_container)?.board)
+    Ok(epd_to_board(fen, zobrist_container, patterns_container, see_container, magic_container)?.board)
 }
 
 /// Converts `epd` into the [Board], using provided containers. If the parameter is [None], then the new container is created.
 /// Returns [Err] with proper error message if `epd` couldn't be parsed correctly.
 pub fn epd_to_board(
     epd: &str,
-    evaluation_parameters: Option<Arc<EvaluationParameters>>,
     zobrist_container: Option<Arc<ZobristContainer>>,
     patterns_container: Option<Arc<PatternsContainer>>,
     see_container: Option<Arc<SEEContainer>>,
@@ -53,7 +50,7 @@ pub fn epd_to_board(
         return Err(format!("Invalid FEN, input too short: epd={}", epd));
     }
 
-    let mut board = Board::new(evaluation_parameters, zobrist_container, patterns_container, see_container, magic_container);
+    let mut board = Board::new(zobrist_container, patterns_container, see_container, magic_container);
     fen_to_pieces(&mut board, tokens[0])?;
     fen_to_active_color(&mut board, tokens[1])?;
     fen_to_castling(&mut board, tokens[2])?;

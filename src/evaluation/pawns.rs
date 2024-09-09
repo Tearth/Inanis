@@ -58,12 +58,12 @@ pub fn evaluate_without_cache(board: &Board) -> PackedEval {
 fn evaluate_color(board: &Board, color: usize) -> PackedEval {
     let pawns_data = get_pawns_data(board, color);
 
-    board.evaluation_parameters.doubled_pawn[pawns_data.doubled_pawns.min(7) as usize]
-        + board.evaluation_parameters.isolated_pawn[pawns_data.isolated_pawns.min(7) as usize]
-        + board.evaluation_parameters.chained_pawn[pawns_data.chained_pawns.min(7) as usize]
-        + board.evaluation_parameters.passed_pawn[pawns_data.passed_pawns.min(7) as usize]
-        + board.evaluation_parameters.pawn_shield[pawns_data.pawn_shield.min(7) as usize]
-        + board.evaluation_parameters.pawn_shield_open_file[pawns_data.opened_files.min(7) as usize]
+    params::DOUBLED_PAWN[pawns_data.doubled_pawns.min(7) as usize]
+        + params::ISOLATED_PAWN[pawns_data.isolated_pawns.min(7) as usize]
+        + params::CHAINED_PAWN[pawns_data.chained_pawns.min(7) as usize]
+        + params::PASSED_PAWN[pawns_data.passed_pawns.min(7) as usize]
+        + params::PAWN_SHIELD[pawns_data.pawn_shield.min(7) as usize]
+        + params::PAWN_SHIELD_OPEN_FILE[pawns_data.opened_files.min(7) as usize]
 }
 
 /// Gets all pawn features on `board` for `color`.

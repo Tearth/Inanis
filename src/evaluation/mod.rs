@@ -8,7 +8,7 @@ use crate::tuning::tuner::TunerParameter;
 
 pub mod material;
 pub mod mobility;
-pub mod parameters;
+pub mod params;
 pub mod pawns;
 pub mod pst;
 pub mod safety;
@@ -24,41 +24,10 @@ macro_rules! s {
 }
 pub(crate) use s;
 
-#[derive(Clone)]
-pub struct EvaluationParameters {
-    pub bishop_pair: PackedEval,
-    pub mobility_inner: [PackedEval; 6],
-    pub mobility_outer: [PackedEval; 6],
-    pub doubled_pawn: [PackedEval; 8],
-    pub isolated_pawn: [PackedEval; 8],
-    pub chained_pawn: [PackedEval; 8],
-    pub passed_pawn: [PackedEval; 8],
-    pub pawn_shield: [PackedEval; 8],
-    pub pawn_shield_open_file: [PackedEval; 8],
-    pub king_attacked_squares: [PackedEval; 8],
-}
-
 #[derive(Copy, Clone)]
 
 pub struct PackedEval {
     pub data: i32,
-}
-
-impl EvaluationParameters {
-    /// Gets a PST value for the specified `color`, `piece`, `phase` and `square`.
-    pub fn get_pst_value(&self, piece: usize, king_square: usize, square: usize) -> PackedEval {
-        let pst = match piece {
-            PAWN => &Self::PAWN_PST_PATTERN,
-            KNIGHT => &Self::KNIGHT_PST_PATTERN,
-            BISHOP => &Self::BISHOP_PST_PATTERN,
-            ROOK => &Self::ROOK_PST_PATTERN,
-            QUEEN => &Self::QUEEN_PST_PATTERN,
-            KING => &Self::KING_PST_PATTERN,
-            _ => panic_fast!("Invalid value: piece={}", piece),
-        };
-
-        pst[KING_BUCKETS[63 - king_square]][63 - square]
-    }
 }
 
 impl PackedEval {

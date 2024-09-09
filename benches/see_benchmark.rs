@@ -6,7 +6,7 @@ use inanis::state::representation::Board;
 
 fn see_benchmark(criterion: &mut Criterion) {
     let fen = "1b2r2k/2qnrn2/5p2/4R3/5P2/3N1N2/1B2Q3/K3R3 w - - 0 1";
-    let board = Board::new_from_fen(fen, None, None, None, None, None).unwrap();
+    let board = Board::new_from_fen(fen, None, None, None, None).unwrap();
     let see_container = SEEContainer::default();
 
     criterion.bench_function("see_benchmark", |bencher| {

@@ -4,8 +4,7 @@
 
 use super::*;
 
-impl EvaluationParameters {
-    #[rustfmt::skip]
+#[rustfmt::skip]
     pub const BISHOP_PST_PATTERN: [[PackedEval; 64]; KING_BUCKETS_COUNT] =
     [
         [
@@ -89,4 +88,3 @@ impl EvaluationParameters {
             s!( 325,  273), s!( 368,  288), s!( 354,  301), s!( 369,  310), s!( 363,  287), s!( 327,  280), s!( 337,  289), s!( 332,  280),
         ],
     ];
-}

@@ -4,7 +4,6 @@ use crate::engine;
 use crate::engine::context::SearchContext;
 use crate::engine::params::SearchParameters;
 use crate::engine::see::SEEContainer;
-use crate::evaluation::EvaluationParameters;
 use crate::perft;
 use crate::state::movescan::Move;
 use crate::state::representation::Board;
@@ -38,7 +37,6 @@ pub struct UciState {
     ponder_flag: Arc<AtomicBool>,
     debug_mode: bool,
 
-    evaluation_parameters: Arc<EvaluationParameters>,
     zobrist_container: Arc<ZobristContainer>,
     patterns_container: Arc<PatternsContainer>,
     see_container: Arc<SEEContainer>,
@@ -81,7 +79,6 @@ impl UciOption {
 impl Default for UciState {
     /// Constructs a default instance of [UciState] with zeroed elements and hashtables with their default sizes.
     fn default() -> Self {
-        let evaluation_parameters = Arc::new(EvaluationParameters::default());
         let zobrist_container = Arc::new(ZobristContainer::default());
         let patterns_container = Arc::new(PatternsContainer::default());
         let see_container = Arc::new(SEEContainer::default());
@@ -93,7 +90,6 @@ impl Default for UciState {
         UciState {
             context: Arc::new(RwLock::new(SearchContext::new(
                 Board::new_initial_position(
-                    Some(evaluation_parameters.clone()),
                     Some(zobrist_container.clone()),
                     Some(patterns_container.clone()),
                     Some(see_container.clone()),
@@ -114,7 +110,6 @@ impl Default for UciState {
             ponder_flag,
             debug_mode: false,
 
-            evaluation_parameters,
             zobrist_container,
             patterns_container,
             see_container,
@@ -612,7 +607,6 @@ fn handle_position(parameters: &[String], state: &UciState) {
             let fen = parameters[2..].join(" ");
             match Board::new_from_fen(
                 fen.as_str(),
-                Some(state.evaluation_parameters.clone()),
                 Some(state.zobrist_container.clone()),
                 Some(state.patterns_container.clone()),
                 Some(state.see_container.clone()),
@@ -626,7 +620,6 @@ fn handle_position(parameters: &[String], state: &UciState) {
             }
         }
         _ => Board::new_initial_position(
-            Some(state.evaluation_parameters.clone()),
             Some(state.zobrist_container.clone()),
             Some(state.patterns_container.clone()),
             Some(state.see_container.clone()),
@@ -724,7 +717,6 @@ fn handle_ucinewgame(state: &mut UciState) {
 
     state.abort_flag.store(true, Ordering::Relaxed);
     context_lock.board = Board::new_initial_position(
-        Some(state.evaluation_parameters.clone()),
         Some(state.zobrist_container.clone()),
         Some(state.patterns_container.clone()),
         Some(state.see_container.clone()),

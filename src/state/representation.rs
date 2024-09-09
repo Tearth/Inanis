@@ -16,7 +16,6 @@ use crate::evaluation::pawns;
 use crate::evaluation::pst;
 use crate::evaluation::pst::*;
 use crate::evaluation::safety;
-use crate::evaluation::EvaluationParameters;
 use crate::evaluation::*;
 use crate::tablebases;
 use crate::utils::bitflags::BitFlags;
@@ -52,7 +51,6 @@ pub struct Board {
     pub state: BoardState,
     pub state_stack: Vec<BoardState>,
     pub pawn_attacks: [u64; 2],
-    pub evaluation_parameters: Arc<EvaluationParameters>,
     pub zobrist: Arc<ZobristContainer>,
     pub patterns: Arc<PatternsContainer>,
     pub see: Arc<SEEContainer>,
@@ -73,13 +71,11 @@ pub struct BoardState {
 impl Board {
     /// Constructs a new instance of [Board], using provided containers. If the parameter is [None], then the new container is created.
     pub fn new(
-        evaluation_parameters: Option<Arc<EvaluationParameters>>,
         zobrist_container: Option<Arc<ZobristContainer>>,
         patterns_container: Option<Arc<PatternsContainer>>,
         see_container: Option<Arc<SEEContainer>>,
         magic_container: Option<Arc<MagicContainer>>,
     ) -> Self {
-        let evaluation_parameters = evaluation_parameters.unwrap_or_else(|| Arc::new(Default::default()));
         let zobrist_container = zobrist_container.unwrap_or_else(|| Arc::new(Default::default()));
         let patterns_container = patterns_container.unwrap_or_else(|| Arc::new(Default::default()));
         let see_container = see_container.unwrap_or_else(|| Arc::new(SEEContainer::default()));
@@ -104,7 +100,6 @@ impl Board {
             },
             state_stack: Vec::new(),
             pawn_attacks: [0; 2],
-            evaluation_parameters,
             zobrist: zobrist_container,
             patterns: patterns_container,
             see: see_container,
@@ -114,47 +109,37 @@ impl Board {
 
     /// Constructs a new instance of [Board] with initial position, using provided containers. If the parameter is [None], then the new container is created.
     pub fn new_initial_position(
-        evaluation_parameters: Option<Arc<EvaluationParameters>>,
         zobrist_container: Option<Arc<ZobristContainer>>,
         patterns_container: Option<Arc<PatternsContainer>>,
         see_container: Option<Arc<SEEContainer>>,
         magic_container: Option<Arc<MagicContainer>>,
     ) -> Self {
-        Board::new_from_fen(
-            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-            evaluation_parameters,
-            zobrist_container,
-            patterns_container,
-            see_container,
-            magic_container,
-        )
-        .unwrap()
+        Board::new_from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", zobrist_container, patterns_container, see_container, magic_container)
+            .unwrap()
     }
 
     /// Constructs a new instance of [Board] with position specified by `fen`, using provided containers. If the parameter is [None],
     /// then the new container is created. Returns [Err] with proper error message if `fen` couldn't be parsed correctly.
     pub fn new_from_fen(
         fen: &str,
-        evaluation_parameters: Option<Arc<EvaluationParameters>>,
         zobrist_container: Option<Arc<ZobristContainer>>,
         patterns_container: Option<Arc<PatternsContainer>>,
         see_container: Option<Arc<SEEContainer>>,
         magic_container: Option<Arc<MagicContainer>>,
     ) -> Result<Self, String> {
-        fen::fen_to_board(fen, evaluation_parameters, zobrist_container, patterns_container, see_container, magic_container)
+        fen::fen_to_board(fen, zobrist_container, patterns_container, see_container, magic_container)
     }
 
     /// Constructs a new instance of [Board] with position specified by list of `moves`, using provided containers. If the parameter is [None],
     /// then the new container is created. Returns [Err] with proper error message is `moves` couldn't be parsed correctly.
     pub fn new_from_moves(
         moves: &[&str],
-        evaluation_parameters: Option<Arc<EvaluationParameters>>,
         zobrist_container: Option<Arc<ZobristContainer>>,
         patterns_container: Option<Arc<PatternsContainer>>,
         see_container: Option<Arc<SEEContainer>>,
         magic_container: Option<Arc<MagicContainer>>,
     ) -> Result<Self, String> {
-        let mut board = Board::new_initial_position(evaluation_parameters, zobrist_container, patterns_container, see_container, magic_container);
+        let mut board = Board::new_initial_position(zobrist_container, patterns_container, see_container, magic_container);
         for premade_move in moves {
             let parsed_move = Move::from_long_notation(premade_move, &board)?;
             board.make_move(parsed_move);
@@ -700,7 +685,7 @@ impl Board {
                 square = (1u64 << square).swap_bytes().bit_scan();
             }
 
-            self.state.pst_scores[color] += self.evaluation_parameters.get_pst_value(piece, king_square, square);
+            self.state.pst_scores[color] += pst::get_pst_value(piece, king_square, square);
         }
     }
 
@@ -719,7 +704,7 @@ impl Board {
                 square = (1u64 << square).swap_bytes().bit_scan();
             }
 
-            self.state.pst_scores[color] -= self.evaluation_parameters.get_pst_value(piece, king_square, square);
+            self.state.pst_scores[color] -= pst::get_pst_value(piece, king_square, square);
         }
     }
 
@@ -740,8 +725,8 @@ impl Board {
                 to = (1u64 << to).swap_bytes().bit_scan();
             }
 
-            self.state.pst_scores[color] -= self.evaluation_parameters.get_pst_value(piece, king_square, from);
-            self.state.pst_scores[color] += self.evaluation_parameters.get_pst_value(piece, king_square, to);
+            self.state.pst_scores[color] -= pst::get_pst_value(piece, king_square, from);
+            self.state.pst_scores[color] += pst::get_pst_value(piece, king_square, to);
         }
     }
 

@@ -8,7 +8,6 @@ use crate::engine::qsearch;
 use crate::engine::see::SEEContainer;
 use crate::engine::*;
 use crate::evaluation::material;
-use crate::evaluation::EvaluationParameters;
 use crate::evaluation::*;
 use crate::state::movegen::MagicContainer;
 use crate::state::patterns::PatternsContainer;
@@ -44,7 +43,6 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
     let mut output_positions = HashSet::new();
     let mut parsed_pgns = 0;
 
-    let evaluation_parameters = Arc::new(EvaluationParameters::default());
     let zobrist_container = Arc::new(ZobristContainer::default());
     let patterns_container = Arc::new(PatternsContainer::default());
     let see_container = Arc::new(SEEContainer::default());
@@ -77,7 +75,6 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
             Some(fen) => {
                 let fen_result = Board::new_from_fen(
                     &fen,
-                    Some(evaluation_parameters.clone()),
                     Some(zobrist_container.clone()),
                     Some(patterns_container.clone()),
                     Some(see_container.clone()),
@@ -94,7 +91,6 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
             }
 
             None => Board::new_initial_position(
-                Some(evaluation_parameters.clone()),
                 Some(zobrist_container.clone()),
                 Some(patterns_container.clone()),
                 Some(see_container.clone()),

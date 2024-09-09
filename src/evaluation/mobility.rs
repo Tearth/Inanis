@@ -17,6 +17,7 @@ pub struct PieceMobility {
     pub outer: i8,
 }
 
+#[inline(never)]
 /// Evaluates mobility and part of the king safety on the `board` and returns score from the white color perspective (more than 0 when advantage,
 /// less than 0 when disadvantage). This evaluator does two things at once: first, counts all possible moves of knight, bishop, rook, queen
 /// (pawns and king are too slow and not very important), and second, sums how many squares around both kings are dangered by enemy side
@@ -35,15 +36,15 @@ pub fn evaluate(board: &Board, dangered_white_king_squares: &mut u32, dangered_b
     let rook_mobility_outer = (white_mobility_data.rook_mobility.outer - black_mobility_data.rook_mobility.outer) as i16;
     let queen_mobility_outer = (white_mobility_data.queen_mobility.outer - black_mobility_data.queen_mobility.outer) as i16;
 
-    let knight_mobility_inner = knight_mobility_inner * board.evaluation_parameters.mobility_inner[KNIGHT];
-    let bishop_mobility_inner = bishop_mobility_inner * board.evaluation_parameters.mobility_inner[BISHOP];
-    let rook_mobility_inner = rook_mobility_inner * board.evaluation_parameters.mobility_inner[ROOK];
-    let queen_mobility_inner = queen_mobility_inner * board.evaluation_parameters.mobility_inner[QUEEN];
+    let knight_mobility_inner = knight_mobility_inner * params::MOBILITY_INNER[KNIGHT];
+    let bishop_mobility_inner = bishop_mobility_inner * params::MOBILITY_INNER[BISHOP];
+    let rook_mobility_inner = rook_mobility_inner * params::MOBILITY_INNER[ROOK];
+    let queen_mobility_inner = queen_mobility_inner * params::MOBILITY_INNER[QUEEN];
 
-    let knight_mobility_outer = knight_mobility_outer * board.evaluation_parameters.mobility_outer[KNIGHT];
-    let bishop_mobility_outer = bishop_mobility_outer * board.evaluation_parameters.mobility_outer[BISHOP];
-    let rook_mobility_outer = rook_mobility_outer * board.evaluation_parameters.mobility_outer[ROOK];
-    let queen_mobility_outer = queen_mobility_outer * board.evaluation_parameters.mobility_outer[QUEEN];
+    let knight_mobility_outer = knight_mobility_outer * params::MOBILITY_OUTER[KNIGHT];
+    let bishop_mobility_outer = bishop_mobility_outer * params::MOBILITY_OUTER[BISHOP];
+    let rook_mobility_outer = rook_mobility_outer * params::MOBILITY_OUTER[ROOK];
+    let queen_mobility_outer = queen_mobility_outer * params::MOBILITY_OUTER[QUEEN];
 
     knight_mobility_inner
         + bishop_mobility_inner

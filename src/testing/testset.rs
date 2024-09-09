@@ -5,7 +5,6 @@ use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
 use crate::engine::context::SearchContext;
 use crate::engine::see::SEEContainer;
-use crate::evaluation::EvaluationParameters;
 use crate::state::movegen::MagicContainer;
 use crate::state::movescan::Move;
 use crate::state::patterns::PatternsContainer;
@@ -163,7 +162,6 @@ fn load_positions(epd_filename: &str) -> Result<Vec<TestPosition>, String> {
         Err(error) => return Err(format!("Invalid EPD file: {}", error)),
     };
 
-    let evaluation_parameters = Arc::new(EvaluationParameters::default());
     let zobrist_container = Arc::new(ZobristContainer::default());
     let patterns_container = Arc::new(PatternsContainer::default());
     let see_container = Arc::new(SEEContainer::default());
@@ -177,7 +175,6 @@ fn load_positions(epd_filename: &str) -> Result<Vec<TestPosition>, String> {
 
         let mut parsed_epd = fen::epd_to_board(
             position.as_str(),
-            Some(evaluation_parameters.clone()),
             Some(zobrist_container.clone()),
             Some(patterns_container.clone()),
             Some(see_container.clone()),

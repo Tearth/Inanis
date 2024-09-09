@@ -12,9 +12,9 @@ pub fn evaluate(board: &Board, dangered_white_king_squares: u32, dangered_black_
 }
 
 /// Evaluates king safety on the `board` for the specified `color` and with `dangered_king_squares` count.
-fn evaluate_color(board: &Board, dangered_king_squares: u32) -> PackedEval {
+fn evaluate_color(_board: &Board, dangered_king_squares: u32) -> PackedEval {
     let index = (dangered_king_squares as usize).min(7);
-    board.evaluation_parameters.king_attacked_squares[index]
+    params::KING_ATTACKED_SQUARES[index]
 }
 
 #[cfg(feature = "dev")]

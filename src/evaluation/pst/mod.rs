@@ -12,6 +12,13 @@ pub mod pawn;
 pub mod queen;
 pub mod rook;
 
+pub use bishop::BISHOP_PST_PATTERN;
+pub use king::KING_PST_PATTERN;
+pub use knight::KNIGHT_PST_PATTERN;
+pub use pawn::PAWN_PST_PATTERN;
+pub use queen::QUEEN_PST_PATTERN;
+pub use rook::ROOK_PST_PATTERN;
+
 pub const KING_BUCKETS_COUNT: usize = 8;
 
 #[rustfmt::skip]
@@ -52,12 +59,27 @@ pub fn recalculate_incremental_values(board: &mut Board) {
                     square = (1u64 << square).swap_bytes().bit_scan();
                 }
 
-                score += board.evaluation_parameters.get_pst_value(piece_index, king_square, square);
+                score += crate::evaluation::get_pst_value(piece_index, king_square, square);
             }
         }
 
         board.state.pst_scores[color_index] = score;
     }
+}
+
+/// Gets a PST value for the specified `color`, `piece`, `phase` and `square`.
+pub fn get_pst_value(piece: usize, king_square: usize, square: usize) -> PackedEval {
+    let pst = match piece {
+        PAWN => &pst::PAWN_PST_PATTERN,
+        KNIGHT => &pst::KNIGHT_PST_PATTERN,
+        BISHOP => &pst::BISHOP_PST_PATTERN,
+        ROOK => &pst::ROOK_PST_PATTERN,
+        QUEEN => &pst::QUEEN_PST_PATTERN,
+        KING => &pst::KING_PST_PATTERN,
+        _ => panic_fast!("Invalid value: piece={}", piece),
+    };
+
+    pst[KING_BUCKETS[63 - king_square]][63 - square]
 }
 
 /// Gets coefficients of piece-square table for `piece` on `board` and assigns indexes starting from `index`.
