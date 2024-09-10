@@ -13,4 +13,4 @@ pub const CHAINED_PAWN: [PackedEval; 8] = [s!(-5, 12), s!(5, 12), s!(17, 19), s!
 pub const PASSED_PAWN: [PackedEval; 8] = [s!(17, -36), s!(22, 9), s!(22, 61), s!(21, 68), s!(17, 46), s!(37, 42), s!(28, 15), s!(37, 26)];
 pub const PAWN_SHIELD: [PackedEval; 8] = [s!(10, 10), s!(18, 16), s!(22, 19), s!(21, 22), s!(51, 23), s!(19, 20), s!(0, 0), s!(0, 0)];
 pub const PAWN_SHIELD_OPEN_FILE: [PackedEval; 8] = [s!(-16, -27), s!(-21, -20), s!(-33, -14), s!(-34, -25), s!(0, 0), s!(0, 0), s!(0, 0), s!(0, 0)];
-pub const KING_ATTACKED_SQUARES: [PackedEval; 8] = [s!(82, -49), s!(79, -44), s!(67, -39), s!(40, -36), s!(-7, -14), s!(-56, 3), s!(-112, 29), s!(-199, 64)];
+pub const KING_AREA_THREATS: [PackedEval; 8] = [s!(-82, 49), s!(-79, 44), s!(-67, 39), s!(-40, 36), s!(7, 14), s!(56, -3), s!(112, -29), s!(199, -64)];

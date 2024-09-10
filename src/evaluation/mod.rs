@@ -35,7 +35,7 @@ impl PackedEval {
         Self { data: ((ending as i32) << 16) + opening as i32 }
     }
 
-    pub fn new_raw(data: i32) -> Self {
+    pub const fn new_raw(data: i32) -> Self {
         Self { data }
     }
 
@@ -95,10 +95,26 @@ impl ops::SubAssign<PackedEval> for PackedEval {
     }
 }
 
+impl ops::Mul<PackedEval> for i8 {
+    type Output = PackedEval;
+
+    fn mul(self, rhs: PackedEval) -> PackedEval {
+        PackedEval::new_raw(self as i32 * rhs.data)
+    }
+}
+
 impl ops::Mul<PackedEval> for i16 {
     type Output = PackedEval;
 
     fn mul(self, rhs: PackedEval) -> PackedEval {
         PackedEval::new_raw(self as i32 * rhs.data)
+    }
+}
+
+impl ops::Mul<PackedEval> for i32 {
+    type Output = PackedEval;
+
+    fn mul(self, rhs: PackedEval) -> PackedEval {
+        PackedEval::new_raw(self * rhs.data)
     }
 }

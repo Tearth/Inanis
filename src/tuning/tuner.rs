@@ -1,6 +1,7 @@
 use crate::engine::see::SEEContainer;
 use crate::evaluation::material;
 use crate::evaluation::mobility;
+use crate::evaluation::mobility::MobilityAuxData;
 use crate::evaluation::pawns;
 use crate::evaluation::pst;
 use crate::evaluation::pst::*;
@@ -379,13 +380,13 @@ fn load_positions(
 
         let mut index = 0;
         let base_index = coefficients.len();
-        let mut dangered_white_king_squares = 0;
-        let mut dangered_black_king_squares = 0;
+        let mut white_aux = MobilityAuxData::default();
+        let mut black_aux = MobilityAuxData::default();
 
         material::get_coefficients(&parsed_epd.board, &mut index, coefficients, indices);
-        mobility::get_coefficients(&parsed_epd.board, &mut dangered_white_king_squares, &mut dangered_black_king_squares, &mut index, coefficients, indices);
+        mobility::get_coefficients(&parsed_epd.board, &mut white_aux, &mut black_aux, &mut index, coefficients, indices);
         pawns::get_coefficients(&parsed_epd.board, &mut index, coefficients, indices);
-        safety::get_coefficients(dangered_white_king_squares, dangered_black_king_squares, &mut index, coefficients, indices);
+        safety::get_coefficients(&white_aux, &black_aux, &mut index, coefficients, indices);
         pst::get_coefficients(&parsed_epd.board, PAWN, &mut index, coefficients, indices);
         pst::get_coefficients(&parsed_epd.board, KNIGHT, &mut index, coefficients, indices);
         pst::get_coefficients(&parsed_epd.board, BISHOP, &mut index, coefficients, indices);
@@ -425,7 +426,7 @@ fn load_values(random_values: bool) -> Vec<TunerParameter> {
     parameters.append(&mut params::PASSED_PAWN.iter().flat_map(|v| v.to_tuner_params(-999, 10, 40, 999, 0)).collect());
     parameters.append(&mut params::PAWN_SHIELD.iter().flat_map(|v| v.to_tuner_params(-999, 10, 40, 999, 0)).collect());
     parameters.append(&mut params::PAWN_SHIELD_OPEN_FILE.iter().flat_map(|v| v.to_tuner_params(-999, -40, -10, 999, 0)).collect());
-    parameters.append(&mut params::KING_ATTACKED_SQUARES.iter().flat_map(|v| v.to_tuner_params(-999, -40, 40, 999, 0)).collect());
+    parameters.append(&mut params::KING_AREA_THREATS.iter().flat_map(|v| v.to_tuner_params(-999, -40, 40, 999, 0)).collect());
 
     let pawn_pst = &pst::PAWN_PST_PATTERN;
     for king_bucket in 0..KING_BUCKETS_COUNT {
@@ -491,7 +492,7 @@ where
     output.push_str(get_array("PASSED_PAWN", weights, 8).as_str());
     output.push_str(get_array("PAWN_SHIELD", weights, 8).as_str());
     output.push_str(get_array("PAWN_SHIELD_OPEN_FILE", weights, 8).as_str());
-    output.push_str(get_array("KING_ATTACKED_SQUARES", weights, 8).as_str());
+    output.push_str(get_array("KING_AREA_THREATS", weights, 8).as_str());
 
     let path = Path::new(output_directory);
     fs::create_dir_all(path).unwrap();
@@ -576,7 +577,7 @@ where
     let ending_score = *weights.next().unwrap();
     let ending_score = if ending_score != f32::MIN { ending_score.round() } else { 0.0 };
 
-    format!("pub const {}: PackedEval = s!({}, {}),\n", name, opening_score, ending_score)
+    format!("pub const {}: PackedEval = s!({}, {});\n", name, opening_score, ending_score)
 }
 
 /// Gets a Rust representation of the piece-square tables with the specified `values`.

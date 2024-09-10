@@ -1,6 +1,7 @@
 use super::uci;
 use crate::evaluation::material;
 use crate::evaluation::mobility;
+use crate::evaluation::mobility::MobilityAuxData;
 use crate::evaluation::pawns;
 use crate::evaluation::pst;
 use crate::evaluation::safety;
@@ -387,15 +388,15 @@ fn handle_evaluate(input: Vec<&str>) {
         }
     };
 
-    let mut dangered_white_king_squares = 0;
-    let mut dangered_black_king_squares = 0;
+    let mut white_aux = MobilityAuxData::default();
+    let mut black_aux = MobilityAuxData::default();
 
     let game_phase = board.game_phase;
 
     let material_evaluation = material::evaluate(&board);
     let pst_evaluation = pst::evaluate(&board);
-    let mobility_evaluation = mobility::evaluate(&board, &mut dangered_white_king_squares, &mut dangered_black_king_squares);
-    let safety_evaluation = safety::evaluate(&board, dangered_white_king_squares, dangered_black_king_squares);
+    let mobility_evaluation = mobility::evaluate(&board, &mut white_aux, &mut black_aux);
+    let safety_evaluation = safety::evaluate(&board, &white_aux, &black_aux);
     let pawns_evaluation = pawns::evaluate_without_cache(&board);
 
     println!("Material: {}", material_evaluation.taper_score(game_phase));

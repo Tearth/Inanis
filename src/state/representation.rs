@@ -12,6 +12,7 @@ use crate::engine::see::SEEContainer;
 use crate::engine::stats::SearchStatistics;
 use crate::evaluation::material;
 use crate::evaluation::mobility;
+use crate::evaluation::mobility::MobilityAuxData;
 use crate::evaluation::pawns;
 use crate::evaluation::pst;
 use crate::evaluation::pst::*;
@@ -752,13 +753,13 @@ impl Board {
     /// evaluations and `statistics` to gather diagnostic data. Returns score from the `color` perspective (more than 0 when advantage, less than 0 when disadvantage).
     pub fn evaluate(&self, color: usize, pawn_hashtable: &PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
         let game_phase = self.game_phase;
-        let mut dangered_white_king_squares = 0;
-        let mut dangered_black_king_squares = 0;
+        let mut white_aux = MobilityAuxData::default();
+        let mut black_aux = MobilityAuxData::default();
 
         let material_evaluation = material::evaluate(self);
         let pst_evaluation = pst::evaluate(self);
-        let mobility_evaluation = mobility::evaluate(self, &mut dangered_white_king_squares, &mut dangered_black_king_squares);
-        let safety_evaluation = safety::evaluate(self, dangered_white_king_squares, dangered_black_king_squares);
+        let mobility_evaluation = mobility::evaluate(self, &mut white_aux, &mut black_aux);
+        let safety_evaluation = safety::evaluate(self, &white_aux, &black_aux);
         let pawns_evaluation = pawns::evaluate(self, pawn_hashtable, statistics);
 
         let evaluation = material_evaluation + pst_evaluation + mobility_evaluation + safety_evaluation + pawns_evaluation;
@@ -771,13 +772,13 @@ impl Board {
     /// Returns score from the `color` perspective (more than 0 when advantage, less than 0 when disadvantage).
     pub fn evaluate_without_cache(&self, color: usize) -> i16 {
         let game_phase = self.game_phase;
-        let mut dangered_white_king_squares = 0;
-        let mut dangered_black_king_squares = 0;
+        let mut white_aux = MobilityAuxData::default();
+        let mut black_aux = MobilityAuxData::default();
 
         let material_evaluation = material::evaluate(self);
         let pst_evaluation = pst::evaluate(self);
-        let mobility_evaluation = mobility::evaluate(self, &mut dangered_white_king_squares, &mut dangered_black_king_squares);
-        let safety_evaluation = safety::evaluate(self, dangered_white_king_squares, dangered_black_king_squares);
+        let mobility_evaluation = mobility::evaluate(self, &mut white_aux, &mut black_aux);
+        let safety_evaluation = safety::evaluate(self, &white_aux, &black_aux);
         let pawns_evaluation = pawns::evaluate_without_cache(self);
 
         let evaluation = material_evaluation + pst_evaluation + mobility_evaluation + safety_evaluation + pawns_evaluation;
