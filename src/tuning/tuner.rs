@@ -562,7 +562,7 @@ where
         output += &format!("s!({}, {})", opening_score, ending_score);
     }
 
-    output += "],\n";
+    output += "];\n";
     output
 }
 
