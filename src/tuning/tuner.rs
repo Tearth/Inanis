@@ -497,7 +497,7 @@ where
     let path = Path::new(output_directory);
     fs::create_dir_all(path).unwrap();
 
-    let path = path.join("parameters.rs");
+    let path = path.join("params.rs");
     write!(&mut File::create(path).unwrap(), "{}", output).unwrap();
 }
 
