@@ -512,6 +512,7 @@ where
     output.push('\n');
     output.push_str("use super::*;\n");
     output.push('\n');
+    output.push_str("#[rustfmt::skip]");
     output.push_str(&format!("pub const {}_PST_PATTERN: [[PackedEval; 64]; KING_BUCKETS_COUNT] =\n", name));
     output.push_str("[\n");
 
