@@ -16,7 +16,8 @@ pub fn evaluate(board: &Board) -> PackedEval {
     (white_has_bishop_pair - black_has_bishop_pair) * params::BISHOP_PAIR
 }
 
-/// Gets coefficients of material on `board` and assigns indexes starting from `index`.
+/// Gets coefficients of material for `board` and inserts them into `coefficients`.
+/// Similarly, their indices (starting from `index`) are inserted into `indices`.
 #[cfg(feature = "dev")]
 pub fn get_coefficients(board: &Board, index: &mut u16, coefficients: &mut Vec<TunerCoefficient>, indices: &mut Vec<u16>) {
     let mut data = [
@@ -31,8 +32,8 @@ pub fn get_coefficients(board: &Board, index: &mut u16, coefficients: &mut Vec<T
     for coefficient in &mut data {
         let (value, _) = coefficient.get_data();
         if value != 0 {
-            indices.push(*index);
             coefficients.push(coefficient.clone());
+            indices.push(*index);
         }
 
         *index += 1;
@@ -43,14 +44,11 @@ pub fn get_coefficients(board: &Board, index: &mut u16, coefficients: &mut Vec<T
     let bishop_pair_diff = white_has_bishop_pair - black_has_bishop_pair;
 
     if bishop_pair_diff != 0 {
-        indices.push(*index);
         coefficients.push(TunerCoefficient::new(bishop_pair_diff, OPENING));
-        *index += 1;
-
-        indices.push(*index);
         coefficients.push(TunerCoefficient::new(bishop_pair_diff, ENDING));
-        *index += 1;
-    } else {
-        *index += 2;
+        indices.push(*index);
+        indices.push(*index + 1);
     }
+
+    *index += 2;
 }

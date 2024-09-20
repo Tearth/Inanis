@@ -18,7 +18,7 @@ pub mod TranspositionTableScoreType {
 }
 
 pub struct TranspositionTable {
-    table: Vec<TranspositionTableBucket>,
+    pub table: Vec<TranspositionTableBucket>,
 }
 
 #[repr(align(64))]
@@ -144,6 +144,8 @@ impl TranspositionTable {
         None
     }
 
+    /// Prefetches an entry using `hash` to calculate an index of the bucket. This function should be called early enough, so CPU has
+    /// the time to transfer data from the memory into cache.
     pub fn prefetch(&self, hash: u64) {
         unsafe {
             let index = self.get_index(hash);

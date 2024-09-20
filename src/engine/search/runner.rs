@@ -13,7 +13,7 @@ use std::cmp;
 use std::mem::MaybeUninit;
 use std::sync::atomic::Ordering;
 
-/// Wrapper for the entry point of the regular search, look at `run_internal` for more information.
+/// Aspiration window wrapper for the entry point of the regular search, look at `run_internal` for more information.
 pub fn run(context: &mut SearchContext, depth: i8) {
     let king_checked = context.board.is_king_checked(context.board.active_color);
     if depth < param!(context.parameters.aspwin_min_depth) {
@@ -54,8 +54,7 @@ pub fn run(context: &mut SearchContext, depth: i8) {
 /// a bunch of reductions and prunings to optimize search. The most important parameter here, `context`, contains the current state of the search, board state,
 /// statistics, and is passed by reference to all nodes. Besides obvious parameters like `depth`, `ply`, `alpha` and `beta`, there's also `allow_null_move`
 /// which prevents two null move checks in a row, and `friendly_king_checked` which is used to share friendly king check status between nodes (it's always
-/// calculated one depth earlier, as it's used as one of the LMR constraints). If `DIAG` is set to true, additional statistics will be gathered (with a small
-/// performance penalty).
+/// calculated one depth earlier, as it's used as one of the LMR constraints).
 ///
 /// Search steps for PV node:
 ///  - test of abort flag
@@ -470,7 +469,7 @@ fn check_extensions_get_e() -> i8 {
 /// try to save time here by reducing depth a little bit. This is not always true, but some inaccuracies should be recompensated by deeper search.
 ///
 /// Conditions:
-///  - depth >= context.parameters.iir_min_depth
+///  - depth >= `iir_min_depth`
 ///  - hash move does not exists
 fn iir_can_be_applied(context: &mut SearchContext, depth: i8, hash_move: Move) -> bool {
     depth >= param!(context.parameters.iir_min_depth) && hash_move == Move::default()
@@ -494,8 +493,8 @@ fn iir_get_r(_context: &mut SearchContext, _depth: i8) -> i8 {
 ///
 /// Conditions:
 ///  - only non-PV nodes
-///  - depth >= [razoring_min_depth]
-///  - depth <= [razoring_max_depth]
+///  - depth >= `razoring_min_depth`
+///  - depth <= `razoring_max_depth`
 ///  - alpha is not a mate score
 ///  - friendly king is not checked
 fn razoring_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, alpha: i16, friendly_king_checked: bool) -> bool {
@@ -520,8 +519,8 @@ fn razoring_get_margin(context: &mut SearchContext, depth: i8) -> i16 {
 ///
 /// Conditions:
 ///  - only non-PV nodes
-///  - depth >= [snmp_min_depth]
-///  - depth <= [snmp_max_depth]
+///  - depth >= `snmp_min_depth`
+///  - depth <= `snmp_max_depth`
 ///  - beta is not a mate score
 ///  - friendly king is not checked
 fn snmp_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, beta: i16, friendly_king_checked: bool) -> bool {
@@ -547,7 +546,7 @@ fn snmp_get_margin(context: &mut SearchContext, depth: i8) -> i16 {
 ///
 /// Conditions:
 ///  - only non-PV nodes
-///  - depth >= [nmp_min_depth]
+///  - depth >= `nmp_min_depth`
 ///  - game phase is not indicating endgame
 ///  - beta score is not a mate score
 ///  - friendly king is not checked
@@ -572,10 +571,10 @@ fn nmp_get_r(context: &mut SearchContext, depth: i8) -> i8 {
 ///
 /// Conditions:
 ///  - only non-PV nodes
-///  - depth >= [lmp_min_depth]
-///  - depth <= [lmp_max_depth]
-///  - move index >= [lmp_move_index_margin_multiplier] + (`depth` - 1) * [lmp_move_index_margin_multiplier]
-///  - move score <= [lmp_max_score]
+///  - depth >= `lmp_min_depth`
+///  - depth <= `lmp_max_depth`
+///  - move index >= `lmp_move_index_margin_multiplier` + (`depth` - 1) * `lmp_move_index_margin_multiplier`
+///  - move score <= `lmp_max_score`
 ///  - friendly king is not checked
 fn lmp_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, move_index: usize, move_score: i16, friendly_king_checked: bool) -> bool {
     let min_depth = param!(context.parameters.lmp_min_depth);
@@ -596,9 +595,9 @@ fn lmp_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, mo
 /// so it's also applied in PV nodes.
 ///
 /// Conditions:
-///  - depth >= [lmr_min_depth]
-///  - move index >= [lmr_pv_min_move_index] or move index >= [lmr_min_move_index]
-///  - move score <= [lmr_max_score]
+///  - depth >= `lmr_min_depth`
+///  - move index >= `lmr_pv_min_move_index` or move index >= `lmr_min_move_index`
+///  - move score <= `lmr_max_score`
 ///  - move is quiet
 ///  - friendly king is not checked
 ///  - enemy king is not checked

@@ -9,7 +9,6 @@ use std::mem::MaybeUninit;
 
 /// Entry point of the quiescence search. The main idea here is to reduce the horizon effect by processing capture sequences and eventually
 /// make a quiet position suitable for final evaluation. `context`, `ply`, `alpha` and `beta` are provided by the leaf of the regular search.
-/// If `DIAG` is set to true, additional statistics will be gathered (with a small performance penalty).
 ///
 /// Search steps:
 ///  - test if the friendly king was not captured earlier
@@ -88,14 +87,14 @@ pub fn run(context: &mut SearchContext, ply: u16, mut alpha: i16, beta: i16) -> 
 }
 
 /// Checks if the score pruning can be applied for `move_score`. The main idea here is to omit all capture sequances, which are clearly
-/// loosing material (`move_score` is less than [q_score_pruning_treshold]) and with high probability won't improve alpha.
+/// loosing material (`move_score` is less than `q_score_pruning_treshold`) and with high probability won't improve alpha.
 fn score_pruning_can_be_applied(context: &SearchContext, move_score: i16) -> bool {
     move_score < param!(context.parameters.q_score_pruning_treshold)
 }
 
 /// Checks if the futility pruning can be applied for `move_score`. The main idea here is similar to score pruning, but instead of checking
-/// if the specified capture sequence loses some material or not, it checks if the final result added to the `stand_pat` and [q_futility_pruning_margin]
-/// will be below alpha - if yes, then we can safely assume that this move is not enough good to be relevant for the search.
+/// if the specified capture sequence loses some material or not, it checks if the final result added to the `stand_pat` and `q_futility_pruning_margin`
+/// will be below alpha - if yes, then we can assume that this move is not enough good to be relevant for the search.
 fn futility_pruning_can_be_applied(context: &SearchContext, move_score: i16, stand_pat: i16, alpha: i16) -> bool {
     stand_pat + move_score + param!(context.parameters.q_futility_pruning_margin) < alpha
 }

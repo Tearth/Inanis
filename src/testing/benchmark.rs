@@ -135,7 +135,6 @@ pub fn run() -> BenchmarkResult {
         let mut context = SearchContext::new(
             board,
             Default::default(),
-            false,
             transposition_table.clone(),
             pawn_hashtable.clone(),
             killers_table,

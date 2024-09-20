@@ -9,7 +9,7 @@ use std::mem::MaybeUninit;
 /// Assigns scores for `moves` by filling `move_scores` array with `moves_count` length, based on current `context`. Move ordering in
 /// quiescence search is mainly based on SEE and works as follows:
 ///  - for every en passant, assign 0
-///  - for every capture with promotion (excluding underpromotions), assign value of the promoted piece
+///  - for every promotion, ignore all of them except queens
 ///  - for rest of the moves, assign SEE result
 pub fn assign_move_scores(
     context: &SearchContext,

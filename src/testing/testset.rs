@@ -93,7 +93,6 @@ fn run_internal(context: &mut TestContext, depth: i8, transposition_table_size: 
                     let mut context = SearchContext::new(
                         board_clone,
                         Default::default(),
-                        false,
                         transposition_table.clone(),
                         pawn_hashtable.clone(),
                         killers_table,

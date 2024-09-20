@@ -22,7 +22,8 @@ impl HistoryTable {
         debug_assert!(to < 64);
 
         let entry = &mut self.table[from][to];
-        let updated_value = entry.data + (depth as u32).pow(2);
+        let value = (depth as u32).pow(2);
+        let updated_value = entry.data + value;
         self.max = cmp::max(self.max, updated_value);
 
         entry.data = updated_value;
@@ -35,7 +36,10 @@ impl HistoryTable {
 
         let entry = &mut self.table[from][to];
         let value = depth as u32;
-        let updated_value = if value > entry.data { 0 } else { entry.data - value };
+        let updated_value = match value <= entry.data {
+            true => entry.data - value,
+            false => 0,
+        };
 
         entry.data = updated_value;
     }
@@ -66,7 +70,8 @@ impl HistoryTable {
 }
 
 impl Default for HistoryTable {
-    /// Constructs a default instance of [HistoryTable] with zeroed elements (except `max`).
+    /// Constructs a default instance of [HistoryTable] by allocating `64 * 64 * mem::size_of::<HistoryTableEntry>()`
+    /// boxed array with zeroed elements.
     fn default() -> Self {
         const SIZE: usize = mem::size_of::<HistoryTableEntry>();
         unsafe {

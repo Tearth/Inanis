@@ -27,7 +27,8 @@ impl CountermovesTable {
 }
 
 impl Default for CountermovesTable {
-    /// Constructs a default instance of [CountermovesTable] with zeroed elements.
+    /// Constructs a default instance of [CountermovesTable] by allocating `64 * 64 * mem::size_of::<CountermovesTableEntry>()`
+    /// boxed array with zeroed elements.
     fn default() -> Self {
         const SIZE: usize = mem::size_of::<CountermovesTableEntry>();
         unsafe {

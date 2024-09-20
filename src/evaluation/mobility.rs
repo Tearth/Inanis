@@ -27,7 +27,7 @@ pub struct PieceMobility {
 /// (pawns and king are too slow and not very important), and second, sums how many squares around both kings are dangered by enemy side
 /// (`dangered_white_king_squares` and `dangered_black_king_squares`). This is used in the safety evaluator, to prevent calculating the same thing twice.
 pub fn evaluate(board: &Board, white_aux: &mut MobilityAuxData, black_aux: &mut MobilityAuxData) -> PackedEval {
-    let mut result = PackedEval::new(0, 0);
+    let mut result = PackedEval::default();
     let white_data = get_mobility_data(board, WHITE, white_aux);
     let black_data = get_mobility_data(board, BLACK, black_aux);
 
@@ -53,8 +53,8 @@ fn get_mobility_data(board: &Board, color: usize, aux: &mut MobilityAuxData) -> 
     }
 }
 
-/// Gets coefficients of mobility on `board` and assigns indexes starting from `index`. Similarly to [evaluate], both `dangered_white_king_squares` and
-/// `dangered_black_king_squares` are accordingly updated.
+/// Gets coefficients of mobility for `board` and inserts them into `coefficients`.
+/// Similarly, their indices (starting from `index`) are inserted into `indices`.
 #[cfg(feature = "dev")]
 pub fn get_coefficients(
     board: &Board,

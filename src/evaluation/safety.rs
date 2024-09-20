@@ -14,8 +14,7 @@ pub fn evaluate(board: &Board, white_aux: &MobilityAuxData, black_aux: &Mobility
 
 /// Evaluates king safety on the `board` for the specified `color` and with `dangered_king_squares` count.
 fn evaluate_color(_board: &Board, aux: &MobilityAuxData) -> PackedEval {
-    let index = (aux.king_area_threats as usize).min(7);
-    params::KING_AREA_THREATS[index]
+    params::KING_AREA_THREATS[(aux.king_area_threats as usize).min(7)]
 }
 
 #[cfg(feature = "dev")]

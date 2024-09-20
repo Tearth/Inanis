@@ -66,7 +66,8 @@ impl KillersTable {
 }
 
 impl Default for KillersTable {
-    /// Constructs a default instance of [KillersTable] with zeroed elements.
+    /// Constructs a default instance of [KillersTable] by allocating `KILLER_SLOTS * MAX_DEPTH * mem::size_of::<KillersTableEntry>()`
+    /// boxed array with zeroed elements.
     fn default() -> Self {
         const SIZE: usize = mem::size_of::<KillersTableEntry>();
         unsafe {

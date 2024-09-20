@@ -37,7 +37,6 @@ pub struct SearchContext {
     pub search_done: bool,
     pub uci_debug: bool,
     pub ponder_mode: bool,
-    pub helper_thread: bool,
     pub syzygy_enabled: bool,
     pub syzygy_probe_limit: u32,
     pub syzygy_probe_depth: i8,
@@ -67,7 +66,6 @@ impl SearchContext {
     /// Constructs a new instance of [SearchContext] with parameters as follows:
     ///  - `board` - initial position of the board
     ///  - `parameters` - structure with all search parameters
-    ///  - `helper_thread` - enables additional features when the thread is a helper in Lazy SMP (like random noise in move ordering)
     ///  - `syzygy_enabled` - enables or disables Syzygy probing
     ///  - `syzygy_probe_limit` - number of pieces for which the probing should be started
     ///  - `syzygy_probe_depth` - minimal depth at which the probing will be started
@@ -77,7 +75,6 @@ impl SearchContext {
     pub fn new(
         board: Board,
         parameters: SearchParameters,
-        helper_thread: bool,
         transposition_table: Arc<TranspositionTable>,
         pawn_hashtable: Arc<PawnHashTable>,
         killers_table: KillersTable,
@@ -105,7 +102,6 @@ impl SearchContext {
             search_done: false,
             uci_debug: false,
             ponder_mode: false,
-            helper_thread,
             syzygy_enabled: false,
             syzygy_probe_limit: 0,
             syzygy_probe_depth: 0,

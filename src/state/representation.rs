@@ -66,7 +66,7 @@ pub struct BoardState {
     pub hash: u64,
     pub pawn_hash: u64,
     pub captured_piece: u8,
-    pub pst_scores: [PackedEval; 2],
+    pub pst_score: PackedEval,
 }
 
 impl Board {
@@ -97,7 +97,7 @@ impl Board {
                 hash: 0,
                 pawn_hash: 0,
                 captured_piece: 0,
-                pst_scores: [PackedEval::new(0, 0); 2],
+                pst_score: PackedEval::default(),
             },
             state_stack: Vec::new(),
             pawn_attacks: [0; 2],
@@ -539,7 +539,7 @@ impl Board {
             self.state.hash,
             self.state.pawn_hash,
             self.state.captured_piece,
-            self.state.pst_scores,
+            self.state.pst_score,
         ));
     }
 
@@ -679,14 +679,15 @@ impl Board {
         self.game_phase += PIECE_PHASE_VALUE[piece];
 
         if !UNDO {
-            let mut king_square = self.pieces[color][KING].bit_scan() & 0x3f;
+            let mut king_square = self.pieces[color][KING].bit_scan() % 64;
 
             if color == BLACK {
                 king_square = (1u64 << king_square).swap_bytes().bit_scan();
                 square = (1u64 << square).swap_bytes().bit_scan();
             }
 
-            self.state.pst_scores[color] += pst::get_pst_value(piece, king_square, square);
+            let sign = -(color as i16 * 2 - 1);
+            self.state.pst_score += sign * pst::get_pst_value(piece, king_square, square);
         }
     }
 
@@ -698,14 +699,15 @@ impl Board {
         self.game_phase -= PIECE_PHASE_VALUE[piece];
 
         if !UNDO {
-            let mut king_square = self.pieces[color][KING].bit_scan() & 0x3f;
+            let mut king_square = self.pieces[color][KING].bit_scan() % 64;
 
             if color == BLACK {
                 king_square = (1u64 << king_square).swap_bytes().bit_scan();
                 square = (1u64 << square).swap_bytes().bit_scan();
             }
 
-            self.state.pst_scores[color] -= pst::get_pst_value(piece, king_square, square);
+            let sign = -(color as i16 * 2 - 1);
+            self.state.pst_score -= sign * pst::get_pst_value(piece, king_square, square);
         }
     }
 
@@ -718,7 +720,7 @@ impl Board {
         self.piece_table[from] = u8::MAX;
 
         if !UNDO {
-            let mut king_square = self.pieces[color][KING].bit_scan() & 0x3f;
+            let mut king_square = self.pieces[color][KING].bit_scan() % 64;
 
             if color == BLACK {
                 king_square = (1u64 << king_square).swap_bytes().bit_scan();
@@ -726,8 +728,9 @@ impl Board {
                 to = (1u64 << to).swap_bytes().bit_scan();
             }
 
-            self.state.pst_scores[color] -= pst::get_pst_value(piece, king_square, from);
-            self.state.pst_scores[color] += pst::get_pst_value(piece, king_square, to);
+            let sign = -(color as i16 * 2 - 1);
+            self.state.pst_score -= sign * pst::get_pst_value(piece, king_square, from);
+            self.state.pst_score += sign * pst::get_pst_value(piece, king_square, to);
         }
     }
 
@@ -743,9 +746,7 @@ impl Board {
         self.pawn_attacks[color] = match color {
             WHITE => ((pawns_bb & !FILE_A_BB) << 9) | ((pawns_bb & !FILE_H_BB) << 7),
             BLACK => ((pawns_bb & !FILE_A_BB) >> 7) | ((pawns_bb & !FILE_H_BB) >> 9),
-            _ => {
-                panic_fast!("Invalid value: color={}", color);
-            }
+            _ => panic_fast!("Invalid value: color={}", color),
         };
     }
 
@@ -938,15 +939,7 @@ impl Display for Board {
 
 impl BoardState {
     /// Constructs a new instance of [BoardState] with stored `halfmove_clock`, `castling_rights`, `en_passant`, `hash`, `pawn_hash` and `captured_piece`.
-    pub fn new(
-        halfmove_clock: u16,
-        castling_rights: u8,
-        en_passant: u64,
-        hash: u64,
-        pawn_hash: u64,
-        captured_piece: u8,
-        pst_scores: [PackedEval; 2],
-    ) -> BoardState {
-        BoardState { halfmove_clock, castling_rights, en_passant, hash, pawn_hash, captured_piece, pst_scores }
+    pub fn new(halfmove_clock: u16, castling_rights: u8, en_passant: u64, hash: u64, pawn_hash: u64, captured_piece: u8, pst_score: PackedEval) -> BoardState {
+        BoardState { halfmove_clock, castling_rights, en_passant, hash, pawn_hash, captured_piece, pst_score }
     }
 }

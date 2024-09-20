@@ -96,7 +96,6 @@ impl Default for UciState {
                     Some(magic_container.clone()),
                 ),
                 Default::default(),
-                false,
                 Arc::new(TranspositionTable::new(1 * 1024 * 1024)),
                 Arc::new(PawnHashTable::new(1 * 1024 * 1024)),
                 Default::default(),
@@ -488,7 +487,6 @@ fn handle_go(parameters: &[String], state: &UciState) {
             let helper_context = SearchContext::new(
                 context_lock.board.clone(),
                 search_parameters.clone(),
-                true,
                 context_lock.transposition_table.clone(),
                 context_lock.pawn_hashtable.clone(),
                 Default::default(),

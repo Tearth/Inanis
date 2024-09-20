@@ -99,7 +99,7 @@ impl SEEContainer {
 }
 
 impl Default for SEEContainer {
-    /// Constructs a default instance of [SEEContainer] with zeroed elements.
+    /// Constructs a default instance of [SEEContainer] with initialized SEE values.
     fn default() -> Self {
         const SIZE: usize = mem::size_of::<i8>();
         unsafe {

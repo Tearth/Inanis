@@ -95,6 +95,7 @@ impl SearchParameters {
 }
 
 impl Default for SearchParameters {
+    /// Constructs a default instance of [SearchParameters] with default elements.
     fn default() -> Self {
         Self {
             aspwin_delta: Self::aspwin_delta,
