@@ -56,14 +56,17 @@ pub fn evaluate_without_cache(board: &Board) -> PackedEval {
 
 /// Evaluates pawn structure on the `board` for the specified `color`.
 fn evaluate_color(board: &Board, color: usize) -> PackedEval {
+    let mut result = PackedEval::default();
     let pawns_data = get_pawns_data(board, color);
 
-    params::DOUBLED_PAWN[pawns_data.doubled_pawns.min(7) as usize]
-        + params::ISOLATED_PAWN[pawns_data.isolated_pawns.min(7) as usize]
-        + params::CHAINED_PAWN[pawns_data.chained_pawns.min(7) as usize]
-        + params::PASSED_PAWN[pawns_data.passed_pawns.min(7) as usize]
-        + params::PAWN_SHIELD[pawns_data.pawn_shield.min(7) as usize]
-        + params::PAWN_SHIELD_OPEN_FILE[pawns_data.opened_files.min(7) as usize]
+    result += params::DOUBLED_PAWN[pawns_data.doubled_pawns.min(7) as usize];
+    result += params::ISOLATED_PAWN[pawns_data.isolated_pawns.min(7) as usize];
+    result += params::CHAINED_PAWN[pawns_data.chained_pawns.min(7) as usize];
+    result += params::PASSED_PAWN[pawns_data.passed_pawns.min(7) as usize];
+    result += params::PAWN_SHIELD[pawns_data.pawn_shield.min(7) as usize];
+    result += params::PAWN_SHIELD_OPEN_FILE[pawns_data.opened_files.min(7) as usize];
+
+    result
 }
 
 /// Gets all pawn features on `board` for `color`.
@@ -76,14 +79,15 @@ fn get_pawns_data(board: &Board, color: usize) -> PawnsData {
     let mut opened_files = 0;
 
     for file in ALL_FILES {
-        let pawns_on_file_count = (board.patterns.get_file(file) & board.pieces[color][PAWN]).bit_count() as u8;
-        if pawns_on_file_count > 1 {
-            doubled_pawns += pawns_on_file_count - 1;
-        }
+        let pawns_on_file = board.patterns.get_file(file) & board.pieces[color][PAWN];
+        if pawns_on_file != 0 {
+            let pawns_on_file_count = pawns_on_file.bit_count() as u8;
 
-        if pawns_on_file_count > 0 {
-            let pawns_on_rail_count = (board.patterns.get_rail(file) & board.pieces[color][PAWN]).bit_count();
-            if pawns_on_rail_count == 0 {
+            if pawns_on_file_count > 1 {
+                doubled_pawns += pawns_on_file_count - 1;
+            }
+
+            if (board.patterns.get_rail(file) & board.pieces[color][PAWN]) == 0 {
                 isolated_pawns += 1;
             }
         }
@@ -93,17 +97,10 @@ fn get_pawns_data(board: &Board, color: usize) -> PawnsData {
     while pawns_bb != 0 {
         let square_bb = pawns_bb.get_lsb();
         let square = square_bb.bit_scan();
-
-        chained_pawns += if (board.patterns.get_star(square) & pawns_bb) > 0 { 1 } else { 0 };
         pawns_bb = pawns_bb.pop_lsb();
 
-        let front_bb = board.patterns.get_front(color, square);
-        let enemy_pawns_ahead_count = (front_bb & board.pieces[color ^ 1][PAWN]).bit_count();
-        let friendly_pawns_ahead_count = (front_bb & board.patterns.get_file(square) & board.pieces[color][PAWN]).bit_count();
-
-        if enemy_pawns_ahead_count == 0 && friendly_pawns_ahead_count == 0 {
-            passed_pawns += 1;
-        }
+        chained_pawns += ((board.patterns.get_front(color ^ 1, square) & board.patterns.get_star(square) & board.pieces[color][PAWN]) != 0) as u8;
+        passed_pawns += ((board.patterns.get_front(color, square) & board.pieces[color ^ 1][PAWN]) == 0) as u8;
     }
 
     let king_bb = board.pieces[color][KING];
