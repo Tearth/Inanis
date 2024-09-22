@@ -31,18 +31,22 @@ pub struct PackedEval {
 }
 
 impl PackedEval {
+    /// Constructs a new instance of [PackedEval] with `opening` and `ending` scores.
     pub const fn new(opening: i16, ending: i16) -> Self {
         Self { data: ((ending as i32) << 16) + opening as i32 }
     }
 
+    /// Constructs a new instance of [PackedEval] with raw `data`.
     pub const fn new_raw(data: i32) -> Self {
         Self { data }
     }
 
+    /// Gets opening score from the internal data.
     pub fn get_opening(&self) -> i16 {
         self.data as i16
     }
 
+    /// Gets ending score from the internal data.
     pub fn get_ending(&self) -> i16 {
         ((self.data + 0x8000) >> 16) as i16
     }
@@ -52,14 +56,22 @@ impl PackedEval {
     ///  - 0 represents a board without any piece (ending phase)
     ///  - every value between them represents a board state somewhere in the middle game
     pub fn taper_score(&self, game_phase: u8) -> i16 {
+        debug_assert!(game_phase <= 24);
+
         let opening_score = (self.get_opening() as i32) * (game_phase as i32);
         let ending_score = (self.get_ending() as i32) * ((INITIAL_GAME_PHASE as i32) - (game_phase as i32));
 
         ((opening_score + ending_score) / (INITIAL_GAME_PHASE as i32)) as i16
     }
 
+    /// Gets tuner coefficients for opening and ending score, constrained by `min`, `min_init`, `max_init` and `max`. Additionally, `offset` is added to each score.
     #[cfg(feature = "dev")]
     pub fn to_tuner_params(&self, min: i16, min_init: i16, max_init: i16, max: i16, offset: i16) -> [TunerParameter; 2] {
+        debug_assert!(min <= max);
+        debug_assert!(min_init <= max_init);
+        debug_assert!(min_init >= min && min_init <= max);
+        debug_assert!(max_init >= min && max_init <= max);
+
         [
             TunerParameter::new(self.get_opening() + offset, min, min_init, max_init, max),
             TunerParameter::new(self.get_ending() + offset, min, min_init, max_init, max),
@@ -70,12 +82,14 @@ impl PackedEval {
 impl ops::Add<PackedEval> for PackedEval {
     type Output = PackedEval;
 
+    /// Implements `+` operator for [PackedEval].
     fn add(self, rhs: PackedEval) -> PackedEval {
         PackedEval::new_raw(self.data + rhs.data)
     }
 }
 
 impl ops::AddAssign<PackedEval> for PackedEval {
+    /// Implements `+=` operator for [PackedEval].
     fn add_assign(&mut self, rhs: PackedEval) {
         self.data += rhs.data;
     }
@@ -84,12 +98,14 @@ impl ops::AddAssign<PackedEval> for PackedEval {
 impl ops::Sub<PackedEval> for PackedEval {
     type Output = PackedEval;
 
+    /// Implements `-` operator for [PackedEval].
     fn sub(self, rhs: PackedEval) -> PackedEval {
         PackedEval::new_raw(self.data - rhs.data)
     }
 }
 
 impl ops::SubAssign<PackedEval> for PackedEval {
+    /// Implements `-=` operator for [PackedEval].
     fn sub_assign(&mut self, rhs: PackedEval) {
         self.data -= rhs.data;
     }
@@ -98,6 +114,7 @@ impl ops::SubAssign<PackedEval> for PackedEval {
 impl ops::Mul<PackedEval> for i8 {
     type Output = PackedEval;
 
+    /// Implements `*` operator for [PackedEval].
     fn mul(self, rhs: PackedEval) -> PackedEval {
         PackedEval::new_raw(self as i32 * rhs.data)
     }
@@ -106,6 +123,7 @@ impl ops::Mul<PackedEval> for i8 {
 impl ops::Mul<PackedEval> for i16 {
     type Output = PackedEval;
 
+    /// Implements `*` operator for [PackedEval].
     fn mul(self, rhs: PackedEval) -> PackedEval {
         PackedEval::new_raw(self as i32 * rhs.data)
     }
@@ -114,6 +132,7 @@ impl ops::Mul<PackedEval> for i16 {
 impl ops::Mul<PackedEval> for i32 {
     type Output = PackedEval;
 
+    /// Implements `*` operator for [PackedEval].
     fn mul(self, rhs: PackedEval) -> PackedEval {
         PackedEval::new_raw(self * rhs.data)
     }

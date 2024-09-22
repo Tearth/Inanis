@@ -16,8 +16,7 @@ pub fn evaluate(board: &Board) -> PackedEval {
     (white_has_bishop_pair - black_has_bishop_pair) * params::BISHOP_PAIR
 }
 
-/// Gets coefficients of material for `board` and inserts them into `coefficients`.
-/// Similarly, their indices (starting from `index`) are inserted into `indices`.
+/// Gets coefficients of material for `board` and inserts them into `coefficients`. Similarly, their indices (starting from `index`) are inserted into `indices`.
 #[cfg(feature = "dev")]
 pub fn get_coefficients(board: &Board, index: &mut u16, coefficients: &mut Vec<TunerCoefficient>, indices: &mut Vec<u16>) {
     let mut data = [

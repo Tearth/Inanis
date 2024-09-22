@@ -45,6 +45,8 @@ pub fn evaluate(board: &Board, white_aux: &mut MobilityAuxData, black_aux: &mut 
 }
 
 fn get_mobility_data(board: &Board, color: usize, aux: &mut MobilityAuxData) -> MobilityData {
+    debug_assert!(color < 2);
+
     MobilityData {
         knight_mobility: movescan::get_piece_mobility::<KNIGHT>(board, color, aux),
         bishop_mobility: movescan::get_piece_mobility::<BISHOP>(board, color, aux),
@@ -53,8 +55,8 @@ fn get_mobility_data(board: &Board, color: usize, aux: &mut MobilityAuxData) -> 
     }
 }
 
-/// Gets coefficients of mobility for `board` and inserts them into `coefficients`.
-/// Similarly, their indices (starting from `index`) are inserted into `indices`.
+/// Gets coefficients of mobility for `board` and inserts them into `coefficients`. Similarly, their indices (starting from `index`) are inserted into `indices`.
+/// Some additional data is also saved in `white_aux` and `black_aux` for further processing.
 #[cfg(feature = "dev")]
 pub fn get_coefficients(
     board: &Board,

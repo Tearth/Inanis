@@ -753,7 +753,6 @@ impl Board {
     /// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position, using `pawn_hashtable` to store pawn
     /// evaluations and `statistics` to gather diagnostic data. Returns score from the `color` perspective (more than 0 when advantage, less than 0 when disadvantage).
     pub fn evaluate(&self, color: usize, pawn_hashtable: &PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
-        let game_phase = self.game_phase;
         let mut white_aux = MobilityAuxData::default();
         let mut black_aux = MobilityAuxData::default();
 
@@ -766,13 +765,12 @@ impl Board {
         let evaluation = material_evaluation + pst_evaluation + mobility_evaluation + safety_evaluation + pawns_evaluation;
         let sign = -((color as i16) * 2 - 1);
 
-        sign * evaluation.taper_score(game_phase)
+        sign * evaluation.taper_score(self.game_phase)
     }
 
     /// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position.
     /// Returns score from the `color` perspective (more than 0 when advantage, less than 0 when disadvantage).
     pub fn evaluate_without_cache(&self, color: usize) -> i16 {
-        let game_phase = self.game_phase;
         let mut white_aux = MobilityAuxData::default();
         let mut black_aux = MobilityAuxData::default();
 
@@ -785,17 +783,16 @@ impl Board {
         let evaluation = material_evaluation + pst_evaluation + mobility_evaluation + safety_evaluation + pawns_evaluation;
         let sign = -((color as i16) * 2 - 1);
 
-        sign * evaluation.taper_score(game_phase)
+        sign * evaluation.taper_score(self.game_phase)
     }
 
     /// Runs lazy (fast) evaluations, considering only material and piece-square tables. Returns score from the `color` perspective (more than 0 when
     /// advantage, less than 0 when disadvantage).
     pub fn evaluate_lazy(&self, color: usize) -> i16 {
-        let game_phase = self.game_phase;
         let evaluation = material::evaluate(self) + pst::evaluate(self);
         let sign = -((color as i16) * 2 - 1);
 
-        sign * evaluation.taper_score(game_phase)
+        sign * evaluation.taper_score(self.game_phase)
     }
 
     /// Recalculates incremental values (material and piece-square tables) entirely.

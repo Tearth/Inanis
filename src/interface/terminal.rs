@@ -14,21 +14,6 @@ use std::io;
 use std::process;
 use std::time::SystemTime;
 
-#[cfg(feature = "dev")]
-use crate::testing::testset;
-
-#[cfg(feature = "dev")]
-use crate::tuning::tuner;
-
-#[cfg(feature = "dev")]
-use crate::tuning::dataset;
-
-#[cfg(feature = "dev")]
-use crate::state::movegen::MagicContainer;
-
-#[cfg(feature = "dev")]
-use crate::state::*;
-
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
 const REPOSITORY: &str = env!("CARGO_PKG_REPOSITORY");
@@ -38,7 +23,8 @@ const COMPILER: &str = env!("COMPILER");
 const TARGET: &str = env!("TARGET");
 const PROFILE: &str = env!("PROFILE");
 
-/// Entry point of the terminal interface and command loop.
+/// Entry point of the terminal interface and command loop. If there's a command passed through `args`, the program will end immediately
+/// after completing it and printing the result.
 pub fn run(args: Vec<OsString>, target_features: Vec<&'static str>) {
     let use_args = args.len() > 1;
 
@@ -146,6 +132,7 @@ fn handle_help() {
 fn handle_benchmark() {
     println!("Starting benchmark...");
     let result = benchmark::run();
+
     println!();
     println!("Benchmark done in {:.2} s", result.time);
     println!();
@@ -392,27 +379,28 @@ fn handle_evaluate(input: Vec<&str>) {
     let mut white_aux = MobilityAuxData::default();
     let mut black_aux = MobilityAuxData::default();
 
-    let game_phase = board.game_phase;
-
     let material_evaluation = material::evaluate(&board);
     let pst_evaluation = pst::evaluate(&board);
     let mobility_evaluation = mobility::evaluate(&board, &mut white_aux, &mut black_aux);
     let safety_evaluation = safety::evaluate(&board, &white_aux, &black_aux);
     let pawns_evaluation = pawns::evaluate_without_cache(&board);
 
-    println!("Material: {}", material_evaluation.taper_score(game_phase));
-    println!("Piece-square tables: {}", pst_evaluation.taper_score(game_phase));
-    println!("Mobility: {}", mobility_evaluation.taper_score(game_phase));
-    println!("Safety: {}", safety_evaluation.taper_score(game_phase));
-    println!("Pawns: {}", pawns_evaluation.taper_score(game_phase));
+    println!("Material: {}", material_evaluation.taper_score(board.game_phase));
+    println!("Piece-square tables: {}", pst_evaluation.taper_score(board.game_phase));
+    println!("Mobility: {}", mobility_evaluation.taper_score(board.game_phase));
+    println!("Safety: {}", safety_evaluation.taper_score(board.game_phase));
+    println!("Pawns: {}", pawns_evaluation.taper_score(board.game_phase));
 
     let sum = material_evaluation + pst_evaluation + mobility_evaluation + safety_evaluation + pawns_evaluation;
-    println!(" --- Total: {} --- ", sum.taper_score(game_phase));
+    println!(" --- Total: {} --- ", sum.taper_score(board.game_phase));
 }
 
 /// Handles `magic` command by printing a fresh set of magic numbers.
 #[cfg(feature = "dev")]
 fn handle_magic() {
+    use crate::state::movegen::MagicContainer;
+    use crate::state::*;
+
     let now = SystemTime::now();
     let magic = MagicContainer::default();
     println!("Generating magic numbers for rook...");
@@ -591,6 +579,8 @@ fn handle_qperft(input: Vec<&str>) {
 /// using hashtable with size specified in `transposition_table_size`. To classify the test as successful, the last iteration has to return the correct best move.
 #[cfg(feature = "dev")]
 fn handle_testset(input: Vec<&str>) {
+    use crate::testing::testset;
+
     if input.len() < 2 {
         println!("EPD filename parameter not found");
         return;
@@ -648,6 +638,8 @@ fn handle_testset(input: Vec<&str>) {
 /// `lock_material` to disable tuner for piece values, and `randomize` to initialize evaluation parameters with random values. Multithreading is supported by `threads_count`.
 #[cfg(feature = "dev")]
 fn handle_tuner(input: Vec<&str>) {
+    use crate::tuning::tuner;
+
     if input.len() < 2 {
         println!("EPD filename parameter not found");
         return;
@@ -722,6 +714,8 @@ fn handle_tuner(input: Vec<&str>) {
 /// `max_differ` and `density`. Output positions are then stored in the `output_file`.
 #[cfg(feature = "dev")]
 fn handle_dataset(input: Vec<&str>) {
+    use crate::tuning::dataset;
+
     if input.len() < 2 {
         println!("PGN filename parameter not found");
         return;

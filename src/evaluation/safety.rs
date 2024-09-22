@@ -17,6 +17,8 @@ fn evaluate_color(_board: &Board, aux: &MobilityAuxData) -> PackedEval {
     params::KING_AREA_THREATS[(aux.king_area_threats as usize).min(7)]
 }
 
+/// Gets coefficients of king safety for `board` and inserts them into `coefficients`. Similarly, their indices (starting from `index`) are inserted into `indices`.
+/// Additionally, `white_aux` and `black_aux` calculated during mobility phase is also used here.
 #[cfg(feature = "dev")]
 pub fn get_coefficients(
     white_aux: &MobilityAuxData,

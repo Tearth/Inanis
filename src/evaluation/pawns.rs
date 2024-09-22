@@ -25,6 +25,7 @@ pub struct PawnsData {
 ///  - chained pawns (positive score)
 ///  - passed pawns (positive score)
 ///  - open files next to the king (negative score)
+///  - pawn shield next to the king (positive score)
 ///
 /// To improve performance (using the fact that structure of pawns changes relatively rare), each evaluation is saved in the pawn hashtable,
 /// and used again if possible.
@@ -49,7 +50,7 @@ pub fn evaluate(board: &Board, pawn_hashtable: &PawnHashTable, statistics: &mut 
     eval
 }
 
-/// Does the same thing as [evaluate], but doesn't use pawn hashtable to save evalations.
+/// Does the same thing as [evaluate], but without using pawn hashtable to save evalations.
 pub fn evaluate_without_cache(board: &Board) -> PackedEval {
     evaluate_color(board, WHITE) - evaluate_color(board, BLACK)
 }
@@ -117,7 +118,7 @@ fn get_pawns_data(board: &Board, color: usize) -> PawnsData {
     PawnsData { doubled_pawns, isolated_pawns, chained_pawns, passed_pawns, pawn_shield, opened_files }
 }
 
-/// Gets coefficients of pawn structure on `board` and assigns indexes starting from `index`.
+/// Gets coefficients of pawn structure for `board` and inserts them into `coefficients`. Similarly, their indices (starting from `index`) are inserted into `indices`.
 #[cfg(feature = "dev")]
 pub fn get_coefficients(board: &Board, index: &mut u16, coefficients: &mut Vec<TunerCoefficient>, indices: &mut Vec<u16>) {
     let white_pawns_data = get_pawns_data(board, WHITE);
