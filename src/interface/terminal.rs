@@ -32,6 +32,7 @@ use crate::state::*;
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
 const REPOSITORY: &str = env!("CARGO_PKG_REPOSITORY");
+const LICENSE: &str = env!("CARGO_PKG_LICENSE");
 const DATE: &str = env!("DATE");
 const COMPILER: &str = env!("COMPILER");
 const TARGET: &str = env!("TARGET");
@@ -51,7 +52,7 @@ pub fn run(args: Vec<OsString>, target_features: Vec<&'static str>) {
     println!("{}", header);
     println!("Compiler: {}", COMPILER);
     println!("Target: {}, profile: {}", TARGET, PROFILE);
-    println!("Homepage: {}", REPOSITORY);
+    println!("Homepage: {}, license: {}", REPOSITORY, LICENSE);
     println!();
     println!("Type \"help\" to get a list of available commands");
 
