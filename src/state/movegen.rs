@@ -179,6 +179,8 @@ pub struct MagicSquare {
 impl MagicContainer {
     /// Gets a rook moves for the square specified by `square`, considering `occupancy_bb`.
     pub fn get_rook_moves(&self, mut occupancy_bb: u64, square: usize) -> u64 {
+        debug_assert!(square < 64);
+
         occupancy_bb &= self.rook_squares[square].mask;
         occupancy_bb = occupancy_bb.wrapping_mul(self.rook_squares[square].magic);
         occupancy_bb >>= 64 - self.rook_squares[square].shift;
@@ -188,6 +190,8 @@ impl MagicContainer {
 
     /// Gets a bishop moves for the square specified by `square`, considering `occupancy_bb`.
     pub fn get_bishop_moves(&self, mut occupancy_bb: u64, square: usize) -> u64 {
+        debug_assert!(square < 64);
+
         occupancy_bb &= self.bishop_squares[square].mask;
         occupancy_bb = occupancy_bb.wrapping_mul(self.bishop_squares[square].magic);
         occupancy_bb >>= 64 - self.bishop_squares[square].shift;
@@ -197,21 +201,26 @@ impl MagicContainer {
 
     /// Gets a queen moves for the square specified by `square`, considering `occupancy_bb`.
     pub fn get_queen_moves(&self, occupancy_bb: u64, square: usize) -> u64 {
+        debug_assert!(square < 64);
         self.get_rook_moves(occupancy_bb, square) | self.get_bishop_moves(occupancy_bb, square)
     }
 
     /// Gets a knight moves for the square specified by `square`, without considering an occupancy.
     pub fn get_knight_moves(&self, square: usize, patterns: &PatternsContainer) -> u64 {
+        debug_assert!(square < 64);
         patterns.get_jumps(square)
     }
 
     /// Gets a king moves for the square specified by `square`, without considering an occupancy.
     pub fn get_king_moves(&self, square: usize, patterns: &PatternsContainer) -> u64 {
+        debug_assert!(square < 64);
         patterns.get_box(square)
     }
 
     /// Generates a rook magic number for the square specified by `square`.
     pub fn generate_rook_magic_number(&self, square: usize) -> u64 {
+        debug_assert!(square < 64);
+
         let patterns = Arc::new(PatternsContainer::default());
 
         let shift = ROOK_SHIFTS[square];
@@ -234,6 +243,8 @@ impl MagicContainer {
 
     /// Generates a bishop magic number for the square specified by `square`.
     pub fn generate_bishop_magic_number(&self, square: usize) -> u64 {
+        debug_assert!(square < 64);
+
         let patterns = Arc::new(PatternsContainer::default());
 
         let shift = BISHOP_SHIFTS[square];
@@ -288,6 +299,8 @@ impl MagicContainer {
 
     /// Applies rook magic for the square specified by `square`, using built-in magic number from [ROOK_MAGIC_NUMBERS].
     fn apply_rook_magic(&mut self, square: usize) {
+        debug_assert!(square < 64);
+
         let patterns = Arc::new(PatternsContainer::default());
 
         let shift = ROOK_SHIFTS[square];
@@ -313,6 +326,8 @@ impl MagicContainer {
 
     /// Applies bishop magic for the square specified by `square`, using built-in magic number from [BISHOP_MAGIC_NUMBERS].
     fn apply_bishop_magic(&mut self, square: usize) {
+        debug_assert!(square < 64);
+
         let patterns = Arc::new(PatternsContainer::default());
 
         let shift = BISHOP_SHIFTS[square];
@@ -371,16 +386,20 @@ impl MagicContainer {
 
     /// Gets a rook mask for the square specified by `square`, without considering occupancy.
     fn get_rook_mask(&self, square: usize, patterns: &PatternsContainer) -> u64 {
+        debug_assert!(square < 64);
         (patterns.get_file(square) & !RANK_1_BB & !RANK_8_BB) | (patterns.get_rank(square) & !FILE_A_BB & !FILE_H_BB)
     }
 
     /// Gets a bishop mask for the square specified by `square`, without considering occupancy.
     fn get_bishop_mask(&self, square: usize, patterns: &PatternsContainer) -> u64 {
+        debug_assert!(square < 64);
         patterns.get_diagonals(square) & !EDGE_BB
     }
 
     /// Gets a rook attacks for the square specified by `square`, considering `occupancy_bb`.
     fn get_rook_attacks(&self, occupancy_bb: u64, square: usize) -> u64 {
+        debug_assert!(square < 64);
+
         let left = self.get_attacks(occupancy_bb, square, (-1, 0));
         let right = self.get_attacks(occupancy_bb, square, (1, 0));
         let top = self.get_attacks(occupancy_bb, square, (0, 1));
@@ -391,6 +410,8 @@ impl MagicContainer {
 
     /// Gets a bishop attacks for the square specified by `square`, occupancy `occupancy_bb`.
     fn get_bishop_attacks(&self, occupancy_bb: u64, square: usize) -> u64 {
+        debug_assert!(square < 64);
+
         let top_right = self.get_attacks(occupancy_bb, square, (1, 1));
         let top_left = self.get_attacks(occupancy_bb, square, (1, -1));
         let down_right = self.get_attacks(occupancy_bb, square, (-1, 1));
@@ -402,6 +423,10 @@ impl MagicContainer {
     /// Helper function to get all possible to move squares, considering `occupancy_bb`, starting from the square
     /// specified by `square` and going into the `direction`.
     fn get_attacks(&self, occupancy_bb: u64, square: usize, direction: (isize, isize)) -> u64 {
+        debug_assert!(square < 64);
+        debug_assert!(direction.0 >= -1 && direction.0 <= 1);
+        debug_assert!(direction.1 >= -1 && direction.1 <= 1);
+
         let mut result = 0u64;
         let mut current = ((square as isize) % 8 + direction.0, (square as isize) / 8 + direction.1);
 

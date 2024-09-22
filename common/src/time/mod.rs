@@ -13,6 +13,12 @@ pub struct DateTime {
 impl DateTime {
     /// Constructs a new instance of [DateTime] with `year`, `month`, `day`, `hour`, `minute` and `second`.
     pub fn new(year: u16, month: u8, day: u8, hour: u8, minute: u8, second: u8) -> DateTime {
+        debug_assert!(month <= 12);
+        debug_assert!(day <= 31);
+        debug_assert!(hour < 24);
+        debug_assert!(minute < 60);
+        debug_assert!(second < 60);
+
         DateTime { year, month, day, hour, minute, second }
     }
 

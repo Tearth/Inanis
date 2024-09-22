@@ -24,6 +24,7 @@ impl PatternsContainer {
     /// . . . x . . . .
     /// ```
     pub fn get_file(&self, square: usize) -> u64 {
+        debug_assert!(square < 64);
         self.file_patterns[square]
     }
 
@@ -39,6 +40,7 @@ impl PatternsContainer {
     /// . . . . . . . .
     /// ```
     pub fn get_rank(&self, square: usize) -> u64 {
+        debug_assert!(square < 64);
         self.rank_patterns[square]
     }
 
@@ -54,6 +56,7 @@ impl PatternsContainer {
     /// x . . . . . x .
     /// ```
     pub fn get_diagonals(&self, square: usize) -> u64 {
+        debug_assert!(square < 64);
         self.diagonal_patterns[square]
     }
 
@@ -69,6 +72,7 @@ impl PatternsContainer {
     /// . . . . . . . .
     /// ```
     pub fn get_jumps(&self, square: usize) -> u64 {
+        debug_assert!(square < 64);
         self.jump_patterns[square]
     }
 
@@ -84,6 +88,7 @@ impl PatternsContainer {
     /// . . . . . . . .
     /// ```
     pub fn get_box(&self, square: usize) -> u64 {
+        debug_assert!(square < 64);
         self.box_patterns[square]
     }
 
@@ -99,6 +104,7 @@ impl PatternsContainer {
     /// . . x . x . . .
     /// ```
     pub fn get_rail(&self, file: usize) -> u64 {
+        debug_assert!(file < 8);
         self.rail_patterns[file]
     }
 
@@ -114,6 +120,7 @@ impl PatternsContainer {
     /// . . . . . . . .
     /// ```
     pub fn get_star(&self, square: usize) -> u64 {
+        debug_assert!(square < 64);
         self.star_patterns[square]
     }
 
@@ -129,6 +136,9 @@ impl PatternsContainer {
     /// . . . . . . . .
     /// ```
     pub fn get_front(&self, color: usize, square: usize) -> u64 {
+        debug_assert!(color < 2);
+        debug_assert!(square < 64);
+
         self.front_patterns[color][square]
     }
 

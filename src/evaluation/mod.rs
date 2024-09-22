@@ -56,8 +56,6 @@ impl PackedEval {
     ///  - 0 represents a board without any piece (ending phase)
     ///  - every value between them represents a board state somewhere in the middle game
     pub fn taper_score(&self, game_phase: u8) -> i16 {
-        debug_assert!(game_phase <= 24);
-
         let opening_score = (self.get_opening() as i32) * (game_phase as i32);
         let ending_score = (self.get_ending() as i32) * ((INITIAL_GAME_PHASE as i32) - (game_phase as i32));
 

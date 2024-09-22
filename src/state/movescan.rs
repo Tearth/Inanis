@@ -450,6 +450,8 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(
 /// Gets `PIECE` mobility (by counting all possible moves at the position specified by `board`) with `color` and increases `dangered_king_squares` if the enemy
 /// king is near to the squares included in the mobility.
 pub fn get_piece_mobility<const PIECE: usize>(board: &Board, color: usize, aux: &mut MobilityAuxData) -> PieceMobility {
+    debug_assert!(color < 2);
+
     let mut pieces_bb = board.pieces[color][PIECE];
     let mut mobility_inner = 0;
     let mut mobility_outer = 0;

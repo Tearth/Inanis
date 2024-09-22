@@ -54,13 +54,15 @@ impl TranspositionTable {
         hashtable
     }
 
-    /// Adds a new entry (storing the key, `score`, `best_move`, `depth`, `ply`, `score_type` and `age`) using `hash` to calculate an index of the bucket.
+    /// Adds a new entry (storing the key, `score`, `best_move`, `depth`, `ply`, `r#type` and `age`) using `hash` to calculate an index of the bucket.
     /// Replacement strategy considers a few elements to optimize memory usage and prioritizes slots to replace as follows:
     ///  - empty slots or slots with the same key as the new entry
     ///  - slots with the smallest depth (if there are some old entries, prioritize them)
     ///
     /// This function takes care of converting mate `score` using passed `ply`.
-    pub fn add(&self, hash: u64, mut score: i16, best_move: Move, depth: i8, ply: u16, score_type: u8, age: u8) {
+    pub fn add(&self, hash: u64, mut score: i16, best_move: Move, depth: i8, ply: u16, r#type: u8, age: u8) {
+        debug_assert!(r#type == 1 || r#type == 2 || r#type == 4);
+
         let key = self.get_key(hash);
         let index = self.get_index(hash);
         let bucket = &self.table[index];
@@ -107,7 +109,7 @@ impl TranspositionTable {
             }
         }
 
-        bucket.entries[desired_index].set_data(key, score, best_move, depth, score_type, age);
+        bucket.entries[desired_index].set_data(key, score, best_move, depth, r#type, age);
     }
 
     /// Gets a wanted entry using `hash` to calculate an index of the bucket. This function takes care of converting
@@ -252,6 +254,8 @@ impl TranspositionTableEntry {
 
     /// Converts `key`, `score`, `best_move`, `depth`, `r#type` and `age` into an atomic word, and stores it.
     pub fn set_data(&self, key: u16, score: i16, best_move: Move, depth: i8, r#type: u8, age: u8) {
+        debug_assert!(r#type == 1 || r#type == 2 || r#type == 4);
+
         let key_data = 0
             | (key as u64)
             | (((score as u16) as u64) << 16)

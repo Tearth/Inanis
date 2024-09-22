@@ -47,7 +47,7 @@ impl SEEContainer {
 
     /// Recursive function called by `evaluate` to help evaluate a static exchange evaluation result.
     fn evaluate_internal(&self, attacking_piece: usize, target_piece: usize, attackers: usize, defenders: usize) -> i8 {
-        debug_assert!(target_piece <= 7);
+        debug_assert!(target_piece < 8);
 
         if attackers == 0 {
             return 0;
@@ -70,7 +70,7 @@ impl SEEContainer {
     ///  - 1 queen (index 6)
     ///  - 1 king (index 7)
     fn get_see_piece_index(&self, piece: usize) -> usize {
-        debug_assert!(piece <= 6);
+        debug_assert!(piece < 6);
 
         match piece {
             PAWN => 0,
@@ -85,7 +85,7 @@ impl SEEContainer {
 
     /// Gets a piece value based on `piece_index` saved in SEE format (look `get_see_piece_index`).
     fn get_piece_value(&self, piece_index: usize) -> i8 {
-        debug_assert!(piece_index <= 7);
+        debug_assert!(piece_index < 8);
 
         match piece_index {
             0 => SEE_PAWN_VALUE,            // Pawn

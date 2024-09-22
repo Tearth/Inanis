@@ -15,6 +15,10 @@ pub struct ZobristContainer {
 impl ZobristContainer {
     /// Gets `piece` hash with the `color` for the square specified by `square`.
     pub fn get_piece_hash(&self, color: usize, piece: usize, square: usize) -> u64 {
+        debug_assert!(color < 2);
+        debug_assert!(piece < 6);
+        debug_assert!(square < 64);
+
         self.piece_hashes[color][piece][square]
     }
 
@@ -29,6 +33,7 @@ impl ZobristContainer {
 
     /// Gets en passant hash for the `file`.
     pub fn get_en_passant_hash(&self, file: usize) -> u64 {
+        debug_assert!(file < 8);
         self.en_passant_hashes[file]
     }
 
