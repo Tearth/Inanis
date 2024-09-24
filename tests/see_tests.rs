@@ -19,7 +19,7 @@ mod see_tests {
             $(
                 #[test]
                 fn $name() {
-                    let board = Board::new_from_fen($fen, None, None, None, None).unwrap();
+                    let board = Board::new_from_fen($fen, None, None, None).unwrap();
 
                     let mut moves = [MaybeUninit::uninit(); engine::MAX_MOVES_COUNT];
                     let moves_count = board.get_all_moves(&mut moves, u64::MAX);

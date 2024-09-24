@@ -8,7 +8,6 @@ use crate::evaluation::pst::*;
 use crate::evaluation::safety;
 use crate::evaluation::*;
 use crate::state::movegen::MagicContainer;
-use crate::state::patterns::PatternsContainer;
 use crate::state::text::fen;
 use crate::state::zobrist::ZobristContainer;
 use crate::state::*;
@@ -350,19 +349,12 @@ fn load_positions(
     };
 
     let zobrist_container = Arc::new(ZobristContainer::default());
-    let patterns_container = Arc::new(PatternsContainer::default());
     let see_container = Arc::new(SEEContainer::default());
     let magic_container = Arc::new(MagicContainer::default());
 
     for line in BufReader::new(file).lines() {
         let position = line.unwrap();
-        let parsed_epd = fen::epd_to_board(
-            position.as_str(),
-            Some(zobrist_container.clone()),
-            Some(patterns_container.clone()),
-            Some(see_container.clone()),
-            Some(magic_container.clone()),
-        )?;
+        let parsed_epd = fen::epd_to_board(position.as_str(), Some(zobrist_container.clone()), Some(see_container.clone()), Some(magic_container.clone()))?;
 
         if parsed_epd.comment.is_none() {
             return Err("Game result not found".to_string());

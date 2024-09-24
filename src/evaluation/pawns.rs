@@ -84,7 +84,7 @@ fn get_pawns_data(board: &Board, color: usize) -> PawnsData {
     let mut opened_files = 0;
 
     for file in ALL_FILES {
-        let pawns_on_file = board.patterns.get_file(file) & board.pieces[color][PAWN];
+        let pawns_on_file = patterns::get_file(file) & board.pieces[color][PAWN];
         if pawns_on_file != 0 {
             let pawns_on_file_count = pawns_on_file.bit_count() as u8;
 
@@ -92,7 +92,7 @@ fn get_pawns_data(board: &Board, color: usize) -> PawnsData {
                 doubled_pawns += pawns_on_file_count - 1;
             }
 
-            if (board.patterns.get_rail(file) & board.pieces[color][PAWN]) == 0 {
+            if (patterns::get_rail(file) & board.pieces[color][PAWN]) == 0 {
                 isolated_pawns += 1;
             }
         }
@@ -104,17 +104,17 @@ fn get_pawns_data(board: &Board, color: usize) -> PawnsData {
         let square = square_bb.bit_scan();
         pawns_bb = pawns_bb.pop_lsb();
 
-        chained_pawns += ((board.patterns.get_front(color ^ 1, square) & board.patterns.get_star(square) & board.pieces[color][PAWN]) != 0) as u8;
-        passed_pawns += ((board.patterns.get_front(color, square) & board.pieces[color ^ 1][PAWN]) == 0) as u8;
+        chained_pawns += ((patterns::get_front(color ^ 1, square) & patterns::get_diagonals(square) & board.pieces[color][PAWN]) != 0) as u8;
+        passed_pawns += ((patterns::get_front(color, square) & board.pieces[color ^ 1][PAWN]) == 0) as u8;
     }
 
     let king_bb = board.pieces[color][KING];
     let king_square = king_bb.bit_scan();
     let king_square_file = (king_square & 7) as i8;
-    pawn_shield = (board.patterns.get_box(king_square) & board.pieces[color][PAWN]).bit_count() as u8;
+    pawn_shield = (patterns::get_box(king_square) & board.pieces[color][PAWN]).bit_count() as u8;
 
     for file in cmp::max(0, king_square_file - 1)..=(cmp::min(7, king_square_file + 1)) {
-        if (board.patterns.get_file(file as usize) & board.pieces[color][PAWN]) == 0 {
+        if (patterns::get_file(file as usize) & board.pieces[color][PAWN]) == 0 {
             opened_files += 1;
         }
     }

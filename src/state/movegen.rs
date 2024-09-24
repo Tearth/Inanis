@@ -1,8 +1,6 @@
-use super::patterns::PatternsContainer;
 use super::*;
 use crate::utils::bithelpers::BitHelpers;
 use crate::utils::rand;
-use std::sync::Arc;
 
 #[rustfmt::skip]
 static ROOK_SHIFTS: [u8; 64] =
@@ -201,30 +199,25 @@ impl MagicContainer {
 
     /// Gets a queen moves for the square specified by `square`, considering `occupancy_bb`.
     pub fn get_queen_moves(&self, occupancy_bb: u64, square: usize) -> u64 {
-        debug_assert!(square < 64);
         self.get_rook_moves(occupancy_bb, square) | self.get_bishop_moves(occupancy_bb, square)
     }
 
     /// Gets a knight moves for the square specified by `square`, without considering an occupancy.
-    pub fn get_knight_moves(&self, square: usize, patterns: &PatternsContainer) -> u64 {
-        debug_assert!(square < 64);
-        patterns.get_jumps(square)
+    pub fn get_knight_moves(&self, square: usize) -> u64 {
+        patterns::get_jumps(square)
     }
 
     /// Gets a king moves for the square specified by `square`, without considering an occupancy.
-    pub fn get_king_moves(&self, square: usize, patterns: &PatternsContainer) -> u64 {
-        debug_assert!(square < 64);
-        patterns.get_box(square)
+    pub fn get_king_moves(&self, square: usize) -> u64 {
+        patterns::get_box(square)
     }
 
     /// Generates a rook magic number for the square specified by `square`.
     pub fn generate_rook_magic_number(&self, square: usize) -> u64 {
         debug_assert!(square < 64);
 
-        let patterns = Arc::new(PatternsContainer::default());
-
         let shift = ROOK_SHIFTS[square];
-        let mask = self.get_rook_mask(square, &patterns);
+        let mask = self.get_rook_mask(square);
         let count = 1 << shift;
 
         let mut permutations = Vec::with_capacity(count as usize);
@@ -245,10 +238,8 @@ impl MagicContainer {
     pub fn generate_bishop_magic_number(&self, square: usize) -> u64 {
         debug_assert!(square < 64);
 
-        let patterns = Arc::new(PatternsContainer::default());
-
         let shift = BISHOP_SHIFTS[square];
-        let mask = self.get_bishop_mask(square, &patterns);
+        let mask = self.get_bishop_mask(square);
         let count = 1 << shift;
 
         let mut permutations = Vec::with_capacity(count as usize);
@@ -301,10 +292,8 @@ impl MagicContainer {
     fn apply_rook_magic(&mut self, square: usize) {
         debug_assert!(square < 64);
 
-        let patterns = Arc::new(PatternsContainer::default());
-
         let shift = ROOK_SHIFTS[square];
-        let mask = self.get_rook_mask(square, &patterns);
+        let mask = self.get_rook_mask(square);
         let count = 1 << shift;
 
         let mut permutations = Vec::with_capacity(count as usize);
@@ -328,10 +317,8 @@ impl MagicContainer {
     fn apply_bishop_magic(&mut self, square: usize) {
         debug_assert!(square < 64);
 
-        let patterns = Arc::new(PatternsContainer::default());
-
         let shift = BISHOP_SHIFTS[square];
-        let mask = self.get_bishop_mask(square, &patterns);
+        let mask = self.get_bishop_mask(square);
         let count = 1 << shift;
 
         let mut permutations = Vec::with_capacity(count as usize);
@@ -385,15 +372,13 @@ impl MagicContainer {
     }
 
     /// Gets a rook mask for the square specified by `square`, without considering occupancy.
-    fn get_rook_mask(&self, square: usize, patterns: &PatternsContainer) -> u64 {
-        debug_assert!(square < 64);
-        (patterns.get_file(square) & !RANK_1_BB & !RANK_8_BB) | (patterns.get_rank(square) & !FILE_A_BB & !FILE_H_BB)
+    fn get_rook_mask(&self, square: usize) -> u64 {
+        (patterns::get_file(square) & !(1u64 << square) & !RANK_1_BB & !RANK_8_BB) | (patterns::get_rank(square) & !(1u64 << square) & !FILE_A_BB & !FILE_H_BB)
     }
 
     /// Gets a bishop mask for the square specified by `square`, without considering occupancy.
-    fn get_bishop_mask(&self, square: usize, patterns: &PatternsContainer) -> u64 {
-        debug_assert!(square < 64);
-        patterns.get_diagonals(square) & !EDGE_BB
+    fn get_bishop_mask(&self, square: usize) -> u64 {
+        patterns::get_diagonals(square) & !(1u64 << square) & !EDGE_BB
     }
 
     /// Gets a rook attacks for the square specified by `square`, considering `occupancy_bb`.

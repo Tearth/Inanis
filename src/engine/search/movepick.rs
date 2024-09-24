@@ -109,7 +109,7 @@ pub fn get_next_move(
                     let occupancy_bb = context.board.occupancy[WHITE] | context.board.occupancy[BLACK];
 
                     let queen_moves_bb = context.board.magic.get_queen_moves(occupancy_bb, king_square);
-                    let knight_moves_bb = context.board.magic.get_knight_moves(king_square, &context.board.patterns);
+                    let knight_moves_bb = context.board.magic.get_knight_moves(king_square);
 
                     queen_moves_bb | knight_moves_bb
                 } else {
