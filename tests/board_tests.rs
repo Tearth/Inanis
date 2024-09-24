@@ -8,7 +8,7 @@ mod board_tests {
             $(
                 #[test]
                 fn $name() {
-                    let board = Board::new_from_fen($fen, None, None, None).unwrap();
+                    let board = Board::new_from_fen($fen, None, None).unwrap();
 
                     for color in ALL_COLORS {
                         let mut result = 0u64;
@@ -44,7 +44,7 @@ mod board_tests {
             $(
                 #[test]
                 fn $name() {
-                    let board = Board::new_from_fen($fen, None, None, None).unwrap();
+                    let board = Board::new_from_fen($fen, None, None).unwrap();
                     assert_eq!($expected_result, board.get_attacking_pieces($color, $square));
                 }
             )*

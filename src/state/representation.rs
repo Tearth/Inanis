@@ -1,4 +1,3 @@
-use super::movegen::MagicContainer;
 use super::movescan;
 use super::movescan::Move;
 use super::movescan::MoveFlags;
@@ -53,7 +52,6 @@ pub struct Board {
     pub pawn_attacks: [u64; 2],
     pub zobrist: Arc<ZobristContainer>,
     pub see: Arc<SEEContainer>,
-    pub magic: Arc<MagicContainer>,
 }
 
 #[derive(Clone)]
@@ -69,14 +67,9 @@ pub struct BoardState {
 
 impl Board {
     /// Constructs a new instance of [Board], using provided containers. If the parameter is [None], then the new container is created.
-    pub fn new(
-        zobrist_container: Option<Arc<ZobristContainer>>,
-        see_container: Option<Arc<SEEContainer>>,
-        magic_container: Option<Arc<MagicContainer>>,
-    ) -> Self {
+    pub fn new(zobrist_container: Option<Arc<ZobristContainer>>, see_container: Option<Arc<SEEContainer>>) -> Self {
         let zobrist_container = zobrist_container.unwrap_or_else(|| Arc::new(Default::default()));
         let see_container = see_container.unwrap_or_else(|| Arc::new(SEEContainer::default()));
-        let magic_container = magic_container.unwrap_or_else(|| Arc::new(Default::default()));
 
         Board {
             pieces: [[0; 6], [0; 6]],
@@ -99,39 +92,24 @@ impl Board {
             pawn_attacks: [0; 2],
             zobrist: zobrist_container,
             see: see_container,
-            magic: magic_container,
         }
     }
 
     /// Constructs a new instance of [Board] with initial position, using provided containers. If the parameter is [None], then the new container is created.
-    pub fn new_initial_position(
-        zobrist_container: Option<Arc<ZobristContainer>>,
-        see_container: Option<Arc<SEEContainer>>,
-        magic_container: Option<Arc<MagicContainer>>,
-    ) -> Self {
-        Board::new_from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", zobrist_container, see_container, magic_container).unwrap()
+    pub fn new_initial_position(zobrist_container: Option<Arc<ZobristContainer>>, see_container: Option<Arc<SEEContainer>>) -> Self {
+        Board::new_from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", zobrist_container, see_container).unwrap()
     }
 
     /// Constructs a new instance of [Board] with position specified by `fen`, using provided containers. If the parameter is [None],
     /// then the new container is created. Returns [Err] with proper error message if `fen` couldn't be parsed correctly.
-    pub fn new_from_fen(
-        fen: &str,
-        zobrist_container: Option<Arc<ZobristContainer>>,
-        see_container: Option<Arc<SEEContainer>>,
-        magic_container: Option<Arc<MagicContainer>>,
-    ) -> Result<Self, String> {
-        fen::fen_to_board(fen, zobrist_container, see_container, magic_container)
+    pub fn new_from_fen(fen: &str, zobrist_container: Option<Arc<ZobristContainer>>, see_container: Option<Arc<SEEContainer>>) -> Result<Self, String> {
+        fen::fen_to_board(fen, zobrist_container, see_container)
     }
 
     /// Constructs a new instance of [Board] with position specified by list of `moves`, using provided containers. If the parameter is [None],
     /// then the new container is created. Returns [Err] with proper error message is `moves` couldn't be parsed correctly.
-    pub fn new_from_moves(
-        moves: &[&str],
-        zobrist_container: Option<Arc<ZobristContainer>>,
-        see_container: Option<Arc<SEEContainer>>,
-        magic_container: Option<Arc<MagicContainer>>,
-    ) -> Result<Self, String> {
-        let mut board = Board::new_initial_position(zobrist_container, see_container, magic_container);
+    pub fn new_from_moves(moves: &[&str], zobrist_container: Option<Arc<ZobristContainer>>, see_container: Option<Arc<SEEContainer>>) -> Result<Self, String> {
+        let mut board = Board::new_initial_position(zobrist_container, see_container);
         for premade_move in moves {
             let parsed_move = Move::from_long_notation(premade_move, &board)?;
             board.make_move(parsed_move);
@@ -550,25 +528,25 @@ impl Board {
         let enemy_color = color ^ 1;
         let occupancy_bb = self.occupancy[WHITE] | self.occupancy[BLACK];
 
-        let rook_queen_attacks_bb = self.magic.get_rook_moves(occupancy_bb, square);
+        let rook_queen_attacks_bb = movegen::get_rook_moves(occupancy_bb, square);
         let enemy_rooks_queens_bb = self.pieces[enemy_color][ROOK] | self.pieces[enemy_color][QUEEN];
         if (rook_queen_attacks_bb & enemy_rooks_queens_bb) != 0 {
             return true;
         }
 
-        let bishop_queen_attacks_bb = self.magic.get_bishop_moves(occupancy_bb, square);
+        let bishop_queen_attacks_bb = movegen::get_bishop_moves(occupancy_bb, square);
         let enemy_bishops_queens_bb = self.pieces[enemy_color][BISHOP] | self.pieces[enemy_color][QUEEN];
         if (bishop_queen_attacks_bb & enemy_bishops_queens_bb) != 0 {
             return true;
         }
 
-        let knight_attacks_bb = self.magic.get_knight_moves(square);
+        let knight_attacks_bb = movegen::get_knight_moves(square);
         let enemy_knights_bb = self.pieces[enemy_color][KNIGHT];
         if (knight_attacks_bb & enemy_knights_bb) != 0 {
             return true;
         }
 
-        let king_attacks_bb = self.magic.get_king_moves(square);
+        let king_attacks_bb = movegen::get_king_moves(square);
         let enemy_kings_bb = self.pieces[enemy_color][KING];
         if (king_attacks_bb & enemy_kings_bb) != 0 {
             return true;
@@ -605,11 +583,11 @@ impl Board {
         let rooks_queens_bb = self.pieces[enemy_color][ROOK] | self.pieces[enemy_color][QUEEN];
         let bishops_queens_bb = self.pieces[enemy_color][BISHOP] | self.pieces[enemy_color][QUEEN];
 
-        let king_attacks_bb = self.magic.get_king_moves(square);
+        let king_attacks_bb = movegen::get_king_moves(square);
         let attacking_kings_count = ((king_attacks_bb & self.pieces[enemy_color][KING]) != 0) as usize;
         result |= attacking_kings_count << 7;
 
-        let rook_attacks_bb = self.magic.get_rook_moves(occupancy_bb & !rooks_queens_bb, square);
+        let rook_attacks_bb = movegen::get_rook_moves(occupancy_bb & !rooks_queens_bb, square);
         let attacking_rooks_count = (rook_attacks_bb & self.pieces[enemy_color][ROOK]).bit_count();
         let attacking_queens_count = ((rook_attacks_bb & self.pieces[enemy_color][QUEEN]) != 0) as usize;
 
@@ -620,10 +598,10 @@ impl Board {
         };
         result |= attacking_queens_count << 6;
 
-        let knight_attacks_bb = self.magic.get_knight_moves(square);
+        let knight_attacks_bb = movegen::get_knight_moves(square);
         let attacking_knights_count = (knight_attacks_bb & self.pieces[enemy_color][KNIGHT]).bit_count();
 
-        let bishop_attacks_bb = self.magic.get_bishop_moves(occupancy_bb & !bishops_queens_bb, square);
+        let bishop_attacks_bb = movegen::get_bishop_moves(occupancy_bb & !bishops_queens_bb, square);
         let attacking_bishops_count = (bishop_attacks_bb & self.pieces[enemy_color][BISHOP]).bit_count();
         let attacking_knights_bishops_count = attacking_knights_count + attacking_bishops_count;
         let attacking_queens_count = ((bishop_attacks_bb & self.pieces[enemy_color][QUEEN]) != 0) as usize;

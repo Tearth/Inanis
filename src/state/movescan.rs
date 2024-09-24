@@ -186,14 +186,14 @@ impl Move {
                     _ => panic_fast!("Invalid value: board.active_color={}", board.active_color),
                 },
             },
-            KNIGHT => board.magic.get_knight_moves(from),
-            BISHOP => board.magic.get_bishop_moves(occupancy_bb, from),
-            ROOK => board.magic.get_rook_moves(occupancy_bb, from),
-            QUEEN => board.magic.get_queen_moves(occupancy_bb, from),
+            KNIGHT => movegen::get_knight_moves(from),
+            BISHOP => movegen::get_bishop_moves(occupancy_bb, from),
+            ROOK => movegen::get_rook_moves(occupancy_bb, from),
+            QUEEN => movegen::get_queen_moves(occupancy_bb, from),
             KING => match flags {
                 MoveFlags::SHORT_CASTLING => 1u64 << (from - 2),
                 MoveFlags::LONG_CASTLING => 1u64 << (from + 2),
-                _ => board.magic.get_king_moves(from),
+                _ => movegen::get_king_moves(from),
             },
             _ => panic_fast!("Invalid value: fen={}, piece={}", board, piece),
         };
@@ -376,11 +376,11 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(
 
         let occupancy_bb = board.occupancy[WHITE] | board.occupancy[BLACK];
         let mut piece_moves_bb = match PIECE {
-            KNIGHT => board.magic.get_knight_moves(from),
-            BISHOP => board.magic.get_bishop_moves(occupancy_bb, from),
-            ROOK => board.magic.get_rook_moves(occupancy_bb, from),
-            QUEEN => board.magic.get_queen_moves(occupancy_bb, from),
-            KING => board.magic.get_king_moves(from),
+            KNIGHT => movegen::get_knight_moves(from),
+            BISHOP => movegen::get_bishop_moves(occupancy_bb, from),
+            ROOK => movegen::get_rook_moves(occupancy_bb, from),
+            QUEEN => movegen::get_queen_moves(occupancy_bb, from),
+            KING => movegen::get_king_moves(from),
             _ => panic_fast!("Invalid parameter: fen={}, PIECE={}", board, PIECE),
         };
         piece_moves_bb &= !board.occupancy[board.active_color] & evasion_mask;
@@ -474,11 +474,11 @@ pub fn get_piece_mobility<const PIECE: usize>(board: &Board, color: usize, aux: 
         };
 
         let mut piece_moves_bb = match PIECE {
-            KNIGHT => board.magic.get_knight_moves(from),
-            BISHOP => board.magic.get_bishop_moves(occupancy_bb, from),
-            ROOK => board.magic.get_rook_moves(occupancy_bb, from),
-            QUEEN => board.magic.get_queen_moves(occupancy_bb, from),
-            KING => board.magic.get_king_moves(from),
+            KNIGHT => movegen::get_knight_moves(from),
+            BISHOP => movegen::get_bishop_moves(occupancy_bb, from),
+            ROOK => movegen::get_rook_moves(occupancy_bb, from),
+            QUEEN => movegen::get_queen_moves(occupancy_bb, from),
+            KING => movegen::get_king_moves(from),
             _ => panic_fast!("Invalid parameter: fen={}, PIECE={}", board, PIECE),
         };
 

@@ -108,8 +108,8 @@ pub fn get_next_move(
                     let king_square = (context.board.pieces[context.board.active_color][KING]).bit_scan();
                     let occupancy_bb = context.board.occupancy[WHITE] | context.board.occupancy[BLACK];
 
-                    let queen_moves_bb = context.board.magic.get_queen_moves(occupancy_bb, king_square);
-                    let knight_moves_bb = context.board.magic.get_knight_moves(king_square);
+                    let queen_moves_bb = movegen::get_queen_moves(occupancy_bb, king_square);
+                    let knight_moves_bb = movegen::get_knight_moves(king_square);
 
                     queen_moves_bb | knight_moves_bb
                 } else {

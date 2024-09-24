@@ -9,7 +9,6 @@ use crate::engine::see::SEEContainer;
 use crate::engine::*;
 use crate::evaluation::material;
 use crate::evaluation::*;
-use crate::state::movegen::MagicContainer;
 use crate::state::representation::Board;
 use crate::state::text::pgn::PGNLoader;
 use crate::state::zobrist::ZobristContainer;
@@ -44,7 +43,6 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
 
     let zobrist_container = Arc::new(ZobristContainer::default());
     let see_container = Arc::new(SEEContainer::default());
-    let magic_container = Arc::new(MagicContainer::default());
 
     let transposition_table = Arc::new(TranspositionTable::new(1 * 1024 * 1024));
     let pawn_hashtable = Arc::new(PawnHashTable::new(1 * 1024 * 1024));
@@ -71,7 +69,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
 
         let board = match pgn.fen {
             Some(fen) => {
-                let fen_result = Board::new_from_fen(&fen, Some(zobrist_container.clone()), Some(see_container.clone()), Some(magic_container.clone()));
+                let fen_result = Board::new_from_fen(&fen, Some(zobrist_container.clone()), Some(see_container.clone()));
                 match fen_result {
                     Ok(board) => board,
                     Err(error) => {
@@ -80,8 +78,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
                     }
                 }
             }
-
-            None => Board::new_initial_position(Some(zobrist_container.clone()), Some(see_container.clone()), Some(magic_container.clone())),
+            None => Board::new_initial_position(Some(zobrist_container.clone()), Some(see_container.clone())),
         };
 
         let mut context = SearchContext::new(

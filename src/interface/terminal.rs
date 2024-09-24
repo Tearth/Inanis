@@ -368,7 +368,7 @@ fn handle_evaluate(input: Vec<&str>) {
     }
 
     let fen = input[1..].join(" ");
-    let board = match Board::new_from_fen(fen.as_str(), None, None, None) {
+    let board = match Board::new_from_fen(fen.as_str(), None, None) {
         Ok(board) => board,
         Err(error) => {
             println!("Invalid FEN parameter: {}", error);
@@ -398,22 +398,20 @@ fn handle_evaluate(input: Vec<&str>) {
 /// Handles `magic` command by printing a fresh set of magic numbers.
 #[cfg(feature = "dev")]
 fn handle_magic() {
-    use crate::state::movegen::MagicContainer;
     use crate::state::*;
 
     let now = SystemTime::now();
-    let magic = MagicContainer::default();
     println!("Generating magic numbers for rook...");
 
     for index in ALL_SQUARES {
-        println!("{},", magic.generate_rook_magic_number(index));
+        println!("{},", movegen::generate_rook_magic_number(index));
     }
 
     println!();
     println!("Generating magic numbers for bishop...");
 
     for index in ALL_SQUARES {
-        println!("{},", magic.generate_bishop_magic_number(index));
+        println!("{},", movegen::generate_bishop_magic_number(index));
     }
 
     let diff = now.elapsed().unwrap().as_millis();
@@ -804,15 +802,15 @@ fn handle_unknown_command() {
 /// Creates a new board based on the input with FEN or moves list - returns [Err] if internal parser failed.
 fn prepare_board(parameters: &[&str]) -> Result<Board, String> {
     if parameters.is_empty() {
-        return Ok(Board::new_initial_position(None, None, None));
+        return Ok(Board::new_initial_position(None, None));
     }
 
     match parameters[0] {
         "fen" => {
             let fen = parameters[1..].join(" ");
-            Board::new_from_fen(fen.as_str(), None, None, None)
+            Board::new_from_fen(fen.as_str(), None, None)
         }
-        "moves" => Board::new_from_moves(&parameters[1..], None, None, None),
+        "moves" => Board::new_from_moves(&parameters[1..], None, None),
         _ => Err(format!("Invalid mode: parameter[0]={}", parameters[0])),
     }
 }

@@ -5,7 +5,6 @@ use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
 use crate::engine::context::SearchContext;
 use crate::engine::see::SEEContainer;
-use crate::state::movegen::MagicContainer;
 use crate::state::movescan::Move;
 use crate::state::representation::Board;
 use crate::state::text::fen;
@@ -162,7 +161,6 @@ fn load_positions(epd_filename: &str) -> Result<Vec<TestPosition>, String> {
 
     let zobrist_container = Arc::new(ZobristContainer::default());
     let see_container = Arc::new(SEEContainer::default());
-    let magic_container = Arc::new(MagicContainer::default());
 
     for line in BufReader::new(file).lines() {
         let position = line.unwrap();
@@ -170,7 +168,7 @@ fn load_positions(epd_filename: &str) -> Result<Vec<TestPosition>, String> {
             continue;
         }
 
-        let mut parsed_epd = fen::epd_to_board(position.as_str(), Some(zobrist_container.clone()), Some(see_container.clone()), Some(magic_container.clone()))?;
+        let mut parsed_epd = fen::epd_to_board(position.as_str(), Some(zobrist_container.clone()), Some(see_container.clone()))?;
         let parsed_best_move = Move::from_short_notation(&parsed_epd.best_move.unwrap(), &mut parsed_epd.board)?;
         positions.push(TestPosition::new(parsed_epd.id.unwrap(), parsed_epd.board, parsed_best_move));
     }

@@ -11,7 +11,6 @@ use crate::state::*;
 use crate::tablebases::syzygy;
 use crate::utils::minmax::MinMax;
 use crate::utils::panic_fast;
-use movegen::MagicContainer;
 use std::cmp;
 use std::collections::HashMap;
 use std::io;
@@ -38,7 +37,6 @@ pub struct UciState {
 
     zobrist_container: Arc<ZobristContainer>,
     see_container: Arc<SEEContainer>,
-    magic_container: Arc<MagicContainer>,
 }
 
 #[derive(Clone)]
@@ -79,14 +77,13 @@ impl Default for UciState {
     fn default() -> Self {
         let zobrist_container = Arc::new(ZobristContainer::default());
         let see_container = Arc::new(SEEContainer::default());
-        let magic_container = Arc::new(MagicContainer::default());
 
         let abort_flag = Arc::new(AtomicBool::new(false));
         let ponder_flag = Arc::new(AtomicBool::new(false));
 
         UciState {
             context: Arc::new(RwLock::new(SearchContext::new(
-                Board::new_initial_position(Some(zobrist_container.clone()), Some(see_container.clone()), Some(magic_container.clone())),
+                Board::new_initial_position(Some(zobrist_container.clone()), Some(see_container.clone())),
                 Default::default(),
                 Arc::new(TranspositionTable::new(1 * 1024 * 1024)),
                 Arc::new(PawnHashTable::new(1 * 1024 * 1024)),
@@ -103,7 +100,6 @@ impl Default for UciState {
 
             zobrist_container,
             see_container,
-            magic_container,
         }
     }
 }
@@ -594,12 +590,7 @@ fn handle_position(parameters: &[String], state: &UciState) {
     context_lock.board = match parameters[1].as_str() {
         "fen" => {
             let fen = parameters[2..].join(" ");
-            match Board::new_from_fen(
-                fen.as_str(),
-                Some(state.zobrist_container.clone()),
-                Some(state.see_container.clone()),
-                Some(state.magic_container.clone()),
-            ) {
+            match Board::new_from_fen(fen.as_str(), Some(state.zobrist_container.clone()), Some(state.see_container.clone())) {
                 Ok(board) => board,
                 Err(error) => {
                     println!("info string Error: {}", error);
@@ -607,7 +598,7 @@ fn handle_position(parameters: &[String], state: &UciState) {
                 }
             }
         }
-        _ => Board::new_initial_position(Some(state.zobrist_container.clone()), Some(state.see_container.clone()), Some(state.magic_container.clone())),
+        _ => Board::new_initial_position(Some(state.zobrist_container.clone()), Some(state.see_container.clone())),
     };
 
     if let Some(index) = parameters.iter().position(|s| s == "moves") {
@@ -699,8 +690,7 @@ fn handle_ucinewgame(state: &mut UciState) {
     let mut context_lock = state.context.write().unwrap();
 
     state.abort_flag.store(true, Ordering::Relaxed);
-    context_lock.board =
-        Board::new_initial_position(Some(state.zobrist_container.clone()), Some(state.see_container.clone()), Some(state.magic_container.clone()));
+    context_lock.board = Board::new_initial_position(Some(state.zobrist_container.clone()), Some(state.see_container.clone()));
     drop(context_lock);
 
     recreate_state_tables(state);
