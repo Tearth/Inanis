@@ -48,7 +48,7 @@ pub fn assign_move_scores(
                 defenders_cache[square] as usize
             };
 
-            move_scores[move_index].write(context.board.see.get(attacking_piece, captured_piece, attackers, defenders));
+            move_scores[move_index].write(see::get(attacking_piece, captured_piece, attackers, defenders));
         }
     }
 }

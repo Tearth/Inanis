@@ -1,5 +1,4 @@
 use super::*;
-use crate::engine::see::SEEContainer;
 use crate::state::movescan::Move;
 use crate::state::representation::Board;
 use crate::state::zobrist::ZobristContainer;
@@ -11,7 +10,6 @@ use std::sync::Arc;
 pub struct PGNLoader {
     pub file_iterator: Lines<BufReader<File>>,
     pub zobrist_container: Arc<ZobristContainer>,
-    pub see_container: Arc<SEEContainer>,
 }
 
 pub struct ParsedPGN {
@@ -29,9 +27,8 @@ impl PGNLoader {
     /// Constructs a new instance of [PGNLoader] with the specified `file_iterator`, which will be used to read input PGN file.
     pub fn new(file_iterator: Lines<BufReader<File>>) -> PGNLoader {
         let zobrist_container = Arc::new(ZobristContainer::default());
-        let see_container = Arc::new(SEEContainer::default());
 
-        PGNLoader { file_iterator, zobrist_container, see_container }
+        PGNLoader { file_iterator, zobrist_container }
     }
 
     /// Parses a single `pgn` and returns [Some] if it has been done with success, otherwise [Err].
@@ -75,14 +72,14 @@ impl PGNLoader {
             } else if line.starts_with('1') {
                 let mut board = match fen.clone() {
                     Some(value) => {
-                        let fen_result = Board::new_from_fen(&value, Some(self.zobrist_container.clone()), Some(self.see_container.clone()));
+                        let fen_result = Board::new_from_fen(&value, Some(self.zobrist_container.clone()));
 
                         match fen_result {
                             Ok(board) => board,
                             Err(error) => return Err(format!("Invalid initial FEN position: {}", error)),
                         }
                     }
-                    None => Board::new_initial_position(Some(self.zobrist_container.clone()), Some(self.see_container.clone())),
+                    None => Board::new_initial_position(Some(self.zobrist_container.clone())),
                 };
 
                 let mut comment = false;

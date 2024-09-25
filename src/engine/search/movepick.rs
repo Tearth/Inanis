@@ -288,7 +288,7 @@ fn assign_capture_scores(
                 defenders_cache[square] as usize
             };
 
-            let see = context.board.see.get(attacking_piece, captured_piece, attackers, defenders);
+            let see = see::get(attacking_piece, captured_piece, attackers, defenders);
             move_scores[move_index].write(if see >= 0 { see + MOVE_ORDERING_WINNING_CAPTURES_OFFSET } else { see + MOVE_ORDERING_LOSING_CAPTURES_OFFSET });
         }
     }

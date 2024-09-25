@@ -1,4 +1,3 @@
-use crate::engine::see::SEEContainer;
 use crate::state::representation::Board;
 use crate::state::representation::CastlingRights;
 use crate::state::zobrist::ZobristContainer;
@@ -24,19 +23,19 @@ impl ParsedEPD {
 
 /// Converts `fen` into the [Board], using provided containers. If the parameter is [None], then the new container is created.
 /// Returns [Err] with proper error message if `fen` couldn't be parsed correctly.
-pub fn fen_to_board(fen: &str, zobrist_container: Option<Arc<ZobristContainer>>, see_container: Option<Arc<SEEContainer>>) -> Result<Board, String> {
-    Ok(epd_to_board(fen, zobrist_container, see_container)?.board)
+pub fn fen_to_board(fen: &str, zobrist_container: Option<Arc<ZobristContainer>>) -> Result<Board, String> {
+    Ok(epd_to_board(fen, zobrist_container)?.board)
 }
 
 /// Converts `epd` into the [Board], using provided containers. If the parameter is [None], then the new container is created.
 /// Returns [Err] with proper error message if `epd` couldn't be parsed correctly.
-pub fn epd_to_board(epd: &str, zobrist_container: Option<Arc<ZobristContainer>>, see_container: Option<Arc<SEEContainer>>) -> Result<ParsedEPD, String> {
+pub fn epd_to_board(epd: &str, zobrist_container: Option<Arc<ZobristContainer>>) -> Result<ParsedEPD, String> {
     let tokens: Vec<&str> = epd.split(' ').map(|v| v.trim()).collect();
     if tokens.len() < 4 {
         return Err(format!("Invalid FEN, input too short: epd={}", epd));
     }
 
-    let mut board = Board::new(zobrist_container, see_container);
+    let mut board = Board::new(zobrist_container);
     fen_to_pieces(&mut board, tokens[0])?;
     fen_to_active_color(&mut board, tokens[1])?;
     fen_to_castling(&mut board, tokens[2])?;

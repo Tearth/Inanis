@@ -1,4 +1,3 @@
-use crate::engine::see::SEEContainer;
 use crate::evaluation::material;
 use crate::evaluation::mobility;
 use crate::evaluation::mobility::MobilityAuxData;
@@ -348,11 +347,10 @@ fn load_positions(
     };
 
     let zobrist_container = Arc::new(ZobristContainer::default());
-    let see_container = Arc::new(SEEContainer::default());
 
     for line in BufReader::new(file).lines() {
         let position = line.unwrap();
-        let parsed_epd = fen::epd_to_board(position.as_str(), Some(zobrist_container.clone()), Some(see_container.clone()))?;
+        let parsed_epd = fen::epd_to_board(position.as_str(), Some(zobrist_container.clone()))?;
 
         if parsed_epd.comment.is_none() {
             return Err("Game result not found".to_string());

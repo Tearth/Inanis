@@ -2,7 +2,6 @@
 
 #[cfg(test)]
 mod see_tests {
-    use crate::see_tests::see::SEEContainer;
     use inanis::engine;
     use inanis::engine::see;
     use inanis::state::representation::Board;
@@ -19,12 +18,11 @@ mod see_tests {
             $(
                 #[test]
                 fn $name() {
-                    let board = Board::new_from_fen($fen, None, None).unwrap();
+                    let board = Board::new_from_fen($fen, None).unwrap();
 
                     let mut moves = [MaybeUninit::uninit(); engine::MAX_MOVES_COUNT];
                     let moves_count = board.get_all_moves(&mut moves, u64::MAX);
 
-                    let see = SEEContainer::default();
                     for move_index in 0..moves_count {
                         let r#move = unsafe { moves[move_index].assume_init() };
                         if r#move.to_long_notation() == $move {
@@ -33,7 +31,7 @@ mod see_tests {
                             let attackers = board.get_attacking_pieces(board.active_color ^ 1, r#move.get_to());
                             let defenders = board.get_attacking_pieces(board.active_color, r#move.get_to());
 
-                            assert_eq!($expected_result, see.get(attacking_piece, target_piece, attackers, defenders));
+                            assert_eq!($expected_result, see::get(attacking_piece, target_piece, attackers, defenders));
                             return;
                         }
                     }

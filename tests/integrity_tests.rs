@@ -8,7 +8,7 @@ mod integrity_tests {
             $(
                 #[test]
                 fn $name() {
-                    perft::normal::run($depth, &mut Board::new_from_fen($fen, None, None).unwrap(), true);
+                    perft::normal::run($depth, &mut Board::new_from_fen($fen, None).unwrap(), true);
                 }
             )*
         }

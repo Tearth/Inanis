@@ -1,4 +1,6 @@
-use inanis::{interface::terminal, state::movegen};
+use inanis::engine::see;
+use inanis::interface::terminal;
+use inanis::state::movegen;
 use std::env;
 
 /// Entry point of the Inanis engine.
@@ -7,6 +9,7 @@ pub fn main() {
     let target_features = get_target_features();
 
     movegen::init();
+    see::init();
 
     terminal::run(args, target_features);
 }

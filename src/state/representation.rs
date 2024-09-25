@@ -6,7 +6,6 @@ use super::zobrist::ZobristContainer;
 use super::*;
 use crate::cache::pawns::PawnHashTable;
 use crate::engine;
-use crate::engine::see::SEEContainer;
 use crate::engine::stats::SearchStatistics;
 use crate::evaluation::material;
 use crate::evaluation::mobility;
@@ -51,7 +50,6 @@ pub struct Board {
     pub state_stack: Vec<BoardState>,
     pub pawn_attacks: [u64; 2],
     pub zobrist: Arc<ZobristContainer>,
-    pub see: Arc<SEEContainer>,
 }
 
 #[derive(Clone)]
@@ -67,9 +65,8 @@ pub struct BoardState {
 
 impl Board {
     /// Constructs a new instance of [Board], using provided containers. If the parameter is [None], then the new container is created.
-    pub fn new(zobrist_container: Option<Arc<ZobristContainer>>, see_container: Option<Arc<SEEContainer>>) -> Self {
+    pub fn new(zobrist_container: Option<Arc<ZobristContainer>>) -> Self {
         let zobrist_container = zobrist_container.unwrap_or_else(|| Arc::new(Default::default()));
-        let see_container = see_container.unwrap_or_else(|| Arc::new(SEEContainer::default()));
 
         Board {
             pieces: [[0; 6], [0; 6]],
@@ -91,25 +88,24 @@ impl Board {
             state_stack: Vec::new(),
             pawn_attacks: [0; 2],
             zobrist: zobrist_container,
-            see: see_container,
         }
     }
 
     /// Constructs a new instance of [Board] with initial position, using provided containers. If the parameter is [None], then the new container is created.
-    pub fn new_initial_position(zobrist_container: Option<Arc<ZobristContainer>>, see_container: Option<Arc<SEEContainer>>) -> Self {
-        Board::new_from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", zobrist_container, see_container).unwrap()
+    pub fn new_initial_position(zobrist_container: Option<Arc<ZobristContainer>>) -> Self {
+        Board::new_from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", zobrist_container).unwrap()
     }
 
     /// Constructs a new instance of [Board] with position specified by `fen`, using provided containers. If the parameter is [None],
     /// then the new container is created. Returns [Err] with proper error message if `fen` couldn't be parsed correctly.
-    pub fn new_from_fen(fen: &str, zobrist_container: Option<Arc<ZobristContainer>>, see_container: Option<Arc<SEEContainer>>) -> Result<Self, String> {
-        fen::fen_to_board(fen, zobrist_container, see_container)
+    pub fn new_from_fen(fen: &str, zobrist_container: Option<Arc<ZobristContainer>>) -> Result<Self, String> {
+        fen::fen_to_board(fen, zobrist_container)
     }
 
     /// Constructs a new instance of [Board] with position specified by list of `moves`, using provided containers. If the parameter is [None],
     /// then the new container is created. Returns [Err] with proper error message is `moves` couldn't be parsed correctly.
-    pub fn new_from_moves(moves: &[&str], zobrist_container: Option<Arc<ZobristContainer>>, see_container: Option<Arc<SEEContainer>>) -> Result<Self, String> {
-        let mut board = Board::new_initial_position(zobrist_container, see_container);
+    pub fn new_from_moves(moves: &[&str], zobrist_container: Option<Arc<ZobristContainer>>) -> Result<Self, String> {
+        let mut board = Board::new_initial_position(zobrist_container);
         for premade_move in moves {
             let parsed_move = Move::from_long_notation(premade_move, &board)?;
             board.make_move(parsed_move);

@@ -7,7 +7,7 @@ mod fen_tests {
             $(
                 #[test]
                 fn $name() {
-                    assert_eq!($original_fen, Board::new_from_fen($original_fen, None, None).unwrap().to_fen());
+                    assert_eq!($original_fen, Board::new_from_fen($original_fen, None).unwrap().to_fen());
                 }
             )*
         }
