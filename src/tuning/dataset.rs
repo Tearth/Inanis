@@ -10,7 +10,6 @@ use crate::evaluation::material;
 use crate::evaluation::*;
 use crate::state::representation::Board;
 use crate::state::text::pgn::PGNLoader;
-use crate::state::zobrist::ZobristContainer;
 use crate::utils::rand;
 use std::collections::HashSet;
 use std::fs::File;
@@ -40,8 +39,6 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
     let mut output_positions = HashSet::new();
     let mut parsed_pgns = 0;
 
-    let zobrist_container = Arc::new(ZobristContainer::default());
-
     let transposition_table = Arc::new(TranspositionTable::new(1 * 1024 * 1024));
     let pawn_hashtable = Arc::new(PawnHashTable::new(1 * 1024 * 1024));
     let abort_flag = Arc::new(AtomicBool::new(false));
@@ -67,7 +64,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
 
         let board = match pgn.fen {
             Some(fen) => {
-                let fen_result = Board::new_from_fen(&fen, Some(zobrist_container.clone()));
+                let fen_result = Board::new_from_fen(&fen);
                 match fen_result {
                     Ok(board) => board,
                     Err(error) => {
@@ -76,7 +73,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
                     }
                 }
             }
-            None => Board::new_initial_position(Some(zobrist_container.clone())),
+            None => Board::new_initial_position(),
         };
 
         let mut context = SearchContext::new(

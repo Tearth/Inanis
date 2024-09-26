@@ -7,7 +7,6 @@ use crate::evaluation::pst::*;
 use crate::evaluation::safety;
 use crate::evaluation::*;
 use crate::state::text::fen;
-use crate::state::zobrist::ZobristContainer;
 use crate::state::*;
 use crate::utils::panic_fast;
 use crate::utils::rand;
@@ -346,11 +345,9 @@ fn load_positions(
         Err(error) => return Err(format!("Invalid EPD file: {}", error)),
     };
 
-    let zobrist_container = Arc::new(ZobristContainer::default());
-
     for line in BufReader::new(file).lines() {
         let position = line.unwrap();
-        let parsed_epd = fen::epd_to_board(position.as_str(), Some(zobrist_container.clone()))?;
+        let parsed_epd = fen::epd_to_board(position.as_str())?;
 
         if parsed_epd.comment.is_none() {
             return Err("Game result not found".to_string());

@@ -131,7 +131,7 @@ pub fn run() -> BenchmarkResult {
 
         rand::seed(584578);
 
-        let board = Board::new_from_fen(fen, None).unwrap();
+        let board = Board::new_from_fen(fen).unwrap();
         let mut context = SearchContext::new(
             board,
             Default::default(),

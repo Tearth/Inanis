@@ -7,7 +7,6 @@ use crate::engine::context::SearchContext;
 use crate::state::movescan::Move;
 use crate::state::representation::Board;
 use crate::state::text::fen;
-use crate::state::zobrist::ZobristContainer;
 use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
@@ -158,15 +157,13 @@ fn load_positions(epd_filename: &str) -> Result<Vec<TestPosition>, String> {
         Err(error) => return Err(format!("Invalid EPD file: {}", error)),
     };
 
-    let zobrist_container = Arc::new(ZobristContainer::default());
-
     for line in BufReader::new(file).lines() {
         let position = line.unwrap();
         if position.is_empty() {
             continue;
         }
 
-        let mut parsed_epd = fen::epd_to_board(position.as_str(), Some(zobrist_container.clone()))?;
+        let mut parsed_epd = fen::epd_to_board(position.as_str())?;
         let parsed_best_move = Move::from_short_notation(&parsed_epd.best_move.unwrap(), &mut parsed_epd.board)?;
         positions.push(TestPosition::new(parsed_epd.id.unwrap(), parsed_epd.board, parsed_best_move));
     }

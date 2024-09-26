@@ -33,11 +33,17 @@ macro_rules! rand_definition {
                 Bound::Unbounded => $max_value,
             };
 
-            if from == $min_value && to == $max_value {
-                rand_internal() as $type
-            } else {
-                (rand_internal() % (((to as i128) - (from as i128) + 1) as u64)) as $type + from
-            }
+            SEED.with(|state| {
+                let (value, seed) = rand(state.seed.get());
+                let result = if from == $min_value && to == $max_value {
+                    value as $type
+                } else {
+                    (value % (((to as i128) - (from as i128) + 1) as u64)) as $type + from
+                };
+
+                state.seed.set(seed);
+                result
+            })
         }
     };
 }
@@ -60,15 +66,12 @@ pub fn seed(seed: u64) {
     });
 }
 
-fn rand_internal() -> u64 {
-    // https://en.wikipedia.org/wiki/Xorshift#xorshift*
-    SEED.with(|state| {
-        let mut x = state.seed.get();
-        x ^= x >> 12;
-        x ^= x << 25;
-        x ^= x >> 27;
-        state.seed.set(x);
+/// https://en.wikipedia.org/wiki/Xorshift#xorshift*
+pub const fn rand(seed: u64) -> (u64, u64) {
+    let mut x = seed;
+    x ^= x >> 12;
+    x ^= x << 25;
+    x ^= x >> 27;
 
-        x.wrapping_mul(0x2545f4914f6cdd1d)
-    })
+    (x.wrapping_mul(0x2545f4914f6cdd1d), x)
 }

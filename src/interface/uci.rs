@@ -21,7 +21,6 @@ use std::sync::Arc;
 use std::sync::RwLock;
 use std::thread;
 use std::time::SystemTime;
-use zobrist::ZobristContainer;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
@@ -33,8 +32,6 @@ pub struct UciState {
     abort_flag: Arc<AtomicBool>,
     ponder_flag: Arc<AtomicBool>,
     debug_mode: bool,
-
-    zobrist_container: Arc<ZobristContainer>,
 }
 
 #[derive(Clone)]
@@ -73,14 +70,12 @@ impl UciOption {
 impl Default for UciState {
     /// Constructs a default instance of [UciState] with zeroed elements and hashtables with their default sizes.
     fn default() -> Self {
-        let zobrist_container = Arc::new(ZobristContainer::default());
-
         let abort_flag = Arc::new(AtomicBool::new(false));
         let ponder_flag = Arc::new(AtomicBool::new(false));
 
         UciState {
             context: Arc::new(RwLock::new(SearchContext::new(
-                Board::new_initial_position(Some(zobrist_container.clone())),
+                Board::new_initial_position(),
                 Default::default(),
                 Arc::new(TranspositionTable::new(1 * 1024 * 1024)),
                 Arc::new(PawnHashTable::new(1 * 1024 * 1024)),
@@ -94,8 +89,6 @@ impl Default for UciState {
             abort_flag,
             ponder_flag,
             debug_mode: false,
-
-            zobrist_container,
         }
     }
 }
@@ -586,7 +579,7 @@ fn handle_position(parameters: &[String], state: &UciState) {
     context_lock.board = match parameters[1].as_str() {
         "fen" => {
             let fen = parameters[2..].join(" ");
-            match Board::new_from_fen(fen.as_str(), Some(state.zobrist_container.clone())) {
+            match Board::new_from_fen(fen.as_str()) {
                 Ok(board) => board,
                 Err(error) => {
                     println!("info string Error: {}", error);
@@ -594,7 +587,7 @@ fn handle_position(parameters: &[String], state: &UciState) {
                 }
             }
         }
-        _ => Board::new_initial_position(Some(state.zobrist_container.clone())),
+        _ => Board::new_initial_position(),
     };
 
     if let Some(index) = parameters.iter().position(|s| s == "moves") {
@@ -686,7 +679,7 @@ fn handle_ucinewgame(state: &mut UciState) {
     let mut context_lock = state.context.write().unwrap();
 
     state.abort_flag.store(true, Ordering::Relaxed);
-    context_lock.board = Board::new_initial_position(Some(state.zobrist_container.clone()));
+    context_lock.board = Board::new_initial_position();
     drop(context_lock);
 
     recreate_state_tables(state);
@@ -714,9 +707,6 @@ fn recreate_state_tables(state: &mut UciState) {
     context_lock.killers_table = Default::default();
     context_lock.history_table = Default::default();
     context_lock.countermoves_table = Default::default();
-
-    // Reset Zobrist keys too, so each game will be slightly different
-    state.zobrist_container = Default::default();
 }
 
 /// Enables saving of crash files by setting a custom panic hook.
