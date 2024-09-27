@@ -192,25 +192,31 @@ pub fn init() {
 /// Gets a rook moves for the square specified by `square`, considering `occupancy_bb`.
 pub fn get_rook_moves(mut occupancy_bb: u64, square: usize) -> u64 {
     debug_assert!(square < 64);
+    unsafe {
+        let data = ROOK_SQUARES.get().unwrap_unchecked();
+        let data_square = data.get_unchecked(square);
 
-    let data = ROOK_SQUARES.get().unwrap();
-    occupancy_bb &= data[square].mask;
-    occupancy_bb = occupancy_bb.wrapping_mul(data[square].magic);
-    occupancy_bb >>= 64 - data[square].shift;
+        occupancy_bb &= data_square.mask;
+        occupancy_bb = occupancy_bb.wrapping_mul(data_square.magic);
+        occupancy_bb >>= 64 - data_square.shift;
 
-    data[square].attacks[occupancy_bb as usize]
+        *data_square.attacks.get_unchecked(occupancy_bb as usize)
+    }
 }
 
 /// Gets a bishop moves for the square specified by `square`, considering `occupancy_bb`.
 pub fn get_bishop_moves(mut occupancy_bb: u64, square: usize) -> u64 {
     debug_assert!(square < 64);
+    unsafe {
+        let data = BISHOP_SQUARES.get().unwrap_unchecked();
+        let data_square = data.get_unchecked(square);
 
-    let data = BISHOP_SQUARES.get().unwrap();
-    occupancy_bb &= data[square].mask;
-    occupancy_bb = occupancy_bb.wrapping_mul(data[square].magic);
-    occupancy_bb >>= 64 - data[square].shift;
+        occupancy_bb &= data_square.mask;
+        occupancy_bb = occupancy_bb.wrapping_mul(data_square.magic);
+        occupancy_bb >>= 64 - data_square.shift;
 
-    data[square].attacks[occupancy_bb as usize]
+        *data_square.attacks.get_unchecked(occupancy_bb as usize)
+    }
 }
 
 /// Gets a queen moves for the square specified by `square`, considering `occupancy_bb`.
