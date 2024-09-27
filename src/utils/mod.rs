@@ -46,6 +46,19 @@ macro_rules! panic_fast {
     });
 }
 
+macro_rules! assert_fast {
+    ($($arg:tt)*) => {
+        if cfg!(debug_assertions) {
+            debug_assert!($($arg)*);
+        } else {
+            if !($($arg)*) {
+                unsafe { std::hint::unreachable_unchecked() };
+            }
+        }
+    };
+}
+
+pub(crate) use assert_fast;
 pub(crate) use dev;
 pub(crate) use panic_fast;
 pub(crate) use param;

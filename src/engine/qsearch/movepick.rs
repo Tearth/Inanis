@@ -4,6 +4,7 @@ use crate::evaluation::*;
 use crate::state::movescan::Move;
 use crate::state::movescan::MoveFlags;
 use crate::state::*;
+use crate::utils::assert_fast;
 use std::mem::MaybeUninit;
 
 /// Assigns scores for `moves` by filling `move_scores` array with `moves_count` length, based on current `context`. Move ordering in
@@ -17,7 +18,7 @@ pub fn assign_move_scores(
     move_scores: &mut [MaybeUninit<i16>; MAX_MOVES_COUNT],
     moves_count: usize,
 ) {
-    debug_assert!(moves_count < MAX_MOVES_COUNT);
+    assert_fast!(moves_count < MAX_MOVES_COUNT);
 
     let mut attackers_cache = [0; 64];
     let mut defenders_cache = [0; 64];

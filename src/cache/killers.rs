@@ -1,5 +1,6 @@
 use crate::engine::*;
 use crate::state::movescan::Move;
+use crate::utils::assert_fast;
 use std::alloc;
 use std::alloc::Layout;
 use std::mem;
@@ -19,7 +20,7 @@ impl KillersTable {
     /// [KILLER_SLOTS] constant, and newer entries have always a priority over old ones. If there's already exactly the same
     /// move in the slot 0, the table is not changed.
     pub fn add(&mut self, ply: u16, r#move: Move) {
-        debug_assert!(r#move.is_some());
+        assert_fast!(r#move.is_some());
 
         if ply >= MAX_DEPTH as u16 || self.table[ply as usize][0].data == r#move {
             return;

@@ -4,6 +4,7 @@ use crate::engine::*;
 use crate::state::movescan::Move;
 use crate::tablebases::syzygy;
 use crate::tablebases::WdlResult;
+use crate::utils::assert_fast;
 use crate::utils::dev;
 use crate::utils::param;
 use context::SearchResultLine;
@@ -101,7 +102,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
     friendly_king_checked: bool,
     previous_move: Move,
 ) -> i16 {
-    debug_assert!(alpha <= beta);
+    assert_fast!(alpha <= beta);
 
     if context.abort_flag.load(Ordering::Relaxed) {
         return INVALID_SCORE;

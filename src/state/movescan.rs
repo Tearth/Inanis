@@ -4,6 +4,7 @@ use super::*;
 use crate::engine;
 use crate::evaluation::mobility::MobilityAuxData;
 use crate::evaluation::mobility::PieceMobility;
+use crate::utils::assert_fast;
 use crate::utils::bitflags::BitFlags;
 use crate::utils::bithelpers::BitHelpers;
 use crate::utils::panic_fast;
@@ -450,7 +451,7 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(
 /// Gets `PIECE` mobility (by counting all possible moves at the position specified by `board`) with `color` and increases `dangered_king_squares` if the enemy
 /// king is near to the squares included in the mobility.
 pub fn get_piece_mobility<const PIECE: usize>(board: &Board, color: usize, aux: &mut MobilityAuxData) -> PieceMobility {
-    debug_assert!(color < 2);
+    assert_fast!(color < 2);
 
     let mut pieces_bb = board.pieces[color][PIECE];
     let mut mobility_inner = 0;
@@ -460,18 +461,18 @@ pub fn get_piece_mobility<const PIECE: usize>(board: &Board, color: usize, aux: 
     let enemy_king_square = (board.pieces[enemy_color][KING]).bit_scan();
     let enemy_king_box_bb = patterns::get_box(enemy_king_square);
 
+    let mut occupancy_bb = board.occupancy[WHITE] | board.occupancy[BLACK];
+    occupancy_bb &= !match PIECE {
+        BISHOP => board.pieces[color][BISHOP] | board.pieces[color][QUEEN],
+        ROOK => board.pieces[color][ROOK] | board.pieces[color][QUEEN],
+        QUEEN => board.pieces[color][BISHOP] | board.pieces[color][ROOK] | board.pieces[color][QUEEN],
+        _ => 0,
+    };
+
     while pieces_bb != 0 {
         let from_bb = pieces_bb.get_lsb();
         let from = from_bb.bit_scan();
         pieces_bb = pieces_bb.pop_lsb();
-
-        let mut occupancy_bb = board.occupancy[WHITE] | board.occupancy[BLACK];
-        occupancy_bb &= !match PIECE {
-            BISHOP => board.pieces[color][BISHOP] | board.pieces[color][QUEEN],
-            ROOK => board.pieces[color][ROOK] | board.pieces[color][QUEEN],
-            QUEEN => board.pieces[color][BISHOP] | board.pieces[color][ROOK] | board.pieces[color][QUEEN],
-            _ => 0,
-        };
 
         let mut piece_moves_bb = match PIECE {
             KNIGHT => movegen::get_knight_moves(from),

@@ -2,6 +2,7 @@ use crate::engine::context::SearchContext;
 use crate::engine::*;
 use crate::state::movescan::Move;
 use crate::state::*;
+use crate::utils::assert_fast;
 use crate::utils::bithelpers::BitHelpers;
 use crate::utils::dev;
 use crate::utils::panic_fast;
@@ -65,12 +66,12 @@ pub fn get_next_move(
     quiet_moves_start_index: &mut usize,
     killer_moves_cache: &mut [MaybeUninit<Move>; 2],
 ) -> Option<(Move, i16)> {
-    debug_assert!(*move_index < MAX_MOVES_COUNT);
-    debug_assert!(move_index <= moves_count);
-    debug_assert!(move_number <= moves_count);
-    debug_assert!(*moves_count < MAX_MOVES_COUNT);
-    debug_assert!(*quiet_moves_start_index < MAX_MOVES_COUNT);
-    debug_assert!(quiet_moves_start_index <= moves_count);
+    assert_fast!(*move_index < MAX_MOVES_COUNT);
+    assert_fast!(move_index <= moves_count);
+    assert_fast!(move_number <= moves_count);
+    assert_fast!(*moves_count < MAX_MOVES_COUNT);
+    assert_fast!(*quiet_moves_start_index < MAX_MOVES_COUNT);
+    assert_fast!(quiet_moves_start_index <= moves_count);
 
     if matches!(*stage, MoveGenStage::HashMove | MoveGenStage::Captures | MoveGenStage::Killers | MoveGenStage::Counters | MoveGenStage::AllGenerated) {
         *move_index += 1;
@@ -255,9 +256,9 @@ fn assign_capture_scores(
     moves_count: usize,
     tt_move: Move,
 ) {
-    debug_assert!(start_index < MAX_MOVES_COUNT);
-    debug_assert!(start_index <= moves_count);
-    debug_assert!(start_index + moves_count < MAX_MOVES_COUNT);
+    assert_fast!(start_index < MAX_MOVES_COUNT);
+    assert_fast!(start_index <= moves_count);
+    assert_fast!(start_index + moves_count < MAX_MOVES_COUNT);
 
     let mut attackers_cache = [0; 64];
     let mut defenders_cache = [0; 64];
@@ -313,9 +314,9 @@ fn assign_quiet_scores(
     previous_move: Move,
     ply: u16,
 ) {
-    debug_assert!(start_index < MAX_MOVES_COUNT);
-    debug_assert!(start_index <= moves_count);
-    debug_assert!(start_index + moves_count < MAX_MOVES_COUNT);
+    assert_fast!(start_index < MAX_MOVES_COUNT);
+    assert_fast!(start_index <= moves_count);
+    assert_fast!(start_index + moves_count < MAX_MOVES_COUNT);
 
     let killer_moves = context.killers_table.get(ply);
     let countermove = context.countermoves_table.get(previous_move);

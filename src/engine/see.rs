@@ -1,4 +1,5 @@
 use crate::state::*;
+use crate::utils::assert_fast;
 use crate::utils::bithelpers::BitHelpers;
 use crate::utils::panic_fast;
 use std::alloc;
@@ -35,9 +36,9 @@ pub fn init() {
 
 /// Gets a result of the static exchange evaluation, based on `attacking_piece`, `target_piece`, `attackers` and `defenders`.
 pub fn get(attacking_piece: usize, target_piece: usize, attackers: usize, defenders: usize) -> i16 {
-    debug_assert!(attacking_piece <= 6);
-    debug_assert!(target_piece <= 6);
-    debug_assert!(attackers != 0);
+    assert_fast!(attacking_piece <= 6);
+    assert_fast!(target_piece <= 6);
+    assert_fast!(attackers != 0);
 
     let attacking_piece_index = get_see_piece_index(attacking_piece);
     let target_piece_index = get_see_piece_index(target_piece);
@@ -49,7 +50,7 @@ pub fn get(attacking_piece: usize, target_piece: usize, attackers: usize, defend
 
 /// Evaluates a static exchange evaluation result, based on `target_piece`, `attackers`, `defenders`.
 fn evaluate(target_piece: usize, attackers: usize, defenders: usize) -> i8 {
-    debug_assert!(target_piece <= 6);
+    assert_fast!(target_piece <= 6);
 
     if attackers == 0 {
         return 0;
@@ -63,7 +64,7 @@ fn evaluate(target_piece: usize, attackers: usize, defenders: usize) -> i8 {
 
 /// Recursive function called by `evaluate` to help evaluate a static exchange evaluation result.
 fn evaluate_internal(attacking_piece: usize, target_piece: usize, attackers: usize, defenders: usize) -> i8 {
-    debug_assert!(target_piece < 8);
+    assert_fast!(target_piece < 8);
 
     if attackers == 0 {
         return 0;
@@ -86,7 +87,7 @@ fn evaluate_internal(attacking_piece: usize, target_piece: usize, attackers: usi
 ///  - 1 queen (index 6)
 ///  - 1 king (index 7)
 fn get_see_piece_index(piece: usize) -> usize {
-    debug_assert!(piece < 6);
+    assert_fast!(piece < 6);
 
     match piece {
         PAWN => 0,
@@ -101,7 +102,7 @@ fn get_see_piece_index(piece: usize) -> usize {
 
 /// Gets a piece value based on `piece_index` saved in SEE format (look `get_see_piece_index`).
 fn get_piece_value(piece_index: usize) -> i8 {
-    debug_assert!(piece_index < 8);
+    assert_fast!(piece_index < 8);
 
     match piece_index {
         0 => SEE_PAWN_VALUE,            // Pawn

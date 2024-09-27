@@ -15,6 +15,7 @@ use crate::evaluation::pst::*;
 use crate::evaluation::safety;
 use crate::evaluation::*;
 use crate::tablebases;
+use crate::utils::assert_fast;
 use crate::utils::bitflags::BitFlags;
 use crate::utils::bithelpers::BitHelpers;
 use crate::utils::panic_fast;
@@ -118,7 +119,7 @@ impl Board {
     ///  - increase halfmove clock if needed
     ///  - switch active color
     pub fn make_move(&mut self, r#move: Move) {
-        debug_assert!(!r#move.is_empty());
+        assert_fast!(!r#move.is_empty());
         self.push_state();
 
         let color = self.active_color;
@@ -354,7 +355,7 @@ impl Board {
     ///  - switch active color
     ///  - restore halfmove clock, castling rights, en passant bitboard, board hash and pawn hash
     pub fn undo_move(&mut self, r#move: Move) {
-        debug_assert!(!r#move.is_empty());
+        assert_fast!(!r#move.is_empty());
 
         let color = self.active_color ^ 1;
         let enemy_color = self.active_color;
@@ -486,8 +487,8 @@ impl Board {
 
     /// Checks if the square specified by `square` is attacked by enemy, from the `color` perspective.
     pub fn is_square_attacked(&self, color: usize, square: usize) -> bool {
-        debug_assert!(color < 2);
-        debug_assert!(square < 64);
+        assert_fast!(color < 2);
+        assert_fast!(square < 64);
 
         let enemy_color = color ^ 1;
         let occupancy_bb = self.occupancy[WHITE] | self.occupancy[BLACK];
@@ -526,7 +527,7 @@ impl Board {
 
     /// Checks if any of the square specified by `squares` list is attacked by enemy, from the `color` perspective.
     pub fn are_squares_attacked(&self, color: usize, squares: &[usize]) -> bool {
-        debug_assert!(color < 2);
+        assert_fast!(color < 2);
         squares.iter().any(|square| self.is_square_attacked(color, *square))
     }
 
@@ -537,8 +538,8 @@ impl Board {
     ///  - bit 6 - Queen
     ///  - bit 7 - King
     pub fn get_attacking_pieces(&self, color: usize, square: usize) -> usize {
-        debug_assert!(color < 2);
-        debug_assert!(square < 64);
+        assert_fast!(color < 2);
+        assert_fast!(square < 64);
 
         let mut result = 0;
         let enemy_color = color ^ 1;
@@ -587,7 +588,7 @@ impl Board {
 
     /// Check if the king of the `color` side is checked.
     pub fn is_king_checked(&self, color: usize) -> bool {
-        debug_assert!(color < 2);
+        assert_fast!(color < 2);
 
         if self.pieces[color][KING] == 0 {
             return false;
@@ -598,7 +599,7 @@ impl Board {
 
     /// Gets piece on the square specified by `square`.
     pub fn get_piece(&self, square: usize) -> usize {
-        debug_assert!(square < 64);
+        assert_fast!(square < 64);
 
         let piece = self.piece_table[square];
         if piece == u8::MAX {
@@ -610,7 +611,7 @@ impl Board {
 
     /// Gets piece's color on the square specified by `square`. Returns `u8::MAX` if there is no piece there.
     pub fn get_piece_color(&self, square: usize) -> usize {
-        debug_assert!(square < 64);
+        assert_fast!(square < 64);
 
         let piece = self.piece_table[square];
         if piece == u8::MAX {
@@ -622,9 +623,9 @@ impl Board {
 
     /// Adds `piece` on the `square` with the specified `color`, also updates occupancy and incremental values.
     pub fn add_piece<const UNDO: bool>(&mut self, color: usize, piece: usize, mut square: usize) {
-        debug_assert!(color < 2);
-        debug_assert!(piece < 6);
-        debug_assert!(square < 64);
+        assert_fast!(color < 2);
+        assert_fast!(piece < 6);
+        assert_fast!(square < 64);
 
         self.pieces[color][piece] |= 1u64 << square;
         self.occupancy[color] |= 1u64 << square;
@@ -646,9 +647,9 @@ impl Board {
 
     /// Removes `piece` on the `square` with the specified `color`, also updates occupancy and incremental values.
     pub fn remove_piece<const UNDO: bool>(&mut self, color: usize, piece: usize, mut square: usize) {
-        debug_assert!(color < 2);
-        debug_assert!(piece < 6);
-        debug_assert!(square < 64);
+        assert_fast!(color < 2);
+        assert_fast!(piece < 6);
+        assert_fast!(square < 64);
 
         self.pieces[color][piece] &= !(1u64 << square);
         self.occupancy[color] &= !(1u64 << square);
@@ -670,10 +671,10 @@ impl Board {
 
     /// Moves `piece` from the square specified by `from` to the square specified by `to` with the specified `color`, also updates occupancy and incremental values.
     pub fn move_piece<const UNDO: bool>(&mut self, color: usize, piece: usize, mut from: usize, mut to: usize) {
-        debug_assert!(color < 2);
-        debug_assert!(piece < 6);
-        debug_assert!(from < 64);
-        debug_assert!(to < 64);
+        assert_fast!(color < 2);
+        assert_fast!(piece < 6);
+        assert_fast!(from < 64);
+        assert_fast!(to < 64);
 
         self.pieces[color][piece] ^= (1u64 << from) | (1u64 << to);
         self.occupancy[color] ^= (1u64 << from) | (1u64 << to);
@@ -704,7 +705,7 @@ impl Board {
 
     /// Recalculate pawn attacks for the specific `color`.
     pub fn recalculate_pawn_attacks(&mut self, color: usize) {
-        debug_assert!(color < 2);
+        assert_fast!(color < 2);
 
         let pawns_bb = self.pieces[color][PAWN];
         self.pawn_attacks[color] = match color {
@@ -717,7 +718,7 @@ impl Board {
     /// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position, using `pawn_hashtable` to store pawn
     /// evaluations and `statistics` to gather diagnostic data. Returns score from the `color` perspective (more than 0 when advantage, less than 0 when disadvantage).
     pub fn evaluate(&self, color: usize, pawn_hashtable: &PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
-        debug_assert!(color < 2);
+        assert_fast!(color < 2);
 
         let mut white_aux = MobilityAuxData::default();
         let mut black_aux = MobilityAuxData::default();
@@ -737,7 +738,7 @@ impl Board {
     /// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position.
     /// Returns score from the `color` perspective (more than 0 when advantage, less than 0 when disadvantage).
     pub fn evaluate_without_cache(&self, color: usize) -> i16 {
-        debug_assert!(color < 2);
+        assert_fast!(color < 2);
 
         let mut white_aux = MobilityAuxData::default();
         let mut black_aux = MobilityAuxData::default();
@@ -757,7 +758,7 @@ impl Board {
     /// Runs lazy (fast) evaluations, considering only material and piece-square tables. Returns score from the `color` perspective (more than 0 when
     /// advantage, less than 0 when disadvantage).
     pub fn evaluate_lazy(&self, color: usize) -> i16 {
-        debug_assert!(color < 2);
+        assert_fast!(color < 2);
 
         let evaluation = material::evaluate(self) + pst::evaluate(self);
         let sign = -((color as i16) * 2 - 1);

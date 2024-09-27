@@ -1,5 +1,5 @@
 use super::*;
-use crate::state::movescan::Move;
+use crate::{state::movescan::Move, utils::assert_fast};
 use std::mem::MaybeUninit;
 
 /// Performs a selection sort on `moves` and `move_scores` arrays with the length specified in `moves_count`, starting from `start_index`.
@@ -10,9 +10,9 @@ pub fn sort_next_move(
     start_index: usize,
     moves_count: usize,
 ) -> (Move, i16) {
-    debug_assert!(start_index < MAX_MOVES_COUNT);
-    debug_assert!(start_index <= moves_count);
-    debug_assert!(start_index + moves_count < MAX_MOVES_COUNT);
+    assert_fast!(start_index < MAX_MOVES_COUNT);
+    assert_fast!(start_index <= moves_count);
+    assert_fast!(start_index + moves_count < MAX_MOVES_COUNT);
 
     let mut best_score = unsafe { move_scores[start_index].assume_init() };
     let mut best_index = start_index;

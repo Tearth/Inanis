@@ -1,3 +1,5 @@
+use crate::utils::assert_fast;
+
 use super::*;
 
 pub const DIAGONAL_PATTERS: [u64; 64] = generate_diagonals();
@@ -18,7 +20,7 @@ pub const FRONT_PATTERS: [[u64; 64]; 2] = generate_fronts();
 /// . . . x . . . .
 /// ```
 pub fn get_file(square: usize) -> u64 {
-    debug_assert!(square < 64);
+    assert_fast!(square < 64);
     FILE_H_BB << (square % 8)
 }
 
@@ -34,7 +36,7 @@ pub fn get_file(square: usize) -> u64 {
 /// . . . . . . . .
 /// ```
 pub fn get_rank(square: usize) -> u64 {
-    debug_assert!(square < 64);
+    assert_fast!(square < 64);
     RANK_1_BB << ((square / 8) * 8)
 }
 
@@ -50,7 +52,7 @@ pub fn get_rank(square: usize) -> u64 {
 /// x . . . . . x .
 /// ```
 pub fn get_diagonals(square: usize) -> u64 {
-    debug_assert!(square < 64);
+    assert_fast!(square < 64);
     DIAGONAL_PATTERS[square]
 }
 
@@ -66,7 +68,7 @@ pub fn get_diagonals(square: usize) -> u64 {
 /// . . . . . . . .
 /// ```
 pub fn get_jumps(square: usize) -> u64 {
-    debug_assert!(square < 64);
+    assert_fast!(square < 64);
     JUMP_PATTERS[square]
 }
 
@@ -82,7 +84,7 @@ pub fn get_jumps(square: usize) -> u64 {
 /// . . . . . . . .
 /// ```
 pub fn get_box(square: usize) -> u64 {
-    debug_assert!(square < 64);
+    assert_fast!(square < 64);
     BOX_PATTERS[square]
 }
 
@@ -98,7 +100,7 @@ pub fn get_box(square: usize) -> u64 {
 /// . . x . x . . .
 /// ```
 pub fn get_rail(file: usize) -> u64 {
-    debug_assert!(file < 8);
+    assert_fast!(file < 8);
     RAIL_PATTERS[file]
 }
 
@@ -114,8 +116,8 @@ pub fn get_rail(file: usize) -> u64 {
 /// . . . . . . . .
 /// ```
 pub fn get_front(color: usize, square: usize) -> u64 {
-    debug_assert!(color < 2);
-    debug_assert!(square < 64);
+    assert_fast!(color < 2);
+    assert_fast!(square < 64);
     FRONT_PATTERS[color][square]
 }
 

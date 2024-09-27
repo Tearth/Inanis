@@ -1,6 +1,7 @@
 use crate::engine::context::SearchContext;
 use crate::engine::*;
 use crate::state::*;
+use crate::utils::assert_fast;
 use crate::utils::dev;
 use crate::utils::param;
 use qsearch::movepick;
@@ -17,7 +18,7 @@ use std::mem::MaybeUninit;
 ///     - score pruning
 ///     - futility pruning (<https://www.chessprogramming.org/Delta_Pruning>)
 pub fn run(context: &mut SearchContext, ply: u16, mut alpha: i16, beta: i16) -> i16 {
-    debug_assert!(alpha <= beta);
+    assert_fast!(alpha <= beta);
 
     context.statistics.q_nodes_count += 1;
     context.statistics.max_ply = cmp::max(ply, context.statistics.max_ply);

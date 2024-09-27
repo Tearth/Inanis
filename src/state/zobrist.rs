@@ -1,6 +1,7 @@
 use super::representation::Board;
 use super::representation::CastlingRights;
 use super::*;
+use crate::utils::assert_fast;
 use crate::utils::bitflags::BitFlags;
 use crate::utils::bithelpers::BitHelpers;
 use crate::utils::rand;
@@ -73,9 +74,9 @@ pub const fn generate_active_color_hash() -> u64 {
 
 /// Gets `piece` hash with the `color` for the square specified by `square`.
 pub fn get_piece_hash(color: usize, piece: usize, square: usize) -> u64 {
-    debug_assert!(color < 2);
-    debug_assert!(piece < 6);
-    debug_assert!(square < 64);
+    assert_fast!(color < 2);
+    assert_fast!(piece < 6);
+    assert_fast!(square < 64);
 
     PIECE_HASHES[color][piece][square]
 }
@@ -91,7 +92,7 @@ pub fn get_castling_right_hash(current: u8, right: u8) -> u64 {
 
 /// Gets en passant hash for the `file`.
 pub fn get_en_passant_hash(file: usize) -> u64 {
-    debug_assert!(file < 8);
+    assert_fast!(file < 8);
     EN_PASSANT_HASHES[file]
 }
 

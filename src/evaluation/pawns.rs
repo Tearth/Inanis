@@ -3,7 +3,7 @@ use crate::cache::pawns::PawnHashTable;
 use crate::engine::stats::SearchStatistics;
 use crate::state::representation::Board;
 use crate::utils::bithelpers::BitHelpers;
-use crate::utils::dev;
+use crate::utils::{assert_fast, dev};
 use std::cmp;
 
 #[cfg(feature = "dev")]
@@ -57,7 +57,7 @@ pub fn evaluate_without_cache(board: &Board) -> PackedEval {
 
 /// Evaluates pawn structure on the `board` for the specified `color`.
 fn evaluate_color(board: &Board, color: usize) -> PackedEval {
-    debug_assert!(color < 2);
+    assert_fast!(color < 2);
 
     let mut result = PackedEval::default();
     let pawns_data = get_pawns_data(board, color);
@@ -74,7 +74,7 @@ fn evaluate_color(board: &Board, color: usize) -> PackedEval {
 
 /// Gets all pawn features on `board` for `color`.
 fn get_pawns_data(board: &Board, color: usize) -> PawnsData {
-    debug_assert!(color < 2);
+    assert_fast!(color < 2);
 
     let mut doubled_pawns = 0;
     let mut isolated_pawns = 0;

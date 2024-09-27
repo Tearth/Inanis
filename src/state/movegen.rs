@@ -1,6 +1,6 @@
 use super::*;
 use crate::utils::bithelpers::BitHelpers;
-use crate::utils::rand;
+use crate::utils::{assert_fast, rand};
 use std::sync::OnceLock;
 
 #[rustfmt::skip]
@@ -191,32 +191,28 @@ pub fn init() {
 
 /// Gets a rook moves for the square specified by `square`, considering `occupancy_bb`.
 pub fn get_rook_moves(mut occupancy_bb: u64, square: usize) -> u64 {
-    debug_assert!(square < 64);
-    unsafe {
-        let data = ROOK_SQUARES.get().unwrap_unchecked();
-        let data_square = data.get_unchecked(square);
+    assert_fast!(square < 64);
 
-        occupancy_bb &= data_square.mask;
-        occupancy_bb = occupancy_bb.wrapping_mul(data_square.magic);
-        occupancy_bb >>= 64 - data_square.shift;
+    let data = unsafe { ROOK_SQUARES.get().unwrap_unchecked() };
+    occupancy_bb &= data[square].mask;
+    occupancy_bb = occupancy_bb.wrapping_mul(data[square].magic);
+    occupancy_bb >>= data[square].shift;
 
-        *data_square.attacks.get_unchecked(occupancy_bb as usize)
-    }
+    assert_fast!(occupancy_bb < data[square].attacks.len() as u64);
+    data[square].attacks[occupancy_bb as usize]
 }
 
 /// Gets a bishop moves for the square specified by `square`, considering `occupancy_bb`.
 pub fn get_bishop_moves(mut occupancy_bb: u64, square: usize) -> u64 {
-    debug_assert!(square < 64);
-    unsafe {
-        let data = BISHOP_SQUARES.get().unwrap_unchecked();
-        let data_square = data.get_unchecked(square);
+    assert_fast!(square < 64);
 
-        occupancy_bb &= data_square.mask;
-        occupancy_bb = occupancy_bb.wrapping_mul(data_square.magic);
-        occupancy_bb >>= 64 - data_square.shift;
+    let data = unsafe { BISHOP_SQUARES.get().unwrap_unchecked() };
+    occupancy_bb &= data[square].mask;
+    occupancy_bb = occupancy_bb.wrapping_mul(data[square].magic);
+    occupancy_bb >>= data[square].shift;
 
-        *data_square.attacks.get_unchecked(occupancy_bb as usize)
-    }
+    assert_fast!(occupancy_bb < data[square].attacks.len() as u64);
+    data[square].attacks[occupancy_bb as usize]
 }
 
 /// Gets a queen moves for the square specified by `square`, considering `occupancy_bb`.
@@ -236,7 +232,7 @@ pub fn get_king_moves(square: usize) -> u64 {
 
 /// Generates a rook magic number for the square specified by `square`.
 pub fn generate_rook_magic_number(square: usize) -> u64 {
-    debug_assert!(square < 64);
+    assert_fast!(square < 64);
 
     let shift = ROOK_SHIFTS[square];
     let mask = get_rook_mask(square);
@@ -258,7 +254,7 @@ pub fn generate_rook_magic_number(square: usize) -> u64 {
 
 /// Generates a bishop magic number for the square specified by `square`.
 pub fn generate_bishop_magic_number(square: usize) -> u64 {
-    debug_assert!(square < 64);
+    assert_fast!(square < 64);
 
     let shift = BISHOP_SHIFTS[square];
     let mask = get_bishop_mask(square);
@@ -312,7 +308,7 @@ fn generate_magic_number(shift: u8, permutations: &[u64], attacks: &[u64]) -> u6
 
 /// Applies rook magic for the square specified by `square`, using built-in magic number from [ROOK_MAGIC_NUMBERS].
 fn apply_rook_magic(rook_squares: &mut [MagicSquare; 64], square: usize) {
-    debug_assert!(square < 64);
+    assert_fast!(square < 64);
 
     let shift = ROOK_SHIFTS[square];
     let mask = get_rook_mask(square);
@@ -329,7 +325,7 @@ fn apply_rook_magic(rook_squares: &mut [MagicSquare; 64], square: usize) {
     }
 
     let magic = ROOK_MAGIC_NUMBERS[square];
-    rook_squares[square].shift = shift;
+    rook_squares[square].shift = 64 - shift;
     rook_squares[square].mask = mask;
     rook_squares[square].magic = magic;
     rook_squares[square].attacks = apply_magic_for_square(&permutations, &attacks, magic, shift);
@@ -337,7 +333,7 @@ fn apply_rook_magic(rook_squares: &mut [MagicSquare; 64], square: usize) {
 
 /// Applies bishop magic for the square specified by `square`, using built-in magic number from [BISHOP_MAGIC_NUMBERS].
 fn apply_bishop_magic(bishop_squares: &mut [MagicSquare; 64], square: usize) {
-    debug_assert!(square < 64);
+    assert_fast!(square < 64);
 
     let shift = BISHOP_SHIFTS[square];
     let mask = get_bishop_mask(square);
@@ -354,7 +350,7 @@ fn apply_bishop_magic(bishop_squares: &mut [MagicSquare; 64], square: usize) {
     }
 
     let magic = BISHOP_MAGIC_NUMBERS[square];
-    bishop_squares[square].shift = shift;
+    bishop_squares[square].shift = 64 - shift;
     bishop_squares[square].mask = mask;
     bishop_squares[square].magic = magic;
     bishop_squares[square].attacks = apply_magic_for_square(&permutations, &attacks, magic, shift);
@@ -370,7 +366,7 @@ fn apply_magic_for_square(permutations: &[u64], attacks: &[u64], magic: u64, shi
         let permutation_attacks = attacks[index as usize];
         let hash = permutation.wrapping_mul(magic) >> (64 - shift);
 
-        debug_assert!(result[hash as usize] == 0);
+        assert_fast!(result[hash as usize] == 0);
         result[hash as usize] = permutation_attacks;
     }
 
@@ -405,7 +401,7 @@ fn get_bishop_mask(square: usize) -> u64 {
 
 /// Gets a rook attacks for the square specified by `square`, considering `occupancy_bb`.
 fn get_rook_attacks(occupancy_bb: u64, square: usize) -> u64 {
-    debug_assert!(square < 64);
+    assert_fast!(square < 64);
 
     let left = get_attacks(occupancy_bb, square, (-1, 0));
     let right = get_attacks(occupancy_bb, square, (1, 0));
@@ -417,7 +413,7 @@ fn get_rook_attacks(occupancy_bb: u64, square: usize) -> u64 {
 
 /// Gets a bishop attacks for the square specified by `square`, occupancy `occupancy_bb`.
 fn get_bishop_attacks(occupancy_bb: u64, square: usize) -> u64 {
-    debug_assert!(square < 64);
+    assert_fast!(square < 64);
 
     let top_right = get_attacks(occupancy_bb, square, (1, 1));
     let top_left = get_attacks(occupancy_bb, square, (1, -1));
@@ -430,9 +426,9 @@ fn get_bishop_attacks(occupancy_bb: u64, square: usize) -> u64 {
 /// Helper function to get all possible to move squares, considering `occupancy_bb`, starting from the square
 /// specified by `square` and going into the `direction`.
 fn get_attacks(occupancy_bb: u64, square: usize, direction: (isize, isize)) -> u64 {
-    debug_assert!(square < 64);
-    debug_assert!(direction.0 >= -1 && direction.0 <= 1);
-    debug_assert!(direction.1 >= -1 && direction.1 <= 1);
+    assert_fast!(square < 64);
+    assert_fast!(direction.0 >= -1 && direction.0 <= 1);
+    assert_fast!(direction.1 >= -1 && direction.1 <= 1);
 
     let mut result = 0u64;
     let mut current = ((square as isize) % 8 + direction.0, (square as isize) / 8 + direction.1);

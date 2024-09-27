@@ -1,3 +1,4 @@
+use crate::utils::assert_fast;
 use crate::utils::percent;
 use std::mem;
 use std::sync::atomic::AtomicI16;
@@ -38,6 +39,7 @@ impl PawnHashTable {
     pub fn add(&self, hash: u64, score_opening: i16, score_ending: i16) {
         let key = self.get_key(hash);
         let index = self.get_index(hash);
+        assert_fast!(index < self.table.len());
 
         self.table[index].set_data(key, score_opening, score_ending);
     }
@@ -45,6 +47,8 @@ impl PawnHashTable {
     /// Gets a wanted entry using `hash` to calculate an index. Returns [None] if `hash` is incompatible with the stored key.
     pub fn get(&self, hash: u64) -> Option<PawnHashTableResult> {
         let index = self.get_index(hash);
+        assert_fast!(index < self.table.len());
+
         let entry = &self.table[index];
         let entry_data = entry.get_data();
 

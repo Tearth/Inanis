@@ -65,10 +65,12 @@ impl PackedEval {
     /// Gets tuner coefficients for opening and ending score, constrained by `min`, `min_init`, `max_init` and `max`. Additionally, `offset` is added to each score.
     #[cfg(feature = "dev")]
     pub fn to_tuner_params(&self, min: i16, min_init: i16, max_init: i16, max: i16, offset: i16) -> [TunerParameter; 2] {
-        debug_assert!(min <= max);
-        debug_assert!(min_init <= max_init);
-        debug_assert!(min_init >= min && min_init <= max);
-        debug_assert!(max_init >= min && max_init <= max);
+        use crate::utils::assert_fast;
+
+        assert_fast!(min <= max);
+        assert_fast!(min_init <= max_init);
+        assert_fast!(min_init >= min && min_init <= max);
+        assert_fast!(max_init >= min && max_init <= max);
 
         [
             TunerParameter::new(self.get_opening() + offset, min, min_init, max_init, max),

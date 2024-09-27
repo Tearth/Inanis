@@ -1,6 +1,7 @@
 use super::*;
 use crate::evaluation;
 use crate::state::representation::Board;
+use crate::utils::assert_fast;
 use crate::utils::bithelpers::BitHelpers;
 
 #[cfg(feature = "dev")]
@@ -72,9 +73,9 @@ pub fn recalculate_incremental_values(board: &mut Board) {
 
 /// Gets a PST value for the specified `color`, `piece`, `phase` and `square`.
 pub fn get_pst_value(piece: usize, king_square: usize, square: usize) -> PackedEval {
-    debug_assert!(piece < 6);
-    debug_assert!(king_square < 64);
-    debug_assert!(square < 64);
+    assert_fast!(piece < 6);
+    assert_fast!(king_square < 64);
+    assert_fast!(square < 64);
 
     let pst = match piece {
         PAWN => &pst::PAWN_PST_PATTERN,
@@ -93,7 +94,7 @@ pub fn get_pst_value(piece: usize, king_square: usize, square: usize) -> PackedE
 /// Similarly, their indices (starting from `index`) are inserted into `indices`.
 #[cfg(feature = "dev")]
 pub fn get_coefficients(board: &Board, piece: usize, index: &mut u16, coefficients: &mut Vec<TunerCoefficient>, indices: &mut Vec<u16>) {
-    debug_assert!(piece < 6);
+    assert_fast!(piece < 6);
 
     for bucket in 0..KING_BUCKETS_COUNT {
         let valid_for_white = bucket == KING_BUCKETS[63 - board.pieces[WHITE][KING].bit_scan()];

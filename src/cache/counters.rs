@@ -1,4 +1,5 @@
 use crate::state::movescan::Move;
+use crate::utils::assert_fast;
 use std::alloc;
 use std::alloc::Layout;
 use std::mem;
@@ -14,14 +15,19 @@ pub struct CountermovesTableEntry {
 impl CountermovesTable {
     /// Adds countermove `r#move` as response to `previous_move`.
     pub fn add(&mut self, previous_move: Move, r#move: Move) {
-        debug_assert!(previous_move.is_some());
-        debug_assert!(r#move.is_some());
+        assert_fast!(previous_move.is_some());
+        assert_fast!(r#move.is_some());
+        assert_fast!(previous_move.get_from() < 64);
+        assert_fast!(previous_move.get_to() < 64);
 
         self.table[previous_move.get_from()][previous_move.get_to()].r#move = r#move;
     }
 
     /// Gets countermove for `previous_move`.
     pub fn get(&self, previous_move: Move) -> Move {
+        assert_fast!(previous_move.get_from() < 64);
+        assert_fast!(previous_move.get_to() < 64);
+
         self.table[previous_move.get_from()][previous_move.get_to()].r#move
     }
 }

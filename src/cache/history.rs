@@ -1,3 +1,4 @@
+use crate::utils::assert_fast;
 use crate::utils::divceil::DivCeil;
 use std::alloc;
 use std::alloc::Layout;
@@ -18,8 +19,8 @@ pub struct HistoryTableEntry {
 impl HistoryTable {
     /// Increases `[from][to]` history slot value based on `depth`.
     pub fn add(&mut self, from: usize, to: usize, depth: u8) {
-        debug_assert!(from < 64);
-        debug_assert!(to < 64);
+        assert_fast!(from < 64);
+        assert_fast!(to < 64);
 
         let entry = &mut self.table[from][to];
         let value = (depth as u32).pow(2);
@@ -31,8 +32,8 @@ impl HistoryTable {
 
     /// Punishes `[from][to]` history slot value based on `depth`.
     pub fn punish(&mut self, from: usize, to: usize, depth: u8) {
-        debug_assert!(from < 64);
-        debug_assert!(to < 64);
+        assert_fast!(from < 64);
+        assert_fast!(to < 64);
 
         let entry = &mut self.table[from][to];
         let value = depth as u32;
@@ -46,8 +47,8 @@ impl HistoryTable {
 
     /// Gets `[from][to]` history slot value, relative to `max`.
     pub fn get(&self, from: usize, to: usize, max: u8) -> u8 {
-        debug_assert!(from < 64);
-        debug_assert!(to < 64);
+        assert_fast!(from < 64);
+        assert_fast!(to < 64);
 
         (self.table[from][to].data * (max as u32)).div_ceil_stable(self.max) as u8
     }

@@ -4,6 +4,7 @@ use crate::state::representation::Board;
 
 #[cfg(feature = "dev")]
 use crate::tuning::tuner::TunerCoefficient;
+use crate::utils::assert_fast;
 
 pub struct MobilityData {
     knight_mobility: PieceMobility,
@@ -45,7 +46,7 @@ pub fn evaluate(board: &Board, white_aux: &mut MobilityAuxData, black_aux: &mut 
 }
 
 fn get_mobility_data(board: &Board, color: usize, aux: &mut MobilityAuxData) -> MobilityData {
-    debug_assert!(color < 2);
+    assert_fast!(color < 2);
 
     MobilityData {
         knight_mobility: movescan::get_piece_mobility::<KNIGHT>(board, color, aux),

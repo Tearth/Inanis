@@ -1,6 +1,7 @@
 use crate::engine;
 use crate::state::movescan::Move;
 use crate::state::representation::Board;
+use crate::utils::assert_fast;
 use crate::utils::percent;
 use std::mem;
 use std::sync::atomic::AtomicU64;
@@ -61,10 +62,12 @@ impl TranspositionTable {
     ///
     /// This function takes care of converting mate `score` using passed `ply`.
     pub fn add(&self, hash: u64, mut score: i16, best_move: Move, depth: i8, ply: u16, r#type: u8, age: u8) {
-        debug_assert!(r#type == 1 || r#type == 2 || r#type == 4);
+        assert_fast!(r#type == 1 || r#type == 2 || r#type == 4);
 
         let key = self.get_key(hash);
         let index = self.get_index(hash);
+
+        assert_fast!(index < self.table.len());
         let bucket = &self.table[index];
 
         let mut smallest_depth = i8::MAX;
@@ -109,6 +112,7 @@ impl TranspositionTable {
             }
         }
 
+        assert_fast!(desired_index < bucket.entries.len());
         bucket.entries[desired_index].set_data(key, score, best_move, depth, r#type, age);
     }
 
@@ -117,6 +121,8 @@ impl TranspositionTable {
     pub fn get(&self, hash: u64, ply: u16) -> Option<TranspositionTableResult> {
         let key = self.get_key(hash);
         let index = self.get_index(hash);
+
+        assert_fast!(index < self.table.len());
         let bucket = &self.table[index];
 
         for entry in &bucket.entries {
@@ -254,7 +260,7 @@ impl TranspositionTableEntry {
 
     /// Converts `key`, `score`, `best_move`, `depth`, `r#type` and `age` into an atomic word, and stores it.
     pub fn set_data(&self, key: u16, score: i16, best_move: Move, depth: i8, r#type: u8, age: u8) {
-        debug_assert!(r#type == 1 || r#type == 2 || r#type == 4);
+        assert_fast!(r#type == 1 || r#type == 2 || r#type == 4);
 
         let key_data = 0
             | (key as u64)
