@@ -87,6 +87,7 @@ pub fn get_pst_value(piece: usize, king_square: usize, square: usize) -> PackedE
         _ => panic_fast!("Invalid value: piece={}", piece),
     };
 
+    assert_fast!(KING_BUCKETS[63 - king_square] < KING_BUCKETS_COUNT);
     pst[KING_BUCKETS[63 - king_square]][63 - square]
 }
 

@@ -7,7 +7,6 @@ use std::mem::MaybeUninit;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
-use std::u64;
 
 /// Entry point of the fixed-`depth` fast perft, which uses both hashtable (with size specified in `hashtable_size`) and multithreading (with `threads_count` threads).
 /// Returns calculated nodes count as the first value, and approximated hashtable usage as the second value.

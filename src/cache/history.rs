@@ -49,6 +49,8 @@ impl HistoryTable {
     pub fn get(&self, from: usize, to: usize, max: u8) -> u8 {
         assert_fast!(from < 64);
         assert_fast!(to < 64);
+        assert_fast!(max > 0);
+        assert_fast!(self.max > 0);
 
         (self.table[from][to].data * (max as u32)).div_ceil_stable(self.max) as u8
     }

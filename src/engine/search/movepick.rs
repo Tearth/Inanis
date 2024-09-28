@@ -67,11 +67,12 @@ pub fn get_next_move(
     killer_moves_cache: &mut [MaybeUninit<Move>; 2],
 ) -> Option<(Move, i16)> {
     assert_fast!(*move_index < MAX_MOVES_COUNT);
-    assert_fast!(move_index <= moves_count);
-    assert_fast!(move_number <= moves_count);
+    assert_fast!(*move_index <= *moves_count);
+    assert_fast!(*move_number <= *moves_count);
     assert_fast!(*moves_count < MAX_MOVES_COUNT);
     assert_fast!(*quiet_moves_start_index < MAX_MOVES_COUNT);
-    assert_fast!(quiet_moves_start_index <= moves_count);
+    assert_fast!(*quiet_moves_start_index <= *moves_count);
+    assert_fast!(context.board.active_color < 2);
 
     if matches!(*stage, MoveGenStage::HashMove | MoveGenStage::Captures | MoveGenStage::Killers | MoveGenStage::Counters | MoveGenStage::AllGenerated) {
         *move_index += 1;
@@ -147,6 +148,8 @@ pub fn get_next_move(
                 for (index, &killer_move) in killer_moves.iter().enumerate() {
                     if killer_move != hash_move {
                         if ((1u64 << killer_move.get_to()) & *evasion_mask) != 0 && killer_move.is_legal(&context.board) {
+                            assert_fast!(*moves_count < MAX_MOVES_COUNT);
+
                             moves[*moves_count].write(killer_move);
                             move_scores[*moves_count].write(MOVE_ORDERING_KILLER_MOVE_1 - (index as i16));
                             *moves_count += 1;
@@ -193,6 +196,8 @@ pub fn get_next_move(
 
                 if countermove != hash_move && countermove != killer_1 && countermove != killer_2 {
                     if ((1u64 << countermove.get_to()) & *evasion_mask) != 0 && countermove.is_legal(&context.board) {
+                        assert_fast!(*moves_count < MAX_MOVES_COUNT);
+
                         moves[*moves_count].write(countermove);
                         move_scores[*moves_count].write(MOVE_ORDERING_COUNTERMOVE);
                         *moves_count += 1;
@@ -258,7 +263,7 @@ fn assign_capture_scores(
 ) {
     assert_fast!(start_index < MAX_MOVES_COUNT);
     assert_fast!(start_index <= moves_count);
-    assert_fast!(start_index + moves_count < MAX_MOVES_COUNT);
+    assert_fast!(moves_count < MAX_MOVES_COUNT);
 
     let mut attackers_cache = [0; 64];
     let mut defenders_cache = [0; 64];
@@ -316,7 +321,7 @@ fn assign_quiet_scores(
 ) {
     assert_fast!(start_index < MAX_MOVES_COUNT);
     assert_fast!(start_index <= moves_count);
-    assert_fast!(start_index + moves_count < MAX_MOVES_COUNT);
+    assert_fast!(moves_count < MAX_MOVES_COUNT);
 
     let killer_moves = context.killers_table.get(ply);
     let countermove = context.countermoves_table.get(previous_move);

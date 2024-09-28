@@ -16,9 +16,9 @@ impl CountermovesTable {
     /// Adds countermove `r#move` as response to `previous_move`.
     pub fn add(&mut self, previous_move: Move, r#move: Move) {
         assert_fast!(previous_move.is_some());
-        assert_fast!(r#move.is_some());
         assert_fast!(previous_move.get_from() < 64);
         assert_fast!(previous_move.get_to() < 64);
+        assert_fast!(r#move.is_some());
 
         self.table[previous_move.get_from()][previous_move.get_to()].r#move = r#move;
     }

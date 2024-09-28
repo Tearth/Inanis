@@ -44,7 +44,8 @@ pub fn get(attacking_piece: usize, target_piece: usize, attackers: usize, defend
     let target_piece_index = get_see_piece_index(target_piece);
     let updated_attackers = attackers & !(1 << attacking_piece_index);
 
-    let see = SEE_TABLE.get().unwrap()[attacking_piece][defenders][updated_attackers];
+    let table = unsafe { SEE_TABLE.get().unwrap_unchecked() };
+    let see = table[attacking_piece][defenders][updated_attackers];
     (get_piece_value(target_piece_index) - see) as i16 * 50
 }
 

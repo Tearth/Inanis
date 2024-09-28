@@ -6,7 +6,6 @@ use crate::utils::percent;
 use std::mem;
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering;
-use std::u64;
 
 const BUCKET_SLOTS: usize = 8;
 

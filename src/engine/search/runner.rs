@@ -109,7 +109,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
     }
 
     if context.forced_depth == 0 && context.max_nodes_count == 0 && (context.statistics.nodes_count & 8191) == 0 {
-        if context.search_time_start.elapsed().unwrap().as_millis() > context.deadline as u128 {
+        if unsafe { context.search_time_start.elapsed().unwrap_unchecked().as_millis() } > context.deadline as u128 {
             context.abort_flag.store(true, Ordering::Relaxed);
             return INVALID_SCORE;
         }
@@ -392,6 +392,8 @@ fn run_internal<const ROOT: bool, const PV: bool>(
 
                     if move_generator_stage == MoveGenStage::AllGenerated {
                         for i in quiet_moves_start_index..moves_count {
+                            assert_fast!(moves_count < MAX_MOVES_COUNT);
+
                             let move_from_list = unsafe { moves[i].assume_init() };
                             if move_from_list.is_quiet() && move_from_list != best_move {
                                 context.history_table.punish(move_from_list.get_from(), move_from_list.get_to(), depth as u8);

@@ -8,8 +8,8 @@ pub fn main() {
     let args = env::args_os().collect();
     let target_features = get_target_features();
 
-    movegen::init();
     see::init();
+    movegen::init();
 
     terminal::run(args, target_features);
 }

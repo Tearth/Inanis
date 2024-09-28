@@ -18,6 +18,8 @@ pub fn sort_next_move(
     let mut best_index = start_index;
 
     for index in (start_index + 1)..moves_count {
+        assert_fast!(index < MAX_MOVES_COUNT);
+
         let score = unsafe { move_scores[index].assume_init() };
         if score > best_score {
             best_score = score;

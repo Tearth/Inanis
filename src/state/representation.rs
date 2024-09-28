@@ -50,7 +50,7 @@ pub struct Board {
     pub pawn_attacks: [u64; 2],
 }
 
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub struct BoardState {
     pub halfmove_clock: u16,
     pub castling_rights: u8,
@@ -469,20 +469,14 @@ impl Board {
 
     /// Preserves halfmove clock, castling rights, en passant bitboard, board hash, pawn hash and captured piece on the stack
     pub fn push_state(&mut self) {
-        self.state_stack.push(BoardState::new(
-            self.state.halfmove_clock,
-            self.state.castling_rights,
-            self.state.en_passant,
-            self.state.hash,
-            self.state.pawn_hash,
-            self.state.captured_piece,
-            self.state.pst_score,
-        ));
+        self.state_stack.push(self.state);
     }
 
     /// Restores halfmove clock, castling rights, en passant bitboard, board hash, pawn hash and captured piece from the stack
     pub fn pop_state(&mut self) {
-        self.state = self.state_stack.pop().unwrap();
+        unsafe {
+            self.state = self.state_stack.pop().unwrap_unchecked();
+        }
     }
 
     /// Checks if the square specified by `square` is attacked by enemy, from the `color` perspective.
@@ -528,7 +522,14 @@ impl Board {
     /// Checks if any of the square specified by `squares` list is attacked by enemy, from the `color` perspective.
     pub fn are_squares_attacked(&self, color: usize, squares: &[usize]) -> bool {
         assert_fast!(color < 2);
-        squares.iter().any(|square| self.is_square_attacked(color, *square))
+
+        for square in squares {
+            if self.is_square_attacked(color, *square) {
+                return true;
+            }
+        }
+
+        false
     }
 
     /// Gets a list of enemy pieces attacking a square specified by `squares_index`, from the `color` perspective. The encoding looks as follows:
@@ -782,6 +783,8 @@ impl Board {
         let to = self.state_stack.len() - 1;
 
         for hash_index in (from..to).rev().step_by(2) {
+            assert_fast!(hash_index < self.state_stack.len());
+
             if self.state_stack[hash_index].hash == self.state.hash {
                 repetitions_count += 1;
 
@@ -855,6 +858,8 @@ impl Board {
 
         let mut moves = [MaybeUninit::uninit(); engine::MAX_MOVES_COUNT];
         let moves_count = self.get_all_moves(&mut moves, u64::MAX);
+
+        assert_fast!(moves_count < engine::MAX_MOVES_COUNT);
 
         let mut evading_moves_count = 0;
         let mut evading_move = Default::default();

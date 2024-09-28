@@ -5,7 +5,6 @@ use crate::cache::pawns::PawnHashTable;
 use crate::cache::search::TranspositionTable;
 use crate::engine::context::SearchContext;
 use crate::state::representation::Board;
-use crate::utils::rand;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 use std::time::SystemTime;
@@ -128,8 +127,6 @@ pub fn run() -> BenchmarkResult {
         let countermoves_table = CountermovesTable::default();
         let abort_flag = Arc::new(AtomicBool::new(false));
         let ponder_flag = Arc::new(AtomicBool::new(false));
-
-        rand::seed(584578);
 
         let board = Board::new_from_fen(fen).unwrap();
         let mut context = SearchContext::new(

@@ -4,7 +4,6 @@ use crate::cache::perft::PerftHashTable;
 use crate::perft::context::PerftContext;
 use crate::state::representation::Board;
 use std::sync::Arc;
-use std::u64;
 
 pub struct NormalPerftResult {
     pub nodes: u64,

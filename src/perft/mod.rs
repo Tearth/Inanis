@@ -3,7 +3,6 @@ use crate::engine;
 use crate::state::*;
 use crate::utils::panic_fast;
 use std::mem::MaybeUninit;
-use std::u64;
 
 pub mod context;
 pub mod divided;

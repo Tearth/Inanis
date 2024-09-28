@@ -1,8 +1,8 @@
+use crate::utils::assert_fast;
 use crate::utils::percent;
 use std::mem;
 use std::sync::atomic::AtomicU64;
 use std::sync::atomic::Ordering;
-use std::u64;
 
 const BUCKET_SLOTS: usize = 4;
 
@@ -42,8 +42,9 @@ impl PerftHashTable {
     /// Adds a new entry (storing `hash`, `depth` and `leafs_count`) using `hash` to calculate an index of the bucket.
     pub fn add(&self, hash: u64, depth: u8, leafs_count: u64) {
         let index = self.get_index(hash);
-        let bucket = &self.table[index];
+        assert_fast!(index < self.table.len());
 
+        let bucket = &self.table[index];
         let mut smallest_depth = u8::MAX;
         let mut smallest_depth_index = 0;
 
@@ -61,6 +62,7 @@ impl PerftHashTable {
         let key = (hash & !0xf) | (depth as u64);
         let data = leafs_count;
 
+        assert_fast!(smallest_depth_index < BUCKET_SLOTS);
         bucket.entries[smallest_depth_index].key.store(key ^ data, Ordering::Relaxed);
         bucket.entries[smallest_depth_index].data.store(data, Ordering::Relaxed);
     }
@@ -69,6 +71,8 @@ impl PerftHashTable {
     /// Returns [None] if `hash` is incompatible with the stored key.
     pub fn get(&self, hash: u64, depth: u8) -> Option<PerftHashTableResult> {
         let index = self.get_index(hash);
+        assert_fast!(index < self.table.len());
+
         let bucket = &self.table[index];
 
         for entry in &bucket.entries {

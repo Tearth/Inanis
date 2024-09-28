@@ -4,7 +4,6 @@ use std::mem;
 use std::sync::atomic::AtomicI16;
 use std::sync::atomic::AtomicU16;
 use std::sync::atomic::Ordering;
-use std::u64;
 
 pub struct PawnHashTable {
     pub table: Vec<PawnHashTableEntry>,

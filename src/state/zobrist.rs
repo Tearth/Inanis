@@ -87,6 +87,7 @@ pub fn get_castling_right_hash(current: u8, right: u8) -> u64 {
         return 0;
     }
 
+    assert_fast!(right.bit_scan() < 4);
     CASTLING_HASHES[right.bit_scan()]
 }
 

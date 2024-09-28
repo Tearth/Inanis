@@ -367,6 +367,8 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(
     mut index: usize,
     evasion_mask: u64,
 ) -> usize {
+    assert_fast!(board.active_color < 2);
+
     let enemy_color = board.active_color ^ 1;
     let mut pieces_bb = board.pieces[board.active_color][PIECE];
 
@@ -393,6 +395,8 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(
         }
 
         while piece_moves_bb != 0 {
+            assert_fast!(index < engine::MAX_MOVES_COUNT);
+
             let to_bb = piece_moves_bb.get_lsb();
             let to = to_bb.bit_scan();
             piece_moves_bb = piece_moves_bb.pop_lsb();
@@ -407,6 +411,8 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(
         if PIECE == KING && !CAPTURES {
             match board.active_color {
                 WHITE => {
+                    assert_fast!(index < engine::MAX_MOVES_COUNT);
+
                     let king_side_castling_rights = board.state.castling_rights.contains(CastlingRights::WHITE_SHORT_CASTLING);
                     if king_side_castling_rights && (occupancy_bb & (F1_BB | G1_BB)) == 0 {
                         if !board.are_squares_attacked(board.active_color, &[E1, F1, G1]) {
@@ -414,6 +420,8 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(
                             index += 1;
                         }
                     }
+
+                    assert_fast!(index < engine::MAX_MOVES_COUNT);
 
                     let queen_side_castling_rights = board.state.castling_rights.contains(CastlingRights::WHITE_LONG_CASTLING);
                     if queen_side_castling_rights && (occupancy_bb & (B1_BB | C1_BB | D1_BB)) == 0 {
@@ -424,6 +432,8 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(
                     }
                 }
                 BLACK => {
+                    assert_fast!(index < engine::MAX_MOVES_COUNT);
+
                     let king_side_castling_rights = board.state.castling_rights.contains(CastlingRights::BLACK_SHORT_CASTLING);
                     if king_side_castling_rights && (occupancy_bb & (F8_BB | G8_BB)) == 0 {
                         if !board.are_squares_attacked(board.active_color, &[E8, F8, G8]) {
@@ -431,6 +441,8 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(
                             index += 1;
                         }
                     }
+
+                    assert_fast!(index < engine::MAX_MOVES_COUNT);
 
                     let queen_side_castling_rights = board.state.castling_rights.contains(CastlingRights::BLACK_LONG_CASTLING);
                     if queen_side_castling_rights && (occupancy_bb & (B8_BB | C8_BB | D8_BB)) == 0 {
@@ -517,6 +529,8 @@ pub fn scan_pawn_moves<const CAPTURES: bool>(
 /// and returns index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the
 /// specified squares (useful during checks).
 fn scan_pawn_moves_single_push(board: &Board, moves: &mut [MaybeUninit<Move>; engine::MAX_MOVES_COUNT], mut index: usize, evasion_mask: u64) -> usize {
+    assert_fast!(board.active_color < 2);
+
     let pieces_bb = board.pieces[board.active_color][PAWN];
     let occupancy_bb = board.occupancy[WHITE] | board.occupancy[BLACK];
 
@@ -538,12 +552,16 @@ fn scan_pawn_moves_single_push(board: &Board, moves: &mut [MaybeUninit<Move>; en
         target_squares_bb = target_squares_bb.pop_lsb();
 
         if (to_bb & promotion_rank_bb) != 0 {
+            assert_fast!(index + 3 < engine::MAX_MOVES_COUNT);
+
             moves[index + 0].write(Move::new(from, to, MoveFlags::QUEEN_PROMOTION));
             moves[index + 1].write(Move::new(from, to, MoveFlags::ROOK_PROMOTION));
             moves[index + 2].write(Move::new(from, to, MoveFlags::BISHOP_PROMOTION));
             moves[index + 3].write(Move::new(from, to, MoveFlags::KNIGHT_PROMOTION));
             index += 4;
         } else {
+            assert_fast!(index < engine::MAX_MOVES_COUNT);
+
             moves[index].write(Move::new(from, to, MoveFlags::SINGLE_PUSH));
             index += 1;
         }
@@ -556,6 +574,8 @@ fn scan_pawn_moves_single_push(board: &Board, moves: &mut [MaybeUninit<Move>; en
 /// and returns index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the
 /// specified squares (useful during checks).
 fn scan_pawn_moves_double_push(board: &Board, moves: &mut [MaybeUninit<Move>; engine::MAX_MOVES_COUNT], mut index: usize, evasion_mask: u64) -> usize {
+    assert_fast!(board.active_color < 2);
+
     let pieces_bb = board.pieces[board.active_color][PAWN];
     let occupancy_bb = board.occupancy[WHITE] | board.occupancy[BLACK];
 
@@ -570,6 +590,8 @@ fn scan_pawn_moves_double_push(board: &Board, moves: &mut [MaybeUninit<Move>; en
     target_squares_bb &= !occupancy_bb & evasion_mask;
 
     while target_squares_bb != 0 {
+        assert_fast!(index < engine::MAX_MOVES_COUNT);
+
         let to_bb = target_squares_bb.get_lsb();
         let to = to_bb.bit_scan();
         let from = ((to as i8) - shift) as usize;
@@ -591,6 +613,8 @@ fn scan_pawn_moves_diagonal_attacks<const DIR: usize>(
     mut index: usize,
     evasion_mask: u64,
 ) -> usize {
+    assert_fast!(board.active_color < 2);
+
     let enemy_color = board.active_color ^ 1;
     let pieces_bb = board.pieces[board.active_color][PAWN];
 
@@ -615,12 +639,16 @@ fn scan_pawn_moves_diagonal_attacks<const DIR: usize>(
         target_squares_bb = target_squares_bb.pop_lsb();
 
         if (to_bb & promotion_rank_bb) != 0 {
+            assert_fast!(index + 3 < engine::MAX_MOVES_COUNT);
+
             moves[index + 0].write(Move::new(from, to, MoveFlags::QUEEN_PROMOTION_CAPTURE));
             moves[index + 1].write(Move::new(from, to, MoveFlags::ROOK_PROMOTION_CAPTURE));
             moves[index + 2].write(Move::new(from, to, MoveFlags::BISHOP_PROMOTION_CAPTURE));
             moves[index + 3].write(Move::new(from, to, MoveFlags::KNIGHT_PROMOTION_CAPTURE));
             index += 4;
         } else {
+            assert_fast!(index < engine::MAX_MOVES_COUNT);
+
             let en_passant = (to_bb & board.state.en_passant) != 0;
             let flags = if en_passant { MoveFlags::EN_PASSANT } else { MoveFlags::CAPTURE };
 
