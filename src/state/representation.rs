@@ -756,12 +756,16 @@ impl Board {
         sign * evaluation.taper_score(self.game_phase)
     }
 
-    /// Runs lazy (fast) evaluations, considering only material and piece-square tables. Returns score from the `color` perspective (more than 0 when
+    /// Runs fast evaluations, considering only material and piece-square tables. Returns score from the `color` perspective (more than 0 when
     /// advantage, less than 0 when disadvantage).
-    pub fn evaluate_lazy(&self, color: usize) -> i16 {
+    pub fn evaluate_fast(&self, color: usize, pawn_hashtable: &PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
         assert_fast!(color < 2);
 
-        let evaluation = material::evaluate(self) + pst::evaluate(self);
+        let material_evaluation = material::evaluate(self);
+        let pst_evaluation = pst::evaluate(self);
+        let pawns_evaluation = pawns::evaluate(self, pawn_hashtable, statistics);
+
+        let evaluation = material_evaluation + pst_evaluation + pawns_evaluation;
         let sign = -((color as i16) * 2 - 1);
 
         sign * evaluation.taper_score(self.game_phase)

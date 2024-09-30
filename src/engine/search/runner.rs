@@ -229,7 +229,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
         let margin = razoring_get_margin(context, depth);
         let lazy_evaluation_value = match lazy_evaluation {
             Some(value) => value,
-            None => context.board.evaluate_lazy(context.board.active_color),
+            None => context.board.evaluate_fast(context.board.active_color, &context.pawn_hashtable, &mut context.statistics),
         };
 
         dev!(context.statistics.razoring_attempts += 1);
@@ -251,7 +251,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
         let margin = snmp_get_margin(context, depth);
         let lazy_evaluation_value = match lazy_evaluation {
             Some(value) => value,
-            None => context.board.evaluate_lazy(context.board.active_color),
+            None => context.board.evaluate_fast(context.board.active_color, &context.pawn_hashtable, &mut context.statistics),
         };
 
         dev!(context.statistics.snmp_attempts += 1);
@@ -270,7 +270,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
         let margin = param!(context.parameters.nmp_margin);
         let lazy_evaluation_value = match lazy_evaluation {
             Some(value) => value,
-            None => context.board.evaluate_lazy(context.board.active_color),
+            None => context.board.evaluate_fast(context.board.active_color, &context.pawn_hashtable, &mut context.statistics),
         };
 
         dev!(context.statistics.nmp_attempts += 1);
