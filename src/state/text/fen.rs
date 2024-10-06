@@ -81,26 +81,14 @@ pub fn board_to_epd(board: &Board) -> String {
 
 /// Gets a value of the `name` parameters from the specified `epd`. Returns [None] if the parameter was not found.
 fn get_epd_parameter(mut epd: &str, name: &[&str]) -> Option<String> {
-    let parameter_index = name.iter().find_map(|p| epd.find(p));
-    if parameter_index.is_none() {
-        return None;
-    }
+    let parameter_index = name.iter().find_map(|p| epd.find(p))?;
+    epd = &epd[parameter_index..];
 
-    epd = &epd[parameter_index.unwrap()..];
+    let value_index = epd.find(' ')?;
+    epd = &epd[value_index..];
 
-    let value_index = epd.find(' ');
-    if value_index.is_none() {
-        return None;
-    }
-
-    epd = &epd[value_index.unwrap()..];
-
-    let separator_index = epd.find(';');
-    if separator_index.is_none() {
-        return None;
-    }
-
-    let mut value = &epd[0..separator_index.unwrap()];
+    let separator_index = epd.find(';')?;
+    let mut value = &epd[0..separator_index];
     value = value.trim_matches(' ');
     value = value.trim_matches('\"');
 

@@ -400,34 +400,28 @@ fn load_values(random_values: bool) -> Vec<TunerParameter> {
     params.append(&mut params::PAWN_SHIELD_OPEN_FILE.iter().flat_map(|v| v.to_tuner_params(-999, -40, -10, 999, 0)).collect());
     params.append(&mut params::KING_AREA_THREATS.iter().flat_map(|v| v.to_tuner_params(-999, -40, 40, 999, 0)).collect());
 
-    let pawn_pst = &pst::PAWN_PST_PATTERN;
-    for king_bucket in 0..KING_BUCKETS_COUNT {
-        params.append(&mut pawn_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-9999, 50, 150, 9999, -PIECE_VALUE[PAWN])).collect());
+    for bucket in &pst::PAWN_PST_PATTERN {
+        params.append(&mut bucket.iter().flat_map(|v| v.to_tuner_params(-9999, 50, 150, 9999, -PIECE_VALUE[PAWN])).collect());
     }
 
-    let knight_pst = &pst::KNIGHT_PST_PATTERN;
-    for king_bucket in 0..KING_BUCKETS_COUNT {
-        params.append(&mut knight_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-9999, 300, 500, 9999, -PIECE_VALUE[KNIGHT])).collect());
+    for bucket in &pst::KNIGHT_PST_PATTERN {
+        params.append(&mut bucket.iter().flat_map(|v| v.to_tuner_params(-9999, 300, 500, 9999, -PIECE_VALUE[KNIGHT])).collect());
     }
 
-    let bishop_pst = &pst::BISHOP_PST_PATTERN;
-    for king_bucket in 0..KING_BUCKETS_COUNT {
-        params.append(&mut bishop_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-9999, 300, 500, 9999, -PIECE_VALUE[BISHOP])).collect());
+    for bucket in &pst::BISHOP_PST_PATTERN {
+        params.append(&mut bucket.iter().flat_map(|v| v.to_tuner_params(-9999, 300, 500, 9999, -PIECE_VALUE[BISHOP])).collect());
     }
 
-    let rook_pst = &pst::ROOK_PST_PATTERN;
-    for king_bucket in 0..KING_BUCKETS_COUNT {
-        params.append(&mut rook_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-9999, 400, 600, 9999, -PIECE_VALUE[ROOK])).collect());
+    for bucket in &pst::ROOK_PST_PATTERN {
+        params.append(&mut bucket.iter().flat_map(|v| v.to_tuner_params(-9999, 400, 600, 9999, -PIECE_VALUE[ROOK])).collect());
     }
 
-    let queen_pst = &pst::QUEEN_PST_PATTERN;
-    for king_bucket in 0..KING_BUCKETS_COUNT {
-        params.append(&mut queen_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-9999, 800, 1400, 9999, -PIECE_VALUE[QUEEN])).collect());
+    for bucket in &pst::QUEEN_PST_PATTERN {
+        params.append(&mut bucket.iter().flat_map(|v| v.to_tuner_params(-9999, 800, 1400, 9999, -PIECE_VALUE[QUEEN])).collect());
     }
 
-    let king_pst = &pst::KING_PST_PATTERN;
-    for king_bucket in 0..KING_BUCKETS_COUNT {
-        params.append(&mut king_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-999, -40, 40, 999, 0)).collect());
+    for bucket in &pst::KING_PST_PATTERN {
+        params.append(&mut bucket.iter().flat_map(|v| v.to_tuner_params(-999, -40, 40, 999, 0)).collect());
     }
 
     if random_values {

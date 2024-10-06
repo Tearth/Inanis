@@ -4,14 +4,8 @@
     clippy::identity_op,
     clippy::collapsible_if,
     clippy::too_many_arguments,
-    clippy::if_same_then_else,
-    clippy::declare_interior_mutable_const,
-    clippy::manual_range_contains,
-    clippy::format_in_format_args,
-    clippy::question_mark,
     clippy::manual_range_patterns,
-    clippy::collapsible_else_if,
-    clippy::type_complexity
+    clippy::collapsible_else_if
 )]
 
 //! The main page of the Inanis documentation. Feel free to explore it by going into the specific module below,
