@@ -3,7 +3,7 @@ use crate::state::movescan;
 use crate::state::representation::Board;
 
 #[cfg(feature = "dev")]
-use crate::tuning::tuner::TunerCoefficient;
+use crate::tuning::tuner::TunerCoeff;
 use crate::utils::assert_fast;
 
 pub struct MobilityData {
@@ -59,50 +59,50 @@ fn get_mobility_data(board: &Board, color: usize, aux: &mut MobilityAuxData) -> 
 /// Gets coefficients of mobility for `board` and inserts them into `coefficients`. Similarly, their indices (starting from `index`) are inserted into `indices`.
 /// Some additional data is also saved in `white_aux` and `black_aux` for further processing.
 #[cfg(feature = "dev")]
-pub fn get_coefficients(
+pub fn get_coeffs(
     board: &Board,
     white_aux: &mut MobilityAuxData,
     black_aux: &mut MobilityAuxData,
     index: &mut u16,
-    coefficients: &mut Vec<TunerCoefficient>,
+    coeffs: &mut Vec<TunerCoeff>,
     indices: &mut Vec<u16>,
 ) {
     let white_data = get_mobility_data(board, WHITE, white_aux);
     let black_data = get_mobility_data(board, BLACK, black_aux);
 
     let mut data = [
-        TunerCoefficient::new(0, OPENING),
-        TunerCoefficient::new(0, ENDING),
-        TunerCoefficient::new(white_data.knight_mobility.inner - black_data.knight_mobility.inner, OPENING),
-        TunerCoefficient::new(white_data.knight_mobility.inner - black_data.knight_mobility.inner, ENDING),
-        TunerCoefficient::new(white_data.bishop_mobility.inner - black_data.bishop_mobility.inner, OPENING),
-        TunerCoefficient::new(white_data.bishop_mobility.inner - black_data.bishop_mobility.inner, ENDING),
-        TunerCoefficient::new(white_data.rook_mobility.inner - black_data.rook_mobility.inner, OPENING),
-        TunerCoefficient::new(white_data.rook_mobility.inner - black_data.rook_mobility.inner, ENDING),
-        TunerCoefficient::new(white_data.queen_mobility.inner - black_data.queen_mobility.inner, OPENING),
-        TunerCoefficient::new(white_data.queen_mobility.inner - black_data.queen_mobility.inner, ENDING),
-        TunerCoefficient::new(0, OPENING),
-        TunerCoefficient::new(0, ENDING),
+        TunerCoeff::new(0, OPENING),
+        TunerCoeff::new(0, ENDING),
+        TunerCoeff::new(white_data.knight_mobility.inner - black_data.knight_mobility.inner, OPENING),
+        TunerCoeff::new(white_data.knight_mobility.inner - black_data.knight_mobility.inner, ENDING),
+        TunerCoeff::new(white_data.bishop_mobility.inner - black_data.bishop_mobility.inner, OPENING),
+        TunerCoeff::new(white_data.bishop_mobility.inner - black_data.bishop_mobility.inner, ENDING),
+        TunerCoeff::new(white_data.rook_mobility.inner - black_data.rook_mobility.inner, OPENING),
+        TunerCoeff::new(white_data.rook_mobility.inner - black_data.rook_mobility.inner, ENDING),
+        TunerCoeff::new(white_data.queen_mobility.inner - black_data.queen_mobility.inner, OPENING),
+        TunerCoeff::new(white_data.queen_mobility.inner - black_data.queen_mobility.inner, ENDING),
+        TunerCoeff::new(0, OPENING),
+        TunerCoeff::new(0, ENDING),
         //
-        TunerCoefficient::new(0, OPENING),
-        TunerCoefficient::new(0, ENDING),
-        TunerCoefficient::new(white_data.knight_mobility.outer - black_data.knight_mobility.outer, OPENING),
-        TunerCoefficient::new(white_data.knight_mobility.outer - black_data.knight_mobility.outer, ENDING),
-        TunerCoefficient::new(white_data.bishop_mobility.outer - black_data.bishop_mobility.outer, OPENING),
-        TunerCoefficient::new(white_data.bishop_mobility.outer - black_data.bishop_mobility.outer, ENDING),
-        TunerCoefficient::new(white_data.rook_mobility.outer - black_data.rook_mobility.outer, OPENING),
-        TunerCoefficient::new(white_data.rook_mobility.outer - black_data.rook_mobility.outer, ENDING),
-        TunerCoefficient::new(white_data.queen_mobility.outer - black_data.queen_mobility.outer, OPENING),
-        TunerCoefficient::new(white_data.queen_mobility.outer - black_data.queen_mobility.outer, ENDING),
-        TunerCoefficient::new(0, OPENING),
-        TunerCoefficient::new(0, ENDING),
+        TunerCoeff::new(0, OPENING),
+        TunerCoeff::new(0, ENDING),
+        TunerCoeff::new(white_data.knight_mobility.outer - black_data.knight_mobility.outer, OPENING),
+        TunerCoeff::new(white_data.knight_mobility.outer - black_data.knight_mobility.outer, ENDING),
+        TunerCoeff::new(white_data.bishop_mobility.outer - black_data.bishop_mobility.outer, OPENING),
+        TunerCoeff::new(white_data.bishop_mobility.outer - black_data.bishop_mobility.outer, ENDING),
+        TunerCoeff::new(white_data.rook_mobility.outer - black_data.rook_mobility.outer, OPENING),
+        TunerCoeff::new(white_data.rook_mobility.outer - black_data.rook_mobility.outer, ENDING),
+        TunerCoeff::new(white_data.queen_mobility.outer - black_data.queen_mobility.outer, OPENING),
+        TunerCoeff::new(white_data.queen_mobility.outer - black_data.queen_mobility.outer, ENDING),
+        TunerCoeff::new(0, OPENING),
+        TunerCoeff::new(0, ENDING),
     ];
 
-    for coefficient in &mut data {
-        let (value, _) = coefficient.get_data();
+    for coeff in &mut data {
+        let (value, _) = coeff.get_data();
         if value != 0 {
             indices.push(*index);
-            coefficients.push(coefficient.clone());
+            coeffs.push(coeff.clone());
         }
 
         *index += 1;

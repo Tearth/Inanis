@@ -1,8 +1,5 @@
-use crate::cache::counters::CountermovesTable;
-use crate::cache::history::HistoryTable;
-use crate::cache::killers::KillersTable;
-use crate::cache::pawns::PawnHashTable;
-use crate::cache::search::TranspositionTable;
+use crate::cache::pawns::PHTable;
+use crate::cache::search::TTable;
 use crate::engine::context::SearchContext;
 use crate::engine::qsearch;
 use crate::engine::*;
@@ -39,8 +36,8 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
     let mut output_positions = HashSet::new();
     let mut parsed_pgns = 0;
 
-    let transposition_table = Arc::new(TranspositionTable::new(1 * 1024 * 1024));
-    let pawn_hashtable = Arc::new(PawnHashTable::new(1 * 1024 * 1024));
+    let ttable = Arc::new(TTable::new(1 * 1024 * 1024));
+    let phtable = Arc::new(PHTable::new(1 * 1024 * 1024));
     let abort_flag = Arc::new(AtomicBool::new(false));
     let ponder_flag = Arc::new(AtomicBool::new(false));
 
@@ -76,18 +73,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
             None => Board::new_initial_position(),
         };
 
-        let mut context = SearchContext::new(
-            board,
-            Default::default(),
-            transposition_table.clone(),
-            pawn_hashtable.clone(),
-            KillersTable::default(),
-            HistoryTable::default(),
-            CountermovesTable::default(),
-            abort_flag.clone(),
-            ponder_flag.clone(),
-        );
-
+        let mut context = SearchContext::new(board, Default::default(), ttable.clone(), phtable.clone(), abort_flag.clone(), ponder_flag.clone());
         let mut viable_positions = Vec::new();
 
         for (index, data) in pgn.data.iter().enumerate() {

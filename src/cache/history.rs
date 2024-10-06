@@ -7,16 +7,16 @@ use std::mem;
 
 const AGING_DIVISOR: u32 = 16;
 
-pub struct HistoryTable {
-    pub table: Box<[[HistoryTableEntry; 64]; 64]>,
+pub struct HTable {
+    pub table: Box<[[HTableEntry; 64]; 64]>,
     pub max: u32,
 }
 
-pub struct HistoryTableEntry {
+pub struct HTableEntry {
     pub data: u32,
 }
 
-impl HistoryTable {
+impl HTable {
     /// Increases `[from][to]` history slot value based on `depth`.
     pub fn add(&mut self, from: usize, to: usize, depth: u8) {
         assert_fast!(from < 64);
@@ -72,14 +72,14 @@ impl HistoryTable {
     }
 }
 
-impl Default for HistoryTable {
+impl Default for HTable {
     /// Constructs a default instance of [HistoryTable] by allocating `64 * 64 * mem::size_of::<HistoryTableEntry>()`
     /// boxed array with zeroed elements.
     fn default() -> Self {
-        const SIZE: usize = mem::size_of::<HistoryTableEntry>();
+        const SIZE: usize = mem::size_of::<HTableEntry>();
         unsafe {
             let ptr = alloc::alloc_zeroed(Layout::from_size_align(64 * 64 * SIZE, SIZE).unwrap());
-            Self { table: Box::from_raw(ptr as *mut [[HistoryTableEntry; 64]; 64]), max: 1 }
+            Self { table: Box::from_raw(ptr as *mut [[HTableEntry; 64]; 64]), max: 1 }
         }
     }
 }

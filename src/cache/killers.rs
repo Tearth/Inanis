@@ -7,15 +7,15 @@ use std::mem;
 
 const KILLER_SLOTS: usize = 2;
 
-pub struct KillersTable {
-    pub table: Box<[[KillersTableEntry; KILLER_SLOTS]; MAX_DEPTH as usize]>,
+pub struct KTable {
+    pub table: Box<[[KTableEntry; KILLER_SLOTS]; MAX_DEPTH as usize]>,
 }
 
-pub struct KillersTableEntry {
+pub struct KTableEntry {
     pub data: Move,
 }
 
-impl KillersTable {
+impl KTable {
     /// Adds a new killer `r#move` at the level specified by `ply` value. Maximal amount of slots for each of them is set by
     /// [KILLER_SLOTS] constant, and newer entries have always a priority over old ones. If there's already exactly the same
     /// move in the slot 0, the table is not changed.
@@ -66,14 +66,14 @@ impl KillersTable {
     }
 }
 
-impl Default for KillersTable {
+impl Default for KTable {
     /// Constructs a default instance of [KillersTable] by allocating `KILLER_SLOTS * MAX_DEPTH * mem::size_of::<KillersTableEntry>()`
     /// boxed array with zeroed elements.
     fn default() -> Self {
-        const SIZE: usize = mem::size_of::<KillersTableEntry>();
+        const SIZE: usize = mem::size_of::<KTableEntry>();
         unsafe {
             let ptr = alloc::alloc_zeroed(Layout::from_size_align(KILLER_SLOTS * MAX_DEPTH as usize * SIZE, SIZE).unwrap());
-            Self { table: Box::from_raw(ptr as *mut [[KillersTableEntry; KILLER_SLOTS]; MAX_DEPTH as usize]) }
+            Self { table: Box::from_raw(ptr as *mut [[KTableEntry; KILLER_SLOTS]; MAX_DEPTH as usize]) }
         }
     }
 }

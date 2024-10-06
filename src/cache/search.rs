@@ -10,29 +10,29 @@ use std::sync::atomic::Ordering;
 const BUCKET_SLOTS: usize = 8;
 
 #[allow(non_snake_case)]
-pub mod TranspositionTableScoreType {
+pub mod TTableScoreType {
     pub const INVALID: u8 = 0;
     pub const EXACT_SCORE: u8 = 1;
     pub const UPPER_BOUND: u8 = 2;
     pub const LOWER_BOUND: u8 = 4;
 }
 
-pub struct TranspositionTable {
-    pub table: Vec<TranspositionTableBucket>,
+pub struct TTable {
+    pub table: Vec<TTableBucket>,
 }
 
 #[repr(align(64))]
 #[derive(Default)]
-pub struct TranspositionTableBucket {
-    pub entries: [TranspositionTableEntry; BUCKET_SLOTS],
+pub struct TTableBucket {
+    pub entries: [TTableEntry; BUCKET_SLOTS],
 }
 
 #[derive(Default)]
-pub struct TranspositionTableEntry {
+pub struct TTableEntry {
     pub key_data: AtomicU64,
 }
 
-pub struct TranspositionTableResult {
+pub struct TTableResult {
     pub key: u16,
     pub score: i16,
     pub best_move: Move,
@@ -41,10 +41,10 @@ pub struct TranspositionTableResult {
     pub age: u8,
 }
 
-impl TranspositionTable {
+impl TTable {
     /// Constructs a new instance of [TranspositionTable] by allocating `size` bytes of memory.
     pub fn new(size: usize) -> Self {
-        const BUCKET_SIZE: usize = mem::size_of::<TranspositionTableBucket>();
+        const BUCKET_SIZE: usize = mem::size_of::<TTableBucket>();
         let mut hashtable = Self { table: Vec::with_capacity(size / BUCKET_SIZE) };
 
         if size != 0 {
@@ -117,7 +117,7 @@ impl TranspositionTable {
 
     /// Gets a wanted entry using `hash` to calculate an index of the bucket. This function takes care of converting
     /// mate `score` using passed `ply`. Returns [None] if `hash` is incompatible with the stored key.
-    pub fn get(&self, hash: u64, ply: u16) -> Option<TranspositionTableResult> {
+    pub fn get(&self, hash: u64, ply: u16) -> Option<TTableResult> {
         let key = self.get_key(hash);
         let index = self.get_index(hash);
 
@@ -137,14 +137,7 @@ impl TranspositionTable {
                     entry_data.score
                 };
 
-                return Some(TranspositionTableResult::new(
-                    entry_data.key,
-                    entry_score,
-                    entry_data.best_move,
-                    entry_data.depth,
-                    entry_data.r#type,
-                    entry_data.age,
-                ));
+                return Some(TTableResult::new(entry_data.key, entry_score, entry_data.best_move, entry_data.depth, entry_data.r#type, entry_data.age));
             }
         }
 
@@ -184,7 +177,7 @@ impl TranspositionTable {
         let mut pv_line = Vec::new();
         match self.get(board.state.hash, 0) {
             Some(entry) => {
-                if entry.r#type != TranspositionTableScoreType::EXACT_SCORE {
+                if entry.r#type != TTableScoreType::EXACT_SCORE {
                     return Vec::new();
                 }
 
@@ -242,9 +235,9 @@ impl TranspositionTable {
     }
 }
 
-impl TranspositionTableEntry {
+impl TTableEntry {
     /// Loads and parses atomic value into a [TranspositionTableResult] struct.
-    pub fn get_data(&self) -> TranspositionTableResult {
+    pub fn get_data(&self) -> TTableResult {
         let key_data = self.key_data.load(Ordering::Relaxed);
 
         let key = key_data as u16;
@@ -254,7 +247,7 @@ impl TranspositionTableEntry {
         let r#type = ((key_data >> 56) & 0x7) as u8;
         let age = (key_data >> 59) as u8;
 
-        TranspositionTableResult::new(key, score, best_move, depth, r#type, age)
+        TTableResult::new(key, score, best_move, depth, r#type, age)
     }
 
     /// Converts `key`, `score`, `best_move`, `depth`, `r#type` and `age` into an atomic word, and stores it.
@@ -273,7 +266,7 @@ impl TranspositionTableEntry {
     }
 }
 
-impl TranspositionTableResult {
+impl TTableResult {
     /// Constructs a new instance of [TranspositionTableResult] with stored `key`, `score`, `best_move`, `depth`, `r#type` and `age`.
     pub fn new(key: u16, score: i16, best_move: Move, depth: i8, r#type: u8, age: u8) -> Self {
         Self { key, score, best_move, depth, r#type, age }

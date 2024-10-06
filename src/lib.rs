@@ -19,6 +19,10 @@
 //!
 //! Homepage: <https://github.com/Tearth/Inanis>
 
+use engine::*;
+use state::movescan::Move;
+use std::mem::MaybeUninit;
+
 pub mod cache;
 pub mod engine;
 pub mod evaluation;
@@ -29,3 +33,6 @@ pub mod tablebases;
 pub mod testing;
 pub mod tuning;
 pub mod utils;
+
+pub type Moves = [MaybeUninit<Move>; MAX_MOVES_COUNT];
+pub type MoveScores = [MaybeUninit<i16>; MAX_MOVES_COUNT];

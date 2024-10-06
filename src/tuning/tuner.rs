@@ -32,7 +32,7 @@ pub struct TunerPosition {
     evaluation: i16,
     result_phase: u8,
     base_index: u32,
-    coefficients_count: u8,
+    coeffs_count: u8,
 }
 
 #[derive(Clone, Copy)]
@@ -45,14 +45,14 @@ pub struct TunerParameter {
 }
 
 #[derive(Clone)]
-pub struct TunerCoefficient {
+pub struct TunerCoeff {
     pub data: u8,
 }
 
 impl TunerPosition {
     /// Constructs a new instance of [TunerPosition] with stored `board` and `result`.
-    pub fn new(evaluation: i16, result: u8, phase: u8, base_index: u32, coefficients_count: u8) -> Self {
-        Self { evaluation, result_phase: (result << 5) | phase, base_index, coefficients_count }
+    pub fn new(evaluation: i16, result: u8, phase: u8, base_index: u32, coeffs_count: u8) -> Self {
+        Self { evaluation, result_phase: (result << 5) | phase, base_index, coeffs_count }
     }
 
     pub fn get_result(&self) -> u8 {
@@ -71,7 +71,7 @@ impl TunerParameter {
     }
 }
 
-impl TunerCoefficient {
+impl TunerCoeff {
     /// Constructs a new instance of [TunerCoefficient] with stored `value`, `phase` and `index`.
     pub fn new(value: i8, phase: usize) -> Self {
         Self { data: (((value + 32) as u8) << 1) | (phase as u8) }
@@ -93,10 +93,10 @@ pub fn run(epd_filename: &str, output_directory: &str, random_values: bool, k: O
     let mut weights_indices = HashSet::new();
     let mut weights = Vec::new();
     let mut gradients = Vec::new();
-    let mut coefficients = Vec::new();
+    let mut coeffs = Vec::new();
     let mut indices = Vec::new();
 
-    let mut positions = match load_positions(epd_filename, &mut coefficients, &mut indices, &mut weights_indices) {
+    let mut positions = match load_positions(epd_filename, &mut coeffs, &mut indices, &mut weights_indices) {
         Ok(value) => value,
         Err(error) => {
             println!("Invalid EPD file: {}", error);
@@ -105,16 +105,16 @@ pub fn run(epd_filename: &str, output_directory: &str, random_values: bool, k: O
     };
 
     positions.shrink_to_fit();
-    coefficients.shrink_to_fit();
+    coeffs.shrink_to_fit();
     indices.shrink_to_fit();
 
-    let coefficients = Arc::new(coefficients);
+    let coeffs = Arc::new(coeffs);
     let indices = Arc::new(indices);
     println!("Loaded {} positions in {} seconds, starting tuner", positions.len(), (start_time.elapsed().unwrap().as_millis() as f32) / 1000.0);
 
-    let mut tuner_parameters = load_values(random_values);
+    let mut tuner_params = load_values(random_values);
 
-    for parameter in &tuner_parameters {
+    for parameter in &tuner_params {
         weights.push(parameter.value as f32);
     }
     gradients.resize(weights.len(), 0.0);
@@ -134,8 +134,8 @@ pub fn run(epd_filename: &str, output_directory: &str, random_values: bool, k: O
 
     drop(weights_indices);
 
-    let k = k.unwrap_or_else(|| calculate_k(&positions, &coefficients, &indices, &weights, wdl_ratio, threads_count));
-    let mut last_error = calculate_error(&positions, &coefficients, &indices, &weights, k, wdl_ratio, threads_count);
+    let k = k.unwrap_or_else(|| calculate_k(&positions, &coeffs, &indices, &weights, wdl_ratio, threads_count));
+    let mut last_error = calculate_error(&positions, &coeffs, &indices, &weights, k, wdl_ratio, threads_count);
     let mut iterations_count = 0;
 
     println!("Scaling constant: {}", k);
@@ -151,7 +151,7 @@ pub fn run(epd_filename: &str, output_directory: &str, random_values: bool, k: O
 
             for chunk in positions.chunks_exact(positions.len() / threads_count) {
                 let weights = weights.clone();
-                let coefficients = coefficients.clone();
+                let coeffs = coeffs.clone();
                 let indices = indices.clone();
 
                 threads.push(scope.spawn(move || {
@@ -159,13 +159,13 @@ pub fn run(epd_filename: &str, output_directory: &str, random_values: bool, k: O
                     for position in chunk {
                         let position_result = position.get_result() as f32 / 2.0;
                         let position_phase = position.get_phase() as f32 / INITIAL_GAME_PHASE as f32;
-                        let evaluation = evaluate_position(position, &coefficients, &indices, &weights);
+                        let evaluation = evaluate_position(position, &coeffs, &indices, &weights);
 
                         let sig = sigmoid(evaluation, k);
                         let a = ((1.0 - wdl_ratio) * sigmoid(position.evaluation as f32, k) + wdl_ratio * position_result) - sig;
                         let b = sig * (1.0 - sig);
 
-                        for i in 0..position.coefficients_count {
+                        for i in 0..position.coeffs_count {
                             let index = position.base_index as usize + i as usize;
 
                             // Skip material weights
@@ -173,7 +173,7 @@ pub fn run(epd_filename: &str, output_directory: &str, random_values: bool, k: O
                                 continue;
                             }
 
-                            let (value, phase) = coefficients[index].get_data();
+                            let (value, phase) = coeffs[index].get_data();
                             let phase = if phase == OPENING { position_phase } else { 1.0 - position_phase };
                             let c = phase * value as f32;
 
@@ -200,19 +200,19 @@ pub fn run(epd_filename: &str, output_directory: &str, random_values: bool, k: O
                 v[i] = B2 * v[i] + (1.0 - B2) * gradient.powi(2);
 
                 weights[i] -= LEARNING_RATE * m[i] / (v[i] + 0.00000001).sqrt();
-                weights[i] = weights[i].clamp(tuner_parameters[i].min as f32, tuner_parameters[i].max as f32);
+                weights[i] = weights[i].clamp(tuner_params[i].min as f32, tuner_params[i].max as f32);
             } else {
                 weights[i] = f32::MIN;
             }
         }
 
         if iterations_count % OUTPUT_INTERVAL == 0 {
-            for i in 0..tuner_parameters.len() {
-                tuner_parameters[i].value = weights[i].round() as i16;
+            for i in 0..tuner_params.len() {
+                tuner_params[i].value = weights[i].round() as i16;
             }
 
             let mut weights_iter = weights.iter().skip(6);
-            let error = calculate_error(&positions, &coefficients, &indices, &weights, k, wdl_ratio, threads_count);
+            let error = calculate_error(&positions, &coeffs, &indices, &weights, k, wdl_ratio, threads_count);
 
             write_evaluation_parameters(&mut weights_iter, output_directory, error, k, wdl_ratio);
             write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "PAWN", PIECE_VALUE[PAWN]);
@@ -243,12 +243,12 @@ pub fn run(epd_filename: &str, output_directory: &str, random_values: bool, k: O
     }
 }
 
-fn calculate_k(positions: &[TunerPosition], coefficients: &[TunerCoefficient], indices: &[u16], weights: &[f32], wdl_ratio: f32, threads_count: usize) -> f32 {
+fn calculate_k(positions: &[TunerPosition], coeffs: &[TunerCoeff], indices: &[u16], weights: &[f32], wdl_ratio: f32, threads_count: usize) -> f32 {
     let mut k = 0.0;
-    let mut last_error = calculate_error(positions, coefficients, indices, weights, k, wdl_ratio, threads_count);
+    let mut last_error = calculate_error(positions, coeffs, indices, weights, k, wdl_ratio, threads_count);
 
     loop {
-        let error = calculate_error(positions, coefficients, indices, weights, k + K_STEP, wdl_ratio, threads_count);
+        let error = calculate_error(positions, coeffs, indices, weights, k + K_STEP, wdl_ratio, threads_count);
         if error >= last_error {
             break;
         }
@@ -261,15 +261,7 @@ fn calculate_k(positions: &[TunerPosition], coefficients: &[TunerCoefficient], i
 }
 
 /// Calculates an error by evaluating all loaded positions with the currently set evaluation parameters. Multithreading is supported by `threads_count`.
-fn calculate_error(
-    positions: &[TunerPosition],
-    coefficients: &[TunerCoefficient],
-    indices: &[u16],
-    weights: &[f32],
-    k: f32,
-    wdl_ratio: f32,
-    threads_count: usize,
-) -> f32 {
+fn calculate_error(positions: &[TunerPosition], coeffs: &[TunerCoeff], indices: &[u16], weights: &[f32], k: f32, wdl_ratio: f32, threads_count: usize) -> f32 {
     let mut sum_of_errors = 0.0;
     let positions_count = positions.len();
 
@@ -283,7 +275,7 @@ fn calculate_error(
                 let mut error = 0.0;
                 for position in chunk {
                     let position_result = position.get_result() as f32 / 2.0;
-                    let evaluation = evaluate_position(position, coefficients, indices, &weights);
+                    let evaluation = evaluate_position(position, coeffs, indices, &weights);
 
                     error += (((1.0 - wdl_ratio) * sigmoid(position.evaluation as f32, k) + wdl_ratio * position_result) - sigmoid(evaluation, k)).powi(2);
                 }
@@ -301,14 +293,14 @@ fn calculate_error(
 }
 
 /// Evaluates `position` based on `weights`.
-fn evaluate_position(position: &TunerPosition, coefficients: &[TunerCoefficient], indices: &[u16], weights: &[f32]) -> f32 {
+fn evaluate_position(position: &TunerPosition, coeffs: &[TunerCoeff], indices: &[u16], weights: &[f32]) -> f32 {
     let mut opening_score = 0.0;
     let mut ending_score = 0.0;
     let position_phase = position.get_phase() as f32 / INITIAL_GAME_PHASE as f32;
 
-    for i in 0..position.coefficients_count {
+    for i in 0..position.coeffs_count {
         let index = position.base_index as usize + i as usize;
-        let (value, phase) = coefficients[index].get_data();
+        let (value, phase) = coeffs[index].get_data();
         let value = weights[indices[index] as usize] * value as f32;
 
         if indices[index] < 6 {
@@ -331,16 +323,11 @@ fn sigmoid(e: f32, k: f32) -> f32 {
     1.0 / (1.0 + (-k * e).exp())
 }
 
-/// Loads positions from the `epd_filename` and parses them into a list of [TunerPosition]. Returns [Err] with a proper error message if the
+/// Loads positions from the `epd` and parses them into a list of [TunerPosition]. Returns [Err] with a proper error message if the
 /// file couldn't be parsed.
-fn load_positions(
-    epd_filename: &str,
-    coefficients: &mut Vec<TunerCoefficient>,
-    indices: &mut Vec<u16>,
-    weights_indices: &mut HashSet<u16>,
-) -> Result<Vec<TunerPosition>, String> {
+fn load_positions(epd: &str, coeffs: &mut Vec<TunerCoeff>, indices: &mut Vec<u16>, weights_indices: &mut HashSet<u16>) -> Result<Vec<TunerPosition>, String> {
     let mut positions = Vec::new();
-    let file = match File::open(epd_filename) {
+    let file = match File::open(epd) {
         Ok(value) => value,
         Err(error) => return Err(format!("Invalid EPD file: {}", error)),
     };
@@ -364,26 +351,26 @@ fn load_positions(
         };
 
         let mut index = 0;
-        let base_index = coefficients.len();
+        let base_index = coeffs.len();
         let mut white_aux = MobilityAuxData::default();
         let mut black_aux = MobilityAuxData::default();
 
-        material::get_coefficients(&parsed_epd.board, &mut index, coefficients, indices);
-        mobility::get_coefficients(&parsed_epd.board, &mut white_aux, &mut black_aux, &mut index, coefficients, indices);
-        pawns::get_coefficients(&parsed_epd.board, &mut index, coefficients, indices);
-        safety::get_coefficients(&white_aux, &black_aux, &mut index, coefficients, indices);
-        pst::get_coefficients(&parsed_epd.board, PAWN, &mut index, coefficients, indices);
-        pst::get_coefficients(&parsed_epd.board, KNIGHT, &mut index, coefficients, indices);
-        pst::get_coefficients(&parsed_epd.board, BISHOP, &mut index, coefficients, indices);
-        pst::get_coefficients(&parsed_epd.board, ROOK, &mut index, coefficients, indices);
-        pst::get_coefficients(&parsed_epd.board, QUEEN, &mut index, coefficients, indices);
-        pst::get_coefficients(&parsed_epd.board, KING, &mut index, coefficients, indices);
+        material::get_coeffs(&parsed_epd.board, &mut index, coeffs, indices);
+        mobility::get_coeffs(&parsed_epd.board, &mut white_aux, &mut black_aux, &mut index, coeffs, indices);
+        pawns::get_coeffs(&parsed_epd.board, &mut index, coeffs, indices);
+        safety::get_coeffs(&white_aux, &black_aux, &mut index, coeffs, indices);
+        pst::get_coeffs(&parsed_epd.board, PAWN, &mut index, coeffs, indices);
+        pst::get_coeffs(&parsed_epd.board, KNIGHT, &mut index, coeffs, indices);
+        pst::get_coeffs(&parsed_epd.board, BISHOP, &mut index, coeffs, indices);
+        pst::get_coeffs(&parsed_epd.board, ROOK, &mut index, coeffs, indices);
+        pst::get_coeffs(&parsed_epd.board, QUEEN, &mut index, coeffs, indices);
+        pst::get_coeffs(&parsed_epd.board, KING, &mut index, coeffs, indices);
 
-        for i in base_index..coefficients.len() {
+        for i in base_index..coeffs.len() {
             weights_indices.insert(indices[i]);
         }
 
-        positions.push(TunerPosition::new(evaluation, result, parsed_epd.board.game_phase, base_index as u32, (coefficients.len() - base_index) as u8));
+        positions.push(TunerPosition::new(evaluation, result, parsed_epd.board.game_phase, base_index as u32, (coeffs.len() - base_index) as u8));
     }
 
     Ok(positions)
@@ -392,7 +379,7 @@ fn load_positions(
 /// Transforms the current evaluation values into a list of [TunerParameter]. Use  `random_values` if the parameters should have
 /// random values (useful when initializing tuner).
 fn load_values(random_values: bool) -> Vec<TunerParameter> {
-    let mut parameters = vec![
+    let mut params = vec![
         TunerParameter::new(PIECE_VALUE[PAWN], PIECE_VALUE[PAWN], PIECE_VALUE[PAWN], PIECE_VALUE[PAWN], PIECE_VALUE[PAWN]),
         TunerParameter::new(PIECE_VALUE[KNIGHT], PIECE_VALUE[KNIGHT], PIECE_VALUE[KNIGHT], PIECE_VALUE[KNIGHT], PIECE_VALUE[KNIGHT]),
         TunerParameter::new(PIECE_VALUE[BISHOP], PIECE_VALUE[BISHOP], PIECE_VALUE[BISHOP], PIECE_VALUE[BISHOP], PIECE_VALUE[BISHOP]),
@@ -403,58 +390,58 @@ fn load_values(random_values: bool) -> Vec<TunerParameter> {
         TunerParameter::new(params::BISHOP_PAIR.get_ending(), -99, 10, 40, 99),
     ];
 
-    parameters.append(&mut params::MOBILITY_INNER.iter().flat_map(|v| v.to_tuner_params(0, 2, 6, 99, 0)).collect());
-    parameters.append(&mut params::MOBILITY_OUTER.iter().flat_map(|v| v.to_tuner_params(0, 2, 6, 99, 0)).collect());
-    parameters.append(&mut params::DOUBLED_PAWN.iter().flat_map(|v| v.to_tuner_params(-999, -40, -10, 999, 0)).collect());
-    parameters.append(&mut params::ISOLATED_PAWN.iter().flat_map(|v| v.to_tuner_params(-999, -40, -10, 999, 0)).collect());
-    parameters.append(&mut params::CHAINED_PAWN.iter().flat_map(|v| v.to_tuner_params(-999, 10, 40, 999, 0)).collect());
-    parameters.append(&mut params::PASSED_PAWN.iter().flat_map(|v| v.to_tuner_params(-999, 10, 40, 999, 0)).collect());
-    parameters.append(&mut params::PAWN_SHIELD.iter().flat_map(|v| v.to_tuner_params(-999, 10, 40, 999, 0)).collect());
-    parameters.append(&mut params::PAWN_SHIELD_OPEN_FILE.iter().flat_map(|v| v.to_tuner_params(-999, -40, -10, 999, 0)).collect());
-    parameters.append(&mut params::KING_AREA_THREATS.iter().flat_map(|v| v.to_tuner_params(-999, -40, 40, 999, 0)).collect());
+    params.append(&mut params::MOBILITY_INNER.iter().flat_map(|v| v.to_tuner_params(0, 2, 6, 99, 0)).collect());
+    params.append(&mut params::MOBILITY_OUTER.iter().flat_map(|v| v.to_tuner_params(0, 2, 6, 99, 0)).collect());
+    params.append(&mut params::DOUBLED_PAWN.iter().flat_map(|v| v.to_tuner_params(-999, -40, -10, 999, 0)).collect());
+    params.append(&mut params::ISOLATED_PAWN.iter().flat_map(|v| v.to_tuner_params(-999, -40, -10, 999, 0)).collect());
+    params.append(&mut params::CHAINED_PAWN.iter().flat_map(|v| v.to_tuner_params(-999, 10, 40, 999, 0)).collect());
+    params.append(&mut params::PASSED_PAWN.iter().flat_map(|v| v.to_tuner_params(-999, 10, 40, 999, 0)).collect());
+    params.append(&mut params::PAWN_SHIELD.iter().flat_map(|v| v.to_tuner_params(-999, 10, 40, 999, 0)).collect());
+    params.append(&mut params::PAWN_SHIELD_OPEN_FILE.iter().flat_map(|v| v.to_tuner_params(-999, -40, -10, 999, 0)).collect());
+    params.append(&mut params::KING_AREA_THREATS.iter().flat_map(|v| v.to_tuner_params(-999, -40, 40, 999, 0)).collect());
 
     let pawn_pst = &pst::PAWN_PST_PATTERN;
     for king_bucket in 0..KING_BUCKETS_COUNT {
-        parameters.append(&mut pawn_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-9999, 50, 150, 9999, -PIECE_VALUE[PAWN])).collect());
+        params.append(&mut pawn_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-9999, 50, 150, 9999, -PIECE_VALUE[PAWN])).collect());
     }
 
     let knight_pst = &pst::KNIGHT_PST_PATTERN;
     for king_bucket in 0..KING_BUCKETS_COUNT {
-        parameters.append(&mut knight_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-9999, 300, 500, 9999, -PIECE_VALUE[KNIGHT])).collect());
+        params.append(&mut knight_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-9999, 300, 500, 9999, -PIECE_VALUE[KNIGHT])).collect());
     }
 
     let bishop_pst = &pst::BISHOP_PST_PATTERN;
     for king_bucket in 0..KING_BUCKETS_COUNT {
-        parameters.append(&mut bishop_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-9999, 300, 500, 9999, -PIECE_VALUE[BISHOP])).collect());
+        params.append(&mut bishop_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-9999, 300, 500, 9999, -PIECE_VALUE[BISHOP])).collect());
     }
 
     let rook_pst = &pst::ROOK_PST_PATTERN;
     for king_bucket in 0..KING_BUCKETS_COUNT {
-        parameters.append(&mut rook_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-9999, 400, 600, 9999, -PIECE_VALUE[ROOK])).collect());
+        params.append(&mut rook_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-9999, 400, 600, 9999, -PIECE_VALUE[ROOK])).collect());
     }
 
     let queen_pst = &pst::QUEEN_PST_PATTERN;
     for king_bucket in 0..KING_BUCKETS_COUNT {
-        parameters.append(&mut queen_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-9999, 800, 1400, 9999, -PIECE_VALUE[QUEEN])).collect());
+        params.append(&mut queen_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-9999, 800, 1400, 9999, -PIECE_VALUE[QUEEN])).collect());
     }
 
     let king_pst = &pst::KING_PST_PATTERN;
     for king_bucket in 0..KING_BUCKETS_COUNT {
-        parameters.append(&mut king_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-999, -40, 40, 999, 0)).collect());
+        params.append(&mut king_pst[king_bucket].iter().flat_map(|v| v.to_tuner_params(-999, -40, 40, 999, 0)).collect());
     }
 
     if random_values {
         rand::seed(common::time::get_unix_timestamp());
-        for parameter in &mut parameters {
+        for parameter in &mut params {
             parameter.value = rand::i16(parameter.min_init..=parameter.max_init);
         }
     }
 
-    for parameter in &mut parameters {
+    for parameter in &mut params {
         parameter.value = parameter.value.clamp(parameter.min, parameter.max);
     }
 
-    parameters
+    params
 }
 
 /// Generates `parameters.rs` file with current evaluation parameters, and saves it into the `output_directory`.

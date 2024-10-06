@@ -49,14 +49,14 @@ pub struct SearchStatistics {
 
     pub tt_legal_hashmoves: u64,
     pub tt_illegal_hashmoves: u64,
-    pub killers_table_legal_moves: u64,
-    pub killers_table_illegal_moves: u64,
-    pub countermoves_table_legal_moves: u64,
-    pub countermoves_table_illegal_moves: u64,
+    pub ktable_legal_moves: u64,
+    pub ktable_illegal_moves: u64,
+    pub cmtable_legal_moves: u64,
+    pub cmtable_illegal_moves: u64,
 
-    pub pawn_hashtable_added: u64,
-    pub pawn_hashtable_hits: u64,
-    pub pawn_hashtable_misses: u64,
+    pub phtable_added: u64,
+    pub phtable_hits: u64,
+    pub phtable_misses: u64,
 
     pub move_generator_hash_move_stages: u64,
     pub move_generator_captures_stages: u64,
@@ -116,9 +116,9 @@ impl ops::AddAssign<&SearchStatistics> for SearchStatistics {
         self.tt_legal_hashmoves += rhs.tt_legal_hashmoves;
         self.tt_illegal_hashmoves += rhs.tt_illegal_hashmoves;
 
-        self.pawn_hashtable_added += rhs.pawn_hashtable_added;
-        self.pawn_hashtable_hits += rhs.pawn_hashtable_hits;
-        self.pawn_hashtable_misses += rhs.pawn_hashtable_misses;
+        self.phtable_added += rhs.phtable_added;
+        self.phtable_hits += rhs.phtable_hits;
+        self.phtable_misses += rhs.phtable_misses;
 
         self.move_generator_hash_move_stages += rhs.move_generator_hash_move_stages;
         self.move_generator_captures_stages += rhs.move_generator_captures_stages;

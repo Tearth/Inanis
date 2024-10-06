@@ -25,7 +25,6 @@ macro_rules! s {
 pub(crate) use s;
 
 #[derive(Copy, Clone, Default)]
-
 pub struct PackedEval {
     pub data: i32,
 }

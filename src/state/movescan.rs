@@ -9,10 +9,10 @@ use crate::utils::bitflags::BitFlags;
 use crate::utils::bithelpers::BitHelpers;
 use crate::utils::panic_fast;
 use crate::utils::rand;
+use crate::Moves;
 use std::cmp;
 use std::fmt::Display;
 use std::fmt::Formatter;
-use std::mem::MaybeUninit;
 
 #[allow(non_snake_case)]
 pub mod MoveFlags {
@@ -361,12 +361,7 @@ impl Display for Move {
 /// Generates all possible non-captures (if `CAPTURES` is false) or all possible captures (if `CAPTURES` is true) for the `PIECE` at
 /// the position specified by `board`, stores them into `moves` list (starting from `index`) and returns index of the first free slot.
 /// Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the specified squares (useful during checks).
-pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(
-    board: &Board,
-    moves: &mut [MaybeUninit<Move>; engine::MAX_MOVES_COUNT],
-    mut index: usize,
-    evasion_mask: u64,
-) -> usize {
+pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(board: &Board, moves: &mut Moves, mut index: usize, evasion_mask: u64) -> usize {
     assert_fast!(board.active_color < 2);
 
     let enemy_color = board.active_color ^ 1;
@@ -508,12 +503,7 @@ pub fn get_piece_mobility<const PIECE: usize>(board: &Board, color: usize, aux: 
 /// Generates all possible non-captures (if `CAPTURES` is false) or all possible captures (if `CAPTURES` is true) for the pawns at
 /// the position specified by `board`, stores them into `moves` list (starting from `index`) and returns index of the first free slot.
 /// Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the specified squares (useful during checks).
-pub fn scan_pawn_moves<const CAPTURES: bool>(
-    board: &Board,
-    moves: &mut [MaybeUninit<Move>; engine::MAX_MOVES_COUNT],
-    mut index: usize,
-    evasion_mask: u64,
-) -> usize {
+pub fn scan_pawn_moves<const CAPTURES: bool>(board: &Board, moves: &mut Moves, mut index: usize, evasion_mask: u64) -> usize {
     if !CAPTURES {
         index = scan_pawn_moves_single_push(board, moves, index, evasion_mask);
         index = scan_pawn_moves_double_push(board, moves, index, evasion_mask);
@@ -528,7 +518,7 @@ pub fn scan_pawn_moves<const CAPTURES: bool>(
 /// Generates all possible single pushes for the pawns at the position specified by `board`, stores them into `moves` list (starting from `index`)
 /// and returns index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the
 /// specified squares (useful during checks).
-fn scan_pawn_moves_single_push(board: &Board, moves: &mut [MaybeUninit<Move>; engine::MAX_MOVES_COUNT], mut index: usize, evasion_mask: u64) -> usize {
+fn scan_pawn_moves_single_push(board: &Board, moves: &mut Moves, mut index: usize, evasion_mask: u64) -> usize {
     assert_fast!(board.active_color < 2);
 
     let pieces_bb = board.pieces[board.active_color][PAWN];
@@ -573,7 +563,7 @@ fn scan_pawn_moves_single_push(board: &Board, moves: &mut [MaybeUninit<Move>; en
 /// Generates all possible double pushes for the pawns at the position specified by `board`, stores them into `moves` list (starting from `index`)
 /// and returns index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the
 /// specified squares (useful during checks).
-fn scan_pawn_moves_double_push(board: &Board, moves: &mut [MaybeUninit<Move>; engine::MAX_MOVES_COUNT], mut index: usize, evasion_mask: u64) -> usize {
+fn scan_pawn_moves_double_push(board: &Board, moves: &mut Moves, mut index: usize, evasion_mask: u64) -> usize {
     assert_fast!(board.active_color < 2);
 
     let pieces_bb = board.pieces[board.active_color][PAWN];
@@ -607,12 +597,7 @@ fn scan_pawn_moves_double_push(board: &Board, moves: &mut [MaybeUninit<Move>; en
 /// Generates all possible captures for the pawns toward the direction specified by `DIR` and at the position specified by `board`,
 /// stores them into `moves` list (starting from `index`) and returns index of the first free slot. Use `evasion_mask` with value
 /// different than `u64::MAX` to restrict generator to the specified squares (useful during checks).
-fn scan_pawn_moves_diagonal_attacks<const DIR: usize>(
-    board: &Board,
-    moves: &mut [MaybeUninit<Move>; engine::MAX_MOVES_COUNT],
-    mut index: usize,
-    evasion_mask: u64,
-) -> usize {
+fn scan_pawn_moves_diagonal_attacks<const DIR: usize>(board: &Board, moves: &mut Moves, mut index: usize, evasion_mask: u64) -> usize {
     assert_fast!(board.active_color < 2);
 
     let enemy_color = board.active_color ^ 1;

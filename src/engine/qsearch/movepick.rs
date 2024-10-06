@@ -1,23 +1,18 @@
 use crate::engine::context::SearchContext;
 use crate::engine::*;
 use crate::evaluation::*;
-use crate::state::movescan::Move;
 use crate::state::movescan::MoveFlags;
 use crate::state::*;
 use crate::utils::assert_fast;
-use std::mem::MaybeUninit;
+use crate::MoveScores;
+use crate::Moves;
 
 /// Assigns scores for `moves` by filling `move_scores` array with `moves_count` length, based on current `context`. Move ordering in
 /// quiescence search is mainly based on SEE and works as follows:
 ///  - for every en passant, assign 0
 ///  - for every promotion, ignore all of them except queens
 ///  - for rest of the moves, assign SEE result
-pub fn assign_move_scores(
-    context: &SearchContext,
-    moves: &[MaybeUninit<Move>; MAX_MOVES_COUNT],
-    move_scores: &mut [MaybeUninit<i16>; MAX_MOVES_COUNT],
-    moves_count: usize,
-) {
+pub fn assign_move_scores(context: &SearchContext, moves: &Moves, move_scores: &mut MoveScores, moves_count: usize) {
     assert_fast!(moves_count < MAX_MOVES_COUNT);
 
     let mut attackers_cache = [0; 64];

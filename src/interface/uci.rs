@@ -1,8 +1,8 @@
-use crate::cache::pawns::PawnHashTable;
-use crate::cache::search::TranspositionTable;
+use crate::cache::pawns::PHTable;
+use crate::cache::search::TTable;
 use crate::engine;
 use crate::engine::context::SearchContext;
-use crate::engine::params::SearchParameters;
+use crate::engine::params::SParams;
 use crate::perft;
 use crate::state::movescan::Move;
 use crate::state::representation::Board;
@@ -77,11 +77,8 @@ impl Default for UciState {
             context: Arc::new(RwLock::new(SearchContext::new(
                 Board::new_initial_position(),
                 Default::default(),
-                Arc::new(TranspositionTable::new(1 * 1024 * 1024)),
-                Arc::new(PawnHashTable::new(1 * 1024 * 1024)),
-                Default::default(),
-                Default::default(),
-                Default::default(),
+                Arc::new(TTable::new(1 * 1024 * 1024)),
+                Arc::new(PHTable::new(1 * 1024 * 1024)),
                 abort_flag.clone(),
                 ponder_flag.clone(),
             ))),
@@ -117,51 +114,51 @@ pub fn run() {
 
     #[cfg(feature = "dev")]
     {
-        let parameters = SearchParameters::default();
-        options_lock.insert("aspwin_delta".to_string(), UciOption::new_wide(99, parameters.aspwin_delta));
-        options_lock.insert("aspwin_min_depth".to_string(), UciOption::new_wide(99, parameters.aspwin_min_depth));
-        options_lock.insert("aspwin_max_width".to_string(), UciOption::new_wide(99, parameters.aspwin_max_width));
+        let params = SParams::default();
+        options_lock.insert("aspwin_delta".to_string(), UciOption::new_wide(99, params.aspwin_delta));
+        options_lock.insert("aspwin_min_depth".to_string(), UciOption::new_wide(99, params.aspwin_min_depth));
+        options_lock.insert("aspwin_max_width".to_string(), UciOption::new_wide(99, params.aspwin_max_width));
 
-        options_lock.insert("iir_min_depth".to_string(), UciOption::new_wide(99, parameters.iir_min_depth));
-        options_lock.insert("iir_reduction_base".to_string(), UciOption::new_wide(99, parameters.iir_reduction_base));
-        options_lock.insert("iir_reduction_step".to_string(), UciOption::new_wide(99, parameters.iir_reduction_step));
-        options_lock.insert("iir_max_reduction".to_string(), UciOption::new_wide(99, parameters.iir_max_reduction));
+        options_lock.insert("iir_min_depth".to_string(), UciOption::new_wide(99, params.iir_min_depth));
+        options_lock.insert("iir_reduction_base".to_string(), UciOption::new_wide(99, params.iir_reduction_base));
+        options_lock.insert("iir_reduction_step".to_string(), UciOption::new_wide(99, params.iir_reduction_step));
+        options_lock.insert("iir_max_reduction".to_string(), UciOption::new_wide(99, params.iir_max_reduction));
 
-        options_lock.insert("razoring_min_depth".to_string(), UciOption::new_wide(99, parameters.razoring_min_depth));
-        options_lock.insert("razoring_max_depth".to_string(), UciOption::new_wide(99, parameters.razoring_max_depth));
-        options_lock.insert("razoring_depth_margin_base".to_string(), UciOption::new_wide(99, parameters.razoring_depth_margin_base));
-        options_lock.insert("razoring_depth_margin_multiplier".to_string(), UciOption::new_wide(99, parameters.razoring_depth_margin_multiplier));
+        options_lock.insert("razoring_min_depth".to_string(), UciOption::new_wide(99, params.razoring_min_depth));
+        options_lock.insert("razoring_max_depth".to_string(), UciOption::new_wide(99, params.razoring_max_depth));
+        options_lock.insert("razoring_depth_margin_base".to_string(), UciOption::new_wide(99, params.razoring_depth_margin_base));
+        options_lock.insert("razoring_depth_margin_multiplier".to_string(), UciOption::new_wide(99, params.razoring_depth_margin_multiplier));
 
-        options_lock.insert("snmp_min_depth".to_string(), UciOption::new_wide(99, parameters.snmp_min_depth));
-        options_lock.insert("snmp_max_depth".to_string(), UciOption::new_wide(99, parameters.snmp_max_depth));
-        options_lock.insert("snmp_depth_margin_base".to_string(), UciOption::new_wide(99, parameters.snmp_depth_margin_base));
-        options_lock.insert("snmp_depth_margin_multiplier".to_string(), UciOption::new_wide(99, parameters.snmp_depth_margin_multiplier));
+        options_lock.insert("snmp_min_depth".to_string(), UciOption::new_wide(99, params.snmp_min_depth));
+        options_lock.insert("snmp_max_depth".to_string(), UciOption::new_wide(99, params.snmp_max_depth));
+        options_lock.insert("snmp_depth_margin_base".to_string(), UciOption::new_wide(99, params.snmp_depth_margin_base));
+        options_lock.insert("snmp_depth_margin_multiplier".to_string(), UciOption::new_wide(99, params.snmp_depth_margin_multiplier));
 
-        options_lock.insert("nmp_min_depth".to_string(), UciOption::new_wide(99, parameters.nmp_min_depth));
-        options_lock.insert("nmp_min_game_phase".to_string(), UciOption::new_wide(99, parameters.nmp_min_game_phase));
-        options_lock.insert("nmp_margin".to_string(), UciOption::new_wide(99, parameters.nmp_margin));
-        options_lock.insert("nmp_depth_base".to_string(), UciOption::new_wide(99, parameters.nmp_depth_base));
-        options_lock.insert("nmp_depth_divider".to_string(), UciOption::new_wide(99, parameters.nmp_depth_divider));
+        options_lock.insert("nmp_min_depth".to_string(), UciOption::new_wide(99, params.nmp_min_depth));
+        options_lock.insert("nmp_min_game_phase".to_string(), UciOption::new_wide(99, params.nmp_min_game_phase));
+        options_lock.insert("nmp_margin".to_string(), UciOption::new_wide(99, params.nmp_margin));
+        options_lock.insert("nmp_depth_base".to_string(), UciOption::new_wide(99, params.nmp_depth_base));
+        options_lock.insert("nmp_depth_divider".to_string(), UciOption::new_wide(99, params.nmp_depth_divider));
 
-        options_lock.insert("lmp_min_depth".to_string(), UciOption::new_wide(99, parameters.lmp_min_depth));
-        options_lock.insert("lmp_max_depth".to_string(), UciOption::new_wide(99, parameters.lmp_max_depth));
-        options_lock.insert("lmp_move_index_margin_base".to_string(), UciOption::new_wide(99, parameters.lmp_move_index_margin_base));
-        options_lock.insert("lmp_move_index_margin_multiplier".to_string(), UciOption::new_wide(99, parameters.lmp_move_index_margin_multiplier));
-        options_lock.insert("lmp_max_score".to_string(), UciOption::new_wide(99, parameters.lmp_max_score));
+        options_lock.insert("lmp_min_depth".to_string(), UciOption::new_wide(99, params.lmp_min_depth));
+        options_lock.insert("lmp_max_depth".to_string(), UciOption::new_wide(99, params.lmp_max_depth));
+        options_lock.insert("lmp_move_index_margin_base".to_string(), UciOption::new_wide(99, params.lmp_move_index_margin_base));
+        options_lock.insert("lmp_move_index_margin_multiplier".to_string(), UciOption::new_wide(99, params.lmp_move_index_margin_multiplier));
+        options_lock.insert("lmp_max_score".to_string(), UciOption::new_wide(99, params.lmp_max_score));
 
-        options_lock.insert("lmr_min_depth".to_string(), UciOption::new_wide(99, parameters.lmr_min_depth));
-        options_lock.insert("lmr_max_score".to_string(), UciOption::new_wide(99, parameters.lmr_max_score));
-        options_lock.insert("lmr_min_move_index".to_string(), UciOption::new_wide(99, parameters.lmr_min_move_index));
-        options_lock.insert("lmr_reduction_base".to_string(), UciOption::new_wide(99, parameters.lmr_reduction_base));
-        options_lock.insert("lmr_reduction_step".to_string(), UciOption::new_wide(99, parameters.lmr_reduction_step));
-        options_lock.insert("lmr_max_reduction".to_string(), UciOption::new_wide(99, parameters.lmr_max_reduction));
-        options_lock.insert("lmr_pv_min_move_index".to_string(), UciOption::new_wide(99, parameters.lmr_pv_min_move_index));
-        options_lock.insert("lmr_pv_reduction_base".to_string(), UciOption::new_wide(99, parameters.lmr_pv_reduction_base));
-        options_lock.insert("lmr_pv_reduction_step".to_string(), UciOption::new_wide(99, parameters.lmr_pv_reduction_step));
-        options_lock.insert("lmr_pv_max_reduction".to_string(), UciOption::new_wide(99, parameters.lmr_pv_max_reduction));
+        options_lock.insert("lmr_min_depth".to_string(), UciOption::new_wide(99, params.lmr_min_depth));
+        options_lock.insert("lmr_max_score".to_string(), UciOption::new_wide(99, params.lmr_max_score));
+        options_lock.insert("lmr_min_move_index".to_string(), UciOption::new_wide(99, params.lmr_min_move_index));
+        options_lock.insert("lmr_reduction_base".to_string(), UciOption::new_wide(99, params.lmr_reduction_base));
+        options_lock.insert("lmr_reduction_step".to_string(), UciOption::new_wide(99, params.lmr_reduction_step));
+        options_lock.insert("lmr_max_reduction".to_string(), UciOption::new_wide(99, params.lmr_max_reduction));
+        options_lock.insert("lmr_pv_min_move_index".to_string(), UciOption::new_wide(99, params.lmr_pv_min_move_index));
+        options_lock.insert("lmr_pv_reduction_base".to_string(), UciOption::new_wide(99, params.lmr_pv_reduction_base));
+        options_lock.insert("lmr_pv_reduction_step".to_string(), UciOption::new_wide(99, params.lmr_pv_reduction_step));
+        options_lock.insert("lmr_pv_max_reduction".to_string(), UciOption::new_wide(99, params.lmr_pv_max_reduction));
 
-        options_lock.insert("q_score_pruning_treshold".to_string(), UciOption::new_wide(99, parameters.q_score_pruning_treshold));
-        options_lock.insert("q_futility_pruning_margin".to_string(), UciOption::new_wide(99, parameters.q_futility_pruning_margin));
+        options_lock.insert("q_score_pruning_treshold".to_string(), UciOption::new_wide(99, params.q_score_pruning_treshold));
+        options_lock.insert("q_futility_pruning_margin".to_string(), UciOption::new_wide(99, params.q_futility_pruning_margin));
     }
 
     let mut options_sorted = options_lock.iter().collect::<Vec<_>>();
@@ -207,12 +204,12 @@ pub fn run() {
 }
 
 /// Handles `debug [on/off]` command by setting the proper flag.
-fn handle_debug(parameters: &[String], state: &mut UciState) {
-    if parameters.len() < 2 {
+fn handle_debug(params: &[String], state: &mut UciState) {
+    if params.len() < 2 {
         return;
     }
 
-    state.debug_mode = matches!(parameters[1].as_str(), "on");
+    state.debug_mode = matches!(params[1].as_str(), "on");
 }
 
 /// Handles non-standard `fen` command by printing FEN of the current position.
@@ -232,7 +229,7 @@ fn handle_fen(state: &UciState) {
 ///  - `infinite` - tells the search to run until it reaches the maximal depth for the engine
 ///  - `searchmoves [moves]` - restricts search to the provided moves list
 ///  - `ponder` - tells the search to run in the ponder mode (thinking on the opponent's time)
-fn handle_go(parameters: &[String], state: &UciState) {
+fn handle_go(params: &[String], state: &UciState) {
     let mut white_time = u32::MAX;
     let mut black_time = u32::MAX;
     let mut white_inc_time = 0;
@@ -248,7 +245,7 @@ fn handle_go(parameters: &[String], state: &UciState) {
 
     let mut context_lock = state.context.write().unwrap();
     let options_lock = state.options.read().unwrap();
-    let mut iter = parameters[1..].iter().peekable();
+    let mut iter = params[1..].iter().peekable();
 
     while let Some(token) = iter.next() {
         match token.as_str() {
@@ -386,10 +383,10 @@ fn handle_go(parameters: &[String], state: &UciState) {
         let syzygy_probe_depth = options_lock["SyzygyProbeDepth"].value.parse::<i8>().unwrap();
 
         #[cfg(not(feature = "dev"))]
-        let search_parameters = SearchParameters::default();
+        let search_params = SParams::default();
 
         #[cfg(feature = "dev")]
-        let search_parameters = SearchParameters {
+        let search_params = SParams {
             aspwin_delta: options_lock["aspwin_delta"].value.parse().unwrap(),
             aspwin_min_depth: options_lock["aspwin_min_depth"].value.parse().unwrap(),
             aspwin_max_width: options_lock["aspwin_max_width"].value.parse().unwrap(),
@@ -436,7 +433,7 @@ fn handle_go(parameters: &[String], state: &UciState) {
             q_futility_pruning_margin: options_lock["q_futility_pruning_margin"].value.parse().unwrap(),
         };
 
-        context_lock.parameters = search_parameters.clone();
+        context_lock.params = search_params.clone();
         context_lock.search_id = context_lock.board.state_stack.len() as u8;
         context_lock.time = time;
         context_lock.inc_time = inc_time;
@@ -462,12 +459,9 @@ fn handle_go(parameters: &[String], state: &UciState) {
         for _ in 0..threads - 1 {
             let helper_context = SearchContext::new(
                 context_lock.board.clone(),
-                search_parameters.clone(),
-                context_lock.transposition_table.clone(),
-                context_lock.pawn_hashtable.clone(),
-                Default::default(),
-                Default::default(),
-                Default::default(),
+                search_params.clone(),
+                context_lock.ttable.clone(),
+                context_lock.phtable.clone(),
                 context_lock.abort_flag.clone(),
                 context_lock.ponder_flag.clone(),
             );
@@ -499,7 +493,7 @@ fn handle_go(parameters: &[String], state: &UciState) {
                         context_lock.statistics.max_ply,
                         line_index + 1,
                         context_lock.statistics.nodes_count + context_lock.statistics.q_nodes_count,
-                        (context_lock.transposition_table.get_usage(1000) * 10.0) as u32,
+                        (context_lock.ttable.get_usage(1000) * 10.0) as u32,
                         context_lock.statistics.tb_hits,
                         pv_line.join(" ").as_str()
                     )
@@ -548,8 +542,8 @@ fn handle_go(parameters: &[String], state: &UciState) {
             println!("bestmove {}", best_move);
         }
 
-        context_lock.killers_table.age_moves();
-        context_lock.history_table.age_values();
+        context_lock.ktable.age_moves();
+        context_lock.htable.age_values();
     });
 }
 
@@ -569,16 +563,16 @@ fn handle_ponderhit(state: &UciState) {
 ///  - `position startpos moves [list of moves]` - sets a default position and applies a list of moves
 ///  - `position fen [fen]` - sets a FEN position
 ///  - `position fen [fen] moves [list of moves]` - sets a FEN position and applies a list of moves
-fn handle_position(parameters: &[String], state: &UciState) {
-    if parameters.len() < 2 {
+fn handle_position(params: &[String], state: &UciState) {
+    if params.len() < 2 {
         return;
     }
 
     let mut context_lock = state.context.write().unwrap();
 
-    context_lock.board = match parameters[1].as_str() {
+    context_lock.board = match params[1].as_str() {
         "fen" => {
-            let fen = parameters[2..].join(" ");
+            let fen = params[2..].join(" ");
             match Board::new_from_fen(fen.as_str()) {
                 Ok(board) => board,
                 Err(error) => {
@@ -590,8 +584,8 @@ fn handle_position(parameters: &[String], state: &UciState) {
         _ => Board::new_initial_position(),
     };
 
-    if let Some(index) = parameters.iter().position(|s| s == "moves") {
-        for premade_move in &parameters[index + 1..] {
+    if let Some(index) = params.iter().position(|s| s == "moves") {
+        for premade_move in &params[index + 1..] {
             let parsed_move = match Move::from_long_notation(premade_move, &context_lock.board) {
                 Ok(r#move) => r#move,
                 Err(error) => {
@@ -607,7 +601,7 @@ fn handle_position(parameters: &[String], state: &UciState) {
 
 /// Handles `setoption [name] value [value]` command by creating or overwriting a `name` option with the specified `value`. Recreates tables if `Hash` or
 /// `Clear Hash` options are modified.
-fn handle_setoption(parameters: &[String], state: &mut UciState) {
+fn handle_setoption(params: &[String], state: &mut UciState) {
     let options_arc = state.options.clone();
     let mut options_lock = options_arc.write().unwrap();
 
@@ -616,7 +610,7 @@ fn handle_setoption(parameters: &[String], state: &mut UciState) {
     let mut name_tokens = Vec::new();
     let mut value_tokens = Vec::new();
 
-    for parameter in parameters {
+    for parameter in params {
         match parameter.as_str() {
             "name" => {
                 reading_name = true;
@@ -700,13 +694,13 @@ fn recreate_state_tables(state: &mut UciState) {
     let mut context_lock = state.context.write().unwrap();
     let options_lock = state.options.read().unwrap();
 
-    let transposition_table_size = options_lock["Hash"].value.parse::<usize>().unwrap();
+    let ttable_size = options_lock["Hash"].value.parse::<usize>().unwrap();
 
-    context_lock.transposition_table = Arc::new(TranspositionTable::new(transposition_table_size * 1024 * 1024));
-    context_lock.pawn_hashtable = Arc::new(PawnHashTable::new(PAWN_HASHTABLE_SIZE));
-    context_lock.killers_table = Default::default();
-    context_lock.history_table = Default::default();
-    context_lock.countermoves_table = Default::default();
+    context_lock.ttable = Arc::new(TTable::new(ttable_size * 1024 * 1024));
+    context_lock.phtable = Arc::new(PHTable::new(PAWN_HASHTABLE_SIZE));
+    context_lock.ktable = Default::default();
+    context_lock.htable = Default::default();
+    context_lock.cmtable = Default::default();
 }
 
 /// Enables saving of crash files by setting a custom panic hook.

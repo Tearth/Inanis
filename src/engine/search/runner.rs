@@ -1,4 +1,4 @@
-use crate::cache::search::TranspositionTableScoreType;
+use crate::cache::search::TTableScoreType;
 use crate::engine::context::SearchContext;
 use crate::engine::*;
 use crate::state::movescan::Move;
@@ -17,10 +17,10 @@ use std::sync::atomic::Ordering;
 /// Aspiration window wrapper for the entry point of the regular search, look at `run_internal` for more information.
 pub fn run(context: &mut SearchContext, depth: i8) {
     let king_checked = context.board.is_king_checked(context.board.active_color);
-    if depth < param!(context.parameters.aspwin_min_depth) {
+    if depth < param!(context.params.aspwin_min_depth) {
         context.last_score = run_internal::<true, true>(context, depth, 0, MIN_ALPHA, MIN_BETA, true, king_checked, Move::default());
     } else {
-        let mut delta = param!(context.parameters.aspwin_delta);
+        let mut delta = param!(context.params.aspwin_delta);
         let mut alpha = context.last_score - delta;
         let mut beta = context.last_score + delta;
 
@@ -40,7 +40,7 @@ pub fn run(context: &mut SearchContext, depth: i8) {
             }
 
             delta *= 2;
-            if delta >= param!(context.parameters.aspwin_max_width) {
+            if delta >= param!(context.params.aspwin_max_width) {
                 alpha = MIN_ALPHA;
                 beta = MIN_BETA;
             }
@@ -164,7 +164,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
     let mut tt_entry_found = false;
     let mut hash_move = Default::default();
 
-    match context.transposition_table.get(context.board.state.hash, ply) {
+    match context.ttable.get(context.board.state.hash, ply) {
         Some(entry) => {
             dev!(context.statistics.tt_hits += 1);
 
@@ -181,10 +181,10 @@ fn run_internal<const ROOT: bool, const PV: bool>(
                 if entry.depth >= depth {
                     tt_entry_found = true;
                     match entry.r#type {
-                        TranspositionTableScoreType::UPPER_BOUND => {
+                        TTableScoreType::UPPER_BOUND => {
                             beta = cmp::min(beta, entry.score);
                         }
-                        TranspositionTableScoreType::LOWER_BOUND => {
+                        TTableScoreType::LOWER_BOUND => {
                             alpha = cmp::max(alpha, entry.score);
                         }
                         _ => {
@@ -204,7 +204,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
                     }
                 } else {
                     match entry.r#type {
-                        TranspositionTableScoreType::UPPER_BOUND | TranspositionTableScoreType::EXACT_SCORE => {
+                        TTableScoreType::UPPER_BOUND | TTableScoreType::EXACT_SCORE => {
                             if entry.score < beta {
                                 allow_null_move = false;
                             }
@@ -229,7 +229,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
         let margin = razoring_get_margin(context, depth);
         let lazy_evaluation_value = match lazy_evaluation {
             Some(value) => value,
-            None => context.board.evaluate_fast(context.board.active_color, &context.pawn_hashtable, &mut context.statistics),
+            None => context.board.evaluate_fast(context.board.active_color, &context.phtable, &mut context.statistics),
         };
 
         dev!(context.statistics.razoring_attempts += 1);
@@ -251,7 +251,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
         let margin = snmp_get_margin(context, depth);
         let lazy_evaluation_value = match lazy_evaluation {
             Some(value) => value,
-            None => context.board.evaluate_fast(context.board.active_color, &context.pawn_hashtable, &mut context.statistics),
+            None => context.board.evaluate_fast(context.board.active_color, &context.phtable, &mut context.statistics),
         };
 
         dev!(context.statistics.snmp_attempts += 1);
@@ -267,10 +267,10 @@ fn run_internal<const ROOT: bool, const PV: bool>(
     }
 
     if nmp_can_be_applied::<PV>(context, depth, beta, allow_null_move, friendly_king_checked) {
-        let margin = param!(context.parameters.nmp_margin);
+        let margin = param!(context.params.nmp_margin);
         let lazy_evaluation_value = match lazy_evaluation {
             Some(value) => value,
-            None => context.board.evaluate_fast(context.board.active_color, &context.pawn_hashtable, &mut context.statistics),
+            None => context.board.evaluate_fast(context.board.active_color, &context.phtable, &mut context.statistics),
         };
 
         dev!(context.statistics.nmp_attempts += 1);
@@ -334,7 +334,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
         }
 
         context.board.make_move(r#move);
-        context.transposition_table.prefetch(context.board.state.hash);
+        context.ttable.prefetch(context.board.state.hash);
 
         let king_checked = context.board.is_king_checked(context.board.active_color);
         let r = if lmr_can_be_applied::<PV>(context, depth, r#move, move_number, score, friendly_king_checked, king_checked) {
@@ -383,11 +383,11 @@ fn run_internal<const ROOT: bool, const PV: bool>(
 
             if alpha >= beta {
                 if r#move.is_quiet() {
-                    context.killers_table.add(ply, r#move);
-                    context.history_table.add(r#move.get_from(), r#move.get_to(), depth as u8);
+                    context.ktable.add(ply, r#move);
+                    context.htable.add(r#move.get_from(), r#move.get_to(), depth as u8);
 
                     if previous_move.is_some() {
-                        context.countermoves_table.add(previous_move, r#move);
+                        context.cmtable.add(previous_move, r#move);
                     }
 
                     if move_generator_stage == MoveGenStage::AllGenerated {
@@ -396,7 +396,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
 
                             let move_from_list = unsafe { moves[i].assume_init() };
                             if move_from_list.is_quiet() && move_from_list != best_move {
-                                context.history_table.punish(move_from_list.get_from(), move_from_list.get_to(), depth as u8);
+                                context.htable.punish(move_from_list.get_from(), move_from_list.get_to(), depth as u8);
                             }
                         }
                     }
@@ -416,7 +416,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
         if ROOT && context.multipv {
             context.board.make_move(best_move);
             if !context.board.is_king_checked(context.board.active_color ^ 1) {
-                let mut pv_line = context.transposition_table.get_pv_line(&mut context.board.clone(), 0);
+                let mut pv_line = context.ttable.get_pv_line(&mut context.board.clone(), 0);
                 pv_line.insert(0, best_move);
 
                 context.lines.push(SearchResultLine::new(best_score, pv_line));
@@ -435,19 +435,19 @@ fn run_internal<const ROOT: bool, const PV: bool>(
 
     if (!tt_entry_found || alpha != original_alpha) && !context.abort_flag.load(Ordering::Relaxed) {
         let score_type = if alpha <= original_alpha {
-            TranspositionTableScoreType::UPPER_BOUND
+            TTableScoreType::UPPER_BOUND
         } else if alpha >= beta {
-            TranspositionTableScoreType::LOWER_BOUND
+            TTableScoreType::LOWER_BOUND
         } else {
-            TranspositionTableScoreType::EXACT_SCORE
+            TTableScoreType::EXACT_SCORE
         };
 
-        context.transposition_table.add(context.board.state.hash, alpha, best_move, depth, ply, score_type, context.search_id);
+        context.ttable.add(context.board.state.hash, alpha, best_move, depth, ply, score_type, context.search_id);
         dev!(context.statistics.tt_added += 1);
     }
 
     if ROOT && !context.multipv {
-        let pv_line = context.transposition_table.get_pv_line(&mut context.board.clone(), 0);
+        let pv_line = context.ttable.get_pv_line(&mut context.board.clone(), 0);
         context.lines.push(SearchResultLine::new(best_score, pv_line));
     }
 
@@ -475,15 +475,15 @@ fn check_extensions_get_e() -> i8 {
 ///  - depth >= `iir_min_depth`
 ///  - hash move does not exists
 fn iir_can_be_applied(context: &mut SearchContext, depth: i8, hash_move: Move) -> bool {
-    depth >= param!(context.parameters.iir_min_depth) && hash_move == Move::default()
+    depth >= param!(context.params.iir_min_depth) && hash_move == Move::default()
 }
 
 /// Gets the internal iterative depth reduction, called R, based on `depth`. The further from the horizon we are, the more reduction will be applied.
 fn iir_get_r(_context: &mut SearchContext, _depth: i8) -> i8 {
-    /*let reduction_base = parameter!(context.parameters.iir_reduction_base);
-    let min_depth = parameter!(context.parameters.iir_min_depth);
-    let reduction_step = parameter!(context.parameters.iir_reduction_step);
-    let max_reduction = parameter!(context.parameters.iir_max_reduction);
+    /*let reduction_base = parameter!(context.params.iir_reduction_base);
+    let min_depth = parameter!(context.params.iir_min_depth);
+    let reduction_step = parameter!(context.params.iir_reduction_step);
+    let max_reduction = parameter!(context.params.iir_max_reduction);
 
     (reduction_base + (depth - min_depth) / reduction_step).min(max_reduction)*/
 
@@ -501,17 +501,17 @@ fn iir_get_r(_context: &mut SearchContext, _depth: i8) -> i8 {
 ///  - alpha is not a mate score
 ///  - friendly king is not checked
 fn razoring_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, alpha: i16, friendly_king_checked: bool) -> bool {
-    let min_depth = param!(context.parameters.razoring_min_depth);
-    let max_depth = param!(context.parameters.razoring_max_depth);
+    let min_depth = param!(context.params.razoring_min_depth);
+    let max_depth = param!(context.params.razoring_max_depth);
 
     !PV && depth >= min_depth && depth <= max_depth && !is_score_near_checkmate(alpha) && !friendly_king_checked
 }
 
 /// Gets the razoring margin, based on `depth`. The further from the horizon we are, the more margin we should take to determine if node can be pruned.
 fn razoring_get_margin(context: &mut SearchContext, depth: i8) -> i16 {
-    let depth_margin_base = param!(context.parameters.razoring_depth_margin_base);
-    let min_depth = param!(context.parameters.razoring_min_depth);
-    let depth_margin_multiplier = param!(context.parameters.razoring_depth_margin_multiplier);
+    let depth_margin_base = param!(context.params.razoring_depth_margin_base);
+    let min_depth = param!(context.params.razoring_min_depth);
+    let depth_margin_multiplier = param!(context.params.razoring_depth_margin_multiplier);
 
     depth_margin_base + ((depth - min_depth) as i16) * depth_margin_multiplier
 }
@@ -527,8 +527,8 @@ fn razoring_get_margin(context: &mut SearchContext, depth: i8) -> i16 {
 ///  - beta is not a mate score
 ///  - friendly king is not checked
 fn snmp_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, beta: i16, friendly_king_checked: bool) -> bool {
-    let min_depth = param!(context.parameters.snmp_min_depth);
-    let max_depth = param!(context.parameters.snmp_max_depth);
+    let min_depth = param!(context.params.snmp_min_depth);
+    let max_depth = param!(context.params.snmp_max_depth);
 
     !PV && depth >= min_depth && depth <= max_depth && !is_score_near_checkmate(beta) && !friendly_king_checked
 }
@@ -536,9 +536,9 @@ fn snmp_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, b
 /// Gets the static null move pruning margin, based on `depth`. The further from the horizon we are, the more margin should we take to determine
 /// if node can be pruned.
 fn snmp_get_margin(context: &mut SearchContext, depth: i8) -> i16 {
-    let depth_margin_base = param!(context.parameters.snmp_depth_margin_base);
-    let min_depth = param!(context.parameters.snmp_min_depth);
-    let depth_margin_multiplier = param!(context.parameters.snmp_depth_margin_multiplier);
+    let depth_margin_base = param!(context.params.snmp_depth_margin_base);
+    let min_depth = param!(context.params.snmp_min_depth);
+    let depth_margin_multiplier = param!(context.params.snmp_depth_margin_multiplier);
 
     depth_margin_base + ((depth - min_depth) as i16) * depth_margin_multiplier
 }
@@ -555,16 +555,16 @@ fn snmp_get_margin(context: &mut SearchContext, depth: i8) -> i16 {
 ///  - friendly king is not checked
 ///  - this is not the second null move in a row
 fn nmp_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, beta: i16, allow_null_move: bool, friendly_king_checked: bool) -> bool {
-    let min_depth = param!(context.parameters.nmp_min_depth);
-    let min_game_phase = param!(context.parameters.nmp_min_game_phase);
+    let min_depth = param!(context.params.nmp_min_depth);
+    let min_game_phase = param!(context.params.nmp_min_game_phase);
 
     !PV && depth >= min_depth && context.board.game_phase > min_game_phase && !is_score_near_checkmate(beta) && !friendly_king_checked && allow_null_move
 }
 
 /// Gets the null move pruning depth reduction, called R, based on `depth`. The further from the horizon we are, the more reduction will be applied.
 fn nmp_get_r(context: &mut SearchContext, depth: i8) -> i8 {
-    let depth_base = param!(context.parameters.nmp_depth_base);
-    let depth_divider = param!(context.parameters.nmp_depth_divider);
+    let depth_base = param!(context.params.nmp_depth_base);
+    let depth_divider = param!(context.params.nmp_depth_divider);
 
     depth_base + depth / depth_divider
 }
@@ -580,11 +580,11 @@ fn nmp_get_r(context: &mut SearchContext, depth: i8) -> i8 {
 ///  - move score <= `lmp_max_score`
 ///  - friendly king is not checked
 fn lmp_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, move_index: usize, move_score: i16, friendly_king_checked: bool) -> bool {
-    let min_depth = param!(context.parameters.lmp_min_depth);
-    let max_depth = param!(context.parameters.lmp_max_depth);
-    let move_index_margin_base = param!(context.parameters.lmp_move_index_margin_base);
-    let move_index_margin_multiplier = param!(context.parameters.lmp_move_index_margin_multiplier);
-    let max_score = param!(context.parameters.lmp_max_score);
+    let min_depth = param!(context.params.lmp_min_depth);
+    let max_depth = param!(context.params.lmp_max_depth);
+    let move_index_margin_base = param!(context.params.lmp_move_index_margin_base);
+    let move_index_margin_multiplier = param!(context.params.lmp_move_index_margin_multiplier);
+    let max_score = param!(context.params.lmp_max_score);
 
     !PV && depth >= min_depth
         && depth <= max_depth
@@ -613,9 +613,9 @@ fn lmr_can_be_applied<const PV: bool>(
     friendly_king_checked: bool,
     enemy_king_checked: bool,
 ) -> bool {
-    let min_depth = param!(context.parameters.lmr_min_depth);
-    let min_move_index = if PV { param!(context.parameters.lmr_pv_min_move_index) } else { param!(context.parameters.lmr_min_move_index) };
-    let max_score = param!(context.parameters.lmr_max_score);
+    let min_depth = param!(context.params.lmr_min_depth);
+    let min_move_index = if PV { param!(context.params.lmr_pv_min_move_index) } else { param!(context.params.lmr_min_move_index) };
+    let max_score = param!(context.params.lmr_max_score);
 
     depth >= min_depth && move_index >= min_move_index && move_score <= max_score && r#move.is_quiet() && !friendly_king_checked && !enemy_king_checked
 }
@@ -623,17 +623,17 @@ fn lmr_can_be_applied<const PV: bool>(
 /// Gets the late move depth reduction, called R, based on `move_index`. The lower the move was scored, the larger reduction will be returned.
 fn lmr_get_r<const PV: bool>(context: &mut SearchContext, move_index: usize) -> i8 {
     let (max, r) = if PV {
-        let max_reduction = param!(context.parameters.lmr_pv_max_reduction);
-        let reduction_base = param!(context.parameters.lmr_pv_reduction_base);
-        let min_move_index = param!(context.parameters.lmr_pv_min_move_index);
-        let reduction_step = param!(context.parameters.lmr_pv_reduction_step);
+        let max_reduction = param!(context.params.lmr_pv_max_reduction);
+        let reduction_base = param!(context.params.lmr_pv_reduction_base);
+        let min_move_index = param!(context.params.lmr_pv_min_move_index);
+        let reduction_step = param!(context.params.lmr_pv_reduction_step);
 
         (max_reduction, (reduction_base + (move_index - min_move_index) / reduction_step))
     } else {
-        let max_reduction = param!(context.parameters.lmr_max_reduction);
-        let reduction_base = param!(context.parameters.lmr_reduction_base);
-        let min_move_index = param!(context.parameters.lmr_min_move_index);
-        let reduction_step = param!(context.parameters.lmr_reduction_step);
+        let max_reduction = param!(context.params.lmr_max_reduction);
+        let reduction_base = param!(context.params.lmr_reduction_base);
+        let min_move_index = param!(context.params.lmr_min_move_index);
+        let reduction_step = param!(context.params.lmr_reduction_step);
 
         (max_reduction, (reduction_base + (move_index - min_move_index) / reduction_step))
     };

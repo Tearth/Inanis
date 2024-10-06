@@ -1,11 +1,11 @@
-use self::params::SearchParameters;
+use self::params::SParams;
 use super::stats::SearchStatistics;
 use super::*;
-use crate::cache::counters::CountermovesTable;
-use crate::cache::history::HistoryTable;
-use crate::cache::killers::KillersTable;
-use crate::cache::pawns::PawnHashTable;
-use crate::cache::search::TranspositionTable;
+use crate::cache::counters::CMTable;
+use crate::cache::history::HTable;
+use crate::cache::killers::KTable;
+use crate::cache::pawns::PHTable;
+use crate::cache::search::TTable;
 use crate::engine::clock;
 use crate::state::movescan::Move;
 use crate::state::representation::Board;
@@ -20,7 +20,7 @@ use std::time::SystemTime;
 
 pub struct SearchContext {
     pub board: Board,
-    pub parameters: SearchParameters,
+    pub params: SParams,
     pub search_id: u8,
     pub time: u32,
     pub inc_time: u32,
@@ -40,11 +40,11 @@ pub struct SearchContext {
     pub syzygy_enabled: bool,
     pub syzygy_probe_limit: u32,
     pub syzygy_probe_depth: i8,
-    pub transposition_table: Arc<TranspositionTable>,
-    pub pawn_hashtable: Arc<PawnHashTable>,
-    pub killers_table: KillersTable,
-    pub history_table: HistoryTable,
-    pub countermoves_table: CountermovesTable,
+    pub ttable: Arc<TTable>,
+    pub phtable: Arc<PHTable>,
+    pub ktable: KTable,
+    pub htable: HTable,
+    pub cmtable: CMTable,
     pub helper_contexts: Arc<RwLock<Vec<SearchContext>>>,
     pub abort_flag: Arc<AtomicBool>,
     pub ponder_flag: Arc<AtomicBool>,
@@ -65,27 +65,17 @@ pub struct SearchResultLine {
 impl SearchContext {
     /// Constructs a new instance of [SearchContext] with parameters as follows:
     ///  - `board` - initial position of the board
-    ///  - `parameters` - structure with all search parameters
+    ///  - `params` - structure with all search parameters
     ///  - `syzygy_enabled` - enables or disables Syzygy probing
     ///  - `syzygy_probe_limit` - number of pieces for which the probing should be started
     ///  - `syzygy_probe_depth` - minimal depth at which the probing will be started
-    ///  - `transposition_table`, `pawn_hashtable`, `killers_table`, `history_table`, `countermoves_table` - hashtables used during search
+    ///  - `ttable`, `phtable`, `ktable`, `htable`, `cmtable` - hashtables used during search
     ///  - `abort_flag` - flag used to abort search from the outside of the context
     ///  - `ponder_flag` - flag used to change a search mode from pondering to the regular one
-    pub fn new(
-        board: Board,
-        parameters: SearchParameters,
-        transposition_table: Arc<TranspositionTable>,
-        pawn_hashtable: Arc<PawnHashTable>,
-        killers_table: KillersTable,
-        history_table: HistoryTable,
-        countermoves_table: CountermovesTable,
-        abort_flag: Arc<AtomicBool>,
-        ponder_flag: Arc<AtomicBool>,
-    ) -> Self {
+    pub fn new(board: Board, params: SParams, ttable: Arc<TTable>, phtable: Arc<PHTable>, abort_flag: Arc<AtomicBool>, ponder_flag: Arc<AtomicBool>) -> Self {
         Self {
             board,
-            parameters,
+            params,
             search_id: 0,
             time: 0,
             inc_time: 0,
@@ -105,11 +95,11 @@ impl SearchContext {
             syzygy_enabled: false,
             syzygy_probe_limit: 0,
             syzygy_probe_depth: 0,
-            transposition_table,
-            pawn_hashtable,
-            killers_table,
-            history_table,
-            countermoves_table,
+            ttable,
+            phtable,
+            ktable: Default::default(),
+            htable: Default::default(),
+            cmtable: Default::default(),
             helper_contexts: Arc::new(RwLock::new(Vec::new())),
             abort_flag,
             ponder_flag,

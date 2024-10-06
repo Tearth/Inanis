@@ -5,7 +5,7 @@ use crate::utils::assert_fast;
 use crate::utils::bithelpers::BitHelpers;
 
 #[cfg(feature = "dev")]
-use crate::tuning::tuner::TunerCoefficient;
+use crate::tuning::tuner::TunerCoeff;
 
 pub mod bishop;
 pub mod king;
@@ -94,7 +94,7 @@ pub fn get_pst_value(piece: usize, king_square: usize, square: usize) -> PackedE
 /// Gets coefficients of piece-square table for `piece` on `board` and inserts them into `coefficients`.
 /// Similarly, their indices (starting from `index`) are inserted into `indices`.
 #[cfg(feature = "dev")]
-pub fn get_coefficients(board: &Board, piece: usize, index: &mut u16, coefficients: &mut Vec<TunerCoefficient>, indices: &mut Vec<u16>) {
+pub fn get_coeffs(board: &Board, piece: usize, index: &mut u16, coeffs: &mut Vec<TunerCoeff>, indices: &mut Vec<u16>) {
     assert_fast!(piece < 6);
 
     for bucket in 0..KING_BUCKETS_COUNT {
@@ -113,27 +113,27 @@ pub fn get_coefficients(board: &Board, piece: usize, index: &mut u16, coefficien
 
             if valid_for_white && !valid_for_black {
                 if current_piece == piece as u8 && current_color == WHITE {
-                    coefficients.push(TunerCoefficient::new(1, OPENING));
-                    coefficients.push(TunerCoefficient::new(1, ENDING));
+                    coeffs.push(TunerCoeff::new(1, OPENING));
+                    coeffs.push(TunerCoeff::new(1, ENDING));
                     indices.push(*index);
                     indices.push(*index + 1);
                 }
             } else if !valid_for_white && valid_for_black {
                 if opposite_piece == piece as u8 && opposite_color == BLACK {
-                    coefficients.push(TunerCoefficient::new(-1, OPENING));
-                    coefficients.push(TunerCoefficient::new(-1, ENDING));
+                    coeffs.push(TunerCoeff::new(-1, OPENING));
+                    coeffs.push(TunerCoeff::new(-1, ENDING));
                     indices.push(*index);
                     indices.push(*index + 1);
                 }
             } else if valid_for_white && valid_for_black {
                 if current_piece == piece as u8 && opposite_piece != piece as u8 && current_color == WHITE {
-                    coefficients.push(TunerCoefficient::new(1, OPENING));
-                    coefficients.push(TunerCoefficient::new(1, ENDING));
+                    coeffs.push(TunerCoeff::new(1, OPENING));
+                    coeffs.push(TunerCoeff::new(1, ENDING));
                     indices.push(*index);
                     indices.push(*index + 1);
                 } else if opposite_piece == piece as u8 && current_piece != piece as u8 && opposite_color == BLACK {
-                    coefficients.push(TunerCoefficient::new(-1, OPENING));
-                    coefficients.push(TunerCoefficient::new(-1, ENDING));
+                    coeffs.push(TunerCoeff::new(-1, OPENING));
+                    coeffs.push(TunerCoeff::new(-1, ENDING));
                     indices.push(*index);
                     indices.push(*index + 1);
                 }
@@ -147,7 +147,7 @@ pub fn get_coefficients(board: &Board, piece: usize, index: &mut u16, coefficien
 /// Gets coefficients for a specific feature (`white_data`/`black_data`/`max`) and inserts them into `coefficients`.
 /// Similarly, their indices (starting from `index`) are inserted into `indices`.
 #[cfg(feature = "dev")]
-pub fn get_array_coefficients(white_data: u8, black_data: u8, max: u8, index: &mut u16, coefficients: &mut Vec<TunerCoefficient>, indices: &mut Vec<u16>) {
+pub fn get_array_coeffs(white_data: u8, black_data: u8, max: u8, index: &mut u16, coeffs: &mut Vec<TunerCoeff>, indices: &mut Vec<u16>) {
     use std::cmp;
 
     let white_data = cmp::min(white_data, max - 1);
@@ -156,8 +156,8 @@ pub fn get_array_coefficients(white_data: u8, black_data: u8, max: u8, index: &m
     for i in 0..max {
         let sum = (white_data == i) as i8 - (black_data == i) as i8;
         if sum != 0 {
-            coefficients.push(TunerCoefficient::new(sum, OPENING));
-            coefficients.push(TunerCoefficient::new(sum, ENDING));
+            coeffs.push(TunerCoeff::new(sum, OPENING));
+            coeffs.push(TunerCoeff::new(sum, ENDING));
             indices.push(*index);
             indices.push(*index + 1);
         }

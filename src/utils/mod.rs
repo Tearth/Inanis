@@ -23,7 +23,7 @@ macro_rules! param {
         if cfg!(feature = "dev") {
             $a.$b.$c
         } else {
-            crate::engine::params::SearchParameters::$c
+            crate::engine::params::SParams::$c
         }
     };
 }

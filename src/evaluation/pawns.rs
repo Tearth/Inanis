@@ -1,5 +1,5 @@
 use super::*;
-use crate::cache::pawns::PawnHashTable;
+use crate::cache::pawns::PHTable;
 use crate::engine::stats::SearchStatistics;
 use crate::state::representation::Board;
 use crate::utils::bithelpers::BitHelpers;
@@ -7,7 +7,7 @@ use crate::utils::{assert_fast, dev};
 use std::cmp;
 
 #[cfg(feature = "dev")]
-use crate::tuning::tuner::TunerCoefficient;
+use crate::tuning::tuner::TunerCoeff;
 
 pub struct PawnsData {
     doubled_pawns: u8,
@@ -29,14 +29,14 @@ pub struct PawnsData {
 ///
 /// To improve performance (using the fact that structure of pawns changes relatively rare), each evaluation is saved in the pawn hashtable,
 /// and used again if possible.
-pub fn evaluate(board: &Board, pawn_hashtable: &PawnHashTable, statistics: &mut SearchStatistics) -> PackedEval {
-    match pawn_hashtable.get(board.state.pawn_hash) {
+pub fn evaluate(board: &Board, phtable: &PHTable, statistics: &mut SearchStatistics) -> PackedEval {
+    match phtable.get(board.state.pawn_hash) {
         Some(entry) => {
-            dev!(statistics.pawn_hashtable_hits += 1);
+            dev!(statistics.phtable_hits += 1);
             return PackedEval::new(entry.score_opening, entry.score_ending);
         }
         None => {
-            dev!(statistics.pawn_hashtable_misses += 1);
+            dev!(statistics.phtable_misses += 1);
         }
     }
 
@@ -44,8 +44,8 @@ pub fn evaluate(board: &Board, pawn_hashtable: &PawnHashTable, statistics: &mut 
     let black_evaluation = evaluate_color(board, BLACK);
     let eval = white_evaluation - black_evaluation;
 
-    pawn_hashtable.add(board.state.pawn_hash, eval.get_opening(), eval.get_ending());
-    dev!(statistics.pawn_hashtable_added += 1);
+    phtable.add(board.state.pawn_hash, eval.get_opening(), eval.get_ending());
+    dev!(statistics.phtable_added += 1);
 
     eval
 }
@@ -124,14 +124,14 @@ fn get_pawns_data(board: &Board, color: usize) -> PawnsData {
 
 /// Gets coefficients of pawn structure for `board` and inserts them into `coefficients`. Similarly, their indices (starting from `index`) are inserted into `indices`.
 #[cfg(feature = "dev")]
-pub fn get_coefficients(board: &Board, index: &mut u16, coefficients: &mut Vec<TunerCoefficient>, indices: &mut Vec<u16>) {
+pub fn get_coeffs(board: &Board, index: &mut u16, coeffs: &mut Vec<TunerCoeff>, indices: &mut Vec<u16>) {
     let white_pawns_data = get_pawns_data(board, WHITE);
     let black_pawns_data = get_pawns_data(board, BLACK);
 
-    get_array_coefficients(white_pawns_data.doubled_pawns, black_pawns_data.doubled_pawns, 8, index, coefficients, indices);
-    get_array_coefficients(white_pawns_data.isolated_pawns, black_pawns_data.isolated_pawns, 8, index, coefficients, indices);
-    get_array_coefficients(white_pawns_data.chained_pawns, black_pawns_data.chained_pawns, 8, index, coefficients, indices);
-    get_array_coefficients(white_pawns_data.passed_pawns, black_pawns_data.passed_pawns, 8, index, coefficients, indices);
-    get_array_coefficients(white_pawns_data.pawn_shield, black_pawns_data.pawn_shield, 8, index, coefficients, indices);
-    get_array_coefficients(white_pawns_data.opened_files, black_pawns_data.opened_files, 8, index, coefficients, indices);
+    get_array_coeffs(white_pawns_data.doubled_pawns, black_pawns_data.doubled_pawns, 8, index, coeffs, indices);
+    get_array_coeffs(white_pawns_data.isolated_pawns, black_pawns_data.isolated_pawns, 8, index, coeffs, indices);
+    get_array_coeffs(white_pawns_data.chained_pawns, black_pawns_data.chained_pawns, 8, index, coeffs, indices);
+    get_array_coeffs(white_pawns_data.passed_pawns, black_pawns_data.passed_pawns, 8, index, coeffs, indices);
+    get_array_coeffs(white_pawns_data.pawn_shield, black_pawns_data.pawn_shield, 8, index, coeffs, indices);
+    get_array_coeffs(white_pawns_data.opened_files, black_pawns_data.opened_files, 8, index, coeffs, indices);
 }

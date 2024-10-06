@@ -3,7 +3,7 @@ use super::movescan::Move;
 use super::movescan::MoveFlags;
 use super::text::fen;
 use super::*;
-use crate::cache::pawns::PawnHashTable;
+use crate::cache::pawns::PHTable;
 use crate::engine;
 use crate::engine::stats::SearchStatistics;
 use crate::evaluation::material;
@@ -19,6 +19,7 @@ use crate::utils::assert_fast;
 use crate::utils::bitflags::BitFlags;
 use crate::utils::bithelpers::BitHelpers;
 use crate::utils::panic_fast;
+use crate::Moves;
 use std::fmt::Display;
 use std::fmt::Formatter;
 use std::mem::MaybeUninit;
@@ -86,7 +87,7 @@ impl Board {
     /// Generates all possible non-captures (if `CAPTURES` is false) or all possible captures (if `CAPTURES` is true) at the current position, stores
     /// them into `moves` list (starting from `index`) and returns index of the first free slot. Use `evasion_mask` with value different
     /// than `u64::MAX` to restrict generator to the specified squares (useful during checks).
-    pub fn get_moves<const CAPTURES: bool>(&self, moves: &mut [MaybeUninit<Move>; engine::MAX_MOVES_COUNT], mut index: usize, evasion_mask: u64) -> usize {
+    pub fn get_moves<const CAPTURES: bool>(&self, moves: &mut Moves, mut index: usize, evasion_mask: u64) -> usize {
         index = movescan::scan_pawn_moves::<CAPTURES>(self, moves, index, evasion_mask);
         index = movescan::scan_piece_moves::<KNIGHT, CAPTURES>(self, moves, index, evasion_mask);
         index = movescan::scan_piece_moves::<BISHOP, CAPTURES>(self, moves, index, evasion_mask);
@@ -99,7 +100,7 @@ impl Board {
 
     /// Generates all possible moves (non-captures and captures) at the current position, stores them into `moves` list (starting from `index`) and returns
     /// index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the specified squares (useful during checks).
-    pub fn get_all_moves(&self, moves: &mut [MaybeUninit<Move>; engine::MAX_MOVES_COUNT], evasion_mask: u64) -> usize {
+    pub fn get_all_moves(&self, moves: &mut Moves, evasion_mask: u64) -> usize {
         let mut index = 0;
         index = self.get_moves::<true>(moves, index, evasion_mask);
         index = self.get_moves::<false>(moves, index, evasion_mask);
@@ -716,9 +717,9 @@ impl Board {
         };
     }
 
-    /// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position, using `pawn_hashtable` to store pawn
+    /// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position, using `phtable` to store pawn
     /// evaluations and `statistics` to gather diagnostic data. Returns score from the `color` perspective (more than 0 when advantage, less than 0 when disadvantage).
-    pub fn evaluate(&self, color: usize, pawn_hashtable: &PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
+    pub fn evaluate(&self, color: usize, phtable: &PHTable, statistics: &mut SearchStatistics) -> i16 {
         assert_fast!(color < 2);
 
         let mut white_aux = MobilityAuxData::default();
@@ -728,7 +729,7 @@ impl Board {
         let pst_evaluation = pst::evaluate(self);
         let mobility_evaluation = mobility::evaluate(self, &mut white_aux, &mut black_aux);
         let safety_evaluation = safety::evaluate(self, &white_aux, &black_aux);
-        let pawns_evaluation = pawns::evaluate(self, pawn_hashtable, statistics);
+        let pawns_evaluation = pawns::evaluate(self, phtable, statistics);
 
         let evaluation = material_evaluation + pst_evaluation + mobility_evaluation + safety_evaluation + pawns_evaluation;
         let sign = -((color as i16) * 2 - 1);
@@ -758,12 +759,12 @@ impl Board {
 
     /// Runs fast evaluations, considering only material and piece-square tables. Returns score from the `color` perspective (more than 0 when
     /// advantage, less than 0 when disadvantage).
-    pub fn evaluate_fast(&self, color: usize, pawn_hashtable: &PawnHashTable, statistics: &mut SearchStatistics) -> i16 {
+    pub fn evaluate_fast(&self, color: usize, phtable: &PHTable, statistics: &mut SearchStatistics) -> i16 {
         assert_fast!(color < 2);
 
         let material_evaluation = material::evaluate(self);
         let pst_evaluation = pst::evaluate(self);
-        let pawns_evaluation = pawns::evaluate(self, pawn_hashtable, statistics);
+        let pawns_evaluation = pawns::evaluate(self, phtable, statistics);
 
         let evaluation = material_evaluation + pst_evaluation + pawns_evaluation;
         let sign = -((color as i16) * 2 - 1);

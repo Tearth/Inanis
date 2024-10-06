@@ -1,8 +1,5 @@
-use crate::cache::counters::CountermovesTable;
-use crate::cache::history::HistoryTable;
-use crate::cache::killers::KillersTable;
-use crate::cache::pawns::PawnHashTable;
-use crate::cache::search::TranspositionTable;
+use crate::cache::pawns::PHTable;
+use crate::cache::search::TTable;
 use crate::engine::context::SearchContext;
 use crate::state::representation::Board;
 use std::sync::atomic::AtomicBool;
@@ -58,14 +55,14 @@ pub struct BenchmarkResult {
 
     pub tt_legal_hashmoves: u64,
     pub tt_illegal_hashmoves: u64,
-    pub killers_table_legal_moves: u64,
-    pub killers_table_illegal_moves: u64,
-    pub countermoves_table_legal_moves: u64,
-    pub countermoves_table_illegal_moves: u64,
+    pub ktable_legal_moves: u64,
+    pub ktable_illegal_moves: u64,
+    pub cmtable_legal_moves: u64,
+    pub cmtable_illegal_moves: u64,
 
-    pub pawn_hashtable_added: u64,
-    pub pawn_hashtable_hits: u64,
-    pub pawn_hashtable_misses: u64,
+    pub phtable_added: u64,
+    pub phtable_hits: u64,
+    pub phtable_misses: u64,
 
     pub move_generator_hash_move_stages: u64,
     pub move_generator_captures_stages: u64,
@@ -120,26 +117,13 @@ pub fn run() -> BenchmarkResult {
     for (current_position_index, fen) in BENCHMARK_POSITIONS.into_iter().enumerate() {
         println!("{}/{}. {}", current_position_index + 1, BENCHMARK_POSITIONS.len(), fen);
 
-        let transposition_table = Arc::new(TranspositionTable::new(64 * 1024 * 1024));
-        let pawn_hashtable = Arc::new(PawnHashTable::new(2 * 1024 * 1024));
-        let killers_table = KillersTable::default();
-        let history_table = HistoryTable::default();
-        let countermoves_table = CountermovesTable::default();
+        let ttable = Arc::new(TTable::new(64 * 1024 * 1024));
+        let phtable = Arc::new(PHTable::new(2 * 1024 * 1024));
         let abort_flag = Arc::new(AtomicBool::new(false));
         let ponder_flag = Arc::new(AtomicBool::new(false));
 
         let board = Board::new_from_fen(fen).unwrap();
-        let mut context = SearchContext::new(
-            board,
-            Default::default(),
-            transposition_table.clone(),
-            pawn_hashtable.clone(),
-            killers_table,
-            history_table,
-            countermoves_table,
-            abort_flag.clone(),
-            ponder_flag.clone(),
-        );
+        let mut context = SearchContext::new(board, Default::default(), ttable.clone(), phtable.clone(), abort_flag.clone(), ponder_flag.clone());
         context.forced_depth = 16;
 
         context.by_ref().last().unwrap();
@@ -190,14 +174,14 @@ pub fn run() -> BenchmarkResult {
 
             benchmark_result.tt_legal_hashmoves += context.statistics.tt_legal_hashmoves;
             benchmark_result.tt_illegal_hashmoves += context.statistics.tt_illegal_hashmoves;
-            benchmark_result.killers_table_legal_moves += context.statistics.killers_table_legal_moves;
-            benchmark_result.killers_table_illegal_moves += context.statistics.killers_table_illegal_moves;
-            benchmark_result.countermoves_table_legal_moves += context.statistics.countermoves_table_legal_moves;
-            benchmark_result.countermoves_table_illegal_moves += context.statistics.countermoves_table_illegal_moves;
+            benchmark_result.ktable_legal_moves += context.statistics.ktable_legal_moves;
+            benchmark_result.ktable_illegal_moves += context.statistics.ktable_illegal_moves;
+            benchmark_result.cmtable_legal_moves += context.statistics.cmtable_legal_moves;
+            benchmark_result.cmtable_illegal_moves += context.statistics.cmtable_illegal_moves;
 
-            benchmark_result.pawn_hashtable_added += context.statistics.pawn_hashtable_added;
-            benchmark_result.pawn_hashtable_hits += context.statistics.pawn_hashtable_hits;
-            benchmark_result.pawn_hashtable_misses += context.statistics.pawn_hashtable_misses;
+            benchmark_result.phtable_added += context.statistics.phtable_added;
+            benchmark_result.phtable_hits += context.statistics.phtable_hits;
+            benchmark_result.phtable_misses += context.statistics.phtable_misses;
 
             benchmark_result.move_generator_hash_move_stages += context.statistics.move_generator_hash_move_stages;
             benchmark_result.move_generator_captures_stages += context.statistics.move_generator_captures_stages;

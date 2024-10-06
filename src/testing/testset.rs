@@ -1,8 +1,5 @@
-use crate::cache::counters::CountermovesTable;
-use crate::cache::history::HistoryTable;
-use crate::cache::killers::KillersTable;
-use crate::cache::pawns::PawnHashTable;
-use crate::cache::search::TranspositionTable;
+use crate::cache::pawns::PHTable;
+use crate::cache::search::TTable;
 use crate::engine::context::SearchContext;
 use crate::state::movescan::Move;
 use crate::state::representation::Board;
@@ -42,8 +39,8 @@ impl TestPosition {
 }
 
 /// Runs a test by performing a fixed-`depth` search for the positions loaded from the `epd_filename` file, using hashtable with
-/// size specified in `transposition_table_size`. To classify the test as successful, the last iteration has to return the correct best move.
-pub fn run(epd_filename: &str, depth: i8, transposition_table_size: usize, threads_count: usize) {
+/// size specified in `ttable_size`. To classify the test as successful, the last iteration has to return the correct best move.
+pub fn run(epd_filename: &str, depth: i8, ttable_size: usize, threads_count: usize) {
     println!("Loading EPD file...");
     let positions = match load_positions(epd_filename) {
         Ok(value) => value,
@@ -55,11 +52,11 @@ pub fn run(epd_filename: &str, depth: i8, transposition_table_size: usize, threa
     println!("Loaded {} positions, starting test", positions.len());
 
     let mut context = TestContext::new(positions);
-    run_internal(&mut context, depth, transposition_table_size, threads_count);
+    run_internal(&mut context, depth, ttable_size, threads_count);
 }
 
 /// Internal test function, called by [run].
-fn run_internal(context: &mut TestContext, depth: i8, transposition_table_size: usize, threads_count: usize) {
+fn run_internal(context: &mut TestContext, depth: i8, ttable_size: usize, threads_count: usize) {
     let index = Arc::new(AtomicU32::new(0));
     let passed_tests = Arc::new(AtomicU32::new(0));
     let failed_tests = Arc::new(AtomicU32::new(0));
@@ -77,26 +74,13 @@ fn run_internal(context: &mut TestContext, depth: i8, transposition_table_size: 
 
             scope.spawn(move || {
                 for position in chunk {
-                    let transposition_table = Arc::new(TranspositionTable::new(transposition_table_size));
-                    let pawn_hashtable = Arc::new(PawnHashTable::new(1 * 1024 * 1024));
-                    let killers_table = KillersTable::default();
-                    let history_table = HistoryTable::default();
-                    let countermoves_table = CountermovesTable::default();
+                    let ttable = Arc::new(TTable::new(ttable_size));
+                    let phtable = Arc::new(PHTable::new(1 * 1024 * 1024));
                     let abort_flag = Arc::new(AtomicBool::new(false));
                     let ponder_flag = Arc::new(AtomicBool::new(false));
 
                     let board_clone = position.board.clone();
-                    let mut context = SearchContext::new(
-                        board_clone,
-                        Default::default(),
-                        transposition_table.clone(),
-                        pawn_hashtable.clone(),
-                        killers_table,
-                        history_table,
-                        countermoves_table,
-                        abort_flag.clone(),
-                        ponder_flag.clone(),
-                    );
+                    let mut context = SearchContext::new(board_clone, Default::default(), ttable, phtable, abort_flag, ponder_flag);
                     context.forced_depth = depth;
 
                     let mut last_best_move = Default::default();

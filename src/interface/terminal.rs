@@ -106,7 +106,7 @@ fn handle_help() {
     #[cfg(feature = "dev")]
     println!(" magic - generate magic numbers");
     #[cfg(feature = "dev")]
-    println!(" testset [epd] [depth] [transposition_table_size] [threads_count] - run test of positions");
+    println!(" testset [epd] [depth] [ttable_size] [threads_count] - run test of positions");
     #[cfg(feature = "dev")]
     println!(" tuner [epd] [output] [randomize] [k] [wdl_ratio] [threads_count] - run tuning");
     #[cfg(feature = "dev")]
@@ -239,15 +239,15 @@ fn handle_benchmark() {
             V = VALUE_INDENT
         );
 
-        let pawn_hashtable_attempts = result.pawn_hashtable_hits + result.pawn_hashtable_misses;
-        let pawn_hashtable_hits_percent = percent!(result.pawn_hashtable_hits, pawn_hashtable_attempts);
-        let pawn_hashtable_misses_percent = percent!(result.pawn_hashtable_misses, pawn_hashtable_attempts);
+        let phtable_attempts = result.phtable_hits + result.phtable_misses;
+        let phtable_hits_percent = percent!(result.phtable_hits, phtable_attempts);
+        let phtable_misses_percent = percent!(result.phtable_misses, phtable_attempts);
         println!(
             "{: <H$} {: <V$} {: <V$} {: <V$}",
             "Pawn hashtable",
-            format!("{}", result.pawn_hashtable_added),
-            format!("{} ({:.2}%)", result.pawn_hashtable_hits, pawn_hashtable_hits_percent),
-            format!("{} ({:.2}%)", result.pawn_hashtable_misses, pawn_hashtable_misses_percent),
+            format!("{}", result.phtable_added),
+            format!("{} ({:.2}%)", result.phtable_hits, phtable_hits_percent),
+            format!("{} ({:.2}%)", result.phtable_misses, phtable_misses_percent),
             H = HEADER_INDENT,
             V = VALUE_INDENT
         );
@@ -348,11 +348,8 @@ fn handle_benchmark() {
         );
 
         println!("Transposition table move legality check: {} legal, {} illegal", result.tt_legal_hashmoves, result.tt_illegal_hashmoves);
-        println!("Killers table move legality check: {} legal, {} illegal", result.killers_table_legal_moves, result.killers_table_illegal_moves);
-        println!(
-            "Countermoves table move legality check: {} legal, {} illegal",
-            result.countermoves_table_legal_moves, result.countermoves_table_illegal_moves
-        );
+        println!("Killers table move legality check: {} legal, {} illegal", result.ktable_legal_moves, result.ktable_illegal_moves);
+        println!("Countermoves table move legality check: {} legal, {} illegal", result.cmtable_legal_moves, result.cmtable_illegal_moves);
     }
 
     println!();
@@ -573,8 +570,8 @@ fn handle_qperft(input: Vec<&str>) {
     println!("Perft done!");
 }
 
-/// Handles `testset [epd] [depth] [transposition_table_size] [threads_count]` command by running a fixed-`depth` search of positions stored in the `epd` file,
-/// using hashtable with size specified in `transposition_table_size`. To classify the test as successful, the last iteration has to return the correct best move.
+/// Handles `testset [epd] [depth] [ttable_size] [threads_count]` command by running a fixed-`depth` search of positions stored in the `epd` file,
+/// using hashtable with size specified in `ttable_size`. To classify the test as successful, the last iteration has to return the correct best move.
 #[cfg(feature = "dev")]
 fn handle_testset(input: Vec<&str>) {
     use crate::testing::testset;
@@ -607,7 +604,7 @@ fn handle_testset(input: Vec<&str>) {
         }
     };
 
-    let transposition_table_size: usize = match input[3].parse() {
+    let ttable_size: usize = match input[3].parse() {
         Ok(value) => value,
         Err(error) => {
             println!("Invalid transposition table size parameter: {}", error);
@@ -615,7 +612,7 @@ fn handle_testset(input: Vec<&str>) {
         }
     };
 
-    if transposition_table_size == 0 {
+    if ttable_size == 0 {
         println!("Transposition table size must be greater than zero");
         return;
     }
@@ -628,7 +625,7 @@ fn handle_testset(input: Vec<&str>) {
         }
     };
 
-    testset::run(input[1], depth, transposition_table_size * 1024 * 1024, threads_count);
+    testset::run(input[1], depth, ttable_size * 1024 * 1024, threads_count);
 }
 
 /// Handles `tuner [epd] [output] [lock_material] [randomize] [threads_count]` command by running the evaluation parameters tuner. The input file is specified by `epd`
@@ -800,17 +797,17 @@ fn handle_unknown_command() {
 }
 
 /// Creates a new board based on the input with FEN or moves list - returns [Err] if internal parser failed.
-fn prepare_board(parameters: &[&str]) -> Result<Board, String> {
-    if parameters.is_empty() {
+fn prepare_board(params: &[&str]) -> Result<Board, String> {
+    if params.is_empty() {
         return Ok(Board::new_initial_position());
     }
 
-    match parameters[0] {
+    match params[0] {
         "fen" => {
-            let fen = parameters[1..].join(" ");
+            let fen = params[1..].join(" ");
             Board::new_from_fen(fen.as_str())
         }
-        "moves" => Board::new_from_moves(&parameters[1..]),
-        _ => Err(format!("Invalid mode: parameter[0]={}", parameters[0])),
+        "moves" => Board::new_from_moves(&params[1..]),
+        _ => Err(format!("Invalid mode: parameter[0]={}", params[0])),
     }
 }

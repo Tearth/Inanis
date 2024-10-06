@@ -5,26 +5,26 @@ use std::sync::atomic::AtomicI16;
 use std::sync::atomic::AtomicU16;
 use std::sync::atomic::Ordering;
 
-pub struct PawnHashTable {
-    pub table: Vec<PawnHashTableEntry>,
+pub struct PHTable {
+    pub table: Vec<PHTableEntry>,
 }
 
-pub struct PawnHashTableEntry {
+pub struct PHTableEntry {
     pub key: AtomicU16,
     pub score_opening: AtomicI16,
     pub score_ending: AtomicI16,
 }
 
-pub struct PawnHashTableResult {
+pub struct PHTableResult {
     pub key: u16,
     pub score_opening: i16,
     pub score_ending: i16,
 }
 
-impl PawnHashTable {
+impl PHTable {
     /// Constructs a new instance of [PawnHashTable] by allocating `size` bytes of memory.
     pub fn new(size: usize) -> Self {
-        const SIZE: usize = mem::size_of::<PawnHashTableEntry>();
+        const SIZE: usize = mem::size_of::<PHTableEntry>();
         let mut hashtable = Self { table: Vec::with_capacity(size / SIZE) };
 
         if size != 0 {
@@ -44,7 +44,7 @@ impl PawnHashTable {
     }
 
     /// Gets a wanted entry using `hash` to calculate an index. Returns [None] if `hash` is incompatible with the stored key.
-    pub fn get(&self, hash: u64) -> Option<PawnHashTableResult> {
+    pub fn get(&self, hash: u64) -> Option<PHTableResult> {
         let index = self.get_index(hash);
         assert_fast!(index < self.table.len());
 
@@ -82,14 +82,14 @@ impl PawnHashTable {
     }
 }
 
-impl PawnHashTableEntry {
+impl PHTableEntry {
     /// Loads and parses atomic value into a [PawnHashTableResult] struct.
-    pub fn get_data(&self) -> PawnHashTableResult {
+    pub fn get_data(&self) -> PHTableResult {
         let key = self.key.load(Ordering::Relaxed);
         let score_opening = self.score_opening.load(Ordering::Relaxed);
         let score_ending = self.score_ending.load(Ordering::Relaxed);
 
-        PawnHashTableResult::new(key, score_opening, score_ending)
+        PHTableResult::new(key, score_opening, score_ending)
     }
 
     /// Converts `key`, `score_opening` and `score_ending` into an atomic word, and stores it.
@@ -100,14 +100,14 @@ impl PawnHashTableEntry {
     }
 }
 
-impl Default for PawnHashTableEntry {
+impl Default for PHTableEntry {
     /// Constructs a default instance of [PawnHashTableEntry] with zeroed elements.
     fn default() -> Self {
-        PawnHashTableEntry { key: AtomicU16::new(0), score_opening: AtomicI16::new(0), score_ending: AtomicI16::new(0) }
+        PHTableEntry { key: AtomicU16::new(0), score_opening: AtomicI16::new(0), score_ending: AtomicI16::new(0) }
     }
 }
 
-impl PawnHashTableResult {
+impl PHTableResult {
     /// Constructs a new instance of [PawnHashTableResult] with stored `key`, `score_opening` and `score_ending`.
     pub fn new(key: u16, score_opening: i16, score_ending: i16) -> Self {
         Self { key, score_opening, score_ending }

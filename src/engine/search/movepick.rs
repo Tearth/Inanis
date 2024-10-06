@@ -6,6 +6,8 @@ use crate::utils::assert_fast;
 use crate::utils::bithelpers::BitHelpers;
 use crate::utils::dev;
 use crate::utils::panic_fast;
+use crate::MoveScores;
+use crate::Moves;
 use std::mem::MaybeUninit;
 
 pub const MOVE_ORDERING_HASH_MOVE: i16 = 10000;
@@ -53,8 +55,8 @@ pub enum MoveGenStage {
 pub fn get_next_move(
     context: &mut SearchContext,
     stage: &mut MoveGenStage,
-    moves: &mut [MaybeUninit<Move>; MAX_MOVES_COUNT],
-    move_scores: &mut [MaybeUninit<i16>; MAX_MOVES_COUNT],
+    moves: &mut Moves,
+    move_scores: &mut MoveScores,
     move_index: &mut usize,
     move_number: &mut usize,
     moves_count: &mut usize,
@@ -143,7 +145,7 @@ pub fn get_next_move(
             }
             MoveGenStage::ReadyToGenerateKillers => {
                 let original_moves_count = *moves_count;
-                let killer_moves = context.killers_table.get(ply);
+                let killer_moves = context.ktable.get(ply);
 
                 for (index, &killer_move) in killer_moves.iter().enumerate() {
                     if killer_move != hash_move {
@@ -154,9 +156,9 @@ pub fn get_next_move(
                             move_scores[*moves_count].write(MOVE_ORDERING_KILLER_MOVE_1 - (index as i16));
                             *moves_count += 1;
 
-                            dev!(context.statistics.killers_table_legal_moves += 1);
+                            dev!(context.statistics.ktable_legal_moves += 1);
                         } else {
-                            dev!(context.statistics.killers_table_illegal_moves += 1);
+                            dev!(context.statistics.ktable_illegal_moves += 1);
                         }
                     }
 
@@ -190,7 +192,7 @@ pub fn get_next_move(
             }
             MoveGenStage::ReadyToGenerateCounters => {
                 let original_moves_count = *moves_count;
-                let countermove = context.countermoves_table.get(previous_move);
+                let countermove = context.cmtable.get(previous_move);
                 let killer_1 = unsafe { killer_moves_cache[0].assume_init() };
                 let killer_2 = unsafe { killer_moves_cache[1].assume_init() };
 
@@ -202,9 +204,9 @@ pub fn get_next_move(
                         move_scores[*moves_count].write(MOVE_ORDERING_COUNTERMOVE);
                         *moves_count += 1;
 
-                        dev!(context.statistics.countermoves_table_legal_moves += 1);
+                        dev!(context.statistics.cmtable_legal_moves += 1);
                     } else {
-                        dev!(context.statistics.countermoves_table_illegal_moves += 1);
+                        dev!(context.statistics.cmtable_illegal_moves += 1);
                     }
                 }
 
@@ -253,14 +255,7 @@ pub fn get_next_move(
 ///  - for transposition table move, assign [MOVE_ORDERING_HASH_MOVE]
 ///  - for every positive capture, assign SEE score + [MOVE_ORDERING_WINNING_CAPTURES_OFFSET]
 ///  - for every negative capture, assign SEE score + [MOVE_ORDERING_LOSING_CAPTURES_OFFSET]
-fn assign_capture_scores(
-    context: &SearchContext,
-    moves: &[MaybeUninit<Move>; MAX_MOVES_COUNT],
-    move_scores: &mut [MaybeUninit<i16>; MAX_MOVES_COUNT],
-    start_index: usize,
-    moves_count: usize,
-    tt_move: Move,
-) {
+fn assign_capture_scores(context: &SearchContext, moves: &Moves, move_scores: &mut MoveScores, start_index: usize, moves_count: usize, tt_move: Move) {
     assert_fast!(start_index < MAX_MOVES_COUNT);
     assert_fast!(start_index <= moves_count);
     assert_fast!(moves_count < MAX_MOVES_COUNT);
@@ -311,8 +306,8 @@ fn assign_capture_scores(
 ///  - for every quiet move which didn't fit in other categories, assign score from history table
 fn assign_quiet_scores(
     context: &SearchContext,
-    moves: &[MaybeUninit<Move>; MAX_MOVES_COUNT],
-    move_scores: &mut [MaybeUninit<i16>; MAX_MOVES_COUNT],
+    moves: &Moves,
+    move_scores: &mut MoveScores,
     start_index: usize,
     moves_count: usize,
     tt_move: Move,
@@ -323,8 +318,8 @@ fn assign_quiet_scores(
     assert_fast!(start_index <= moves_count);
     assert_fast!(moves_count < MAX_MOVES_COUNT);
 
-    let killer_moves = context.killers_table.get(ply);
-    let countermove = context.countermoves_table.get(previous_move);
+    let killer_moves = context.ktable.get(ply);
+    let countermove = context.cmtable.get(previous_move);
 
     for move_index in start_index..moves_count {
         let r#move = unsafe { moves[move_index].assume_init() };
@@ -347,7 +342,7 @@ fn assign_quiet_scores(
                 continue;
             }
 
-            let value = context.history_table.get(r#move.get_from(), r#move.get_to(), MOVE_ORDERING_HISTORY_MOVE) as i16;
+            let value = context.htable.get(r#move.get_from(), r#move.get_to(), MOVE_ORDERING_HISTORY_MOVE) as i16;
             move_scores[move_index].write(value + MOVE_ORDERING_HISTORY_MOVE_OFFSET);
         } else if r#move.is_promotion() {
             move_scores[move_index].write(match r#move.get_promotion_piece() {
