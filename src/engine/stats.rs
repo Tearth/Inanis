@@ -2,7 +2,7 @@ use std::cmp;
 use std::ops;
 
 #[derive(Default)]
-pub struct SearchStatistics {
+pub struct SearchStats {
     pub nodes_count: u64,
     pub q_nodes_count: u64,
     pub leafs_count: u64,
@@ -58,18 +58,18 @@ pub struct SearchStatistics {
     pub phtable_hits: u64,
     pub phtable_misses: u64,
 
-    pub move_generator_hash_move_stages: u64,
-    pub move_generator_captures_stages: u64,
-    pub move_generator_killers_stages: u64,
-    pub move_generator_counters_stages: u64,
-    pub move_generator_quiets_stages: u64,
+    pub movegen_hash_move_stages: u64,
+    pub movegen_captures_stages: u64,
+    pub movegen_killers_stages: u64,
+    pub movegen_counters_stages: u64,
+    pub movegen_quiets_stages: u64,
 
     pub max_ply: u16,
 }
 
-impl ops::AddAssign<&SearchStatistics> for SearchStatistics {
-    /// Implements `+=` operator for [SearchStatistics] by adding all corresponding squares together (except `max_ply`, where the highest value is taken).
-    fn add_assign(&mut self, rhs: &SearchStatistics) {
+impl ops::AddAssign<&SearchStats> for SearchStats {
+    /// Implements `+=` operator for [SearchStats] by adding all corresponding squares together (except `max_ply`, where the highest value is taken).
+    fn add_assign(&mut self, rhs: &SearchStats) {
         self.nodes_count += rhs.nodes_count;
         self.q_nodes_count += rhs.q_nodes_count;
         self.leafs_count += rhs.leafs_count;
@@ -120,9 +120,9 @@ impl ops::AddAssign<&SearchStatistics> for SearchStatistics {
         self.phtable_hits += rhs.phtable_hits;
         self.phtable_misses += rhs.phtable_misses;
 
-        self.move_generator_hash_move_stages += rhs.move_generator_hash_move_stages;
-        self.move_generator_captures_stages += rhs.move_generator_captures_stages;
-        self.move_generator_quiets_stages += rhs.move_generator_quiets_stages;
+        self.movegen_hash_move_stages += rhs.movegen_hash_move_stages;
+        self.movegen_captures_stages += rhs.movegen_captures_stages;
+        self.movegen_quiets_stages += rhs.movegen_quiets_stages;
 
         self.max_ply = cmp::max(self.max_ply, rhs.max_ply);
     }

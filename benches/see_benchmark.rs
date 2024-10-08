@@ -12,8 +12,8 @@ fn see_benchmark(criterion: &mut Criterion) {
         bencher.iter(|| {
             let attacking_piece = board.get_piece(criterion::black_box(51));
             let captured_piece = board.get_piece(criterion::black_box(35));
-            let attackers = board.get_attacking_pieces(criterion::black_box(board.active_color ^ 1), criterion::black_box(35));
-            let defenders = board.get_attacking_pieces(criterion::black_box(board.active_color), criterion::black_box(35));
+            let attackers = board.get_attacking_pieces(criterion::black_box(board.stm ^ 1), criterion::black_box(35));
+            let defenders = board.get_attacking_pieces(criterion::black_box(board.stm), criterion::black_box(35));
 
             see::get(
                 criterion::black_box(attacking_piece),

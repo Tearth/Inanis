@@ -89,7 +89,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
                 continue;
             }
 
-            if context.board.is_king_checked(context.board.active_color) {
+            if context.board.is_king_checked(context.board.stm) {
                 ignored_positions += 1;
                 continue;
             }
@@ -100,7 +100,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
                 continue;
             }
 
-            let score = context.board.evaluate_without_cache(context.board.active_color);
+            let score = context.board.evaluate_without_cache(context.board.stm);
             let q_score = qsearch::run(&mut context, 0, MIN_ALPHA, MIN_BETA);
 
             if score.abs_diff(q_score) > max_diff {
@@ -108,7 +108,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
                 continue;
             }
 
-            let epd = format!("{} c9 \"{:.2}|{}\";", context.board.to_epd(), data.evaluation, pgn.result);
+            let epd = format!("{} c9 \"{:.2}|{}\";", context.board.to_epd(), data.eval, pgn.result);
             let game_phase = (context.board.game_phase as f32) / (INITIAL_GAME_PHASE as f32);
 
             viable_positions.push((epd, game_phase));

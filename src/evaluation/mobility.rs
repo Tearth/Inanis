@@ -14,7 +14,7 @@ pub struct MobilityData {
 }
 
 #[derive(Default)]
-pub struct MobilityAuxData {
+pub struct EvalAux {
     pub king_area_threats: i8,
 }
 
@@ -27,7 +27,7 @@ pub struct PieceMobility {
 /// less than 0 when disadvantage). This evaluator does two things at once: first, counts all possible moves of knight, bishop, rook, queen
 /// (pawns and king are too slow and not very important), and second, sums how many squares around both kings are dangered by enemy side
 /// (`dangered_white_king_squares` and `dangered_black_king_squares`). This is used in the safety evaluator, to prevent calculating the same thing twice.
-pub fn evaluate(board: &Board, white_aux: &mut MobilityAuxData, black_aux: &mut MobilityAuxData) -> PackedEval {
+pub fn evaluate(board: &Board, white_aux: &mut EvalAux, black_aux: &mut EvalAux) -> PackedEval {
     let mut result = PackedEval::default();
     let white_data = get_mobility_data(board, WHITE, white_aux);
     let black_data = get_mobility_data(board, BLACK, black_aux);
@@ -45,7 +45,7 @@ pub fn evaluate(board: &Board, white_aux: &mut MobilityAuxData, black_aux: &mut 
     result
 }
 
-fn get_mobility_data(board: &Board, color: usize, aux: &mut MobilityAuxData) -> MobilityData {
+fn get_mobility_data(board: &Board, color: usize, aux: &mut EvalAux) -> MobilityData {
     assert_fast!(color < 2);
 
     MobilityData {
@@ -59,14 +59,7 @@ fn get_mobility_data(board: &Board, color: usize, aux: &mut MobilityAuxData) -> 
 /// Gets coefficients of mobility for `board` and inserts them into `coefficients`. Similarly, their indices (starting from `index`) are inserted into `indices`.
 /// Some additional data is also saved in `white_aux` and `black_aux` for further processing.
 #[cfg(feature = "dev")]
-pub fn get_coeffs(
-    board: &Board,
-    white_aux: &mut MobilityAuxData,
-    black_aux: &mut MobilityAuxData,
-    index: &mut u16,
-    coeffs: &mut Vec<TunerCoeff>,
-    indices: &mut Vec<u16>,
-) {
+pub fn get_coeffs(board: &Board, white_aux: &mut EvalAux, black_aux: &mut EvalAux, index: &mut u16, coeffs: &mut Vec<TunerCoeff>, indices: &mut Vec<u16>) {
     let white_data = get_mobility_data(board, WHITE, white_aux);
     let black_data = get_mobility_data(board, BLACK, black_aux);
 

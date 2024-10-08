@@ -1,5 +1,5 @@
 use self::params::SParams;
-use super::stats::SearchStatistics;
+use super::stats::SearchStats;
 use super::*;
 use crate::cache::counters::CMTable;
 use crate::cache::history::HTable;
@@ -48,7 +48,7 @@ pub struct SearchContext {
     pub helper_contexts: Arc<RwLock<Vec<SearchContext>>>,
     pub abort_flag: Arc<AtomicBool>,
     pub ponder_flag: Arc<AtomicBool>,
-    pub statistics: SearchStatistics,
+    pub stats: SearchStats,
     pub last_score: i16,
 }
 
@@ -103,7 +103,7 @@ impl SearchContext {
             helper_contexts: Arc::new(RwLock::new(Vec::new())),
             abort_flag,
             ponder_flag,
-            statistics: Default::default(),
+            stats: Default::default(),
             last_score: 0,
         }
     }
@@ -152,7 +152,7 @@ impl Iterator for SearchContext {
                 if self.syzygy_enabled {
                     if let Some((r#move, score)) = self.board.get_tablebase_move(self.syzygy_probe_limit) {
                         self.search_done = true;
-                        self.statistics.tb_hits = 1;
+                        self.stats.tb_hits = 1;
                         self.lines.push(SearchResultLine::new(score, vec![r#move]));
 
                         return Some(SearchResult::new(0, self.current_depth));
@@ -211,7 +211,7 @@ impl Iterator for SearchContext {
             });
 
             for helper_context in helper_contexts_lock.iter() {
-                self.statistics += &helper_context.statistics;
+                self.stats += &helper_context.stats;
             }
 
             if self.abort_flag.load(Ordering::Relaxed) {
@@ -219,7 +219,7 @@ impl Iterator for SearchContext {
                 if self.ponder_flag.load(Ordering::Relaxed) {
                     self.current_depth = 1;
                     self.search_time_start = SystemTime::now();
-                    self.statistics = Default::default();
+                    self.stats = Default::default();
 
                     self.ponder_flag.store(false, Ordering::Relaxed);
                     self.abort_flag.store(false, Ordering::Relaxed);

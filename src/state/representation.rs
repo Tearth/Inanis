@@ -5,10 +5,10 @@ use super::text::fen;
 use super::*;
 use crate::cache::pawns::PHTable;
 use crate::engine;
-use crate::engine::stats::SearchStatistics;
+use crate::engine::stats::SearchStats;
 use crate::evaluation::material;
 use crate::evaluation::mobility;
-use crate::evaluation::mobility::MobilityAuxData;
+use crate::evaluation::mobility::EvalAux;
 use crate::evaluation::pawns;
 use crate::evaluation::pst;
 use crate::evaluation::pst::*;
@@ -43,7 +43,7 @@ pub struct Board {
     pub occupancy: [u64; 2],
     pub piece_table: [u8; 64],
     pub fullmove_number: u16,
-    pub active_color: usize,
+    pub stm: usize,
     pub null_moves: u8,
     pub game_phase: u8,
     pub state: BoardState,
@@ -123,8 +123,8 @@ impl Board {
         assert_fast!(!r#move.is_empty());
         self.push_state();
 
-        let color = self.active_color;
-        let enemy_color = self.active_color ^ 1;
+        let stm = self.stm;
+        let nstm = self.stm ^ 1;
         let from = r#move.get_from();
         let to = r#move.get_to();
         let flags = r#move.get_flags();
@@ -137,122 +137,122 @@ impl Board {
 
         match flags {
             MoveFlags::SINGLE_PUSH => {
-                self.move_piece::<false>(color, piece, from, to);
-                self.state.hash ^= zobrist::get_piece_hash(color, piece, from);
-                self.state.hash ^= zobrist::get_piece_hash(color, piece, to);
+                self.move_piece::<false>(stm, piece, from, to);
+                self.state.hash ^= zobrist::get_piece_hash(stm, piece, from);
+                self.state.hash ^= zobrist::get_piece_hash(stm, piece, to);
 
                 if piece == PAWN {
-                    self.state.pawn_hash ^= zobrist::get_piece_hash(color, piece, from);
-                    self.state.pawn_hash ^= zobrist::get_piece_hash(color, piece, to);
-                    self.recalculate_pawn_attacks(color);
+                    self.state.pawn_hash ^= zobrist::get_piece_hash(stm, piece, from);
+                    self.state.pawn_hash ^= zobrist::get_piece_hash(stm, piece, to);
+                    self.recalculate_pawn_attacks(stm);
                 }
             }
             MoveFlags::DOUBLE_PUSH => {
-                self.move_piece::<false>(color, piece, from, to);
-                self.state.hash ^= zobrist::get_piece_hash(color, piece, from);
-                self.state.hash ^= zobrist::get_piece_hash(color, piece, to);
+                self.move_piece::<false>(stm, piece, from, to);
+                self.state.hash ^= zobrist::get_piece_hash(stm, piece, from);
+                self.state.hash ^= zobrist::get_piece_hash(stm, piece, to);
 
-                self.state.pawn_hash ^= zobrist::get_piece_hash(color, piece, from);
-                self.state.pawn_hash ^= zobrist::get_piece_hash(color, piece, to);
+                self.state.pawn_hash ^= zobrist::get_piece_hash(stm, piece, from);
+                self.state.pawn_hash ^= zobrist::get_piece_hash(stm, piece, to);
 
-                let sign = (color as i8) * 2 - 1;
+                let sign = (stm as i8) * 2 - 1;
                 self.state.en_passant = 1u64 << ((to as i8) + sign * 8);
                 self.state.hash ^= zobrist::get_en_passant_hash(self.state.en_passant.bit_scan() & 7);
 
-                self.recalculate_pawn_attacks(color);
+                self.recalculate_pawn_attacks(stm);
             }
             MoveFlags::CAPTURE => {
                 let captured_piece = self.get_piece(to);
-                self.remove_piece::<false>(enemy_color, captured_piece, to);
-                self.state.hash ^= zobrist::get_piece_hash(enemy_color, captured_piece, to);
+                self.remove_piece::<false>(nstm, captured_piece, to);
+                self.state.hash ^= zobrist::get_piece_hash(nstm, captured_piece, to);
 
                 if captured_piece == PAWN {
-                    self.state.pawn_hash ^= zobrist::get_piece_hash(enemy_color, captured_piece, to);
-                    self.recalculate_pawn_attacks(enemy_color);
+                    self.state.pawn_hash ^= zobrist::get_piece_hash(nstm, captured_piece, to);
+                    self.recalculate_pawn_attacks(nstm);
                 }
 
-                self.move_piece::<false>(color, piece, from, to);
-                self.state.hash ^= zobrist::get_piece_hash(color, piece, from);
-                self.state.hash ^= zobrist::get_piece_hash(color, piece, to);
+                self.move_piece::<false>(stm, piece, from, to);
+                self.state.hash ^= zobrist::get_piece_hash(stm, piece, from);
+                self.state.hash ^= zobrist::get_piece_hash(stm, piece, to);
 
                 if piece == PAWN {
-                    self.state.pawn_hash ^= zobrist::get_piece_hash(color, piece, from);
-                    self.state.pawn_hash ^= zobrist::get_piece_hash(color, piece, to);
-                    self.recalculate_pawn_attacks(color);
+                    self.state.pawn_hash ^= zobrist::get_piece_hash(stm, piece, from);
+                    self.state.pawn_hash ^= zobrist::get_piece_hash(stm, piece, to);
+                    self.recalculate_pawn_attacks(stm);
                 }
 
                 self.state.captured_piece = captured_piece as u8;
             }
             MoveFlags::SHORT_CASTLING => {
-                let king_from = 3 + 56 * color;
-                let king_to = 1 + 56 * color;
+                let king_from = 3 + 56 * stm;
+                let king_to = 1 + 56 * stm;
 
-                self.move_piece::<false>(color, KING, king_from, king_to);
-                self.state.hash ^= zobrist::get_piece_hash(color, KING, king_from);
-                self.state.hash ^= zobrist::get_piece_hash(color, KING, king_to);
+                self.move_piece::<false>(stm, KING, king_from, king_to);
+                self.state.hash ^= zobrist::get_piece_hash(stm, KING, king_from);
+                self.state.hash ^= zobrist::get_piece_hash(stm, KING, king_to);
 
-                let rook_from = 0 + 56 * color;
-                let rook_to = 2 + 56 * color;
+                let rook_from = 0 + 56 * stm;
+                let rook_to = 2 + 56 * stm;
 
-                self.move_piece::<false>(color, ROOK, rook_from, rook_to);
-                self.state.hash ^= zobrist::get_piece_hash(color, ROOK, rook_from);
-                self.state.hash ^= zobrist::get_piece_hash(color, ROOK, rook_to);
+                self.move_piece::<false>(stm, ROOK, rook_from, rook_to);
+                self.state.hash ^= zobrist::get_piece_hash(stm, ROOK, rook_from);
+                self.state.hash ^= zobrist::get_piece_hash(stm, ROOK, rook_to);
             }
             MoveFlags::LONG_CASTLING => {
-                let king_from = 3 + 56 * color;
-                let king_to = 5 + 56 * color;
+                let king_from = 3 + 56 * stm;
+                let king_to = 5 + 56 * stm;
 
-                self.move_piece::<false>(color, KING, king_from, king_to);
-                self.state.hash ^= zobrist::get_piece_hash(color, KING, king_from);
-                self.state.hash ^= zobrist::get_piece_hash(color, KING, king_to);
+                self.move_piece::<false>(stm, KING, king_from, king_to);
+                self.state.hash ^= zobrist::get_piece_hash(stm, KING, king_from);
+                self.state.hash ^= zobrist::get_piece_hash(stm, KING, king_to);
 
-                let rook_from = 7 + 56 * color;
-                let rook_to = 4 + 56 * color;
+                let rook_from = 7 + 56 * stm;
+                let rook_to = 4 + 56 * stm;
 
-                self.move_piece::<false>(color, ROOK, rook_from, rook_to);
-                self.state.hash ^= zobrist::get_piece_hash(color, ROOK, rook_from);
-                self.state.hash ^= zobrist::get_piece_hash(color, ROOK, rook_to);
+                self.move_piece::<false>(stm, ROOK, rook_from, rook_to);
+                self.state.hash ^= zobrist::get_piece_hash(stm, ROOK, rook_from);
+                self.state.hash ^= zobrist::get_piece_hash(stm, ROOK, rook_to);
             }
             MoveFlags::EN_PASSANT => {
-                self.move_piece::<false>(color, piece, from, to);
-                self.state.hash ^= zobrist::get_piece_hash(color, piece, from);
-                self.state.hash ^= zobrist::get_piece_hash(color, piece, to);
+                self.move_piece::<false>(stm, piece, from, to);
+                self.state.hash ^= zobrist::get_piece_hash(stm, piece, from);
+                self.state.hash ^= zobrist::get_piece_hash(stm, piece, to);
 
-                self.state.pawn_hash ^= zobrist::get_piece_hash(color, piece, from);
-                self.state.pawn_hash ^= zobrist::get_piece_hash(color, piece, to);
+                self.state.pawn_hash ^= zobrist::get_piece_hash(stm, piece, from);
+                self.state.pawn_hash ^= zobrist::get_piece_hash(stm, piece, to);
 
-                let sign = (color as isize) * 2 - 1;
+                let sign = (stm as isize) * 2 - 1;
                 let enemy_pawn_square = ((to as isize) + sign * 8) as usize;
 
-                self.remove_piece::<false>(enemy_color, PAWN, enemy_pawn_square);
-                self.state.hash ^= zobrist::get_piece_hash(enemy_color, piece, enemy_pawn_square);
-                self.state.pawn_hash ^= zobrist::get_piece_hash(enemy_color, piece, enemy_pawn_square);
+                self.remove_piece::<false>(nstm, PAWN, enemy_pawn_square);
+                self.state.hash ^= zobrist::get_piece_hash(nstm, piece, enemy_pawn_square);
+                self.state.pawn_hash ^= zobrist::get_piece_hash(nstm, piece, enemy_pawn_square);
 
-                self.recalculate_pawn_attacks(color);
-                self.recalculate_pawn_attacks(enemy_color);
+                self.recalculate_pawn_attacks(stm);
+                self.recalculate_pawn_attacks(nstm);
             }
             _ => {
                 let promotion_piece = r#move.get_promotion_piece();
                 if flags.contains(MoveFlags::CAPTURE) {
                     let captured_piece = self.get_piece(to);
-                    self.remove_piece::<false>(enemy_color, captured_piece, to);
-                    self.state.hash ^= zobrist::get_piece_hash(enemy_color, captured_piece, to);
+                    self.remove_piece::<false>(nstm, captured_piece, to);
+                    self.state.hash ^= zobrist::get_piece_hash(nstm, captured_piece, to);
                     self.state.captured_piece = captured_piece as u8;
                 }
 
-                self.remove_piece::<false>(color, PAWN, from);
-                self.state.hash ^= zobrist::get_piece_hash(color, PAWN, from);
-                self.state.pawn_hash ^= zobrist::get_piece_hash(color, PAWN, from);
+                self.remove_piece::<false>(stm, PAWN, from);
+                self.state.hash ^= zobrist::get_piece_hash(stm, PAWN, from);
+                self.state.pawn_hash ^= zobrist::get_piece_hash(stm, PAWN, from);
 
-                self.add_piece::<false>(color, promotion_piece, to);
-                self.state.hash ^= zobrist::get_piece_hash(color, promotion_piece, to);
+                self.add_piece::<false>(stm, promotion_piece, to);
+                self.state.hash ^= zobrist::get_piece_hash(stm, promotion_piece, to);
 
-                self.recalculate_pawn_attacks(color);
+                self.recalculate_pawn_attacks(stm);
             }
         }
 
         if piece == KING {
-            self.state.castling_rights &= match color {
+            self.state.castling_rights &= match stm {
                 WHITE => {
                     self.state.hash ^= zobrist::get_castling_right_hash(self.state.castling_rights, CastlingRights::WHITE_SHORT_CASTLING);
                     self.state.hash ^= zobrist::get_castling_right_hash(self.state.castling_rights, CastlingRights::WHITE_LONG_CASTLING);
@@ -265,20 +265,20 @@ impl Board {
 
                     !CastlingRights::BLACK_CASTLING
                 }
-                _ => panic_fast!("Invalid parameter: fen={}, color={}", self, color),
+                _ => panic_fast!("Invalid parameter: fen={}, stm={}", self, stm),
             };
 
-            self.state.pawn_hash ^= zobrist::get_piece_hash(color, KING, from);
-            self.state.pawn_hash ^= zobrist::get_piece_hash(color, KING, to);
+            self.state.pawn_hash ^= zobrist::get_piece_hash(stm, KING, from);
+            self.state.pawn_hash ^= zobrist::get_piece_hash(stm, KING, to);
 
-            let from = if color == WHITE { from } else { (1u64 << from).swap_bytes().bit_scan() };
-            let to = if color == WHITE { to } else { (1u64 << to).swap_bytes().bit_scan() };
+            let from = if stm == WHITE { from } else { (1u64 << from).swap_bytes().bit_scan() };
+            let to = if stm == WHITE { to } else { (1u64 << to).swap_bytes().bit_scan() };
 
             if KING_BUCKETS[from] != KING_BUCKETS[to] {
                 pst::recalculate_incremental_values(self);
             }
         } else if piece == ROOK {
-            match color {
+            match stm {
                 WHITE => match from {
                     A1 => {
                         self.state.hash ^= zobrist::get_castling_right_hash(self.state.castling_rights, CastlingRights::WHITE_LONG_CASTLING);
@@ -301,12 +301,12 @@ impl Board {
                     }
                     _ => {}
                 },
-                _ => panic_fast!("Invalid parameter: fen={}, color={}", self, color),
+                _ => panic_fast!("Invalid parameter: fen={}, stm={}", self, stm),
             }
         }
 
         if self.state.captured_piece == ROOK as u8 {
-            match enemy_color {
+            match nstm {
                 WHITE => match to {
                     A1 => {
                         self.state.hash ^= zobrist::get_castling_right_hash(self.state.castling_rights, CastlingRights::WHITE_LONG_CASTLING);
@@ -329,11 +329,11 @@ impl Board {
                     }
                     _ => {}
                 },
-                _ => panic_fast!("Invalid parameter: fen={}, color={}", self, color),
+                _ => panic_fast!("Invalid parameter: fen={}, stm={}", self, stm),
             }
         }
 
-        if color == BLACK {
+        if stm == BLACK {
             self.fullmove_number += 1;
         }
 
@@ -343,8 +343,8 @@ impl Board {
             self.state.halfmove_clock += 1;
         }
 
-        self.state.hash ^= zobrist::get_active_color_hash();
-        self.active_color = enemy_color;
+        self.state.hash ^= zobrist::get_stm_hash();
+        self.stm = nstm;
     }
 
     /// Undoes `r#move`, with the assumption that it's perfectly valid at the current position (otherwise, internal state can be irreversibly corrupted).
@@ -358,8 +358,8 @@ impl Board {
     pub fn undo_move(&mut self, r#move: Move) {
         assert_fast!(!r#move.is_empty());
 
-        let color = self.active_color ^ 1;
-        let enemy_color = self.active_color;
+        let stm = self.stm ^ 1;
+        let nstm = self.stm;
         let from = r#move.get_from();
         let to = r#move.get_to();
         let flags = r#move.get_flags();
@@ -368,61 +368,61 @@ impl Board {
 
         match flags {
             MoveFlags::SINGLE_PUSH => {
-                self.move_piece::<true>(color, piece, to, from);
+                self.move_piece::<true>(stm, piece, to, from);
 
                 if piece == PAWN {
-                    self.recalculate_pawn_attacks(color);
+                    self.recalculate_pawn_attacks(stm);
                 }
             }
             MoveFlags::DOUBLE_PUSH => {
-                self.move_piece::<true>(color, piece, to, from);
-                self.recalculate_pawn_attacks(color);
+                self.move_piece::<true>(stm, piece, to, from);
+                self.recalculate_pawn_attacks(stm);
             }
             MoveFlags::CAPTURE => {
-                self.move_piece::<true>(color, piece, to, from);
-                self.add_piece::<true>(enemy_color, captured_piece, to);
+                self.move_piece::<true>(stm, piece, to, from);
+                self.add_piece::<true>(nstm, captured_piece, to);
 
                 if piece == PAWN {
-                    self.recalculate_pawn_attacks(color);
+                    self.recalculate_pawn_attacks(stm);
                 }
 
                 if captured_piece == PAWN {
-                    self.recalculate_pawn_attacks(enemy_color);
+                    self.recalculate_pawn_attacks(nstm);
                 }
             }
             MoveFlags::SHORT_CASTLING => {
-                self.move_piece::<true>(color, KING, 1 + 56 * color, 3 + 56 * color);
-                self.move_piece::<true>(color, ROOK, 2 + 56 * color, 0 + 56 * color);
+                self.move_piece::<true>(stm, KING, 1 + 56 * stm, 3 + 56 * stm);
+                self.move_piece::<true>(stm, ROOK, 2 + 56 * stm, 0 + 56 * stm);
             }
             MoveFlags::LONG_CASTLING => {
-                self.move_piece::<true>(color, KING, 5 + 56 * color, 3 + 56 * color);
-                self.move_piece::<true>(color, ROOK, 4 + 56 * color, 7 + 56 * color);
+                self.move_piece::<true>(stm, KING, 5 + 56 * stm, 3 + 56 * stm);
+                self.move_piece::<true>(stm, ROOK, 4 + 56 * stm, 7 + 56 * stm);
             }
             MoveFlags::EN_PASSANT => {
-                let sign = (color as isize) * 2 - 1;
+                let sign = (stm as isize) * 2 - 1;
                 let enemy_pawn_square = ((to as isize) + sign * 8) as usize;
 
-                self.move_piece::<true>(color, piece, to, from);
-                self.add_piece::<true>(enemy_color, PAWN, enemy_pawn_square);
-                self.recalculate_pawn_attacks(color);
-                self.recalculate_pawn_attacks(enemy_color);
+                self.move_piece::<true>(stm, piece, to, from);
+                self.add_piece::<true>(nstm, PAWN, enemy_pawn_square);
+                self.recalculate_pawn_attacks(stm);
+                self.recalculate_pawn_attacks(nstm);
             }
             _ => {
-                self.add_piece::<true>(color, PAWN, from);
-                self.remove_piece::<true>(color, piece, to);
-                self.recalculate_pawn_attacks(color);
+                self.add_piece::<true>(stm, PAWN, from);
+                self.remove_piece::<true>(stm, piece, to);
+                self.recalculate_pawn_attacks(stm);
 
                 if flags.contains(MoveFlags::CAPTURE) {
-                    self.add_piece::<true>(enemy_color, captured_piece, to);
+                    self.add_piece::<true>(nstm, captured_piece, to);
                 }
             }
         }
 
-        if color == BLACK {
+        if stm == BLACK {
             self.fullmove_number -= 1;
         }
 
-        self.active_color = color;
+        self.stm = stm;
         self.pop_state();
     }
 
@@ -442,13 +442,13 @@ impl Board {
             self.state.en_passant = 0;
         }
 
-        if self.active_color == BLACK {
+        if self.stm == BLACK {
             self.fullmove_number += 1;
         }
 
         self.null_moves += 1;
-        self.active_color ^= 1;
-        self.state.hash ^= zobrist::get_active_color_hash();
+        self.stm ^= 1;
+        self.state.hash ^= zobrist::get_stm_hash();
     }
 
     /// Undoes a null move, which is basically a switch of the active color with restoring of the internal state.
@@ -459,11 +459,11 @@ impl Board {
     ///  - decrease null moves count
     ///  - restore halfmove clock, castling rights, en passant bitboard, board hash and pawn hash
     pub fn undo_null_move(&mut self) {
-        if self.active_color == WHITE {
+        if self.stm == WHITE {
             self.fullmove_number -= 1;
         }
 
-        self.active_color ^= 1;
+        self.stm ^= 1;
         self.null_moves -= 1;
         self.pop_state();
     }
@@ -485,35 +485,35 @@ impl Board {
         assert_fast!(color < 2);
         assert_fast!(square < 64);
 
-        let enemy_color = color ^ 1;
+        let nstm = color ^ 1;
         let occupancy_bb = self.occupancy[WHITE] | self.occupancy[BLACK];
 
         let rook_queen_attacks_bb = movegen::get_rook_moves(occupancy_bb, square);
-        let enemy_rooks_queens_bb = self.pieces[enemy_color][ROOK] | self.pieces[enemy_color][QUEEN];
+        let enemy_rooks_queens_bb = self.pieces[nstm][ROOK] | self.pieces[nstm][QUEEN];
         if (rook_queen_attacks_bb & enemy_rooks_queens_bb) != 0 {
             return true;
         }
 
         let bishop_queen_attacks_bb = movegen::get_bishop_moves(occupancy_bb, square);
-        let enemy_bishops_queens_bb = self.pieces[enemy_color][BISHOP] | self.pieces[enemy_color][QUEEN];
+        let enemy_bishops_queens_bb = self.pieces[nstm][BISHOP] | self.pieces[nstm][QUEEN];
         if (bishop_queen_attacks_bb & enemy_bishops_queens_bb) != 0 {
             return true;
         }
 
         let knight_attacks_bb = movegen::get_knight_moves(square);
-        let enemy_knights_bb = self.pieces[enemy_color][KNIGHT];
+        let enemy_knights_bb = self.pieces[nstm][KNIGHT];
         if (knight_attacks_bb & enemy_knights_bb) != 0 {
             return true;
         }
 
         let king_attacks_bb = movegen::get_king_moves(square);
-        let enemy_kings_bb = self.pieces[enemy_color][KING];
+        let enemy_kings_bb = self.pieces[nstm][KING];
         if (king_attacks_bb & enemy_kings_bb) != 0 {
             return true;
         }
 
         let square_bb = 1u64 << square;
-        if (self.pawn_attacks[enemy_color] & square_bb) != 0 {
+        if (self.pawn_attacks[nstm] & square_bb) != 0 {
             return true;
         }
 
@@ -544,19 +544,19 @@ impl Board {
         assert_fast!(square < 64);
 
         let mut result = 0;
-        let enemy_color = color ^ 1;
+        let nstm = color ^ 1;
         let occupancy_bb = self.occupancy[WHITE] | self.occupancy[BLACK];
 
-        let rooks_queens_bb = self.pieces[enemy_color][ROOK] | self.pieces[enemy_color][QUEEN];
-        let bishops_queens_bb = self.pieces[enemy_color][BISHOP] | self.pieces[enemy_color][QUEEN];
+        let rooks_queens_bb = self.pieces[nstm][ROOK] | self.pieces[nstm][QUEEN];
+        let bishops_queens_bb = self.pieces[nstm][BISHOP] | self.pieces[nstm][QUEEN];
 
         let king_attacks_bb = movegen::get_king_moves(square);
-        let attacking_kings_count = ((king_attacks_bb & self.pieces[enemy_color][KING]) != 0) as usize;
+        let attacking_kings_count = ((king_attacks_bb & self.pieces[nstm][KING]) != 0) as usize;
         result |= attacking_kings_count << 7;
 
         let rook_attacks_bb = movegen::get_rook_moves(occupancy_bb & !rooks_queens_bb, square);
-        let attacking_rooks_count = (rook_attacks_bb & self.pieces[enemy_color][ROOK]).bit_count();
-        let attacking_queens_count = ((rook_attacks_bb & self.pieces[enemy_color][QUEEN]) != 0) as usize;
+        let attacking_rooks_count = (rook_attacks_bb & self.pieces[nstm][ROOK]).bit_count();
+        let attacking_queens_count = ((rook_attacks_bb & self.pieces[nstm][QUEEN]) != 0) as usize;
 
         result |= match attacking_rooks_count {
             0 => 0,
@@ -566,12 +566,12 @@ impl Board {
         result |= attacking_queens_count << 6;
 
         let knight_attacks_bb = movegen::get_knight_moves(square);
-        let attacking_knights_count = (knight_attacks_bb & self.pieces[enemy_color][KNIGHT]).bit_count();
+        let attacking_knights_count = (knight_attacks_bb & self.pieces[nstm][KNIGHT]).bit_count();
 
         let bishop_attacks_bb = movegen::get_bishop_moves(occupancy_bb & !bishops_queens_bb, square);
-        let attacking_bishops_count = (bishop_attacks_bb & self.pieces[enemy_color][BISHOP]).bit_count();
+        let attacking_bishops_count = (bishop_attacks_bb & self.pieces[nstm][BISHOP]).bit_count();
         let attacking_knights_bishops_count = attacking_knights_count + attacking_bishops_count;
-        let attacking_queens_count = ((bishop_attacks_bb & self.pieces[enemy_color][QUEEN]) != 0) as usize;
+        let attacking_queens_count = ((bishop_attacks_bb & self.pieces[nstm][QUEEN]) != 0) as usize;
 
         result |= match attacking_knights_bishops_count {
             0 => 0,
@@ -582,7 +582,7 @@ impl Board {
         result |= attacking_queens_count << 6;
 
         let square_bb = 1u64 << square;
-        let attacking_pawns_count = ((self.pawn_attacks[enemy_color] & square_bb) != 0) as usize;
+        let attacking_pawns_count = ((self.pawn_attacks[nstm] & square_bb) != 0) as usize;
 
         result |= attacking_pawns_count;
         result
@@ -718,18 +718,18 @@ impl Board {
     }
 
     /// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position, using `phtable` to store pawn
-    /// evaluations and `statistics` to gather diagnostic data. Returns score from the `color` perspective (more than 0 when advantage, less than 0 when disadvantage).
-    pub fn evaluate(&self, color: usize, phtable: &PHTable, statistics: &mut SearchStatistics) -> i16 {
+    /// evaluations and `stats` to gather diagnostic data. Returns score from the `color` perspective (more than 0 when advantage, less than 0 when disadvantage).
+    pub fn evaluate(&self, color: usize, phtable: &PHTable, stats: &mut SearchStats) -> i16 {
         assert_fast!(color < 2);
 
-        let mut white_aux = MobilityAuxData::default();
-        let mut black_aux = MobilityAuxData::default();
+        let mut white_aux = EvalAux::default();
+        let mut black_aux = EvalAux::default();
 
         let material_evaluation = material::evaluate(self);
         let pst_evaluation = pst::evaluate(self);
         let mobility_evaluation = mobility::evaluate(self, &mut white_aux, &mut black_aux);
         let safety_evaluation = safety::evaluate(self, &white_aux, &black_aux);
-        let pawns_evaluation = pawns::evaluate(self, phtable, statistics);
+        let pawns_evaluation = pawns::evaluate(self, phtable, stats);
 
         let evaluation = material_evaluation + pst_evaluation + mobility_evaluation + safety_evaluation + pawns_evaluation;
         let sign = -((color as i16) * 2 - 1);
@@ -742,8 +742,8 @@ impl Board {
     pub fn evaluate_without_cache(&self, color: usize) -> i16 {
         assert_fast!(color < 2);
 
-        let mut white_aux = MobilityAuxData::default();
-        let mut black_aux = MobilityAuxData::default();
+        let mut white_aux = EvalAux::default();
+        let mut black_aux = EvalAux::default();
 
         let material_evaluation = material::evaluate(self);
         let pst_evaluation = pst::evaluate(self);
@@ -759,12 +759,12 @@ impl Board {
 
     /// Runs fast evaluations, considering only material and piece-square tables. Returns score from the `color` perspective (more than 0 when
     /// advantage, less than 0 when disadvantage).
-    pub fn evaluate_fast(&self, color: usize, phtable: &PHTable, statistics: &mut SearchStatistics) -> i16 {
+    pub fn evaluate_fast(&self, color: usize, phtable: &PHTable, stats: &mut SearchStats) -> i16 {
         assert_fast!(color < 2);
 
         let material_evaluation = material::evaluate(self);
         let pst_evaluation = pst::evaluate(self);
-        let pawns_evaluation = pawns::evaluate(self, phtable, statistics);
+        let pawns_evaluation = pawns::evaluate(self, phtable, stats);
 
         let evaluation = material_evaluation + pst_evaluation + pawns_evaluation;
         let sign = -((color as i16) * 2 - 1);
@@ -857,7 +857,7 @@ impl Board {
 
     /// Checks if there's an instant move possible and returns it as [Some], otherwise [None].
     pub fn get_instant_move(&mut self) -> Option<Move> {
-        if !self.is_king_checked(self.active_color) {
+        if !self.is_king_checked(self.stm) {
             return None;
         }
 
@@ -873,7 +873,7 @@ impl Board {
             let r#move = unsafe { r#move.assume_init() };
             self.make_move(r#move);
 
-            if !self.is_king_checked(self.active_color ^ 1) {
+            if !self.is_king_checked(self.stm ^ 1) {
                 evading_moves_count += 1;
                 evading_move = r#move;
 
@@ -915,7 +915,7 @@ impl Default for Board {
             pieces: [[0; 6], [0; 6]],
             occupancy: [0; 2],
             piece_table: [u8::MAX; 64],
-            active_color: WHITE,
+            stm: WHITE,
             null_moves: 0,
             game_phase: 0,
             fullmove_number: 1,

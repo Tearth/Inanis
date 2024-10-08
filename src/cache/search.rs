@@ -183,7 +183,7 @@ impl TTable {
 
                 if entry.best_move.is_legal(board) {
                     board.make_move(entry.best_move);
-                    if !board.is_king_checked(board.active_color ^ 1) {
+                    if !board.is_king_checked(board.stm ^ 1) {
                         pv_line.push(entry.best_move);
                         pv_line.append(&mut self.get_pv_line(board, ply + 1));
                     }

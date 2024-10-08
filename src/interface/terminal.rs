@@ -1,7 +1,7 @@
 use super::uci;
 use crate::evaluation::material;
 use crate::evaluation::mobility;
-use crate::evaluation::mobility::MobilityAuxData;
+use crate::evaluation::mobility::EvalAux;
 use crate::evaluation::pawns;
 use crate::evaluation::pst;
 use crate::evaluation::safety;
@@ -340,11 +340,11 @@ fn handle_benchmark() {
 
         println!(
             "Move generator stages: {} hash moves, {} captures, {} killers, {} countermoves, {} quiets",
-            result.move_generator_hash_move_stages,
-            result.move_generator_captures_stages,
-            result.move_generator_killers_stages,
-            result.move_generator_counters_stages,
-            result.move_generator_quiets_stages
+            result.movegen_hash_move_stages,
+            result.movegen_captures_stages,
+            result.movegen_killers_stages,
+            result.movegen_counters_stages,
+            result.movegen_quiets_stages
         );
 
         println!("Transposition table move legality check: {} legal, {} illegal", result.tt_legal_hashmoves, result.tt_illegal_hashmoves);
@@ -373,8 +373,8 @@ fn handle_evaluate(input: Vec<&str>) {
         }
     };
 
-    let mut white_aux = MobilityAuxData::default();
-    let mut black_aux = MobilityAuxData::default();
+    let mut white_aux = EvalAux::default();
+    let mut black_aux = EvalAux::default();
 
     let material_evaluation = material::evaluate(&board);
     let pst_evaluation = pst::evaluate(&board);
@@ -452,11 +452,11 @@ fn handle_perft(input: Vec<&str>) {
             result.nodes,
             diff,
             mnps,
-            result.statistics.captures,
-            result.statistics.en_passants,
-            result.statistics.castles,
-            result.statistics.promotions,
-            result.statistics.checks
+            result.stats.captures,
+            result.stats.en_passants,
+            result.stats.castles,
+            result.stats.promotions,
+            result.stats.checks
         );
     }
 

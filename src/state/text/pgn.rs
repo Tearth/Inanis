@@ -17,7 +17,7 @@ pub struct ParsedPGN {
 
 pub struct ParsedPGNMove {
     pub r#move: Move,
-    pub evaluation: f32,
+    pub eval: f32,
 }
 
 impl PGNLoader {
@@ -79,7 +79,7 @@ impl PGNLoader {
 
                 let mut comment = false;
                 let mut pgn_move = None;
-                let mut pgn_evaluation: Option<&str> = None;
+                let mut pgn_eval: Option<&str> = None;
 
                 for token in line.split_ascii_whitespace() {
                     if token.ends_with('}') {
@@ -92,29 +92,29 @@ impl PGNLoader {
                     }
 
                     if let Some(r#move) = pgn_move {
-                        if let Some(evaluation) = pgn_evaluation {
-                            let mut evaluation = if evaluation.starts_with("+M") {
+                        if let Some(eval) = pgn_eval {
+                            let mut eval = if eval.starts_with("+M") {
                                 100.0
-                            } else if evaluation.starts_with("-M") {
+                            } else if eval.starts_with("-M") {
                                 -100.0
                             } else {
-                                evaluation.parse::<f32>().unwrap()
+                                eval.parse::<f32>().unwrap()
                             };
 
-                            if board.active_color == BLACK {
-                                evaluation = -evaluation;
+                            if board.stm == BLACK {
+                                eval = -eval;
                             }
 
-                            moves.push(ParsedPGNMove::new(r#move, evaluation));
+                            moves.push(ParsedPGNMove::new(r#move, eval));
                             board.make_move(r#move);
 
                             pgn_move = None;
-                            pgn_evaluation = None;
+                            pgn_eval = None;
                         }
                     }
 
                     if let Some(token) = token.strip_prefix('{') {
-                        pgn_evaluation = Some(token.split('/').collect::<Vec<&str>>()[0]);
+                        pgn_eval = Some(token.split('/').collect::<Vec<&str>>()[0]);
                         comment = true;
                         continue;
                     }
@@ -186,7 +186,7 @@ impl ParsedPGN {
 }
 
 impl ParsedPGNMove {
-    pub fn new(r#move: Move, evaluation: f32) -> Self {
-        Self { r#move, evaluation }
+    pub fn new(r#move: Move, eval: f32) -> Self {
+        Self { r#move, eval }
     }
 }

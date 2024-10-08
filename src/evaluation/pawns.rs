@@ -1,6 +1,6 @@
 use super::*;
 use crate::cache::pawns::PHTable;
-use crate::engine::stats::SearchStatistics;
+use crate::engine::stats::SearchStats;
 use crate::state::representation::Board;
 use crate::utils::bithelpers::BitHelpers;
 use crate::utils::{assert_fast, dev};
@@ -29,14 +29,14 @@ pub struct PawnsData {
 ///
 /// To improve performance (using the fact that structure of pawns changes relatively rare), each evaluation is saved in the pawn hashtable,
 /// and used again if possible.
-pub fn evaluate(board: &Board, phtable: &PHTable, statistics: &mut SearchStatistics) -> PackedEval {
+pub fn evaluate(board: &Board, phtable: &PHTable, stats: &mut SearchStats) -> PackedEval {
     match phtable.get(board.state.pawn_hash) {
         Some(entry) => {
-            dev!(statistics.phtable_hits += 1);
+            dev!(stats.phtable_hits += 1);
             return PackedEval::new(entry.score_opening, entry.score_ending);
         }
         None => {
-            dev!(statistics.phtable_misses += 1);
+            dev!(stats.phtable_misses += 1);
         }
     }
 
@@ -45,7 +45,7 @@ pub fn evaluate(board: &Board, phtable: &PHTable, statistics: &mut SearchStatist
     let eval = white_evaluation - black_evaluation;
 
     phtable.add(board.state.pawn_hash, eval.get_opening(), eval.get_ending());
-    dev!(statistics.phtable_added += 1);
+    dev!(stats.phtable_added += 1);
 
     eval
 }

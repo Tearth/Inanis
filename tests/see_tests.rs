@@ -28,8 +28,8 @@ mod see_tests {
                         if r#move.to_long_notation() == $move {
                             let attacking_piece = board.get_piece(r#move.get_from());
                             let target_piece = board.get_piece(r#move.get_to());
-                            let attackers = board.get_attacking_pieces(board.active_color ^ 1, r#move.get_to());
-                            let defenders = board.get_attacking_pieces(board.active_color, r#move.get_to());
+                            let attackers = board.get_attacking_pieces(board.stm ^ 1, r#move.get_to());
+                            let defenders = board.get_attacking_pieces(board.stm, r#move.get_to());
 
                             assert_eq!($expected_result, see::get(attacking_piece, target_piece, attackers, defenders));
                             return;

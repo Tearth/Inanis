@@ -33,7 +33,7 @@ pub fn epd_to_board(epd: &str) -> Result<ParsedEPD, String> {
 
     let mut board = Board::default();
     fen_to_pieces(&mut board, tokens[0])?;
-    fen_to_active_color(&mut board, tokens[1])?;
+    fen_to_stm(&mut board, tokens[1])?;
     fen_to_castling(&mut board, tokens[2])?;
     fen_to_en_passant(&mut board, tokens[3])?;
 
@@ -60,23 +60,23 @@ pub fn epd_to_board(epd: &str) -> Result<ParsedEPD, String> {
 /// Converts [Board] into the FEN.
 pub fn board_to_fen(board: &Board) -> String {
     let pieces = pieces_to_fen(board);
-    let active_color = active_color_to_fen(board);
+    let stm = stm_to_fen(board);
     let castling = castling_to_fen(board);
     let en_passant = en_passant_to_fen(board);
     let halfmove_clock = halfmove_clock_to_fen(board);
     let fullmove_number = fullmove_number_to_fen(board);
 
-    format!("{} {} {} {} {} {}", pieces, active_color, castling, en_passant, halfmove_clock, fullmove_number)
+    format!("{} {} {} {} {} {}", pieces, stm, castling, en_passant, halfmove_clock, fullmove_number)
 }
 
 /// Converts [Board] into the EPD.
 pub fn board_to_epd(board: &Board) -> String {
     let pieces = pieces_to_fen(board);
-    let active_color = active_color_to_fen(board);
+    let stm = stm_to_fen(board);
     let castling = castling_to_fen(board);
     let en_passant = en_passant_to_fen(board);
 
-    format!("{} {} {} {}", pieces, active_color, castling, en_passant)
+    format!("{} {} {} {}", pieces, stm, castling, en_passant)
 }
 
 /// Gets a value of the `name` parameters from the specified `epd`. Returns [None] if the parameter was not found.
@@ -151,10 +151,10 @@ fn pieces_to_fen(board: &Board) -> String {
     result
 }
 
-/// Parses FEN's active color and stores it into the `board`. Returns [Err] with the proper error message if `active_color` couldn't be parsed.
-fn fen_to_active_color(board: &mut Board, color: &str) -> Result<(), String> {
+/// Parses FEN's active color and stores it into the `board`. Returns [Err] with the proper error message if `stm` couldn't be parsed.
+fn fen_to_stm(board: &mut Board, color: &str) -> Result<(), String> {
     let color_char = color.chars().next().ok_or(format!("Invalid FEN, bad color: color={}", color))?;
-    board.active_color = match color_char {
+    board.stm = match color_char {
         'w' => WHITE,
         'b' => BLACK,
         _ => return Err(format!("Invalid FEN, bad color: color={}", color)),
@@ -164,11 +164,11 @@ fn fen_to_active_color(board: &mut Board, color: &str) -> Result<(), String> {
 }
 
 /// Converts active color from the `board` into the FEN chunk.
-fn active_color_to_fen(board: &Board) -> String {
-    match board.active_color {
+fn stm_to_fen(board: &Board) -> String {
+    match board.stm {
         WHITE => "w".to_string(),
         BLACK => "b".to_string(),
-        _ => panic_fast!("Invalid value: board.active_color={}", board.active_color),
+        _ => panic_fast!("Invalid value: board.stm={}", board.stm),
     }
 }
 

@@ -9,7 +9,7 @@ use crate::utils::rand;
 pub const PIECE_HASHES: [[[u64; 64]; 6]; 2] = generate_piece_hashes();
 pub const CASTLING_HASHES: [u64; 4] = generate_castling_hashes();
 pub const EN_PASSANT_HASHES: [u64; 8] = generate_en_passant_hashes();
-pub const ACTIVE_COLOR_HASH: u64 = generate_active_color_hash();
+pub const STM_HASH: u64 = generate_stm_hash();
 
 pub const fn generate_piece_hashes() -> [[[u64; 64]; 6]; 2] {
     let mut result = [[[0; 64]; 6]; 2];
@@ -66,7 +66,7 @@ pub const fn generate_en_passant_hashes() -> [u64; 8] {
     result
 }
 
-pub const fn generate_active_color_hash() -> u64 {
+pub const fn generate_stm_hash() -> u64 {
     let seed = 13914115299070061278;
     let (value, _) = rand::rand(seed);
     value
@@ -98,8 +98,8 @@ pub fn get_en_passant_hash(file: usize) -> u64 {
 }
 
 /// Gets active color hash.
-pub fn get_active_color_hash() -> u64 {
-    ACTIVE_COLOR_HASH
+pub fn get_stm_hash() -> u64 {
+    STM_HASH
 }
 
 /// Recalculates board's hash entirely.
@@ -136,8 +136,8 @@ pub fn recalculate_hash(board: &mut Board) {
         hash ^= zobrist::get_en_passant_hash(board.state.en_passant.bit_scan() & 7);
     }
 
-    if board.active_color == BLACK {
-        hash ^= zobrist::get_active_color_hash();
+    if board.stm == BLACK {
+        hash ^= zobrist::get_stm_hash();
     }
 
     board.state.hash = hash;

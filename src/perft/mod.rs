@@ -14,7 +14,7 @@ pub fn run_internal(context: &mut PerftContext, depth: i32) -> u64 {
     if context.check_integrity {
         let original_hash = context.board.state.hash;
         let original_pawn_hash = context.board.state.pawn_hash;
-        let original_evaluation = context.board.evaluate_without_cache(WHITE);
+        let original_eval = context.board.evaluate_without_cache(WHITE);
 
         context.board.recalculate_hashes();
         context.board.recalculate_incremental_values();
@@ -37,14 +37,9 @@ pub fn run_internal(context: &mut PerftContext, depth: i32) -> u64 {
             );
         }
 
-        let evaluation = context.board.evaluate_without_cache(WHITE);
-        if original_evaluation != evaluation {
-            panic_fast!(
-                "Integrity check failed, invalid evaluation: fen={}, original_evaluation={}, evaluation={}",
-                context.board,
-                original_evaluation,
-                evaluation
-            )
+        let eval = context.board.evaluate_without_cache(WHITE);
+        if original_eval != eval {
+            panic_fast!("Integrity check failed, invalid evaluation: fen={}, original_eval={}, eval={}", context.board, original_eval, eval)
         }
     }
 
@@ -70,28 +65,28 @@ pub fn run_internal(context: &mut PerftContext, depth: i32) -> u64 {
 
         context.board.make_move(r#move);
 
-        if !context.board.is_king_checked(context.board.active_color ^ 1) {
+        if !context.board.is_king_checked(context.board.stm ^ 1) {
             count += run_internal(context, depth - 1);
 
             if !context.fast && depth == 1 {
                 if r#move.is_capture() {
-                    context.statistics.captures += 1;
+                    context.stats.captures += 1;
                 }
 
                 if r#move.is_en_passant() {
-                    context.statistics.en_passants += 1;
+                    context.stats.en_passants += 1;
                 }
 
                 if r#move.is_castling() {
-                    context.statistics.castles += 1;
+                    context.stats.castles += 1;
                 }
 
                 if r#move.is_promotion() {
-                    context.statistics.promotions += 1;
+                    context.stats.promotions += 1;
                 }
 
-                if context.board.is_king_checked(context.board.active_color) {
-                    context.statistics.checks += 1;
+                if context.board.is_king_checked(context.board.stm) {
+                    context.stats.checks += 1;
                 }
             }
         }

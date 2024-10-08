@@ -33,14 +33,14 @@ pub fn assign_move_scores(context: &SearchContext, moves: &Moves, move_scores: &
             let attackers = if attackers_cache[square] != 0 {
                 attackers_cache[square] as usize
             } else {
-                attackers_cache[square] = context.board.get_attacking_pieces(context.board.active_color ^ 1, square) as u8;
+                attackers_cache[square] = context.board.get_attacking_pieces(context.board.stm ^ 1, square) as u8;
                 attackers_cache[square] as usize
             };
 
             let defenders = if defenders_cache[square] != 0 {
                 defenders_cache[square] as usize
             } else {
-                defenders_cache[square] = context.board.get_attacking_pieces(context.board.active_color, square) as u8;
+                defenders_cache[square] = context.board.get_attacking_pieces(context.board.stm, square) as u8;
                 defenders_cache[square] as usize
             };
 

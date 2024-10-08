@@ -19,20 +19,20 @@ use std::mem::MaybeUninit;
 ///     - futility pruning (<https://www.chessprogramming.org/Delta_Pruning>)
 pub fn run(context: &mut SearchContext, ply: u16, mut alpha: i16, beta: i16) -> i16 {
     assert_fast!(alpha <= beta);
-    assert_fast!(context.board.active_color < 2);
+    assert_fast!(context.board.stm < 2);
 
-    context.statistics.q_nodes_count += 1;
-    context.statistics.max_ply = cmp::max(ply, context.statistics.max_ply);
+    context.stats.q_nodes_count += 1;
+    context.stats.max_ply = cmp::max(ply, context.stats.max_ply);
 
-    if context.board.pieces[context.board.active_color][KING] == 0 {
-        dev!(context.statistics.q_leafs_count += 1);
+    if context.board.pieces[context.board.stm][KING] == 0 {
+        dev!(context.stats.q_leafs_count += 1);
         return -CHECKMATE_SCORE + (ply as i16);
     }
 
-    let stand_pat = context.board.evaluate(context.board.active_color, &context.phtable, &mut context.statistics);
+    let stand_pat = context.board.evaluate(context.board.stm, &context.phtable, &mut context.stats);
     if stand_pat >= beta {
-        dev!(context.statistics.q_leafs_count += 1);
-        dev!(context.statistics.q_beta_cutoffs += 1);
+        dev!(context.stats.q_leafs_count += 1);
+        dev!(context.stats.q_beta_cutoffs += 1);
         return stand_pat;
     }
 
@@ -49,17 +49,17 @@ pub fn run(context: &mut SearchContext, ply: u16, mut alpha: i16, beta: i16) -> 
         let (r#move, score) = movesort::sort_next_move(&mut moves, &mut move_scores, move_index, moves_count);
 
         if score_pruning_can_be_applied(context, score) {
-            dev!(context.statistics.q_score_pruning_accepted += 1);
+            dev!(context.stats.q_score_pruning_accepted += 1);
             break;
         } else {
-            dev!(context.statistics.q_score_pruning_rejected += 1);
+            dev!(context.stats.q_score_pruning_rejected += 1);
         }
 
         if futility_pruning_can_be_applied(context, score, stand_pat, alpha) {
-            dev!(context.statistics.q_futility_pruning_accepted += 1);
+            dev!(context.stats.q_futility_pruning_accepted += 1);
             break;
         } else {
-            dev!(context.statistics.q_futility_pruning_rejected += 1);
+            dev!(context.stats.q_futility_pruning_rejected += 1);
         }
 
         found = true;
@@ -70,11 +70,11 @@ pub fn run(context: &mut SearchContext, ply: u16, mut alpha: i16, beta: i16) -> 
 
         alpha = cmp::max(alpha, score);
         if alpha >= beta {
-            dev!(context.statistics.q_beta_cutoffs += 1);
+            dev!(context.stats.q_beta_cutoffs += 1);
             if move_index == 0 {
-                dev!(context.statistics.q_perfect_cutoffs += 1);
+                dev!(context.stats.q_perfect_cutoffs += 1);
             } else {
-                dev!(context.statistics.q_non_perfect_cutoffs += 1);
+                dev!(context.stats.q_non_perfect_cutoffs += 1);
             }
 
             break;
@@ -82,7 +82,7 @@ pub fn run(context: &mut SearchContext, ply: u16, mut alpha: i16, beta: i16) -> 
     }
 
     if !found {
-        dev!(context.statistics.q_leafs_count += 1);
+        dev!(context.stats.q_leafs_count += 1);
     }
 
     alpha

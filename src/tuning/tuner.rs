@@ -1,6 +1,6 @@
 use crate::evaluation::material;
 use crate::evaluation::mobility;
-use crate::evaluation::mobility::MobilityAuxData;
+use crate::evaluation::mobility::EvalAux;
 use crate::evaluation::pawns;
 use crate::evaluation::pst;
 use crate::evaluation::pst::*;
@@ -29,7 +29,7 @@ const B2: f32 = 0.999;
 const OUTPUT_INTERVAL: i32 = 100;
 
 pub struct TunerPosition {
-    evaluation: i16,
+    eval: i16,
     result_phase: u8,
     base_index: u32,
     coeffs_count: u8,
@@ -51,8 +51,8 @@ pub struct TunerCoeff {
 
 impl TunerPosition {
     /// Constructs a new instance of [TunerPosition] with stored `board` and `result`.
-    pub fn new(evaluation: i16, result: u8, phase: u8, base_index: u32, coeffs_count: u8) -> Self {
-        Self { evaluation, result_phase: (result << 5) | phase, base_index, coeffs_count }
+    pub fn new(eval: i16, result: u8, phase: u8, base_index: u32, coeffs_count: u8) -> Self {
+        Self { eval, result_phase: (result << 5) | phase, base_index, coeffs_count }
     }
 
     pub fn get_result(&self) -> u8 {
@@ -159,10 +159,10 @@ pub fn run(epd_filename: &str, output_directory: &str, random_values: bool, k: O
                     for position in chunk {
                         let position_result = position.get_result() as f32 / 2.0;
                         let position_phase = position.get_phase() as f32 / INITIAL_GAME_PHASE as f32;
-                        let evaluation = evaluate_position(position, &coeffs, &indices, &weights);
+                        let eval = evaluate_position(position, &coeffs, &indices, &weights);
 
-                        let sig = sigmoid(evaluation, k);
-                        let a = ((1.0 - wdl_ratio) * sigmoid(position.evaluation as f32, k) + wdl_ratio * position_result) - sig;
+                        let sig = sigmoid(eval, k);
+                        let a = ((1.0 - wdl_ratio) * sigmoid(position.eval as f32, k) + wdl_ratio * position_result) - sig;
                         let b = sig * (1.0 - sig);
 
                         for i in 0..position.coeffs_count {
@@ -274,10 +274,10 @@ fn calculate_error(positions: &[TunerPosition], coeffs: &[TunerCoeff], indices: 
             threads.push(scope.spawn(move || {
                 let mut error = 0.0;
                 for position in chunk {
-                    let position_result = position.get_result() as f32 / 2.0;
-                    let evaluation = evaluate_position(position, coeffs, indices, &weights);
+                    let result = position.get_result() as f32 / 2.0;
+                    let eval = evaluate_position(position, coeffs, indices, &weights);
 
-                    error += (((1.0 - wdl_ratio) * sigmoid(position.evaluation as f32, k) + wdl_ratio * position_result) - sigmoid(evaluation, k)).powi(2);
+                    error += (((1.0 - wdl_ratio) * sigmoid(position.eval as f32, k) + wdl_ratio * result) - sigmoid(eval, k)).powi(2);
                 }
 
                 error
@@ -342,7 +342,7 @@ fn load_positions(epd: &str, coeffs: &mut Vec<TunerCoeff>, indices: &mut Vec<u16
 
         let comment = parsed_epd.comment.unwrap();
         let comment_tokens = comment.split('|').collect::<Vec<&str>>();
-        let evaluation = (comment_tokens[0].parse::<f32>().unwrap() * 100.0) as i16;
+        let eval = (comment_tokens[0].parse::<f32>().unwrap() * 100.0) as i16;
         let result = match comment_tokens[1] {
             "0-1" => 0,
             "1/2-1/2" => 1,
@@ -352,8 +352,8 @@ fn load_positions(epd: &str, coeffs: &mut Vec<TunerCoeff>, indices: &mut Vec<u16
 
         let mut index = 0;
         let base_index = coeffs.len();
-        let mut white_aux = MobilityAuxData::default();
-        let mut black_aux = MobilityAuxData::default();
+        let mut white_aux = EvalAux::default();
+        let mut black_aux = EvalAux::default();
 
         material::get_coeffs(&parsed_epd.board, &mut index, coeffs, indices);
         mobility::get_coeffs(&parsed_epd.board, &mut white_aux, &mut black_aux, &mut index, coeffs, indices);
@@ -370,7 +370,7 @@ fn load_positions(epd: &str, coeffs: &mut Vec<TunerCoeff>, indices: &mut Vec<u16
             weights_indices.insert(indices[i]);
         }
 
-        positions.push(TunerPosition::new(evaluation, result, parsed_epd.board.game_phase, base_index as u32, (coeffs.len() - base_index) as u8));
+        positions.push(TunerPosition::new(eval, result, parsed_epd.board.game_phase, base_index as u32, (coeffs.len() - base_index) as u8));
     }
 
     Ok(positions)

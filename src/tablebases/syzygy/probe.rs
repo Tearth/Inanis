@@ -44,7 +44,7 @@ pub fn get_wdl(board: &Board) -> Option<WdlResult> {
             0,
             0,
             0,
-            board.active_color == WHITE,
+            board.stm == WHITE,
         );
 
         return match wdl {
@@ -75,7 +75,7 @@ pub fn get_root_wdl_dtz(board: &Board) -> Option<WdlDtzResult> {
             board.state.halfmove_clock as u32,
             0,
             0,
-            board.active_color == WHITE,
+            board.stm == WHITE,
             ptr::null_mut(),
         );
 

@@ -64,11 +64,11 @@ pub struct BenchmarkResult {
     pub phtable_hits: u64,
     pub phtable_misses: u64,
 
-    pub move_generator_hash_move_stages: u64,
-    pub move_generator_captures_stages: u64,
-    pub move_generator_killers_stages: u64,
-    pub move_generator_counters_stages: u64,
-    pub move_generator_quiets_stages: u64,
+    pub movegen_hash_move_stages: u64,
+    pub movegen_captures_stages: u64,
+    pub movegen_killers_stages: u64,
+    pub movegen_counters_stages: u64,
+    pub movegen_quiets_stages: u64,
 
     pub result_hash: u16,
 }
@@ -128,66 +128,66 @@ pub fn run() -> BenchmarkResult {
 
         context.by_ref().last().unwrap();
 
-        benchmark_result.nodes_count += context.statistics.nodes_count;
-        benchmark_result.q_nodes_count += context.statistics.q_nodes_count;
-        benchmark_result.leafs_count += context.statistics.leafs_count;
-        benchmark_result.q_leafs_count += context.statistics.q_leafs_count;
+        benchmark_result.nodes_count += context.stats.nodes_count;
+        benchmark_result.q_nodes_count += context.stats.q_nodes_count;
+        benchmark_result.leafs_count += context.stats.leafs_count;
+        benchmark_result.q_leafs_count += context.stats.q_leafs_count;
 
         #[cfg(feature = "dev")]
         {
-            benchmark_result.beta_cutoffs += context.statistics.beta_cutoffs;
-            benchmark_result.q_beta_cutoffs += context.statistics.q_beta_cutoffs;
+            benchmark_result.beta_cutoffs += context.stats.beta_cutoffs;
+            benchmark_result.q_beta_cutoffs += context.stats.q_beta_cutoffs;
 
-            benchmark_result.perfect_cutoffs += context.statistics.perfect_cutoffs;
-            benchmark_result.q_perfect_cutoffs += context.statistics.q_perfect_cutoffs;
-            benchmark_result.non_perfect_cutoffs += context.statistics.non_perfect_cutoffs;
-            benchmark_result.q_non_perfect_cutoffs += context.statistics.q_non_perfect_cutoffs;
+            benchmark_result.perfect_cutoffs += context.stats.perfect_cutoffs;
+            benchmark_result.q_perfect_cutoffs += context.stats.q_perfect_cutoffs;
+            benchmark_result.non_perfect_cutoffs += context.stats.non_perfect_cutoffs;
+            benchmark_result.q_non_perfect_cutoffs += context.stats.q_non_perfect_cutoffs;
 
-            benchmark_result.pvs_full_window_searches += context.statistics.pvs_full_window_searches;
-            benchmark_result.pvs_zero_window_searches += context.statistics.pvs_zero_window_searches;
-            benchmark_result.pvs_rejected_searches += context.statistics.pvs_rejected_searches;
+            benchmark_result.pvs_full_window_searches += context.stats.pvs_full_window_searches;
+            benchmark_result.pvs_zero_window_searches += context.stats.pvs_zero_window_searches;
+            benchmark_result.pvs_rejected_searches += context.stats.pvs_rejected_searches;
 
-            benchmark_result.snmp_attempts += context.statistics.snmp_attempts;
-            benchmark_result.snmp_accepted += context.statistics.snmp_accepted;
-            benchmark_result.snmp_rejected += context.statistics.snmp_rejected;
+            benchmark_result.snmp_attempts += context.stats.snmp_attempts;
+            benchmark_result.snmp_accepted += context.stats.snmp_accepted;
+            benchmark_result.snmp_rejected += context.stats.snmp_rejected;
 
-            benchmark_result.nmp_attempts += context.statistics.nmp_attempts;
-            benchmark_result.nmp_accepted += context.statistics.nmp_accepted;
-            benchmark_result.nmp_rejected += context.statistics.nmp_rejected;
+            benchmark_result.nmp_attempts += context.stats.nmp_attempts;
+            benchmark_result.nmp_accepted += context.stats.nmp_accepted;
+            benchmark_result.nmp_rejected += context.stats.nmp_rejected;
 
-            benchmark_result.lmp_accepted += context.statistics.lmp_accepted;
-            benchmark_result.lmp_rejected += context.statistics.lmp_rejected;
+            benchmark_result.lmp_accepted += context.stats.lmp_accepted;
+            benchmark_result.lmp_rejected += context.stats.lmp_rejected;
 
-            benchmark_result.razoring_attempts += context.statistics.razoring_attempts;
-            benchmark_result.razoring_accepted += context.statistics.razoring_accepted;
-            benchmark_result.razoring_rejected += context.statistics.razoring_rejected;
+            benchmark_result.razoring_attempts += context.stats.razoring_attempts;
+            benchmark_result.razoring_accepted += context.stats.razoring_accepted;
+            benchmark_result.razoring_rejected += context.stats.razoring_rejected;
 
-            benchmark_result.q_score_pruning_accepted += context.statistics.q_score_pruning_accepted;
-            benchmark_result.q_score_pruning_rejected += context.statistics.q_score_pruning_rejected;
+            benchmark_result.q_score_pruning_accepted += context.stats.q_score_pruning_accepted;
+            benchmark_result.q_score_pruning_rejected += context.stats.q_score_pruning_rejected;
 
-            benchmark_result.q_futility_pruning_accepted += context.statistics.q_futility_pruning_accepted;
-            benchmark_result.q_futility_pruning_rejected += context.statistics.q_futility_pruning_rejected;
+            benchmark_result.q_futility_pruning_accepted += context.stats.q_futility_pruning_accepted;
+            benchmark_result.q_futility_pruning_rejected += context.stats.q_futility_pruning_rejected;
 
-            benchmark_result.tt_added += context.statistics.tt_added;
-            benchmark_result.tt_hits += context.statistics.tt_hits;
-            benchmark_result.tt_misses += context.statistics.tt_misses;
+            benchmark_result.tt_added += context.stats.tt_added;
+            benchmark_result.tt_hits += context.stats.tt_hits;
+            benchmark_result.tt_misses += context.stats.tt_misses;
 
-            benchmark_result.tt_legal_hashmoves += context.statistics.tt_legal_hashmoves;
-            benchmark_result.tt_illegal_hashmoves += context.statistics.tt_illegal_hashmoves;
-            benchmark_result.ktable_legal_moves += context.statistics.ktable_legal_moves;
-            benchmark_result.ktable_illegal_moves += context.statistics.ktable_illegal_moves;
-            benchmark_result.cmtable_legal_moves += context.statistics.cmtable_legal_moves;
-            benchmark_result.cmtable_illegal_moves += context.statistics.cmtable_illegal_moves;
+            benchmark_result.tt_legal_hashmoves += context.stats.tt_legal_hashmoves;
+            benchmark_result.tt_illegal_hashmoves += context.stats.tt_illegal_hashmoves;
+            benchmark_result.ktable_legal_moves += context.stats.ktable_legal_moves;
+            benchmark_result.ktable_illegal_moves += context.stats.ktable_illegal_moves;
+            benchmark_result.cmtable_legal_moves += context.stats.cmtable_legal_moves;
+            benchmark_result.cmtable_illegal_moves += context.stats.cmtable_illegal_moves;
 
-            benchmark_result.phtable_added += context.statistics.phtable_added;
-            benchmark_result.phtable_hits += context.statistics.phtable_hits;
-            benchmark_result.phtable_misses += context.statistics.phtable_misses;
+            benchmark_result.phtable_added += context.stats.phtable_added;
+            benchmark_result.phtable_hits += context.stats.phtable_hits;
+            benchmark_result.phtable_misses += context.stats.phtable_misses;
 
-            benchmark_result.move_generator_hash_move_stages += context.statistics.move_generator_hash_move_stages;
-            benchmark_result.move_generator_captures_stages += context.statistics.move_generator_captures_stages;
-            benchmark_result.move_generator_killers_stages += context.statistics.move_generator_killers_stages;
-            benchmark_result.move_generator_counters_stages += context.statistics.move_generator_counters_stages;
-            benchmark_result.move_generator_quiets_stages += context.statistics.move_generator_quiets_stages;
+            benchmark_result.movegen_hash_move_stages += context.stats.movegen_hash_move_stages;
+            benchmark_result.movegen_captures_stages += context.stats.movegen_captures_stages;
+            benchmark_result.movegen_killers_stages += context.stats.movegen_killers_stages;
+            benchmark_result.movegen_counters_stages += context.stats.movegen_counters_stages;
+            benchmark_result.movegen_quiets_stages += context.stats.movegen_quiets_stages;
         }
 
         benchmark_result.result_hash ^= context.lines[0].pv_line[0].data;

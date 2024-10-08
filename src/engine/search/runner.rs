@@ -16,7 +16,7 @@ use std::sync::atomic::Ordering;
 
 /// Aspiration window wrapper for the entry point of the regular search, look at `run_internal` for more information.
 pub fn run(context: &mut SearchContext, depth: i8) {
-    let king_checked = context.board.is_king_checked(context.board.active_color);
+    let king_checked = context.board.is_king_checked(context.board.stm);
     if depth < param!(context.params.aspwin_min_depth) {
         context.last_score = run_internal::<true, true>(context, depth, 0, MIN_ALPHA, MIN_BETA, true, king_checked, Move::default());
     } else {
@@ -108,7 +108,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
         return INVALID_SCORE;
     }
 
-    if context.forced_depth == 0 && context.max_nodes_count == 0 && (context.statistics.nodes_count & 8191) == 0 {
+    if context.forced_depth == 0 && context.max_nodes_count == 0 && (context.stats.nodes_count & 8191) == 0 {
         if unsafe { context.search_time_start.elapsed().unwrap_unchecked().as_millis() } > context.deadline as u128 {
             context.abort_flag.store(true, Ordering::Relaxed);
             return INVALID_SCORE;
@@ -116,16 +116,16 @@ fn run_internal<const ROOT: bool, const PV: bool>(
     }
 
     if context.max_nodes_count != 0 {
-        if context.statistics.nodes_count + context.statistics.q_nodes_count >= context.max_nodes_count {
+        if context.stats.nodes_count + context.stats.q_nodes_count >= context.max_nodes_count {
             context.abort_flag.store(true, Ordering::Relaxed);
             return INVALID_SCORE;
         }
     }
 
-    context.statistics.nodes_count += 1;
+    context.stats.nodes_count += 1;
 
-    if context.board.is_king_checked(context.board.active_color ^ 1) {
-        dev!(context.statistics.leafs_count += 1);
+    if context.board.is_king_checked(context.board.stm ^ 1) {
+        dev!(context.stats.leafs_count += 1);
 
         // The position where both kings are checked is illegal, it will be filtered after returning invalid score
         if friendly_king_checked {
@@ -136,13 +136,13 @@ fn run_internal<const ROOT: bool, const PV: bool>(
     }
 
     if context.board.is_repetition_draw(if ROOT { 3 } else { 2 }) || context.board.is_fifty_move_rule_draw() || context.board.is_insufficient_material_draw() {
-        dev!(context.statistics.leafs_count += 1);
+        dev!(context.stats.leafs_count += 1);
         return DRAW_SCORE;
     }
 
     if context.syzygy_enabled && depth >= context.syzygy_probe_depth && context.board.get_pieces_count() <= syzygy::probe::get_max_pieces_count() {
         if let Some(wdl) = syzygy::probe::get_wdl(&context.board) {
-            context.statistics.tb_hits += 1;
+            context.stats.tb_hits += 1;
             return match wdl {
                 WdlResult::Win => TBMATE_SCORE - (ply as i16),
                 WdlResult::Loss => -TBMATE_SCORE + (ply as i16),
@@ -156,7 +156,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
     }
 
     if depth <= 0 {
-        dev!(context.statistics.leafs_count += 1);
+        dev!(context.stats.leafs_count += 1);
         return qsearch::run(context, ply, alpha, beta);
     }
 
@@ -166,14 +166,14 @@ fn run_internal<const ROOT: bool, const PV: bool>(
 
     match context.ttable.get(context.board.state.hash, ply) {
         Some(entry) => {
-            dev!(context.statistics.tt_hits += 1);
+            dev!(context.stats.tt_hits += 1);
 
             if entry.best_move.is_some() {
                 if entry.best_move.is_legal(&context.board) {
                     hash_move = entry.best_move;
-                    dev!(context.statistics.tt_legal_hashmoves += 1);
+                    dev!(context.stats.tt_legal_hashmoves += 1);
                 } else {
-                    dev!(context.statistics.tt_illegal_hashmoves += 1);
+                    dev!(context.stats.tt_illegal_hashmoves += 1);
                 }
             }
 
@@ -190,7 +190,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
                         _ => {
                             if !PV || entry.age == 0 {
                                 if !context.board.is_repetition_draw(2) {
-                                    dev!(context.statistics.leafs_count += 1);
+                                    dev!(context.stats.leafs_count += 1);
                                     return entry.score;
                                 }
                             }
@@ -198,8 +198,8 @@ fn run_internal<const ROOT: bool, const PV: bool>(
                     }
 
                     if alpha >= beta {
-                        dev!(context.statistics.leafs_count += 1);
-                        dev!(context.statistics.beta_cutoffs += 1);
+                        dev!(context.stats.leafs_count += 1);
+                        dev!(context.stats.beta_cutoffs += 1);
                         return entry.score;
                     }
                 } else {
@@ -215,7 +215,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
             }
         }
         None => {
-            dev!(context.statistics.tt_misses += 1);
+            dev!(context.stats.tt_misses += 1);
         }
     };
 
@@ -229,18 +229,18 @@ fn run_internal<const ROOT: bool, const PV: bool>(
         let margin = razoring_get_margin(context, depth);
         let lazy_evaluation_value = match lazy_evaluation {
             Some(value) => value,
-            None => context.board.evaluate_fast(context.board.active_color, &context.phtable, &mut context.statistics),
+            None => context.board.evaluate_fast(context.board.stm, &context.phtable, &mut context.stats),
         };
 
-        dev!(context.statistics.razoring_attempts += 1);
+        dev!(context.stats.razoring_attempts += 1);
         if lazy_evaluation_value + margin <= alpha {
             let score = qsearch::run(context, ply, alpha, beta);
             if score <= alpha {
-                dev!(context.statistics.leafs_count += 1);
-                dev!(context.statistics.razoring_accepted += 1);
+                dev!(context.stats.leafs_count += 1);
+                dev!(context.stats.razoring_accepted += 1);
                 return score;
             } else {
-                dev!(context.statistics.razoring_rejected += 1);
+                dev!(context.stats.razoring_rejected += 1);
             }
         }
 
@@ -251,16 +251,16 @@ fn run_internal<const ROOT: bool, const PV: bool>(
         let margin = snmp_get_margin(context, depth);
         let lazy_evaluation_value = match lazy_evaluation {
             Some(value) => value,
-            None => context.board.evaluate_fast(context.board.active_color, &context.phtable, &mut context.statistics),
+            None => context.board.evaluate_fast(context.board.stm, &context.phtable, &mut context.stats),
         };
 
-        dev!(context.statistics.snmp_attempts += 1);
+        dev!(context.stats.snmp_attempts += 1);
         if lazy_evaluation_value - margin >= beta {
-            dev!(context.statistics.leafs_count += 1);
-            dev!(context.statistics.snmp_accepted += 1);
+            dev!(context.stats.leafs_count += 1);
+            dev!(context.stats.snmp_accepted += 1);
             return lazy_evaluation_value - margin;
         } else {
-            dev!(context.statistics.snmp_rejected += 1);
+            dev!(context.stats.snmp_rejected += 1);
         }
 
         lazy_evaluation = Some(lazy_evaluation_value);
@@ -270,10 +270,10 @@ fn run_internal<const ROOT: bool, const PV: bool>(
         let margin = param!(context.params.nmp_margin);
         let lazy_evaluation_value = match lazy_evaluation {
             Some(value) => value,
-            None => context.board.evaluate_fast(context.board.active_color, &context.phtable, &mut context.statistics),
+            None => context.board.evaluate_fast(context.board.stm, &context.phtable, &mut context.stats),
         };
 
-        dev!(context.statistics.nmp_attempts += 1);
+        dev!(context.stats.nmp_attempts += 1);
         if lazy_evaluation_value + margin >= beta {
             let r = nmp_get_r(context, depth);
 
@@ -282,11 +282,11 @@ fn run_internal<const ROOT: bool, const PV: bool>(
             context.board.undo_null_move();
 
             if score >= beta {
-                dev!(context.statistics.leafs_count += 1);
-                dev!(context.statistics.nmp_accepted += 1);
+                dev!(context.stats.leafs_count += 1);
+                dev!(context.stats.nmp_accepted += 1);
                 return score;
             } else {
-                dev!(context.statistics.nmp_rejected += 1);
+                dev!(context.stats.nmp_rejected += 1);
             }
         }
 
@@ -297,7 +297,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
     let mut best_move = Default::default();
     let mut moves = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
     let mut move_scores = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
-    let mut move_generator_stage = MoveGenStage::ReadyToCheckHashMove;
+    let mut movegen_stage = MoveGenStage::ReadyToCheckHashMove;
     let mut quiet_moves_start_index = 0;
     let mut killer_moves = [MaybeUninit::uninit(); 2];
 
@@ -308,7 +308,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
 
     while let Some((r#move, score)) = movepick::get_next_move(
         context,
-        &mut move_generator_stage,
+        &mut movegen_stage,
         &mut moves,
         &mut move_scores,
         &mut move_index,
@@ -327,16 +327,16 @@ fn run_internal<const ROOT: bool, const PV: bool>(
         }
 
         if lmp_can_be_applied::<PV>(context, depth, move_number, score, friendly_king_checked) {
-            dev!(context.statistics.lmp_accepted += 1);
+            dev!(context.stats.lmp_accepted += 1);
             break;
         } else {
-            dev!(context.statistics.lmp_rejected += 1);
+            dev!(context.stats.lmp_rejected += 1);
         }
 
         context.board.make_move(r#move);
         context.ttable.prefetch(context.board.state.hash);
 
-        let king_checked = context.board.is_king_checked(context.board.active_color);
+        let king_checked = context.board.is_king_checked(context.board.stm);
         let r = if lmr_can_be_applied::<PV>(context, depth, r#move, move_number, score, friendly_king_checked, king_checked) {
             lmr_get_r::<PV>(context, move_number)
         } else {
@@ -345,14 +345,14 @@ fn run_internal<const ROOT: bool, const PV: bool>(
 
         let score = if PV {
             if move_index == 0 {
-                dev!(context.statistics.pvs_full_window_searches += 1);
+                dev!(context.stats.pvs_full_window_searches += 1);
                 -run_internal::<false, true>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked, r#move)
             } else {
                 let zero_window_score = -run_internal::<false, false>(context, depth - r - 1, ply + 1, -alpha - 1, -alpha, true, king_checked, r#move);
-                dev!(context.statistics.pvs_zero_window_searches += 1);
+                dev!(context.stats.pvs_zero_window_searches += 1);
 
                 if zero_window_score > alpha && (alpha != beta - 1 || r > 0) && zero_window_score != -INVALID_SCORE {
-                    dev!(context.statistics.pvs_rejected_searches += 1);
+                    dev!(context.stats.pvs_rejected_searches += 1);
                     -run_internal::<false, true>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked, r#move)
                 } else {
                     zero_window_score
@@ -360,10 +360,10 @@ fn run_internal<const ROOT: bool, const PV: bool>(
             }
         } else {
             let zero_window_score = -run_internal::<false, false>(context, depth - r - 1, ply + 1, -beta, -alpha, true, king_checked, r#move);
-            dev!(context.statistics.pvs_zero_window_searches += 1);
+            dev!(context.stats.pvs_zero_window_searches += 1);
 
             if zero_window_score > alpha && r > 0 && zero_window_score != -INVALID_SCORE {
-                dev!(context.statistics.pvs_rejected_searches += 1);
+                dev!(context.stats.pvs_rejected_searches += 1);
                 -run_internal::<false, false>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked, r#move)
             } else {
                 zero_window_score
@@ -390,7 +390,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
                         context.cmtable.add(previous_move, r#move);
                     }
 
-                    if move_generator_stage == MoveGenStage::AllGenerated {
+                    if movegen_stage == MoveGenStage::AllGenerated {
                         for i in quiet_moves_start_index..moves_count {
                             assert_fast!(moves_count < MAX_MOVES_COUNT);
 
@@ -402,11 +402,11 @@ fn run_internal<const ROOT: bool, const PV: bool>(
                     }
                 }
 
-                dev!(context.statistics.beta_cutoffs += 1);
+                dev!(context.stats.beta_cutoffs += 1);
                 if move_number == 0 {
-                    dev!(context.statistics.perfect_cutoffs += 1);
+                    dev!(context.stats.perfect_cutoffs += 1);
                 } else {
-                    dev!(context.statistics.non_perfect_cutoffs += 1);
+                    dev!(context.stats.non_perfect_cutoffs += 1);
                 }
 
                 break;
@@ -415,7 +415,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
 
         if ROOT && context.multipv {
             context.board.make_move(best_move);
-            if !context.board.is_king_checked(context.board.active_color ^ 1) {
+            if !context.board.is_king_checked(context.board.stm ^ 1) {
                 let mut pv_line = context.ttable.get_pv_line(&mut context.board.clone(), 0);
                 pv_line.insert(0, best_move);
 
@@ -443,7 +443,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
         };
 
         context.ttable.add(context.board.state.hash, alpha, best_move, depth, ply, score_type, context.search_id);
-        dev!(context.statistics.tt_added += 1);
+        dev!(context.stats.tt_added += 1);
     }
 
     if ROOT && !context.multipv {

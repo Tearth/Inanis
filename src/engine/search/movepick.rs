@@ -74,7 +74,7 @@ pub fn get_next_move(
     assert_fast!(*moves_count < MAX_MOVES_COUNT);
     assert_fast!(*quiet_moves_start_index < MAX_MOVES_COUNT);
     assert_fast!(*quiet_moves_start_index <= *moves_count);
-    assert_fast!(context.board.active_color < 2);
+    assert_fast!(context.board.stm < 2);
 
     if matches!(*stage, MoveGenStage::HashMove | MoveGenStage::Captures | MoveGenStage::Killers | MoveGenStage::Counters | MoveGenStage::AllGenerated) {
         *move_index += 1;
@@ -102,14 +102,14 @@ pub fn get_next_move(
                     *stage = MoveGenStage::ReadyToGenerateCaptures;
                 }
 
-                dev!(context.statistics.move_generator_hash_move_stages += 1);
+                dev!(context.stats.movegen_hash_move_stages += 1);
             }
             MoveGenStage::HashMove => {
                 return Some((hash_move, MOVE_ORDERING_HASH_MOVE));
             }
             MoveGenStage::ReadyToGenerateCaptures => {
                 *evasion_mask = if friendly_king_checked {
-                    let king_square = (context.board.pieces[context.board.active_color][KING]).bit_scan();
+                    let king_square = (context.board.pieces[context.board.stm][KING]).bit_scan();
                     let occupancy_bb = context.board.occupancy[WHITE] | context.board.occupancy[BLACK];
 
                     let queen_moves_bb = movegen::get_queen_moves(occupancy_bb, king_square);
@@ -130,7 +130,7 @@ pub fn get_next_move(
                     assign_capture_scores(context, moves, move_scores, 0, *moves_count, hash_move);
                 }
 
-                dev!(context.statistics.move_generator_captures_stages += 1);
+                dev!(context.stats.movegen_captures_stages += 1);
             }
             MoveGenStage::Captures => {
                 let (r#move, score) = movesort::sort_next_move(moves, move_scores, *move_index, *moves_count);
@@ -156,9 +156,9 @@ pub fn get_next_move(
                             move_scores[*moves_count].write(MOVE_ORDERING_KILLER_MOVE_1 - (index as i16));
                             *moves_count += 1;
 
-                            dev!(context.statistics.ktable_legal_moves += 1);
+                            dev!(context.stats.ktable_legal_moves += 1);
                         } else {
-                            dev!(context.statistics.ktable_illegal_moves += 1);
+                            dev!(context.stats.ktable_illegal_moves += 1);
                         }
                     }
 
@@ -175,7 +175,7 @@ pub fn get_next_move(
                     }
                 };
 
-                dev!(context.statistics.move_generator_killers_stages += 1);
+                dev!(context.stats.movegen_killers_stages += 1);
             }
             MoveGenStage::Killers => {
                 let (r#move, score) = movesort::sort_next_move(moves, move_scores, *move_index, *moves_count);
@@ -204,9 +204,9 @@ pub fn get_next_move(
                         move_scores[*moves_count].write(MOVE_ORDERING_COUNTERMOVE);
                         *moves_count += 1;
 
-                        dev!(context.statistics.cmtable_legal_moves += 1);
+                        dev!(context.stats.cmtable_legal_moves += 1);
                     } else {
-                        dev!(context.statistics.cmtable_illegal_moves += 1);
+                        dev!(context.stats.cmtable_illegal_moves += 1);
                     }
                 }
 
@@ -216,7 +216,7 @@ pub fn get_next_move(
                     *stage = MoveGenStage::ReadyToGenerateQuiets;
                 };
 
-                dev!(context.statistics.move_generator_counters_stages += 1);
+                dev!(context.stats.movegen_counters_stages += 1);
             }
             MoveGenStage::Counters => {
                 let (r#move, score) = movesort::sort_next_move(moves, move_scores, *move_index, *moves_count);
@@ -235,7 +235,7 @@ pub fn get_next_move(
                 *stage = MoveGenStage::AllGenerated;
 
                 assign_quiet_scores(context, moves, move_scores, original_moves_count, *moves_count, hash_move, previous_move, ply);
-                dev!(context.statistics.move_generator_quiets_stages += 1);
+                dev!(context.stats.movegen_quiets_stages += 1);
             }
             MoveGenStage::AllGenerated => {
                 let (r#move, score) = movesort::sort_next_move(moves, move_scores, *move_index, *moves_count);
@@ -278,14 +278,14 @@ fn assign_capture_scores(context: &SearchContext, moves: &Moves, move_scores: &m
             let attackers = if attackers_cache[square] != 0 {
                 attackers_cache[square] as usize
             } else {
-                attackers_cache[square] = context.board.get_attacking_pieces(context.board.active_color ^ 1, square) as u8;
+                attackers_cache[square] = context.board.get_attacking_pieces(context.board.stm ^ 1, square) as u8;
                 attackers_cache[square] as usize
             };
 
             let defenders = if defenders_cache[square] != 0 {
                 defenders_cache[square] as usize
             } else {
-                defenders_cache[square] = context.board.get_attacking_pieces(context.board.active_color, square) as u8;
+                defenders_cache[square] = context.board.get_attacking_pieces(context.board.stm, square) as u8;
                 defenders_cache[square] as usize
             };
 

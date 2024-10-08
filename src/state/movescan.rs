@@ -2,7 +2,7 @@ use super::representation::Board;
 use super::representation::CastlingRights;
 use super::*;
 use crate::engine;
-use crate::evaluation::mobility::MobilityAuxData;
+use crate::evaluation::mobility::EvalAux;
 use crate::evaluation::mobility::PieceMobility;
 use crate::utils::assert_fast;
 use crate::utils::bitflags::BitFlags;
@@ -152,7 +152,7 @@ impl Move {
         let piece_color = board.get_piece_color(from);
 
         // Fast check: source square must contain a piece with the proper color
-        if piece == usize::MAX || piece_color != board.active_color {
+        if piece == usize::MAX || piece_color != board.stm {
             return false;
         }
 
@@ -175,16 +175,16 @@ impl Move {
         // Checking what squares are reachable for the piece
         let moves_bb = match piece {
             PAWN => match flags {
-                MoveFlags::DOUBLE_PUSH => match board.active_color {
+                MoveFlags::DOUBLE_PUSH => match board.stm {
                     WHITE => from_bb << 16,
                     BLACK => from_bb >> 16,
-                    _ => panic_fast!("Invalid value: board.active_color={}", board.active_color),
+                    _ => panic_fast!("Invalid value: board.stm={}", board.stm),
                 },
                 MoveFlags::EN_PASSANT => board.state.en_passant,
-                _ => match board.active_color {
+                _ => match board.stm {
                     WHITE => ((from_bb & !FILE_H_BB) << 7) | ((from_bb & !RANK_8_BB) << 8) | ((from_bb & !FILE_A_BB) << 9),
                     BLACK => ((from_bb & !FILE_A_BB) >> 7) | ((from_bb & !RANK_1_BB) >> 8) | ((from_bb & !FILE_H_BB) >> 9),
-                    _ => panic_fast!("Invalid value: board.active_color={}", board.active_color),
+                    _ => panic_fast!("Invalid value: board.stm={}", board.stm),
                 },
             },
             KNIGHT => movegen::get_knight_moves(from),
@@ -226,7 +226,7 @@ impl Move {
             }
 
             // Double push can be performed only from the specific ranks (2 for white, 7 for black)
-            if (board.active_color == WHITE && (from_bb & RANK_2_BB) == 0) || (board.active_color == BLACK && (from_bb & RANK_7_BB) == 0) {
+            if (board.stm == WHITE && (from_bb & RANK_2_BB) == 0) || (board.stm == BLACK && (from_bb & RANK_7_BB) == 0) {
                 return false;
             }
 
@@ -277,7 +277,7 @@ impl Move {
             }
 
             // Castling can be performed only from the specific squares (e1 for white, e8 for black)
-            if (board.active_color == WHITE && from != E1) || (board.active_color == BLACK && from != E8) {
+            if (board.stm == WHITE && from != E1) || (board.stm == BLACK && from != E8) {
                 return false;
             }
 
@@ -315,7 +315,7 @@ impl Move {
             };
 
             // There must be a rook on the specific square
-            if (board.pieces[board.active_color][ROOK] & rook_square_bb) == 0 {
+            if (board.pieces[board.stm][ROOK] & rook_square_bb) == 0 {
                 return false;
             }
 
@@ -362,10 +362,10 @@ impl Display for Move {
 /// the position specified by `board`, stores them into `moves` list (starting from `index`) and returns index of the first free slot.
 /// Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the specified squares (useful during checks).
 pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(board: &Board, moves: &mut Moves, mut index: usize, evasion_mask: u64) -> usize {
-    assert_fast!(board.active_color < 2);
+    assert_fast!(board.stm < 2);
 
-    let enemy_color = board.active_color ^ 1;
-    let mut pieces_bb = board.pieces[board.active_color][PIECE];
+    let nstm = board.stm ^ 1;
+    let mut pieces_bb = board.pieces[board.stm][PIECE];
 
     while pieces_bb != 0 {
         let from_bb = pieces_bb.get_lsb();
@@ -381,12 +381,12 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(board: &Board,
             KING => movegen::get_king_moves(from),
             _ => panic_fast!("Invalid parameter: fen={}, PIECE={}", board, PIECE),
         };
-        piece_moves_bb &= !board.occupancy[board.active_color] & evasion_mask;
+        piece_moves_bb &= !board.occupancy[board.stm] & evasion_mask;
 
         if CAPTURES {
-            piece_moves_bb &= board.occupancy[enemy_color];
+            piece_moves_bb &= board.occupancy[nstm];
         } else {
-            piece_moves_bb &= !board.occupancy[enemy_color];
+            piece_moves_bb &= !board.occupancy[nstm];
         }
 
         while piece_moves_bb != 0 {
@@ -396,7 +396,7 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(board: &Board,
             let to = to_bb.bit_scan();
             piece_moves_bb = piece_moves_bb.pop_lsb();
 
-            let capture = (to_bb & board.occupancy[enemy_color]) != 0;
+            let capture = (to_bb & board.occupancy[nstm]) != 0;
             let flags = if CAPTURES || capture { MoveFlags::CAPTURE } else { MoveFlags::SINGLE_PUSH };
 
             moves[index].write(Move::new(from, to, flags));
@@ -404,13 +404,13 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(board: &Board,
         }
 
         if PIECE == KING && !CAPTURES {
-            match board.active_color {
+            match board.stm {
                 WHITE => {
                     assert_fast!(index < engine::MAX_MOVES_COUNT);
 
                     let king_side_castling_rights = board.state.castling_rights.contains(CastlingRights::WHITE_SHORT_CASTLING);
                     if king_side_castling_rights && (occupancy_bb & (F1_BB | G1_BB)) == 0 {
-                        if !board.are_squares_attacked(board.active_color, &[E1, F1, G1]) {
+                        if !board.are_squares_attacked(board.stm, &[E1, F1, G1]) {
                             moves[index].write(Move::new(E1, G1, MoveFlags::SHORT_CASTLING));
                             index += 1;
                         }
@@ -420,7 +420,7 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(board: &Board,
 
                     let queen_side_castling_rights = board.state.castling_rights.contains(CastlingRights::WHITE_LONG_CASTLING);
                     if queen_side_castling_rights && (occupancy_bb & (B1_BB | C1_BB | D1_BB)) == 0 {
-                        if !board.are_squares_attacked(board.active_color, &[C1, D1, E1]) {
+                        if !board.are_squares_attacked(board.stm, &[C1, D1, E1]) {
                             moves[index].write(Move::new(E1, C1, MoveFlags::LONG_CASTLING));
                             index += 1;
                         }
@@ -431,7 +431,7 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(board: &Board,
 
                     let king_side_castling_rights = board.state.castling_rights.contains(CastlingRights::BLACK_SHORT_CASTLING);
                     if king_side_castling_rights && (occupancy_bb & (F8_BB | G8_BB)) == 0 {
-                        if !board.are_squares_attacked(board.active_color, &[E8, F8, G8]) {
+                        if !board.are_squares_attacked(board.stm, &[E8, F8, G8]) {
                             moves[index].write(Move::new(E8, G8, MoveFlags::SHORT_CASTLING));
                             index += 1;
                         }
@@ -441,13 +441,13 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(board: &Board,
 
                     let queen_side_castling_rights = board.state.castling_rights.contains(CastlingRights::BLACK_LONG_CASTLING);
                     if queen_side_castling_rights && (occupancy_bb & (B8_BB | C8_BB | D8_BB)) == 0 {
-                        if !board.are_squares_attacked(board.active_color, &[C8, D8, E8]) {
+                        if !board.are_squares_attacked(board.stm, &[C8, D8, E8]) {
                             moves[index].write(Move::new(E8, C8, MoveFlags::LONG_CASTLING));
                             index += 1;
                         }
                     }
                 }
-                _ => panic_fast!("Invalid value: board.active_color={}", board.active_color),
+                _ => panic_fast!("Invalid value: board.stm={}", board.stm),
             }
         }
     }
@@ -457,15 +457,15 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(board: &Board,
 
 /// Gets `PIECE` mobility (by counting all possible moves at the position specified by `board`) with `color` and increases `dangered_king_squares` if the enemy
 /// king is near to the squares included in the mobility.
-pub fn get_piece_mobility<const PIECE: usize>(board: &Board, color: usize, aux: &mut MobilityAuxData) -> PieceMobility {
+pub fn get_piece_mobility<const PIECE: usize>(board: &Board, color: usize, aux: &mut EvalAux) -> PieceMobility {
     assert_fast!(color < 2);
 
     let mut pieces_bb = board.pieces[color][PIECE];
     let mut mobility_inner = 0;
     let mut mobility_outer = 0;
 
-    let enemy_color = color ^ 1;
-    let enemy_king_square = (board.pieces[enemy_color][KING]).bit_scan();
+    let nstm = color ^ 1;
+    let enemy_king_square = (board.pieces[nstm][KING]).bit_scan();
     let enemy_king_box_bb = patterns::get_box(enemy_king_square);
 
     let mut occupancy_bb = board.occupancy[WHITE] | board.occupancy[BLACK];
@@ -491,7 +491,7 @@ pub fn get_piece_mobility<const PIECE: usize>(board: &Board, color: usize, aux: 
         };
 
         aux.king_area_threats += (enemy_king_box_bb & (piece_moves_bb | from_bb)).bit_count() as i8;
-        piece_moves_bb &= !board.occupancy[color] & !board.pawn_attacks[enemy_color];
+        piece_moves_bb &= !board.occupancy[color] & !board.pawn_attacks[nstm];
 
         mobility_inner += (piece_moves_bb & CENTER_BB).bit_count() as i8;
         mobility_outer += (piece_moves_bb & OUTSIDE_BB).bit_count() as i8;
@@ -519,18 +519,18 @@ pub fn scan_pawn_moves<const CAPTURES: bool>(board: &Board, moves: &mut Moves, m
 /// and returns index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the
 /// specified squares (useful during checks).
 fn scan_pawn_moves_single_push(board: &Board, moves: &mut Moves, mut index: usize, evasion_mask: u64) -> usize {
-    assert_fast!(board.active_color < 2);
+    assert_fast!(board.stm < 2);
 
-    let pieces_bb = board.pieces[board.active_color][PAWN];
+    let pieces_bb = board.pieces[board.stm][PAWN];
     let occupancy_bb = board.occupancy[WHITE] | board.occupancy[BLACK];
 
-    let shift = 8 - 16 * (board.active_color as i8);
-    let promotion_rank_bb = RANK_8_BB >> (56 * (board.active_color as u8));
-    let mut target_squares_bb = match board.active_color {
+    let shift = 8 - 16 * (board.stm as i8);
+    let promotion_rank_bb = RANK_8_BB >> (56 * (board.stm as u8));
+    let mut target_squares_bb = match board.stm {
         WHITE => pieces_bb << 8,
         BLACK => pieces_bb >> 8,
         _ => {
-            panic_fast!("Invalid value: board.active_color={}", board.active_color);
+            panic_fast!("Invalid value: board.stm={}", board.stm);
         }
     };
     target_squares_bb &= !occupancy_bb & evasion_mask;
@@ -564,17 +564,17 @@ fn scan_pawn_moves_single_push(board: &Board, moves: &mut Moves, mut index: usiz
 /// and returns index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the
 /// specified squares (useful during checks).
 fn scan_pawn_moves_double_push(board: &Board, moves: &mut Moves, mut index: usize, evasion_mask: u64) -> usize {
-    assert_fast!(board.active_color < 2);
+    assert_fast!(board.stm < 2);
 
-    let pieces_bb = board.pieces[board.active_color][PAWN];
+    let pieces_bb = board.pieces[board.stm][PAWN];
     let occupancy_bb = board.occupancy[WHITE] | board.occupancy[BLACK];
 
-    let shift = 16 - 32 * (board.active_color as i8);
-    let mut target_squares_bb = match board.active_color {
+    let shift = 16 - 32 * (board.stm as i8);
+    let mut target_squares_bb = match board.stm {
         WHITE => (((pieces_bb & RANK_2_BB) << 8) & !occupancy_bb) << 8,
         BLACK => (((pieces_bb & RANK_7_BB) >> 8) & !occupancy_bb) >> 8,
         _ => {
-            panic_fast!("Invalid value: board.active_color={}", board.active_color);
+            panic_fast!("Invalid value: board.stm={}", board.stm);
         }
     };
     target_squares_bb &= !occupancy_bb & evasion_mask;
@@ -598,24 +598,24 @@ fn scan_pawn_moves_double_push(board: &Board, moves: &mut Moves, mut index: usiz
 /// stores them into `moves` list (starting from `index`) and returns index of the first free slot. Use `evasion_mask` with value
 /// different than `u64::MAX` to restrict generator to the specified squares (useful during checks).
 fn scan_pawn_moves_diagonal_attacks<const DIR: usize>(board: &Board, moves: &mut Moves, mut index: usize, evasion_mask: u64) -> usize {
-    assert_fast!(board.active_color < 2);
+    assert_fast!(board.stm < 2);
 
-    let enemy_color = board.active_color ^ 1;
-    let pieces_bb = board.pieces[board.active_color][PAWN];
+    let nstm = board.stm ^ 1;
+    let pieces_bb = board.pieces[board.stm][PAWN];
 
     let forbidden_file_bb = FILE_A_BB >> (DIR * 7);
-    let shift = 9 - (board.active_color ^ DIR) * 2;
-    let signed_shift = (shift as i8) - ((board.active_color as i8) * 2 * (shift as i8));
-    let promotion_rank_bb = RANK_8_BB >> (56 * (board.active_color as u8));
+    let shift = 9 - (board.stm ^ DIR) * 2;
+    let signed_shift = (shift as i8) - ((board.stm as i8) * 2 * (shift as i8));
+    let promotion_rank_bb = RANK_8_BB >> (56 * (board.stm as u8));
 
-    let mut target_squares_bb = match board.active_color {
+    let mut target_squares_bb = match board.stm {
         WHITE => (pieces_bb & !forbidden_file_bb) << shift,
         BLACK => (pieces_bb & !forbidden_file_bb) >> shift,
         _ => {
-            panic_fast!("Invalid value: board.active_color={}", board.active_color);
+            panic_fast!("Invalid value: board.stm={}", board.stm);
         }
     };
-    target_squares_bb &= (board.occupancy[enemy_color] | board.state.en_passant) & evasion_mask;
+    target_squares_bb &= (board.occupancy[nstm] | board.state.en_passant) & evasion_mask;
 
     while target_squares_bb != 0 {
         let to_bb = target_squares_bb.get_lsb();

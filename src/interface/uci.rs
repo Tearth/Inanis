@@ -347,17 +347,17 @@ fn handle_go(params: &[String], state: &UciState) {
         return;
     }
 
-    let mut time = match context_lock.board.active_color {
+    let mut time = match context_lock.board.stm {
         WHITE => white_time,
         BLACK => black_time,
-        _ => panic_fast!("Invalid value: context_lock.active_color={}", context_lock.board.active_color),
+        _ => panic_fast!("Invalid value: context_lock.board.stm={}", context_lock.board.stm),
     };
     time -= cmp::min(time, options_lock["Move Overhead"].value.parse::<u32>().unwrap());
 
-    let inc_time = match context_lock.board.active_color {
+    let inc_time = match context_lock.board.stm {
         WHITE => white_inc_time,
         BLACK => black_inc_time,
-        _ => panic_fast!("Invalid value: context_lock.active_color={}", context_lock.board.active_color),
+        _ => panic_fast!("Invalid value: context_lock.board.stm={}", context_lock.board.stm),
     };
 
     state.abort_flag.store(false, Ordering::Relaxed);
@@ -451,7 +451,7 @@ fn handle_go(params: &[String], state: &UciState) {
         context_lock.syzygy_enabled = syzygy_enabled;
         context_lock.syzygy_probe_limit = syzygy_probe_limit;
         context_lock.syzygy_probe_depth = syzygy_probe_depth;
-        context_lock.statistics = Default::default();
+        context_lock.stats = Default::default();
 
         context_lock.lines.clear();
         context_lock.helper_contexts.write().unwrap().clear();
@@ -490,11 +490,11 @@ fn handle_go(params: &[String], state: &UciState) {
                         depth_result.time,
                         formatted_score,
                         depth_result.depth,
-                        context_lock.statistics.max_ply,
+                        context_lock.stats.max_ply,
                         line_index + 1,
-                        context_lock.statistics.nodes_count + context_lock.statistics.q_nodes_count,
+                        context_lock.stats.nodes_count + context_lock.stats.q_nodes_count,
                         (context_lock.ttable.get_usage(1000) * 10.0) as u32,
-                        context_lock.statistics.tb_hits,
+                        context_lock.stats.tb_hits,
                         pv_line.join(" ").as_str()
                     )
                 );
@@ -515,7 +515,7 @@ fn handle_go(params: &[String], state: &UciState) {
                 board.make_move(context_lock.lines[0].pv_line[0]);
                 board.make_move(context_lock.lines[0].pv_line[1]);
 
-                if board.is_king_checked(board.active_color ^ 1) {
+                if board.is_king_checked(board.stm ^ 1) {
                     allow_ponder = false;
                 }
 

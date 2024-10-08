@@ -204,7 +204,7 @@ impl Move {
             _ => {
                 for r#move in valid_moves {
                     board.make_move(r#move);
-                    if !board.is_king_checked(board.active_color ^ 1) {
+                    if !board.is_king_checked(board.stm ^ 1) {
                         board.undo_move(r#move);
                         return Ok(r#move);
                     }
