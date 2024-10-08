@@ -376,19 +376,19 @@ fn handle_evaluate(input: Vec<&str>) {
     let mut white_aux = EvalAux::default();
     let mut black_aux = EvalAux::default();
 
-    let material_evaluation = material::evaluate(&board);
-    let pst_evaluation = pst::evaluate(&board);
-    let mobility_evaluation = mobility::evaluate(&board, &mut white_aux, &mut black_aux);
-    let safety_evaluation = safety::evaluate(&board, &white_aux, &black_aux);
-    let pawns_evaluation = pawns::evaluate_without_cache(&board);
+    let material_eval = material::evaluate(&board);
+    let pst_eval = pst::evaluate(&board);
+    let mobility_eval = mobility::evaluate(&board, &mut white_aux, &mut black_aux);
+    let safety_eval = safety::evaluate(&board, &white_aux, &black_aux);
+    let pawns_eval = pawns::evaluate_without_cache(&board);
 
-    println!("Material: {}", material_evaluation.taper_score(board.game_phase));
-    println!("Piece-square tables: {}", pst_evaluation.taper_score(board.game_phase));
-    println!("Mobility: {}", mobility_evaluation.taper_score(board.game_phase));
-    println!("Safety: {}", safety_evaluation.taper_score(board.game_phase));
-    println!("Pawns: {}", pawns_evaluation.taper_score(board.game_phase));
+    println!("Material: {}", material_eval.taper_score(board.game_phase));
+    println!("Piece-square tables: {}", pst_eval.taper_score(board.game_phase));
+    println!("Mobility: {}", mobility_eval.taper_score(board.game_phase));
+    println!("Safety: {}", safety_eval.taper_score(board.game_phase));
+    println!("Pawns: {}", pawns_eval.taper_score(board.game_phase));
 
-    let sum = material_evaluation + pst_evaluation + mobility_evaluation + safety_evaluation + pawns_evaluation;
+    let sum = material_eval + pst_eval + mobility_eval + safety_eval + pawns_eval;
     println!(" --- Total: {} --- ", sum.taper_score(board.game_phase));
 }
 

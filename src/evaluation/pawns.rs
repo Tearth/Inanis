@@ -40,9 +40,9 @@ pub fn evaluate(board: &Board, phtable: &PHTable, stats: &mut SearchStats) -> Pa
         }
     }
 
-    let white_evaluation = evaluate_color(board, WHITE);
-    let black_evaluation = evaluate_color(board, BLACK);
-    let eval = white_evaluation - black_evaluation;
+    let white_eval = evaluate_color(board, WHITE);
+    let black_eval = evaluate_color(board, BLACK);
+    let eval = white_eval - black_eval;
 
     phtable.add(board.state.pawn_hash, eval.get_opening(), eval.get_ending());
     dev!(stats.phtable_added += 1);

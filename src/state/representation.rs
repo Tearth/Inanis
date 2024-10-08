@@ -725,16 +725,16 @@ impl Board {
         let mut white_aux = EvalAux::default();
         let mut black_aux = EvalAux::default();
 
-        let material_evaluation = material::evaluate(self);
-        let pst_evaluation = pst::evaluate(self);
-        let mobility_evaluation = mobility::evaluate(self, &mut white_aux, &mut black_aux);
-        let safety_evaluation = safety::evaluate(self, &white_aux, &black_aux);
-        let pawns_evaluation = pawns::evaluate(self, phtable, stats);
+        let material_eval = material::evaluate(self);
+        let pst_eval = pst::evaluate(self);
+        let mobility_eval = mobility::evaluate(self, &mut white_aux, &mut black_aux);
+        let safety_eval = safety::evaluate(self, &white_aux, &black_aux);
+        let pawns_eval = pawns::evaluate(self, phtable, stats);
 
-        let evaluation = material_evaluation + pst_evaluation + mobility_evaluation + safety_evaluation + pawns_evaluation;
+        let eval = material_eval + pst_eval + mobility_eval + safety_eval + pawns_eval;
         let sign = -((color as i16) * 2 - 1);
 
-        sign * evaluation.taper_score(self.game_phase)
+        sign * eval.taper_score(self.game_phase)
     }
 
     /// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position.
@@ -745,16 +745,16 @@ impl Board {
         let mut white_aux = EvalAux::default();
         let mut black_aux = EvalAux::default();
 
-        let material_evaluation = material::evaluate(self);
-        let pst_evaluation = pst::evaluate(self);
-        let mobility_evaluation = mobility::evaluate(self, &mut white_aux, &mut black_aux);
-        let safety_evaluation = safety::evaluate(self, &white_aux, &black_aux);
-        let pawns_evaluation = pawns::evaluate_without_cache(self);
+        let material_eval = material::evaluate(self);
+        let pst_eval = pst::evaluate(self);
+        let mobility_eval = mobility::evaluate(self, &mut white_aux, &mut black_aux);
+        let safety_eval = safety::evaluate(self, &white_aux, &black_aux);
+        let pawns_eval = pawns::evaluate_without_cache(self);
 
-        let evaluation = material_evaluation + pst_evaluation + mobility_evaluation + safety_evaluation + pawns_evaluation;
+        let eval = material_eval + pst_eval + mobility_eval + safety_eval + pawns_eval;
         let sign = -((color as i16) * 2 - 1);
 
-        sign * evaluation.taper_score(self.game_phase)
+        sign * eval.taper_score(self.game_phase)
     }
 
     /// Runs fast evaluations, considering only material and piece-square tables. Returns score from the `color` perspective (more than 0 when
@@ -762,14 +762,14 @@ impl Board {
     pub fn evaluate_fast(&self, color: usize, phtable: &PHTable, stats: &mut SearchStats) -> i16 {
         assert_fast!(color < 2);
 
-        let material_evaluation = material::evaluate(self);
-        let pst_evaluation = pst::evaluate(self);
-        let pawns_evaluation = pawns::evaluate(self, phtable, stats);
+        let material_eval = material::evaluate(self);
+        let pst_eval = pst::evaluate(self);
+        let pawns_eval = pawns::evaluate(self, phtable, stats);
 
-        let evaluation = material_evaluation + pst_evaluation + pawns_evaluation;
+        let eval = material_eval + pst_eval + pawns_eval;
         let sign = -((color as i16) * 2 - 1);
 
-        sign * evaluation.taper_score(self.game_phase)
+        sign * eval.taper_score(self.game_phase)
     }
 
     /// Recalculates incremental values (material and piece-square tables) entirely.
