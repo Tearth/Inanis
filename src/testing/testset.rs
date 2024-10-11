@@ -1,6 +1,7 @@
 use crate::cache::pawns::PHTable;
 use crate::cache::search::TTable;
 use crate::engine::context::SearchContext;
+use crate::params::SParams;
 use crate::state::movescan::Move;
 use crate::state::representation::Board;
 use crate::state::text::fen;
@@ -14,21 +15,10 @@ use std::sync::Arc;
 use std::thread;
 use std::time::SystemTime;
 
-pub struct TestContext {
-    positions: Vec<TestPosition>,
-}
-
 pub struct TestPosition {
     id: String,
     board: Board,
     best_move: Move,
-}
-
-impl TestContext {
-    /// Constructs a new instance of [TestContext] with stored `positions`.
-    pub fn new(positions: Vec<TestPosition>) -> Self {
-        Self { positions }
-    }
 }
 
 impl TestPosition {
@@ -42,7 +32,7 @@ impl TestPosition {
 /// size specified in `ttable_size`. To classify the test as successful, the last iteration has to return the correct best move.
 pub fn run(epd_filename: &str, depth: i8, ttable_size: usize, threads_count: usize) {
     println!("Loading EPD file...");
-    let positions = match load_positions(epd_filename) {
+    let mut positions = match load_positions(epd_filename) {
         Ok(value) => value,
         Err(error) => {
             println!("Invalid PGN: {}", error);
@@ -51,22 +41,15 @@ pub fn run(epd_filename: &str, depth: i8, ttable_size: usize, threads_count: usi
     };
     println!("Loaded {} positions, starting test", positions.len());
 
-    let mut context = TestContext::new(positions);
-    run_internal(&mut context, depth, ttable_size, threads_count);
-}
-
-/// Internal test function, called by [run].
-fn run_internal(context: &mut TestContext, depth: i8, ttable_size: usize, threads_count: usize) {
     let index = Arc::new(AtomicU32::new(0));
     let passed_tests = Arc::new(AtomicU32::new(0));
     let failed_tests = Arc::new(AtomicU32::new(0));
     let recognition_depths_sum = Arc::new(AtomicU32::new(0));
     let start_time = SystemTime::now();
-
-    let positions_count = context.positions.len();
+    let positions_count = positions.len();
 
     thread::scope(|scope| {
-        for chunk in context.positions.chunks_mut(positions_count / threads_count) {
+        for chunk in positions.chunks_mut(positions_count / threads_count) {
             let index_arc = index.clone();
             let passed_tests_arc = passed_tests.clone();
             let failed_tests_arc = failed_tests.clone();
@@ -80,10 +63,10 @@ fn run_internal(context: &mut TestContext, depth: i8, ttable_size: usize, thread
                     let ponder_flag = Arc::new(AtomicBool::new(false));
 
                     let board_clone = position.board.clone();
-                    let mut context = SearchContext::new(board_clone, Default::default(), ttable, phtable, abort_flag, ponder_flag);
+                    let mut context = SearchContext::new(board_clone, SParams::default(), ttable, phtable, abort_flag, ponder_flag);
                     context.forced_depth = depth;
 
-                    let mut last_best_move = Default::default();
+                    let mut last_best_move = Move::default();
                     let mut best_moves_count = 0;
                     let mut recognition_depth = 0;
 

@@ -36,7 +36,7 @@ impl KTable {
 
     /// Gets all killer moves at the level specified by `ply`.
     pub fn get(&self, ply: u16) -> [Move; KILLER_SLOTS] {
-        let mut result = [Default::default(); KILLER_SLOTS];
+        let mut result = [Move::default(); KILLER_SLOTS];
 
         if ply >= MAX_DEPTH as u16 {
             return result;
@@ -60,7 +60,7 @@ impl KTable {
 
         for ply in MAX_DEPTH - 2..MAX_DEPTH {
             for entry in &mut self.table[ply as usize] {
-                entry.data = Default::default();
+                entry.data = Move::default();
             }
         }
     }

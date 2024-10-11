@@ -1,6 +1,7 @@
 use crate::cache::pawns::PHTable;
 use crate::cache::search::TTable;
 use crate::engine::context::SearchContext;
+use crate::engine::params::SParams;
 use crate::engine::qsearch;
 use crate::engine::*;
 use crate::evaluation::material;
@@ -73,7 +74,7 @@ pub fn run(pgn_filename: &str, output_file: &str, min_ply: usize, max_score: i16
             None => Board::new_initial_position(),
         };
 
-        let mut context = SearchContext::new(board, Default::default(), ttable.clone(), phtable.clone(), abort_flag.clone(), ponder_flag.clone());
+        let mut context = SearchContext::new(board, SParams::default(), ttable.clone(), phtable.clone(), abort_flag.clone(), ponder_flag.clone());
         let mut viable_positions = Vec::new();
 
         for (index, data) in pgn.data.iter().enumerate() {

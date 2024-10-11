@@ -10,21 +10,37 @@ use crate::MoveScores;
 use crate::Moves;
 use std::mem::MaybeUninit;
 
-pub const MOVE_ORDERING_HASH_MOVE: i16 = 10000;
-pub const MOVE_ORDERING_WINNING_CAPTURES_OFFSET: i16 = 100;
-pub const MOVE_ORDERING_KILLER_MOVE_1: i16 = 99;
-pub const MOVE_ORDERING_KILLER_MOVE_2: i16 = 98;
-pub const MOVE_ORDERING_COUNTERMOVE: i16 = 97;
-pub const MOVE_ORDERING_QUEEN_PROMOTION: i16 = 95;
-pub const MOVE_ORDERING_ROOK_PROMOTION: i16 = 94;
-pub const MOVE_ORDERING_BISHOP_PROMOTION: i16 = 93;
-pub const MOVE_ORDERING_KNIGHT_PROMOTION: i16 = 92;
-pub const MOVE_ORDERING_CASTLING: i16 = 91;
-pub const MOVE_ORDERING_HISTORY_MOVE: u8 = 180;
-pub const MOVE_ORDERING_HISTORY_MOVE_OFFSET: i16 = -90;
-pub const MOVE_ORDERING_LOSING_CAPTURES_OFFSET: i16 = -100;
+pub const MOVEORD_HASH_MOVE: i16 = 10000;
+pub const MOVEORD_WINNING_CAPTURES_OFFSET: i16 = 100;
+pub const MOVEORD_KILLER_MOVE_1: i16 = 99;
+pub const MOVEORD_KILLER_MOVE_2: i16 = 98;
+pub const MOVEORD_COUNTERMOVE: i16 = 97;
+pub const MOVEORD_QUEEN_PROMOTION: i16 = 95;
+pub const MOVEORD_ROOK_PROMOTION: i16 = 94;
+pub const MOVEORD_BISHOP_PROMOTION: i16 = 93;
+pub const MOVEORD_KNIGHT_PROMOTION: i16 = 92;
+pub const MOVEORD_CASTLING: i16 = 91;
+pub const MOVEORD_HISTORY_MOVE: u8 = 180;
+pub const MOVEORD_HISTORY_MOVE_OFFSET: i16 = -90;
+pub const MOVEORD_LOSING_CAPTURES_OFFSET: i16 = -100;
 
-#[derive(std::cmp::PartialEq)]
+pub struct MoveGenState {
+    pub moves: Moves,
+    pub move_scores: MoveScores,
+    pub stage: MoveGenStage,
+    pub quiet_moves_start_index: usize,
+    pub killer_moves: [MaybeUninit<Move>; 2],
+    pub move_index: usize,
+    pub move_number: usize,
+    pub moves_count: usize,
+    pub evasion_mask: u64,
+    pub hash_move: Move,
+    pub ply: u16,
+    pub friendly_king_checked: bool,
+    pub previous_move: Move,
+}
+
+#[derive(PartialEq)]
 pub enum MoveGenStage {
     ReadyToCheckHashMove,
     HashMove,
@@ -52,63 +68,48 @@ pub enum MoveGenStage {
 ///  - [MoveGenStage::AllGenerated] - returns all subsequent elements until the end
 ///
 /// If the last stage is set and there are no more moves, [None] is returned.
-pub fn get_next_move(
-    context: &mut SearchContext,
-    stage: &mut MoveGenStage,
-    moves: &mut Moves,
-    move_scores: &mut MoveScores,
-    move_index: &mut usize,
-    move_number: &mut usize,
-    moves_count: &mut usize,
-    evasion_mask: &mut u64,
-    hash_move: Move,
-    ply: u16,
-    friendly_king_checked: bool,
-    previous_move: Move,
-    quiet_moves_start_index: &mut usize,
-    killer_moves_cache: &mut [MaybeUninit<Move>; 2],
-) -> Option<(Move, i16)> {
-    assert_fast!(*move_index < MAX_MOVES_COUNT);
-    assert_fast!(*move_index <= *moves_count);
-    assert_fast!(*move_number <= *moves_count);
-    assert_fast!(*moves_count < MAX_MOVES_COUNT);
-    assert_fast!(*quiet_moves_start_index < MAX_MOVES_COUNT);
-    assert_fast!(*quiet_moves_start_index <= *moves_count);
+pub fn get_next_move(context: &mut SearchContext, state: &mut MoveGenState) -> Option<(Move, i16)> {
+    assert_fast!(state.move_index < MAX_MOVES_COUNT);
+    assert_fast!(state.move_index <= state.moves_count);
+    assert_fast!(state.move_number <= state.moves_count);
+    assert_fast!(state.moves_count < MAX_MOVES_COUNT);
+    assert_fast!(state.quiet_moves_start_index < MAX_MOVES_COUNT);
+    assert_fast!(state.quiet_moves_start_index <= state.moves_count);
     assert_fast!(context.board.stm < 2);
 
-    if matches!(*stage, MoveGenStage::HashMove | MoveGenStage::Captures | MoveGenStage::Killers | MoveGenStage::Counters | MoveGenStage::AllGenerated) {
-        *move_index += 1;
-        *move_number += 1;
+    if matches!(state.stage, MoveGenStage::HashMove | MoveGenStage::Captures | MoveGenStage::Killers | MoveGenStage::Counters | MoveGenStage::AllGenerated) {
+        state.move_index += 1;
+        state.move_number += 1;
     }
 
     loop {
-        if move_index >= moves_count {
-            match *stage {
-                MoveGenStage::HashMove => *stage = MoveGenStage::ReadyToGenerateCaptures,
-                MoveGenStage::Captures => *stage = MoveGenStage::ReadyToGenerateKillers,
-                MoveGenStage::Killers => *stage = MoveGenStage::ReadyToGenerateCounters,
-                MoveGenStage::Counters => *stage = MoveGenStage::ReadyToGenerateQuiets,
+        if state.move_index >= state.moves_count {
+            match state.stage {
+                MoveGenStage::HashMove => state.stage = MoveGenStage::ReadyToGenerateCaptures,
+                MoveGenStage::Captures => state.stage = MoveGenStage::ReadyToGenerateKillers,
+                MoveGenStage::Killers => state.stage = MoveGenStage::ReadyToGenerateCounters,
+                MoveGenStage::Counters => state.stage = MoveGenStage::ReadyToGenerateQuiets,
                 MoveGenStage::AllGenerated => return None,
                 _ => {}
             }
         }
 
-        match stage {
+        match state.stage {
             MoveGenStage::ReadyToCheckHashMove => {
-                if hash_move.is_some() {
-                    *moves_count = 1;
-                    *stage = MoveGenStage::HashMove;
+                if state.hash_move.is_some() {
+                    state.moves_count = 1;
+                    state.stage = MoveGenStage::HashMove;
                 } else {
-                    *stage = MoveGenStage::ReadyToGenerateCaptures;
+                    state.stage = MoveGenStage::ReadyToGenerateCaptures;
                 }
 
                 dev!(context.stats.movegen_hash_move_stages += 1);
             }
             MoveGenStage::HashMove => {
-                return Some((hash_move, MOVE_ORDERING_HASH_MOVE));
+                return Some((state.hash_move, MOVEORD_HASH_MOVE));
             }
             MoveGenStage::ReadyToGenerateCaptures => {
-                *evasion_mask = if friendly_king_checked {
+                state.evasion_mask = if state.friendly_king_checked {
                     let king_square = (context.board.pieces[context.board.stm][KING]).bit_scan();
                     let occupancy_bb = context.board.occupancy[WHITE] | context.board.occupancy[BLACK];
 
@@ -120,41 +121,41 @@ pub fn get_next_move(
                     u64::MAX
                 };
 
-                *move_index = 0;
-                *moves_count = context.board.get_moves::<true>(moves, 0, *evasion_mask);
+                state.move_index = 0;
+                state.moves_count = context.board.get_moves::<true>(&mut state.moves, 0, state.evasion_mask);
 
-                if *moves_count == 0 {
-                    *stage = MoveGenStage::ReadyToGenerateKillers;
+                if state.moves_count == 0 {
+                    state.stage = MoveGenStage::ReadyToGenerateKillers;
                 } else {
-                    *stage = MoveGenStage::Captures;
-                    assign_capture_scores(context, moves, move_scores, 0, *moves_count, hash_move);
+                    state.stage = MoveGenStage::Captures;
+                    assign_capture_scores(context, state);
                 }
 
                 dev!(context.stats.movegen_captures_stages += 1);
             }
             MoveGenStage::Captures => {
-                let (r#move, score) = movesort::sort_next_move(moves, move_scores, *move_index, *moves_count);
+                let (r#move, score) = movesort::sort_next_move(&mut state.moves, &mut state.move_scores, state.move_index, state.moves_count);
 
-                if r#move == hash_move {
-                    *move_index += 1;
-                } else if score < MOVE_ORDERING_WINNING_CAPTURES_OFFSET {
-                    *stage = MoveGenStage::ReadyToGenerateKillers;
+                if r#move == state.hash_move {
+                    state.move_index += 1;
+                } else if score < MOVEORD_WINNING_CAPTURES_OFFSET {
+                    state.stage = MoveGenStage::ReadyToGenerateKillers;
                 } else {
                     return Some((r#move, score));
                 }
             }
             MoveGenStage::ReadyToGenerateKillers => {
-                let original_moves_count = *moves_count;
-                let killer_moves = context.ktable.get(ply);
+                let original_moves_count = state.moves_count;
+                let killer_moves = context.ktable.get(state.ply);
 
                 for (index, &killer_move) in killer_moves.iter().enumerate() {
-                    if killer_move != hash_move {
-                        if ((1u64 << killer_move.get_to()) & *evasion_mask) != 0 && killer_move.is_legal(&context.board) {
-                            assert_fast!(*moves_count < MAX_MOVES_COUNT);
+                    if killer_move != state.hash_move {
+                        if ((1u64 << killer_move.get_to()) & state.evasion_mask) != 0 && killer_move.is_legal(&context.board) {
+                            assert_fast!(state.moves_count < MAX_MOVES_COUNT);
 
-                            moves[*moves_count].write(killer_move);
-                            move_scores[*moves_count].write(MOVE_ORDERING_KILLER_MOVE_1 - (index as i16));
-                            *moves_count += 1;
+                            state.moves[state.moves_count].write(killer_move);
+                            state.move_scores[state.moves_count].write(MOVEORD_KILLER_MOVE_1 - (index as i16));
+                            state.moves_count += 1;
 
                             dev!(context.stats.ktable_legal_moves += 1);
                         } else {
@@ -162,47 +163,47 @@ pub fn get_next_move(
                         }
                     }
 
-                    killer_moves_cache[index].write(killer_move);
+                    state.killer_moves[index].write(killer_move);
                 }
 
-                if original_moves_count != *moves_count {
-                    *stage = MoveGenStage::Killers
+                if original_moves_count != state.moves_count {
+                    state.stage = MoveGenStage::Killers
                 } else {
-                    if previous_move.is_some() {
-                        *stage = MoveGenStage::ReadyToGenerateCounters
+                    if state.previous_move.is_some() {
+                        state.stage = MoveGenStage::ReadyToGenerateCounters
                     } else {
-                        *stage = MoveGenStage::ReadyToGenerateQuiets
+                        state.stage = MoveGenStage::ReadyToGenerateQuiets
                     }
                 };
 
                 dev!(context.stats.movegen_killers_stages += 1);
             }
             MoveGenStage::Killers => {
-                let (r#move, score) = movesort::sort_next_move(moves, move_scores, *move_index, *moves_count);
+                let (r#move, score) = movesort::sort_next_move(&mut state.moves, &mut state.move_scores, state.move_index, state.moves_count);
 
-                if score < MOVE_ORDERING_KILLER_MOVE_2 {
-                    if previous_move.is_some() {
-                        *stage = MoveGenStage::ReadyToGenerateCounters;
+                if score < MOVEORD_KILLER_MOVE_2 {
+                    if state.previous_move.is_some() {
+                        state.stage = MoveGenStage::ReadyToGenerateCounters;
                     } else {
-                        *stage = MoveGenStage::ReadyToGenerateQuiets;
+                        state.stage = MoveGenStage::ReadyToGenerateQuiets;
                     }
                 } else {
                     return Some((r#move, score));
                 }
             }
             MoveGenStage::ReadyToGenerateCounters => {
-                let original_moves_count = *moves_count;
-                let countermove = context.cmtable.get(previous_move);
-                let killer_1 = unsafe { killer_moves_cache[0].assume_init() };
-                let killer_2 = unsafe { killer_moves_cache[1].assume_init() };
+                let original_moves_count = state.moves_count;
+                let countermove = context.cmtable.get(state.previous_move);
+                let killer_1 = unsafe { state.killer_moves[0].assume_init() };
+                let killer_2 = unsafe { state.killer_moves[1].assume_init() };
 
-                if countermove != hash_move && countermove != killer_1 && countermove != killer_2 {
-                    if ((1u64 << countermove.get_to()) & *evasion_mask) != 0 && countermove.is_legal(&context.board) {
-                        assert_fast!(*moves_count < MAX_MOVES_COUNT);
+                if countermove != state.hash_move && countermove != killer_1 && countermove != killer_2 {
+                    if ((1u64 << countermove.get_to()) & state.evasion_mask) != 0 && countermove.is_legal(&context.board) {
+                        assert_fast!(state.moves_count < MAX_MOVES_COUNT);
 
-                        moves[*moves_count].write(countermove);
-                        move_scores[*moves_count].write(MOVE_ORDERING_COUNTERMOVE);
-                        *moves_count += 1;
+                        state.moves[state.moves_count].write(countermove);
+                        state.move_scores[state.moves_count].write(MOVEORD_COUNTERMOVE);
+                        state.moves_count += 1;
 
                         dev!(context.stats.cmtable_legal_moves += 1);
                     } else {
@@ -210,38 +211,38 @@ pub fn get_next_move(
                     }
                 }
 
-                if original_moves_count != *moves_count {
-                    *stage = MoveGenStage::Counters;
+                if original_moves_count != state.moves_count {
+                    state.stage = MoveGenStage::Counters;
                 } else {
-                    *stage = MoveGenStage::ReadyToGenerateQuiets;
+                    state.stage = MoveGenStage::ReadyToGenerateQuiets;
                 };
 
                 dev!(context.stats.movegen_counters_stages += 1);
             }
             MoveGenStage::Counters => {
-                let (r#move, score) = movesort::sort_next_move(moves, move_scores, *move_index, *moves_count);
+                let (r#move, score) = movesort::sort_next_move(&mut state.moves, &mut state.move_scores, state.move_index, state.moves_count);
 
-                if score < MOVE_ORDERING_COUNTERMOVE {
-                    *stage = MoveGenStage::ReadyToGenerateQuiets;
+                if score < MOVEORD_COUNTERMOVE {
+                    state.stage = MoveGenStage::ReadyToGenerateQuiets;
                 } else {
                     return Some((r#move, score));
                 }
             }
             MoveGenStage::ReadyToGenerateQuiets => {
-                let original_moves_count = *moves_count;
+                let original_moves_count = state.moves_count;
 
-                *quiet_moves_start_index = *move_index;
-                *moves_count = context.board.get_moves::<false>(moves, *moves_count, *evasion_mask);
-                *stage = MoveGenStage::AllGenerated;
+                state.quiet_moves_start_index = state.move_index;
+                state.moves_count = context.board.get_moves::<false>(&mut state.moves, state.moves_count, state.evasion_mask);
+                state.stage = MoveGenStage::AllGenerated;
 
-                assign_quiet_scores(context, moves, move_scores, original_moves_count, *moves_count, hash_move, previous_move, ply);
+                assign_quiet_scores(context, state, original_moves_count);
                 dev!(context.stats.movegen_quiets_stages += 1);
             }
             MoveGenStage::AllGenerated => {
-                let (r#move, score) = movesort::sort_next_move(moves, move_scores, *move_index, *moves_count);
+                let (r#move, score) = movesort::sort_next_move(&mut state.moves, &mut state.move_scores, state.move_index, state.moves_count);
 
-                if r#move == hash_move || score == MOVE_ORDERING_KILLER_MOVE_1 || score == MOVE_ORDERING_KILLER_MOVE_2 || score == MOVE_ORDERING_COUNTERMOVE {
-                    *move_index += 1;
+                if r#move == state.hash_move || score == MOVEORD_KILLER_MOVE_1 || score == MOVEORD_KILLER_MOVE_2 || score == MOVEORD_COUNTERMOVE {
+                    state.move_index += 1;
                 } else {
                     return Some((r#move, score));
                 }
@@ -255,21 +256,19 @@ pub fn get_next_move(
 ///  - for transposition table move, assign [MOVE_ORDERING_HASH_MOVE]
 ///  - for every positive capture, assign SEE score + [MOVE_ORDERING_WINNING_CAPTURES_OFFSET]
 ///  - for every negative capture, assign SEE score + [MOVE_ORDERING_LOSING_CAPTURES_OFFSET]
-fn assign_capture_scores(context: &SearchContext, moves: &Moves, move_scores: &mut MoveScores, start_index: usize, moves_count: usize, tt_move: Move) {
-    assert_fast!(start_index < MAX_MOVES_COUNT);
-    assert_fast!(start_index <= moves_count);
-    assert_fast!(moves_count < MAX_MOVES_COUNT);
+fn assign_capture_scores(context: &SearchContext, state: &mut MoveGenState) {
+    assert_fast!(state.moves_count < MAX_MOVES_COUNT);
 
     let mut attackers_cache = [0; 64];
     let mut defenders_cache = [0; 64];
 
-    for move_index in start_index..moves_count {
-        let r#move = unsafe { moves[move_index].assume_init() };
+    for move_index in 0..state.moves_count {
+        let r#move = unsafe { state.moves[move_index].assume_init() };
 
-        if r#move == tt_move {
-            move_scores[move_index].write(MOVE_ORDERING_HASH_MOVE);
+        if r#move == state.hash_move {
+            state.move_scores[move_index].write(MOVEORD_HASH_MOVE);
         } else if r#move.is_en_passant() {
-            move_scores[move_index].write(MOVE_ORDERING_WINNING_CAPTURES_OFFSET);
+            state.move_scores[move_index].write(MOVEORD_WINNING_CAPTURES_OFFSET);
         } else {
             let square = r#move.get_to();
             let attacking_piece = context.board.get_piece(r#move.get_from());
@@ -290,7 +289,7 @@ fn assign_capture_scores(context: &SearchContext, moves: &Moves, move_scores: &m
             };
 
             let see = see::get(attacking_piece, captured_piece, attackers, defenders);
-            move_scores[move_index].write(if see >= 0 { see + MOVE_ORDERING_WINNING_CAPTURES_OFFSET } else { see + MOVE_ORDERING_LOSING_CAPTURES_OFFSET });
+            state.move_scores[move_index].write(if see >= 0 { see + MOVEORD_WINNING_CAPTURES_OFFSET } else { see + MOVEORD_LOSING_CAPTURES_OFFSET });
         }
     }
 }
@@ -304,35 +303,26 @@ fn assign_capture_scores(context: &SearchContext, moves: &Moves, move_scores: &m
 ///  - for every countermove, assign [MOVE_ORDERING_COUNTERMOVE]
 ///  - for every castling, assign [MOVE_ORDERING_CASTLING]
 ///  - for every quiet move which didn't fit in other categories, assign score from history table
-fn assign_quiet_scores(
-    context: &SearchContext,
-    moves: &Moves,
-    move_scores: &mut MoveScores,
-    start_index: usize,
-    moves_count: usize,
-    tt_move: Move,
-    previous_move: Move,
-    ply: u16,
-) {
+fn assign_quiet_scores(context: &SearchContext, state: &mut MoveGenState, start_index: usize) {
     assert_fast!(start_index < MAX_MOVES_COUNT);
-    assert_fast!(start_index <= moves_count);
-    assert_fast!(moves_count < MAX_MOVES_COUNT);
+    assert_fast!(start_index <= state.moves_count);
+    assert_fast!(state.moves_count < MAX_MOVES_COUNT);
 
-    let killer_moves = context.ktable.get(ply);
-    let countermove = context.cmtable.get(previous_move);
+    let killer_moves = context.ktable.get(state.ply);
+    let countermove = context.cmtable.get(state.previous_move);
 
-    for move_index in start_index..moves_count {
-        let r#move = unsafe { moves[move_index].assume_init() };
+    for move_index in start_index..state.moves_count {
+        let r#move = unsafe { state.moves[move_index].assume_init() };
 
-        if r#move == tt_move {
-            move_scores[move_index].write(MOVE_ORDERING_HASH_MOVE);
+        if r#move == state.hash_move {
+            state.move_scores[move_index].write(MOVEORD_HASH_MOVE);
         } else if r#move == countermove {
-            move_scores[move_index].write(MOVE_ORDERING_COUNTERMOVE);
+            state.move_scores[move_index].write(MOVEORD_COUNTERMOVE);
         } else if r#move.is_quiet() {
             let mut killer_move_found = false;
             for (index, &killer_move) in killer_moves.iter().enumerate() {
                 if killer_move == r#move {
-                    move_scores[move_index].write(MOVE_ORDERING_KILLER_MOVE_1 - (index as i16));
+                    state.move_scores[move_index].write(MOVEORD_KILLER_MOVE_1 - (index as i16));
                     killer_move_found = true;
                     break;
                 }
@@ -342,20 +332,40 @@ fn assign_quiet_scores(
                 continue;
             }
 
-            let value = context.htable.get(r#move.get_from(), r#move.get_to(), MOVE_ORDERING_HISTORY_MOVE) as i16;
-            move_scores[move_index].write(value + MOVE_ORDERING_HISTORY_MOVE_OFFSET);
+            let value = context.htable.get(r#move.get_from(), r#move.get_to(), MOVEORD_HISTORY_MOVE) as i16;
+            state.move_scores[move_index].write(value + MOVEORD_HISTORY_MOVE_OFFSET);
         } else if r#move.is_promotion() {
-            move_scores[move_index].write(match r#move.get_promotion_piece() {
-                QUEEN => MOVE_ORDERING_QUEEN_PROMOTION,
-                ROOK => MOVE_ORDERING_ROOK_PROMOTION,
-                BISHOP => MOVE_ORDERING_BISHOP_PROMOTION,
-                KNIGHT => MOVE_ORDERING_KNIGHT_PROMOTION,
+            state.move_scores[move_index].write(match r#move.get_promotion_piece() {
+                QUEEN => MOVEORD_QUEEN_PROMOTION,
+                ROOK => MOVEORD_ROOK_PROMOTION,
+                BISHOP => MOVEORD_BISHOP_PROMOTION,
+                KNIGHT => MOVEORD_KNIGHT_PROMOTION,
                 _ => panic_fast!("Invalid value: fen={}, r#move.data={}", context.board, r#move.data),
             });
         } else if r#move.is_castling() {
-            move_scores[move_index].write(MOVE_ORDERING_CASTLING);
+            state.move_scores[move_index].write(MOVEORD_CASTLING);
         } else {
             panic_fast!("Sorting rule missing: fen={}, r#move.data={}", context.board, r#move.data);
+        }
+    }
+}
+
+impl Default for MoveGenState {
+    fn default() -> Self {
+        Self {
+            moves: [MaybeUninit::uninit(); MAX_MOVES_COUNT],
+            move_scores: [MaybeUninit::uninit(); MAX_MOVES_COUNT],
+            stage: MoveGenStage::ReadyToCheckHashMove,
+            quiet_moves_start_index: Default::default(),
+            killer_moves: [MaybeUninit::uninit(); 2],
+            move_index: Default::default(),
+            move_number: Default::default(),
+            moves_count: Default::default(),
+            evasion_mask: Default::default(),
+            hash_move: Default::default(),
+            ply: Default::default(),
+            friendly_king_checked: Default::default(),
+            previous_move: Move::default(),
         }
     }
 }

@@ -867,7 +867,7 @@ impl Board {
         assert_fast!(moves_count < engine::MAX_MOVES_COUNT);
 
         let mut evading_moves_count = 0;
-        let mut evading_move = Default::default();
+        let mut evading_move = Move::default();
 
         for r#move in &moves[0..moves_count] {
             let r#move = unsafe { r#move.assume_init() };

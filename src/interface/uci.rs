@@ -1,3 +1,6 @@
+use crate::cache::counters::CMTable;
+use crate::cache::history::HTable;
+use crate::cache::killers::KTable;
 use crate::cache::pawns::PHTable;
 use crate::cache::search::TTable;
 use crate::engine;
@@ -7,6 +10,7 @@ use crate::perft;
 use crate::state::movescan::Move;
 use crate::state::representation::Board;
 use crate::state::*;
+use crate::stats::SearchStats;
 use crate::tablebases::syzygy;
 use crate::utils::minmax::MinMax;
 use crate::utils::panic_fast;
@@ -76,7 +80,7 @@ impl Default for UciState {
         UciState {
             context: Arc::new(RwLock::new(SearchContext::new(
                 Board::new_initial_position(),
-                Default::default(),
+                SParams::default(),
                 Arc::new(TTable::new(1 * 1024 * 1024)),
                 Arc::new(PHTable::new(1 * 1024 * 1024)),
                 abort_flag.clone(),
@@ -451,7 +455,7 @@ fn handle_go(params: &[String], state: &UciState) {
         context_lock.syzygy_enabled = syzygy_enabled;
         context_lock.syzygy_probe_limit = syzygy_probe_limit;
         context_lock.syzygy_probe_depth = syzygy_probe_depth;
-        context_lock.stats = Default::default();
+        context_lock.stats = SearchStats::default();
 
         context_lock.lines.clear();
         context_lock.helper_contexts.write().unwrap().clear();
@@ -468,8 +472,8 @@ fn handle_go(params: &[String], state: &UciState) {
             context_lock.helper_contexts.write().unwrap().push(helper_context);
         }
 
-        let mut best_move = Default::default();
-        let mut ponder_move = Default::default();
+        let mut best_move = Move::default();
+        let mut ponder_move = Move::default();
 
         while let Some(depth_result) = context_lock.next() {
             for (line_index, line) in context_lock.lines.iter().take(multipv as usize).enumerate() {
@@ -529,10 +533,10 @@ fn handle_go(params: &[String], state: &UciState) {
                 if allow_ponder {
                     ponder_move = context_lock.lines[0].pv_line[1];
                 } else {
-                    ponder_move = Default::default();
+                    ponder_move = Move::default();
                 }
             } else {
-                ponder_move = Default::default();
+                ponder_move = Move::default();
             }
         }
 
@@ -698,9 +702,9 @@ fn recreate_state_tables(state: &mut UciState) {
 
     context_lock.ttable = Arc::new(TTable::new(ttable_size * 1024 * 1024));
     context_lock.phtable = Arc::new(PHTable::new(PAWN_HASHTABLE_SIZE));
-    context_lock.ktable = Default::default();
-    context_lock.htable = Default::default();
-    context_lock.cmtable = Default::default();
+    context_lock.ktable = KTable::default();
+    context_lock.htable = HTable::default();
+    context_lock.cmtable = CMTable::default();
 }
 
 /// Enables saving of crash files by setting a custom panic hook.

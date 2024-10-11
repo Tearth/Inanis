@@ -10,8 +10,8 @@ use crate::utils::param;
 use context::SearchResultLine;
 use search::movepick;
 use search::movepick::MoveGenStage;
+use search::movepick::MoveGenState;
 use std::cmp;
-use std::mem::MaybeUninit;
 use std::sync::atomic::Ordering;
 
 /// Aspiration window wrapper for the entry point of the regular search, look at `run_internal` for more information.
@@ -162,7 +162,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
 
     let original_alpha = alpha;
     let mut tt_entry_found = false;
-    let mut hash_move = Default::default();
+    let mut hash_move = Move::default();
 
     match context.ttable.get(context.board.state.hash, ply) {
         Some(entry) => {
@@ -294,39 +294,15 @@ fn run_internal<const ROOT: bool, const PV: bool>(
     }
 
     let mut best_score = -CHECKMATE_SCORE;
-    let mut best_move = Default::default();
-    let mut moves = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
-    let mut move_scores = [MaybeUninit::uninit(); MAX_MOVES_COUNT];
-    let mut movegen_stage = MoveGenStage::ReadyToCheckHashMove;
-    let mut quiet_moves_start_index = 0;
-    let mut killer_moves = [MaybeUninit::uninit(); 2];
+    let mut best_move = Move::default();
+    let mut state = MoveGenState { hash_move, ply, friendly_king_checked, previous_move, ..Default::default() };
 
-    let mut move_index = 0;
-    let mut move_number = 0;
-    let mut moves_count = 0;
-    let mut evasion_mask = 0;
-
-    while let Some((r#move, score)) = movepick::get_next_move(
-        context,
-        &mut movegen_stage,
-        &mut moves,
-        &mut move_scores,
-        &mut move_index,
-        &mut move_number,
-        &mut moves_count,
-        &mut evasion_mask,
-        hash_move,
-        ply,
-        friendly_king_checked,
-        previous_move,
-        &mut quiet_moves_start_index,
-        &mut killer_moves,
-    ) {
+    while let Some((r#move, score)) = movepick::get_next_move(context, &mut state) {
         if ROOT && !context.moves_to_search.is_empty() && !context.moves_to_search.contains(&r#move) {
             continue;
         }
 
-        if lmp_can_be_applied::<PV>(context, depth, move_number, score, friendly_king_checked) {
+        if lmp_can_be_applied::<PV>(context, depth, state.move_number, score, friendly_king_checked) {
             dev!(context.stats.lmp_accepted += 1);
             break;
         } else {
@@ -337,14 +313,14 @@ fn run_internal<const ROOT: bool, const PV: bool>(
         context.ttable.prefetch(context.board.state.hash);
 
         let king_checked = context.board.is_king_checked(context.board.stm);
-        let r = if lmr_can_be_applied::<PV>(context, depth, r#move, move_number, score, friendly_king_checked, king_checked) {
-            lmr_get_r::<PV>(context, move_number)
+        let r = if lmr_can_be_applied::<PV>(context, depth, r#move, state.move_number, score, friendly_king_checked, king_checked) {
+            lmr_get_r::<PV>(context, state.move_number)
         } else {
             0
         };
 
         let score = if PV {
-            if move_index == 0 {
+            if state.move_index == 0 {
                 dev!(context.stats.pvs_full_window_searches += 1);
                 -run_internal::<false, true>(context, depth - 1, ply + 1, -beta, -alpha, true, king_checked, r#move)
             } else {
@@ -390,11 +366,11 @@ fn run_internal<const ROOT: bool, const PV: bool>(
                         context.cmtable.add(previous_move, r#move);
                     }
 
-                    if movegen_stage == MoveGenStage::AllGenerated {
-                        for i in quiet_moves_start_index..moves_count {
-                            assert_fast!(moves_count < MAX_MOVES_COUNT);
+                    if state.stage == MoveGenStage::AllGenerated {
+                        for i in state.quiet_moves_start_index..state.moves_count {
+                            assert_fast!(state.moves_count < MAX_MOVES_COUNT);
 
-                            let move_from_list = unsafe { moves[i].assume_init() };
+                            let move_from_list = unsafe { state.moves[i].assume_init() };
                             if move_from_list.is_quiet() && move_from_list != best_move {
                                 context.htable.punish(move_from_list.get_from(), move_from_list.get_to(), depth as u8);
                             }
@@ -403,7 +379,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
                 }
 
                 dev!(context.stats.beta_cutoffs += 1);
-                if move_number == 0 {
+                if state.move_number == 0 {
                     dev!(context.stats.perfect_cutoffs += 1);
                 } else {
                     dev!(context.stats.non_perfect_cutoffs += 1);

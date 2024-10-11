@@ -33,7 +33,7 @@ impl PerftHashTable {
         let mut hashtable = Self { table: Vec::with_capacity(size / BUCKET_SIZE) };
 
         if BUCKET_SIZE != 0 {
-            hashtable.table.resize_with(hashtable.table.capacity(), Default::default);
+            hashtable.table.resize_with(hashtable.table.capacity(), PerftHashTableBucket::default);
         }
 
         hashtable

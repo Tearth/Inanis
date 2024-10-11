@@ -1,6 +1,7 @@
 use crate::cache::pawns::PHTable;
 use crate::cache::search::TTable;
 use crate::engine::context::SearchContext;
+use crate::params::SParams;
 use crate::state::representation::Board;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
@@ -111,7 +112,7 @@ pub fn run() -> BenchmarkResult {
         "8/1p6/pP3p2/P2k1P2/6Kp/8/8/8 b - - 1 73",
     ];
 
-    let mut benchmark_result: BenchmarkResult = Default::default();
+    let mut benchmark_result = BenchmarkResult::default();
     let benchmark_time_start = SystemTime::now();
 
     for (current_position_index, fen) in BENCHMARK_POSITIONS.into_iter().enumerate() {
@@ -123,7 +124,7 @@ pub fn run() -> BenchmarkResult {
         let ponder_flag = Arc::new(AtomicBool::new(false));
 
         let board = Board::new_from_fen(fen).unwrap();
-        let mut context = SearchContext::new(board, Default::default(), ttable.clone(), phtable.clone(), abort_flag.clone(), ponder_flag.clone());
+        let mut context = SearchContext::new(board, SParams::default(), ttable.clone(), phtable.clone(), abort_flag.clone(), ponder_flag.clone());
         context.forced_depth = 16;
 
         context.by_ref().last().unwrap();

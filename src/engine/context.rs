@@ -97,13 +97,13 @@ impl SearchContext {
             syzygy_probe_depth: 0,
             ttable,
             phtable,
-            ktable: Default::default(),
-            htable: Default::default(),
-            cmtable: Default::default(),
-            helper_contexts: Arc::new(RwLock::new(Vec::new())),
+            ktable: KTable::default(),
+            htable: HTable::default(),
+            cmtable: CMTable::default(),
+            helper_contexts: Arc::default(),
             abort_flag,
             ponder_flag,
-            stats: Default::default(),
+            stats: SearchStats::default(),
             last_score: 0,
         }
     }
@@ -219,7 +219,7 @@ impl Iterator for SearchContext {
                 if self.ponder_flag.load(Ordering::Relaxed) {
                     self.current_depth = 1;
                     self.search_time_start = SystemTime::now();
-                    self.stats = Default::default();
+                    self.stats = SearchStats::default();
 
                     self.ponder_flag.store(false, Ordering::Relaxed);
                     self.abort_flag.store(false, Ordering::Relaxed);

@@ -28,7 +28,7 @@ impl PHTable {
         let mut hashtable = Self { table: Vec::with_capacity(size / SIZE) };
 
         if size != 0 {
-            hashtable.table.resize_with(hashtable.table.capacity(), Default::default);
+            hashtable.table.resize_with(hashtable.table.capacity(), PHTableEntry::default);
         }
 
         hashtable
