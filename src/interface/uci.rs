@@ -5,7 +5,7 @@ use crate::cache::pawns::PHTable;
 use crate::cache::search::TTable;
 use crate::engine;
 use crate::engine::context::SearchContext;
-use crate::engine::params::SParams;
+use crate::engine::params::SearchParams;
 use crate::perft;
 use crate::state::movescan::Move;
 use crate::state::representation::Board;
@@ -80,7 +80,6 @@ impl Default for UciState {
         UciState {
             context: Arc::new(RwLock::new(SearchContext::new(
                 Board::new_initial_position(),
-                SParams::default(),
                 Arc::new(TTable::new(1 * 1024 * 1024)),
                 Arc::new(PHTable::new(1 * 1024 * 1024)),
                 abort_flag.clone(),
@@ -118,7 +117,7 @@ pub fn run() {
 
     #[cfg(feature = "dev")]
     {
-        let params = SParams::default();
+        let params = SearchParams::default();
         options_lock.insert("aspwin_delta".to_string(), UciOption::new_wide(99, params.aspwin_delta));
         options_lock.insert("aspwin_min_depth".to_string(), UciOption::new_wide(99, params.aspwin_min_depth));
         options_lock.insert("aspwin_max_width".to_string(), UciOption::new_wide(99, params.aspwin_max_width));
@@ -387,10 +386,10 @@ fn handle_go(params: &[String], state: &UciState) {
         let syzygy_probe_depth = options_lock["SyzygyProbeDepth"].value.parse::<i8>().unwrap();
 
         #[cfg(not(feature = "dev"))]
-        let search_params = SParams::default();
+        let search_params = SearchParams::default();
 
         #[cfg(feature = "dev")]
-        let search_params = SParams {
+        let search_params = SearchParams {
             aspwin_delta: options_lock["aspwin_delta"].value.parse().unwrap(),
             aspwin_min_depth: options_lock["aspwin_min_depth"].value.parse().unwrap(),
             aspwin_max_width: options_lock["aspwin_max_width"].value.parse().unwrap(),
@@ -461,14 +460,14 @@ fn handle_go(params: &[String], state: &UciState) {
         context_lock.helper_contexts.write().unwrap().clear();
 
         for _ in 0..threads - 1 {
-            let helper_context = SearchContext::new(
+            let mut helper_context = SearchContext::new(
                 context_lock.board.clone(),
-                search_params.clone(),
                 context_lock.ttable.clone(),
                 context_lock.phtable.clone(),
                 context_lock.abort_flag.clone(),
                 context_lock.ponder_flag.clone(),
             );
+            helper_context.params = search_params.clone();
             context_lock.helper_contexts.write().unwrap().push(helper_context);
         }
 
@@ -488,19 +487,16 @@ fn handle_go(params: &[String], state: &UciState) {
                 };
 
                 println!(
-                    "{}",
-                    &format!(
-                        "info time {} {} depth {} seldepth {} multipv {} nodes {} hashfull {} tbhits {} pv {}",
-                        depth_result.time,
-                        formatted_score,
-                        depth_result.depth,
-                        context_lock.stats.max_ply,
-                        line_index + 1,
-                        context_lock.stats.nodes_count + context_lock.stats.q_nodes_count,
-                        (context_lock.ttable.get_usage(1000) * 10.0) as u32,
-                        context_lock.stats.tb_hits,
-                        pv_line.join(" ").as_str()
-                    )
+                    "info time {} {} depth {} seldepth {} multipv {} nodes {} hashfull {} tbhits {} pv {}",
+                    depth_result.time,
+                    formatted_score,
+                    depth_result.depth,
+                    context_lock.stats.max_ply,
+                    line_index + 1,
+                    context_lock.stats.nodes_count + context_lock.stats.q_nodes_count,
+                    (context_lock.ttable.get_usage(1000) * 10.0) as u32,
+                    context_lock.stats.tb_hits,
+                    pv_line.join(" ").as_str()
                 );
             }
 

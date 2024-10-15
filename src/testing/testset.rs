@@ -1,7 +1,6 @@
 use crate::cache::pawns::PHTable;
 use crate::cache::search::TTable;
 use crate::engine::context::SearchContext;
-use crate::params::SParams;
 use crate::state::movescan::Move;
 use crate::state::representation::Board;
 use crate::state::text::fen;
@@ -63,7 +62,7 @@ pub fn run(epd_filename: &str, depth: i8, ttable_size: usize, threads_count: usi
                     let ponder_flag = Arc::new(AtomicBool::new(false));
 
                     let board_clone = position.board.clone();
-                    let mut context = SearchContext::new(board_clone, SParams::default(), ttable, phtable, abort_flag, ponder_flag);
+                    let mut context = SearchContext::new(board_clone, ttable, phtable, abort_flag, ponder_flag);
                     context.forced_depth = depth;
 
                     let mut last_best_move = Move::default();

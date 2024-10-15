@@ -1,5 +1,5 @@
 #[derive(Clone)]
-pub struct SParams {
+pub struct SearchParams {
     pub aspwin_delta: i16,
     pub aspwin_min_depth: i8,
     pub aspwin_max_width: i16,
@@ -47,7 +47,7 @@ pub struct SParams {
 }
 
 #[allow(non_upper_case_globals)]
-impl SParams {
+impl SearchParams {
     pub const aspwin_delta: i16 = 25;
     pub const aspwin_min_depth: i8 = 5;
     pub const aspwin_max_width: i16 = 400;
@@ -94,7 +94,7 @@ impl SParams {
     pub const q_futility_pruning_margin: i16 = 100;
 }
 
-impl Default for SParams {
+impl Default for SearchParams {
     /// Constructs a default instance of [SearchParams] with default elements.
     fn default() -> Self {
         Self {

@@ -1,7 +1,6 @@
 use crate::cache::pawns::PHTable;
 use crate::cache::search::TTable;
 use crate::engine::context::SearchContext;
-use crate::params::SParams;
 use crate::state::representation::Board;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
@@ -124,7 +123,7 @@ pub fn run() -> BenchmarkResult {
         let ponder_flag = Arc::new(AtomicBool::new(false));
 
         let board = Board::new_from_fen(fen).unwrap();
-        let mut context = SearchContext::new(board, SParams::default(), ttable.clone(), phtable.clone(), abort_flag.clone(), ponder_flag.clone());
+        let mut context = SearchContext::new(board, ttable.clone(), phtable.clone(), abort_flag.clone(), ponder_flag.clone());
         context.forced_depth = 16;
 
         context.by_ref().last().unwrap();
