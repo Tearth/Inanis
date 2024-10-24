@@ -74,7 +74,6 @@ impl PerftHashTable {
         assert_fast!(index < self.table.len());
 
         let bucket = &self.table[index];
-
         for entry in &bucket.entries {
             let entry_key = entry.key.load(Ordering::Relaxed);
             let entry_data = entry.data.load(Ordering::Relaxed);

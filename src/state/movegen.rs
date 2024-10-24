@@ -1,6 +1,7 @@
 use super::*;
+use crate::utils::assert_fast;
 use crate::utils::bithelpers::BitHelpers;
-use crate::utils::{assert_fast, rand};
+use crate::utils::rand;
 use std::sync::OnceLock;
 
 #[rustfmt::skip]

@@ -6,12 +6,11 @@ use std::env;
 /// Entry point of the Inanis engine.
 pub fn main() {
     let args = env::args_os().collect();
-    let target_features = get_target_features();
+    let features = get_target_features();
 
     see::init();
     movegen::init();
-
-    terminal::run(args, target_features);
+    terminal::run(args, features);
 }
 
 /// Gets a list of target features (POPCNT, BMI1, BMI2) with which the executable was built.

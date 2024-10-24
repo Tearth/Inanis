@@ -25,13 +25,13 @@ const PROFILE: &str = env!("PROFILE");
 
 /// Entry point of the terminal interface and command loop. If there's a command passed through `args`, the program will end immediately
 /// after completing it and printing the result.
-pub fn run(args: Vec<OsString>, target_features: Vec<&'static str>) {
+pub fn run(args: Vec<OsString>, features: Vec<&'static str>) {
     let use_args = args.len() > 1;
 
     let mut header = String::new();
     header.push_str(&format!("Inanis {}", VERSION));
-    if !target_features.is_empty() {
-        header.push_str(&format!(" {}", target_features.join(" ")));
+    if !features.is_empty() {
+        header.push_str(&format!(" {}", features.join(" ")));
     }
     header.push_str(&format!(" ({}), created by {}", DATE, AUTHOR));
 
@@ -100,17 +100,14 @@ fn handle_help() {
     println!();
 
     #[cfg(feature = "dev")]
-    println!("=== Development ===");
-    #[cfg(feature = "dev")]
-    println!(" dataset [pgn] [output] [min_ply] [max_score] [max_diff] [density] - dataset generator");
-    #[cfg(feature = "dev")]
-    println!(" magic - generate magic numbers");
-    #[cfg(feature = "dev")]
-    println!(" testset [epd] [depth] [ttable_size] [threads_count] - run test of positions");
-    #[cfg(feature = "dev")]
-    println!(" tuner [epd] [output] [randomize] [k] [wdl_ratio] [threads_count] - run tuning");
-    #[cfg(feature = "dev")]
-    println!();
+    {
+        println!("=== Development ===");
+        println!(" dataset [pgn] [output] [min_ply] [max_score] [max_diff] [density] - dataset generator");
+        println!(" magic - generate magic numbers");
+        println!(" testset [epd] [depth] [ttable_size] [threads_count] - run test of positions");
+        println!(" tuner [epd] [output] [randomize] [k] [wdl_ratio] [threads_count] - run tuning");
+        println!();
+    }
 
     println!("=== Perft ===");
     println!(" perft [depth]");
@@ -339,7 +336,7 @@ fn handle_benchmark() {
         );
 
         println!(
-            "Move generator stages: {} hash moves, {} captures, {} killers, {} countermoves, {} quiets",
+            "Move generator stages: {} hash moves, {} captures, {} killers, {} counters, {} quiets",
             result.movegen_hash_move_stages,
             result.movegen_captures_stages,
             result.movegen_killers_stages,

@@ -2,8 +2,9 @@ use super::*;
 use crate::cache::pawns::PHTable;
 use crate::engine::stats::SearchStats;
 use crate::state::representation::Board;
+use crate::utils::assert_fast;
 use crate::utils::bithelpers::BitHelpers;
-use crate::utils::{assert_fast, dev};
+use crate::utils::dev;
 use std::cmp;
 
 #[cfg(feature = "dev")]

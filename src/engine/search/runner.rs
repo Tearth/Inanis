@@ -223,17 +223,17 @@ fn run_internal<const ROOT: bool, const PV: bool>(
         depth -= iir_get_r(context, depth);
     }
 
-    let mut lazy_eval = None;
+    let mut static_eval = None;
 
     if razoring_can_be_applied::<PV>(context, depth, alpha, friendly_king_checked) {
         let margin = razoring_get_margin(context, depth);
-        let lazy_eval_value = match lazy_eval {
+        let static_eval_value = match static_eval {
             Some(value) => value,
             None => context.board.evaluate_fast(context.board.stm, &context.phtable, &mut context.stats),
         };
 
         dev!(context.stats.razoring_attempts += 1);
-        if lazy_eval_value + margin <= alpha {
+        if static_eval_value + margin <= alpha {
             let score = qsearch::run(context, ply, alpha, beta);
             if score <= alpha {
                 dev!(context.stats.leafs_count += 1);
@@ -244,37 +244,37 @@ fn run_internal<const ROOT: bool, const PV: bool>(
             }
         }
 
-        lazy_eval = Some(lazy_eval_value);
+        static_eval = Some(static_eval_value);
     }
 
     if snmp_can_be_applied::<PV>(context, depth, beta, friendly_king_checked) {
         let margin = snmp_get_margin(context, depth);
-        let lazy_eval_value = match lazy_eval {
+        let static_eval_value = match static_eval {
             Some(value) => value,
             None => context.board.evaluate_fast(context.board.stm, &context.phtable, &mut context.stats),
         };
 
         dev!(context.stats.snmp_attempts += 1);
-        if lazy_eval_value - margin >= beta {
+        if static_eval_value - margin >= beta {
             dev!(context.stats.leafs_count += 1);
             dev!(context.stats.snmp_accepted += 1);
-            return lazy_eval_value - margin;
+            return static_eval_value - margin;
         } else {
             dev!(context.stats.snmp_rejected += 1);
         }
 
-        lazy_eval = Some(lazy_eval_value);
+        static_eval = Some(static_eval_value);
     }
 
     if nmp_can_be_applied::<PV>(context, depth, beta, allow_null_move, friendly_king_checked) {
         let margin = param!(context.params.nmp_margin);
-        let lazy_eval_value = match lazy_eval {
+        let static_eval_value = match static_eval {
             Some(value) => value,
             None => context.board.evaluate_fast(context.board.stm, &context.phtable, &mut context.stats),
         };
 
         dev!(context.stats.nmp_attempts += 1);
-        if lazy_eval_value + margin >= beta {
+        if static_eval_value + margin >= beta {
             let r = nmp_get_r(context, depth);
 
             context.board.make_null_move();
@@ -290,7 +290,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
             }
         }
 
-        lazy_eval = Some(lazy_eval_value);
+        static_eval = Some(static_eval_value);
     }
 
     let mut best_score = -CHECKMATE_SCORE;

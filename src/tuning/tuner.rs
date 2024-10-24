@@ -215,11 +215,11 @@ pub fn run(epd_filename: &str, output_directory: &str, random_values: bool, k: O
             let error = calculate_error(&positions, &coeffs, &indices, &weights, k, wdl_ratio, threads_count);
 
             write_evaluation_parameters(&mut weights_iter, output_directory, error, k, wdl_ratio);
-            write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "PAWN", PIECE_VALUE[PAWN]);
-            write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "KNIGHT", PIECE_VALUE[KNIGHT]);
-            write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "BISHOP", PIECE_VALUE[BISHOP]);
-            write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "ROOK", PIECE_VALUE[ROOK]);
-            write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "QUEEN", PIECE_VALUE[QUEEN]);
+            write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "PAWN", PIECE_VALUES[PAWN]);
+            write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "KNIGHT", PIECE_VALUES[KNIGHT]);
+            write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "BISHOP", PIECE_VALUES[BISHOP]);
+            write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "ROOK", PIECE_VALUES[ROOK]);
+            write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "QUEEN", PIECE_VALUES[QUEEN]);
             write_piece_square_table(&mut weights_iter, output_directory, error, k, wdl_ratio, "KING", 0);
 
             if weights_iter.next().is_some() {
@@ -380,12 +380,12 @@ fn load_positions(epd: &str, coeffs: &mut Vec<TunerCoeff>, indices: &mut Vec<u16
 /// random values (useful when initializing tuner).
 fn load_values(random_values: bool) -> Vec<TunerParameter> {
     let mut params = vec![
-        TunerParameter::new(PIECE_VALUE[PAWN], PIECE_VALUE[PAWN], PIECE_VALUE[PAWN], PIECE_VALUE[PAWN], PIECE_VALUE[PAWN]),
-        TunerParameter::new(PIECE_VALUE[KNIGHT], PIECE_VALUE[KNIGHT], PIECE_VALUE[KNIGHT], PIECE_VALUE[KNIGHT], PIECE_VALUE[KNIGHT]),
-        TunerParameter::new(PIECE_VALUE[BISHOP], PIECE_VALUE[BISHOP], PIECE_VALUE[BISHOP], PIECE_VALUE[BISHOP], PIECE_VALUE[BISHOP]),
-        TunerParameter::new(PIECE_VALUE[ROOK], PIECE_VALUE[ROOK], PIECE_VALUE[ROOK], PIECE_VALUE[ROOK], PIECE_VALUE[ROOK]),
-        TunerParameter::new(PIECE_VALUE[QUEEN], PIECE_VALUE[QUEEN], PIECE_VALUE[QUEEN], PIECE_VALUE[QUEEN], PIECE_VALUE[QUEEN]),
-        TunerParameter::new(PIECE_VALUE[KING], PIECE_VALUE[KING], PIECE_VALUE[KING], PIECE_VALUE[KING], PIECE_VALUE[KING]),
+        TunerParameter::new(PIECE_VALUES[PAWN], PIECE_VALUES[PAWN], PIECE_VALUES[PAWN], PIECE_VALUES[PAWN], PIECE_VALUES[PAWN]),
+        TunerParameter::new(PIECE_VALUES[KNIGHT], PIECE_VALUES[KNIGHT], PIECE_VALUES[KNIGHT], PIECE_VALUES[KNIGHT], PIECE_VALUES[KNIGHT]),
+        TunerParameter::new(PIECE_VALUES[BISHOP], PIECE_VALUES[BISHOP], PIECE_VALUES[BISHOP], PIECE_VALUES[BISHOP], PIECE_VALUES[BISHOP]),
+        TunerParameter::new(PIECE_VALUES[ROOK], PIECE_VALUES[ROOK], PIECE_VALUES[ROOK], PIECE_VALUES[ROOK], PIECE_VALUES[ROOK]),
+        TunerParameter::new(PIECE_VALUES[QUEEN], PIECE_VALUES[QUEEN], PIECE_VALUES[QUEEN], PIECE_VALUES[QUEEN], PIECE_VALUES[QUEEN]),
+        TunerParameter::new(PIECE_VALUES[KING], PIECE_VALUES[KING], PIECE_VALUES[KING], PIECE_VALUES[KING], PIECE_VALUES[KING]),
         TunerParameter::new(params::BISHOP_PAIR.get_opening(), -99, 10, 40, 99),
         TunerParameter::new(params::BISHOP_PAIR.get_ending(), -99, 10, 40, 99),
     ];
@@ -401,23 +401,23 @@ fn load_values(random_values: bool) -> Vec<TunerParameter> {
     params.append(&mut params::KING_AREA_THREATS.iter().flat_map(|v| v.to_tuner_params(-999, -40, 40, 999, 0)).collect());
 
     for bucket in &pst::PAWN_PST_PATTERN {
-        params.append(&mut bucket.iter().flat_map(|v| v.to_tuner_params(-9999, 50, 150, 9999, -PIECE_VALUE[PAWN])).collect());
+        params.append(&mut bucket.iter().flat_map(|v| v.to_tuner_params(-9999, 50, 150, 9999, -PIECE_VALUES[PAWN])).collect());
     }
 
     for bucket in &pst::KNIGHT_PST_PATTERN {
-        params.append(&mut bucket.iter().flat_map(|v| v.to_tuner_params(-9999, 300, 500, 9999, -PIECE_VALUE[KNIGHT])).collect());
+        params.append(&mut bucket.iter().flat_map(|v| v.to_tuner_params(-9999, 300, 500, 9999, -PIECE_VALUES[KNIGHT])).collect());
     }
 
     for bucket in &pst::BISHOP_PST_PATTERN {
-        params.append(&mut bucket.iter().flat_map(|v| v.to_tuner_params(-9999, 300, 500, 9999, -PIECE_VALUE[BISHOP])).collect());
+        params.append(&mut bucket.iter().flat_map(|v| v.to_tuner_params(-9999, 300, 500, 9999, -PIECE_VALUES[BISHOP])).collect());
     }
 
     for bucket in &pst::ROOK_PST_PATTERN {
-        params.append(&mut bucket.iter().flat_map(|v| v.to_tuner_params(-9999, 400, 600, 9999, -PIECE_VALUE[ROOK])).collect());
+        params.append(&mut bucket.iter().flat_map(|v| v.to_tuner_params(-9999, 400, 600, 9999, -PIECE_VALUES[ROOK])).collect());
     }
 
     for bucket in &pst::QUEEN_PST_PATTERN {
-        params.append(&mut bucket.iter().flat_map(|v| v.to_tuner_params(-9999, 800, 1400, 9999, -PIECE_VALUE[QUEEN])).collect());
+        params.append(&mut bucket.iter().flat_map(|v| v.to_tuner_params(-9999, 800, 1400, 9999, -PIECE_VALUES[QUEEN])).collect());
     }
 
     for bucket in &pst::KING_PST_PATTERN {

@@ -14,8 +14,8 @@ pub mod pst;
 pub mod safety;
 
 pub const INITIAL_GAME_PHASE: u8 = 24;
-pub const PIECE_VALUE: [i16; 6] = [100, 337, 338, 521, 1050, 10000];
-pub const PIECE_PHASE_VALUE: [u8; 6] = [0, 1, 1, 2, 4, 0];
+pub const PIECE_VALUES: [i16; 6] = [100, 337, 338, 521, 1050, 10000];
+pub const PIECE_PHASE_VALUES: [u8; 6] = [0, 1, 1, 2, 4, 0];
 
 macro_rules! s {
     ($opening_score: expr, $ending_score: expr) => {

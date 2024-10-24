@@ -74,12 +74,12 @@ impl Move {
 
     /// Gets source square from the internal data.
     pub fn get_from(&self) -> usize {
-        (self.data & 0x3f) as usize
+        (self.data % 64) as usize
     }
 
     /// Gets destination square from the internal data.
     pub fn get_to(&self) -> usize {
-        ((self.data >> 6) & 0x3f) as usize
+        ((self.data >> 6) % 64) as usize
     }
 
     /// Gets flags from the internal data.

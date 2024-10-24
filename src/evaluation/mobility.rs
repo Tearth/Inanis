@@ -1,10 +1,10 @@
 use super::*;
 use crate::state::movescan;
 use crate::state::representation::Board;
+use crate::utils::assert_fast;
 
 #[cfg(feature = "dev")]
 use crate::tuning::tuner::TunerCoeff;
-use crate::utils::assert_fast;
 
 pub struct MobilityData {
     knight_mobility: PieceMobility,

@@ -632,7 +632,7 @@ impl Board {
         self.pieces[color][piece] |= 1u64 << square;
         self.occupancy[color] |= 1u64 << square;
         self.piece_table[square] = piece as u8;
-        self.game_phase += PIECE_PHASE_VALUE[piece];
+        self.game_phase += PIECE_PHASE_VALUES[piece];
 
         if !UNDO {
             let mut king_square = self.pieces[color][KING].bit_scan() % 64;
@@ -656,7 +656,7 @@ impl Board {
         self.pieces[color][piece] &= !(1u64 << square);
         self.occupancy[color] &= !(1u64 << square);
         self.piece_table[square] = u8::MAX;
-        self.game_phase -= PIECE_PHASE_VALUE[piece];
+        self.game_phase -= PIECE_PHASE_VALUES[piece];
 
         if !UNDO {
             let mut king_square = self.pieces[color][KING].bit_scan() % 64;

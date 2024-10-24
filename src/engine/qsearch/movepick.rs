@@ -1,7 +1,6 @@
 use crate::engine::context::SearchContext;
 use crate::engine::*;
 use crate::evaluation::*;
-use crate::state::movescan::MoveFlags;
 use crate::state::*;
 use crate::utils::assert_fast;
 use crate::MoveScores;
@@ -21,10 +20,10 @@ pub fn assign_move_scores(context: &SearchContext, moves: &Moves, move_scores: &
     for move_index in 0..moves_count {
         let r#move = unsafe { moves[move_index].assume_init() };
 
-        if r#move.get_flags() == MoveFlags::EN_PASSANT {
+        if r#move.is_en_passant() {
             move_scores[move_index].write(0);
         } else if r#move.is_promotion() {
-            move_scores[move_index].write(if r#move.get_promotion_piece() == QUEEN { PIECE_VALUE[QUEEN] } else { -9999 });
+            move_scores[move_index].write(if r#move.get_promotion_piece() == QUEEN { PIECE_VALUES[QUEEN] } else { -9999 });
         } else {
             let square = r#move.get_to();
             let attacking_piece = context.board.get_piece(r#move.get_from());

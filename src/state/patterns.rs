@@ -1,12 +1,11 @@
+use super::*;
 use crate::utils::assert_fast;
 
-use super::*;
-
-pub const DIAGONAL_PATTERS: [u64; 64] = generate_diagonals();
-pub const JUMP_PATTERS: [u64; 64] = generate_jumps();
-pub const BOX_PATTERS: [u64; 64] = generate_boxes();
-pub const RAIL_PATTERS: [u64; 8] = generate_rails();
-pub const FRONT_PATTERS: [[u64; 64]; 2] = generate_fronts();
+pub const DIAGONAL_PATTERNS: [u64; 64] = generate_diagonals();
+pub const JUMP_PATTERNS: [u64; 64] = generate_jumps();
+pub const BOX_PATTERNS: [u64; 64] = generate_boxes();
+pub const RAIL_PATTERNS: [u64; 8] = generate_rails();
+pub const FRONT_PATTERNS: [[u64; 64]; 2] = generate_fronts();
 
 /// Gets a file pattern for the square specified by `square`.
 /// ```
@@ -53,7 +52,7 @@ pub fn get_rank(square: usize) -> u64 {
 /// ```
 pub fn get_diagonals(square: usize) -> u64 {
     assert_fast!(square < 64);
-    DIAGONAL_PATTERS[square]
+    DIAGONAL_PATTERNS[square]
 }
 
 /// Get a jumps pattern for the square specified by `square`.
@@ -69,7 +68,7 @@ pub fn get_diagonals(square: usize) -> u64 {
 /// ```
 pub fn get_jumps(square: usize) -> u64 {
     assert_fast!(square < 64);
-    JUMP_PATTERS[square]
+    JUMP_PATTERNS[square]
 }
 
 /// Get a box pattern for the square specified by `square`.
@@ -85,7 +84,7 @@ pub fn get_jumps(square: usize) -> u64 {
 /// ```
 pub fn get_box(square: usize) -> u64 {
     assert_fast!(square < 64);
-    BOX_PATTERS[square]
+    BOX_PATTERNS[square]
 }
 
 /// Get a rail pattern for the square specified by `file`.
@@ -101,7 +100,7 @@ pub fn get_box(square: usize) -> u64 {
 /// ```
 pub fn get_rail(file: usize) -> u64 {
     assert_fast!(file < 8);
-    RAIL_PATTERS[file]
+    RAIL_PATTERNS[file]
 }
 
 /// Get a front pattern for the square specified by `square`, from the `color` perspective.
@@ -118,7 +117,7 @@ pub fn get_rail(file: usize) -> u64 {
 pub fn get_front(color: usize, square: usize) -> u64 {
     assert_fast!(color < 2);
     assert_fast!(square < 64);
-    FRONT_PATTERS[color][square]
+    FRONT_PATTERNS[color][square]
 }
 
 /// Generates diagonal patterns for all squares.
