@@ -11,6 +11,7 @@ pub const CASTLING_HASHES: [u64; 4] = generate_castling_hashes();
 pub const EN_PASSANT_HASHES: [u64; 8] = generate_en_passant_hashes();
 pub const STM_HASH: u64 = generate_stm_hash();
 
+/// Generates a constant array of piece hashes.
 pub const fn generate_piece_hashes() -> [[[u64; 64]; 6]; 2] {
     let mut result = [[[0; 64]; 6]; 2];
     let mut seed = 584578;
@@ -36,6 +37,7 @@ pub const fn generate_piece_hashes() -> [[[u64; 64]; 6]; 2] {
     result
 }
 
+/// Generates a constant array of castling hashes.
 pub const fn generate_castling_hashes() -> [u64; 4] {
     let mut result = [0; 4];
     let mut seed = 8652221015076841656;
@@ -51,6 +53,7 @@ pub const fn generate_castling_hashes() -> [u64; 4] {
     result
 }
 
+/// Generates a constant array of en passant hashes.
 pub const fn generate_en_passant_hashes() -> [u64; 8] {
     let mut result = [0; 8];
     let mut seed = 13494315632332173397;
@@ -66,6 +69,7 @@ pub const fn generate_en_passant_hashes() -> [u64; 8] {
     result
 }
 
+/// Generates a constant array of side to move hashes.
 pub const fn generate_stm_hash() -> u64 {
     let seed = 13914115299070061278;
     let (value, _) = rand::rand(seed);

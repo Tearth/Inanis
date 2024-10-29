@@ -65,10 +65,8 @@ pub struct SearchResultLine {
 impl SearchContext {
     /// Constructs a new instance of [SearchContext] with parameters as follows:
     ///  - `board` - initial position of the board
-    ///  - `syzygy_enabled` - enables or disables Syzygy probing
-    ///  - `syzygy_probe_limit` - number of pieces for which the probing should be started
-    ///  - `syzygy_probe_depth` - minimal depth at which the probing will be started
-    ///  - `ttable`, `phtable`, `ktable`, `htable`, `cmtable` - hashtables used during search
+    ///  - `ttable` - transposition table
+    ///  - `phtable` - pawn hash table
     ///  - `abort_flag` - flag used to abort search from the outside of the context
     ///  - `ponder_flag` - flag used to change a search mode from pondering to the regular one
     pub fn new(board: Board, ttable: Arc<TTable>, phtable: Arc<PHTable>, abort_flag: Arc<AtomicBool>, ponder_flag: Arc<AtomicBool>) -> Self {

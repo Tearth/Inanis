@@ -16,6 +16,7 @@ pub const SEE_KING_VALUE: i8 = 60;
 
 static SEE_TABLE: OnceLock<Box<[[[i8; 256]; 256]; 6]>> = OnceLock::new();
 
+/// Initializes static exchange evaluation table.
 pub fn init() {
     const SIZE: usize = mem::size_of::<i8>();
     unsafe {

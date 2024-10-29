@@ -42,7 +42,7 @@ pub struct TTableResult {
 }
 
 impl TTable {
-    /// Constructs a new instance of [TranspositionTable] by allocating `size` bytes of memory.
+    /// Constructs a new instance of [TTable] by allocating `size` bytes of memory.
     pub fn new(size: usize) -> Self {
         const BUCKET_SIZE: usize = mem::size_of::<TTableBucket>();
         let mut hashtable = Self { table: Vec::with_capacity(size / BUCKET_SIZE) };
@@ -116,7 +116,7 @@ impl TTable {
     }
 
     /// Gets a wanted entry using `hash` to calculate an index of the bucket. This function takes care of converting
-    /// mate `score` using passed `ply`. Returns [None] if `hash` is incompatible with the stored key.
+    /// mate `score` using passed `ply`. Returns [None] if entry does not exists or `hash` is incompatible with the stored key.
     pub fn get(&self, hash: u64, ply: u16) -> Option<TTableResult> {
         let key = self.get_key(hash);
         let index = self.get_index(hash);
@@ -145,7 +145,7 @@ impl TTable {
     }
 
     /// Prefetches an entry using `hash` to calculate an index of the bucket. This function should be called early enough, so CPU has
-    /// the time to transfer data from the memory into cache.
+    /// enough time to transfer data from the memory into cache.
     pub fn prefetch(&self, hash: u64) {
         unsafe {
             let index = self.get_index(hash);
@@ -163,7 +163,7 @@ impl TTable {
     }
 
     /// Gets an entry's best move using `hash` to calculate an index of the bucket.
-    /// Returns [None] if `hash` is incompatible with the stored key.
+    /// Returns [None] if entry does not exists or `hash` is incompatible with the stored key.
     pub fn get_best_move(&self, hash: u64) -> Option<Move> {
         self.get(hash, 0).map(|entry| entry.best_move)
     }
@@ -236,7 +236,7 @@ impl TTable {
 }
 
 impl TTableEntry {
-    /// Loads and parses atomic value into a [TranspositionTableResult] struct.
+    /// Loads and parses atomic value into a [TTableResult] struct.
     pub fn get_data(&self) -> TTableResult {
         let key_data = self.key_data.load(Ordering::Relaxed);
 
@@ -267,7 +267,7 @@ impl TTableEntry {
 }
 
 impl TTableResult {
-    /// Constructs a new instance of [TranspositionTableResult] with stored `key`, `score`, `best_move`, `depth`, `r#type` and `age`.
+    /// Constructs a new instance of [TTableResult] with stored `key`, `score`, `best_move`, `depth`, `r#type` and `age`.
     pub fn new(key: u16, score: i16, best_move: Move, depth: i8, r#type: u8, age: u8) -> Self {
         Self { key, score, best_move, depth, r#type, age }
     }

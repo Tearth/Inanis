@@ -33,7 +33,7 @@ impl CMTable {
 }
 
 impl Default for CMTable {
-    /// Constructs a default instance of [CountermovesTable] by allocating `64 * 64 * mem::size_of::<CountermovesTableEntry>()`
+    /// Constructs a default instance of [CMTable] by allocating `64 * 64 * mem::size_of::<CMTableEntry>()`
     /// boxed array with zeroed elements.
     fn default() -> Self {
         const SIZE: usize = mem::size_of::<CMTableEntry>();

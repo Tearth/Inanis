@@ -253,9 +253,9 @@ pub fn get_next_move(context: &mut SearchContext, state: &mut MoveGenState) -> O
 
 /// Assigns capture scores for `moves` by filling `move_scores` array with `moves_count` length (starting from `start_index`), based on current `context`.
 /// If transposition table move is available, it's passed as `tt_move` too. Moves are prioritized as follows (from most important to the less ones):
-///  - for transposition table move, assign [MOVE_ORDERING_HASH_MOVE]
-///  - for every positive capture, assign SEE score + [MOVE_ORDERING_WINNING_CAPTURES_OFFSET]
-///  - for every negative capture, assign SEE score + [MOVE_ORDERING_LOSING_CAPTURES_OFFSET]
+///  - for transposition table move, assign [MOVEORD_HASH_MOVE]
+///  - for every positive capture, assign SEE score + [MOVEORD_WINNING_CAPTURES_OFFSET]
+///  - for every negative capture, assign SEE score + [MOVEORD_LOSING_CAPTURES_OFFSET]
 fn assign_capture_scores(context: &SearchContext, state: &mut MoveGenState) {
     assert_fast!(state.moves_count < MAX_MOVES_COUNT);
 
@@ -296,12 +296,12 @@ fn assign_capture_scores(context: &SearchContext, state: &mut MoveGenState) {
 
 /// Assigns quiet scores for `moves` by filling `move_scores` array with `moves_count` length (starting from `start_index`), based on current `context`.
 /// If transposition table move is available, it's passed as `tt_move` too. Moves are prioritized as follows (from most important to the less ones):
-///  - for transposition table move, assign [MOVE_ORDERING_HASH_MOVE]
-///  - for every promotion (excluding these with capture), assign [MOVE_ORDERING_QUEEN_PROMOTION], [MOVE_ORDERING_ROOK_PROMOTION],
-///    [MOVE_ORDERING_BISHOP_PROMOTION] or [MOVE_ORDERING_KNIGHT_PROMOTION]
-///  - for every move found in killer table, assign [MOVE_ORDERING_KILLER_MOVE_1] or [MOVE_ORDERING_KILLER_MOVE_2]
-///  - for every countermove, assign [MOVE_ORDERING_COUNTERMOVE]
-///  - for every castling, assign [MOVE_ORDERING_CASTLING]
+///  - for transposition table move, assign [MOVEORD_HASH_MOVE]
+///  - for every promotion (excluding these with capture), assign [MOVEORD_QUEEN_PROMOTION], [MOVEORD_ROOK_PROMOTION],
+///    [MOVEORD_BISHOP_PROMOTION] or [MOVEORD_KNIGHT_PROMOTION]
+///  - for every move found in killer table, assign [MOVEORD_KILLER_MOVE_1] or [MOVEORD_KILLER_MOVE_2]
+///  - for every countermove, assign [MOVEORD_COUNTERMOVE]
+///  - for every castling, assign [MOVEORD_CASTLING]
 ///  - for every quiet move which didn't fit in other categories, assign score from history table
 fn assign_quiet_scores(context: &SearchContext, state: &mut MoveGenState, start_index: usize) {
     assert_fast!(start_index < MAX_MOVES_COUNT);

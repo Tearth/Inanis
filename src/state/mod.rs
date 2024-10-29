@@ -1,3 +1,5 @@
+use std::ops::RangeInclusive;
+
 pub mod movegen;
 pub mod movescan;
 pub mod patterns;
@@ -182,9 +184,9 @@ pub const F8_BB: u64 = 1 << F8;
 pub const G8_BB: u64 = 1 << G8;
 pub const H8_BB: u64 = 1 << H8;
 
-pub const ALL_COLORS: std::ops::RangeInclusive<usize> = 0..=1;
-pub const ALL_PHASES: std::ops::RangeInclusive<usize> = 0..=1;
-pub const ALL_PIECES: std::ops::RangeInclusive<usize> = 0..=5;
-pub const ALL_FILES: std::ops::RangeInclusive<usize> = 0..=7;
-pub const ALL_RANKS: std::ops::RangeInclusive<usize> = 0..=7;
-pub const ALL_SQUARES: std::ops::RangeInclusive<usize> = 0..=63;
+pub const ALL_COLORS: RangeInclusive<usize> = 0..=1;
+pub const ALL_PHASES: RangeInclusive<usize> = 0..=1;
+pub const ALL_PIECES: RangeInclusive<usize> = 0..=5;
+pub const ALL_FILES: RangeInclusive<usize> = 0..=7;
+pub const ALL_RANKS: RangeInclusive<usize> = 0..=7;
+pub const ALL_SQUARES: RangeInclusive<usize> = 0..=63;

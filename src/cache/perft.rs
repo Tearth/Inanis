@@ -68,7 +68,7 @@ impl PerftHashTable {
     }
 
     /// Gets a wanted entry from the specified `depth` using `hash` to calculate an index of the bucket.
-    /// Returns [None] if `hash` is incompatible with the stored key.
+    /// Returns [None] if entry does not exists or `hash` is incompatible with the stored key.
     pub fn get(&self, hash: u64, depth: u8) -> Option<PerftHashTableResult> {
         let index = self.get_index(hash);
         assert_fast!(index < self.table.len());

@@ -22,7 +22,7 @@ pub struct PHTableResult {
 }
 
 impl PHTable {
-    /// Constructs a new instance of [PawnHashTable] by allocating `size` bytes of memory.
+    /// Constructs a new instance of [PHTable] by allocating `size` bytes of memory.
     pub fn new(size: usize) -> Self {
         const SIZE: usize = mem::size_of::<PHTableEntry>();
         let mut hashtable = Self { table: Vec::with_capacity(size / SIZE) };
@@ -43,7 +43,8 @@ impl PHTable {
         self.table[index].set_data(key, score_opening, score_ending);
     }
 
-    /// Gets a wanted entry using `hash` to calculate an index. Returns [None] if `hash` is incompatible with the stored key.
+    /// Gets a wanted entry using `hash` to calculate an index. Returns [None] if entry does not exists
+    /// or `hash` is incompatible with the stored key.
     pub fn get(&self, hash: u64) -> Option<PHTableResult> {
         let index = self.get_index(hash);
         assert_fast!(index < self.table.len());
@@ -83,7 +84,7 @@ impl PHTable {
 }
 
 impl PHTableEntry {
-    /// Loads and parses atomic value into a [PawnHashTableResult] struct.
+    /// Loads and parses atomic value into a [PHTableResult] struct.
     pub fn get_data(&self) -> PHTableResult {
         let key = self.key.load(Ordering::Relaxed);
         let score_opening = self.score_opening.load(Ordering::Relaxed);
@@ -101,14 +102,14 @@ impl PHTableEntry {
 }
 
 impl Default for PHTableEntry {
-    /// Constructs a default instance of [PawnHashTableEntry] with zeroed elements.
+    /// Constructs a default instance of [PHTableEntry] with zeroed elements.
     fn default() -> Self {
         PHTableEntry { key: AtomicU16::new(0), score_opening: AtomicI16::new(0), score_ending: AtomicI16::new(0) }
     }
 }
 
 impl PHTableResult {
-    /// Constructs a new instance of [PawnHashTableResult] with stored `key`, `score_opening` and `score_ending`.
+    /// Constructs a new instance of [PHTableResult] with stored `key`, `score_opening` and `score_ending`.
     pub fn new(key: u16, score_opening: i16, score_ending: i16) -> Self {
         Self { key, score_opening, score_ending }
     }

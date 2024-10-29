@@ -94,7 +94,6 @@ impl Board {
         index = movescan::scan_piece_moves::<ROOK, CAPTURES>(self, moves, index, evasion_mask);
         index = movescan::scan_piece_moves::<QUEEN, CAPTURES>(self, moves, index, evasion_mask);
         index = movescan::scan_piece_moves::<KING, CAPTURES>(self, moves, index, evasion_mask);
-
         index
     }
 
@@ -102,22 +101,24 @@ impl Board {
     /// index of the first free slot. Use `evasion_mask` with value different than `u64::MAX` to restrict generator to the specified squares (useful during checks).
     pub fn get_all_moves(&self, moves: &mut Moves, evasion_mask: u64) -> usize {
         let mut index = 0;
+
         index = self.get_moves::<true>(moves, index, evasion_mask);
         index = self.get_moves::<false>(moves, index, evasion_mask);
-
         index
     }
 
     /// Makes `r#move`, with the assumption that it's perfectly valid at the current position (otherwise, internal state can be irreversibly corrupted).
     ///
     /// Steps of making a move:
-    ///  - preserve halfmove clock, castling rights, en passant bitboard, board hash and pawn hash
+    ///  - preserve board state
     ///  - update piece bitboards
     ///  - update board hash and pawn hash
-    ///  - update en passant bitboard if needed
-    ///  - update castling rights if needed
-    ///  - increase fullmove number if needed
-    ///  - increase halfmove clock if needed
+    ///  - update en passant bitboard
+    ///  - update castling rights
+    ///  - update piece-square table scores
+    ///  - update pawn attacks
+    ///  - increase fullmove number
+    ///  - increase halfmove clock
     ///  - switch active color
     pub fn make_move(&mut self, r#move: Move) {
         assert_fast!(!r#move.is_empty());
@@ -351,10 +352,10 @@ impl Board {
     ///
     /// Steps of undoing a move:
     ///  - update piece bitboards
-    ///  - decrease fullmove number if needed
-    ///  - restore halfmove clock if needed
+    ///  - update pawn attacks
+    ///  - decrease fullmove number
     ///  - switch active color
-    ///  - restore halfmove clock, castling rights, en passant bitboard, board hash and pawn hash
+    ///  - restore board state
     pub fn undo_move(&mut self, r#move: Move) {
         assert_fast!(!r#move.is_empty());
 
@@ -429,9 +430,9 @@ impl Board {
     /// Makes a null move, which is basically a switch of the active color with preservation of the internal state.
     ///
     /// Steps of making a null move:
-    ///  - preserve halfmove clock, castling rights, en passant bitboard, board hash and pawn hash
-    ///  - update en passant bitboard if needed
-    ///  - increase fullmove number if needed
+    ///  - preserve board state
+    ///  - update en passant bitboard
+    ///  - increase fullmove number
     ///  - increase null moves count
     ///  - switch active color
     pub fn make_null_move(&mut self) {
@@ -454,10 +455,10 @@ impl Board {
     /// Undoes a null move, which is basically a switch of the active color with restoring of the internal state.
     ///
     /// Steps of undoing a null move:
-    ///  - decrease fullmove number if needed
+    ///  - decrease fullmove number
     ///  - switch active color
     ///  - decrease null moves count
-    ///  - restore halfmove clock, castling rights, en passant bitboard, board hash and pawn hash
+    ///  - restore board state
     pub fn undo_null_move(&mut self) {
         if self.stm == WHITE {
             self.fullmove_number -= 1;
@@ -468,12 +469,12 @@ impl Board {
         self.pop_state();
     }
 
-    /// Preserves halfmove clock, castling rights, en passant bitboard, board hash, pawn hash and captured piece on the stack
+    /// Preserves internal board state.
     pub fn push_state(&mut self) {
         self.state_stack.push(self.state);
     }
 
-    /// Restores halfmove clock, castling rights, en passant bitboard, board hash, pawn hash and captured piece from the stack
+    /// Restores internal board state.
     pub fn pop_state(&mut self) {
         unsafe {
             self.state = self.state_stack.pop().unwrap_unchecked();
@@ -611,7 +612,7 @@ impl Board {
         piece as usize
     }
 
-    /// Gets piece's color on the square specified by `square`. Returns `u8::MAX` if there is no piece there.
+    /// Gets piece's color on the square specified by `square`. Returns `usize::MAX` if there is no piece there.
     pub fn get_piece_color(&self, square: usize) -> usize {
         assert_fast!(square < 64);
 
@@ -717,7 +718,7 @@ impl Board {
         };
     }
 
-    /// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position, using `phtable` to store pawn
+    /// Runs full evaluation (material, piece-square tables, mobility, pawn structure and safety) of the current position, using `phtable` to store pawn
     /// evaluations and `stats` to gather diagnostic data. Returns score from the `color` perspective (more than 0 when advantage, less than 0 when disadvantage).
     pub fn evaluate(&self, color: usize, phtable: &PHTable, stats: &mut SearchStats) -> i16 {
         assert_fast!(color < 2);
@@ -737,7 +738,7 @@ impl Board {
         sign * eval.taper_score(self.game_phase)
     }
 
-    /// Runs full evaluation (material, piece-square tables, mobility, pawns structure and safety) of the current position.
+    /// Runs full evaluation (material, piece-square tables, mobility, pawn structure and safety) of the current position.
     /// Returns score from the `color` perspective (more than 0 when advantage, less than 0 when disadvantage).
     pub fn evaluate_without_cache(&self, color: usize) -> i16 {
         assert_fast!(color < 2);
@@ -757,7 +758,7 @@ impl Board {
         sign * eval.taper_score(self.game_phase)
     }
 
-    /// Runs fast evaluations, considering only material and piece-square tables. Returns score from the `color` perspective (more than 0 when
+    /// Runs fast evaluations, considering only material, piece-square tables and pawn structure. Returns score from the `color` perspective (more than 0 when
     /// advantage, less than 0 when disadvantage).
     pub fn evaluate_fast(&self, color: usize, phtable: &PHTable, stats: &mut SearchStats) -> i16 {
         assert_fast!(color < 2);
@@ -772,7 +773,7 @@ impl Board {
         sign * eval.taper_score(self.game_phase)
     }
 
-    /// Recalculates incremental values (material and piece-square tables) entirely.
+    /// Recalculates incremental values entirely.
     pub fn recalculate_incremental_values(&mut self) {
         pst::recalculate_incremental_values(self);
     }
@@ -811,7 +812,7 @@ impl Board {
         self.state.halfmove_clock >= 100
     }
 
-    /// Checks if there's an inssuficient material draw:
+    /// Checks if there's an insufficient material draw:
     ///  - King vs King
     ///  - King + Knight/Bishop vs King
     ///  - King + Bishop (same color) vs King + Bishop (same color)
@@ -941,7 +942,7 @@ impl Display for Board {
 }
 
 impl BoardState {
-    /// Constructs a new instance of [BoardState] with stored `halfmove_clock`, `castling_rights`, `en_passant`, `hash`, `pawn_hash` and `captured_piece`.
+    /// Constructs a new instance of [BoardState] with stored `halfmove_clock`, `castling_rights`, `en_passant`, `hash`, `pawn_hash`, `captured_piece` and `pst_score`.
     pub fn new(halfmove_clock: u16, castling_rights: u8, en_passant: u64, hash: u64, pawn_hash: u64, captured_piece: u8, pst_score: PackedEval) -> BoardState {
         BoardState { halfmove_clock, castling_rights, en_passant, hash, pawn_hash, captured_piece, pst_score }
     }

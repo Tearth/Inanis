@@ -71,7 +71,7 @@ pub fn recalculate_incremental_values(board: &mut Board) {
     board.state.pst_score = score;
 }
 
-/// Gets a PST value for the specified `color`, `piece`, `phase` and `square`.
+/// Gets a PST value for the specified `color`, `piece`, `phase` and `square` (relative perspective).
 pub fn get_pst_value(piece: usize, king_square: usize, square: usize) -> PackedEval {
     assert_fast!(piece < 6);
     assert_fast!(king_square < 64);
@@ -91,7 +91,7 @@ pub fn get_pst_value(piece: usize, king_square: usize, square: usize) -> PackedE
     pst[KING_BUCKETS[63 - king_square]][63 - square]
 }
 
-/// Gets coefficients of piece-square table for `piece` on `board` and inserts them into `coefficients`.
+/// Gets coefficients of piece-square table for `piece` on `board` and inserts them into `coeffs`.
 /// Similarly, their indices (starting from `index`) are inserted into `indices`.
 #[cfg(feature = "dev")]
 pub fn get_coeffs(board: &Board, piece: usize, index: &mut u16, coeffs: &mut Vec<TunerCoeff>, indices: &mut Vec<u16>) {
@@ -144,7 +144,7 @@ pub fn get_coeffs(board: &Board, piece: usize, index: &mut u16, coeffs: &mut Vec
     }
 }
 
-/// Gets coefficients for a specific feature (`white_data`/`black_data`/`max`) and inserts them into `coefficients`.
+/// Gets coefficients for a specific feature (`white_data`/`black_data`/`max`) and inserts them into `coeffs`.
 /// Similarly, their indices (starting from `index`) are inserted into `indices`.
 #[cfg(feature = "dev")]
 pub fn get_array_coeffs(white_data: u8, black_data: u8, max: u8, index: &mut u16, coeffs: &mut Vec<TunerCoeff>, indices: &mut Vec<u16>) {

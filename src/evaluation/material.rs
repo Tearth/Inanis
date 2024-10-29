@@ -8,7 +8,7 @@ use crate::utils::bithelpers::BitHelpers;
 use crate::tuning::tuner::TunerCoeff;
 
 /// Evaluates material on the `board` and returns score from the white color perspective (more than 0 when advantage, less than 0 when disadvantage).
-/// This simple evaluator sums all scores of all present pieces using incremental counters in `board`, without considering the current game phase.
+/// The piece values themself are included in PST so it's no longer evaluated here, instead other features like bishop pair are processed.
 pub fn evaluate(board: &Board) -> PackedEval {
     let white_has_bishop_pair = if board.pieces[WHITE][BISHOP].bit_count() == 2 { 1 } else { 0 };
     let black_has_bishop_pair = if board.pieces[BLACK][BISHOP].bit_count() == 2 { 1 } else { 0 };
@@ -16,7 +16,7 @@ pub fn evaluate(board: &Board) -> PackedEval {
     (white_has_bishop_pair - black_has_bishop_pair) * params::BISHOP_PAIR
 }
 
-/// Gets coefficients of material for `board` and inserts them into `coefficients`. Similarly, their indices (starting from `index`) are inserted into `indices`.
+/// Gets coefficients of material for `board` and inserts them into `coeffs`. Similarly, their indices (starting from `index`) are inserted into `indices`.
 #[cfg(feature = "dev")]
 pub fn get_coeffs(board: &Board, index: &mut u16, coeffs: &mut Vec<TunerCoeff>, indices: &mut Vec<u16>) {
     let mut data = [

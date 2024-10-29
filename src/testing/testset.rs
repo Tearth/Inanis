@@ -29,6 +29,7 @@ impl TestPosition {
 
 /// Runs a test by performing a fixed-`depth` search for the positions loaded from the `epd_filename` file, using hashtable with
 /// size specified in `ttable_size`. To classify the test as successful, the last iteration has to return the correct best move.
+/// Multithreading is supported by `threads_count`.
 pub fn run(epd_filename: &str, depth: i8, ttable_size: usize, threads_count: usize) {
     println!("Loading EPD file...");
     let mut positions = match load_positions(epd_filename) {
@@ -114,8 +115,8 @@ pub fn run(epd_filename: &str, depth: i8, ttable_size: usize, threads_count: usi
     );
 }
 
-/// Loads positions from the `epd_filename` and parses them into a list of [TestPosition]. Returns [Err] with a proper error message if the
-/// file couldn't be parsed.
+/// Loads positions from the `epd_filename` and parses them into a list of [TestPosition].
+/// Returns [Err] with a proper error message if the file couldn't be parsed.
 fn load_positions(epd_filename: &str) -> Result<Vec<TestPosition>, String> {
     let mut positions = Vec::new();
     let file = match File::open(epd_filename) {

@@ -67,7 +67,7 @@ impl KTable {
 }
 
 impl Default for KTable {
-    /// Constructs a default instance of [KillersTable] by allocating `KILLER_SLOTS * MAX_DEPTH * mem::size_of::<KillersTableEntry>()`
+    /// Constructs a default instance of [KTable] by allocating `KILLER_SLOTS * MAX_DEPTH * mem::size_of::<KTableEntry>()`
     /// boxed array with zeroed elements.
     fn default() -> Self {
         const SIZE: usize = mem::size_of::<KTableEntry>();

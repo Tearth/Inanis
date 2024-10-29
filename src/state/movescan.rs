@@ -99,10 +99,12 @@ impl Move {
         }
     }
 
+    /// Checks if there is any data present or it's just a default move.
     pub fn is_some(&self) -> bool {
         self.data != 0
     }
 
+    /// Checks if there is any data present or it's just a default move.
     pub fn is_empty(&self) -> bool {
         self.data == 0
     }
@@ -455,8 +457,7 @@ pub fn scan_piece_moves<const PIECE: usize, const CAPTURES: bool>(board: &Board,
     index
 }
 
-/// Gets `PIECE` mobility (by counting all possible moves at the position specified by `board`) with `color` and increases `dangered_king_squares` if the enemy
-/// king is near to the squares included in the mobility.
+/// Gets `PIECE` mobility (by counting all possible moves at the position specified by `board`) with `color` and fills `aux` with additional data.
 pub fn get_piece_mobility<const PIECE: usize>(board: &Board, color: usize, aux: &mut EvalAux) -> PieceMobility {
     assert_fast!(color < 2);
 

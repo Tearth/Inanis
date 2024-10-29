@@ -625,9 +625,10 @@ fn handle_testset(input: Vec<&str>) {
     testset::run(input[1], depth, ttable_size * 1024 * 1024, threads_count);
 }
 
-/// Handles `tuner [epd] [output] [lock_material] [randomize] [threads_count]` command by running the evaluation parameters tuner. The input file is specified by `epd`
-/// file with a list of positions and their expected results, and the `output` directory is used to store generated Rust sources with the optimized values. Use
-/// `lock_material` to disable tuner for piece values, and `randomize` to initialize evaluation parameters with random values. Multithreading is supported by `threads_count`.
+/// Handles `tuner [epd] [output] [randomize] [k] [wdl_ratio] [threads_count]` command by running the evaluation parameters tuner. The input file is specified by `epd`
+/// file with a list of positions and their expected results, and the `output` directory is used to store generated Rust sources with the optimized values.
+/// Use `randomize` to initialize evaluation parameters with random values, `k` to set scaling constant and `wdl_ratio` to set the ratio between WDL and eval.
+/// Multithreading is supported by `threads_count`.
 #[cfg(feature = "dev")]
 fn handle_tuner(input: Vec<&str>) {
     use crate::tuning::tuner;
@@ -788,7 +789,7 @@ fn handle_quit() {
     process::exit(0);
 }
 
-/// Handles unknown command by printing warning message.
+/// Handles unknown command by printing an error.
 fn handle_unknown_command() {
     println!("Unknown command, type \"help\" to get a list of available ones");
 }

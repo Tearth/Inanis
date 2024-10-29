@@ -25,8 +25,7 @@ pub struct PieceMobility {
 
 /// Evaluates mobility and part of the king safety on the `board` and returns score from the white color perspective (more than 0 when advantage,
 /// less than 0 when disadvantage). This evaluator does two things at once: first, counts all possible moves of knight, bishop, rook, queen
-/// (pawns and king are too slow and not very important), and second, sums how many squares around both kings are dangered by enemy side
-/// (`dangered_white_king_squares` and `dangered_black_king_squares`). This is used in the safety evaluator, to prevent calculating the same thing twice.
+/// (pawns and king are too slow and not very important), and second, fills `white_aux` and `black_aux` with additional data used in other evaluators.
 pub fn evaluate(board: &Board, white_aux: &mut EvalAux, black_aux: &mut EvalAux) -> PackedEval {
     let mut result = PackedEval::default();
     let white_data = get_mobility_data(board, WHITE, white_aux);
@@ -45,6 +44,7 @@ pub fn evaluate(board: &Board, white_aux: &mut EvalAux, black_aux: &mut EvalAux)
     result
 }
 
+/// Gets mobility data for `board`, `color` and fills `aux` with additional data used in other evaluators.
 fn get_mobility_data(board: &Board, color: usize, aux: &mut EvalAux) -> MobilityData {
     assert_fast!(color < 2);
 
@@ -56,7 +56,7 @@ fn get_mobility_data(board: &Board, color: usize, aux: &mut EvalAux) -> Mobility
     }
 }
 
-/// Gets coefficients of mobility for `board` and inserts them into `coefficients`. Similarly, their indices (starting from `index`) are inserted into `indices`.
+/// Gets coefficients of mobility for `board` and inserts them into `coeffs`. Similarly, their indices (starting from `index`) are inserted into `indices`.
 /// Some additional data is also saved in `white_aux` and `black_aux` for further processing.
 #[cfg(feature = "dev")]
 pub fn get_coeffs(board: &Board, white_aux: &mut EvalAux, black_aux: &mut EvalAux, index: &mut u16, coeffs: &mut Vec<TunerCoeff>, indices: &mut Vec<u16>) {

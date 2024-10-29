@@ -124,8 +124,8 @@ pub fn run() -> BenchmarkResult {
 
         let board = Board::new_from_fen(fen).unwrap();
         let mut context = SearchContext::new(board, ttable.clone(), phtable.clone(), abort_flag.clone(), ponder_flag.clone());
-        context.forced_depth = 16;
 
+        context.forced_depth = 16;
         context.by_ref().last().unwrap();
 
         benchmark_result.nodes_count += context.stats.nodes_count;

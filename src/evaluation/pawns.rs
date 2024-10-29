@@ -123,7 +123,7 @@ fn get_pawns_data(board: &Board, color: usize) -> PawnsData {
     PawnsData { doubled_pawns, isolated_pawns, chained_pawns, passed_pawns, pawn_shield, opened_files }
 }
 
-/// Gets coefficients of pawn structure for `board` and inserts them into `coefficients`. Similarly, their indices (starting from `index`) are inserted into `indices`.
+/// Gets coefficients of pawn structure for `board` and inserts them into `coeffs`. Similarly, their indices (starting from `index`) are inserted into `indices`.
 #[cfg(feature = "dev")]
 pub fn get_coeffs(board: &Board, index: &mut u16, coeffs: &mut Vec<TunerCoeff>, indices: &mut Vec<u16>) {
     let white_pawns_data = get_pawns_data(board, WHITE);

@@ -6,13 +6,13 @@ pub trait MinMax {
 macro_rules! min_max {
     ($type:ident) => {
         impl MinMax for $type {
-            /// Gets minimal possible value for the type.
+            /// Gets a minimal possible value for the type.
             #[inline(always)]
             fn min() -> $type {
                 $type::MIN
             }
 
-            /// Gets maximal possible value for the type.
+            /// Gets a maximal possible value for the type.
             #[inline(always)]
             fn max() -> $type {
                 $type::MAX

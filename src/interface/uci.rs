@@ -49,6 +49,7 @@ pub struct UciOption {
 }
 
 impl UciOption {
+    /// Constructs a new instance of [UciOption] with `order`, `r#type`, `min`, `max` and `default`.
     pub fn new<T>(order: u32, r#type: &str, min: T, max: T, default: T) -> Self
     where
         T: ToString,
@@ -56,6 +57,7 @@ impl UciOption {
         Self { order, r#type: r#type.to_string(), min: min.to_string(), max: max.to_string(), default: default.to_string(), value: default.to_string() }
     }
 
+    /// Constructs a new instance of [UciOption] with `order` and `default`, where `min` and `max` are set to make the biggest range possible.
     pub fn new_wide<T>(order: u32, default: T) -> Self
     where
         T: ToString + MinMax,
@@ -72,7 +74,7 @@ impl UciOption {
 }
 
 impl Default for UciState {
-    /// Constructs a default instance of [UciState] with zeroed elements and hashtables with their default sizes.
+    /// Constructs a default instance of [UciState] with zeroed elements and hashtables with their default sizes (1 MB).
     fn default() -> Self {
         let abort_flag = Arc::new(AtomicBool::new(false));
         let ponder_flag = Arc::new(AtomicBool::new(false));
@@ -176,7 +178,6 @@ pub fn run() {
             _ => panic_fast!("Invalid value: option.r#type={}", option.r#type),
         };
     }
-
     drop(options_lock);
 
     println!("uciok");
@@ -212,7 +213,7 @@ fn handle_debug(params: &[String], state: &mut UciState) {
         return;
     }
 
-    state.debug_mode = matches!(params[1].as_str(), "on");
+    state.debug_mode = params[1].as_str() == "on";
 }
 
 /// Handles non-standard `fen` command by printing FEN of the current position.
@@ -305,7 +306,6 @@ fn handle_go(params: &[String], state: &UciState) {
             }
             "searchmoves" => {
                 let keywords = ["wtime", "btime", "winc", "binc", "depth", "nodes", "movetime", "movestogo", "infinite", "searchmoves", "ponder"];
-
                 while let Some(value) = iter.peek() {
                     if keywords.contains(&value.as_str()) {
                         break;
@@ -547,7 +547,7 @@ fn handle_go(params: &[String], state: &UciState) {
     });
 }
 
-/// Handles `isready` command by waiting for the busy flag, and then printing response as fast as possible.
+/// Handles `isready` command by printing response as fast as possible.
 fn handle_isready() {
     println!("readyok");
 }
@@ -569,7 +569,6 @@ fn handle_position(params: &[String], state: &UciState) {
     }
 
     let mut context_lock = state.context.write().unwrap();
-
     context_lock.board = match params[1].as_str() {
         "fen" => {
             let fen = params[2..].join(" ");
@@ -599,8 +598,8 @@ fn handle_position(params: &[String], state: &UciState) {
     };
 }
 
-/// Handles `setoption [name] value [value]` command by creating or overwriting a `name` option with the specified `value`. Recreates tables if `Hash` or
-/// `Clear Hash` options are modified.
+/// Handles `setoption [name] value [value]` command by creating or overwriting a `name` option with the specified `value`.
+/// Recreates tables if `Hash` or `Clear Hash` options are modified.
 fn handle_setoption(params: &[String], state: &mut UciState) {
     let options_arc = state.options.clone();
     let mut options_lock = options_arc.write().unwrap();
@@ -693,7 +692,6 @@ fn handle_quit() {
 fn recreate_state_tables(state: &mut UciState) {
     let mut context_lock = state.context.write().unwrap();
     let options_lock = state.options.read().unwrap();
-
     let ttable_size = options_lock["Hash"].value.parse::<usize>().unwrap();
 
     context_lock.ttable = Arc::new(TTable::new(ttable_size * 1024 * 1024));

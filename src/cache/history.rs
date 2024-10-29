@@ -73,7 +73,7 @@ impl HTable {
 }
 
 impl Default for HTable {
-    /// Constructs a default instance of [HistoryTable] by allocating `64 * 64 * mem::size_of::<HistoryTableEntry>()`
+    /// Constructs a default instance of [HTable] by allocating `64 * 64 * mem::size_of::<HTableEntry>()`
     /// boxed array with zeroed elements.
     fn default() -> Self {
         const SIZE: usize = mem::size_of::<HTableEntry>();

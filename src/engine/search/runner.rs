@@ -431,7 +431,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
 }
 
 /// The main idea of the check extensions is to extend search when there's a check. Because it's a forced move, we assume that a lot is going on
-/// in that branch and it's a good idea to search it deeper so we avoid horizon effects.
+/// in that branch and it's a good idea to search deeper so we avoid horizon effects.
 ///
 /// Conditions:
 ///  - friendly king is checked
@@ -439,7 +439,7 @@ fn check_extensions_can_be_applied(friendly_king_checked: bool) -> bool {
     friendly_king_checked
 }
 
-/// Gets the check extensions, for now it's constant 1.
+/// Gets the check extension, for now it's constant 1.
 fn check_extensions_get_e() -> i8 {
     1
 }
@@ -454,7 +454,7 @@ fn iir_can_be_applied(context: &mut SearchContext, depth: i8, hash_move: Move) -
     depth >= param!(context.params.iir_min_depth) && hash_move == Move::default()
 }
 
-/// Gets the internal iterative depth reduction, called R, based on `depth`. The further from the horizon we are, the more reduction will be applied.
+/// Gets the internal iterative depth reduction, based on `depth`. The further from the horizon we are, the more reduction will be applied.
 fn iir_get_r(_context: &mut SearchContext, _depth: i8) -> i8 {
     /*let reduction_base = parameter!(context.params.iir_reduction_base);
     let min_depth = parameter!(context.params.iir_min_depth);
@@ -466,7 +466,7 @@ fn iir_get_r(_context: &mut SearchContext, _depth: i8) -> i8 {
     1
 }
 
-/// The main idea of the razoring is to detect and prune all nodes, which (based on lazy evaluation) are hopeless compared to the current alpha and
+/// The main idea of the razoring is to detect and prune all nodes, which (based on static evaluation) are hopeless compared to the current alpha and
 /// the chance to improve the score is too small to spend time here. To make it more safe and not to skip positions where we're somewhere in the
 /// middle of capture sequence, there's the quiescence search performed to verify if the final score is still below alpha - margin.
 ///
@@ -492,7 +492,7 @@ fn razoring_get_margin(context: &mut SearchContext, depth: i8) -> i16 {
     depth_margin_base + ((depth - min_depth) as i16) * depth_margin_multiplier
 }
 
-/// The main idea of the static null move pruning (also called as reverse futility pruning) is to prune all nodes, which (based on lazy evaluation) are too
+/// The main idea of the static null move pruning (also called as reverse futility pruning) is to prune all nodes, which (based on static evaluation) are too
 /// good compared to the current beta, and will very likely be a cut-node. To save time, we skip move loop entirely and return beta + some margin score.
 /// The concept is very similar to null move pruning, but without performing any search.
 ///
@@ -537,7 +537,7 @@ fn nmp_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, be
     !PV && depth >= min_depth && context.board.game_phase > min_game_phase && !is_score_near_checkmate(beta) && !friendly_king_checked && allow_null_move
 }
 
-/// Gets the null move pruning depth reduction, called R, based on `depth`. The further from the horizon we are, the more reduction will be applied.
+/// Gets the null move pruning depth reduction, based on `depth`. The further from the horizon we are, the more reduction will be applied.
 fn nmp_get_r(context: &mut SearchContext, depth: i8) -> i8 {
     let depth_base = param!(context.params.nmp_depth_base);
     let depth_divider = param!(context.params.nmp_depth_divider);
@@ -546,7 +546,7 @@ fn nmp_get_r(context: &mut SearchContext, depth: i8) -> i8 {
 }
 
 /// The main idea of the late move pruning is to prune all nodes, which are near the horizon and were scored low by the history table.
-/// We assume here, that there's a little chance that move being near the end of the list will improve score, so there's no point of spending time here.
+/// We assume here that there's a little chance that move being near the end of the list will improve score, so no point of spending time here.
 ///
 /// Conditions:
 ///  - only non-PV nodes
@@ -596,7 +596,7 @@ fn lmr_can_be_applied<const PV: bool>(
     depth >= min_depth && move_index >= min_move_index && move_score <= max_score && r#move.is_quiet() && !friendly_king_checked && !enemy_king_checked
 }
 
-/// Gets the late move depth reduction, called R, based on `move_index`. The lower the move was scored, the larger reduction will be returned.
+/// Gets the late move depth reduction, based on `move_index`. The lower the move was scored, the larger reduction will be returned.
 fn lmr_get_r<const PV: bool>(context: &mut SearchContext, move_index: usize) -> i8 {
     let (max, r) = if PV {
         let max_reduction = param!(context.params.lmr_pv_max_reduction);

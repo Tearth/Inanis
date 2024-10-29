@@ -55,10 +55,12 @@ impl TunerPosition {
         Self { eval, result_phase: (result << 5) | phase, base_index, coeffs_count }
     }
 
+    /// Gets result of the position (0 = white won, 1 = draw, 2 = black won).
     pub fn get_result(&self) -> u8 {
         self.result_phase >> 5
     }
 
+    // Gets game phase of the position.
     pub fn get_phase(&self) -> u8 {
         self.result_phase & 0x1f
     }
@@ -72,11 +74,12 @@ impl TunerParameter {
 }
 
 impl TunerCoeff {
-    /// Constructs a new instance of [TunerCoefficient] with stored `value`, `phase` and `index`.
+    /// Constructs a new instance of [TunerCoeff] with stored `value` and `phase`.
     pub fn new(value: i8, phase: usize) -> Self {
         Self { data: (((value + 32) as u8) << 1) | (phase as u8) }
     }
 
+    /// Gets value and game phase as a tuple.
     pub fn get_data(&self) -> (i8, usize) {
         ((self.data as i8 >> 1) - 32, (self.data & 1) as usize)
     }
@@ -243,9 +246,11 @@ pub fn run(epd_filename: &str, output_directory: &str, random_values: bool, k: O
     }
 }
 
+/// Calculates scaling constant `k` that minimizes evaluation error for `positions`, `coeffs`, `indices`, `weights` and `wdl_ratio`.
+/// Multithreading is supported by `threads_count`.
 fn calculate_k(positions: &[TunerPosition], coeffs: &[TunerCoeff], indices: &[u16], weights: &[f32], wdl_ratio: f32, threads_count: usize) -> f32 {
     let mut k = 0.0;
-    let mut last_error = calculate_error(positions, coeffs, indices, weights, k, wdl_ratio, threads_count);
+    let mut last_error = f32::MAX;
 
     loop {
         let error = calculate_error(positions, coeffs, indices, weights, k + K_STEP, wdl_ratio, threads_count);
@@ -260,7 +265,7 @@ fn calculate_k(positions: &[TunerPosition], coeffs: &[TunerCoeff], indices: &[u1
     k
 }
 
-/// Calculates an error by evaluating all loaded positions with the currently set evaluation parameters. Multithreading is supported by `threads_count`.
+/// Calculates an error for `positions`, `coeffs`, `indices`, `weights`, scaling constant `k` and `wdl_ratio`. Multithreading is supported by `threads_count`.
 fn calculate_error(positions: &[TunerPosition], coeffs: &[TunerCoeff], indices: &[u16], weights: &[f32], k: f32, wdl_ratio: f32, threads_count: usize) -> f32 {
     let mut sum_of_errors = 0.0;
     let positions_count = positions.len();
@@ -292,7 +297,7 @@ fn calculate_error(positions: &[TunerPosition], coeffs: &[TunerCoeff], indices: 
     sum_of_errors / (positions_count as f32)
 }
 
-/// Evaluates `position` based on `weights`.
+/// Evaluates a single `position` based on `coeffs`, `indices`, `weights`, and returns a score (casted to float).
 fn evaluate_position(position: &TunerPosition, coeffs: &[TunerCoeff], indices: &[u16], weights: &[f32]) -> f32 {
     let mut opening_score = 0.0;
     let mut ending_score = 0.0;
@@ -318,13 +323,13 @@ fn evaluate_position(position: &TunerPosition, coeffs: &[TunerCoeff], indices: &
     (opening_score * position_phase) + (ending_score * (1.0 - position_phase))
 }
 
-/// Gets simplified sigmoid function.
+/// Gets simplified sigmoid function for `e` and scaling constant `k`.
 fn sigmoid(e: f32, k: f32) -> f32 {
     1.0 / (1.0 + (-k * e).exp())
 }
 
-/// Loads positions from the `epd` and parses them into a list of [TunerPosition]. Returns [Err] with a proper error message if the
-/// file couldn't be parsed.
+/// Loads positions from the `epd` and parses them into a list of [TunerPosition], while filling `coeffs`, `indices` and `weights_indices`.
+/// Returns [Err] with a proper error message if the file couldn't be parsed.
 fn load_positions(epd: &str, coeffs: &mut Vec<TunerCoeff>, indices: &mut Vec<u16>, weights_indices: &mut HashSet<u16>) -> Result<Vec<TunerPosition>, String> {
     let mut positions = Vec::new();
     let file = match File::open(epd) {
@@ -438,10 +443,10 @@ fn load_values(random_values: bool) -> Vec<TunerParameter> {
     params
 }
 
-/// Generates `parameters.rs` file with current evaluation parameters, and saves it into the `output_directory`.
-fn write_evaluation_parameters<'a, I>(weights: &mut I, output_directory: &str, best_error: f32, k: f32, wdl_ratio: f32)
+/// Generates `params.rs` file with current `weights` and metadata (`best_error`, scaling constant `k`, `wdl_ratio`), then saves it into the `output_directory`.
+fn write_evaluation_parameters<'a, W>(weights: &mut W, output_directory: &str, best_error: f32, k: f32, wdl_ratio: f32)
 where
-    I: Iterator<Item = &'a f32>,
+    W: Iterator<Item = &'a f32>,
 {
     let mut output = String::new();
 
@@ -467,10 +472,11 @@ where
     write!(&mut File::create(path).unwrap(), "{}", output).unwrap();
 }
 
-/// Generates piece-square tables (Rust source file with current evaluation parameters), and saves it into the `output_directory`.
-fn write_piece_square_table<'a, I>(weights: &mut I, output_directory: &str, best_error: f32, k: f32, wdl_ratio: f32, name: &str, piece_value: i16)
+/// Generates piece-square tables as Rust source file `name`.rs with current `weights` and metadata (`best_error`, scaling constant `k`, `wdl_ratio`),
+/// then saves it into the `output_directory`.
+fn write_piece_square_table<'a, W>(weights: &mut W, output_directory: &str, best_error: f32, k: f32, wdl_ratio: f32, name: &str, piece_value: i16)
 where
-    I: Iterator<Item = &'a f32>,
+    W: Iterator<Item = &'a f32>,
 {
     let mut output = String::new();
 
@@ -497,7 +503,7 @@ where
     write!(&mut File::create(path).unwrap(), "{}", output).unwrap();
 }
 
-/// Gets a generated Rust source file header with timestamp, `best_error`, `k` and `wdl_ratio`.
+/// Gets a generated Rust source file header with timestamp, `best_error`, scaling constant `k` and `wdl_ratio`.
 fn get_header(best_error: f32, k: f32, wdl_ratio: f32) -> String {
     let mut output = String::new();
     let datetime = DateTime::now();
@@ -509,10 +515,10 @@ fn get_header(best_error: f32, k: f32, wdl_ratio: f32) -> String {
     output
 }
 
-/// Gets a Rust representation of the piece `values` array.
-fn get_array<'a, I>(name: &str, weights: &mut I, length: usize) -> String
+/// Gets a Rust representation of `weight` with the specific `length` as an array `name`.
+fn get_array<'a, W>(name: &str, weights: &mut W, length: usize) -> String
 where
-    I: Iterator<Item = &'a f32>,
+    W: Iterator<Item = &'a f32>,
 {
     let mut output = format!("pub const {}: [PackedEval; {}] = [", name, length);
     for i in 0..length {
@@ -533,10 +539,10 @@ where
     output
 }
 
-/// Gets a Rust representation of the parameter with the specified `name` and `value`.
-fn get_parameter<'a, I>(name: &str, weights: &mut I) -> String
+/// Gets a Rust representation of the single `weight`.
+fn get_parameter<'a, W>(name: &str, weights: &mut W) -> String
 where
-    I: Iterator<Item = &'a f32>,
+    W: Iterator<Item = &'a f32>,
 {
     let opening_score = *weights.next().unwrap();
     let opening_score = if opening_score != f32::MIN { opening_score.round() } else { 0.0 };
@@ -547,10 +553,10 @@ where
     format!("pub const {}: PackedEval = s!({}, {});\n", name, opening_score, ending_score)
 }
 
-/// Gets a Rust representation of the piece-square tables with the specified `values`.
-fn get_piece_square_table<'a, I>(weights: &mut I, piece_value: i16) -> String
+/// Gets a Rust representation of the piece-square tables with `weights` adjusted by `piece_value`.
+fn get_piece_square_table<'a, W>(weights: &mut W, piece_value: i16) -> String
 where
-    I: Iterator<Item = &'a f32>,
+    W: Iterator<Item = &'a f32>,
 {
     let mut output = String::new();
     output.push_str("        ");
