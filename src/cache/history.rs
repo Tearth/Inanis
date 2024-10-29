@@ -1,5 +1,4 @@
 use crate::utils::assert_fast;
-use crate::utils::divceil::DivCeil;
 use std::alloc;
 use std::alloc::Layout;
 use std::cmp;
@@ -52,14 +51,14 @@ impl HTable {
         assert_fast!(max > 0);
         assert_fast!(self.max > 0);
 
-        (self.table[from][to].data * (max as u32)).div_ceil_stable(self.max) as u8
+        (self.table[from][to].data * (max as u32)).div_ceil(self.max) as u8
     }
 
     /// Ages all values in the history table by dividing them by the [AGING_DIVISOR].
     pub fn age_values(&mut self) {
         for row in self.table.iter_mut() {
             for entry in row {
-                entry.data = entry.data.div_ceil_stable(AGING_DIVISOR);
+                entry.data = entry.data.div_ceil(AGING_DIVISOR);
             }
         }
 
@@ -68,7 +67,7 @@ impl HTable {
 
     /// Ages a single value by dividing value by the [AGING_DIVISOR].
     fn age_value(&self, value: u32) -> u32 {
-        value.div_ceil_stable(AGING_DIVISOR)
+        value.div_ceil(AGING_DIVISOR)
     }
 }
 
