@@ -7,13 +7,11 @@ macro_rules! min_max {
     ($type:ident) => {
         impl MinMax for $type {
             /// Gets a minimal possible value for the type.
-            #[inline(always)]
             fn min() -> $type {
                 $type::MIN
             }
 
             /// Gets a maximal possible value for the type.
-            #[inline(always)]
             fn max() -> $type {
                 $type::MAX
             }

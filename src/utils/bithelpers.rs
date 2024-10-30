@@ -15,7 +15,6 @@ macro_rules! bit_helpers {
             /// Extracts the lowest set isolated bit.
             ///
             /// More about asm instruction: <https://www.felixcloutier.com/x86/blsi>
-            #[inline(always)]
             fn get_lsb(&self) -> Self::Item {
                 self & self.wrapping_neg()
             }
@@ -23,7 +22,6 @@ macro_rules! bit_helpers {
             /// Resets the lowest set bit.
             ///
             /// More about asm instruction: <https://www.felixcloutier.com/x86/blsr>
-            #[inline(always)]
             fn pop_lsb(&self) -> Self::Item {
                 self & (self - 1)
             }
@@ -31,7 +29,6 @@ macro_rules! bit_helpers {
             /// Counts the number of set bits.
             ///
             /// More about asm instruction: <https://www.felixcloutier.com/x86/popcnt>
-            #[inline(always)]
             fn bit_count(&self) -> usize {
                 self.count_ones() as usize
             }
@@ -39,7 +36,6 @@ macro_rules! bit_helpers {
             /// Gets an index of the first set bit by counting trailing zero bits.
             ///
             /// More about asm instruction: <https://www.felixcloutier.com/x86/tzcnt>
-            #[inline(always)]
             fn bit_scan(&self) -> usize {
                 self.trailing_zeros() as usize
             }

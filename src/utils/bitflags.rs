@@ -10,7 +10,6 @@ macro_rules! bit_flags {
             type Item = $type;
 
             /// Checks if the specified flags (bytes) are present.
-            #[inline(always)]
             fn contains(&self, value: $type) -> bool {
                 (self & value) != 0
             }
