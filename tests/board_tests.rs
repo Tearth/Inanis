@@ -1,13 +1,22 @@
 #[cfg(test)]
 mod board_tests {
+    use inanis::engine::see;
     use inanis::state::representation::Board;
     use inanis::state::*;
+    use std::sync::Once;
+
+    static INIT: Once = Once::new();
 
     macro_rules! is_square_attacked_tests {
         ($($name:ident: $fen:expr, $white_mask:expr, $black_mask:expr,)*) => {
             $(
                 #[test]
                 fn $name() {
+                    INIT.call_once(|| {
+                        see::init();
+                        movegen::init();
+                    });
+
                     let board = Board::new_from_fen($fen).unwrap();
 
                     for color in ALL_COLORS {
@@ -44,6 +53,11 @@ mod board_tests {
             $(
                 #[test]
                 fn $name() {
+                    INIT.call_once(|| {
+                        see::init();
+                        movegen::init();
+                    });
+
                     let board = Board::new_from_fen($fen).unwrap();
                     assert_eq!($expected_result, board.get_attacking_pieces($color, $square));
                 }

@@ -4,22 +4,31 @@
 mod see_tests {
     use inanis::engine;
     use inanis::engine::see;
+    use inanis::engine::see::*;
     use inanis::state::representation::Board;
+    use inanis::state::*;
     use std::mem::MaybeUninit;
+    use std::sync::Once;
 
-    static P: i16 = 100;
-    static N: i16 = 320;
-    static B: i16 = 320;
-    static R: i16 = 500;
-    static Q: i16 = 1100;
+    static INIT: Once = Once::new();
+
+    const P: i16 = SEE_PAWN_VALUE as i16 * 50;
+    const N: i16 = SEE_KNISHOP_VALUE as i16 * 50;
+    const B: i16 = SEE_KNISHOP_VALUE as i16 * 50;
+    const R: i16 = SEE_ROOK_VALUE as i16 * 50;
+    const Q: i16 = SEE_QUEEN_VALUE as i16 * 50;
 
     macro_rules! see_tests {
         ($($name:ident: $fen:expr, $move:expr, $expected_result:expr, )*) => {
             $(
                 #[test]
                 fn $name() {
-                    let board = Board::new_from_fen($fen).unwrap();
+                    INIT.call_once(|| {
+                        see::init();
+                        movegen::init();
+                    });
 
+                    let board = Board::new_from_fen($fen).unwrap();
                     let mut moves = [MaybeUninit::uninit(); engine::MAX_MOVES_COUNT];
                     let moves_count = board.get_all_moves(&mut moves, u64::MAX);
 

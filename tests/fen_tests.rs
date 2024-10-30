@@ -1,12 +1,22 @@
 #[cfg(test)]
 mod fen_tests {
+    use inanis::engine::see;
     use inanis::state::representation::Board;
+    use inanis::state::*;
+    use std::sync::Once;
+
+    static INIT: Once = Once::new();
 
     macro_rules! fen_tests {
         ($($name:ident: $original_fen:expr,)*) => {
             $(
                 #[test]
                 fn $name() {
+                    INIT.call_once(|| {
+                        see::init();
+                        movegen::init();
+                    });
+
                     assert_eq!($original_fen, Board::new_from_fen($original_fen).unwrap().to_fen());
                 }
             )*

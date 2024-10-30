@@ -1,13 +1,23 @@
 #[cfg(test)]
 mod perft_tests {
+    use inanis::engine::see;
     use inanis::perft;
     use inanis::state::representation::Board;
+    use inanis::state::*;
+    use std::sync::Once;
+
+    static INIT: Once = Once::new();
 
     macro_rules! perft_tests {
         ($($name:ident: $depth:expr, $fen:expr, $expected_leafs_count:expr,)*) => {
             $(
                 #[test]
                 fn $name() {
+                    INIT.call_once(|| {
+                        see::init();
+                        movegen::init();
+                    });
+
                     assert_eq!($expected_leafs_count, perft::normal::run($depth, &mut Board::new_from_fen($fen).unwrap(), false).nodes);
                 }
             )*
