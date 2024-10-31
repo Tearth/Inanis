@@ -1,3 +1,30 @@
+# Version 1.5.0 (xx-xx-xxxx)
+ - Added aspiration windows
+ - Added support for tuning based on evaluation
+ - Added "k" and "wdl_ratio" parameters to "tuner" command
+ - Added prefetching of transposition table entries
+ - Added packed evaluation
+ - Added pawn structure to fast evaluation
+ - Removed "lock material" parameter from "tuner" command
+ - Removed "Crash Files" UCI option from the release version
+ - Removed Lazy SMP artificial noise
+ - Removed allocator, pawn hashtable has fixed size now
+ - Improved tuner performance and excessive memory usage
+ - Improved tuner output by setting unused parameters to zero
+ - Improved indexing of transposition, pawn and perft tables
+ - Improved rand algorithm (change from xorshift to xorshift*)
+ - Improved engine strength when using multiple threads
+ - Improved evaluation parameters
+ - Improved overall performance
+ - Incorporated piece values in PST
+ - Fixed endless search in fixed-nodes mode
+ - Fixed tuner output filename
+ - Fixed crash when parsing certain FENs
+ - Fixed incorrect workload between threads in tuner
+ - Fixed incorrect evaluation of black pawn chains
+
+**Strength**: 3000 Elo
+
 # Version 1.4.0 (03-08-2024)
  - Added relative PST
  - Added check extensions

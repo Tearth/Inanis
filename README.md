@@ -1,13 +1,14 @@
 # Inanis
 UCI chess engine written in Rust, the successor of [Proxima b](https://github.com/Tearth/Proxima-b), [Proxima b 2.0](https://github.com/Tearth/Proxima-b-2.0) and [Cosette](https://github.com/Tearth/Cosette). The project is written after hours, with the goal to reach a strength of 3000 Elo. Perfect as a sparring partner for other chess engines, since it was heavily tested using very fast games. Supports Syzygy tablebases, MultiPV, pondering and multithreading.
 
-**Current strength**: 2950 Elo (03-08-2024)
+**Current strength**: 3000 Elo (xx-xx-xxxx)
 
 **Documentation**: https://tearth.dev/Inanis/
 
 ## Releases
 | Version                                                       | Release date | Elo  | Main changes |
 |---------------------------------------------------------------|--------------|------|--------------|
+| [1.5.0](https://github.com/Tearth/Inanis/releases/tag/v1.5.0) | xx-xx-xxxx   | 3000 | Aspiration windows, improved performance and multithreading |
 | [1.4.0](https://github.com/Tearth/Inanis/releases/tag/v1.4.0) | 03-08-2024   | 2950 | Check extensions, relative PST, countermove heuristic |
 | [1.3.0](https://github.com/Tearth/Inanis/releases/tag/v1.3.0) | 14-06-2024   | 2900 | Gradient descent tuner, improved SEE and evaluation |
 | [1.2.1](https://github.com/Tearth/Inanis/releases/tag/v1.2.1) | 04-09-2023   | 2850 | Commands executed directly from a command line, perft in UCI mode |
@@ -48,9 +49,9 @@ By default, calling `cargo build` or `cargo build --release` will build the engi
 ## Algorithms
  - **Board representation**: bitboards (a hybrid of make/undo scheme and storing data on stacks)
  - **Move generator**: staged (hash move, captures, quiet moves), magic bitboards, precalculated arrays for knight and king
- - **Move ordering**: hash move, good captures (SEE with support for x-ray attacks), killer table, special moves, history table (with random noise if lazy SMP is enabled), bad captures
+ - **Move ordering**: hash move, good captures (SEE with support for x-ray attacks), killer table, special moves, history table, bad captures
  - **Search**: negamax, alpha-beta pruning, quiescence search, aspiration windows, null-move pruning, static null move pruning, razoring, late move reduction, late move pruning, lazy SMP, internal iterative reductions, check extensions
- - **Cache**: transposition table, pawn hashtable
+ - **Cache**: transposition table, pawn hashtable, history heuristic, killer heuristic, countermove heuristic
  - **Evaluation**: material, piece-square tables, pawn structure, mobility, king safety
 
 ## Tuner
@@ -118,7 +119,7 @@ All commands listed below can be executed both in interactive mode and directly 
 === Development ===
  [DEV] dataset [pgn] [output] [min_ply] [max_score] [max_diff] [density] - dataset generator
  [DEV] magic - generate magic numbers
- [DEV] testset [epd] [depth] [transposition_table_size] [threads_count] - run test of positions
+ [DEV] testset [epd] [depth] [ttable_size] [threads_count] - run test of positions
  [DEV] tuner [epd] [output] [randomize] [k] [wdl_ratio] [threads_count] - run tuning
 
 === Perft ===
