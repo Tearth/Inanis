@@ -157,7 +157,7 @@ impl TTable {
             #[cfg(target_arch = "x86_64")]
             std::arch::x86_64::_mm_prefetch::<{ std::arch::x86_64::_MM_HINT_T0 }>(addr);
 
-            #[cfg(any(target_arch = "arm", target_arch = "aarch64"))]
+            #[cfg(target_arch = "aarch64")]
             std::arch::asm!("prfm PSTL1KEEP, [{}]", in(reg) addr);
         }
     }
