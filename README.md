@@ -1,14 +1,14 @@
 # Inanis
 UCI chess engine written in Rust, the successor of [Proxima b](https://github.com/Tearth/Proxima-b), [Proxima b 2.0](https://github.com/Tearth/Proxima-b-2.0) and [Cosette](https://github.com/Tearth/Cosette). The project is written after hours, with the goal to reach a strength of 3000 Elo. Perfect as a sparring partner for other chess engines, since it was heavily tested using very fast games. Supports Syzygy tablebases, MultiPV, pondering and multithreading.
 
-**Current strength**: 3000 Elo (xx-xx-xxxx)
+**Current strength**: 3000 Elo (01-11-2024)
 
 **Documentation**: https://tearth.dev/Inanis/
 
 ## Releases
 | Version                                                       | Release date | Elo  | Main changes |
 |---------------------------------------------------------------|--------------|------|--------------|
-| [1.5.0](https://github.com/Tearth/Inanis/releases/tag/v1.5.0) | xx-xx-xxxx   | 3000 | Aspiration windows, improved performance and multithreading |
+| [1.5.0](https://github.com/Tearth/Inanis/releases/tag/v1.5.0) | 01-11-2024   | 3000 | Aspiration windows, improved performance and multithreading |
 | [1.4.0](https://github.com/Tearth/Inanis/releases/tag/v1.4.0) | 03-08-2024   | 2950 | Check extensions, relative PST, countermove heuristic |
 | [1.3.0](https://github.com/Tearth/Inanis/releases/tag/v1.3.0) | 14-06-2024   | 2900 | Gradient descent tuner, improved SEE and evaluation |
 | [1.2.1](https://github.com/Tearth/Inanis/releases/tag/v1.2.1) | 04-09-2023   | 2850 | Commands executed directly from a command line, perft in UCI mode |

@@ -1,4 +1,4 @@
-# Version 1.5.0 (xx-xx-xxxx)
+# Version 1.5.0 (01-11-2024)
  - Added aspiration windows
  - Added support for tuning based on evaluation
  - Added "k" and "wdl_ratio" parameters to "tuner" command
