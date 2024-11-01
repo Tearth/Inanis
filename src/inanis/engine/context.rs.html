@@ -276,6 +276,7 @@
 <a href="#274" id="274">274</a>
 <a href="#275" id="275">275</a>
 <a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="self">self</span>::params::SearchParams;
 <span class="kw">use </span><span class="kw">super</span>::stats::SearchStats;
 <span class="kw">use super</span>::<span class="kw-2">*</span>;
@@ -493,6 +494,7 @@
                 <span class="comment">// If ponder flag is set, the search is completly restarted within the same iteration
                 </span><span class="kw">if </span><span class="self">self</span>.ponder_flag.load(Ordering::Relaxed) {
                     <span class="self">self</span>.current_depth = <span class="number">1</span>;
+                    <span class="self">self</span>.forced_depth = <span class="number">0</span>;
                     <span class="self">self</span>.search_time_start = SystemTime::now();
                     <span class="self">self</span>.stats = SearchStats::default();
 
