@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["CountermovesTable","CountermovesTableEntry","CountermovesTableResult"]};
+window.SIDEBAR_ITEMS = {"struct":["CMTable","CMTableEntry"]};

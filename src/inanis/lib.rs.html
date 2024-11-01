@@ -31,20 +31,15 @@
 <a href="#29" id="29">29</a>
 <a href="#30" id="30">30</a>
 <a href="#31" id="31">31</a>
+<a href="#32" id="32">32</a>
 </pre></div><pre class="rust"><code><span class="attr">#![allow(
     unused_assignments,
     clippy::needless_range_loop,
     clippy::identity_op,
     clippy::collapsible_if,
     clippy::too_many_arguments,
-    clippy::if_same_then_else,
-    clippy::declare_interior_mutable_const,
-    clippy::manual_range_contains,
-    clippy::format_in_format_args,
-    clippy::question_mark,
     clippy::manual_range_patterns,
-    clippy::collapsible_else_if,
-    clippy::type_complexity
+    clippy::collapsible_else_if
 )]
 
 </span><span class="doccomment">//! The main page of the Inanis documentation. Feel free to explore it by going into the specific module below,
@@ -52,7 +47,11 @@
 //!
 //! Homepage: &lt;https://github.com/Tearth/Inanis&gt;
 
-</span><span class="kw">pub mod </span>cache;
+</span><span class="kw">use </span>engine::<span class="kw-2">*</span>;
+<span class="kw">use </span>state::movescan::Move;
+<span class="kw">use </span>std::mem::MaybeUninit;
+
+<span class="kw">pub mod </span>cache;
 <span class="kw">pub mod </span>engine;
 <span class="kw">pub mod </span>evaluation;
 <span class="kw">pub mod </span>interface;
@@ -62,4 +61,7 @@
 <span class="kw">pub mod </span>testing;
 <span class="kw">pub mod </span>tuning;
 <span class="kw">pub mod </span>utils;
+
+<span class="kw">pub type </span>Moves = [MaybeUninit&lt;Move&gt;; MAX_MOVES_COUNT];
+<span class="kw">pub type </span>MoveScores = [MaybeUninit&lt;i16&gt;; MAX_MOVES_COUNT];
 </code></pre></div></section></main></body></html>

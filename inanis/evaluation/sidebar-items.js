@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["material","mobility","parameters","pawns","pst","safety"],"struct":["EvaluationParameters","EvaluationResult"]};
+window.SIDEBAR_ITEMS = {"constant":["INITIAL_GAME_PHASE","PIECE_PHASE_VALUES","PIECE_VALUES"],"macro":["s"],"mod":["material","mobility","params","pawns","pst","safety"],"struct":["PackedEval"]};

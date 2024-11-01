@@ -113,54 +113,60 @@
 <a href="#111" id="111">111</a>
 <a href="#112" id="112">112</a>
 <a href="#113" id="113">113</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::utils::percent;
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::utils::assert_fast;
+<span class="kw">use </span><span class="kw">crate</span>::utils::percent;
 <span class="kw">use </span>std::mem;
 <span class="kw">use </span>std::sync::atomic::AtomicI16;
 <span class="kw">use </span>std::sync::atomic::AtomicU16;
 <span class="kw">use </span>std::sync::atomic::Ordering;
-<span class="kw">use </span>std::u64;
 
-<span class="kw">pub struct </span>PawnHashTable {
-    <span class="kw">pub </span>table: Vec&lt;PawnHashTableEntry&gt;,
+<span class="kw">pub struct </span>PHTable {
+    <span class="kw">pub </span>table: Vec&lt;PHTableEntry&gt;,
 }
 
-<span class="kw">pub struct </span>PawnHashTableEntry {
+<span class="kw">pub struct </span>PHTableEntry {
     <span class="kw">pub </span>key: AtomicU16,
     <span class="kw">pub </span>score_opening: AtomicI16,
     <span class="kw">pub </span>score_ending: AtomicI16,
 }
 
-<span class="kw">pub struct </span>PawnHashTableResult {
+<span class="kw">pub struct </span>PHTableResult {
     <span class="kw">pub </span>key: u16,
     <span class="kw">pub </span>score_opening: i16,
     <span class="kw">pub </span>score_ending: i16,
 }
 
-<span class="kw">impl </span>PawnHashTable {
-    <span class="doccomment">/// Constructs a new instance of [PawnHashTable] by allocating `size` bytes of memory.
+<span class="kw">impl </span>PHTable {
+    <span class="doccomment">/// Constructs a new instance of [PHTable] by allocating `size` bytes of memory.
     </span><span class="kw">pub fn </span>new(size: usize) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>bucket_size = mem::size_of::&lt;PawnHashTableEntry&gt;();
-        <span class="kw">let </span>aligned_size = <span class="kw">if </span>size != <span class="number">0 </span>{ <span class="number">1 </span>&lt;&lt; (<span class="number">63 </span>- size.leading_zeros()) } <span class="kw">else </span>{ <span class="number">0 </span>};
-        <span class="kw">let </span><span class="kw-2">mut </span>hashtable = <span class="self">Self </span>{ table: Vec::with_capacity(aligned_size / bucket_size) };
+        <span class="kw">const </span>SIZE: usize = mem::size_of::&lt;PHTableEntry&gt;();
+        <span class="kw">let </span><span class="kw-2">mut </span>hashtable = <span class="self">Self </span>{ table: Vec::with_capacity(size / SIZE) };
 
-        <span class="kw">if </span>aligned_size != <span class="number">0 </span>{
-            hashtable.table.resize_with(hashtable.table.capacity(), Default::default);
+        <span class="kw">if </span>size != <span class="number">0 </span>{
+            hashtable.table.resize_with(hashtable.table.capacity(), PHTableEntry::default);
         }
 
         hashtable
     }
 
-    <span class="doccomment">/// Adds a new entry (storing the key, `score_opening` and `score_ending`) using `hash &amp; (self.table.len() - 1)` formula to calculate an index.
+    <span class="doccomment">/// Adds a new entry (storing the key, `score_opening` and `score_ending`) using `hash` to calculate an index.
     </span><span class="kw">pub fn </span>add(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: u64, score_opening: i16, score_ending: i16) {
         <span class="kw">let </span>key = <span class="self">self</span>.get_key(hash);
         <span class="kw">let </span>index = <span class="self">self</span>.get_index(hash);
+        <span class="macro">assert_fast!</span>(index &lt; <span class="self">self</span>.table.len());
 
         <span class="self">self</span>.table[index].set_data(key, score_opening, score_ending);
     }
 
-    <span class="doccomment">/// Gets a wanted entry using `hash &amp; (self.table.len() - 1)` formula to calculate an index. Returns [None] if `hash` is incompatible with the stored key.
-    </span><span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: u64) -&gt; <span class="prelude-ty">Option</span>&lt;PawnHashTableResult&gt; {
+    <span class="doccomment">/// Gets a wanted entry using `hash` to calculate an index. Returns [None] if entry does not exists
+    /// or `hash` is incompatible with the stored key.
+    </span><span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: u64) -&gt; <span class="prelude-ty">Option</span>&lt;PHTableResult&gt; {
         <span class="kw">let </span>index = <span class="self">self</span>.get_index(hash);
+        <span class="macro">assert_fast!</span>(index &lt; <span class="self">self</span>.table.len());
+
         <span class="kw">let </span>entry = <span class="kw-2">&amp;</span><span class="self">self</span>.table[index];
         <span class="kw">let </span>entry_data = entry.get_data();
 
@@ -184,44 +190,44 @@
         <span class="macro">percent!</span>(filled_entries, resolution)
     }
 
-    <span class="doccomment">/// Calculates a key for the `hash` by taking the last 16 bits of it.
+    <span class="doccomment">/// Calculates a key for the `hash` by taking first 16 bits of it.
     </span><span class="kw">fn </span>get_key(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: u64) -&gt; u16 {
-        (hash &gt;&gt; <span class="number">48</span>) <span class="kw">as </span>u16
+        hash <span class="kw">as </span>u16
     }
 
     <span class="doccomment">/// Calculates an index for the `hash`.
     </span><span class="kw">fn </span>get_index(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: u64) -&gt; usize {
-        (hash <span class="kw">as </span>usize) &amp; (<span class="self">self</span>.table.len() - <span class="number">1</span>)
+        (((hash <span class="kw">as </span>u128).wrapping_mul(<span class="self">self</span>.table.len() <span class="kw">as </span>u128)) &gt;&gt; <span class="number">64</span>) <span class="kw">as </span>usize
     }
 }
 
-<span class="kw">impl </span>PawnHashTableEntry {
+<span class="kw">impl </span>PHTableEntry {
+    <span class="doccomment">/// Loads and parses atomic value into a [PHTableResult] struct.
+    </span><span class="kw">pub fn </span>get_data(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; PHTableResult {
+        <span class="kw">let </span>key = <span class="self">self</span>.key.load(Ordering::Relaxed);
+        <span class="kw">let </span>score_opening = <span class="self">self</span>.score_opening.load(Ordering::Relaxed);
+        <span class="kw">let </span>score_ending = <span class="self">self</span>.score_ending.load(Ordering::Relaxed);
+
+        PHTableResult::new(key, score_opening, score_ending)
+    }
+
     <span class="doccomment">/// Converts `key`, `score_opening` and `score_ending` into an atomic word, and stores it.
     </span><span class="kw">pub fn </span>set_data(<span class="kw-2">&amp;</span><span class="self">self</span>, key: u16, score_opening: i16, score_ending: i16) {
         <span class="self">self</span>.key.store(key, Ordering::Relaxed);
         <span class="self">self</span>.score_opening.store(score_opening, Ordering::Relaxed);
         <span class="self">self</span>.score_ending.store(score_ending, Ordering::Relaxed);
     }
-
-    <span class="doccomment">/// Loads and parses atomic value into a [PawnHashTableResult] struct.
-    </span><span class="kw">pub fn </span>get_data(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; PawnHashTableResult {
-        <span class="kw">let </span>key = <span class="self">self</span>.key.load(Ordering::Relaxed);
-        <span class="kw">let </span>score_opening = <span class="self">self</span>.score_opening.load(Ordering::Relaxed);
-        <span class="kw">let </span>score_ending = <span class="self">self</span>.score_ending.load(Ordering::Relaxed);
-
-        PawnHashTableResult::new(key, score_opening, score_ending)
-    }
 }
 
-<span class="kw">impl </span>Default <span class="kw">for </span>PawnHashTableEntry {
-    <span class="doccomment">/// Constructs a default instance of [PawnHashTableEntry] with zeroed elements.
+<span class="kw">impl </span>Default <span class="kw">for </span>PHTableEntry {
+    <span class="doccomment">/// Constructs a default instance of [PHTableEntry] with zeroed elements.
     </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        PawnHashTableEntry { key: AtomicU16::new(<span class="number">0</span>), score_opening: AtomicI16::new(<span class="number">0</span>), score_ending: AtomicI16::new(<span class="number">0</span>) }
+        PHTableEntry { key: AtomicU16::new(<span class="number">0</span>), score_opening: AtomicI16::new(<span class="number">0</span>), score_ending: AtomicI16::new(<span class="number">0</span>) }
     }
 }
 
-<span class="kw">impl </span>PawnHashTableResult {
-    <span class="doccomment">/// Constructs a new instance of [PawnHashTableResult] with stored `key`, `score_opening` and `score_ending`.
+<span class="kw">impl </span>PHTableResult {
+    <span class="doccomment">/// Constructs a new instance of [PHTableResult] with stored `key`, `score_opening` and `score_ending`.
     </span><span class="kw">pub fn </span>new(key: u16, score_opening: i16, score_ending: i16) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ key, score_opening, score_ending }
     }

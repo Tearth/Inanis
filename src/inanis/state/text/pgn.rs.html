@@ -173,43 +173,51 @@
 <a href="#171" id="171">171</a>
 <a href="#172" id="172">172</a>
 <a href="#173" id="173">173</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::engine::see::SEEContainer;
-<span class="kw">use </span><span class="kw">crate</span>::evaluation::EvaluationParameters;
-<span class="kw">use </span><span class="kw">crate</span>::state::movegen::MagicContainer;
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+</pre></div><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::state::movescan::Move;
-<span class="kw">use </span><span class="kw">crate</span>::state::patterns::PatternsContainer;
 <span class="kw">use </span><span class="kw">crate</span>::state::representation::Board;
-<span class="kw">use </span><span class="kw">crate</span>::state::zobrist::ZobristContainer;
 <span class="kw">use </span>std::fs::File;
 <span class="kw">use </span>std::io::BufReader;
 <span class="kw">use </span>std::io::Lines;
-<span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">pub struct </span>PGNLoader {
     <span class="kw">pub </span>file_iterator: Lines&lt;BufReader&lt;File&gt;&gt;,
-    <span class="kw">pub </span>evaluation_parameters: Arc&lt;EvaluationParameters&gt;,
-    <span class="kw">pub </span>zobrist_container: Arc&lt;ZobristContainer&gt;,
-    <span class="kw">pub </span>patterns_container: Arc&lt;PatternsContainer&gt;,
-    <span class="kw">pub </span>see_container: Arc&lt;SEEContainer&gt;,
-    <span class="kw">pub </span>magic_container: Arc&lt;MagicContainer&gt;,
 }
 
 <span class="kw">pub struct </span>ParsedPGN {
     <span class="kw">pub </span>result: String,
     <span class="kw">pub </span>fen: <span class="prelude-ty">Option</span>&lt;String&gt;,
-    <span class="kw">pub </span>moves: Vec&lt;Move&gt;,
+    <span class="kw">pub </span>data: Vec&lt;ParsedPGNMove&gt;,
+}
+
+<span class="kw">pub struct </span>ParsedPGNMove {
+    <span class="kw">pub </span>r#move: Move,
+    <span class="kw">pub </span>eval: f32,
 }
 
 <span class="kw">impl </span>PGNLoader {
     <span class="doccomment">/// Constructs a new instance of [PGNLoader] with the specified `file_iterator`, which will be used to read input PGN file.
     </span><span class="kw">pub fn </span>new(file_iterator: Lines&lt;BufReader&lt;File&gt;&gt;) -&gt; PGNLoader {
-        <span class="kw">let </span>evaluation_parameters = Arc::new(EvaluationParameters::default());
-        <span class="kw">let </span>zobrist_container = Arc::new(ZobristContainer::default());
-        <span class="kw">let </span>patterns_container = Arc::new(PatternsContainer::default());
-        <span class="kw">let </span>see_container = Arc::new(SEEContainer::new(<span class="prelude-val">Some</span>(evaluation_parameters.clone())));
-        <span class="kw">let </span>magic_container = Arc::new(MagicContainer::default());
-
-        PGNLoader { file_iterator, evaluation_parameters, zobrist_container, patterns_container, see_container, magic_container }
+        PGNLoader { file_iterator }
     }
 
     <span class="doccomment">/// Parses a single `pgn` and returns [Some] if it has been done with success, otherwise [Err].
@@ -253,32 +261,59 @@
             } <span class="kw">else if </span>line.starts_with(<span class="string">'1'</span>) {
                 <span class="kw">let </span><span class="kw-2">mut </span>board = <span class="kw">match </span>fen.clone() {
                     <span class="prelude-val">Some</span>(value) =&gt; {
-                        <span class="kw">let </span>fen_result = Board::new_from_fen(
-                            <span class="kw-2">&amp;</span>value,
-                            <span class="prelude-val">Some</span>(<span class="self">self</span>.evaluation_parameters.clone()),
-                            <span class="prelude-val">Some</span>(<span class="self">self</span>.zobrist_container.clone()),
-                            <span class="prelude-val">Some</span>(<span class="self">self</span>.patterns_container.clone()),
-                            <span class="prelude-val">Some</span>(<span class="self">self</span>.see_container.clone()),
-                            <span class="prelude-val">Some</span>(<span class="self">self</span>.magic_container.clone()),
-                        );
+                        <span class="kw">let </span>fen_result = Board::new_from_fen(<span class="kw-2">&amp;</span>value);
 
                         <span class="kw">match </span>fen_result {
                             <span class="prelude-val">Ok</span>(board) =&gt; board,
                             <span class="prelude-val">Err</span>(error) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">"Invalid initial FEN position: {}"</span>, error)),
                         }
                     }
-
-                    <span class="prelude-val">None </span>=&gt; Board::new_initial_position(
-                        <span class="prelude-val">Some</span>(<span class="self">self</span>.evaluation_parameters.clone()),
-                        <span class="prelude-val">Some</span>(<span class="self">self</span>.zobrist_container.clone()),
-                        <span class="prelude-val">Some</span>(<span class="self">self</span>.patterns_container.clone()),
-                        <span class="prelude-val">Some</span>(<span class="self">self</span>.see_container.clone()),
-                        <span class="prelude-val">Some</span>(<span class="self">self</span>.magic_container.clone()),
-                    ),
+                    <span class="prelude-val">None </span>=&gt; Board::new_initial_position(),
                 };
 
-                <span class="kw">for </span>token <span class="kw">in </span>line.replace(<span class="string">'.'</span>, <span class="string">". "</span>).split_ascii_whitespace() {
+                <span class="kw">let </span><span class="kw-2">mut </span>comment = <span class="bool-val">false</span>;
+                <span class="kw">let </span><span class="kw-2">mut </span>pgn_move = <span class="prelude-val">None</span>;
+                <span class="kw">let </span><span class="kw-2">mut </span>pgn_eval: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt; = <span class="prelude-val">None</span>;
+
+                <span class="kw">for </span>token <span class="kw">in </span>line.split_ascii_whitespace() {
+                    <span class="kw">if </span>token.ends_with(<span class="string">'}'</span>) {
+                        comment = <span class="bool-val">false</span>;
+                        <span class="kw">continue</span>;
+                    }
+
                     <span class="kw">if </span>token.as_bytes()[<span class="number">0</span>].is_ascii_digit() {
+                        <span class="kw">continue</span>;
+                    }
+
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(r#move) = pgn_move {
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(eval) = pgn_eval {
+                            <span class="kw">let </span><span class="kw-2">mut </span>eval = <span class="kw">if </span>eval.starts_with(<span class="string">"+M"</span>) {
+                                <span class="number">100.0
+                            </span>} <span class="kw">else if </span>eval.starts_with(<span class="string">"-M"</span>) {
+                                -<span class="number">100.0
+                            </span>} <span class="kw">else </span>{
+                                eval.parse::&lt;f32&gt;().unwrap()
+                            };
+
+                            <span class="kw">if </span>board.stm == BLACK {
+                                eval = -eval;
+                            }
+
+                            moves.push(ParsedPGNMove::new(r#move, eval));
+                            board.make_move(r#move);
+
+                            pgn_move = <span class="prelude-val">None</span>;
+                            pgn_eval = <span class="prelude-val">None</span>;
+                        }
+                    }
+
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(token) = token.strip_prefix(<span class="string">'{'</span>) {
+                        pgn_eval = <span class="prelude-val">Some</span>(token.split(<span class="string">'/'</span>).collect::&lt;Vec&lt;<span class="kw-2">&amp;</span>str&gt;&gt;()[<span class="number">0</span>]);
+                        comment = <span class="bool-val">true</span>;
+                        <span class="kw">continue</span>;
+                    }
+
+                    <span class="kw">if </span>comment {
                         <span class="kw">continue</span>;
                     }
 
@@ -286,13 +321,10 @@
                         <span class="kw">break</span>;
                     }
 
-                    <span class="kw">let </span>r#move = <span class="kw">match </span>Move::from_short_notation(token, <span class="kw-2">&amp;mut </span>board) {
-                        <span class="prelude-val">Ok</span>(r#move) =&gt; r#move,
+                    pgn_move = <span class="kw">match </span>Move::from_short_notation(token, <span class="kw-2">&amp;mut </span>board) {
+                        <span class="prelude-val">Ok</span>(r#move) =&gt; <span class="prelude-val">Some</span>(r#move),
                         <span class="prelude-val">Err</span>(error) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">"Invalid move: {}"</span>, error)),
                     };
-
-                    moves.push(r#move);
-                    board.make_move(r#move);
                 }
             }
         }
@@ -342,8 +374,14 @@
 
 <span class="kw">impl </span>ParsedPGN {
     <span class="doccomment">/// Constructs a new instance of [ParsedPGN] with stored `result`, `fen` and `moves`.
-    </span><span class="kw">pub fn </span>new(result: String, fen: <span class="prelude-ty">Option</span>&lt;String&gt;, moves: Vec&lt;Move&gt;) -&gt; ParsedPGN {
-        ParsedPGN { result, fen, moves }
+    </span><span class="kw">pub fn </span>new(result: String, fen: <span class="prelude-ty">Option</span>&lt;String&gt;, moves: Vec&lt;ParsedPGNMove&gt;) -&gt; ParsedPGN {
+        ParsedPGN { result, fen, data: moves }
+    }
+}
+
+<span class="kw">impl </span>ParsedPGNMove {
+    <span class="kw">pub fn </span>new(r#move: Move, eval: f32) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ r#move, eval }
     }
 }
 </code></pre></div></section></main></body></html>

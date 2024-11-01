@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["PerftContext","PerftStatistics"]};
+window.SIDEBAR_ITEMS = {"struct":["PerftContext","PerftStats"]};

@@ -268,39 +268,47 @@
 <a href="#266" id="266">266</a>
 <a href="#267" id="267">267</a>
 <a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::engine;
 <span class="kw">use </span><span class="kw">crate</span>::state::movescan::Move;
 <span class="kw">use </span><span class="kw">crate</span>::state::representation::Board;
+<span class="kw">use </span><span class="kw">crate</span>::utils::assert_fast;
 <span class="kw">use </span><span class="kw">crate</span>::utils::percent;
 <span class="kw">use </span>std::mem;
 <span class="kw">use </span>std::sync::atomic::AtomicU64;
 <span class="kw">use </span>std::sync::atomic::Ordering;
-<span class="kw">use </span>std::u64;
 
 <span class="kw">const </span>BUCKET_SLOTS: usize = <span class="number">8</span>;
 
 <span class="attr">#[allow(non_snake_case)]
-</span><span class="kw">pub mod </span>TranspositionTableScoreType {
+</span><span class="kw">pub mod </span>TTableScoreType {
     <span class="kw">pub const </span>INVALID: u8 = <span class="number">0</span>;
     <span class="kw">pub const </span>EXACT_SCORE: u8 = <span class="number">1</span>;
     <span class="kw">pub const </span>UPPER_BOUND: u8 = <span class="number">2</span>;
     <span class="kw">pub const </span>LOWER_BOUND: u8 = <span class="number">4</span>;
 }
 
-<span class="kw">pub struct </span>TranspositionTable {
-    table: Vec&lt;TranspositionTableBucket&gt;,
+<span class="kw">pub struct </span>TTable {
+    <span class="kw">pub </span>table: Vec&lt;TTableBucket&gt;,
 }
 
 <span class="attr">#[repr(align(<span class="number">64</span>))]
-</span><span class="kw">pub struct </span>TranspositionTableBucket {
-    <span class="kw">pub </span>entries: [TranspositionTableEntry; BUCKET_SLOTS],
+#[derive(Default)]
+</span><span class="kw">pub struct </span>TTableBucket {
+    <span class="kw">pub </span>entries: [TTableEntry; BUCKET_SLOTS],
 }
 
-<span class="kw">pub struct </span>TranspositionTableEntry {
+<span class="attr">#[derive(Default)]
+</span><span class="kw">pub struct </span>TTableEntry {
     <span class="kw">pub </span>key_data: AtomicU64,
 }
 
-<span class="kw">pub struct </span>TranspositionTableResult {
+<span class="kw">pub struct </span>TTableResult {
     <span class="kw">pub </span>key: u16,
     <span class="kw">pub </span>score: i16,
     <span class="kw">pub </span>best_move: Move,
@@ -309,29 +317,32 @@
     <span class="kw">pub </span>age: u8,
 }
 
-<span class="kw">impl </span>TranspositionTable {
-    <span class="doccomment">/// Constructs a new instance of [TranspositionTable] by allocating `size` bytes of memory.
+<span class="kw">impl </span>TTable {
+    <span class="doccomment">/// Constructs a new instance of [TTable] by allocating `size` bytes of memory.
     </span><span class="kw">pub fn </span>new(size: usize) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>bucket_size = mem::size_of::&lt;TranspositionTableBucket&gt;();
-        <span class="kw">let </span>aligned_size = <span class="kw">if </span>size != <span class="number">0 </span>{ <span class="number">1 </span>&lt;&lt; (<span class="number">63 </span>- size.leading_zeros()) } <span class="kw">else </span>{ <span class="number">0 </span>};
-        <span class="kw">let </span><span class="kw-2">mut </span>hashtable = <span class="self">Self </span>{ table: Vec::with_capacity(aligned_size / bucket_size) };
+        <span class="kw">const </span>BUCKET_SIZE: usize = mem::size_of::&lt;TTableBucket&gt;();
+        <span class="kw">let </span><span class="kw-2">mut </span>hashtable = <span class="self">Self </span>{ table: Vec::with_capacity(size / BUCKET_SIZE) };
 
-        <span class="kw">if </span>aligned_size != <span class="number">0 </span>{
-            hashtable.table.resize_with(hashtable.table.capacity(), Default::default);
+        <span class="kw">if </span>size != <span class="number">0 </span>{
+            hashtable.table.resize_with(hashtable.table.capacity(), TTableBucket::default);
         }
 
         hashtable
     }
 
-    <span class="doccomment">/// Adds a new entry (storing the key, `score`, `best_move`, `depth`, `ply`, `score_type` and `age`) using `hash &amp; (self.table.len() - 1)` formula
-    /// to calculate an index of the bucket. Replacement strategy considers a few elements to optimize memory usage and prioritizes slots to replace as follows:
+    <span class="doccomment">/// Adds a new entry (storing the key, `score`, `best_move`, `depth`, `ply`, `r#type` and `age`) using `hash` to calculate an index of the bucket.
+    /// Replacement strategy considers a few elements to optimize memory usage and prioritizes slots to replace as follows:
     ///  - empty slots or slots with the same key as the new entry
     ///  - slots with the smallest depth (if there are some old entries, prioritize them)
     ///
     /// This function takes care of converting mate `score` using passed `ply`.
-    </span><span class="kw">pub fn </span>add(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: u64, <span class="kw-2">mut </span>score: i16, best_move: Move, depth: i8, ply: u16, score_type: u8, age: u8) {
+    </span><span class="kw">pub fn </span>add(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: u64, <span class="kw-2">mut </span>score: i16, best_move: Move, depth: i8, ply: u16, r#type: u8, age: u8) {
+        <span class="macro">assert_fast!</span>(r#type == <span class="number">1 </span>|| r#type == <span class="number">2 </span>|| r#type == <span class="number">4</span>);
+
         <span class="kw">let </span>key = <span class="self">self</span>.get_key(hash);
         <span class="kw">let </span>index = <span class="self">self</span>.get_index(hash);
+
+        <span class="macro">assert_fast!</span>(index &lt; <span class="self">self</span>.table.len());
         <span class="kw">let </span>bucket = <span class="kw-2">&amp;</span><span class="self">self</span>.table[index];
 
         <span class="kw">let </span><span class="kw-2">mut </span>smallest_depth = i8::MAX;
@@ -376,14 +387,17 @@
             }
         }
 
-        bucket.entries[desired_index].set_data(key, score, best_move, depth, score_type, age);
+        <span class="macro">assert_fast!</span>(desired_index &lt; bucket.entries.len());
+        bucket.entries[desired_index].set_data(key, score, best_move, depth, r#type, age);
     }
 
-    <span class="doccomment">/// Gets a wanted entry using `hash &amp; (self.table.len() - 1)` formula to calculate an index of the bucket. This function takes care of converting
-    /// mate `score` using passed `ply`. Returns [None] if `hash` is incompatible with the stored key.
-    </span><span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: u64, ply: u16) -&gt; <span class="prelude-ty">Option</span>&lt;TranspositionTableResult&gt; {
+    <span class="doccomment">/// Gets a wanted entry using `hash` to calculate an index of the bucket. This function takes care of converting
+    /// mate `score` using passed `ply`. Returns [None] if entry does not exists or `hash` is incompatible with the stored key.
+    </span><span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: u64, ply: u16) -&gt; <span class="prelude-ty">Option</span>&lt;TTableResult&gt; {
         <span class="kw">let </span>key = <span class="self">self</span>.get_key(hash);
         <span class="kw">let </span>index = <span class="self">self</span>.get_index(hash);
+
+        <span class="macro">assert_fast!</span>(index &lt; <span class="self">self</span>.table.len());
         <span class="kw">let </span>bucket = <span class="kw-2">&amp;</span><span class="self">self</span>.table[index];
 
         <span class="kw">for </span>entry <span class="kw">in </span><span class="kw-2">&amp;</span>bucket.entries {
@@ -399,25 +413,35 @@
                     entry_data.score
                 };
 
-                <span class="kw">return </span><span class="prelude-val">Some</span>(TranspositionTableResult::new(
-                    entry_data.key,
-                    entry_score,
-                    entry_data.best_move,
-                    entry_data.depth,
-                    entry_data.r#type,
-                    entry_data.age,
-                ));
+                <span class="kw">return </span><span class="prelude-val">Some</span>(TTableResult::new(entry_data.key, entry_score, entry_data.best_move, entry_data.depth, entry_data.r#type, entry_data.age));
             }
         }
 
         <span class="prelude-val">None
     </span>}
 
-    <span class="doccomment">/// Gets an entry's best move using `hash &amp; (self.table.len() - 1)` formula to calculate an index of the bucket.
-    /// Returns [None] if `hash` is incompatible with the stored key.
+    <span class="doccomment">/// Prefetches an entry using `hash` to calculate an index of the bucket. This function should be called early enough, so CPU has
+    /// enough time to transfer data from the memory into cache.
+    </span><span class="kw">pub fn </span>prefetch(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: u64) {
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>index = <span class="self">self</span>.get_index(hash);
+            <span class="kw">let </span>addr = <span class="self">self</span>.table.as_ptr().add(index) <span class="kw">as </span><span class="kw-2">*const </span>i8;
+
+            <span class="attr">#[cfg(target_arch = <span class="string">"x86"</span>)]
+            </span>std::arch::x86::_mm_prefetch::&lt;{ std::arch::x86::_MM_HINT_T0 }&gt;(addr);
+
+            <span class="attr">#[cfg(target_arch = <span class="string">"x86_64"</span>)]
+            </span>std::arch::x86_64::_mm_prefetch::&lt;{ std::arch::x86_64::_MM_HINT_T0 }&gt;(addr);
+
+            <span class="attr">#[cfg(target_arch = <span class="string">"aarch64"</span>)]
+            </span><span class="macro">std::arch::asm!</span>(<span class="string">"prfm PSTL1KEEP, [{}]"</span>, <span class="kw">in</span>(reg) addr);
+        }
+    }
+
+    <span class="doccomment">/// Gets an entry's best move using `hash` to calculate an index of the bucket.
+    /// Returns [None] if entry does not exists or `hash` is incompatible with the stored key.
     </span><span class="kw">pub fn </span>get_best_move(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: u64) -&gt; <span class="prelude-ty">Option</span>&lt;Move&gt; {
-        <span class="kw">let </span>entry = <span class="self">self</span>.get(hash, <span class="number">0</span>);
-        entry.map(|entry| entry.best_move)
+        <span class="self">self</span>.get(hash, <span class="number">0</span>).map(|entry| entry.best_move)
     }
 
     <span class="doccomment">/// Retrieves PV line from the transposition table, using `board` position and the current `ply`.
@@ -427,15 +451,15 @@
         }
 
         <span class="kw">let </span><span class="kw-2">mut </span>pv_line = Vec::new();
-        <span class="kw">match </span><span class="self">self</span>.get(board.hash, <span class="number">0</span>) {
+        <span class="kw">match </span><span class="self">self</span>.get(board.state.hash, <span class="number">0</span>) {
             <span class="prelude-val">Some</span>(entry) =&gt; {
-                <span class="kw">if </span>entry.r#type != TranspositionTableScoreType::EXACT_SCORE {
+                <span class="kw">if </span>entry.r#type != TTableScoreType::EXACT_SCORE {
                     <span class="kw">return </span>Vec::new();
                 }
 
                 <span class="kw">if </span>entry.best_move.is_legal(board) {
                     board.make_move(entry.best_move);
-                    <span class="kw">if </span>!board.is_king_checked(board.active_color ^ <span class="number">1</span>) {
+                    <span class="kw">if </span>!board.is_king_checked(board.stm ^ <span class="number">1</span>) {
                         pv_line.push(entry.best_move);
                         pv_line.append(<span class="kw-2">&amp;mut </span><span class="self">self</span>.get_pv_line(board, ply + <span class="number">1</span>));
                     }
@@ -476,27 +500,36 @@
         <span class="macro">percent!</span>(filled_entries, resolution)
     }
 
-    <span class="doccomment">/// Calculates a key for the `hash` by taking the last 16 bits of it.
+    <span class="doccomment">/// Calculates a key for the `hash` by taking first 16 bits of it.
     </span><span class="kw">fn </span>get_key(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: u64) -&gt; u16 {
-        (hash &gt;&gt; <span class="number">48</span>) <span class="kw">as </span>u16
+        hash <span class="kw">as </span>u16
     }
 
     <span class="doccomment">/// Calculates an index for the `hash`.
     </span><span class="kw">fn </span>get_index(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: u64) -&gt; usize {
-        (hash <span class="kw">as </span>usize) &amp; (<span class="self">self</span>.table.len() - <span class="number">1</span>)
+        (((hash <span class="kw">as </span>u128).wrapping_mul(<span class="self">self</span>.table.len() <span class="kw">as </span>u128)) &gt;&gt; <span class="number">64</span>) <span class="kw">as </span>usize
     }
 }
 
-<span class="kw">impl </span>Default <span class="kw">for </span>TranspositionTableBucket {
-    <span class="doccomment">/// Constructs a default instance of [TranspositionTableBucket] with zeroed elements.
-    </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ entries: Default::default() }
-    }
-}
+<span class="kw">impl </span>TTableEntry {
+    <span class="doccomment">/// Loads and parses atomic value into a [TTableResult] struct.
+    </span><span class="kw">pub fn </span>get_data(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TTableResult {
+        <span class="kw">let </span>key_data = <span class="self">self</span>.key_data.load(Ordering::Relaxed);
 
-<span class="kw">impl </span>TranspositionTableEntry {
+        <span class="kw">let </span>key = key_data <span class="kw">as </span>u16;
+        <span class="kw">let </span>score = (key_data &gt;&gt; <span class="number">16</span>) <span class="kw">as </span>i16;
+        <span class="kw">let </span>best_move = Move::new_from_raw((key_data &gt;&gt; <span class="number">32</span>) <span class="kw">as </span>u16);
+        <span class="kw">let </span>depth = (key_data &gt;&gt; <span class="number">48</span>) <span class="kw">as </span>i8;
+        <span class="kw">let </span>r#type = ((key_data &gt;&gt; <span class="number">56</span>) &amp; <span class="number">0x7</span>) <span class="kw">as </span>u8;
+        <span class="kw">let </span>age = (key_data &gt;&gt; <span class="number">59</span>) <span class="kw">as </span>u8;
+
+        TTableResult::new(key, score, best_move, depth, r#type, age)
+    }
+
     <span class="doccomment">/// Converts `key`, `score`, `best_move`, `depth`, `r#type` and `age` into an atomic word, and stores it.
     </span><span class="kw">pub fn </span>set_data(<span class="kw-2">&amp;</span><span class="self">self</span>, key: u16, score: i16, best_move: Move, depth: i8, r#type: u8, age: u8) {
+        <span class="macro">assert_fast!</span>(r#type == <span class="number">1 </span>|| r#type == <span class="number">2 </span>|| r#type == <span class="number">4</span>);
+
         <span class="kw">let </span>key_data = <span class="number">0
             </span>| (key <span class="kw">as </span>u64)
             | (((score <span class="kw">as </span>u16) <span class="kw">as </span>u64) &lt;&lt; <span class="number">16</span>)
@@ -507,31 +540,10 @@
 
         <span class="self">self</span>.key_data.store(key_data, Ordering::Relaxed);
     }
-
-    <span class="doccomment">/// Loads and parses atomic value into a [TranspositionTableResult] struct.
-    </span><span class="kw">pub fn </span>get_data(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TranspositionTableResult {
-        <span class="kw">let </span>key_data = <span class="self">self</span>.key_data.load(Ordering::Relaxed);
-
-        <span class="kw">let </span>key = key_data <span class="kw">as </span>u16;
-        <span class="kw">let </span>score = (key_data &gt;&gt; <span class="number">16</span>) <span class="kw">as </span>i16;
-        <span class="kw">let </span>best_move = Move::new_from_raw((key_data &gt;&gt; <span class="number">32</span>) <span class="kw">as </span>u16);
-        <span class="kw">let </span>depth = (key_data &gt;&gt; <span class="number">48</span>) <span class="kw">as </span>i8;
-        <span class="kw">let </span>r#type = ((key_data &gt;&gt; <span class="number">56</span>) &amp; <span class="number">0x7</span>) <span class="kw">as </span>u8;
-        <span class="kw">let </span>age = (key_data &gt;&gt; <span class="number">59</span>) <span class="kw">as </span>u8;
-
-        TranspositionTableResult::new(key, score, best_move, depth, r#type, age)
-    }
 }
 
-<span class="kw">impl </span>Default <span class="kw">for </span>TranspositionTableEntry {
-    <span class="doccomment">/// Constructs a default instance of [TranspositionTableEntry] with zeroed elements.
-    </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        TranspositionTableEntry { key_data: AtomicU64::new(<span class="number">0</span>) }
-    }
-}
-
-<span class="kw">impl </span>TranspositionTableResult {
-    <span class="doccomment">/// Constructs a new instance of [TranspositionTableResult] with stored `key`, `score`, `best_move`, `depth`, `r#type` and `age`.
+<span class="kw">impl </span>TTableResult {
+    <span class="doccomment">/// Constructs a new instance of [TTableResult] with stored `key`, `score`, `best_move`, `depth`, `r#type` and `age`.
     </span><span class="kw">pub fn </span>new(key: u16, score: i16, best_move: Move, depth: i8, r#type: u8, age: u8) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ key, score, best_move, depth, r#type, age }
     }

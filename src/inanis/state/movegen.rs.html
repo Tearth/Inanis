@@ -443,14 +443,26 @@
 <a href="#441" id="441">441</a>
 <a href="#442" id="442">442</a>
 <a href="#443" id="443">443</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::patterns::PatternsContainer;
-<span class="kw">use super</span>::<span class="kw-2">*</span>;
+<a href="#444" id="444">444</a>
+<a href="#445" id="445">445</a>
+<a href="#446" id="446">446</a>
+<a href="#447" id="447">447</a>
+<a href="#448" id="448">448</a>
+<a href="#449" id="449">449</a>
+<a href="#450" id="450">450</a>
+<a href="#451" id="451">451</a>
+<a href="#452" id="452">452</a>
+<a href="#453" id="453">453</a>
+<a href="#454" id="454">454</a>
+<a href="#455" id="455">455</a>
+</pre></div><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::utils::assert_fast;
 <span class="kw">use </span><span class="kw">crate</span>::utils::bithelpers::BitHelpers;
 <span class="kw">use </span><span class="kw">crate</span>::utils::rand;
-<span class="kw">use </span>std::sync::Arc;
+<span class="kw">use </span>std::sync::OnceLock;
 
 <span class="attr">#[rustfmt::skip]
-</span><span class="kw">static </span>ROOK_SHIFTS: [u8; <span class="number">64</span>] =
+</span><span class="kw">const </span>ROOK_SHIFTS: [u8; <span class="number">64</span>] =
 [
     <span class="number">12</span>, <span class="number">11</span>, <span class="number">11</span>, <span class="number">11</span>, <span class="number">11</span>, <span class="number">11</span>, <span class="number">11</span>, <span class="number">12</span>,
     <span class="number">11</span>, <span class="number">10</span>, <span class="number">10</span>, <span class="number">10</span>, <span class="number">10</span>, <span class="number">10</span>, <span class="number">10</span>, <span class="number">11</span>,
@@ -463,7 +475,7 @@
 </span>];
 
 <span class="attr">#[rustfmt::skip]
-</span><span class="kw">static </span>BISHOP_SHIFTS: [u8; <span class="number">64</span>] =
+</span><span class="kw">const </span>BISHOP_SHIFTS: [u8; <span class="number">64</span>] =
 [
     <span class="number">6</span>, <span class="number">5</span>, <span class="number">5</span>, <span class="number">5</span>, <span class="number">5</span>, <span class="number">5</span>, <span class="number">5</span>, <span class="number">6</span>,
     <span class="number">5</span>, <span class="number">5</span>, <span class="number">5</span>, <span class="number">5</span>, <span class="number">5</span>, <span class="number">5</span>, <span class="number">5</span>, <span class="number">5</span>,
@@ -475,7 +487,7 @@
     <span class="number">6</span>, <span class="number">5</span>, <span class="number">5</span>, <span class="number">5</span>, <span class="number">5</span>, <span class="number">5</span>, <span class="number">5</span>, <span class="number">6
 </span>];
 
-<span class="kw">static </span>ROOK_MAGIC_NUMBERS: [u64; <span class="number">64</span>] = [
+<span class="kw">const </span>ROOK_MAGIC_NUMBERS: [u64; <span class="number">64</span>] = [
     <span class="number">2413929538783315984</span>,
     <span class="number">1170945936180973568</span>,
     <span class="number">36063983556362632</span>,
@@ -542,7 +554,7 @@
     <span class="number">2323860433544422402</span>,
 ];
 
-<span class="kw">static </span>BISHOP_MAGIC_NUMBERS: [u64; <span class="number">64</span>] = [
+<span class="kw">const </span>BISHOP_MAGIC_NUMBERS: [u64; <span class="number">64</span>] = [
     <span class="number">18018831217729569</span>,
     <span class="number">7566619154406457857</span>,
     <span class="number">5769265629886676992</span>,
@@ -609,275 +621,287 @@
     <span class="number">9377059641948700736</span>,
 ];
 
-<span class="kw">pub struct </span>MagicContainer {
-    <span class="kw">pub </span>rook_squares: [MagicSquare; <span class="number">64</span>],
-    <span class="kw">pub </span>bishop_squares: [MagicSquare; <span class="number">64</span>],
-}
+<span class="kw">static </span>ROOK_SQUARES: OnceLock&lt;[MagicSquare; <span class="number">64</span>]&gt; = OnceLock::new();
+<span class="kw">static </span>BISHOP_SQUARES: OnceLock&lt;[MagicSquare; <span class="number">64</span>]&gt; = OnceLock::new();
 
-<span class="kw">pub struct </span>MagicSquare {
+<span class="attr">#[derive(Clone, Default)]
+</span><span class="kw">pub struct </span>MagicSquare {
     <span class="kw">pub </span>mask: u64,
     <span class="kw">pub </span>shift: u8,
     <span class="kw">pub </span>magic: u64,
     <span class="kw">pub </span>attacks: Vec&lt;u64&gt;,
 }
 
-<span class="kw">impl </span>MagicContainer {
-    <span class="doccomment">/// Gets a rook moves for the square specified by `square`, considering `occupancy_bb`.
-    </span><span class="kw">pub fn </span>get_rook_moves(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut </span>occupancy_bb: u64, square: usize) -&gt; u64 {
-        occupancy_bb &amp;= <span class="self">self</span>.rook_squares[square].mask;
-        occupancy_bb = occupancy_bb.wrapping_mul(<span class="self">self</span>.rook_squares[square].magic);
-        occupancy_bb &gt;&gt;= <span class="number">64 </span>- <span class="self">self</span>.rook_squares[square].shift;
+<span class="doccomment">/// Initialize movegen for rooks and bishops.
+</span><span class="kw">pub fn </span>init() {
+    <span class="kw">const </span>INIT: MagicSquare = MagicSquare::new();
+    <span class="kw">let </span><span class="kw-2">mut </span>rook_squares = [INIT; <span class="number">64</span>];
+    <span class="kw">let </span><span class="kw-2">mut </span>bishop_squares = [INIT; <span class="number">64</span>];
 
-        <span class="self">self</span>.rook_squares[square].attacks[occupancy_bb <span class="kw">as </span>usize]
+    <span class="kw">for </span>index <span class="kw">in </span>ALL_SQUARES {
+        apply_rook_magic(<span class="kw-2">&amp;mut </span>rook_squares, index);
+        apply_bishop_magic(<span class="kw-2">&amp;mut </span>bishop_squares, index);
     }
 
-    <span class="doccomment">/// Gets a bishop moves for the square specified by `square`, considering `occupancy_bb`.
-    </span><span class="kw">pub fn </span>get_bishop_moves(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut </span>occupancy_bb: u64, square: usize) -&gt; u64 {
-        occupancy_bb &amp;= <span class="self">self</span>.bishop_squares[square].mask;
-        occupancy_bb = occupancy_bb.wrapping_mul(<span class="self">self</span>.bishop_squares[square].magic);
-        occupancy_bb &gt;&gt;= <span class="number">64 </span>- <span class="self">self</span>.bishop_squares[square].shift;
-
-        <span class="self">self</span>.bishop_squares[square].attacks[occupancy_bb <span class="kw">as </span>usize]
-    }
-
-    <span class="doccomment">/// Gets a queen moves for the square specified by `square`, considering `occupancy_bb`.
-    </span><span class="kw">pub fn </span>get_queen_moves(<span class="kw-2">&amp;</span><span class="self">self</span>, occupancy_bb: u64, square: usize) -&gt; u64 {
-        <span class="self">self</span>.get_rook_moves(occupancy_bb, square) | <span class="self">self</span>.get_bishop_moves(occupancy_bb, square)
-    }
-
-    <span class="doccomment">/// Gets a knight moves for the square specified by `square`, without considering an occupancy.
-    </span><span class="kw">pub fn </span>get_knight_moves(<span class="kw-2">&amp;</span><span class="self">self</span>, square: usize, patterns: <span class="kw-2">&amp;</span>PatternsContainer) -&gt; u64 {
-        patterns.get_jumps(square)
-    }
-
-    <span class="doccomment">/// Gets a king moves for the square specified by `square`, without considering an occupancy.
-    </span><span class="kw">pub fn </span>get_king_moves(<span class="kw-2">&amp;</span><span class="self">self</span>, square: usize, patterns: <span class="kw-2">&amp;</span>PatternsContainer) -&gt; u64 {
-        patterns.get_box(square)
-    }
-
-    <span class="doccomment">/// Generates a rook magic number for the square specified by `square`.
-    </span><span class="kw">pub fn </span>generate_rook_magic_number(<span class="kw-2">&amp;</span><span class="self">self</span>, square: usize) -&gt; u64 {
-        <span class="kw">let </span>patterns = Arc::new(PatternsContainer::default());
-
-        <span class="kw">let </span>shift = ROOK_SHIFTS[square];
-        <span class="kw">let </span>mask = <span class="self">self</span>.get_rook_mask(square, <span class="kw-2">&amp;</span>patterns);
-        <span class="kw">let </span>count = <span class="number">1 </span>&lt;&lt; shift;
-
-        <span class="kw">let </span><span class="kw-2">mut </span>permutations = Vec::with_capacity(count <span class="kw">as </span>usize);
-        <span class="kw">let </span><span class="kw-2">mut </span>attacks = Vec::with_capacity(count <span class="kw">as </span>usize);
-
-        <span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>..count {
-            <span class="kw">let </span>permutation = <span class="self">self</span>.get_permutation(mask, index <span class="kw">as </span>u64);
-            <span class="kw">let </span>permutation_attacks = <span class="self">self</span>.get_rook_attacks(permutation, square);
-
-            permutations.push(permutation);
-            attacks.push(permutation_attacks);
-        }
-
-        <span class="self">self</span>.generate_magic_number(shift, <span class="kw-2">&amp;</span>permutations, <span class="kw-2">&amp;</span>attacks)
-    }
-
-    <span class="doccomment">/// Generates a bishop magic number for the square specified by `square`.
-    </span><span class="kw">pub fn </span>generate_bishop_magic_number(<span class="kw-2">&amp;</span><span class="self">self</span>, square: usize) -&gt; u64 {
-        <span class="kw">let </span>patterns = Arc::new(PatternsContainer::default());
-
-        <span class="kw">let </span>shift = BISHOP_SHIFTS[square];
-        <span class="kw">let </span>mask = <span class="self">self</span>.get_bishop_mask(square, <span class="kw-2">&amp;</span>patterns);
-        <span class="kw">let </span>count = <span class="number">1 </span>&lt;&lt; shift;
-
-        <span class="kw">let </span><span class="kw-2">mut </span>permutations = Vec::with_capacity(count <span class="kw">as </span>usize);
-        <span class="kw">let </span><span class="kw-2">mut </span>attacks = Vec::with_capacity(count <span class="kw">as </span>usize);
-
-        <span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>..count {
-            <span class="kw">let </span>permutation = <span class="self">self</span>.get_permutation(mask, index <span class="kw">as </span>u64);
-            <span class="kw">let </span>permutation_attacks = <span class="self">self</span>.get_bishop_attacks(permutation, square);
-
-            permutations.push(permutation);
-            attacks.push(permutation_attacks);
-        }
-
-        <span class="self">self</span>.generate_magic_number(shift, <span class="kw-2">&amp;</span>permutations, <span class="kw-2">&amp;</span>attacks)
-    }
-
-    <span class="doccomment">/// Generates a magic number for a set of `permutations` and `attacks`, using `shift` proper for the specified square.
-    </span><span class="kw">fn </span>generate_magic_number(<span class="kw-2">&amp;</span><span class="self">self</span>, shift: u8, permutations: <span class="kw-2">&amp;</span>[u64], attacks: <span class="kw-2">&amp;</span>[u64]) -&gt; u64 {
-        <span class="kw">let </span>count = <span class="number">1 </span>&lt;&lt; shift;
-        <span class="kw">let </span><span class="kw-2">mut </span>hashed_attacks = <span class="macro">vec!</span>[<span class="number">0</span>; count];
-        <span class="kw">let </span><span class="kw-2">mut </span>magic_number: u64;
-
-        <span class="kw">loop </span>{
-            magic_number = rand::u64(..) &amp; rand::u64(..) &amp; rand::u64(..);
-
-            <span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>..count {
-                <span class="kw">let </span>hash = (permutations[index].wrapping_mul(magic_number) &gt;&gt; (<span class="number">64 </span>- shift)) <span class="kw">as </span>usize;
-
-                <span class="kw">if </span>hashed_attacks[hash] == <span class="number">0 </span>|| hashed_attacks[hash] == attacks[index] {
-                    hashed_attacks[hash] = attacks[index];
-                } <span class="kw">else </span>{
-                    magic_number = <span class="number">0</span>;
-                    <span class="kw">break</span>;
-                }
-            }
-
-            <span class="kw">if </span>magic_number != <span class="number">0 </span>{
-                <span class="kw">break</span>;
-            }
-
-            <span class="kw">for </span>index <span class="kw">in </span><span class="kw-2">&amp;mut </span>hashed_attacks {
-                <span class="kw-2">*</span>index = <span class="number">0</span>;
-            }
-        }
-
-        magic_number
-    }
-
-    <span class="doccomment">/// Applies rook magic for the square specified by `square`, using built-in magic number from [ROOK_MAGIC_NUMBERS].
-    </span><span class="kw">fn </span>apply_rook_magic(<span class="kw-2">&amp;mut </span><span class="self">self</span>, square: usize) {
-        <span class="kw">let </span>patterns = Arc::new(PatternsContainer::default());
-
-        <span class="kw">let </span>shift = ROOK_SHIFTS[square];
-        <span class="kw">let </span>mask = <span class="self">self</span>.get_rook_mask(square, <span class="kw-2">&amp;</span>patterns);
-        <span class="kw">let </span>count = <span class="number">1 </span>&lt;&lt; shift;
-
-        <span class="kw">let </span><span class="kw-2">mut </span>permutations = Vec::with_capacity(count <span class="kw">as </span>usize);
-        <span class="kw">let </span><span class="kw-2">mut </span>attacks = Vec::with_capacity(count <span class="kw">as </span>usize);
-
-        <span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>..count {
-            <span class="kw">let </span>permutation = <span class="self">self</span>.get_permutation(mask, index <span class="kw">as </span>u64);
-
-            permutations.push(permutation);
-            attacks.push(<span class="self">self</span>.get_rook_attacks(permutation, square));
-        }
-
-        <span class="kw">let </span>magic = ROOK_MAGIC_NUMBERS[square];
-        <span class="self">self</span>.rook_squares[square].shift = shift;
-        <span class="self">self</span>.rook_squares[square].mask = mask;
-        <span class="self">self</span>.rook_squares[square].magic = magic;
-        <span class="self">self</span>.rook_squares[square].attacks = <span class="self">self</span>.apply_magic_for_square(<span class="kw-2">&amp;</span>permutations, <span class="kw-2">&amp;</span>attacks, magic, shift);
-    }
-
-    <span class="doccomment">/// Applies bishop magic for the square specified by `square`, using built-in magic number from [BISHOP_MAGIC_NUMBERS].
-    </span><span class="kw">fn </span>apply_bishop_magic(<span class="kw-2">&amp;mut </span><span class="self">self</span>, square: usize) {
-        <span class="kw">let </span>patterns = Arc::new(PatternsContainer::default());
-
-        <span class="kw">let </span>shift = BISHOP_SHIFTS[square];
-        <span class="kw">let </span>mask = <span class="self">self</span>.get_bishop_mask(square, <span class="kw-2">&amp;</span>patterns);
-        <span class="kw">let </span>count = <span class="number">1 </span>&lt;&lt; shift;
-
-        <span class="kw">let </span><span class="kw-2">mut </span>permutations = Vec::with_capacity(count <span class="kw">as </span>usize);
-        <span class="kw">let </span><span class="kw-2">mut </span>attacks = Vec::with_capacity(count <span class="kw">as </span>usize);
-
-        <span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>..count {
-            <span class="kw">let </span>permutation = <span class="self">self</span>.get_permutation(mask, index <span class="kw">as </span>u64);
-
-            permutations.push(permutation);
-            attacks.push(<span class="self">self</span>.get_bishop_attacks(permutation, square));
-        }
-
-        <span class="kw">let </span>magic = BISHOP_MAGIC_NUMBERS[square];
-        <span class="self">self</span>.bishop_squares[square].shift = shift;
-        <span class="self">self</span>.bishop_squares[square].mask = mask;
-        <span class="self">self</span>.bishop_squares[square].magic = magic;
-        <span class="self">self</span>.bishop_squares[square].attacks = <span class="self">self</span>.apply_magic_for_square(<span class="kw-2">&amp;</span>permutations, <span class="kw-2">&amp;</span>attacks, magic, shift);
-    }
-
-    <span class="doccomment">/// Applies a magic number for a set of `permutations`, `attacks` and `square`.
-    </span><span class="kw">fn </span>apply_magic_for_square(<span class="kw-2">&amp;</span><span class="self">self</span>, permutations: <span class="kw-2">&amp;</span>[u64], attacks: <span class="kw-2">&amp;</span>[u64], magic: u64, shift: u8) -&gt; Vec&lt;u64&gt; {
-        <span class="kw">let </span>count = <span class="number">1 </span>&lt;&lt; shift;
-        <span class="kw">let </span><span class="kw-2">mut </span>result = <span class="macro">vec!</span>[<span class="number">0</span>; count <span class="kw">as </span>usize];
-
-        <span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>..count {
-            <span class="kw">let </span>permutation = permutations[index <span class="kw">as </span>usize];
-            <span class="kw">let </span>permutation_attacks = attacks[index <span class="kw">as </span>usize];
-            <span class="kw">let </span>hash = permutation.wrapping_mul(magic) &gt;&gt; (<span class="number">64 </span>- shift);
-
-            <span class="macro">debug_assert!</span>(result[hash <span class="kw">as </span>usize] == <span class="number">0</span>);
-            result[hash <span class="kw">as </span>usize] = permutation_attacks;
-        }
-
-        result
-    }
-
-    <span class="doccomment">/// Gets `index`-th permutation of the `mask`.  
-    </span><span class="kw">fn </span>get_permutation(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut </span>mask: u64, <span class="kw-2">mut </span>index: u64) -&gt; u64 {
-        <span class="kw">let </span><span class="kw-2">mut </span>result = <span class="number">0u64</span>;
-
-        <span class="kw">while </span>mask != <span class="number">0 </span>{
-            <span class="kw">let </span>lsb = mask.get_lsb();
-            <span class="kw">let </span>lsb_index = lsb.bit_scan();
-            mask = mask.pop_lsb();
-
-            result |= (index &amp; <span class="number">1</span>) &lt;&lt; lsb_index;
-            index &gt;&gt;= <span class="number">1</span>;
-        }
-
-        result
-    }
-
-    <span class="doccomment">/// Gets a rook mask for the square specified by `square`, without considering occupancy.
-    </span><span class="kw">fn </span>get_rook_mask(<span class="kw-2">&amp;</span><span class="self">self</span>, square: usize, patterns: <span class="kw-2">&amp;</span>PatternsContainer) -&gt; u64 {
-        (patterns.get_file(square) &amp; !RANK_1_BB &amp; !RANK_8_BB) | (patterns.get_rank(square) &amp; !FILE_A_BB &amp; !FILE_H_BB)
-    }
-
-    <span class="doccomment">/// Gets a bishop mask for the square specified by `square`, without considering occupancy.
-    </span><span class="kw">fn </span>get_bishop_mask(<span class="kw-2">&amp;</span><span class="self">self</span>, square: usize, patterns: <span class="kw-2">&amp;</span>PatternsContainer) -&gt; u64 {
-        patterns.get_diagonals(square) &amp; !EDGE_BB
-    }
-
-    <span class="doccomment">/// Gets a rook attacks for the square specified by `square`, considering `occupancy_bb`.
-    </span><span class="kw">fn </span>get_rook_attacks(<span class="kw-2">&amp;</span><span class="self">self</span>, occupancy_bb: u64, square: usize) -&gt; u64 {
-        <span class="kw">let </span>left = <span class="self">self</span>.get_attacks(occupancy_bb, square, (-<span class="number">1</span>, <span class="number">0</span>));
-        <span class="kw">let </span>right = <span class="self">self</span>.get_attacks(occupancy_bb, square, (<span class="number">1</span>, <span class="number">0</span>));
-        <span class="kw">let </span>top = <span class="self">self</span>.get_attacks(occupancy_bb, square, (<span class="number">0</span>, <span class="number">1</span>));
-        <span class="kw">let </span>down = <span class="self">self</span>.get_attacks(occupancy_bb, square, (<span class="number">0</span>, -<span class="number">1</span>));
-
-        left | right | top | down
-    }
-
-    <span class="doccomment">/// Gets a bishop attacks for the square specified by `square`, occupancy `occupancy_bb`.
-    </span><span class="kw">fn </span>get_bishop_attacks(<span class="kw-2">&amp;</span><span class="self">self</span>, occupancy_bb: u64, square: usize) -&gt; u64 {
-        <span class="kw">let </span>top_right = <span class="self">self</span>.get_attacks(occupancy_bb, square, (<span class="number">1</span>, <span class="number">1</span>));
-        <span class="kw">let </span>top_left = <span class="self">self</span>.get_attacks(occupancy_bb, square, (<span class="number">1</span>, -<span class="number">1</span>));
-        <span class="kw">let </span>down_right = <span class="self">self</span>.get_attacks(occupancy_bb, square, (-<span class="number">1</span>, <span class="number">1</span>));
-        <span class="kw">let </span>down_left = <span class="self">self</span>.get_attacks(occupancy_bb, square, (-<span class="number">1</span>, -<span class="number">1</span>));
-
-        top_right | top_left | down_right | down_left
-    }
-
-    <span class="doccomment">/// Helper function to get all possible to move squares, considering `occupancy_bb`, starting from the square
-    /// specified by `square` and going into the `direction`.
-    </span><span class="kw">fn </span>get_attacks(<span class="kw-2">&amp;</span><span class="self">self</span>, occupancy_bb: u64, square: usize, direction: (isize, isize)) -&gt; u64 {
-        <span class="kw">let </span><span class="kw-2">mut </span>result = <span class="number">0u64</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>current = ((square <span class="kw">as </span>isize) % <span class="number">8 </span>+ direction.<span class="number">0</span>, (square <span class="kw">as </span>isize) / <span class="number">8 </span>+ direction.<span class="number">1</span>);
-
-        <span class="kw">while </span>current.<span class="number">0 </span>&gt;= <span class="number">0 </span>&amp;&amp; current.<span class="number">0 </span>&lt;= <span class="number">7 </span>&amp;&amp; current.<span class="number">1 </span>&gt;= <span class="number">0 </span>&amp;&amp; current.<span class="number">1 </span>&lt;= <span class="number">7 </span>{
-            result |= <span class="number">1u64 </span>&lt;&lt; (current.<span class="number">0 </span>+ current.<span class="number">1 </span>* <span class="number">8</span>);
-
-            <span class="kw">if </span>(occupancy_bb &amp; result) != <span class="number">0 </span>{
-                <span class="kw">break</span>;
-            }
-
-            current = (current.<span class="number">0 </span>+ direction.<span class="number">0</span>, current.<span class="number">1 </span>+ direction.<span class="number">1</span>);
-        }
-
-        result
-    }
+    <span class="kw">let _ </span>= ROOK_SQUARES.set(rook_squares);
+    <span class="kw">let _ </span>= BISHOP_SQUARES.set(bishop_squares);
 }
 
-<span class="kw">impl </span>Default <span class="kw">for </span>MagicContainer {
-    <span class="doccomment">/// Constructs a new instance of [MagicContainer] with default values.
-    </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        <span class="kw">const </span>INIT: MagicSquare = MagicSquare::new();
+<span class="doccomment">/// Gets a rook moves for the square specified by `square`, considering `occupancy_bb`.
+</span><span class="kw">pub fn </span>get_rook_moves(<span class="kw-2">mut </span>occupancy_bb: u64, square: usize) -&gt; u64 {
+    <span class="macro">assert_fast!</span>(square &lt; <span class="number">64</span>);
 
-        <span class="kw">let </span><span class="kw-2">mut </span>result = <span class="self">Self </span>{ rook_squares: [INIT; <span class="number">64</span>], bishop_squares: [INIT; <span class="number">64</span>] };
+    <span class="kw">let </span>data = <span class="kw">unsafe </span>{ ROOK_SQUARES.get().unwrap_unchecked() };
+    occupancy_bb &amp;= data[square].mask;
+    occupancy_bb = occupancy_bb.wrapping_mul(data[square].magic);
+    occupancy_bb &gt;&gt;= data[square].shift;
 
-        <span class="kw">for </span>index <span class="kw">in </span>ALL_SQUARES {
-            result.apply_rook_magic(index);
-            result.apply_bishop_magic(index);
+    <span class="macro">assert_fast!</span>(occupancy_bb &lt; data[square].attacks.len() <span class="kw">as </span>u64);
+    data[square].attacks[occupancy_bb <span class="kw">as </span>usize]
+}
+
+<span class="doccomment">/// Gets a bishop moves for the square specified by `square`, considering `occupancy_bb`.
+</span><span class="kw">pub fn </span>get_bishop_moves(<span class="kw-2">mut </span>occupancy_bb: u64, square: usize) -&gt; u64 {
+    <span class="macro">assert_fast!</span>(square &lt; <span class="number">64</span>);
+
+    <span class="kw">let </span>data = <span class="kw">unsafe </span>{ BISHOP_SQUARES.get().unwrap_unchecked() };
+    occupancy_bb &amp;= data[square].mask;
+    occupancy_bb = occupancy_bb.wrapping_mul(data[square].magic);
+    occupancy_bb &gt;&gt;= data[square].shift;
+
+    <span class="macro">assert_fast!</span>(occupancy_bb &lt; data[square].attacks.len() <span class="kw">as </span>u64);
+    data[square].attacks[occupancy_bb <span class="kw">as </span>usize]
+}
+
+<span class="doccomment">/// Gets a queen moves for the square specified by `square`, considering `occupancy_bb`.
+</span><span class="kw">pub fn </span>get_queen_moves(occupancy_bb: u64, square: usize) -&gt; u64 {
+    movegen::get_rook_moves(occupancy_bb, square) | movegen::get_bishop_moves(occupancy_bb, square)
+}
+
+<span class="doccomment">/// Gets a knight moves for the square specified by `square`, without considering an occupancy.
+</span><span class="kw">pub fn </span>get_knight_moves(square: usize) -&gt; u64 {
+    patterns::get_jumps(square)
+}
+
+<span class="doccomment">/// Gets a king moves for the square specified by `square`, without considering an occupancy.
+</span><span class="kw">pub fn </span>get_king_moves(square: usize) -&gt; u64 {
+    patterns::get_box(square)
+}
+
+<span class="doccomment">/// Generates a rook magic number for the square specified by `square`.
+</span><span class="kw">pub fn </span>generate_rook_magic_number(square: usize) -&gt; u64 {
+    <span class="macro">assert_fast!</span>(square &lt; <span class="number">64</span>);
+
+    <span class="kw">let </span>shift = ROOK_SHIFTS[square];
+    <span class="kw">let </span>mask = get_rook_mask(square);
+    <span class="kw">let </span>count = <span class="number">1 </span>&lt;&lt; shift;
+
+    <span class="kw">let </span><span class="kw-2">mut </span>permutations = Vec::with_capacity(count <span class="kw">as </span>usize);
+    <span class="kw">let </span><span class="kw-2">mut </span>attacks = Vec::with_capacity(count <span class="kw">as </span>usize);
+
+    <span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>..count {
+        <span class="kw">let </span>permutation = get_permutation(mask, index <span class="kw">as </span>u64);
+        <span class="kw">let </span>permutation_attacks = get_rook_attacks(permutation, square);
+
+        permutations.push(permutation);
+        attacks.push(permutation_attacks);
+    }
+
+    generate_magic_number(shift, <span class="kw-2">&amp;</span>permutations, <span class="kw-2">&amp;</span>attacks)
+}
+
+<span class="doccomment">/// Generates a bishop magic number for the square specified by `square`.
+</span><span class="kw">pub fn </span>generate_bishop_magic_number(square: usize) -&gt; u64 {
+    <span class="macro">assert_fast!</span>(square &lt; <span class="number">64</span>);
+
+    <span class="kw">let </span>shift = BISHOP_SHIFTS[square];
+    <span class="kw">let </span>mask = get_bishop_mask(square);
+    <span class="kw">let </span>count = <span class="number">1 </span>&lt;&lt; shift;
+
+    <span class="kw">let </span><span class="kw-2">mut </span>permutations = Vec::with_capacity(count <span class="kw">as </span>usize);
+    <span class="kw">let </span><span class="kw-2">mut </span>attacks = Vec::with_capacity(count <span class="kw">as </span>usize);
+
+    <span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>..count {
+        <span class="kw">let </span>permutation = get_permutation(mask, index <span class="kw">as </span>u64);
+        <span class="kw">let </span>permutation_attacks = get_bishop_attacks(permutation, square);
+
+        permutations.push(permutation);
+        attacks.push(permutation_attacks);
+    }
+
+    generate_magic_number(shift, <span class="kw-2">&amp;</span>permutations, <span class="kw-2">&amp;</span>attacks)
+}
+
+<span class="doccomment">/// Generates a magic number for a set of `permutations` and `attacks`, using `shift` proper for the specified square.
+</span><span class="kw">fn </span>generate_magic_number(shift: u8, permutations: <span class="kw-2">&amp;</span>[u64], attacks: <span class="kw-2">&amp;</span>[u64]) -&gt; u64 {
+    <span class="kw">let </span>count = <span class="number">1 </span>&lt;&lt; shift;
+    <span class="kw">let </span><span class="kw-2">mut </span>hashed_attacks = <span class="macro">vec!</span>[<span class="number">0</span>; count];
+    <span class="kw">let </span><span class="kw-2">mut </span>magic_number: u64;
+
+    <span class="kw">loop </span>{
+        magic_number = rand::u64(..) &amp; rand::u64(..) &amp; rand::u64(..);
+
+        <span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>..count {
+            <span class="kw">let </span>hash = (permutations[index].wrapping_mul(magic_number) &gt;&gt; (<span class="number">64 </span>- shift)) <span class="kw">as </span>usize;
+
+            <span class="kw">if </span>hashed_attacks[hash] == <span class="number">0 </span>|| hashed_attacks[hash] == attacks[index] {
+                hashed_attacks[hash] = attacks[index];
+            } <span class="kw">else </span>{
+                magic_number = <span class="number">0</span>;
+                <span class="kw">break</span>;
+            }
         }
 
-        result
+        <span class="kw">if </span>magic_number != <span class="number">0 </span>{
+            <span class="kw">break</span>;
+        }
+
+        <span class="kw">for </span>index <span class="kw">in </span><span class="kw-2">&amp;mut </span>hashed_attacks {
+            <span class="kw-2">*</span>index = <span class="number">0</span>;
+        }
     }
+
+    magic_number
+}
+
+<span class="doccomment">/// Applies rook magic for the square specified by `square`, using built-in magic number from [ROOK_MAGIC_NUMBERS].
+</span><span class="kw">fn </span>apply_rook_magic(rook_squares: <span class="kw-2">&amp;mut </span>[MagicSquare; <span class="number">64</span>], square: usize) {
+    <span class="macro">assert_fast!</span>(square &lt; <span class="number">64</span>);
+
+    <span class="kw">let </span>shift = ROOK_SHIFTS[square];
+    <span class="kw">let </span>mask = get_rook_mask(square);
+    <span class="kw">let </span>count = <span class="number">1 </span>&lt;&lt; shift;
+
+    <span class="kw">let </span><span class="kw-2">mut </span>permutations = Vec::with_capacity(count <span class="kw">as </span>usize);
+    <span class="kw">let </span><span class="kw-2">mut </span>attacks = Vec::with_capacity(count <span class="kw">as </span>usize);
+
+    <span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>..count {
+        <span class="kw">let </span>permutation = get_permutation(mask, index <span class="kw">as </span>u64);
+
+        permutations.push(permutation);
+        attacks.push(get_rook_attacks(permutation, square));
+    }
+
+    <span class="kw">let </span>magic = ROOK_MAGIC_NUMBERS[square];
+    rook_squares[square].shift = <span class="number">64 </span>- shift;
+    rook_squares[square].mask = mask;
+    rook_squares[square].magic = magic;
+    rook_squares[square].attacks = apply_magic_for_square(<span class="kw-2">&amp;</span>permutations, <span class="kw-2">&amp;</span>attacks, magic, shift);
+}
+
+<span class="doccomment">/// Applies bishop magic for the square specified by `square`, using built-in magic number from [BISHOP_MAGIC_NUMBERS].
+</span><span class="kw">fn </span>apply_bishop_magic(bishop_squares: <span class="kw-2">&amp;mut </span>[MagicSquare; <span class="number">64</span>], square: usize) {
+    <span class="macro">assert_fast!</span>(square &lt; <span class="number">64</span>);
+
+    <span class="kw">let </span>shift = BISHOP_SHIFTS[square];
+    <span class="kw">let </span>mask = get_bishop_mask(square);
+    <span class="kw">let </span>count = <span class="number">1 </span>&lt;&lt; shift;
+
+    <span class="kw">let </span><span class="kw-2">mut </span>permutations = Vec::with_capacity(count <span class="kw">as </span>usize);
+    <span class="kw">let </span><span class="kw-2">mut </span>attacks = Vec::with_capacity(count <span class="kw">as </span>usize);
+
+    <span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>..count {
+        <span class="kw">let </span>permutation = get_permutation(mask, index <span class="kw">as </span>u64);
+
+        permutations.push(permutation);
+        attacks.push(get_bishop_attacks(permutation, square));
+    }
+
+    <span class="kw">let </span>magic = BISHOP_MAGIC_NUMBERS[square];
+    bishop_squares[square].shift = <span class="number">64 </span>- shift;
+    bishop_squares[square].mask = mask;
+    bishop_squares[square].magic = magic;
+    bishop_squares[square].attacks = apply_magic_for_square(<span class="kw-2">&amp;</span>permutations, <span class="kw-2">&amp;</span>attacks, magic, shift);
+}
+
+<span class="doccomment">/// Applies a magic number for a set of `permutations`, `attacks` and `square`.
+</span><span class="kw">fn </span>apply_magic_for_square(permutations: <span class="kw-2">&amp;</span>[u64], attacks: <span class="kw-2">&amp;</span>[u64], magic: u64, shift: u8) -&gt; Vec&lt;u64&gt; {
+    <span class="kw">let </span>count = <span class="number">1 </span>&lt;&lt; shift;
+    <span class="kw">let </span><span class="kw-2">mut </span>result = <span class="macro">vec!</span>[<span class="number">0</span>; count <span class="kw">as </span>usize];
+
+    <span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>..count {
+        <span class="kw">let </span>permutation = permutations[index <span class="kw">as </span>usize];
+        <span class="kw">let </span>permutation_attacks = attacks[index <span class="kw">as </span>usize];
+        <span class="kw">let </span>hash = permutation.wrapping_mul(magic) &gt;&gt; (<span class="number">64 </span>- shift);
+
+        <span class="macro">assert_fast!</span>(result[hash <span class="kw">as </span>usize] == <span class="number">0</span>);
+        result[hash <span class="kw">as </span>usize] = permutation_attacks;
+    }
+
+    result
+}
+
+<span class="doccomment">/// Gets `index`-th permutation of the `mask`.  
+</span><span class="kw">fn </span>get_permutation(<span class="kw-2">mut </span>mask: u64, <span class="kw-2">mut </span>index: u64) -&gt; u64 {
+    <span class="kw">let </span><span class="kw-2">mut </span>result = <span class="number">0u64</span>;
+
+    <span class="kw">while </span>mask != <span class="number">0 </span>{
+        <span class="kw">let </span>lsb = mask.get_lsb();
+        <span class="kw">let </span>lsb_index = lsb.bit_scan();
+        mask = mask.pop_lsb();
+
+        result |= (index &amp; <span class="number">1</span>) &lt;&lt; lsb_index;
+        index &gt;&gt;= <span class="number">1</span>;
+    }
+
+    result
+}
+
+<span class="doccomment">/// Gets a rook mask for the square specified by `square`, without considering occupancy.
+</span><span class="kw">fn </span>get_rook_mask(square: usize) -&gt; u64 {
+    (patterns::get_file(square) &amp; !(<span class="number">1u64 </span>&lt;&lt; square) &amp; !RANK_1_BB &amp; !RANK_8_BB) | (patterns::get_rank(square) &amp; !(<span class="number">1u64 </span>&lt;&lt; square) &amp; !FILE_A_BB &amp; !FILE_H_BB)
+}
+
+<span class="doccomment">/// Gets a bishop mask for the square specified by `square`, without considering occupancy.
+</span><span class="kw">fn </span>get_bishop_mask(square: usize) -&gt; u64 {
+    patterns::get_diagonals(square) &amp; !(<span class="number">1u64 </span>&lt;&lt; square) &amp; !EDGE_BB
+}
+
+<span class="doccomment">/// Gets a rook attacks for the square specified by `square`, considering `occupancy_bb`.
+</span><span class="kw">fn </span>get_rook_attacks(occupancy_bb: u64, square: usize) -&gt; u64 {
+    <span class="macro">assert_fast!</span>(square &lt; <span class="number">64</span>);
+
+    <span class="kw">let </span>left = get_attacks(occupancy_bb, square, (-<span class="number">1</span>, <span class="number">0</span>));
+    <span class="kw">let </span>right = get_attacks(occupancy_bb, square, (<span class="number">1</span>, <span class="number">0</span>));
+    <span class="kw">let </span>top = get_attacks(occupancy_bb, square, (<span class="number">0</span>, <span class="number">1</span>));
+    <span class="kw">let </span>down = get_attacks(occupancy_bb, square, (<span class="number">0</span>, -<span class="number">1</span>));
+
+    left | right | top | down
+}
+
+<span class="doccomment">/// Gets a bishop attacks for the square specified by `square`, occupancy `occupancy_bb`.
+</span><span class="kw">fn </span>get_bishop_attacks(occupancy_bb: u64, square: usize) -&gt; u64 {
+    <span class="macro">assert_fast!</span>(square &lt; <span class="number">64</span>);
+
+    <span class="kw">let </span>top_right = get_attacks(occupancy_bb, square, (<span class="number">1</span>, <span class="number">1</span>));
+    <span class="kw">let </span>top_left = get_attacks(occupancy_bb, square, (<span class="number">1</span>, -<span class="number">1</span>));
+    <span class="kw">let </span>down_right = get_attacks(occupancy_bb, square, (-<span class="number">1</span>, <span class="number">1</span>));
+    <span class="kw">let </span>down_left = get_attacks(occupancy_bb, square, (-<span class="number">1</span>, -<span class="number">1</span>));
+
+    top_right | top_left | down_right | down_left
+}
+
+<span class="doccomment">/// Helper function to get all possible to move squares, considering `occupancy_bb`, starting from the square
+/// specified by `square` and going into the `direction`.
+</span><span class="kw">fn </span>get_attacks(occupancy_bb: u64, square: usize, direction: (isize, isize)) -&gt; u64 {
+    <span class="macro">assert_fast!</span>(square &lt; <span class="number">64</span>);
+    <span class="macro">assert_fast!</span>(direction.<span class="number">0 </span>&gt;= -<span class="number">1 </span>&amp;&amp; direction.<span class="number">0 </span>&lt;= <span class="number">1</span>);
+    <span class="macro">assert_fast!</span>(direction.<span class="number">1 </span>&gt;= -<span class="number">1 </span>&amp;&amp; direction.<span class="number">1 </span>&lt;= <span class="number">1</span>);
+
+    <span class="kw">let </span><span class="kw-2">mut </span>result = <span class="number">0u64</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>current = ((square <span class="kw">as </span>isize) % <span class="number">8 </span>+ direction.<span class="number">0</span>, (square <span class="kw">as </span>isize) / <span class="number">8 </span>+ direction.<span class="number">1</span>);
+
+    <span class="kw">while </span>current.<span class="number">0 </span>&gt;= <span class="number">0 </span>&amp;&amp; current.<span class="number">0 </span>&lt;= <span class="number">7 </span>&amp;&amp; current.<span class="number">1 </span>&gt;= <span class="number">0 </span>&amp;&amp; current.<span class="number">1 </span>&lt;= <span class="number">7 </span>{
+        result |= <span class="number">1u64 </span>&lt;&lt; (current.<span class="number">0 </span>+ current.<span class="number">1 </span>* <span class="number">8</span>);
+
+        <span class="kw">if </span>(occupancy_bb &amp; result) != <span class="number">0 </span>{
+            <span class="kw">break</span>;
+        }
+
+        current = (current.<span class="number">0 </span>+ direction.<span class="number">0</span>, current.<span class="number">1 </span>+ direction.<span class="number">1</span>);
+    }
+
+    result
 }
 
 <span class="kw">impl </span>MagicSquare {

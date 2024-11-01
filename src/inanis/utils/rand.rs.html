@@ -73,6 +73,10 @@
 <a href="#71" id="71">71</a>
 <a href="#72" id="72">72</a>
 <a href="#73" id="73">73</a>
+<a href="#74" id="74">74</a>
+<a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::cell::Cell;
 <span class="kw">use </span>std::ops::Bound;
 <span class="kw">use </span>std::ops::RangeBounds;
@@ -108,11 +112,17 @@
                 Bound::Unbounded =&gt; <span class="macro-nonterminal">$max_value</span>,
             };
 
-            <span class="kw">if </span>from == <span class="macro-nonterminal">$min_value </span>&amp;&amp; to == <span class="macro-nonterminal">$max_value </span>{
-                rand_internal() <span class="kw">as </span><span class="macro-nonterminal">$</span><span class="kw">type
-            </span>} <span class="kw">else </span>{
-                (<span class="macro-nonterminal">rand_internal</span>() % (((to <span class="kw">as </span>i128) - (from <span class="kw">as </span>i128) + <span class="number">1</span>) <span class="kw">as </span>u64)) <span class="kw">as </span><span class="macro-nonterminal">$</span><span class="kw">type </span>+ <span class="macro-nonterminal">from
-            </span>}
+            SEED.with(|state| {
+                <span class="kw">let </span>(value, seed) = rand(state.seed.get());
+                <span class="kw">let </span>result = <span class="kw">if </span>from == <span class="macro-nonterminal">$min_value </span>&amp;&amp; to == <span class="macro-nonterminal">$max_value </span>{
+                    value <span class="kw">as </span><span class="macro-nonterminal">$</span><span class="kw">type
+                </span>} <span class="kw">else </span>{
+                    (<span class="macro-nonterminal">value </span>% (((to <span class="kw">as </span>i128) - (from <span class="kw">as </span>i128) + <span class="number">1</span>) <span class="kw">as </span>u64)) <span class="kw">as </span><span class="macro-nonterminal">$</span><span class="kw">type </span>+ <span class="macro-nonterminal">from
+                </span>};
+
+                state.seed.set(seed);
+                result
+            })
         }
     };
 }
@@ -135,15 +145,13 @@
     });
 }
 
-<span class="kw">fn </span>rand_internal() -&gt; u64 {
-    SEED.with(|state| {
-        <span class="kw">let </span><span class="kw-2">mut </span>x = state.seed.get();
-        x ^= x &lt;&lt; <span class="number">13</span>;
-        x ^= x &gt;&gt; <span class="number">7</span>;
-        x ^= x &lt;&lt; <span class="number">17</span>;
+<span class="doccomment">/// https://en.wikipedia.org/wiki/Xorshift#xorshift*
+</span><span class="kw">pub const fn </span>rand(seed: u64) -&gt; (u64, u64) {
+    <span class="kw">let </span><span class="kw-2">mut </span>x = seed;
+    x ^= x &gt;&gt; <span class="number">12</span>;
+    x ^= x &lt;&lt; <span class="number">25</span>;
+    x ^= x &gt;&gt; <span class="number">27</span>;
 
-        state.seed.set(x);
-        x
-    })
+    (x.wrapping_mul(<span class="number">0x2545f4914f6cdd1d</span>), x)
 }
 </code></pre></div></section></main></body></html>

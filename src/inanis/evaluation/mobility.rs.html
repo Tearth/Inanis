@@ -103,49 +103,24 @@
 <a href="#101" id="101">101</a>
 <a href="#102" id="102">102</a>
 <a href="#103" id="103">103</a>
-<a href="#104" id="104">104</a>
-<a href="#105" id="105">105</a>
-<a href="#106" id="106">106</a>
-<a href="#107" id="107">107</a>
-<a href="#108" id="108">108</a>
-<a href="#109" id="109">109</a>
-<a href="#110" id="110">110</a>
-<a href="#111" id="111">111</a>
-<a href="#112" id="112">112</a>
-<a href="#113" id="113">113</a>
-<a href="#114" id="114">114</a>
-<a href="#115" id="115">115</a>
-<a href="#116" id="116">116</a>
-<a href="#117" id="117">117</a>
-<a href="#118" id="118">118</a>
-<a href="#119" id="119">119</a>
-<a href="#120" id="120">120</a>
-<a href="#121" id="121">121</a>
-<a href="#122" id="122">122</a>
-<a href="#123" id="123">123</a>
-<a href="#124" id="124">124</a>
-<a href="#125" id="125">125</a>
-<a href="#126" id="126">126</a>
-<a href="#127" id="127">127</a>
-<a href="#128" id="128">128</a>
-<a href="#129" id="129">129</a>
-<a href="#130" id="130">130</a>
-<a href="#131" id="131">131</a>
-<a href="#132" id="132">132</a>
-<a href="#133" id="133">133</a>
-<a href="#134" id="134">134</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::state::movescan;
 <span class="kw">use </span><span class="kw">crate</span>::state::representation::Board;
+<span class="kw">use </span><span class="kw">crate</span>::utils::assert_fast;
 
 <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
-</span><span class="kw">use </span><span class="kw">crate</span>::tuning::tuner::TunerCoefficient;
+</span><span class="kw">use </span><span class="kw">crate</span>::tuning::tuner::TunerCoeff;
 
 <span class="kw">pub struct </span>MobilityData {
     knight_mobility: PieceMobility,
     bishop_mobility: PieceMobility,
     rook_mobility: PieceMobility,
     queen_mobility: PieceMobility,
+}
+
+<span class="attr">#[derive(Default)]
+</span><span class="kw">pub struct </span>EvalAux {
+    <span class="kw">pub </span>king_area_threats: i8,
 }
 
 <span class="kw">pub struct </span>PieceMobility {
@@ -155,117 +130,80 @@
 
 <span class="doccomment">/// Evaluates mobility and part of the king safety on the `board` and returns score from the white color perspective (more than 0 when advantage,
 /// less than 0 when disadvantage). This evaluator does two things at once: first, counts all possible moves of knight, bishop, rook, queen
-/// (pawns and king are too slow and not very important), and second, sums how many squares around both kings are dangered by enemy side
-/// (`dangered_white_king_squares` and `dangered_black_king_squares`). This is used in the safety evaluator, to prevent calculating the same thing twice.
-</span><span class="kw">pub fn </span>evaluate(board: <span class="kw-2">&amp;</span>Board, dangered_white_king_squares: <span class="kw-2">&amp;mut </span>u32, dangered_black_king_squares: <span class="kw-2">&amp;mut </span>u32) -&gt; EvaluationResult {
-    <span class="kw">let </span>white_mobility_data = get_mobility_data(board, WHITE, dangered_black_king_squares);
-    <span class="kw">let </span>black_mobility_data = get_mobility_data(board, BLACK, dangered_white_king_squares);
+/// (pawns and king are too slow and not very important), and second, fills `white_aux` and `black_aux` with additional data used in other evaluators.
+</span><span class="kw">pub fn </span>evaluate(board: <span class="kw-2">&amp;</span>Board, white_aux: <span class="kw-2">&amp;mut </span>EvalAux, black_aux: <span class="kw-2">&amp;mut </span>EvalAux) -&gt; PackedEval {
+    <span class="kw">let </span><span class="kw-2">mut </span>result = PackedEval::default();
+    <span class="kw">let </span>white_data = get_mobility_data(board, WHITE, white_aux);
+    <span class="kw">let </span>black_data = get_mobility_data(board, BLACK, black_aux);
 
-    <span class="kw">let </span>knight_mobility_inner = (white_mobility_data.knight_mobility.inner - black_mobility_data.knight_mobility.inner) <span class="kw">as </span>i16;
-    <span class="kw">let </span>bishop_mobility_inner = (white_mobility_data.bishop_mobility.inner - black_mobility_data.bishop_mobility.inner) <span class="kw">as </span>i16;
-    <span class="kw">let </span>rook_mobility_inner = (white_mobility_data.rook_mobility.inner - black_mobility_data.rook_mobility.inner) <span class="kw">as </span>i16;
-    <span class="kw">let </span>queen_mobility_inner = (white_mobility_data.queen_mobility.inner - black_mobility_data.queen_mobility.inner) <span class="kw">as </span>i16;
+    result += (white_data.knight_mobility.inner - black_data.knight_mobility.inner) * params::MOBILITY_INNER[KNIGHT];
+    result += (white_data.bishop_mobility.inner - black_data.bishop_mobility.inner) * params::MOBILITY_INNER[BISHOP];
+    result += (white_data.rook_mobility.inner - black_data.rook_mobility.inner) * params::MOBILITY_INNER[ROOK];
+    result += (white_data.queen_mobility.inner - black_data.queen_mobility.inner) * params::MOBILITY_INNER[QUEEN];
 
-    <span class="kw">let </span>knight_mobility_outer = (white_mobility_data.knight_mobility.outer - black_mobility_data.knight_mobility.outer) <span class="kw">as </span>i16;
-    <span class="kw">let </span>bishop_mobility_outer = (white_mobility_data.bishop_mobility.outer - black_mobility_data.bishop_mobility.outer) <span class="kw">as </span>i16;
-    <span class="kw">let </span>rook_mobility_outer = (white_mobility_data.rook_mobility.outer - black_mobility_data.rook_mobility.outer) <span class="kw">as </span>i16;
-    <span class="kw">let </span>queen_mobility_outer = (white_mobility_data.queen_mobility.outer - black_mobility_data.queen_mobility.outer) <span class="kw">as </span>i16;
+    result += (white_data.knight_mobility.outer - black_data.knight_mobility.outer) * params::MOBILITY_OUTER[KNIGHT];
+    result += (white_data.bishop_mobility.outer - black_data.bishop_mobility.outer) * params::MOBILITY_OUTER[BISHOP];
+    result += (white_data.rook_mobility.outer - black_data.rook_mobility.outer) * params::MOBILITY_OUTER[ROOK];
+    result += (white_data.queen_mobility.outer - black_data.queen_mobility.outer) * params::MOBILITY_OUTER[QUEEN];
 
-    <span class="kw">let </span>knight_mobility_inner_opening = knight_mobility_inner * board.evaluation_parameters.mobility_inner_opening[KNIGHT];
-    <span class="kw">let </span>knight_mobility_inner_ending = knight_mobility_inner * board.evaluation_parameters.mobility_inner_ending[KNIGHT];
-    <span class="kw">let </span>bishop_mobility_inner_opening = bishop_mobility_inner * board.evaluation_parameters.mobility_inner_opening[BISHOP];
-    <span class="kw">let </span>bishop_mobility_inner_ending = bishop_mobility_inner * board.evaluation_parameters.mobility_inner_ending[BISHOP];
-    <span class="kw">let </span>rook_mobility_inner_opening = rook_mobility_inner * board.evaluation_parameters.mobility_inner_opening[ROOK];
-    <span class="kw">let </span>rook_mobility_inner_ending = rook_mobility_inner * board.evaluation_parameters.mobility_inner_ending[ROOK];
-    <span class="kw">let </span>queen_mobility_inner_opening = queen_mobility_inner * board.evaluation_parameters.mobility_inner_opening[QUEEN];
-    <span class="kw">let </span>queen_mobility_inner_ending = queen_mobility_inner * board.evaluation_parameters.mobility_inner_ending[QUEEN];
-
-    <span class="kw">let </span>knight_mobility_outer_opening = knight_mobility_outer * board.evaluation_parameters.mobility_outer_opening[KNIGHT];
-    <span class="kw">let </span>knight_mobility_outer_ending = knight_mobility_outer * board.evaluation_parameters.mobility_outer_ending[KNIGHT];
-    <span class="kw">let </span>bishop_mobility_outer_opening = bishop_mobility_outer * board.evaluation_parameters.mobility_outer_opening[BISHOP];
-    <span class="kw">let </span>bishop_mobility_outer_ending = bishop_mobility_outer * board.evaluation_parameters.mobility_outer_ending[BISHOP];
-    <span class="kw">let </span>rook_mobility_outer_opening = rook_mobility_outer * board.evaluation_parameters.mobility_outer_opening[ROOK];
-    <span class="kw">let </span>rook_mobility_outer_ending = rook_mobility_outer * board.evaluation_parameters.mobility_outer_ending[ROOK];
-    <span class="kw">let </span>queen_mobility_outer_opening = queen_mobility_outer * board.evaluation_parameters.mobility_outer_opening[QUEEN];
-    <span class="kw">let </span>queen_mobility_outer_ending = queen_mobility_outer * board.evaluation_parameters.mobility_outer_ending[QUEEN];
-
-    <span class="kw">let </span>opening_score = <span class="number">0
-        </span>+ knight_mobility_inner_opening
-        + bishop_mobility_inner_opening
-        + rook_mobility_inner_opening
-        + queen_mobility_inner_opening
-        + knight_mobility_outer_opening
-        + bishop_mobility_outer_opening
-        + rook_mobility_outer_opening
-        + queen_mobility_outer_opening;
-
-    <span class="kw">let </span>ending_score = <span class="number">0
-        </span>+ knight_mobility_inner_ending
-        + bishop_mobility_inner_ending
-        + rook_mobility_inner_ending
-        + queen_mobility_inner_ending
-        + knight_mobility_outer_ending
-        + bishop_mobility_outer_ending
-        + rook_mobility_outer_ending
-        + queen_mobility_outer_ending;
-
-    EvaluationResult::new(opening_score, ending_score)
+    result
 }
 
-<span class="kw">fn </span>get_mobility_data(board: <span class="kw-2">&amp;</span>Board, color: usize, dangered_king_squares: <span class="kw-2">&amp;mut </span>u32) -&gt; MobilityData {
+<span class="doccomment">/// Gets mobility data for `board`, `color` and fills `aux` with additional data used in other evaluators.
+</span><span class="kw">fn </span>get_mobility_data(board: <span class="kw-2">&amp;</span>Board, color: usize, aux: <span class="kw-2">&amp;mut </span>EvalAux) -&gt; MobilityData {
+    <span class="macro">assert_fast!</span>(color &lt; <span class="number">2</span>);
+
     MobilityData {
-        knight_mobility: movescan::get_piece_mobility::&lt;KNIGHT&gt;(board, color, dangered_king_squares),
-        bishop_mobility: movescan::get_piece_mobility::&lt;BISHOP&gt;(board, color, dangered_king_squares),
-        rook_mobility: movescan::get_piece_mobility::&lt;ROOK&gt;(board, color, dangered_king_squares),
-        queen_mobility: movescan::get_piece_mobility::&lt;QUEEN&gt;(board, color, dangered_king_squares),
+        knight_mobility: movescan::get_piece_mobility::&lt;KNIGHT&gt;(board, color, aux),
+        bishop_mobility: movescan::get_piece_mobility::&lt;BISHOP&gt;(board, color, aux),
+        rook_mobility: movescan::get_piece_mobility::&lt;ROOK&gt;(board, color, aux),
+        queen_mobility: movescan::get_piece_mobility::&lt;QUEEN&gt;(board, color, aux),
     }
 }
 
-<span class="doccomment">/// Gets coefficients of mobility on `board` and assigns indexes starting from `index`. Similarly to [evaluate], both `dangered_white_king_squares` and
-/// `dangered_black_king_squares` are accordingly updated.
+<span class="doccomment">/// Gets coefficients of mobility for `board` and inserts them into `coeffs`. Similarly, their indices (starting from `index`) are inserted into `indices`.
+/// Some additional data is also saved in `white_aux` and `black_aux` for further processing.
 </span><span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
-</span><span class="kw">pub fn </span>get_coefficients(board: <span class="kw-2">&amp;</span>Board, dangered_white_king_squares: <span class="kw-2">&amp;mut </span>u32, dangered_black_king_squares: <span class="kw-2">&amp;mut </span>u32, index: <span class="kw-2">&amp;mut </span>u16) -&gt; Vec&lt;TunerCoefficient&gt; {
-    <span class="kw">let </span>white_mobility_data = get_mobility_data(board, WHITE, dangered_black_king_squares);
-    <span class="kw">let </span>black_mobility_data = get_mobility_data(board, BLACK, dangered_white_king_squares);
+</span><span class="kw">pub fn </span>get_coeffs(board: <span class="kw-2">&amp;</span>Board, white_aux: <span class="kw-2">&amp;mut </span>EvalAux, black_aux: <span class="kw-2">&amp;mut </span>EvalAux, index: <span class="kw-2">&amp;mut </span>u16, coeffs: <span class="kw-2">&amp;mut </span>Vec&lt;TunerCoeff&gt;, indices: <span class="kw-2">&amp;mut </span>Vec&lt;u16&gt;) {
+    <span class="kw">let </span>white_data = get_mobility_data(board, WHITE, white_aux);
+    <span class="kw">let </span>black_data = get_mobility_data(board, BLACK, black_aux);
 
-    <span class="kw">let </span><span class="kw-2">mut </span>coefficients = [
-        TunerCoefficient::new(<span class="number">0</span>, OPENING, <span class="kw-2">*</span>index),
-        TunerCoefficient::new(white_mobility_data.knight_mobility.inner - black_mobility_data.knight_mobility.inner, OPENING, <span class="number">0</span>),
-        TunerCoefficient::new(white_mobility_data.bishop_mobility.inner - black_mobility_data.bishop_mobility.inner, OPENING, <span class="number">0</span>),
-        TunerCoefficient::new(white_mobility_data.rook_mobility.inner - black_mobility_data.rook_mobility.inner, OPENING, <span class="number">0</span>),
-        TunerCoefficient::new(white_mobility_data.queen_mobility.inner - black_mobility_data.queen_mobility.inner, OPENING, <span class="number">0</span>),
-        TunerCoefficient::new(<span class="number">0</span>, OPENING, <span class="kw-2">*</span>index),
-        TunerCoefficient::new(<span class="number">0</span>, ENDING, <span class="kw-2">*</span>index),
-        TunerCoefficient::new(white_mobility_data.knight_mobility.inner - black_mobility_data.knight_mobility.inner, ENDING, <span class="number">0</span>),
-        TunerCoefficient::new(white_mobility_data.bishop_mobility.inner - black_mobility_data.bishop_mobility.inner, ENDING, <span class="number">0</span>),
-        TunerCoefficient::new(white_mobility_data.rook_mobility.inner - black_mobility_data.rook_mobility.inner, ENDING, <span class="number">0</span>),
-        TunerCoefficient::new(white_mobility_data.queen_mobility.inner - black_mobility_data.queen_mobility.inner, ENDING, <span class="number">0</span>),
-        TunerCoefficient::new(<span class="number">0</span>, <span class="number">0</span>, <span class="kw-2">*</span>index),
+    <span class="kw">let </span><span class="kw-2">mut </span>data = [
+        TunerCoeff::new(<span class="number">0</span>, OPENING),
+        TunerCoeff::new(<span class="number">0</span>, ENDING),
+        TunerCoeff::new(white_data.knight_mobility.inner - black_data.knight_mobility.inner, OPENING),
+        TunerCoeff::new(white_data.knight_mobility.inner - black_data.knight_mobility.inner, ENDING),
+        TunerCoeff::new(white_data.bishop_mobility.inner - black_data.bishop_mobility.inner, OPENING),
+        TunerCoeff::new(white_data.bishop_mobility.inner - black_data.bishop_mobility.inner, ENDING),
+        TunerCoeff::new(white_data.rook_mobility.inner - black_data.rook_mobility.inner, OPENING),
+        TunerCoeff::new(white_data.rook_mobility.inner - black_data.rook_mobility.inner, ENDING),
+        TunerCoeff::new(white_data.queen_mobility.inner - black_data.queen_mobility.inner, OPENING),
+        TunerCoeff::new(white_data.queen_mobility.inner - black_data.queen_mobility.inner, ENDING),
+        TunerCoeff::new(<span class="number">0</span>, OPENING),
+        TunerCoeff::new(<span class="number">0</span>, ENDING),
         <span class="comment">//
-        </span>TunerCoefficient::new(<span class="number">0</span>, OPENING, <span class="kw-2">*</span>index),
-        TunerCoefficient::new(white_mobility_data.knight_mobility.outer - black_mobility_data.knight_mobility.outer, OPENING, <span class="number">0</span>),
-        TunerCoefficient::new(white_mobility_data.bishop_mobility.outer - black_mobility_data.bishop_mobility.outer, OPENING, <span class="number">0</span>),
-        TunerCoefficient::new(white_mobility_data.rook_mobility.outer - black_mobility_data.rook_mobility.outer, OPENING, <span class="number">0</span>),
-        TunerCoefficient::new(white_mobility_data.queen_mobility.outer - black_mobility_data.queen_mobility.outer, OPENING, <span class="number">0</span>),
-        TunerCoefficient::new(<span class="number">0</span>, OPENING, <span class="kw-2">*</span>index),
-        TunerCoefficient::new(<span class="number">0</span>, <span class="number">0</span>, <span class="kw-2">*</span>index),
-        TunerCoefficient::new(white_mobility_data.knight_mobility.outer - black_mobility_data.knight_mobility.outer, ENDING, <span class="number">0</span>),
-        TunerCoefficient::new(white_mobility_data.bishop_mobility.outer - black_mobility_data.bishop_mobility.outer, ENDING, <span class="number">0</span>),
-        TunerCoefficient::new(white_mobility_data.rook_mobility.outer - black_mobility_data.rook_mobility.outer, ENDING, <span class="number">0</span>),
-        TunerCoefficient::new(white_mobility_data.queen_mobility.outer - black_mobility_data.queen_mobility.outer, ENDING, <span class="number">0</span>),
-        TunerCoefficient::new(<span class="number">0</span>, ENDING, <span class="kw-2">*</span>index),
+        </span>TunerCoeff::new(<span class="number">0</span>, OPENING),
+        TunerCoeff::new(<span class="number">0</span>, ENDING),
+        TunerCoeff::new(white_data.knight_mobility.outer - black_data.knight_mobility.outer, OPENING),
+        TunerCoeff::new(white_data.knight_mobility.outer - black_data.knight_mobility.outer, ENDING),
+        TunerCoeff::new(white_data.bishop_mobility.outer - black_data.bishop_mobility.outer, OPENING),
+        TunerCoeff::new(white_data.bishop_mobility.outer - black_data.bishop_mobility.outer, ENDING),
+        TunerCoeff::new(white_data.rook_mobility.outer - black_data.rook_mobility.outer, OPENING),
+        TunerCoeff::new(white_data.rook_mobility.outer - black_data.rook_mobility.outer, ENDING),
+        TunerCoeff::new(white_data.queen_mobility.outer - black_data.queen_mobility.outer, OPENING),
+        TunerCoeff::new(white_data.queen_mobility.outer - black_data.queen_mobility.outer, ENDING),
+        TunerCoeff::new(<span class="number">0</span>, OPENING),
+        TunerCoeff::new(<span class="number">0</span>, ENDING),
     ];
-    <span class="kw">let </span><span class="kw-2">mut </span>coefficients_filtered = Vec::new();
 
-    <span class="kw">for </span>coefficient <span class="kw">in </span><span class="kw-2">&amp;mut </span>coefficients {
-        coefficient.index = <span class="kw-2">*</span>index;
-        <span class="kw-2">*</span>index += <span class="number">1</span>;
-
-        <span class="kw">if </span>coefficient.value != <span class="number">0 </span>{
-            coefficients_filtered.push(coefficient.clone());
+    <span class="kw">for </span>coeff <span class="kw">in </span><span class="kw-2">&amp;mut </span>data {
+        <span class="kw">let </span>(value, <span class="kw">_</span>) = coeff.get_data();
+        <span class="kw">if </span>value != <span class="number">0 </span>{
+            indices.push(<span class="kw-2">*</span>index);
+            coeffs.push(coeff.clone());
         }
-    }
 
-    coefficients_filtered
+        <span class="kw-2">*</span>index += <span class="number">1</span>;
+    }
 }
 </code></pre></div></section></main></body></html>

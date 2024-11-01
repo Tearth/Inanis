@@ -198,48 +198,10 @@
 <a href="#196" id="196">196</a>
 <a href="#197" id="197">197</a>
 <a href="#198" id="198">198</a>
-<a href="#199" id="199">199</a>
-<a href="#200" id="200">200</a>
-<a href="#201" id="201">201</a>
-<a href="#202" id="202">202</a>
-<a href="#203" id="203">203</a>
-<a href="#204" id="204">204</a>
-<a href="#205" id="205">205</a>
-<a href="#206" id="206">206</a>
-<a href="#207" id="207">207</a>
-<a href="#208" id="208">208</a>
-<a href="#209" id="209">209</a>
-<a href="#210" id="210">210</a>
-<a href="#211" id="211">211</a>
-<a href="#212" id="212">212</a>
-<a href="#213" id="213">213</a>
-<a href="#214" id="214">214</a>
-<a href="#215" id="215">215</a>
-<a href="#216" id="216">216</a>
-<a href="#217" id="217">217</a>
-<a href="#218" id="218">218</a>
-<a href="#219" id="219">219</a>
-<a href="#220" id="220">220</a>
-<a href="#221" id="221">221</a>
-<a href="#222" id="222">222</a>
-<a href="#223" id="223">223</a>
-<a href="#224" id="224">224</a>
-<a href="#225" id="225">225</a>
-<a href="#226" id="226">226</a>
-<a href="#227" id="227">227</a>
-<a href="#228" id="228">228</a>
-<a href="#229" id="229">229</a>
-<a href="#230" id="230">230</a>
-<a href="#231" id="231">231</a>
-<a href="#232" id="232">232</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::cache::counters::CountermovesTable;
-<span class="kw">use </span><span class="kw">crate</span>::cache::history::HistoryTable;
-<span class="kw">use </span><span class="kw">crate</span>::cache::killers::KillersTable;
-<span class="kw">use </span><span class="kw">crate</span>::cache::pawns::PawnHashTable;
-<span class="kw">use </span><span class="kw">crate</span>::cache::search::TranspositionTable;
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::cache::pawns::PHTable;
+<span class="kw">use </span><span class="kw">crate</span>::cache::search::TTable;
 <span class="kw">use </span><span class="kw">crate</span>::engine::context::SearchContext;
 <span class="kw">use </span><span class="kw">crate</span>::state::representation::Board;
-<span class="kw">use </span><span class="kw">crate</span>::utils::rand;
 <span class="kw">use </span>std::sync::atomic::AtomicBool;
 <span class="kw">use </span>std::sync::Arc;
 <span class="kw">use </span>std::time::SystemTime;
@@ -293,20 +255,20 @@
 
     <span class="kw">pub </span>tt_legal_hashmoves: u64,
     <span class="kw">pub </span>tt_illegal_hashmoves: u64,
-    <span class="kw">pub </span>killers_table_legal_moves: u64,
-    <span class="kw">pub </span>killers_table_illegal_moves: u64,
-    <span class="kw">pub </span>countermoves_table_legal_moves: u64,
-    <span class="kw">pub </span>countermoves_table_illegal_moves: u64,
+    <span class="kw">pub </span>ktable_legal_moves: u64,
+    <span class="kw">pub </span>ktable_illegal_moves: u64,
+    <span class="kw">pub </span>cmtable_legal_moves: u64,
+    <span class="kw">pub </span>cmtable_illegal_moves: u64,
 
-    <span class="kw">pub </span>pawn_hashtable_added: u64,
-    <span class="kw">pub </span>pawn_hashtable_hits: u64,
-    <span class="kw">pub </span>pawn_hashtable_misses: u64,
+    <span class="kw">pub </span>phtable_added: u64,
+    <span class="kw">pub </span>phtable_hits: u64,
+    <span class="kw">pub </span>phtable_misses: u64,
 
-    <span class="kw">pub </span>move_generator_hash_move_stages: u64,
-    <span class="kw">pub </span>move_generator_captures_stages: u64,
-    <span class="kw">pub </span>move_generator_killers_stages: u64,
-    <span class="kw">pub </span>move_generator_counters_stages: u64,
-    <span class="kw">pub </span>move_generator_quiets_stages: u64,
+    <span class="kw">pub </span>movegen_hash_move_stages: u64,
+    <span class="kw">pub </span>movegen_captures_stages: u64,
+    <span class="kw">pub </span>movegen_killers_stages: u64,
+    <span class="kw">pub </span>movegen_counters_stages: u64,
+    <span class="kw">pub </span>movegen_quiets_stages: u64,
 
     <span class="kw">pub </span>result_hash: u16,
 }
@@ -349,116 +311,86 @@
         <span class="string">"8/1p6/pP3p2/P2k1P2/6Kp/8/8/8 b - - 1 73"</span>,
     ];
 
-    <span class="kw">let </span><span class="kw-2">mut </span>benchmark_result: BenchmarkResult = Default::default();
+    <span class="kw">let </span><span class="kw-2">mut </span>benchmark_result = BenchmarkResult::default();
     <span class="kw">let </span>benchmark_time_start = SystemTime::now();
 
     <span class="kw">for </span>(current_position_index, fen) <span class="kw">in </span>BENCHMARK_POSITIONS.into_iter().enumerate() {
         <span class="macro">println!</span>(<span class="string">"{}/{}. {}"</span>, current_position_index + <span class="number">1</span>, BENCHMARK_POSITIONS.len(), fen);
 
-        <span class="kw">let </span>transposition_table = Arc::new(TranspositionTable::new(<span class="number">64 </span>* <span class="number">1024 </span>* <span class="number">1024</span>));
-        <span class="kw">let </span>pawn_hashtable = Arc::new(PawnHashTable::new(<span class="number">2 </span>* <span class="number">1024 </span>* <span class="number">1024</span>));
-        <span class="kw">let </span>killers_table = Arc::new(KillersTable::default());
-        <span class="kw">let </span>history_table = Arc::new(HistoryTable::default());
-        <span class="kw">let </span>countermoves_table = Arc::new(CountermovesTable::default());
+        <span class="kw">let </span>ttable = Arc::new(TTable::new(<span class="number">64 </span>* <span class="number">1024 </span>* <span class="number">1024</span>));
+        <span class="kw">let </span>phtable = Arc::new(PHTable::new(<span class="number">2 </span>* <span class="number">1024 </span>* <span class="number">1024</span>));
         <span class="kw">let </span>abort_flag = Arc::new(AtomicBool::new(<span class="bool-val">false</span>));
         <span class="kw">let </span>ponder_flag = Arc::new(AtomicBool::new(<span class="bool-val">false</span>));
 
-        rand::seed(<span class="number">584578</span>);
+        <span class="kw">let </span>board = Board::new_from_fen(fen).unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>context = SearchContext::new(board, ttable.clone(), phtable.clone(), abort_flag.clone(), ponder_flag.clone());
 
-        <span class="kw">let </span>board = Board::new_from_fen(fen, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>).unwrap();
-        <span class="kw">let </span>context = SearchContext::new(
-            board,
-            Default::default(),
-            <span class="number">0</span>,
-            <span class="number">0</span>,
-            <span class="number">0</span>,
-            <span class="number">16</span>,
-            <span class="number">0</span>,
-            <span class="number">0</span>,
-            <span class="number">0</span>,
-            Vec::new(),
-            <span class="bool-val">false</span>,
-            <span class="bool-val">false</span>,
-            <span class="bool-val">false</span>,
-            <span class="bool-val">true</span>,
-            <span class="bool-val">false</span>,
-            <span class="bool-val">false</span>,
-            <span class="number">0</span>,
-            <span class="number">0</span>,
-            transposition_table.clone(),
-            pawn_hashtable.clone(),
-            killers_table.clone(),
-            history_table.clone(),
-            countermoves_table.clone(),
-            abort_flag.clone(),
-            ponder_flag.clone(),
-        );
+        context.forced_depth = <span class="number">16</span>;
+        context.by_ref().last().unwrap();
 
-        <span class="kw">let </span>result = context.last().unwrap();
-
-        benchmark_result.nodes_count += result.statistics.nodes_count;
-        benchmark_result.q_nodes_count += result.statistics.q_nodes_count;
-        benchmark_result.leafs_count += result.statistics.leafs_count;
-        benchmark_result.q_leafs_count += result.statistics.q_leafs_count;
+        benchmark_result.nodes_count += context.stats.nodes_count;
+        benchmark_result.q_nodes_count += context.stats.q_nodes_count;
+        benchmark_result.leafs_count += context.stats.leafs_count;
+        benchmark_result.q_leafs_count += context.stats.q_leafs_count;
 
         <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
         </span>{
-            benchmark_result.beta_cutoffs += result.statistics.beta_cutoffs;
-            benchmark_result.q_beta_cutoffs += result.statistics.q_beta_cutoffs;
+            benchmark_result.beta_cutoffs += context.stats.beta_cutoffs;
+            benchmark_result.q_beta_cutoffs += context.stats.q_beta_cutoffs;
 
-            benchmark_result.perfect_cutoffs += result.statistics.perfect_cutoffs;
-            benchmark_result.q_perfect_cutoffs += result.statistics.q_perfect_cutoffs;
-            benchmark_result.non_perfect_cutoffs += result.statistics.non_perfect_cutoffs;
-            benchmark_result.q_non_perfect_cutoffs += result.statistics.q_non_perfect_cutoffs;
+            benchmark_result.perfect_cutoffs += context.stats.perfect_cutoffs;
+            benchmark_result.q_perfect_cutoffs += context.stats.q_perfect_cutoffs;
+            benchmark_result.non_perfect_cutoffs += context.stats.non_perfect_cutoffs;
+            benchmark_result.q_non_perfect_cutoffs += context.stats.q_non_perfect_cutoffs;
 
-            benchmark_result.pvs_full_window_searches += result.statistics.pvs_full_window_searches;
-            benchmark_result.pvs_zero_window_searches += result.statistics.pvs_zero_window_searches;
-            benchmark_result.pvs_rejected_searches += result.statistics.pvs_rejected_searches;
+            benchmark_result.pvs_full_window_searches += context.stats.pvs_full_window_searches;
+            benchmark_result.pvs_zero_window_searches += context.stats.pvs_zero_window_searches;
+            benchmark_result.pvs_rejected_searches += context.stats.pvs_rejected_searches;
 
-            benchmark_result.snmp_attempts += result.statistics.snmp_attempts;
-            benchmark_result.snmp_accepted += result.statistics.snmp_accepted;
-            benchmark_result.snmp_rejected += result.statistics.snmp_rejected;
+            benchmark_result.snmp_attempts += context.stats.snmp_attempts;
+            benchmark_result.snmp_accepted += context.stats.snmp_accepted;
+            benchmark_result.snmp_rejected += context.stats.snmp_rejected;
 
-            benchmark_result.nmp_attempts += result.statistics.nmp_attempts;
-            benchmark_result.nmp_accepted += result.statistics.nmp_accepted;
-            benchmark_result.nmp_rejected += result.statistics.nmp_rejected;
+            benchmark_result.nmp_attempts += context.stats.nmp_attempts;
+            benchmark_result.nmp_accepted += context.stats.nmp_accepted;
+            benchmark_result.nmp_rejected += context.stats.nmp_rejected;
 
-            benchmark_result.lmp_accepted += result.statistics.lmp_accepted;
-            benchmark_result.lmp_rejected += result.statistics.lmp_rejected;
+            benchmark_result.lmp_accepted += context.stats.lmp_accepted;
+            benchmark_result.lmp_rejected += context.stats.lmp_rejected;
 
-            benchmark_result.razoring_attempts += result.statistics.razoring_attempts;
-            benchmark_result.razoring_accepted += result.statistics.razoring_accepted;
-            benchmark_result.razoring_rejected += result.statistics.razoring_rejected;
+            benchmark_result.razoring_attempts += context.stats.razoring_attempts;
+            benchmark_result.razoring_accepted += context.stats.razoring_accepted;
+            benchmark_result.razoring_rejected += context.stats.razoring_rejected;
 
-            benchmark_result.q_score_pruning_accepted += result.statistics.q_score_pruning_accepted;
-            benchmark_result.q_score_pruning_rejected += result.statistics.q_score_pruning_rejected;
+            benchmark_result.q_score_pruning_accepted += context.stats.q_score_pruning_accepted;
+            benchmark_result.q_score_pruning_rejected += context.stats.q_score_pruning_rejected;
 
-            benchmark_result.q_futility_pruning_accepted += result.statistics.q_futility_pruning_accepted;
-            benchmark_result.q_futility_pruning_rejected += result.statistics.q_futility_pruning_rejected;
+            benchmark_result.q_futility_pruning_accepted += context.stats.q_futility_pruning_accepted;
+            benchmark_result.q_futility_pruning_rejected += context.stats.q_futility_pruning_rejected;
 
-            benchmark_result.tt_added += result.statistics.tt_added;
-            benchmark_result.tt_hits += result.statistics.tt_hits;
-            benchmark_result.tt_misses += result.statistics.tt_misses;
+            benchmark_result.tt_added += context.stats.tt_added;
+            benchmark_result.tt_hits += context.stats.tt_hits;
+            benchmark_result.tt_misses += context.stats.tt_misses;
 
-            benchmark_result.tt_legal_hashmoves += result.statistics.tt_legal_hashmoves;
-            benchmark_result.tt_illegal_hashmoves += result.statistics.tt_illegal_hashmoves;
-            benchmark_result.killers_table_legal_moves += result.statistics.killers_table_legal_moves;
-            benchmark_result.killers_table_illegal_moves += result.statistics.killers_table_illegal_moves;
-            benchmark_result.countermoves_table_legal_moves += result.statistics.countermoves_table_legal_moves;
-            benchmark_result.countermoves_table_illegal_moves += result.statistics.countermoves_table_illegal_moves;
+            benchmark_result.tt_legal_hashmoves += context.stats.tt_legal_hashmoves;
+            benchmark_result.tt_illegal_hashmoves += context.stats.tt_illegal_hashmoves;
+            benchmark_result.ktable_legal_moves += context.stats.ktable_legal_moves;
+            benchmark_result.ktable_illegal_moves += context.stats.ktable_illegal_moves;
+            benchmark_result.cmtable_legal_moves += context.stats.cmtable_legal_moves;
+            benchmark_result.cmtable_illegal_moves += context.stats.cmtable_illegal_moves;
 
-            benchmark_result.pawn_hashtable_added += result.statistics.pawn_hashtable_added;
-            benchmark_result.pawn_hashtable_hits += result.statistics.pawn_hashtable_hits;
-            benchmark_result.pawn_hashtable_misses += result.statistics.pawn_hashtable_misses;
+            benchmark_result.phtable_added += context.stats.phtable_added;
+            benchmark_result.phtable_hits += context.stats.phtable_hits;
+            benchmark_result.phtable_misses += context.stats.phtable_misses;
 
-            benchmark_result.move_generator_hash_move_stages += result.statistics.move_generator_hash_move_stages;
-            benchmark_result.move_generator_captures_stages += result.statistics.move_generator_captures_stages;
-            benchmark_result.move_generator_killers_stages += result.statistics.move_generator_killers_stages;
-            benchmark_result.move_generator_counters_stages += result.statistics.move_generator_counters_stages;
-            benchmark_result.move_generator_quiets_stages += result.statistics.move_generator_quiets_stages;
+            benchmark_result.movegen_hash_move_stages += context.stats.movegen_hash_move_stages;
+            benchmark_result.movegen_captures_stages += context.stats.movegen_captures_stages;
+            benchmark_result.movegen_killers_stages += context.stats.movegen_killers_stages;
+            benchmark_result.movegen_counters_stages += context.stats.movegen_counters_stages;
+            benchmark_result.movegen_quiets_stages += context.stats.movegen_quiets_stages;
         }
 
-        benchmark_result.result_hash ^= result.lines[<span class="number">0</span>].pv_line[<span class="number">0</span>].data;
+        benchmark_result.result_hash ^= context.lines[<span class="number">0</span>].pv_line[<span class="number">0</span>].data;
     }
 
     benchmark_result.time = (benchmark_time_start.elapsed().unwrap().as_millis() <span class="kw">as </span>f32) / <span class="number">1000.0</span>;

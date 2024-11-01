@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["PatternsContainer"]};
+window.SIDEBAR_ITEMS = {"constant":["BOX_PATTERNS","DIAGONAL_PATTERNS","FRONT_PATTERNS","JUMP_PATTERNS","RAIL_PATTERNS"],"fn":["generate_boxes","generate_diagonals","generate_fronts","generate_jumps","generate_rails","get_box","get_diagonals","get_file","get_front","get_jumps","get_rail","get_rank"]};

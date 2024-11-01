@@ -276,137 +276,29 @@
 <a href="#274" id="274">274</a>
 <a href="#275" id="275">275</a>
 <a href="#276" id="276">276</a>
-<a href="#277" id="277">277</a>
-<a href="#278" id="278">278</a>
-<a href="#279" id="279">279</a>
-<a href="#280" id="280">280</a>
-<a href="#281" id="281">281</a>
-<a href="#282" id="282">282</a>
-<a href="#283" id="283">283</a>
-<a href="#284" id="284">284</a>
-<a href="#285" id="285">285</a>
-<a href="#286" id="286">286</a>
-<a href="#287" id="287">287</a>
-<a href="#288" id="288">288</a>
-<a href="#289" id="289">289</a>
-<a href="#290" id="290">290</a>
-<a href="#291" id="291">291</a>
-<a href="#292" id="292">292</a>
-<a href="#293" id="293">293</a>
-<a href="#294" id="294">294</a>
-<a href="#295" id="295">295</a>
-<a href="#296" id="296">296</a>
-<a href="#297" id="297">297</a>
-<a href="#298" id="298">298</a>
-<a href="#299" id="299">299</a>
-<a href="#300" id="300">300</a>
-<a href="#301" id="301">301</a>
-<a href="#302" id="302">302</a>
-<a href="#303" id="303">303</a>
-<a href="#304" id="304">304</a>
-<a href="#305" id="305">305</a>
-<a href="#306" id="306">306</a>
-<a href="#307" id="307">307</a>
-<a href="#308" id="308">308</a>
-<a href="#309" id="309">309</a>
-<a href="#310" id="310">310</a>
-<a href="#311" id="311">311</a>
-<a href="#312" id="312">312</a>
-<a href="#313" id="313">313</a>
-<a href="#314" id="314">314</a>
-<a href="#315" id="315">315</a>
-<a href="#316" id="316">316</a>
-<a href="#317" id="317">317</a>
-<a href="#318" id="318">318</a>
-<a href="#319" id="319">319</a>
-<a href="#320" id="320">320</a>
-<a href="#321" id="321">321</a>
-<a href="#322" id="322">322</a>
-<a href="#323" id="323">323</a>
-<a href="#324" id="324">324</a>
-<a href="#325" id="325">325</a>
-<a href="#326" id="326">326</a>
-<a href="#327" id="327">327</a>
-<a href="#328" id="328">328</a>
-<a href="#329" id="329">329</a>
-<a href="#330" id="330">330</a>
-<a href="#331" id="331">331</a>
-<a href="#332" id="332">332</a>
-<a href="#333" id="333">333</a>
-<a href="#334" id="334">334</a>
-<a href="#335" id="335">335</a>
-<a href="#336" id="336">336</a>
-<a href="#337" id="337">337</a>
-<a href="#338" id="338">338</a>
-<a href="#339" id="339">339</a>
-<a href="#340" id="340">340</a>
-<a href="#341" id="341">341</a>
-<a href="#342" id="342">342</a>
-<a href="#343" id="343">343</a>
-<a href="#344" id="344">344</a>
-<a href="#345" id="345">345</a>
-<a href="#346" id="346">346</a>
-<a href="#347" id="347">347</a>
-<a href="#348" id="348">348</a>
-<a href="#349" id="349">349</a>
-<a href="#350" id="350">350</a>
-<a href="#351" id="351">351</a>
-<a href="#352" id="352">352</a>
-<a href="#353" id="353">353</a>
-<a href="#354" id="354">354</a>
-<a href="#355" id="355">355</a>
-<a href="#356" id="356">356</a>
-<a href="#357" id="357">357</a>
-<a href="#358" id="358">358</a>
-<a href="#359" id="359">359</a>
-<a href="#360" id="360">360</a>
-<a href="#361" id="361">361</a>
-<a href="#362" id="362">362</a>
-<a href="#363" id="363">363</a>
-<a href="#364" id="364">364</a>
-<a href="#365" id="365">365</a>
-<a href="#366" id="366">366</a>
-<a href="#367" id="367">367</a>
-<a href="#368" id="368">368</a>
-<a href="#369" id="369">369</a>
-<a href="#370" id="370">370</a>
-<a href="#371" id="371">371</a>
-<a href="#372" id="372">372</a>
-<a href="#373" id="373">373</a>
-<a href="#374" id="374">374</a>
-<a href="#375" id="375">375</a>
-<a href="#376" id="376">376</a>
-<a href="#377" id="377">377</a>
-<a href="#378" id="378">378</a>
-<a href="#379" id="379">379</a>
-<a href="#380" id="380">380</a>
-<a href="#381" id="381">381</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="self">self</span>::parameters::SearchParameters;
-<span class="kw">use </span><span class="kw">super</span>::statistics::SearchStatistics;
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="self">self</span>::params::SearchParams;
+<span class="kw">use </span><span class="kw">super</span>::stats::SearchStats;
 <span class="kw">use super</span>::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::cache::counters::CountermovesTable;
-<span class="kw">use </span><span class="kw">crate</span>::cache::history::HistoryTable;
-<span class="kw">use </span><span class="kw">crate</span>::cache::killers::KillersTable;
-<span class="kw">use </span><span class="kw">crate</span>::cache::pawns::PawnHashTable;
-<span class="kw">use </span><span class="kw">crate</span>::cache::search::TranspositionTable;
+<span class="kw">use </span><span class="kw">crate</span>::cache::counters::CMTable;
+<span class="kw">use </span><span class="kw">crate</span>::cache::history::HTable;
+<span class="kw">use </span><span class="kw">crate</span>::cache::killers::KTable;
+<span class="kw">use </span><span class="kw">crate</span>::cache::pawns::PHTable;
+<span class="kw">use </span><span class="kw">crate</span>::cache::search::TTable;
 <span class="kw">use </span><span class="kw">crate</span>::engine::clock;
-<span class="kw">use </span><span class="kw">crate</span>::evaluation::material;
-<span class="kw">use </span><span class="kw">crate</span>::evaluation::mobility;
-<span class="kw">use </span><span class="kw">crate</span>::evaluation::pawns;
-<span class="kw">use </span><span class="kw">crate</span>::evaluation::pst;
-<span class="kw">use </span><span class="kw">crate</span>::evaluation::safety;
 <span class="kw">use </span><span class="kw">crate</span>::state::movescan::Move;
 <span class="kw">use </span><span class="kw">crate</span>::state::representation::Board;
+<span class="kw">use </span><span class="kw">crate</span>::utils::panic_fast;
 <span class="kw">use </span>std::cmp;
 <span class="kw">use </span>std::sync::atomic::AtomicBool;
 <span class="kw">use </span>std::sync::atomic::Ordering;
 <span class="kw">use </span>std::sync::Arc;
+<span class="kw">use </span>std::sync::RwLock;
 <span class="kw">use </span>std::thread;
 <span class="kw">use </span>std::time::SystemTime;
 
 <span class="kw">pub struct </span>SearchContext {
     <span class="kw">pub </span>board: Board,
-    <span class="kw">pub </span>parameters: SearchParameters,
+    <span class="kw">pub </span>params: SearchParams,
     <span class="kw">pub </span>search_id: u8,
     <span class="kw">pub </span>time: u32,
     <span class="kw">pub </span>inc_time: u32,
@@ -419,41 +311,31 @@
     <span class="kw">pub </span>search_time_start: SystemTime,
     <span class="kw">pub </span>deadline: u32,
     <span class="kw">pub </span>multipv: bool,
-    <span class="kw">pub </span>multipv_lines: Vec&lt;SearchResultLine&gt;,
+    <span class="kw">pub </span>lines: Vec&lt;SearchResultLine&gt;,
     <span class="kw">pub </span>search_done: bool,
     <span class="kw">pub </span>uci_debug: bool,
     <span class="kw">pub </span>ponder_mode: bool,
-    <span class="kw">pub </span>diagnostic_mode: bool,
-    <span class="kw">pub </span>helper_thread: bool,
     <span class="kw">pub </span>syzygy_enabled: bool,
     <span class="kw">pub </span>syzygy_probe_limit: u32,
     <span class="kw">pub </span>syzygy_probe_depth: i8,
-    <span class="kw">pub </span>transposition_table: Arc&lt;TranspositionTable&gt;,
-    <span class="kw">pub </span>pawn_hashtable: Arc&lt;PawnHashTable&gt;,
-    <span class="kw">pub </span>killers_table: Arc&lt;KillersTable&gt;,
-    <span class="kw">pub </span>history_table: Arc&lt;HistoryTable&gt;,
-    <span class="kw">pub </span>countermoves_table: Arc&lt;CountermovesTable&gt;,
-    <span class="kw">pub </span>helper_contexts: Vec&lt;HelperThreadContext&gt;,
+    <span class="kw">pub </span>ttable: Arc&lt;TTable&gt;,
+    <span class="kw">pub </span>phtable: Arc&lt;PHTable&gt;,
+    <span class="kw">pub </span>ktable: KTable,
+    <span class="kw">pub </span>htable: HTable,
+    <span class="kw">pub </span>cmtable: CMTable,
+    <span class="kw">pub </span>helper_contexts: Arc&lt;RwLock&lt;Vec&lt;SearchContext&gt;&gt;&gt;,
     <span class="kw">pub </span>abort_flag: Arc&lt;AtomicBool&gt;,
     <span class="kw">pub </span>ponder_flag: Arc&lt;AtomicBool&gt;,
-    <span class="kw">pub </span>statistics: SearchStatistics,
-}
-
-<span class="kw">pub struct </span>HelperThreadContext {
-    <span class="kw">pub </span>board: Board,
-    <span class="kw">pub </span>context: SearchContext,
+    <span class="kw">pub </span>stats: SearchStats,
+    <span class="kw">pub </span>last_score: i16,
 }
 
 <span class="kw">pub struct </span>SearchResult {
     <span class="kw">pub </span>time: u32,
     <span class="kw">pub </span>depth: i8,
-    <span class="kw">pub </span>transposition_table_usage: f32,
-    <span class="kw">pub </span>lines: Vec&lt;SearchResultLine&gt;,
-    <span class="kw">pub </span>statistics: SearchStatistics,
 }
 
-<span class="attr">#[derive(Clone)]
-</span><span class="kw">pub struct </span>SearchResultLine {
+<span class="kw">pub struct </span>SearchResultLine {
     <span class="kw">pub </span>score: i16,
     <span class="kw">pub </span>pv_line: Vec&lt;Move&gt;,
 }
@@ -461,86 +343,43 @@
 <span class="kw">impl </span>SearchContext {
     <span class="doccomment">/// Constructs a new instance of [SearchContext] with parameters as follows:
     ///  - `board` - initial position of the board
-    ///  - `search_id` - search identificator used to recognize old transposition table entries
-    ///  - `time` - total time for the color in a move (in milliseconds)
-    ///  - `inc_time` - incremental time for the color in a move (in milliseconds)
-    ///  - `forced_depth` - depth at which the search will stop (might happen earlier if mate is detected), 0 if there is no constraint
-    ///  - `max_nodes_count` - total nodes count at which the search will top (might happen earlier if mate is detected), 0 if there is no constraint
-    /// This value can possibly not be strictly respected due to way of how the check is performed, so expect a bit more nodes count before stop
-    ///  - `max_move_time` - allocated amount of time for the search (in milliseconds), 0 if we want to use default time allocator
-    ///  - `moves_to_go` - moves count, after which the time will be increased
-    ///  - `moves_to_search` - a list of moves to which the root node will be restricted
-    ///  - `multipv` - enables or disables analyzing multiple PV lines (might slow down search)
-    ///  - `uci_debug` - enables or disables additional debug info sent to GUI by `info string` command
-    ///  - `ponder_mode` - prevents search from being stopped after detecting a checkmate (ponder mode requirement)
-    ///  - `diagnostic_mode` - enables gathering of additional statistics, useful for benchmarks
-    ///  - `helper_thread` - enables additional features when the thread is a helper in Lazy SMP (like random noise in move ordering)
-    ///  - `syzygy_enabled` - enables or disables Syzygy probing
-    ///  - `syzygy_probe_limit` - number of pieces for which the probing should be started
-    ///  - `syzygy_probe_depth` - minimal depth at which the probing will be started
-    ///  - `transposition_table`, `pawn_hashtable`, `killers_table`, `history_table`, `countermoves_table` - hashtables used during search
+    ///  - `ttable` - transposition table
+    ///  - `phtable` - pawn hash table
     ///  - `abort_flag` - flag used to abort search from the outside of the context
     ///  - `ponder_flag` - flag used to change a search mode from pondering to the regular one
-    </span><span class="kw">pub fn </span>new(
-        board: Board,
-        parameters: SearchParameters,
-        search_id: u8,
-        time: u32,
-        inc_time: u32,
-        forced_depth: i8,
-        max_nodes_count: u64,
-        max_move_time: u32,
-        moves_to_go: u32,
-        moves_to_search: Vec&lt;Move&gt;,
-        multipv: bool,
-        uci_debug: bool,
-        ponder_mode: bool,
-        diagnostic_mode: bool,
-        helper_thread: bool,
-        syzygy_enabled: bool,
-        syzygy_probe_limit: u32,
-        syzygy_probe_depth: i8,
-        transposition_table: Arc&lt;TranspositionTable&gt;,
-        pawn_hashtable: Arc&lt;PawnHashTable&gt;,
-        killers_table: Arc&lt;KillersTable&gt;,
-        history_table: Arc&lt;HistoryTable&gt;,
-        countermoves_table: Arc&lt;CountermovesTable&gt;,
-        abort_flag: Arc&lt;AtomicBool&gt;,
-        ponder_flag: Arc&lt;AtomicBool&gt;,
-    ) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub fn </span>new(board: Board, ttable: Arc&lt;TTable&gt;, phtable: Arc&lt;PHTable&gt;, abort_flag: Arc&lt;AtomicBool&gt;, ponder_flag: Arc&lt;AtomicBool&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             board,
-            parameters,
-            search_id,
-            time,
-            inc_time,
+            params: SearchParams::default(),
+            search_id: <span class="number">0</span>,
+            time: <span class="number">0</span>,
+            inc_time: <span class="number">0</span>,
             current_depth: <span class="number">1</span>,
-            forced_depth,
-            max_nodes_count,
-            max_move_time,
-            moves_to_go,
-            moves_to_search,
+            forced_depth: <span class="number">0</span>,
+            max_nodes_count: <span class="number">0</span>,
+            max_move_time: <span class="number">0</span>,
+            moves_to_go: <span class="number">0</span>,
+            moves_to_search: Vec::new(),
             search_time_start: SystemTime::now(),
             deadline: <span class="number">0</span>,
-            multipv,
-            multipv_lines: Vec::new(),
+            multipv: <span class="bool-val">false</span>,
+            lines: Vec::new(),
             search_done: <span class="bool-val">false</span>,
-            uci_debug,
-            ponder_mode,
-            diagnostic_mode,
-            helper_thread,
-            syzygy_enabled,
-            syzygy_probe_limit,
-            syzygy_probe_depth,
-            transposition_table,
-            pawn_hashtable,
-            killers_table,
-            history_table,
-            countermoves_table,
-            helper_contexts: Vec::new(),
+            uci_debug: <span class="bool-val">false</span>,
+            ponder_mode: <span class="bool-val">false</span>,
+            syzygy_enabled: <span class="bool-val">false</span>,
+            syzygy_probe_limit: <span class="number">0</span>,
+            syzygy_probe_depth: <span class="number">0</span>,
+            ttable,
+            phtable,
+            ktable: KTable::default(),
+            htable: HTable::default(),
+            cmtable: CMTable::default(),
+            helper_contexts: Arc::default(),
             abort_flag,
             ponder_flag,
-            statistics: Default::default(),
+            stats: SearchStats::default(),
+            last_score: <span class="number">0</span>,
         }
     }
 }
@@ -580,28 +419,18 @@
             </span><span class="kw">if </span><span class="self">self</span>.forced_depth == <span class="number">0 </span>&amp;&amp; <span class="self">self</span>.current_depth == <span class="number">1 </span>{
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(r#move) = <span class="self">self</span>.board.get_instant_move() {
                     <span class="self">self</span>.search_done = <span class="bool-val">true</span>;
+                    <span class="self">self</span>.lines.push(SearchResultLine::new(<span class="number">0</span>, <span class="macro">vec!</span>[r#move]));
 
-                    <span class="kw">return </span><span class="prelude-val">Some</span>(SearchResult::new(
-                        <span class="number">0</span>,
-                        <span class="self">self</span>.current_depth,
-                        <span class="self">self</span>.transposition_table.get_usage(<span class="number">1000</span>),
-                        <span class="macro">vec!</span>[SearchResultLine::new(<span class="number">0</span>, <span class="macro">vec!</span>[r#move])],
-                        <span class="self">self</span>.statistics,
-                    ));
+                    <span class="kw">return </span><span class="prelude-val">Some</span>(SearchResult::new(<span class="number">0</span>, <span class="self">self</span>.current_depth));
                 }
 
                 <span class="kw">if </span><span class="self">self</span>.syzygy_enabled {
                     <span class="kw">if let </span><span class="prelude-val">Some</span>((r#move, score)) = <span class="self">self</span>.board.get_tablebase_move(<span class="self">self</span>.syzygy_probe_limit) {
                         <span class="self">self</span>.search_done = <span class="bool-val">true</span>;
-                        <span class="self">self</span>.statistics.tb_hits = <span class="number">1</span>;
+                        <span class="self">self</span>.stats.tb_hits = <span class="number">1</span>;
+                        <span class="self">self</span>.lines.push(SearchResultLine::new(score, <span class="macro">vec!</span>[r#move]));
 
-                        <span class="kw">return </span><span class="prelude-val">Some</span>(SearchResult::new(
-                            <span class="number">0</span>,
-                            <span class="self">self</span>.current_depth,
-                            <span class="self">self</span>.transposition_table.get_usage(<span class="number">1000</span>),
-                            <span class="macro">vec!</span>[SearchResultLine::new(score, <span class="macro">vec!</span>[r#move])],
-                            <span class="self">self</span>.statistics,
-                        ));
+                        <span class="kw">return </span><span class="prelude-val">Some</span>(SearchResult::new(<span class="number">0</span>, <span class="self">self</span>.current_depth));
                     }
                 }
             }
@@ -626,77 +455,46 @@
                 u32::MAX
             };
 
-            <span class="kw">if </span>!<span class="self">self</span>.helper_contexts.is_empty() {
-                thread::scope(|scope| {
-                    <span class="kw">let </span>depth = <span class="self">self</span>.current_depth;
-                    <span class="kw">let </span><span class="kw-2">mut </span>threads = Vec::new();
+            <span class="self">self</span>.lines.clear();
 
-                    <span class="kw">for </span>helper_context <span class="kw">in </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.helper_contexts {
-                        helper_context.context.deadline = <span class="self">self</span>.deadline;
-                        threads.push(scope.spawn(<span class="kw">move </span>|| {
-                            search::run::&lt;<span class="bool-val">false</span>&gt;(<span class="kw-2">&amp;mut </span>helper_context.context, depth);
-                            helper_context.context.statistics
-                        }));
-                    }
+            <span class="kw">let </span>helper_contexts_arc = <span class="self">self</span>.helper_contexts.clone();
+            <span class="kw">let </span><span class="kw-2">mut </span>helper_contexts_lock = helper_contexts_arc.write().unwrap();
 
-                    <span class="kw">for </span>thread <span class="kw">in </span>threads {
-                        <span class="self">self</span>.statistics += thread.join().unwrap();
-                    }
-                });
-            }
+            thread::scope(|scope| {
+                <span class="kw">let </span>depth = <span class="self">self</span>.current_depth;
+                <span class="kw">let </span><span class="kw-2">mut </span>threads = Vec::new();
 
-            <span class="self">self</span>.multipv_lines.clear();
+                <span class="kw">for </span>helper_context <span class="kw">in </span>helper_contexts_lock.iter_mut() {
+                    helper_context.forced_depth = depth;
+                    threads.push(scope.spawn(<span class="kw">move </span>|| {
+                        search::run(helper_context, depth);
+                    }));
+                }
 
-            <span class="kw">if </span><span class="macro">cfg!</span>(feature = <span class="string">"dev"</span>) {
-                <span class="kw">match </span><span class="self">self</span>.diagnostic_mode {
-                    <span class="bool-val">true </span>=&gt; search::run::&lt;<span class="bool-val">true</span>&gt;(<span class="self">self</span>, <span class="self">self</span>.current_depth),
-                    <span class="bool-val">false </span>=&gt; search::run::&lt;<span class="bool-val">false</span>&gt;(<span class="self">self</span>, <span class="self">self</span>.current_depth),
-                };
-            } <span class="kw">else </span>{
-                search::run::&lt;<span class="bool-val">false</span>&gt;(<span class="self">self</span>, <span class="self">self</span>.current_depth);
-            }
+                search::run(<span class="self">self</span>, <span class="self">self</span>.current_depth);
 
-            <span class="kw">let </span>search_time = <span class="self">self</span>.search_time_start.elapsed().unwrap().as_millis() <span class="kw">as </span>u32;
-            <span class="kw">if </span><span class="self">self</span>.uci_debug {
-                <span class="kw">let </span><span class="kw-2">mut </span>dangered_white_king_squares = <span class="number">0</span>;
-                <span class="kw">let </span><span class="kw-2">mut </span>dangered_black_king_squares = <span class="number">0</span>;
+                <span class="kw">let </span>reset_abort_flag = !<span class="self">self</span>.abort_flag.load(Ordering::Relaxed);
+                <span class="self">self</span>.abort_flag.store(<span class="bool-val">true</span>, Ordering::Relaxed);
 
-                <span class="kw">let </span>game_phase = <span class="self">self</span>.board.game_phase;
-                <span class="kw">let </span>initial_game_phase = <span class="self">self</span>.board.evaluation_parameters.initial_game_phase;
+                <span class="kw">for </span>thread <span class="kw">in </span>threads {
+                    thread.join().unwrap();
+                }
 
-                <span class="kw">let </span>material_evaluation = material::evaluate(<span class="kw-2">&amp;</span><span class="self">self</span>.board);
-                <span class="kw">let </span>pst_evaluation = pst::evaluate(<span class="kw-2">&amp;</span><span class="self">self</span>.board);
-                <span class="kw">let </span>mobility_evaluation = mobility::evaluate(<span class="kw-2">&amp;</span><span class="self">self</span>.board, <span class="kw-2">&amp;mut </span>dangered_white_king_squares, <span class="kw-2">&amp;mut </span>dangered_black_king_squares);
-                <span class="kw">let </span>safety_evaluation = safety::evaluate(<span class="kw-2">&amp;</span><span class="self">self</span>.board, dangered_white_king_squares, dangered_black_king_squares);
-                <span class="kw">let </span>pawns_evaluation = pawns::evaluate_without_cache(<span class="kw-2">&amp;</span><span class="self">self</span>.board);
+                <span class="kw">if </span>reset_abort_flag {
+                    <span class="self">self</span>.abort_flag.store(<span class="bool-val">false</span>, Ordering::Relaxed);
+                }
+            });
 
-                <span class="macro">println!</span>(
-                    <span class="string">"info string search_time={}, desired_time={}, game_phase={}, material={}, pst={}, mobility={}, safety={}, pawns={}"</span>,
-                    search_time,
-                    desired_time,
-                    game_phase,
-                    material_evaluation.taper_score(game_phase, initial_game_phase),
-                    pst_evaluation.taper_score(game_phase, initial_game_phase),
-                    mobility_evaluation.taper_score(game_phase, initial_game_phase),
-                    safety_evaluation.taper_score(game_phase, initial_game_phase),
-                    pawns_evaluation.taper_score(game_phase, initial_game_phase)
-                );
+            <span class="kw">for </span>helper_context <span class="kw">in </span>helper_contexts_lock.iter() {
+                <span class="self">self</span>.stats += <span class="kw-2">&amp;</span>helper_context.stats;
             }
 
             <span class="kw">if </span><span class="self">self</span>.abort_flag.load(Ordering::Relaxed) {
                 <span class="comment">// If ponder flag is set, the search is completly restarted within the same iteration
                 </span><span class="kw">if </span><span class="self">self</span>.ponder_flag.load(Ordering::Relaxed) {
                     <span class="self">self</span>.current_depth = <span class="number">1</span>;
-                    <span class="self">self</span>.forced_depth = <span class="number">0</span>;
                     <span class="self">self</span>.search_time_start = SystemTime::now();
-                    <span class="self">self</span>.statistics = Default::default();
-
-                    <span class="kw">for </span>helper_context <span class="kw">in </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.helper_contexts {
-                        helper_context.context.current_depth = <span class="number">1</span>;
-                        helper_context.context.forced_depth = <span class="number">0</span>;
-                        helper_context.context.search_time_start = SystemTime::now();
-                        helper_context.context.statistics = Default::default();
-                    }
+                    <span class="self">self</span>.stats = SearchStats::default();
 
                     <span class="self">self</span>.ponder_flag.store(<span class="bool-val">false</span>, Ordering::Relaxed);
                     <span class="self">self</span>.abort_flag.store(<span class="bool-val">false</span>, Ordering::Relaxed);
@@ -711,15 +509,19 @@
                 }
             }
 
-            <span class="kw">if </span><span class="self">self</span>.multipv_lines.is_empty() || <span class="self">self</span>.multipv_lines[<span class="number">0</span>].pv_line.is_empty() {
+            <span class="kw">if </span><span class="self">self</span>.lines.is_empty() || <span class="self">self</span>.lines[<span class="number">0</span>].pv_line.is_empty() {
                 <span class="macro">println!</span>(<span class="string">"info string Invalid position"</span>);
                 <span class="kw">return </span><span class="prelude-val">None</span>;
             }
 
-            <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
-            </span><span class="kw">if </span><span class="self">self</span>.multipv_lines[<span class="number">0</span>].pv_line[<span class="number">0</span>] == Default::default() {
-                <span class="macro">panic!</span>(<span class="string">"Invalid PV move: {}"</span>, <span class="self">self</span>.multipv_lines[<span class="number">0</span>].pv_line[<span class="number">0</span>]);
+            <span class="kw">if </span><span class="self">self</span>.lines[<span class="number">0</span>].pv_line[<span class="number">0</span>].is_empty() {
+                <span class="macro">panic_fast!</span>(<span class="string">"Invalid PV move: {}"</span>, <span class="self">self</span>.lines[<span class="number">0</span>].pv_line[<span class="number">0</span>]);
             }
+
+            <span class="kw">let </span>search_time = <span class="self">self</span>.search_time_start.elapsed().unwrap().as_millis() <span class="kw">as </span>u32;
+
+            <span class="self">self</span>.lines.sort_by(|a, b| a.score.cmp(<span class="kw-2">&amp;</span>b.score).reverse());
+            <span class="self">self</span>.current_depth += <span class="number">1</span>;
 
             <span class="kw">if </span><span class="self">self</span>.forced_depth == <span class="number">0 </span>&amp;&amp; <span class="self">self</span>.max_nodes_count == <span class="number">0 </span>{
                 <span class="kw">if </span>search_time &gt; ((desired_time <span class="kw">as </span>f32) * TIME_THRESHOLD_RATIO) <span class="kw">as </span>u32 {
@@ -727,32 +529,20 @@
                 }
 
                 <span class="comment">// Checkmate score must indicate that the depth it was found is equal or smaller than the current one, to prevent endless move sequences
-                </span><span class="kw">if </span>is_score_near_checkmate(<span class="self">self</span>.multipv_lines[<span class="number">0</span>].score) &amp;&amp; <span class="self">self</span>.current_depth &gt;= (CHECKMATE_SCORE - <span class="self">self</span>.multipv_lines[<span class="number">0</span>].score.abs()) <span class="kw">as </span>i8 {
+                </span><span class="kw">if </span>is_score_near_checkmate(<span class="self">self</span>.lines[<span class="number">0</span>].score) &amp;&amp; <span class="self">self</span>.current_depth &gt;= (CHECKMATE_SCORE - <span class="self">self</span>.lines[<span class="number">0</span>].score.abs()) <span class="kw">as </span>i8 {
                     <span class="self">self</span>.search_done = <span class="bool-val">true</span>;
                 }
             }
 
-            <span class="self">self</span>.current_depth += <span class="number">1</span>;
-
-            <span class="kw">let </span><span class="kw-2">mut </span>multipv_result = <span class="self">self</span>.multipv_lines.clone();
-            multipv_result.sort_by(|a, b| a.score.cmp(<span class="kw-2">&amp;</span>b.score).reverse());
-
-            <span class="kw">return </span><span class="prelude-val">Some</span>(SearchResult::new(search_time, <span class="self">self</span>.current_depth - <span class="number">1</span>, <span class="self">self</span>.transposition_table.get_usage(<span class="number">1000</span>), multipv_result, <span class="self">self</span>.statistics));
+            <span class="kw">return </span><span class="prelude-val">Some</span>(SearchResult::new(search_time, <span class="self">self</span>.current_depth - <span class="number">1</span>));
         }
     }
 }
 
-<span class="kw">impl </span>HelperThreadContext {
-    <span class="doccomment">/// Constructs a new instance of [HelperThreadContext] with stored `board`, `pawn_hashtable`, `killers_table`, `history_table` and `context`.
-    </span><span class="kw">pub fn </span>new(board: Board, context: SearchContext) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ board, context }
-    }
-}
-
 <span class="kw">impl </span>SearchResult {
-    <span class="doccomment">/// Constructs a new instance of [SearchResult] with stored `time`, `depth`, `lines` and `statistics`.
-    </span><span class="kw">pub fn </span>new(time: u32, depth: i8, transposition_table_usage: f32, lines: Vec&lt;SearchResultLine&gt;, statistics: SearchStatistics) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ time, depth, transposition_table_usage, lines, statistics }
+    <span class="doccomment">/// Constructs a new instance of [SearchResult] with stored `time` and `depth`.
+    </span><span class="kw">pub fn </span>new(time: u32, depth: i8) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ time, depth }
     }
 }
 

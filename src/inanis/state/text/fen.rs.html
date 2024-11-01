@@ -276,50 +276,12 @@
 <a href="#274" id="274">274</a>
 <a href="#275" id="275">275</a>
 <a href="#276" id="276">276</a>
-<a href="#277" id="277">277</a>
-<a href="#278" id="278">278</a>
-<a href="#279" id="279">279</a>
-<a href="#280" id="280">280</a>
-<a href="#281" id="281">281</a>
-<a href="#282" id="282">282</a>
-<a href="#283" id="283">283</a>
-<a href="#284" id="284">284</a>
-<a href="#285" id="285">285</a>
-<a href="#286" id="286">286</a>
-<a href="#287" id="287">287</a>
-<a href="#288" id="288">288</a>
-<a href="#289" id="289">289</a>
-<a href="#290" id="290">290</a>
-<a href="#291" id="291">291</a>
-<a href="#292" id="292">292</a>
-<a href="#293" id="293">293</a>
-<a href="#294" id="294">294</a>
-<a href="#295" id="295">295</a>
-<a href="#296" id="296">296</a>
-<a href="#297" id="297">297</a>
-<a href="#298" id="298">298</a>
-<a href="#299" id="299">299</a>
-<a href="#300" id="300">300</a>
-<a href="#301" id="301">301</a>
-<a href="#302" id="302">302</a>
-<a href="#303" id="303">303</a>
-<a href="#304" id="304">304</a>
-<a href="#305" id="305">305</a>
-<a href="#306" id="306">306</a>
-<a href="#307" id="307">307</a>
-<a href="#308" id="308">308</a>
-<a href="#309" id="309">309</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::engine::see::SEEContainer;
-<span class="kw">use </span><span class="kw">crate</span>::evaluation::EvaluationParameters;
-<span class="kw">use </span><span class="kw">crate</span>::state::movegen::MagicContainer;
-<span class="kw">use </span><span class="kw">crate</span>::state::patterns::PatternsContainer;
-<span class="kw">use </span><span class="kw">crate</span>::state::representation::Board;
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::state::representation::Board;
 <span class="kw">use </span><span class="kw">crate</span>::state::representation::CastlingRights;
-<span class="kw">use </span><span class="kw">crate</span>::state::zobrist::ZobristContainer;
 <span class="kw">use </span><span class="kw">crate</span>::state::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::utils::bitflags::BitFlags;
 <span class="kw">use </span><span class="kw">crate</span>::utils::bithelpers::BitHelpers;
-<span class="kw">use </span>std::sync::Arc;
+<span class="kw">use </span><span class="kw">crate</span>::utils::panic_fast;
 
 <span class="kw">pub struct </span>ParsedEPD {
     <span class="kw">pub </span>board: Board,
@@ -335,37 +297,21 @@
     }
 }
 
-<span class="doccomment">/// Converts `fen` into the [Board], using provided containers. If the parameter is [None], then the new container is created.
-/// Returns [Err] with proper error message if `fen` couldn't be parsed correctly.
-</span><span class="kw">pub fn </span>fen_to_board(
-    fen: <span class="kw-2">&amp;</span>str,
-    evaluation_parameters: <span class="prelude-ty">Option</span>&lt;Arc&lt;EvaluationParameters&gt;&gt;,
-    zobrist_container: <span class="prelude-ty">Option</span>&lt;Arc&lt;ZobristContainer&gt;&gt;,
-    patterns_container: <span class="prelude-ty">Option</span>&lt;Arc&lt;PatternsContainer&gt;&gt;,
-    see_container: <span class="prelude-ty">Option</span>&lt;Arc&lt;SEEContainer&gt;&gt;,
-    magic_container: <span class="prelude-ty">Option</span>&lt;Arc&lt;MagicContainer&gt;&gt;,
-) -&gt; <span class="prelude-ty">Result</span>&lt;Board, String&gt; {
-    <span class="prelude-val">Ok</span>(epd_to_board(fen, evaluation_parameters, zobrist_container, patterns_container, see_container, magic_container)<span class="question-mark">?</span>.board)
+<span class="doccomment">/// Converts `fen` into the [Board]. Returns [Err] with proper error message if `fen` couldn't be parsed correctly.
+</span><span class="kw">pub fn </span>fen_to_board(fen: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Board, String&gt; {
+    <span class="prelude-val">Ok</span>(epd_to_board(fen)<span class="question-mark">?</span>.board)
 }
 
-<span class="doccomment">/// Converts `epd` into the [Board], using provided containers. If the parameter is [None], then the new container is created.
-/// Returns [Err] with proper error message if `epd` couldn't be parsed correctly.
-</span><span class="kw">pub fn </span>epd_to_board(
-    epd: <span class="kw-2">&amp;</span>str,
-    evaluation_parameters: <span class="prelude-ty">Option</span>&lt;Arc&lt;EvaluationParameters&gt;&gt;,
-    zobrist_container: <span class="prelude-ty">Option</span>&lt;Arc&lt;ZobristContainer&gt;&gt;,
-    patterns_container: <span class="prelude-ty">Option</span>&lt;Arc&lt;PatternsContainer&gt;&gt;,
-    see_container: <span class="prelude-ty">Option</span>&lt;Arc&lt;SEEContainer&gt;&gt;,
-    magic_container: <span class="prelude-ty">Option</span>&lt;Arc&lt;MagicContainer&gt;&gt;,
-) -&gt; <span class="prelude-ty">Result</span>&lt;ParsedEPD, String&gt; {
+<span class="doccomment">/// Converts `epd` into the [Board]. Returns [Err] with proper error message if `epd` couldn't be parsed correctly.
+</span><span class="kw">pub fn </span>epd_to_board(epd: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;ParsedEPD, String&gt; {
     <span class="kw">let </span>tokens: Vec&lt;<span class="kw-2">&amp;</span>str&gt; = epd.split(<span class="string">' '</span>).map(|v| v.trim()).collect();
     <span class="kw">if </span>tokens.len() &lt; <span class="number">4 </span>{
         <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">"Invalid FEN, input too short: epd={}"</span>, epd));
     }
 
-    <span class="kw">let </span><span class="kw-2">mut </span>board = Board::new(evaluation_parameters, zobrist_container, patterns_container, see_container, magic_container);
+    <span class="kw">let </span><span class="kw-2">mut </span>board = Board::default();
     fen_to_pieces(<span class="kw-2">&amp;mut </span>board, tokens[<span class="number">0</span>])<span class="question-mark">?</span>;
-    fen_to_active_color(<span class="kw-2">&amp;mut </span>board, tokens[<span class="number">1</span>])<span class="question-mark">?</span>;
+    fen_to_stm(<span class="kw-2">&amp;mut </span>board, tokens[<span class="number">1</span>])<span class="question-mark">?</span>;
     fen_to_castling(<span class="kw-2">&amp;mut </span>board, tokens[<span class="number">2</span>])<span class="question-mark">?</span>;
     fen_to_en_passant(<span class="kw-2">&amp;mut </span>board, tokens[<span class="number">3</span>])<span class="question-mark">?</span>;
 
@@ -375,8 +321,8 @@
     board.recalculate_pawn_attacks(BLACK);
 
     <span class="kw">if </span>tokens.len() &gt; <span class="number">4 </span>{
-        fen_to_halfmove_clock(<span class="kw-2">&amp;mut </span>board, tokens[<span class="number">4</span>])<span class="question-mark">?</span>;
-        fen_to_fullmove_number(<span class="kw-2">&amp;mut </span>board, tokens[<span class="number">5</span>])<span class="question-mark">?</span>;
+        <span class="kw">let _ </span>= fen_to_halfmove_clock(<span class="kw-2">&amp;mut </span>board, tokens[<span class="number">4</span>]);
+        <span class="kw">let _ </span>= fen_to_fullmove_number(<span class="kw-2">&amp;mut </span>board, tokens[<span class="number">5</span>]);
 
         <span class="kw">let </span><span class="kw-2">mut </span>parsed_epd = ParsedEPD::new(board);
         parsed_epd.id = get_epd_parameter(epd, <span class="kw-2">&amp;</span>[<span class="string">"id"</span>]);
@@ -392,47 +338,35 @@
 <span class="doccomment">/// Converts [Board] into the FEN.
 </span><span class="kw">pub fn </span>board_to_fen(board: <span class="kw-2">&amp;</span>Board) -&gt; String {
     <span class="kw">let </span>pieces = pieces_to_fen(board);
-    <span class="kw">let </span>active_color = active_color_to_fen(board);
+    <span class="kw">let </span>stm = stm_to_fen(board);
     <span class="kw">let </span>castling = castling_to_fen(board);
     <span class="kw">let </span>en_passant = en_passant_to_fen(board);
     <span class="kw">let </span>halfmove_clock = halfmove_clock_to_fen(board);
     <span class="kw">let </span>fullmove_number = fullmove_number_to_fen(board);
 
-    <span class="macro">format!</span>(<span class="string">"{} {} {} {} {} {}"</span>, pieces, active_color, castling, en_passant, halfmove_clock, fullmove_number)
+    <span class="macro">format!</span>(<span class="string">"{} {} {} {} {} {}"</span>, pieces, stm, castling, en_passant, halfmove_clock, fullmove_number)
 }
 
 <span class="doccomment">/// Converts [Board] into the EPD.
 </span><span class="kw">pub fn </span>board_to_epd(board: <span class="kw-2">&amp;</span>Board) -&gt; String {
     <span class="kw">let </span>pieces = pieces_to_fen(board);
-    <span class="kw">let </span>active_color = active_color_to_fen(board);
+    <span class="kw">let </span>stm = stm_to_fen(board);
     <span class="kw">let </span>castling = castling_to_fen(board);
     <span class="kw">let </span>en_passant = en_passant_to_fen(board);
 
-    <span class="macro">format!</span>(<span class="string">"{} {} {} {}"</span>, pieces, active_color, castling, en_passant)
+    <span class="macro">format!</span>(<span class="string">"{} {} {} {}"</span>, pieces, stm, castling, en_passant)
 }
 
 <span class="doccomment">/// Gets a value of the `name` parameters from the specified `epd`. Returns [None] if the parameter was not found.
 </span><span class="kw">fn </span>get_epd_parameter(<span class="kw-2">mut </span>epd: <span class="kw-2">&amp;</span>str, name: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str]) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
-    <span class="kw">let </span>parameter_index = name.iter().find_map(|p| epd.find(p));
-    <span class="kw">if </span>parameter_index.is_none() {
-        <span class="kw">return </span><span class="prelude-val">None</span>;
-    }
+    <span class="kw">let </span>parameter_index = name.iter().find_map(|p| epd.find(p))<span class="question-mark">?</span>;
+    epd = <span class="kw-2">&amp;</span>epd[parameter_index..];
 
-    epd = <span class="kw-2">&amp;</span>epd[parameter_index.unwrap()..];
+    <span class="kw">let </span>value_index = epd.find(<span class="string">' '</span>)<span class="question-mark">?</span>;
+    epd = <span class="kw-2">&amp;</span>epd[value_index..];
 
-    <span class="kw">let </span>value_index = epd.find(<span class="string">' '</span>);
-    <span class="kw">if </span>value_index.is_none() {
-        <span class="kw">return </span><span class="prelude-val">None</span>;
-    }
-
-    epd = <span class="kw-2">&amp;</span>epd[value_index.unwrap()..];
-
-    <span class="kw">let </span>separator_index = epd.find(<span class="string">';'</span>);
-    <span class="kw">if </span>separator_index.is_none() {
-        <span class="kw">return </span><span class="prelude-val">None</span>;
-    }
-
-    <span class="kw">let </span><span class="kw-2">mut </span>value = <span class="kw-2">&amp;</span>epd[<span class="number">0</span>..separator_index.unwrap()];
+    <span class="kw">let </span>separator_index = epd.find(<span class="string">';'</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>value = <span class="kw-2">&amp;</span>epd[<span class="number">0</span>..separator_index];
     value = value.trim_matches(<span class="string">' '</span>);
     value = value.trim_matches(<span class="string">'\"'</span>);
 
@@ -495,10 +429,10 @@
     result
 }
 
-<span class="doccomment">/// Parses FEN's active color and stores it into the `board`. Returns [Err] with the proper error message if `active_color` couldn't be parsed.
-</span><span class="kw">fn </span>fen_to_active_color(board: <span class="kw-2">&amp;mut </span>Board, color: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;(), String&gt; {
+<span class="doccomment">/// Parses FEN's active color and stores it into the `board`. Returns [Err] with the proper error message if `stm` couldn't be parsed.
+</span><span class="kw">fn </span>fen_to_stm(board: <span class="kw-2">&amp;mut </span>Board, color: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;(), String&gt; {
     <span class="kw">let </span>color_char = color.chars().next().ok_or(<span class="macro">format!</span>(<span class="string">"Invalid FEN, bad color: color={}"</span>, color))<span class="question-mark">?</span>;
-    board.active_color = <span class="kw">match </span>color_char {
+    board.stm = <span class="kw">match </span>color_char {
         <span class="string">'w' </span>=&gt; WHITE,
         <span class="string">'b' </span>=&gt; BLACK,
         <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">"Invalid FEN, bad color: color={}"</span>, color)),
@@ -508,11 +442,11 @@
 }
 
 <span class="doccomment">/// Converts active color from the `board` into the FEN chunk.
-</span><span class="kw">fn </span>active_color_to_fen(board: <span class="kw-2">&amp;</span>Board) -&gt; String {
-    <span class="kw">match </span>board.active_color {
+</span><span class="kw">fn </span>stm_to_fen(board: <span class="kw-2">&amp;</span>Board) -&gt; String {
+    <span class="kw">match </span>board.stm {
         WHITE =&gt; <span class="string">"w"</span>.to_string(),
         BLACK =&gt; <span class="string">"b"</span>.to_string(),
-        <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">"Invalid value: board.active_color={}"</span>, board.active_color),
+        <span class="kw">_ </span>=&gt; <span class="macro">panic_fast!</span>(<span class="string">"Invalid value: board.stm={}"</span>, board.stm),
     }
 }
 
@@ -523,7 +457,7 @@
     }
 
     <span class="kw">for </span>right <span class="kw">in </span>castling.chars() {
-        board.castling_rights |= <span class="kw">match </span>right {
+        board.state.castling_rights |= <span class="kw">match </span>right {
             <span class="string">'K' </span>=&gt; CastlingRights::WHITE_SHORT_CASTLING,
             <span class="string">'Q' </span>=&gt; CastlingRights::WHITE_LONG_CASTLING,
             <span class="string">'k' </span>=&gt; CastlingRights::BLACK_SHORT_CASTLING,
@@ -537,22 +471,22 @@
 
 <span class="doccomment">/// Converts castling rights from the `board` into the FEN chunk.
 </span><span class="kw">fn </span>castling_to_fen(board: <span class="kw-2">&amp;</span>Board) -&gt; String {
-    <span class="kw">if </span>board.castling_rights == CastlingRights::NONE {
+    <span class="kw">if </span>board.state.castling_rights == CastlingRights::NONE {
         <span class="kw">return </span><span class="string">"-"</span>.to_string();
     }
 
     <span class="kw">let </span><span class="kw-2">mut </span>result = String::new();
 
-    <span class="kw">if </span>board.castling_rights.contains(CastlingRights::WHITE_SHORT_CASTLING) {
+    <span class="kw">if </span>board.state.castling_rights.contains(CastlingRights::WHITE_SHORT_CASTLING) {
         result.push(<span class="string">'K'</span>);
     }
-    <span class="kw">if </span>board.castling_rights.contains(CastlingRights::WHITE_LONG_CASTLING) {
+    <span class="kw">if </span>board.state.castling_rights.contains(CastlingRights::WHITE_LONG_CASTLING) {
         result.push(<span class="string">'Q'</span>);
     }
-    <span class="kw">if </span>board.castling_rights.contains(CastlingRights::BLACK_SHORT_CASTLING) {
+    <span class="kw">if </span>board.state.castling_rights.contains(CastlingRights::BLACK_SHORT_CASTLING) {
         result.push(<span class="string">'k'</span>);
     }
-    <span class="kw">if </span>board.castling_rights.contains(CastlingRights::BLACK_LONG_CASTLING) {
+    <span class="kw">if </span>board.state.castling_rights.contains(CastlingRights::BLACK_LONG_CASTLING) {
         result.push(<span class="string">'q'</span>);
     }
 
@@ -570,18 +504,18 @@
     <span class="kw">let </span>rank = chars.next().ok_or(<span class="macro">format!</span>(<span class="string">"Invalid FEN, bad en passant rank: en_passant={}"</span>, en_passant))<span class="question-mark">? </span><span class="kw">as </span>u8;
 
     <span class="kw">let </span>square = (<span class="number">7 </span>- (file - <span class="string">b'a'</span>)) + <span class="number">8 </span>* (rank - <span class="string">b'1'</span>);
-    board.en_passant = <span class="number">1u64 </span>&lt;&lt; square;
+    board.state.en_passant = <span class="number">1u64 </span>&lt;&lt; square;
 
     <span class="prelude-val">Ok</span>(())
 }
 
 <span class="doccomment">/// Converts en passant from the `board` into the FEN chunk.
 </span><span class="kw">fn </span>en_passant_to_fen(board: <span class="kw-2">&amp;</span>Board) -&gt; String {
-    <span class="kw">if </span>board.en_passant == <span class="number">0 </span>{
+    <span class="kw">if </span>board.state.en_passant == <span class="number">0 </span>{
         <span class="kw">return </span><span class="string">"-"</span>.to_string();
     }
 
-    <span class="kw">let </span>square = board.en_passant.bit_scan();
+    <span class="kw">let </span>square = board.state.en_passant.bit_scan();
     <span class="kw">let </span>file = square % <span class="number">8</span>;
     <span class="kw">let </span>rank = square / <span class="number">8</span>;
 
@@ -591,7 +525,7 @@
 
 <span class="doccomment">/// Parses FEN's halfmove clock and stores it into the `board`. Returns [Err] with the proper error message if `halfmove_clock` couldn't be parsed.
 </span><span class="kw">fn </span>fen_to_halfmove_clock(board: <span class="kw-2">&amp;mut </span>Board, halfmove_clock: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;(), String&gt; {
-    board.halfmove_clock = <span class="kw">match </span>halfmove_clock.parse::&lt;u16&gt;() {
+    board.state.halfmove_clock = <span class="kw">match </span>halfmove_clock.parse::&lt;u16&gt;() {
         <span class="prelude-val">Ok</span>(value) =&gt; value,
         <span class="prelude-val">Err</span>(error) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">"Invalid FEN, bad halfmove clock: {}"</span>, error)),
     };
@@ -601,7 +535,7 @@
 
 <span class="doccomment">/// Converts halfmove clock from the `board` into the FEN chunk.
 </span><span class="kw">fn </span>halfmove_clock_to_fen(board: <span class="kw-2">&amp;</span>Board) -&gt; String {
-    board.halfmove_clock.to_string()
+    board.state.halfmove_clock.to_string()
 }
 
 <span class="doccomment">/// Parses FEN's fullmove number and stores it into the `board`. Returns [Err] with the proper error message if `fullmove_number` couldn't be parsed.

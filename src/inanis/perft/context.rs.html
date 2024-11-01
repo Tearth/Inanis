@@ -37,11 +37,11 @@
     <span class="kw">pub </span>hashtable: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Arc&lt;PerftHashTable&gt;,
     <span class="kw">pub </span>check_integrity: bool,
     <span class="kw">pub </span>fast: bool,
-    <span class="kw">pub </span>statistics: PerftStatistics,
+    <span class="kw">pub </span>stats: PerftStats,
 }
 
 <span class="attr">#[derive(Default)]
-</span><span class="kw">pub struct </span>PerftStatistics {
+</span><span class="kw">pub struct </span>PerftStats {
     <span class="kw">pub </span>captures: u64,
     <span class="kw">pub </span>en_passants: u64,
     <span class="kw">pub </span>castles: u64,
@@ -53,7 +53,7 @@
     <span class="doccomment">/// Constructs a new instance of [PerftContext] with `board` as initial state and `hashtable`. Use `check_integrity` to allow panics when internal state
     /// becomes invalid due to some bug, and `fast` to allow `hashtable` work.
     </span><span class="kw">pub fn </span>new(board: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Board, hashtable: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Arc&lt;PerftHashTable&gt;, check_integrity: bool, fast: bool) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ board, hashtable, check_integrity, fast, statistics: Default::default() }
+        <span class="self">Self </span>{ board, hashtable, check_integrity, fast, stats: PerftStats::default() }
     }
 }
 </code></pre></div></section></main></body></html>

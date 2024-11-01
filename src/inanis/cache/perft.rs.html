@@ -117,21 +117,11 @@
 <a href="#115" id="115">115</a>
 <a href="#116" id="116">116</a>
 <a href="#117" id="117">117</a>
-<a href="#118" id="118">118</a>
-<a href="#119" id="119">119</a>
-<a href="#120" id="120">120</a>
-<a href="#121" id="121">121</a>
-<a href="#122" id="122">122</a>
-<a href="#123" id="123">123</a>
-<a href="#124" id="124">124</a>
-<a href="#125" id="125">125</a>
-<a href="#126" id="126">126</a>
-<a href="#127" id="127">127</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::utils::percent;
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::utils::assert_fast;
+<span class="kw">use </span><span class="kw">crate</span>::utils::percent;
 <span class="kw">use </span>std::mem;
 <span class="kw">use </span>std::sync::atomic::AtomicU64;
 <span class="kw">use </span>std::sync::atomic::Ordering;
-<span class="kw">use </span>std::u64;
 
 <span class="kw">const </span>BUCKET_SLOTS: usize = <span class="number">4</span>;
 
@@ -140,11 +130,13 @@
 }
 
 <span class="attr">#[repr(align(<span class="number">64</span>))]
+#[derive(Default)]
 </span><span class="kw">pub struct </span>PerftHashTableBucket {
     <span class="kw">pub </span>entries: [PerftHashTableEntry; BUCKET_SLOTS],
 }
 
-<span class="kw">pub struct </span>PerftHashTableEntry {
+<span class="attr">#[derive(Default)]
+</span><span class="kw">pub struct </span>PerftHashTableEntry {
     <span class="kw">pub </span>key: AtomicU64,
     <span class="kw">pub </span>data: AtomicU64,
 }
@@ -156,22 +148,22 @@
 <span class="kw">impl </span>PerftHashTable {
     <span class="doccomment">/// Constructs a new instance of [PerftHashTable] by allocating `size` bytes of memory.
     </span><span class="kw">pub fn </span>new(size: usize) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>bucket_size = mem::size_of::&lt;PerftHashTableBucket&gt;();
-        <span class="kw">let </span>aligned_size = <span class="kw">if </span>size != <span class="number">0 </span>{ <span class="number">1 </span>&lt;&lt; (<span class="number">63 </span>- size.leading_zeros()) } <span class="kw">else </span>{ <span class="number">0 </span>};
-        <span class="kw">let </span><span class="kw-2">mut </span>hashtable = <span class="self">Self </span>{ table: Vec::with_capacity(aligned_size / bucket_size) };
+        <span class="kw">const </span>BUCKET_SIZE: usize = mem::size_of::&lt;PerftHashTableBucket&gt;();
+        <span class="kw">let </span><span class="kw-2">mut </span>hashtable = <span class="self">Self </span>{ table: Vec::with_capacity(size / BUCKET_SIZE) };
 
-        <span class="kw">if </span>aligned_size != <span class="number">0 </span>{
-            hashtable.table.resize_with(hashtable.table.capacity(), Default::default);
+        <span class="kw">if </span>BUCKET_SIZE != <span class="number">0 </span>{
+            hashtable.table.resize_with(hashtable.table.capacity(), PerftHashTableBucket::default);
         }
 
         hashtable
     }
 
-    <span class="doccomment">/// Adds a new entry (storing `hash`, `depth` and `leafs_count`) using `hash &amp; (self.table.len() - 1)` formula to calculate an index of the bucket.
+    <span class="doccomment">/// Adds a new entry (storing `hash`, `depth` and `leafs_count`) using `hash` to calculate an index of the bucket.
     </span><span class="kw">pub fn </span>add(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: u64, depth: u8, leafs_count: u64) {
         <span class="kw">let </span>index = <span class="self">self</span>.get_index(hash);
-        <span class="kw">let </span>bucket = <span class="kw-2">&amp;</span><span class="self">self</span>.table[index];
+        <span class="macro">assert_fast!</span>(index &lt; <span class="self">self</span>.table.len());
 
+        <span class="kw">let </span>bucket = <span class="kw-2">&amp;</span><span class="self">self</span>.table[index];
         <span class="kw">let </span><span class="kw-2">mut </span>smallest_depth = u8::MAX;
         <span class="kw">let </span><span class="kw-2">mut </span>smallest_depth_index = <span class="number">0</span>;
 
@@ -189,16 +181,18 @@
         <span class="kw">let </span>key = (hash &amp; !<span class="number">0xf</span>) | (depth <span class="kw">as </span>u64);
         <span class="kw">let </span>data = leafs_count;
 
+        <span class="macro">assert_fast!</span>(smallest_depth_index &lt; BUCKET_SLOTS);
         bucket.entries[smallest_depth_index].key.store(key ^ data, Ordering::Relaxed);
         bucket.entries[smallest_depth_index].data.store(data, Ordering::Relaxed);
     }
 
-    <span class="doccomment">/// Gets a wanted entry from the specified `depth` using `hash &amp; (self.table.len() - 1)` formula to calculate an index of the bucket.
-    /// Returns [None] if `hash` is incompatible with the stored key.
+    <span class="doccomment">/// Gets a wanted entry from the specified `depth` using `hash` to calculate an index of the bucket.
+    /// Returns [None] if entry does not exists or `hash` is incompatible with the stored key.
     </span><span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: u64, depth: u8) -&gt; <span class="prelude-ty">Option</span>&lt;PerftHashTableResult&gt; {
         <span class="kw">let </span>index = <span class="self">self</span>.get_index(hash);
-        <span class="kw">let </span>bucket = <span class="kw-2">&amp;</span><span class="self">self</span>.table[index];
+        <span class="macro">assert_fast!</span>(index &lt; <span class="self">self</span>.table.len());
 
+        <span class="kw">let </span>bucket = <span class="kw-2">&amp;</span><span class="self">self</span>.table[index];
         <span class="kw">for </span>entry <span class="kw">in </span><span class="kw-2">&amp;</span>bucket.entries {
             <span class="kw">let </span>entry_key = entry.key.load(Ordering::Relaxed);
             <span class="kw">let </span>entry_data = entry.data.load(Ordering::Relaxed);
@@ -230,21 +224,7 @@
 
     <span class="doccomment">/// Calculates an index for the `hash`.
     </span><span class="kw">fn </span>get_index(<span class="kw-2">&amp;</span><span class="self">self</span>, hash: u64) -&gt; usize {
-        (hash <span class="kw">as </span>usize) &amp; (<span class="self">self</span>.table.len() - <span class="number">1</span>)
-    }
-}
-
-<span class="kw">impl </span>Default <span class="kw">for </span>PerftHashTableBucket {
-    <span class="doccomment">/// Constructs a default instance of [PerftHashTableBucket] with zeroed elements.
-    </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        PerftHashTableBucket { entries: Default::default() }
-    }
-}
-
-<span class="kw">impl </span>Default <span class="kw">for </span>PerftHashTableEntry {
-    <span class="doccomment">/// Constructs a default instance of [PerftHashTableEntry] with zeroed elements.
-    </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ key: AtomicU64::new(<span class="number">0</span>), data: AtomicU64::new(<span class="number">0</span>) }
+        (((hash <span class="kw">as </span>u128).wrapping_mul(<span class="self">self</span>.table.len() <span class="kw">as </span>u128)) &gt;&gt; <span class="number">64</span>) <span class="kw">as </span>usize
     }
 }
 

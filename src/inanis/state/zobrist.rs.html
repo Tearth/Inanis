@@ -126,70 +126,154 @@
 <a href="#124" id="124">124</a>
 <a href="#125" id="125">125</a>
 <a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::representation::Board;
 <span class="kw">use </span><span class="kw">super</span>::representation::CastlingRights;
 <span class="kw">use super</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::utils::assert_fast;
 <span class="kw">use </span><span class="kw">crate</span>::utils::bitflags::BitFlags;
 <span class="kw">use </span><span class="kw">crate</span>::utils::bithelpers::BitHelpers;
 <span class="kw">use </span><span class="kw">crate</span>::utils::rand;
 
-<span class="kw">pub struct </span>ZobristContainer {
-    piece_hashes: [[[u64; <span class="number">64</span>]; <span class="number">6</span>]; <span class="number">2</span>],
-    castling_hashes: [u64; <span class="number">4</span>],
-    en_passant_hashes: [u64; <span class="number">8</span>],
-    active_color_hash: u64,
-}
+<span class="kw">pub const </span>PIECE_HASHES: [[[u64; <span class="number">64</span>]; <span class="number">6</span>]; <span class="number">2</span>] = generate_piece_hashes();
+<span class="kw">pub const </span>CASTLING_HASHES: [u64; <span class="number">4</span>] = generate_castling_hashes();
+<span class="kw">pub const </span>EN_PASSANT_HASHES: [u64; <span class="number">8</span>] = generate_en_passant_hashes();
+<span class="kw">pub const </span>STM_HASH: u64 = generate_stm_hash();
 
-<span class="kw">impl </span>ZobristContainer {
-    <span class="doccomment">/// Gets `piece` hash with the `color` for the square specified by `square`.
-    </span><span class="kw">pub fn </span>get_piece_hash(<span class="kw-2">&amp;</span><span class="self">self</span>, color: usize, piece: usize, square: usize) -&gt; u64 {
-        <span class="self">self</span>.piece_hashes[color][piece][square]
-    }
+<span class="doccomment">/// Generates a constant array of piece hashes.
+</span><span class="kw">pub const fn </span>generate_piece_hashes() -&gt; [[[u64; <span class="number">64</span>]; <span class="number">6</span>]; <span class="number">2</span>] {
+    <span class="kw">let </span><span class="kw-2">mut </span>result = [[[<span class="number">0</span>; <span class="number">64</span>]; <span class="number">6</span>]; <span class="number">2</span>];
+    <span class="kw">let </span><span class="kw-2">mut </span>seed = <span class="number">584578</span>;
 
-    <span class="doccomment">/// Gets castling right hash based on the `current` ones and the desired change specified by `right`.
-    </span><span class="kw">pub fn </span>get_castling_right_hash(<span class="kw-2">&amp;</span><span class="self">self</span>, current: u8, right: u8) -&gt; u64 {
-        <span class="kw">if </span>!current.contains(right) {
-            <span class="kw">return </span><span class="number">0</span>;
-        }
-
-        <span class="self">self</span>.castling_hashes[right.bit_scan()]
-    }
-
-    <span class="doccomment">/// Gets en passant hash for the `file`.
-    </span><span class="kw">pub fn </span>get_en_passant_hash(<span class="kw-2">&amp;</span><span class="self">self</span>, file: usize) -&gt; u64 {
-        <span class="self">self</span>.en_passant_hashes[file]
-    }
-
-    <span class="doccomment">/// Gets active color hash.
-    </span><span class="kw">pub fn </span>get_active_color_hash(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
-        <span class="self">self</span>.active_color_hash
-    }
-}
-
-<span class="kw">impl </span>Default <span class="kw">for </span>ZobristContainer {
-    <span class="doccomment">/// Constructs a default instance of [ZobristContainer] with initialized hashes.
-    </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span><span class="kw-2">mut </span>result = <span class="self">Self </span>{ piece_hashes: [[[<span class="number">0</span>; <span class="number">64</span>]; <span class="number">6</span>]; <span class="number">2</span>], castling_hashes: [<span class="number">0</span>; <span class="number">4</span>], en_passant_hashes: [<span class="number">0</span>; <span class="number">8</span>], active_color_hash: <span class="number">0 </span>};
-
-        <span class="kw">for </span>color <span class="kw">in </span>ALL_COLORS {
-            <span class="kw">for </span>piece <span class="kw">in </span>ALL_PIECES {
-                <span class="kw">for </span>square <span class="kw">in </span>ALL_SQUARES {
-                    result.piece_hashes[color][piece][square] = rand::u64(..);
-                }
+    <span class="kw">let </span><span class="kw-2">mut </span>color = <span class="number">0</span>;
+    <span class="kw">while </span>color &lt; <span class="number">2 </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>piece = <span class="number">0</span>;
+        <span class="kw">while </span>piece &lt; <span class="number">6 </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>square = <span class="number">0</span>;
+            <span class="kw">while </span>square &lt; <span class="number">64 </span>{
+                <span class="kw">let </span>(value, new_seed) = rand::rand(seed);
+                result[color][piece][square] = value;
+                seed = new_seed;
+                square += <span class="number">1</span>;
             }
+
+            piece += <span class="number">1</span>;
         }
 
-        <span class="kw">for </span>castling_index <span class="kw">in </span><span class="number">0</span>..<span class="number">4 </span>{
-            result.castling_hashes[castling_index] = rand::u64(..);
-        }
-
-        <span class="kw">for </span>en_passant_index <span class="kw">in </span>ALL_FILES {
-            result.en_passant_hashes[en_passant_index] = rand::u64(..);
-        }
-
-        result.active_color_hash = rand::u64(..);
-        result
+        color += <span class="number">1</span>;
     }
+
+    result
+}
+
+<span class="doccomment">/// Generates a constant array of castling hashes.
+</span><span class="kw">pub const fn </span>generate_castling_hashes() -&gt; [u64; <span class="number">4</span>] {
+    <span class="kw">let </span><span class="kw-2">mut </span>result = [<span class="number">0</span>; <span class="number">4</span>];
+    <span class="kw">let </span><span class="kw-2">mut </span>seed = <span class="number">8652221015076841656</span>;
+
+    <span class="kw">let </span><span class="kw-2">mut </span>castling_index = <span class="number">0</span>;
+    <span class="kw">while </span>castling_index &lt; <span class="number">4 </span>{
+        <span class="kw">let </span>(value, new_seed) = rand::rand(seed);
+        result[castling_index] = value;
+        seed = new_seed;
+        castling_index += <span class="number">1</span>;
+    }
+
+    result
+}
+
+<span class="doccomment">/// Generates a constant array of en passant hashes.
+</span><span class="kw">pub const fn </span>generate_en_passant_hashes() -&gt; [u64; <span class="number">8</span>] {
+    <span class="kw">let </span><span class="kw-2">mut </span>result = [<span class="number">0</span>; <span class="number">8</span>];
+    <span class="kw">let </span><span class="kw-2">mut </span>seed = <span class="number">13494315632332173397</span>;
+
+    <span class="kw">let </span><span class="kw-2">mut </span>en_passant_index = <span class="number">0</span>;
+    <span class="kw">while </span>en_passant_index &lt; <span class="number">8 </span>{
+        <span class="kw">let </span>(value, new_seed) = rand::rand(seed);
+        result[en_passant_index] = value;
+        seed = new_seed;
+        en_passant_index += <span class="number">1</span>;
+    }
+
+    result
+}
+
+<span class="doccomment">/// Generates a constant array of side to move hashes.
+</span><span class="kw">pub const fn </span>generate_stm_hash() -&gt; u64 {
+    <span class="kw">let </span>seed = <span class="number">13914115299070061278</span>;
+    <span class="kw">let </span>(value, <span class="kw">_</span>) = rand::rand(seed);
+    value
+}
+
+<span class="doccomment">/// Gets `piece` hash with the `color` for the square specified by `square`.
+</span><span class="kw">pub fn </span>get_piece_hash(color: usize, piece: usize, square: usize) -&gt; u64 {
+    <span class="macro">assert_fast!</span>(color &lt; <span class="number">2</span>);
+    <span class="macro">assert_fast!</span>(piece &lt; <span class="number">6</span>);
+    <span class="macro">assert_fast!</span>(square &lt; <span class="number">64</span>);
+
+    PIECE_HASHES[color][piece][square]
+}
+
+<span class="doccomment">/// Gets castling right hash based on the `current` ones and the desired change specified by `right`.
+</span><span class="kw">pub fn </span>get_castling_right_hash(current: u8, right: u8) -&gt; u64 {
+    <span class="kw">if </span>!current.contains(right) {
+        <span class="kw">return </span><span class="number">0</span>;
+    }
+
+    <span class="macro">assert_fast!</span>(right.bit_scan() &lt; <span class="number">4</span>);
+    CASTLING_HASHES[right.bit_scan()]
+}
+
+<span class="doccomment">/// Gets en passant hash for the `file`.
+</span><span class="kw">pub fn </span>get_en_passant_hash(file: usize) -&gt; u64 {
+    <span class="macro">assert_fast!</span>(file &lt; <span class="number">8</span>);
+    EN_PASSANT_HASHES[file]
+}
+
+<span class="doccomment">/// Gets active color hash.
+</span><span class="kw">pub fn </span>get_stm_hash() -&gt; u64 {
+    STM_HASH
 }
 
 <span class="doccomment">/// Recalculates board's hash entirely.
@@ -204,33 +288,33 @@
                 <span class="kw">let </span>square = square_bb.bit_scan();
                 pieces_bb = pieces_bb.pop_lsb();
 
-                hash ^= board.zobrist.get_piece_hash(color, piece_index, square);
+                hash ^= zobrist::get_piece_hash(color, piece_index, square);
             }
         }
     }
 
-    <span class="kw">if </span>board.castling_rights.contains(CastlingRights::WHITE_SHORT_CASTLING) {
-        hash ^= board.zobrist.get_castling_right_hash(board.castling_rights, CastlingRights::WHITE_SHORT_CASTLING);
+    <span class="kw">if </span>board.state.castling_rights.contains(CastlingRights::WHITE_SHORT_CASTLING) {
+        hash ^= zobrist::get_castling_right_hash(board.state.castling_rights, CastlingRights::WHITE_SHORT_CASTLING);
     }
-    <span class="kw">if </span>board.castling_rights.contains(CastlingRights::WHITE_LONG_CASTLING) {
-        hash ^= board.zobrist.get_castling_right_hash(board.castling_rights, CastlingRights::WHITE_LONG_CASTLING);
+    <span class="kw">if </span>board.state.castling_rights.contains(CastlingRights::WHITE_LONG_CASTLING) {
+        hash ^= zobrist::get_castling_right_hash(board.state.castling_rights, CastlingRights::WHITE_LONG_CASTLING);
     }
-    <span class="kw">if </span>board.castling_rights.contains(CastlingRights::BLACK_SHORT_CASTLING) {
-        hash ^= board.zobrist.get_castling_right_hash(board.castling_rights, CastlingRights::BLACK_SHORT_CASTLING);
+    <span class="kw">if </span>board.state.castling_rights.contains(CastlingRights::BLACK_SHORT_CASTLING) {
+        hash ^= zobrist::get_castling_right_hash(board.state.castling_rights, CastlingRights::BLACK_SHORT_CASTLING);
     }
-    <span class="kw">if </span>board.castling_rights.contains(CastlingRights::BLACK_LONG_CASTLING) {
-        hash ^= board.zobrist.get_castling_right_hash(board.castling_rights, CastlingRights::BLACK_LONG_CASTLING);
-    }
-
-    <span class="kw">if </span>board.en_passant != <span class="number">0 </span>{
-        hash ^= board.zobrist.get_en_passant_hash(board.en_passant.bit_scan() &amp; <span class="number">7</span>);
+    <span class="kw">if </span>board.state.castling_rights.contains(CastlingRights::BLACK_LONG_CASTLING) {
+        hash ^= zobrist::get_castling_right_hash(board.state.castling_rights, CastlingRights::BLACK_LONG_CASTLING);
     }
 
-    <span class="kw">if </span>board.active_color == BLACK {
-        hash ^= board.zobrist.get_active_color_hash();
+    <span class="kw">if </span>board.state.en_passant != <span class="number">0 </span>{
+        hash ^= zobrist::get_en_passant_hash(board.state.en_passant.bit_scan() &amp; <span class="number">7</span>);
     }
 
-    board.hash = hash;
+    <span class="kw">if </span>board.stm == BLACK {
+        hash ^= zobrist::get_stm_hash();
+    }
+
+    board.state.hash = hash;
 }
 
 <span class="doccomment">/// Recalculates board's pawn hash entirely.
@@ -245,11 +329,11 @@
                 <span class="kw">let </span>square = square_bb.bit_scan();
                 pieces_bb = pieces_bb.pop_lsb();
 
-                hash ^= board.zobrist.get_piece_hash(color, piece, square);
+                hash ^= zobrist::get_piece_hash(color, piece, square);
             }
         }
     }
 
-    board.pawn_hash = hash;
+    board.state.pawn_hash = hash;
 }
 </code></pre></div></section></main></body></html>

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"macro":["div_ceil"],"trait":["DivCeil"]};

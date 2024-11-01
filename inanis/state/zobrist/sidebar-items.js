@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["recalculate_hash","recalculate_pawn_hash"],"struct":["ZobristContainer"]};
+window.SIDEBAR_ITEMS = {"constant":["CASTLING_HASHES","EN_PASSANT_HASHES","PIECE_HASHES","STM_HASH"],"fn":["generate_castling_hashes","generate_en_passant_hashes","generate_piece_hashes","generate_stm_hash","get_castling_right_hash","get_en_passant_hash","get_piece_hash","get_stm_hash","recalculate_hash","recalculate_pawn_hash"]};

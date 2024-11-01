@@ -138,32 +138,17 @@
 <a href="#136" id="136">136</a>
 <a href="#137" id="137">137</a>
 <a href="#138" id="138">138</a>
-<a href="#139" id="139">139</a>
-<a href="#140" id="140">140</a>
-<a href="#141" id="141">141</a>
-<a href="#142" id="142">142</a>
-<a href="#143" id="143">143</a>
-<a href="#144" id="144">144</a>
-<a href="#145" id="145">145</a>
-<a href="#146" id="146">146</a>
-<a href="#147" id="147">147</a>
-<a href="#148" id="148">148</a>
-<a href="#149" id="149">149</a>
-<a href="#150" id="150">150</a>
-<a href="#151" id="151">151</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
-<span class="kw">use </span><span class="kw">crate</span>::cache::pawns::PawnHashTable;
-<span class="kw">use </span><span class="kw">crate</span>::engine::statistics::SearchStatistics;
+<span class="kw">use </span><span class="kw">crate</span>::cache::pawns::PHTable;
+<span class="kw">use </span><span class="kw">crate</span>::engine::stats::SearchStats;
 <span class="kw">use </span><span class="kw">crate</span>::state::representation::Board;
+<span class="kw">use </span><span class="kw">crate</span>::utils::assert_fast;
 <span class="kw">use </span><span class="kw">crate</span>::utils::bithelpers::BitHelpers;
-<span class="kw">use </span><span class="kw">crate</span>::utils::conditional_expression;
+<span class="kw">use </span><span class="kw">crate</span>::utils::dev;
 <span class="kw">use </span>std::cmp;
 
 <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
-</span><span class="kw">use </span>pst::<span class="kw-2">*</span>;
-
-<span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
-</span><span class="kw">use </span><span class="kw">crate</span>::tuning::tuner::TunerCoefficient;
+</span><span class="kw">use </span><span class="kw">crate</span>::tuning::tuner::TunerCoeff;
 
 <span class="kw">pub struct </span>PawnsData {
     doubled_pawns: u8,
@@ -181,59 +166,57 @@
 ///  - chained pawns (positive score)
 ///  - passed pawns (positive score)
 ///  - open files next to the king (negative score)
+///  - pawn shield next to the king (positive score)
 ///
 /// To improve performance (using the fact that structure of pawns changes relatively rare), each evaluation is saved in the pawn hashtable,
 /// and used again if possible.
-</span><span class="kw">pub fn </span>evaluate&lt;<span class="kw">const </span>DIAG: bool&gt;(board: <span class="kw-2">&amp;</span>Board, pawn_hashtable: <span class="kw-2">&amp;</span>PawnHashTable, statistics: <span class="kw-2">&amp;mut </span>SearchStatistics) -&gt; EvaluationResult {
-    <span class="kw">match </span>pawn_hashtable.get(board.pawn_hash) {
+</span><span class="kw">pub fn </span>evaluate(board: <span class="kw-2">&amp;</span>Board, phtable: <span class="kw-2">&amp;</span>PHTable, stats: <span class="kw-2">&amp;mut </span>SearchStats) -&gt; PackedEval {
+    <span class="kw">match </span>phtable.get(board.state.pawn_hash) {
         <span class="prelude-val">Some</span>(entry) =&gt; {
-            <span class="macro">conditional_expression!</span>(DIAG, statistics.pawn_hashtable_hits += <span class="number">1</span>);
-            <span class="kw">return </span>EvaluationResult::new(entry.score_opening, entry.score_ending);
+            <span class="macro">dev!</span>(stats.phtable_hits += <span class="number">1</span>);
+            <span class="kw">return </span>PackedEval::new(entry.score_opening, entry.score_ending);
         }
         <span class="prelude-val">None </span>=&gt; {
-            <span class="macro">conditional_expression!</span>(DIAG, statistics.pawn_hashtable_misses += <span class="number">1</span>);
+            <span class="macro">dev!</span>(stats.phtable_misses += <span class="number">1</span>);
         }
     }
 
-    <span class="kw">let </span>white_evaluation = evaluate_color(board, WHITE);
-    <span class="kw">let </span>black_evaluation = evaluate_color(board, BLACK);
-    <span class="kw">let </span>score_opening = white_evaluation.opening_score - black_evaluation.opening_score;
-    <span class="kw">let </span>score_ending = white_evaluation.ending_score - black_evaluation.ending_score;
+    <span class="kw">let </span>white_eval = evaluate_color(board, WHITE);
+    <span class="kw">let </span>black_eval = evaluate_color(board, BLACK);
+    <span class="kw">let </span>eval = white_eval - black_eval;
 
-    pawn_hashtable.add(board.pawn_hash, score_opening, score_ending);
-    <span class="macro">conditional_expression!</span>(DIAG, statistics.pawn_hashtable_added += <span class="number">1</span>);
+    phtable.add(board.state.pawn_hash, eval.get_opening(), eval.get_ending());
+    <span class="macro">dev!</span>(stats.phtable_added += <span class="number">1</span>);
 
-    EvaluationResult::new(score_opening, score_ending)
+    eval
 }
 
-<span class="doccomment">/// Does the same thing as [evaluate], but doesn't use pawn hashtable to save evalations.
-</span><span class="kw">pub fn </span>evaluate_without_cache(board: <span class="kw-2">&amp;</span>Board) -&gt; EvaluationResult {
+<span class="doccomment">/// Does the same thing as [evaluate], but without using pawn hashtable to save evalations.
+</span><span class="kw">pub fn </span>evaluate_without_cache(board: <span class="kw-2">&amp;</span>Board) -&gt; PackedEval {
     evaluate_color(board, WHITE) - evaluate_color(board, BLACK)
 }
 
 <span class="doccomment">/// Evaluates pawn structure on the `board` for the specified `color`.
-</span><span class="kw">fn </span>evaluate_color(board: <span class="kw-2">&amp;</span>Board, color: usize) -&gt; EvaluationResult {
-    <span class="kw">let </span>pawns_data = get_pawns_data(board, color);
-    <span class="kw">let </span>opening_score = <span class="number">0
-        </span>+ board.evaluation_parameters.doubled_pawn_opening[pawns_data.doubled_pawns.min(<span class="number">7</span>) <span class="kw">as </span>usize]
-        + board.evaluation_parameters.isolated_pawn_opening[pawns_data.isolated_pawns.min(<span class="number">7</span>) <span class="kw">as </span>usize]
-        + board.evaluation_parameters.chained_pawn_opening[pawns_data.chained_pawns.min(<span class="number">7</span>) <span class="kw">as </span>usize]
-        + board.evaluation_parameters.passed_pawn_opening[pawns_data.passed_pawns.min(<span class="number">7</span>) <span class="kw">as </span>usize]
-        + board.evaluation_parameters.pawn_shield_opening[pawns_data.pawn_shield.min(<span class="number">7</span>) <span class="kw">as </span>usize]
-        + board.evaluation_parameters.pawn_shield_open_file_opening[pawns_data.opened_files.min(<span class="number">7</span>) <span class="kw">as </span>usize];
-    <span class="kw">let </span>ending_score = <span class="number">0
-        </span>+ board.evaluation_parameters.doubled_pawn_ending[pawns_data.doubled_pawns.min(<span class="number">7</span>) <span class="kw">as </span>usize]
-        + board.evaluation_parameters.isolated_pawn_ending[pawns_data.isolated_pawns.min(<span class="number">7</span>) <span class="kw">as </span>usize]
-        + board.evaluation_parameters.chained_pawn_ending[pawns_data.chained_pawns.min(<span class="number">7</span>) <span class="kw">as </span>usize]
-        + board.evaluation_parameters.passed_pawn_ending[pawns_data.passed_pawns.min(<span class="number">7</span>) <span class="kw">as </span>usize]
-        + board.evaluation_parameters.pawn_shield_ending[pawns_data.pawn_shield.min(<span class="number">7</span>) <span class="kw">as </span>usize]
-        + board.evaluation_parameters.pawn_shield_open_file_ending[pawns_data.opened_files.min(<span class="number">7</span>) <span class="kw">as </span>usize];
+</span><span class="kw">fn </span>evaluate_color(board: <span class="kw-2">&amp;</span>Board, color: usize) -&gt; PackedEval {
+    <span class="macro">assert_fast!</span>(color &lt; <span class="number">2</span>);
 
-    EvaluationResult::new(opening_score, ending_score)
+    <span class="kw">let </span><span class="kw-2">mut </span>result = PackedEval::default();
+    <span class="kw">let </span>pawns_data = get_pawns_data(board, color);
+
+    result += params::DOUBLED_PAWN[pawns_data.doubled_pawns.min(<span class="number">7</span>) <span class="kw">as </span>usize];
+    result += params::ISOLATED_PAWN[pawns_data.isolated_pawns.min(<span class="number">7</span>) <span class="kw">as </span>usize];
+    result += params::CHAINED_PAWN[pawns_data.chained_pawns.min(<span class="number">7</span>) <span class="kw">as </span>usize];
+    result += params::PASSED_PAWN[pawns_data.passed_pawns.min(<span class="number">7</span>) <span class="kw">as </span>usize];
+    result += params::PAWN_SHIELD[pawns_data.pawn_shield.min(<span class="number">7</span>) <span class="kw">as </span>usize];
+    result += params::PAWN_SHIELD_OPEN_FILE[pawns_data.opened_files.min(<span class="number">7</span>) <span class="kw">as </span>usize];
+
+    result
 }
 
 <span class="doccomment">/// Gets all pawn features on `board` for `color`.
 </span><span class="kw">fn </span>get_pawns_data(board: <span class="kw-2">&amp;</span>Board, color: usize) -&gt; PawnsData {
+    <span class="macro">assert_fast!</span>(color &lt; <span class="number">2</span>);
+
     <span class="kw">let </span><span class="kw-2">mut </span>doubled_pawns = <span class="number">0</span>;
     <span class="kw">let </span><span class="kw-2">mut </span>isolated_pawns = <span class="number">0</span>;
     <span class="kw">let </span><span class="kw-2">mut </span>chained_pawns = <span class="number">0</span>;
@@ -242,14 +225,15 @@
     <span class="kw">let </span><span class="kw-2">mut </span>opened_files = <span class="number">0</span>;
 
     <span class="kw">for </span>file <span class="kw">in </span>ALL_FILES {
-        <span class="kw">let </span>pawns_on_file_count = (board.patterns.get_file(file) &amp; board.pieces[color][PAWN]).bit_count() <span class="kw">as </span>u8;
-        <span class="kw">if </span>pawns_on_file_count &gt; <span class="number">1 </span>{
-            doubled_pawns += pawns_on_file_count - <span class="number">1</span>;
-        }
+        <span class="kw">let </span>pawns_on_file = patterns::get_file(file) &amp; board.pieces[color][PAWN];
+        <span class="kw">if </span>pawns_on_file != <span class="number">0 </span>{
+            <span class="kw">let </span>pawns_on_file_count = pawns_on_file.bit_count() <span class="kw">as </span>u8;
 
-        <span class="kw">if </span>pawns_on_file_count &gt; <span class="number">0 </span>{
-            <span class="kw">let </span>pawns_on_rail_count = (board.patterns.get_rail(file) &amp; board.pieces[color][PAWN]).bit_count();
-            <span class="kw">if </span>pawns_on_rail_count == <span class="number">0 </span>{
+            <span class="kw">if </span>pawns_on_file_count &gt; <span class="number">1 </span>{
+                doubled_pawns += pawns_on_file_count - <span class="number">1</span>;
+            }
+
+            <span class="kw">if </span>(patterns::get_rail(file) &amp; board.pieces[color][PAWN]) == <span class="number">0 </span>{
                 isolated_pawns += <span class="number">1</span>;
             }
         }
@@ -259,26 +243,19 @@
     <span class="kw">while </span>pawns_bb != <span class="number">0 </span>{
         <span class="kw">let </span>square_bb = pawns_bb.get_lsb();
         <span class="kw">let </span>square = square_bb.bit_scan();
-
-        chained_pawns += <span class="kw">if </span>(board.patterns.get_star(square) &amp; pawns_bb) &gt; <span class="number">0 </span>{ <span class="number">1 </span>} <span class="kw">else </span>{ <span class="number">0 </span>};
         pawns_bb = pawns_bb.pop_lsb();
 
-        <span class="kw">let </span>front_bb = board.patterns.get_front(color, square);
-        <span class="kw">let </span>enemy_pawns_ahead_count = (front_bb &amp; board.pieces[color ^ <span class="number">1</span>][PAWN]).bit_count();
-        <span class="kw">let </span>friendly_pawns_ahead_count = (front_bb &amp; board.patterns.get_file(square) &amp; board.pieces[color][PAWN]).bit_count();
-
-        <span class="kw">if </span>enemy_pawns_ahead_count == <span class="number">0 </span>&amp;&amp; friendly_pawns_ahead_count == <span class="number">0 </span>{
-            passed_pawns += <span class="number">1</span>;
-        }
+        chained_pawns += ((patterns::get_front(color ^ <span class="number">1</span>, square) &amp; patterns::get_diagonals(square) &amp; board.pieces[color][PAWN]) != <span class="number">0</span>) <span class="kw">as </span>u8;
+        passed_pawns += ((patterns::get_front(color, square) &amp; board.pieces[color ^ <span class="number">1</span>][PAWN]) == <span class="number">0</span>) <span class="kw">as </span>u8;
     }
 
     <span class="kw">let </span>king_bb = board.pieces[color][KING];
     <span class="kw">let </span>king_square = king_bb.bit_scan();
     <span class="kw">let </span>king_square_file = (king_square &amp; <span class="number">7</span>) <span class="kw">as </span>i8;
-    pawn_shield = (board.patterns.get_box(king_square) &amp; board.pieces[color][PAWN]).bit_count() <span class="kw">as </span>u8;
+    pawn_shield = (patterns::get_box(king_square) &amp; board.pieces[color][PAWN]).bit_count() <span class="kw">as </span>u8;
 
     <span class="kw">for </span>file <span class="kw">in </span>cmp::max(<span class="number">0</span>, king_square_file - <span class="number">1</span>)..=(cmp::min(<span class="number">7</span>, king_square_file + <span class="number">1</span>)) {
-        <span class="kw">if </span>(board.patterns.get_file(file <span class="kw">as </span>usize) &amp; board.pieces[color][PAWN]) == <span class="number">0 </span>{
+        <span class="kw">if </span>(patterns::get_file(file <span class="kw">as </span>usize) &amp; board.pieces[color][PAWN]) == <span class="number">0 </span>{
             opened_files += <span class="number">1</span>;
         }
     }
@@ -286,20 +263,17 @@
     PawnsData { doubled_pawns, isolated_pawns, chained_pawns, passed_pawns, pawn_shield, opened_files }
 }
 
-<span class="doccomment">/// Gets coefficients of pawn structure on `board` and assigns indexes starting from `index`.
+<span class="doccomment">/// Gets coefficients of pawn structure for `board` and inserts them into `coeffs`. Similarly, their indices (starting from `index`) are inserted into `indices`.
 </span><span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
-</span><span class="kw">pub fn </span>get_coefficients(board: <span class="kw-2">&amp;</span>Board, index: <span class="kw-2">&amp;mut </span>u16) -&gt; Vec&lt;TunerCoefficient&gt; {
+</span><span class="kw">pub fn </span>get_coeffs(board: <span class="kw-2">&amp;</span>Board, index: <span class="kw-2">&amp;mut </span>u16, coeffs: <span class="kw-2">&amp;mut </span>Vec&lt;TunerCoeff&gt;, indices: <span class="kw-2">&amp;mut </span>Vec&lt;u16&gt;) {
     <span class="kw">let </span>white_pawns_data = get_pawns_data(board, WHITE);
     <span class="kw">let </span>black_pawns_data = get_pawns_data(board, BLACK);
-    <span class="kw">let </span><span class="kw-2">mut </span>coefficients = Vec::new();
 
-    coefficients.append(<span class="kw-2">&amp;mut </span>get_array_coefficients(white_pawns_data.doubled_pawns, black_pawns_data.doubled_pawns, <span class="number">8</span>, index));
-    coefficients.append(<span class="kw-2">&amp;mut </span>get_array_coefficients(white_pawns_data.isolated_pawns, black_pawns_data.isolated_pawns, <span class="number">8</span>, index));
-    coefficients.append(<span class="kw-2">&amp;mut </span>get_array_coefficients(white_pawns_data.chained_pawns, black_pawns_data.chained_pawns, <span class="number">8</span>, index));
-    coefficients.append(<span class="kw-2">&amp;mut </span>get_array_coefficients(white_pawns_data.passed_pawns, black_pawns_data.passed_pawns, <span class="number">8</span>, index));
-    coefficients.append(<span class="kw-2">&amp;mut </span>get_array_coefficients(white_pawns_data.pawn_shield, black_pawns_data.pawn_shield, <span class="number">8</span>, index));
-    coefficients.append(<span class="kw-2">&amp;mut </span>get_array_coefficients(white_pawns_data.opened_files, black_pawns_data.opened_files, <span class="number">8</span>, index));
-
-    coefficients
+    get_array_coeffs(white_pawns_data.doubled_pawns, black_pawns_data.doubled_pawns, <span class="number">8</span>, index, coeffs, indices);
+    get_array_coeffs(white_pawns_data.isolated_pawns, black_pawns_data.isolated_pawns, <span class="number">8</span>, index, coeffs, indices);
+    get_array_coeffs(white_pawns_data.chained_pawns, black_pawns_data.chained_pawns, <span class="number">8</span>, index, coeffs, indices);
+    get_array_coeffs(white_pawns_data.passed_pawns, black_pawns_data.passed_pawns, <span class="number">8</span>, index, coeffs, indices);
+    get_array_coeffs(white_pawns_data.pawn_shield, black_pawns_data.pawn_shield, <span class="number">8</span>, index, coeffs, indices);
+    get_array_coeffs(white_pawns_data.opened_files, black_pawns_data.opened_files, <span class="number">8</span>, index, coeffs, indices);
 }
 </code></pre></div></section></main></body></html>

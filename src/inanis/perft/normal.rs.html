@@ -26,24 +26,22 @@
 <a href="#24" id="24">24</a>
 <a href="#25" id="25">25</a>
 <a href="#26" id="26">26</a>
-<a href="#27" id="27">27</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::context::PerftStatistics;
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::context::PerftStats;
 <span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::cache::perft::PerftHashTable;
 <span class="kw">use </span><span class="kw">crate</span>::perft::context::PerftContext;
 <span class="kw">use </span><span class="kw">crate</span>::state::representation::Board;
 <span class="kw">use </span>std::sync::Arc;
-<span class="kw">use </span>std::u64;
 
 <span class="kw">pub struct </span>NormalPerftResult {
     <span class="kw">pub </span>nodes: u64,
-    <span class="kw">pub </span>statistics: PerftStatistics,
+    <span class="kw">pub </span>stats: PerftStats,
 }
 
 <span class="kw">impl </span>NormalPerftResult {
-    <span class="doccomment">/// Constructs a new instance of [NormalPerftResult] with stored `nodes` and `statistics`.
-    </span><span class="kw">pub fn </span>new(nodes: u64, statistics: PerftStatistics) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ nodes, statistics }
+    <span class="doccomment">/// Constructs a new instance of [NormalPerftResult] with stored `nodes` and `stats`.
+    </span><span class="kw">pub fn </span>new(nodes: u64, stats: PerftStats) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ nodes, stats }
     }
 }
 
@@ -52,6 +50,6 @@
     <span class="kw">let </span>hashtable = Arc::new(PerftHashTable::new(<span class="number">0</span>));
     <span class="kw">let </span><span class="kw-2">mut </span>context = PerftContext::new(board, <span class="kw-2">&amp;</span>hashtable, check_integrity, <span class="bool-val">false</span>);
 
-    NormalPerftResult::new(run_internal(<span class="kw-2">&amp;mut </span>context, depth), context.statistics)
+    NormalPerftResult::new(run_internal(<span class="kw-2">&amp;mut </span>context, depth), context.stats)
 }
 </code></pre></div></section></main></body></html>

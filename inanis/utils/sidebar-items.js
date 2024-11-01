@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"macro":["conditional_expression","parameter","percent"],"mod":["bitflags","bithelpers","divceil","minmax","rand"]};
+window.SIDEBAR_ITEMS = {"macro":["assert_fast","dev","panic_fast","param","percent"],"mod":["bitflags","bithelpers","minmax","rand"]};

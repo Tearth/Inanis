@@ -1,0 +1,61 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Entry point of the regular search, with generic `ROOT` parameter indicating if this is the root node where the moves filterigh might happen, and `PV` parameter determining if the current node is a PV (principal variation) node in the PVS framework. The implementation contains a typical alpha-beta approach, together with a bunch of reductions and prunings to optimize search. The most important parameter here, `context`, contains the current state of the search, board state, statistics, and is passed by reference to all nodes. Besides obvious parameters like `depth`, `ply`, `alpha` and `beta`, there’s also `allow_null_move` which prevents two null move checks in a row, and `friendly_king_checked` which is used to share friendly king check status between nodes (it’s always calculated one depth earlier, as it’s used as one of the LMR constraints)."><title>run_internal in inanis::engine::search::runner - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="inanis" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.2 (25ef9e3d8 2024-04-09)" data-channel="1.77.2" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc fn"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../../../inanis/index.html">inanis</a><span class="version">1.5.0</span></h2></div><div class="sidebar-elems"><h2><a href="index.html">In inanis::engine::search::runner</a></h2></div></nav><div class="sidebar-resizer"></div>
+    <main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../../inanis/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Function <a href="../../../index.html">inanis</a>::<wbr><a href="../../index.html">engine</a>::<wbr><a href="../index.html">search</a>::<wbr><a href="index.html">runner</a>::<wbr><a class="fn" href="#">run_internal</a><button id="copy-path" title="Copy item path to clipboard"><img src="../../../../static.files/clipboard-7571035ce49a181d.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="src" href="../../../../src/inanis/engine/search/runner.rs.html#95-431">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><pre class="rust item-decl"><code>fn run_internal&lt;const ROOT: <a class="primitive" href="https://doc.rust-lang.org/1.77.2/std/primitive.bool.html">bool</a>, const PV: <a class="primitive" href="https://doc.rust-lang.org/1.77.2/std/primitive.bool.html">bool</a>&gt;(
+    context: &amp;mut <a class="struct" href="../../context/struct.SearchContext.html" title="struct inanis::engine::context::SearchContext">SearchContext</a>,
+    depth: <a class="primitive" href="https://doc.rust-lang.org/1.77.2/std/primitive.i8.html">i8</a>,
+    ply: <a class="primitive" href="https://doc.rust-lang.org/1.77.2/std/primitive.u16.html">u16</a>,
+    alpha: <a class="primitive" href="https://doc.rust-lang.org/1.77.2/std/primitive.i16.html">i16</a>,
+    beta: <a class="primitive" href="https://doc.rust-lang.org/1.77.2/std/primitive.i16.html">i16</a>,
+    allow_null_move: <a class="primitive" href="https://doc.rust-lang.org/1.77.2/std/primitive.bool.html">bool</a>,
+    friendly_king_checked: <a class="primitive" href="https://doc.rust-lang.org/1.77.2/std/primitive.bool.html">bool</a>,
+    previous_move: <a class="struct" href="../../../state/movescan/struct.Move.html" title="struct inanis::state::movescan::Move">Move</a>
+) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.77.2/std/primitive.i16.html">i16</a></code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Entry point of the regular search, with generic <code>ROOT</code> parameter indicating if this is the root node where the moves filterigh might happen, and <code>PV</code> parameter
+determining if the current node is a PV (principal variation) node in the PVS framework. The implementation contains a typical alpha-beta approach, together with
+a bunch of reductions and prunings to optimize search. The most important parameter here, <code>context</code>, contains the current state of the search, board state,
+statistics, and is passed by reference to all nodes. Besides obvious parameters like <code>depth</code>, <code>ply</code>, <code>alpha</code> and <code>beta</code>, there’s also <code>allow_null_move</code>
+which prevents two null move checks in a row, and <code>friendly_king_checked</code> which is used to share friendly king check status between nodes (it’s always
+calculated one depth earlier, as it’s used as one of the LMR constraints).</p>
+<p>Search steps for PV node:</p>
+<ul>
+<li>test of abort flag</li>
+<li>test of initial constraints: abort flag, forced depth</li>
+<li>test if the enemy king is checked</li>
+<li>test if there’s threefold repetition draw, fifty move rule draw or insufficient material draw</li>
+<li>check extensions (<a href="https://www.chessprogramming.org/Check_Extensions">https://www.chessprogramming.org/Check_Extensions</a>)</li>
+<li>switch to the quiescence search if the depth is equal to zero</li>
+<li>read from the transposition table, return score if possible or update alpha/beta (<a href="https://www.chessprogramming.org/Transposition_Table">https://www.chessprogramming.org/Transposition_Table</a>)</li>
+<li>internal iterative reduction (<a href="https://chessprogrammingwiki.netlify.app/internal_iterative_reductions/">https://chessprogrammingwiki.netlify.app/internal_iterative_reductions/</a>)</li>
+<li>main loop:
+<ul>
+<li>filter moves (if <code>ROOT</code> is set)</li>
+<li>late move reduction (<a href="https://www.chessprogramming.org/Late_Move_Reductions">https://www.chessprogramming.org/Late_Move_Reductions</a>)</li>
+<li>PVS framework (<a href="https://www.chessprogramming.org/Principal_Variation_Search">https://www.chessprogramming.org/Principal_Variation_Search</a>)</li>
+</ul>
+</li>
+<li>test if stalemate draw is detected</li>
+<li>update transposition table</li>
+</ul>
+<p>Search steps for non-PV node:</p>
+<ul>
+<li>test of abort flag</li>
+<li>test of initial constraints: abort flag, forced depth, max nodes count</li>
+<li>test if the enemy king is checked</li>
+<li>test if there’s threefold repetition draw, fifty move rule draw or insufficient material draw</li>
+<li>check extensions (<a href="https://www.chessprogramming.org/Check_Extensions">https://www.chessprogramming.org/Check_Extensions</a>)</li>
+<li>switch to the quiescence search if the depth is equal to zero</li>
+<li>read from the transposition table, return score if possible or update alpha/beta (<a href="https://www.chessprogramming.org/Transposition_Table">https://www.chessprogramming.org/Transposition_Table</a>)</li>
+<li>internal iterative reduction (<a href="https://chessprogrammingwiki.netlify.app/internal_iterative_reductions/">https://chessprogrammingwiki.netlify.app/internal_iterative_reductions/</a>)</li>
+<li>razoring (<a href="https://www.chessprogramming.org/Razoring">https://www.chessprogramming.org/Razoring</a>)</li>
+<li>static null move pruning (<a href="https://www.chessprogramming.org/Reverse_Futility_Pruning">https://www.chessprogramming.org/Reverse_Futility_Pruning</a>)</li>
+<li>null move pruning (<a href="https://www.chessprogramming.org/Null_Move_Pruning">https://www.chessprogramming.org/Null_Move_Pruning</a>)</li>
+<li>main loop:
+<ul>
+<li>filter moves (if <code>ROOT</code> is set)</li>
+<li>late move pruning (<a href="https://www.chessprogramming.org/Futility_Pruning#MoveCountBasedPruning">https://www.chessprogramming.org/Futility_Pruning#MoveCountBasedPruning</a>)</li>
+<li>late move reduction (<a href="https://www.chessprogramming.org/Late_Move_Reductions">https://www.chessprogramming.org/Late_Move_Reductions</a>)</li>
+<li>PVS framework (<a href="https://www.chessprogramming.org/Principal_Variation_Search">https://www.chessprogramming.org/Principal_Variation_Search</a>)</li>
+</ul>
+</li>
+<li>test if stalemate draw is detected</li>
+<li>update transposition table</li>
+</ul>
+</div></details></section></div></main></body></html>

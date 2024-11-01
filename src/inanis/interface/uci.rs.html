@@ -728,121 +728,44 @@
 <a href="#726" id="726">726</a>
 <a href="#727" id="727">727</a>
 <a href="#728" id="728">728</a>
-<a href="#729" id="729">729</a>
-<a href="#730" id="730">730</a>
-<a href="#731" id="731">731</a>
-<a href="#732" id="732">732</a>
-<a href="#733" id="733">733</a>
-<a href="#734" id="734">734</a>
-<a href="#735" id="735">735</a>
-<a href="#736" id="736">736</a>
-<a href="#737" id="737">737</a>
-<a href="#738" id="738">738</a>
-<a href="#739" id="739">739</a>
-<a href="#740" id="740">740</a>
-<a href="#741" id="741">741</a>
-<a href="#742" id="742">742</a>
-<a href="#743" id="743">743</a>
-<a href="#744" id="744">744</a>
-<a href="#745" id="745">745</a>
-<a href="#746" id="746">746</a>
-<a href="#747" id="747">747</a>
-<a href="#748" id="748">748</a>
-<a href="#749" id="749">749</a>
-<a href="#750" id="750">750</a>
-<a href="#751" id="751">751</a>
-<a href="#752" id="752">752</a>
-<a href="#753" id="753">753</a>
-<a href="#754" id="754">754</a>
-<a href="#755" id="755">755</a>
-<a href="#756" id="756">756</a>
-<a href="#757" id="757">757</a>
-<a href="#758" id="758">758</a>
-<a href="#759" id="759">759</a>
-<a href="#760" id="760">760</a>
-<a href="#761" id="761">761</a>
-<a href="#762" id="762">762</a>
-<a href="#763" id="763">763</a>
-<a href="#764" id="764">764</a>
-<a href="#765" id="765">765</a>
-<a href="#766" id="766">766</a>
-<a href="#767" id="767">767</a>
-<a href="#768" id="768">768</a>
-<a href="#769" id="769">769</a>
-<a href="#770" id="770">770</a>
-<a href="#771" id="771">771</a>
-<a href="#772" id="772">772</a>
-<a href="#773" id="773">773</a>
-<a href="#774" id="774">774</a>
-<a href="#775" id="775">775</a>
-<a href="#776" id="776">776</a>
-<a href="#777" id="777">777</a>
-<a href="#778" id="778">778</a>
-<a href="#779" id="779">779</a>
-<a href="#780" id="780">780</a>
-<a href="#781" id="781">781</a>
-<a href="#782" id="782">782</a>
-<a href="#783" id="783">783</a>
-<a href="#784" id="784">784</a>
-<a href="#785" id="785">785</a>
-<a href="#786" id="786">786</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::cache::allocator;
-<span class="kw">use </span><span class="kw">crate</span>::cache::counters::CountermovesTable;
-<span class="kw">use </span><span class="kw">crate</span>::cache::history::HistoryTable;
-<span class="kw">use </span><span class="kw">crate</span>::cache::killers::KillersTable;
-<span class="kw">use </span><span class="kw">crate</span>::cache::pawns::PawnHashTable;
-<span class="kw">use </span><span class="kw">crate</span>::cache::search::TranspositionTable;
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::cache::counters::CMTable;
+<span class="kw">use </span><span class="kw">crate</span>::cache::history::HTable;
+<span class="kw">use </span><span class="kw">crate</span>::cache::killers::KTable;
+<span class="kw">use </span><span class="kw">crate</span>::cache::pawns::PHTable;
+<span class="kw">use </span><span class="kw">crate</span>::cache::search::TTable;
 <span class="kw">use </span><span class="kw">crate</span>::engine;
-<span class="kw">use </span><span class="kw">crate</span>::engine::context::HelperThreadContext;
 <span class="kw">use </span><span class="kw">crate</span>::engine::context::SearchContext;
-<span class="kw">use </span><span class="kw">crate</span>::engine::parameters::SearchParameters;
-<span class="kw">use </span><span class="kw">crate</span>::engine::see::SEEContainer;
-<span class="kw">use </span><span class="kw">crate</span>::evaluation::EvaluationParameters;
+<span class="kw">use </span><span class="kw">crate</span>::engine::params::SearchParams;
 <span class="kw">use </span><span class="kw">crate</span>::perft;
 <span class="kw">use </span><span class="kw">crate</span>::state::movescan::Move;
 <span class="kw">use </span><span class="kw">crate</span>::state::representation::Board;
 <span class="kw">use </span><span class="kw">crate</span>::state::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::stats::SearchStats;
 <span class="kw">use </span><span class="kw">crate</span>::tablebases::syzygy;
 <span class="kw">use </span><span class="kw">crate</span>::utils::minmax::MinMax;
-<span class="kw">use </span>movegen::MagicContainer;
-<span class="kw">use </span>patterns::PatternsContainer;
+<span class="kw">use </span><span class="kw">crate</span>::utils::panic_fast;
 <span class="kw">use </span>std::cmp;
 <span class="kw">use </span>std::collections::HashMap;
-<span class="kw">use </span>std::fs;
-<span class="kw">use </span>std::fs::File;
 <span class="kw">use </span>std::io;
-<span class="kw">use </span>std::io::Write;
 <span class="kw">use </span>std::panic;
-<span class="kw">use </span>std::path::Path;
 <span class="kw">use </span>std::process;
 <span class="kw">use </span>std::sync::atomic::AtomicBool;
 <span class="kw">use </span>std::sync::atomic::Ordering;
 <span class="kw">use </span>std::sync::Arc;
-<span class="kw">use </span>std::sync::Mutex;
+<span class="kw">use </span>std::sync::RwLock;
 <span class="kw">use </span>std::thread;
 <span class="kw">use </span>std::time::SystemTime;
-<span class="kw">use </span>zobrist::ZobristContainer;
 
 <span class="kw">const </span>VERSION: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">"CARGO_PKG_VERSION"</span>);
 <span class="kw">const </span>AUTHOR: <span class="kw-2">&amp;</span>str = <span class="macro">env!</span>(<span class="string">"CARGO_PKG_AUTHORS"</span>);
+<span class="kw">const </span>PAWN_HASHTABLE_SIZE: usize = <span class="number">1 </span>* <span class="number">1024 </span>* <span class="number">1024</span>;
 
 <span class="kw">pub struct </span>UciState {
-    board: Board,
-    options: HashMap&lt;String, UciOption&gt;,
-    transposition_table: Arc&lt;TranspositionTable&gt;,
-    pawn_hashtable: Arc&lt;PawnHashTable&gt;,
-    killers_table: Arc&lt;KillersTable&gt;,
-    history_table: Arc&lt;HistoryTable&gt;,
-    countermoves_table: Arc&lt;CountermovesTable&gt;,
+    context: Arc&lt;RwLock&lt;SearchContext&gt;&gt;,
+    options: Arc&lt;RwLock&lt;HashMap&lt;String, UciOption&gt;&gt;&gt;,
     abort_flag: Arc&lt;AtomicBool&gt;,
     ponder_flag: Arc&lt;AtomicBool&gt;,
-    debug_mode: AtomicBool,
-
-    evaluation_parameters: Arc&lt;EvaluationParameters&gt;,
-    zobrist_container: Arc&lt;ZobristContainer&gt;,
-    patterns_container: Arc&lt;PatternsContainer&gt;,
-    see_container: Arc&lt;SEEContainer&gt;,
-    magic_container: Arc&lt;MagicContainer&gt;,
+    debug_mode: bool,
 }
 
 <span class="attr">#[derive(Clone)]
@@ -856,14 +779,16 @@
 }
 
 <span class="kw">impl </span>UciOption {
-    <span class="kw">pub fn </span>new&lt;T&gt;(order: u32, r#type: <span class="kw-2">&amp;</span>str, min: T, max: T, default: T) -&gt; <span class="self">Self
+    <span class="doccomment">/// Constructs a new instance of [UciOption] with `order`, `r#type`, `min`, `max` and `default`.
+    </span><span class="kw">pub fn </span>new&lt;T&gt;(order: u32, r#type: <span class="kw-2">&amp;</span>str, min: T, max: T, default: T) -&gt; <span class="self">Self
     </span><span class="kw">where
         </span>T: ToString,
     {
         <span class="self">Self </span>{ order, r#type: r#type.to_string(), min: min.to_string(), max: max.to_string(), default: default.to_string(), value: default.to_string() }
     }
 
-    <span class="kw">pub fn </span>new_wide&lt;T&gt;(order: u32, default: T) -&gt; <span class="self">Self
+    <span class="doccomment">/// Constructs a new instance of [UciOption] with `order` and `default`, where `min` and `max` are set to make the biggest range possible.
+    </span><span class="kw">pub fn </span>new_wide&lt;T&gt;(order: u32, default: T) -&gt; <span class="self">Self
     </span><span class="kw">where
         </span>T: ToString + MinMax,
     {
@@ -879,106 +804,99 @@
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>UciState {
-    <span class="doccomment">/// Constructs a default instance of [UciState] with zeroed elements and hashtables with their default sizes.
+    <span class="doccomment">/// Constructs a default instance of [UciState] with zeroed elements and hashtables with their default sizes (1 MB).
     </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>evaluation_parameters = Arc::new(EvaluationParameters::default());
-        <span class="kw">let </span>zobrist_container = Arc::new(ZobristContainer::default());
-        <span class="kw">let </span>patterns_container = Arc::new(PatternsContainer::default());
-        <span class="kw">let </span>see_container = Arc::new(SEEContainer::new(<span class="prelude-val">Some</span>(evaluation_parameters.clone())));
-        <span class="kw">let </span>magic_container = Arc::new(MagicContainer::default());
+        <span class="kw">let </span>abort_flag = Arc::new(AtomicBool::new(<span class="bool-val">false</span>));
+        <span class="kw">let </span>ponder_flag = Arc::new(AtomicBool::new(<span class="bool-val">false</span>));
 
         UciState {
-            board: Board::new_initial_position(
-                <span class="prelude-val">Some</span>(evaluation_parameters.clone()),
-                <span class="prelude-val">Some</span>(zobrist_container.clone()),
-                <span class="prelude-val">Some</span>(patterns_container.clone()),
-                <span class="prelude-val">Some</span>(see_container.clone()),
-                <span class="prelude-val">Some</span>(magic_container.clone()),
-            ),
-            options: HashMap::new(),
-            transposition_table: Arc::new(TranspositionTable::new(<span class="number">1 </span>* <span class="number">1024 </span>* <span class="number">1024</span>)),
-            pawn_hashtable: Arc::new(PawnHashTable::new(<span class="number">1 </span>* <span class="number">1024 </span>* <span class="number">1024</span>)),
-            killers_table: Arc::new(Default::default()),
-            history_table: Arc::new(Default::default()),
-            countermoves_table: Arc::new(Default::default()),
-            abort_flag: Arc::new(AtomicBool::new(<span class="bool-val">false</span>)),
-            ponder_flag: Arc::new(AtomicBool::new(<span class="bool-val">false</span>)),
-            debug_mode: AtomicBool::new(<span class="bool-val">false</span>),
-
-            evaluation_parameters,
-            zobrist_container,
-            patterns_container,
-            see_container,
-            magic_container,
+            context: Arc::new(RwLock::new(SearchContext::new(
+                Board::new_initial_position(),
+                Arc::new(TTable::new(<span class="number">1 </span>* <span class="number">1024 </span>* <span class="number">1024</span>)),
+                Arc::new(PHTable::new(<span class="number">1 </span>* <span class="number">1024 </span>* <span class="number">1024</span>)),
+                abort_flag.clone(),
+                ponder_flag.clone(),
+            ))),
+            options: Arc::new(RwLock::new(HashMap::new())),
+            abort_flag,
+            ponder_flag,
+            debug_mode: <span class="bool-val">false</span>,
         }
     }
 }
 
 <span class="doccomment">/// Entry point of the UCI (Universal Chess Interface) and command loop.
 </span><span class="kw">pub fn </span>run() {
-    <span class="kw">let </span>state: Arc&lt;Mutex&lt;UciState&gt;&gt; = Arc::new(Mutex::new(Default::default()));
-    <span class="kw">let </span><span class="kw-2">mut </span>state_lock = state.lock().unwrap();
+    <span class="kw">let </span><span class="kw-2">mut </span>state = UciState::default();
+    <span class="kw">let </span>options_arc = state.options.clone();
+    <span class="kw">let </span><span class="kw-2">mut </span>options_lock = options_arc.write().unwrap();
 
     <span class="macro">println!</span>(<span class="string">"id name Inanis {}"</span>, VERSION);
     <span class="macro">println!</span>(<span class="string">"id author {}"</span>, AUTHOR);
 
-    state_lock.options.insert(<span class="string">"Hash"</span>.to_string(), UciOption::new(<span class="number">0</span>, <span class="string">"spin"</span>, <span class="number">1</span>, <span class="number">1048576</span>, <span class="number">2</span>));
-    state_lock.options.insert(<span class="string">"Move Overhead"</span>.to_string(), UciOption::new(<span class="number">1</span>, <span class="string">"spin"</span>, <span class="number">0</span>, <span class="number">3600000</span>, <span class="number">10</span>));
-    state_lock.options.insert(<span class="string">"MultiPV"</span>.to_string(), UciOption::new(<span class="number">2</span>, <span class="string">"spin"</span>, <span class="number">1</span>, <span class="number">256</span>, <span class="number">1</span>));
-    state_lock.options.insert(<span class="string">"Threads"</span>.to_string(), UciOption::new(<span class="number">3</span>, <span class="string">"spin"</span>, <span class="number">1</span>, <span class="number">1024</span>, <span class="number">1</span>));
-    state_lock.options.insert(<span class="string">"SyzygyPath"</span>.to_string(), UciOption::new(<span class="number">4</span>, <span class="string">"string"</span>, <span class="string">""</span>, <span class="string">""</span>, <span class="string">"&lt;empty&gt;"</span>));
-    state_lock.options.insert(<span class="string">"SyzygyProbeLimit"</span>.to_string(), UciOption::new(<span class="number">5</span>, <span class="string">"spin"</span>, <span class="number">1</span>, <span class="number">9</span>, <span class="number">8</span>));
-    state_lock.options.insert(<span class="string">"SyzygyProbeDepth"</span>.to_string(), UciOption::new(<span class="number">6</span>, <span class="string">"spin"</span>, <span class="number">1</span>, <span class="number">32</span>, <span class="number">6</span>));
-    state_lock.options.insert(<span class="string">"Ponder"</span>.to_string(), UciOption::new(<span class="number">7</span>, <span class="string">"check"</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>));
-    state_lock.options.insert(<span class="string">"Crash Files"</span>.to_string(), UciOption::new(<span class="number">8</span>, <span class="string">"check"</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>));
-    state_lock.options.insert(<span class="string">"Clear Hash"</span>.to_string(), UciOption::new(<span class="number">9</span>, <span class="string">"button"</span>, <span class="string">""</span>, <span class="string">""</span>, <span class="string">""</span>));
+    options_lock.insert(<span class="string">"Hash"</span>.to_string(), UciOption::new(<span class="number">0</span>, <span class="string">"spin"</span>, <span class="number">1</span>, <span class="number">1048576</span>, <span class="number">2</span>));
+    options_lock.insert(<span class="string">"Move Overhead"</span>.to_string(), UciOption::new(<span class="number">1</span>, <span class="string">"spin"</span>, <span class="number">0</span>, <span class="number">3600000</span>, <span class="number">10</span>));
+    options_lock.insert(<span class="string">"MultiPV"</span>.to_string(), UciOption::new(<span class="number">2</span>, <span class="string">"spin"</span>, <span class="number">1</span>, <span class="number">256</span>, <span class="number">1</span>));
+    options_lock.insert(<span class="string">"Threads"</span>.to_string(), UciOption::new(<span class="number">3</span>, <span class="string">"spin"</span>, <span class="number">1</span>, <span class="number">1024</span>, <span class="number">1</span>));
+    options_lock.insert(<span class="string">"SyzygyPath"</span>.to_string(), UciOption::new(<span class="number">4</span>, <span class="string">"string"</span>, <span class="string">""</span>, <span class="string">""</span>, <span class="string">"&lt;empty&gt;"</span>));
+    options_lock.insert(<span class="string">"SyzygyProbeLimit"</span>.to_string(), UciOption::new(<span class="number">5</span>, <span class="string">"spin"</span>, <span class="number">1</span>, <span class="number">9</span>, <span class="number">8</span>));
+    options_lock.insert(<span class="string">"SyzygyProbeDepth"</span>.to_string(), UciOption::new(<span class="number">6</span>, <span class="string">"spin"</span>, <span class="number">1</span>, <span class="number">32</span>, <span class="number">6</span>));
+    options_lock.insert(<span class="string">"Ponder"</span>.to_string(), UciOption::new(<span class="number">7</span>, <span class="string">"check"</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>));
+    options_lock.insert(<span class="string">"Clear Hash"</span>.to_string(), UciOption::new(<span class="number">8</span>, <span class="string">"button"</span>, <span class="string">""</span>, <span class="string">""</span>, <span class="string">""</span>));
+
+    <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
+    </span>options_lock.insert(<span class="string">"Crash Files"</span>.to_string(), UciOption::new(<span class="number">50</span>, <span class="string">"check"</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>));
 
     <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
     </span>{
-        <span class="kw">let </span>parameters = SearchParameters::default();
-        state_lock.options.insert(<span class="string">"iir_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.iir_min_depth));
-        state_lock.options.insert(<span class="string">"iir_reduction_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.iir_reduction_base));
-        state_lock.options.insert(<span class="string">"iir_reduction_step"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.iir_reduction_step));
-        state_lock.options.insert(<span class="string">"iir_max_reduction"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.iir_max_reduction));
+        <span class="kw">let </span>params = SearchParams::default();
+        options_lock.insert(<span class="string">"aspwin_delta"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.aspwin_delta));
+        options_lock.insert(<span class="string">"aspwin_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.aspwin_min_depth));
+        options_lock.insert(<span class="string">"aspwin_max_width"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.aspwin_max_width));
 
-        state_lock.options.insert(<span class="string">"razoring_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.razoring_min_depth));
-        state_lock.options.insert(<span class="string">"razoring_max_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.razoring_max_depth));
-        state_lock.options.insert(<span class="string">"razoring_depth_margin_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.razoring_depth_margin_base));
-        state_lock.options.insert(<span class="string">"razoring_depth_margin_multiplier"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.razoring_depth_margin_multiplier));
+        options_lock.insert(<span class="string">"iir_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.iir_min_depth));
+        options_lock.insert(<span class="string">"iir_reduction_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.iir_reduction_base));
+        options_lock.insert(<span class="string">"iir_reduction_step"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.iir_reduction_step));
+        options_lock.insert(<span class="string">"iir_max_reduction"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.iir_max_reduction));
 
-        state_lock.options.insert(<span class="string">"snmp_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.snmp_min_depth));
-        state_lock.options.insert(<span class="string">"snmp_max_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.snmp_max_depth));
-        state_lock.options.insert(<span class="string">"snmp_depth_margin_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.snmp_depth_margin_base));
-        state_lock.options.insert(<span class="string">"snmp_depth_margin_multiplier"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.snmp_depth_margin_multiplier));
+        options_lock.insert(<span class="string">"razoring_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.razoring_min_depth));
+        options_lock.insert(<span class="string">"razoring_max_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.razoring_max_depth));
+        options_lock.insert(<span class="string">"razoring_depth_margin_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.razoring_depth_margin_base));
+        options_lock.insert(<span class="string">"razoring_depth_margin_multiplier"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.razoring_depth_margin_multiplier));
 
-        state_lock.options.insert(<span class="string">"nmp_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.nmp_min_depth));
-        state_lock.options.insert(<span class="string">"nmp_min_game_phase"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.nmp_min_game_phase));
-        state_lock.options.insert(<span class="string">"nmp_margin"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.nmp_margin));
-        state_lock.options.insert(<span class="string">"nmp_depth_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.nmp_depth_base));
-        state_lock.options.insert(<span class="string">"nmp_depth_divider"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.nmp_depth_divider));
+        options_lock.insert(<span class="string">"snmp_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.snmp_min_depth));
+        options_lock.insert(<span class="string">"snmp_max_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.snmp_max_depth));
+        options_lock.insert(<span class="string">"snmp_depth_margin_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.snmp_depth_margin_base));
+        options_lock.insert(<span class="string">"snmp_depth_margin_multiplier"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.snmp_depth_margin_multiplier));
 
-        state_lock.options.insert(<span class="string">"lmp_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmp_min_depth));
-        state_lock.options.insert(<span class="string">"lmp_max_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmp_max_depth));
-        state_lock.options.insert(<span class="string">"lmp_move_index_margin_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmp_move_index_margin_base));
-        state_lock.options.insert(<span class="string">"lmp_move_index_margin_multiplier"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmp_move_index_margin_multiplier));
-        state_lock.options.insert(<span class="string">"lmp_max_score"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmp_max_score));
+        options_lock.insert(<span class="string">"nmp_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.nmp_min_depth));
+        options_lock.insert(<span class="string">"nmp_min_game_phase"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.nmp_min_game_phase));
+        options_lock.insert(<span class="string">"nmp_margin"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.nmp_margin));
+        options_lock.insert(<span class="string">"nmp_depth_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.nmp_depth_base));
+        options_lock.insert(<span class="string">"nmp_depth_divider"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.nmp_depth_divider));
 
-        state_lock.options.insert(<span class="string">"lmr_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_min_depth));
-        state_lock.options.insert(<span class="string">"lmr_max_score"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_max_score));
-        state_lock.options.insert(<span class="string">"lmr_min_move_index"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_min_move_index));
-        state_lock.options.insert(<span class="string">"lmr_reduction_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_reduction_base));
-        state_lock.options.insert(<span class="string">"lmr_reduction_step"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_reduction_step));
-        state_lock.options.insert(<span class="string">"lmr_max_reduction"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_max_reduction));
-        state_lock.options.insert(<span class="string">"lmr_pv_min_move_index"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_pv_min_move_index));
-        state_lock.options.insert(<span class="string">"lmr_pv_reduction_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_pv_reduction_base));
-        state_lock.options.insert(<span class="string">"lmr_pv_reduction_step"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_pv_reduction_step));
-        state_lock.options.insert(<span class="string">"lmr_pv_max_reduction"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.lmr_pv_max_reduction));
+        options_lock.insert(<span class="string">"lmp_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.lmp_min_depth));
+        options_lock.insert(<span class="string">"lmp_max_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.lmp_max_depth));
+        options_lock.insert(<span class="string">"lmp_move_index_margin_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.lmp_move_index_margin_base));
+        options_lock.insert(<span class="string">"lmp_move_index_margin_multiplier"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.lmp_move_index_margin_multiplier));
+        options_lock.insert(<span class="string">"lmp_max_score"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.lmp_max_score));
 
-        state_lock.options.insert(<span class="string">"q_score_pruning_treshold"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.q_score_pruning_treshold));
-        state_lock.options.insert(<span class="string">"q_futility_pruning_margin"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, parameters.q_futility_pruning_margin));
+        options_lock.insert(<span class="string">"lmr_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.lmr_min_depth));
+        options_lock.insert(<span class="string">"lmr_max_score"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.lmr_max_score));
+        options_lock.insert(<span class="string">"lmr_min_move_index"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.lmr_min_move_index));
+        options_lock.insert(<span class="string">"lmr_reduction_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.lmr_reduction_base));
+        options_lock.insert(<span class="string">"lmr_reduction_step"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.lmr_reduction_step));
+        options_lock.insert(<span class="string">"lmr_max_reduction"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.lmr_max_reduction));
+        options_lock.insert(<span class="string">"lmr_pv_min_move_index"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.lmr_pv_min_move_index));
+        options_lock.insert(<span class="string">"lmr_pv_reduction_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.lmr_pv_reduction_base));
+        options_lock.insert(<span class="string">"lmr_pv_reduction_step"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.lmr_pv_reduction_step));
+        options_lock.insert(<span class="string">"lmr_pv_max_reduction"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.lmr_pv_max_reduction));
+
+        options_lock.insert(<span class="string">"q_score_pruning_treshold"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.q_score_pruning_treshold));
+        options_lock.insert(<span class="string">"q_futility_pruning_margin"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.q_futility_pruning_margin));
     }
 
-    <span class="kw">let </span><span class="kw-2">mut </span>options_sorted = state_lock.options.iter().collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+    <span class="kw">let </span><span class="kw-2">mut </span>options_sorted = options_lock.iter().collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
     options_sorted.sort_by_key(|(<span class="kw">_</span>, option)| option.order);
 
     <span class="kw">for </span>(name, option) <span class="kw">in </span>options_sorted {
@@ -987,11 +905,11 @@
             <span class="string">"string" </span>=&gt; <span class="macro">println!</span>(<span class="string">"option name {} type {} default {}"</span>, name, option.r#type, option.default),
             <span class="string">"check" </span>=&gt; <span class="macro">println!</span>(<span class="string">"option name {} type {} default {}"</span>, name, option.r#type, option.default),
             <span class="string">"button" </span>=&gt; <span class="macro">println!</span>(<span class="string">"option name {} type {}"</span>, name, option.r#type),
-            <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">"Invalid value: option.r#type={}"</span>, option.r#type),
+            <span class="kw">_ </span>=&gt; <span class="macro">panic_fast!</span>(<span class="string">"Invalid value: option.r#type={}"</span>, option.r#type),
         };
     }
+    drop(options_lock);
 
-    drop(state_lock);
     <span class="macro">println!</span>(<span class="string">"uciok"</span>);
 
     <span class="kw">loop </span>{
@@ -1004,15 +922,15 @@
 
         <span class="kw">let </span>tokens: Vec&lt;String&gt; = input.split(<span class="string">' '</span>).map(|v| v.trim().to_string()).collect();
         <span class="kw">match </span>tokens[<span class="number">0</span>].to_lowercase().as_str() {
-            <span class="string">"debug" </span>=&gt; handle_debug(<span class="kw-2">&amp;</span>tokens, state.clone()),
-            <span class="string">"fen" </span>=&gt; handle_fen(state.clone()),
-            <span class="string">"go" </span>=&gt; handle_go(<span class="kw-2">&amp;</span>tokens, state.clone()),
+            <span class="string">"debug" </span>=&gt; handle_debug(<span class="kw-2">&amp;</span>tokens, <span class="kw-2">&amp;mut </span>state),
+            <span class="string">"fen" </span>=&gt; handle_fen(<span class="kw-2">&amp;</span>state),
+            <span class="string">"go" </span>=&gt; handle_go(<span class="kw-2">&amp;</span>tokens, <span class="kw-2">&amp;</span>state),
             <span class="string">"isready" </span>=&gt; handle_isready(),
-            <span class="string">"ponderhit" </span>=&gt; handle_ponderhit(state.clone()),
-            <span class="string">"position" </span>=&gt; handle_position(<span class="kw-2">&amp;</span>tokens, state.clone()),
-            <span class="string">"setoption" </span>=&gt; handle_setoption(<span class="kw-2">&amp;</span>tokens, state.clone()),
-            <span class="string">"ucinewgame" </span>=&gt; handle_ucinewgame(state.clone()),
-            <span class="string">"stop" </span>=&gt; handle_stop(state.clone()),
+            <span class="string">"ponderhit" </span>=&gt; handle_ponderhit(<span class="kw-2">&amp;</span>state),
+            <span class="string">"position" </span>=&gt; handle_position(<span class="kw-2">&amp;</span>tokens, <span class="kw-2">&amp;</span>state),
+            <span class="string">"setoption" </span>=&gt; handle_setoption(<span class="kw-2">&amp;</span>tokens, <span class="kw-2">&amp;mut </span>state),
+            <span class="string">"ucinewgame" </span>=&gt; handle_ucinewgame(<span class="kw-2">&amp;mut </span>state),
+            <span class="string">"stop" </span>=&gt; handle_stop(<span class="kw-2">&amp;</span>state),
             <span class="string">"quit" </span>=&gt; handle_quit(),
             <span class="kw">_ </span>=&gt; {}
         }
@@ -1020,17 +938,17 @@
 }
 
 <span class="doccomment">/// Handles `debug [on/off]` command by setting the proper flag.
-</span><span class="kw">fn </span>handle_debug(parameters: <span class="kw-2">&amp;</span>[String], state: Arc&lt;Mutex&lt;UciState&gt;&gt;) {
-    <span class="kw">if </span>parameters.len() &lt; <span class="number">2 </span>{
+</span><span class="kw">fn </span>handle_debug(params: <span class="kw-2">&amp;</span>[String], state: <span class="kw-2">&amp;mut </span>UciState) {
+    <span class="kw">if </span>params.len() &lt; <span class="number">2 </span>{
         <span class="kw">return</span>;
     }
 
-    state.lock().unwrap().debug_mode.store(<span class="macro">matches!</span>(parameters[<span class="number">1</span>].as_str(), <span class="string">"on"</span>), Ordering::Relaxed);
+    state.debug_mode = params[<span class="number">1</span>].as_str() == <span class="string">"on"</span>;
 }
 
 <span class="doccomment">/// Handles non-standard `fen` command by printing FEN of the current position.
-</span><span class="kw">fn </span>handle_fen(state: Arc&lt;Mutex&lt;UciState&gt;&gt;) {
-    <span class="macro">println!</span>(<span class="string">"info string {}"</span>, state.lock().unwrap().board);
+</span><span class="kw">fn </span>handle_fen(state: <span class="kw-2">&amp;</span>UciState) {
+    <span class="macro">println!</span>(<span class="string">"info string {}"</span>, state.context.read().unwrap().board);
 }
 
 <span class="doccomment">/// Handles `go [parameters]` command by running a new search for a position which was set using `position` command. Supported parameters:
@@ -1045,7 +963,7 @@
 ///  - `infinite` - tells the search to run until it reaches the maximal depth for the engine
 ///  - `searchmoves [moves]` - restricts search to the provided moves list
 ///  - `ponder` - tells the search to run in the ponder mode (thinking on the opponent's time)
-</span><span class="kw">fn </span>handle_go(parameters: <span class="kw-2">&amp;</span>[String], state: Arc&lt;Mutex&lt;UciState&gt;&gt;) {
+</span><span class="kw">fn </span>handle_go(params: <span class="kw-2">&amp;</span>[String], state: <span class="kw-2">&amp;</span>UciState) {
     <span class="kw">let </span><span class="kw-2">mut </span>white_time = u32::MAX;
     <span class="kw">let </span><span class="kw-2">mut </span>black_time = u32::MAX;
     <span class="kw">let </span><span class="kw-2">mut </span>white_inc_time = <span class="number">0</span>;
@@ -1059,8 +977,9 @@
     <span class="kw">let </span><span class="kw-2">mut </span>perft_mode = <span class="bool-val">false</span>;
     <span class="kw">let </span><span class="kw-2">mut </span>perft_depth = <span class="number">0</span>;
 
-    <span class="kw">let </span><span class="kw-2">mut </span>state_lock = state.lock().unwrap();
-    <span class="kw">let </span><span class="kw-2">mut </span>iter = parameters[<span class="number">1</span>..].iter().peekable();
+    <span class="kw">let </span><span class="kw-2">mut </span>context_lock = state.context.write().unwrap();
+    <span class="kw">let </span>options_lock = state.options.read().unwrap();
+    <span class="kw">let </span><span class="kw-2">mut </span>iter = params[<span class="number">1</span>..].iter().peekable();
 
     <span class="kw">while let </span><span class="prelude-val">Some</span>(token) = iter.next() {
         <span class="kw">match </span>token.as_str() {
@@ -1117,13 +1036,12 @@
             }
             <span class="string">"searchmoves" </span>=&gt; {
                 <span class="kw">let </span>keywords = [<span class="string">"wtime"</span>, <span class="string">"btime"</span>, <span class="string">"winc"</span>, <span class="string">"binc"</span>, <span class="string">"depth"</span>, <span class="string">"nodes"</span>, <span class="string">"movetime"</span>, <span class="string">"movestogo"</span>, <span class="string">"infinite"</span>, <span class="string">"searchmoves"</span>, <span class="string">"ponder"</span>];
-
                 <span class="kw">while let </span><span class="prelude-val">Some</span>(value) = iter.peek() {
                     <span class="kw">if </span>keywords.contains(<span class="kw-2">&amp;</span>value.as_str()) {
                         <span class="kw">break</span>;
                     }
 
-                    <span class="kw">let </span>parsed_move = <span class="kw">match </span>Move::from_long_notation(value, <span class="kw-2">&amp;</span>state_lock.board) {
+                    <span class="kw">let </span>parsed_move = <span class="kw">match </span>Move::from_long_notation(value, <span class="kw-2">&amp;</span>context_lock.board) {
                         <span class="prelude-val">Ok</span>(r#move) =&gt; r#move,
                         <span class="prelude-val">Err</span>(error) =&gt; {
                             <span class="macro">println!</span>(<span class="string">"info string Error: {}"</span>, error);
@@ -1153,7 +1071,7 @@
     <span class="kw">if </span>perft_mode {
         <span class="kw">for </span>depth <span class="kw">in </span><span class="number">1</span>..=perft_depth {
             <span class="kw">let </span>now = SystemTime::now();
-            <span class="kw">let </span>result = perft::normal::run(depth, <span class="kw-2">&amp;mut </span>state_lock.board, <span class="bool-val">false</span>);
+            <span class="kw">let </span>result = perft::normal::run(depth, <span class="kw-2">&amp;mut </span>context_lock.board, <span class="bool-val">false</span>);
             <span class="kw">let </span>time = now.elapsed().unwrap().as_millis();
 
             <span class="macro">println!</span>(<span class="string">"info time {} depth {} nodes {}"</span>, time, depth, result.nodes);
@@ -1162,195 +1080,172 @@
         <span class="kw">return</span>;
     }
 
-    <span class="kw">let </span><span class="kw-2">mut </span>time = <span class="kw">match </span>state_lock.board.active_color {
+    <span class="kw">let </span><span class="kw-2">mut </span>time = <span class="kw">match </span>context_lock.board.stm {
         WHITE =&gt; white_time,
         BLACK =&gt; black_time,
-        <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">"Invalid value: state_lock.board.active_color={}"</span>, state_lock.board.active_color),
+        <span class="kw">_ </span>=&gt; <span class="macro">panic_fast!</span>(<span class="string">"Invalid value: context_lock.board.stm={}"</span>, context_lock.board.stm),
     };
-    time -= cmp::min(time, state_lock.options[<span class="string">"Move Overhead"</span>].value.parse::&lt;u32&gt;().unwrap());
+    time -= cmp::min(time, options_lock[<span class="string">"Move Overhead"</span>].value.parse::&lt;u32&gt;().unwrap());
 
-    <span class="kw">let </span>inc_time = <span class="kw">match </span>state_lock.board.active_color {
+    <span class="kw">let </span>inc_time = <span class="kw">match </span>context_lock.board.stm {
         WHITE =&gt; white_inc_time,
         BLACK =&gt; black_inc_time,
-        <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">"Invalid value: state_lock.board.active_color={}"</span>, state_lock.board.active_color),
+        <span class="kw">_ </span>=&gt; <span class="macro">panic_fast!</span>(<span class="string">"Invalid value: context_lock.board.stm={}"</span>, context_lock.board.stm),
     };
 
-    state_lock.abort_flag.store(<span class="bool-val">false</span>, Ordering::Relaxed);
-    state_lock.ponder_flag.store(<span class="bool-val">false</span>, Ordering::Relaxed);
-    drop(state_lock);
+    state.abort_flag.store(<span class="bool-val">false</span>, Ordering::Relaxed);
+    state.ponder_flag.store(<span class="bool-val">false</span>, Ordering::Relaxed);
 
-    <span class="kw">let </span>state_arc = state.clone();
+    drop(options_lock);
+    drop(context_lock);
+
+    <span class="kw">let </span>context_arc = state.context.clone();
+    <span class="kw">let </span>options_arc = state.options.clone();
+    <span class="kw">let </span>debug_mode = state.debug_mode;
+
     thread::spawn(<span class="kw">move </span>|| {
-        <span class="kw">let </span>state_lock = state_arc.lock().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>context_lock = context_arc.write().unwrap();
+        <span class="kw">let </span>options_lock = options_arc.read().unwrap();
 
-        <span class="kw">let </span>multipv = state_lock.options[<span class="string">"MultiPV"</span>].value.parse::&lt;u32&gt;().unwrap();
-        <span class="kw">let </span>threads = state_lock.options[<span class="string">"Threads"</span>].value.parse::&lt;usize&gt;().unwrap();
-        <span class="kw">let </span>ponder = state_lock.options[<span class="string">"Ponder"</span>].value.parse::&lt;bool&gt;().unwrap();
-        <span class="kw">let </span>syzygy_path = state_lock.options[<span class="string">"SyzygyPath"</span>].value.clone();
+        <span class="kw">let </span>multipv = options_lock[<span class="string">"MultiPV"</span>].value.parse::&lt;u32&gt;().unwrap();
+        <span class="kw">let </span>threads = options_lock[<span class="string">"Threads"</span>].value.parse::&lt;usize&gt;().unwrap();
+        <span class="kw">let </span>ponder = options_lock[<span class="string">"Ponder"</span>].value.parse::&lt;bool&gt;().unwrap();
+        <span class="kw">let </span>syzygy_path = options_lock[<span class="string">"SyzygyPath"</span>].value.clone();
         <span class="kw">let </span>syzygy_enabled = !syzygy_path.is_empty() &amp;&amp; syzygy_path != <span class="string">"&lt;empty&gt;"</span>;
-        <span class="kw">let </span>syzygy_probe_limit = state_lock.options[<span class="string">"SyzygyProbeLimit"</span>].value.parse::&lt;u32&gt;().unwrap();
-        <span class="kw">let </span>syzygy_probe_depth = state_lock.options[<span class="string">"SyzygyProbeDepth"</span>].value.parse::&lt;i8&gt;().unwrap();
+        <span class="kw">let </span>syzygy_probe_limit = options_lock[<span class="string">"SyzygyProbeLimit"</span>].value.parse::&lt;u32&gt;().unwrap();
+        <span class="kw">let </span>syzygy_probe_depth = options_lock[<span class="string">"SyzygyProbeDepth"</span>].value.parse::&lt;i8&gt;().unwrap();
 
         <span class="attr">#[cfg(not(feature = <span class="string">"dev"</span>))]
-        </span><span class="kw">let </span>search_parameters = SearchParameters::default();
+        </span><span class="kw">let </span>search_params = SearchParams::default();
 
         <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
-        </span><span class="kw">let </span>search_parameters = SearchParameters {
-            iir_min_depth: state_lock.options[<span class="string">"iir_min_depth"</span>].value.parse().unwrap(),
-            iir_reduction_base: state_lock.options[<span class="string">"iir_reduction_base"</span>].value.parse().unwrap(),
-            iir_reduction_step: state_lock.options[<span class="string">"iir_reduction_step"</span>].value.parse().unwrap(),
-            iir_max_reduction: state_lock.options[<span class="string">"iir_max_reduction"</span>].value.parse().unwrap(),
+        </span><span class="kw">let </span>search_params = SearchParams {
+            aspwin_delta: options_lock[<span class="string">"aspwin_delta"</span>].value.parse().unwrap(),
+            aspwin_min_depth: options_lock[<span class="string">"aspwin_min_depth"</span>].value.parse().unwrap(),
+            aspwin_max_width: options_lock[<span class="string">"aspwin_max_width"</span>].value.parse().unwrap(),
 
-            razoring_min_depth: state_lock.options[<span class="string">"razoring_min_depth"</span>].value.parse().unwrap(),
-            razoring_max_depth: state_lock.options[<span class="string">"razoring_max_depth"</span>].value.parse().unwrap(),
-            razoring_depth_margin_base: state_lock.options[<span class="string">"razoring_depth_margin_base"</span>].value.parse().unwrap(),
-            razoring_depth_margin_multiplier: state_lock.options[<span class="string">"razoring_depth_margin_multiplier"</span>].value.parse().unwrap(),
+            iir_min_depth: options_lock[<span class="string">"iir_min_depth"</span>].value.parse().unwrap(),
+            iir_reduction_base: options_lock[<span class="string">"iir_reduction_base"</span>].value.parse().unwrap(),
+            iir_reduction_step: options_lock[<span class="string">"iir_reduction_step"</span>].value.parse().unwrap(),
+            iir_max_reduction: options_lock[<span class="string">"iir_max_reduction"</span>].value.parse().unwrap(),
 
-            snmp_min_depth: state_lock.options[<span class="string">"snmp_min_depth"</span>].value.parse().unwrap(),
-            snmp_max_depth: state_lock.options[<span class="string">"snmp_max_depth"</span>].value.parse().unwrap(),
-            snmp_depth_margin_base: state_lock.options[<span class="string">"snmp_depth_margin_base"</span>].value.parse().unwrap(),
-            snmp_depth_margin_multiplier: state_lock.options[<span class="string">"snmp_depth_margin_multiplier"</span>].value.parse().unwrap(),
+            razoring_min_depth: options_lock[<span class="string">"razoring_min_depth"</span>].value.parse().unwrap(),
+            razoring_max_depth: options_lock[<span class="string">"razoring_max_depth"</span>].value.parse().unwrap(),
+            razoring_depth_margin_base: options_lock[<span class="string">"razoring_depth_margin_base"</span>].value.parse().unwrap(),
+            razoring_depth_margin_multiplier: options_lock[<span class="string">"razoring_depth_margin_multiplier"</span>].value.parse().unwrap(),
 
-            nmp_min_depth: state_lock.options[<span class="string">"nmp_min_depth"</span>].value.parse().unwrap(),
-            nmp_min_game_phase: state_lock.options[<span class="string">"nmp_min_game_phase"</span>].value.parse().unwrap(),
-            nmp_margin: state_lock.options[<span class="string">"nmp_margin"</span>].value.parse().unwrap(),
-            nmp_depth_base: state_lock.options[<span class="string">"nmp_depth_base"</span>].value.parse().unwrap(),
-            nmp_depth_divider: state_lock.options[<span class="string">"nmp_depth_divider"</span>].value.parse().unwrap(),
+            snmp_min_depth: options_lock[<span class="string">"snmp_min_depth"</span>].value.parse().unwrap(),
+            snmp_max_depth: options_lock[<span class="string">"snmp_max_depth"</span>].value.parse().unwrap(),
+            snmp_depth_margin_base: options_lock[<span class="string">"snmp_depth_margin_base"</span>].value.parse().unwrap(),
+            snmp_depth_margin_multiplier: options_lock[<span class="string">"snmp_depth_margin_multiplier"</span>].value.parse().unwrap(),
 
-            lmp_min_depth: state_lock.options[<span class="string">"lmp_min_depth"</span>].value.parse().unwrap(),
-            lmp_max_depth: state_lock.options[<span class="string">"lmp_max_depth"</span>].value.parse().unwrap(),
-            lmp_move_index_margin_base: state_lock.options[<span class="string">"lmp_move_index_margin_base"</span>].value.parse().unwrap(),
-            lmp_move_index_margin_multiplier: state_lock.options[<span class="string">"lmp_move_index_margin_multiplier"</span>].value.parse().unwrap(),
-            lmp_max_score: state_lock.options[<span class="string">"lmp_max_score"</span>].value.parse().unwrap(),
+            nmp_min_depth: options_lock[<span class="string">"nmp_min_depth"</span>].value.parse().unwrap(),
+            nmp_min_game_phase: options_lock[<span class="string">"nmp_min_game_phase"</span>].value.parse().unwrap(),
+            nmp_margin: options_lock[<span class="string">"nmp_margin"</span>].value.parse().unwrap(),
+            nmp_depth_base: options_lock[<span class="string">"nmp_depth_base"</span>].value.parse().unwrap(),
+            nmp_depth_divider: options_lock[<span class="string">"nmp_depth_divider"</span>].value.parse().unwrap(),
 
-            lmr_min_depth: state_lock.options[<span class="string">"lmr_min_depth"</span>].value.parse().unwrap(),
-            lmr_max_score: state_lock.options[<span class="string">"lmr_max_score"</span>].value.parse().unwrap(),
-            lmr_min_move_index: state_lock.options[<span class="string">"lmr_min_move_index"</span>].value.parse().unwrap(),
-            lmr_reduction_base: state_lock.options[<span class="string">"lmr_reduction_base"</span>].value.parse().unwrap(),
-            lmr_reduction_step: state_lock.options[<span class="string">"lmr_reduction_step"</span>].value.parse().unwrap(),
-            lmr_max_reduction: state_lock.options[<span class="string">"lmr_max_reduction"</span>].value.parse().unwrap(),
-            lmr_pv_min_move_index: state_lock.options[<span class="string">"lmr_pv_min_move_index"</span>].value.parse().unwrap(),
-            lmr_pv_reduction_base: state_lock.options[<span class="string">"lmr_pv_reduction_base"</span>].value.parse().unwrap(),
-            lmr_pv_reduction_step: state_lock.options[<span class="string">"lmr_pv_reduction_step"</span>].value.parse().unwrap(),
-            lmr_pv_max_reduction: state_lock.options[<span class="string">"lmr_pv_max_reduction"</span>].value.parse().unwrap(),
+            lmp_min_depth: options_lock[<span class="string">"lmp_min_depth"</span>].value.parse().unwrap(),
+            lmp_max_depth: options_lock[<span class="string">"lmp_max_depth"</span>].value.parse().unwrap(),
+            lmp_move_index_margin_base: options_lock[<span class="string">"lmp_move_index_margin_base"</span>].value.parse().unwrap(),
+            lmp_move_index_margin_multiplier: options_lock[<span class="string">"lmp_move_index_margin_multiplier"</span>].value.parse().unwrap(),
+            lmp_max_score: options_lock[<span class="string">"lmp_max_score"</span>].value.parse().unwrap(),
 
-            q_score_pruning_treshold: state_lock.options[<span class="string">"q_score_pruning_treshold"</span>].value.parse().unwrap(),
-            q_futility_pruning_margin: state_lock.options[<span class="string">"q_futility_pruning_margin"</span>].value.parse().unwrap(),
+            lmr_min_depth: options_lock[<span class="string">"lmr_min_depth"</span>].value.parse().unwrap(),
+            lmr_max_score: options_lock[<span class="string">"lmr_max_score"</span>].value.parse().unwrap(),
+            lmr_min_move_index: options_lock[<span class="string">"lmr_min_move_index"</span>].value.parse().unwrap(),
+            lmr_reduction_base: options_lock[<span class="string">"lmr_reduction_base"</span>].value.parse().unwrap(),
+            lmr_reduction_step: options_lock[<span class="string">"lmr_reduction_step"</span>].value.parse().unwrap(),
+            lmr_max_reduction: options_lock[<span class="string">"lmr_max_reduction"</span>].value.parse().unwrap(),
+            lmr_pv_min_move_index: options_lock[<span class="string">"lmr_pv_min_move_index"</span>].value.parse().unwrap(),
+            lmr_pv_reduction_base: options_lock[<span class="string">"lmr_pv_reduction_base"</span>].value.parse().unwrap(),
+            lmr_pv_reduction_step: options_lock[<span class="string">"lmr_pv_reduction_step"</span>].value.parse().unwrap(),
+            lmr_pv_max_reduction: options_lock[<span class="string">"lmr_pv_max_reduction"</span>].value.parse().unwrap(),
+
+            q_score_pruning_treshold: options_lock[<span class="string">"q_score_pruning_treshold"</span>].value.parse().unwrap(),
+            q_futility_pruning_margin: options_lock[<span class="string">"q_futility_pruning_margin"</span>].value.parse().unwrap(),
         };
 
-        <span class="kw">let </span><span class="kw-2">mut </span>context = SearchContext::new(
-            state_lock.board.clone(),
-            search_parameters.clone(),
-            state_lock.board.state_stack.len() <span class="kw">as </span>u8,
-            time,
-            inc_time,
-            forced_depth,
-            max_nodes_count,
-            max_move_time,
-            moves_to_go,
-            moves_to_search.clone(),
-            multipv &gt; <span class="number">1</span>,
-            state_lock.debug_mode.load(Ordering::Relaxed),
-            ponder_mode,
-            <span class="bool-val">false</span>,
-            <span class="bool-val">false</span>,
-            syzygy_enabled,
-            syzygy_probe_limit,
-            syzygy_probe_depth,
-            state_lock.transposition_table.clone(),
-            state_lock.pawn_hashtable.clone(),
-            state_lock.killers_table.clone(),
-            state_lock.history_table.clone(),
-            state_lock.countermoves_table.clone(),
-            state_lock.abort_flag.clone(),
-            state_lock.ponder_flag.clone(),
-        );
-        drop(state_lock);
+        context_lock.params = search_params.clone();
+        context_lock.search_id = context_lock.board.state_stack.len() <span class="kw">as </span>u8;
+        context_lock.time = time;
+        context_lock.inc_time = inc_time;
+        context_lock.current_depth = <span class="number">1</span>;
+        context_lock.forced_depth = forced_depth;
+        context_lock.max_nodes_count = max_nodes_count;
+        context_lock.max_move_time = max_move_time;
+        context_lock.moves_to_go = moves_to_go;
+        context_lock.moves_to_search = moves_to_search.clone();
+        context_lock.search_time_start = SystemTime::now();
+        context_lock.multipv = multipv &gt; <span class="number">1</span>;
+        context_lock.search_done = <span class="bool-val">false</span>;
+        context_lock.uci_debug = debug_mode;
+        context_lock.ponder_mode = ponder_mode;
+        context_lock.syzygy_enabled = syzygy_enabled;
+        context_lock.syzygy_probe_limit = syzygy_probe_limit;
+        context_lock.syzygy_probe_depth = syzygy_probe_depth;
+        context_lock.stats = SearchStats::default();
 
-        <span class="kw">if </span>threads &gt; <span class="number">1 </span>{
-            <span class="kw">for _ in </span><span class="number">0</span>..threads {
-                <span class="kw">let </span>state_lock = state_arc.lock().unwrap();
-                <span class="kw">let </span>helper_context = SearchContext::new(
-                    state_lock.board.clone(),
-                    search_parameters.clone(),
-                    state_lock.board.state_stack.len() <span class="kw">as </span>u8,
-                    time,
-                    inc_time,
-                    forced_depth,
-                    max_nodes_count,
-                    max_move_time,
-                    moves_to_go,
-                    moves_to_search.clone(),
-                    <span class="bool-val">false</span>,
-                    state_lock.debug_mode.load(Ordering::Relaxed),
-                    <span class="bool-val">false</span>,
-                    <span class="bool-val">false</span>,
-                    <span class="bool-val">true</span>,
-                    <span class="bool-val">false</span>,
-                    <span class="number">0</span>,
-                    <span class="number">0</span>,
-                    state_lock.transposition_table.clone(),
-                    state_lock.pawn_hashtable.clone(),
-                    state_lock.killers_table.clone(),
-                    state_lock.history_table.clone(),
-                    state_lock.countermoves_table.clone(),
-                    state_lock.abort_flag.clone(),
-                    state_lock.ponder_flag.clone(),
-                );
-                drop(state_lock);
+        context_lock.lines.clear();
+        context_lock.helper_contexts.write().unwrap().clear();
 
-                context.helper_contexts.push(HelperThreadContext::new(context.board.clone(), helper_context));
-            }
+        <span class="kw">for _ in </span><span class="number">0</span>..threads - <span class="number">1 </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>helper_context = SearchContext::new(
+                context_lock.board.clone(),
+                context_lock.ttable.clone(),
+                context_lock.phtable.clone(),
+                context_lock.abort_flag.clone(),
+                context_lock.ponder_flag.clone(),
+            );
+            helper_context.params = search_params.clone();
+            context_lock.helper_contexts.write().unwrap().push(helper_context);
         }
 
-        <span class="kw">let </span><span class="kw-2">mut </span>best_move = Default::default();
-        <span class="kw">let </span><span class="kw-2">mut </span>ponder_move = Default::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>best_move = Move::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>ponder_move = Move::default();
 
-        <span class="kw">for </span>depth_result <span class="kw">in </span>context {
-            <span class="kw">for </span>(multipv_index, multipv_entry) <span class="kw">in </span>depth_result.lines.iter().take(multipv <span class="kw">as </span>usize).enumerate() {
-                <span class="kw">let </span>pv_line: Vec&lt;String&gt; = multipv_entry.pv_line.iter().map(|v| v.to_long_notation()).collect();
-                <span class="kw">let </span>formatted_score = <span class="kw">if </span>engine::is_score_near_checkmate(multipv_entry.score) {
-                    <span class="kw">let </span><span class="kw-2">mut </span>moves_to_mate = (multipv_entry.score.abs() - engine::CHECKMATE_SCORE).abs() / <span class="number">2</span>;
-                    moves_to_mate <span class="kw-2">*</span>= multipv_entry.score.signum();
+        <span class="kw">while let </span><span class="prelude-val">Some</span>(depth_result) = context_lock.next() {
+            <span class="kw">for </span>(line_index, line) <span class="kw">in </span>context_lock.lines.iter().take(multipv <span class="kw">as </span>usize).enumerate() {
+                <span class="kw">let </span>pv_line: Vec&lt;String&gt; = line.pv_line.iter().map(|v| v.to_long_notation()).collect();
+                <span class="kw">let </span>formatted_score = <span class="kw">if </span>engine::is_score_near_checkmate(line.score) {
+                    <span class="kw">let </span><span class="kw-2">mut </span>moves_to_mate = (line.score.abs() - engine::CHECKMATE_SCORE).abs() / <span class="number">2</span>;
+                    moves_to_mate <span class="kw-2">*</span>= line.score.signum();
 
                     <span class="macro">format!</span>(<span class="string">"score mate {}"</span>, moves_to_mate).to_string()
                 } <span class="kw">else </span>{
-                    <span class="macro">format!</span>(<span class="string">"score cp {}"</span>, multipv_entry.score).to_string()
+                    <span class="macro">format!</span>(<span class="string">"score cp {}"</span>, line.score).to_string()
                 };
 
                 <span class="macro">println!</span>(
-                    <span class="string">"{}"</span>,
-                    <span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                        <span class="string">"info time {} {} depth {} seldepth {} multipv {} nodes {} hashfull {} tbhits {} pv {}"</span>,
-                        depth_result.time,
-                        formatted_score,
-                        depth_result.depth,
-                        depth_result.statistics.max_ply,
-                        multipv_index + <span class="number">1</span>,
-                        depth_result.statistics.nodes_count + depth_result.statistics.q_nodes_count,
-                        (depth_result.transposition_table_usage * <span class="number">10.0</span>) <span class="kw">as </span>u32,
-                        depth_result.statistics.tb_hits,
-                        pv_line.join(<span class="string">" "</span>).as_str()
-                    )
+                    <span class="string">"info time {} {} depth {} seldepth {} multipv {} nodes {} hashfull {} tbhits {} pv {}"</span>,
+                    depth_result.time,
+                    formatted_score,
+                    depth_result.depth,
+                    context_lock.stats.max_ply,
+                    line_index + <span class="number">1</span>,
+                    context_lock.stats.nodes_count + context_lock.stats.q_nodes_count,
+                    (context_lock.ttable.get_usage(<span class="number">1000</span>) * <span class="number">10.0</span>) <span class="kw">as </span>u32,
+                    context_lock.stats.tb_hits,
+                    pv_line.join(<span class="string">" "</span>).as_str()
                 );
             }
 
             <span class="comment">// Ignore result when no legal move was found, to prevent crash further
-            </span><span class="kw">if </span>depth_result.lines[<span class="number">0</span>].pv_line.is_empty() {
+            </span><span class="kw">if </span>context_lock.lines[<span class="number">0</span>].pv_line.is_empty() {
                 <span class="kw">continue</span>;
             }
 
-            best_move = depth_result.lines[<span class="number">0</span>].pv_line[<span class="number">0</span>];
+            best_move = context_lock.lines[<span class="number">0</span>].pv_line[<span class="number">0</span>];
 
             <span class="comment">// Check if the ponder move is legal
-            </span><span class="kw">if </span>ponder &amp;&amp; depth_result.lines[<span class="number">0</span>].pv_line.len() &gt;= <span class="number">2 </span>{
-                <span class="kw">let </span><span class="kw-2">mut </span>board = state_arc.lock().unwrap().board.clone();
+            </span><span class="kw">if </span>ponder &amp;&amp; context_lock.lines[<span class="number">0</span>].pv_line.len() &gt;= <span class="number">2 </span>{
+                <span class="kw">let </span><span class="kw-2">mut </span>board = context_lock.board.clone();
                 <span class="kw">let </span><span class="kw-2">mut </span>allow_ponder = <span class="bool-val">true</span>;
 
-                board.make_move(depth_result.lines[<span class="number">0</span>].pv_line[<span class="number">0</span>]);
-                board.make_move(depth_result.lines[<span class="number">0</span>].pv_line[<span class="number">1</span>]);
+                board.make_move(context_lock.lines[<span class="number">0</span>].pv_line[<span class="number">0</span>]);
+                board.make_move(context_lock.lines[<span class="number">0</span>].pv_line[<span class="number">1</span>]);
 
-                <span class="kw">if </span>board.is_king_checked(board.active_color ^ <span class="number">1</span>) {
+                <span class="kw">if </span>board.is_king_checked(board.stm ^ <span class="number">1</span>) {
                     allow_ponder = <span class="bool-val">false</span>;
                 }
 
@@ -1358,41 +1253,39 @@
                     allow_ponder = <span class="bool-val">false</span>;
                 }
 
-                board.undo_move(depth_result.lines[<span class="number">0</span>].pv_line[<span class="number">1</span>]);
-                board.undo_move(depth_result.lines[<span class="number">0</span>].pv_line[<span class="number">0</span>]);
+                board.undo_move(context_lock.lines[<span class="number">0</span>].pv_line[<span class="number">1</span>]);
+                board.undo_move(context_lock.lines[<span class="number">0</span>].pv_line[<span class="number">0</span>]);
 
                 <span class="kw">if </span>allow_ponder {
-                    ponder_move = depth_result.lines[<span class="number">0</span>].pv_line[<span class="number">1</span>];
+                    ponder_move = context_lock.lines[<span class="number">0</span>].pv_line[<span class="number">1</span>];
                 } <span class="kw">else </span>{
-                    ponder_move = Default::default();
+                    ponder_move = Move::default();
                 }
             } <span class="kw">else </span>{
-                ponder_move = Default::default();
+                ponder_move = Move::default();
             }
         }
 
-        <span class="kw">if </span>ponder &amp;&amp; ponder_move != Default::default() {
+        <span class="kw">if </span>ponder &amp;&amp; ponder_move.is_some() {
             <span class="macro">println!</span>(<span class="string">"bestmove {} ponder {}"</span>, best_move, ponder_move);
         } <span class="kw">else </span>{
             <span class="macro">println!</span>(<span class="string">"bestmove {}"</span>, best_move);
         }
 
-        <span class="kw">let </span>state_lock = state_arc.lock().unwrap();
-        state_lock.killers_table.age_moves();
-        state_lock.history_table.age_values();
+        context_lock.ktable.age_moves();
+        context_lock.htable.age_values();
     });
 }
 
-<span class="doccomment">/// Handles `isready` command by waiting for the busy flag, and then printing response as fast as possible.
+<span class="doccomment">/// Handles `isready` command by printing response as fast as possible.
 </span><span class="kw">fn </span>handle_isready() {
     <span class="macro">println!</span>(<span class="string">"readyok"</span>);
 }
 
 <span class="doccomment">/// Handles `ponderhit` command by setting abort and ponder flags, which should switch a search mode from the ponder to the regular one.
-</span><span class="kw">fn </span>handle_ponderhit(state: Arc&lt;Mutex&lt;UciState&gt;&gt;) {
-    <span class="kw">let </span>state_lock = state.lock().unwrap();
-    state_lock.ponder_flag.store(<span class="bool-val">true</span>, Ordering::Relaxed);
-    state_lock.abort_flag.store(<span class="bool-val">true</span>, Ordering::Relaxed);
+</span><span class="kw">fn </span>handle_ponderhit(state: <span class="kw-2">&amp;</span>UciState) {
+    state.ponder_flag.store(<span class="bool-val">true</span>, Ordering::Relaxed);
+    state.abort_flag.store(<span class="bool-val">true</span>, Ordering::Relaxed);
 }
 
 <span class="doccomment">/// Handles `position ...` command with the following variants:
@@ -1400,23 +1293,16 @@
 ///  - `position startpos moves [list of moves]` - sets a default position and applies a list of moves
 ///  - `position fen [fen]` - sets a FEN position
 ///  - `position fen [fen] moves [list of moves]` - sets a FEN position and applies a list of moves
-</span><span class="kw">fn </span>handle_position(parameters: <span class="kw-2">&amp;</span>[String], state: Arc&lt;Mutex&lt;UciState&gt;&gt;) {
-    <span class="kw">if </span>parameters.len() &lt; <span class="number">2 </span>{
+</span><span class="kw">fn </span>handle_position(params: <span class="kw-2">&amp;</span>[String], state: <span class="kw-2">&amp;</span>UciState) {
+    <span class="kw">if </span>params.len() &lt; <span class="number">2 </span>{
         <span class="kw">return</span>;
     }
 
-    <span class="kw">let </span><span class="kw-2">mut </span>state_lock = state.lock().unwrap();
-    state_lock.board = <span class="kw">match </span>parameters[<span class="number">1</span>].as_str() {
+    <span class="kw">let </span><span class="kw-2">mut </span>context_lock = state.context.write().unwrap();
+    context_lock.board = <span class="kw">match </span>params[<span class="number">1</span>].as_str() {
         <span class="string">"fen" </span>=&gt; {
-            <span class="kw">let </span>fen = parameters[<span class="number">2</span>..].join(<span class="string">" "</span>);
-            <span class="kw">match </span>Board::new_from_fen(
-                fen.as_str(),
-                <span class="prelude-val">Some</span>(state_lock.evaluation_parameters.clone()),
-                <span class="prelude-val">Some</span>(state_lock.zobrist_container.clone()),
-                <span class="prelude-val">Some</span>(state_lock.patterns_container.clone()),
-                <span class="prelude-val">Some</span>(state_lock.see_container.clone()),
-                <span class="prelude-val">Some</span>(state_lock.magic_container.clone()),
-            ) {
+            <span class="kw">let </span>fen = params[<span class="number">2</span>..].join(<span class="string">" "</span>);
+            <span class="kw">match </span>Board::new_from_fen(fen.as_str()) {
                 <span class="prelude-val">Ok</span>(board) =&gt; board,
                 <span class="prelude-val">Err</span>(error) =&gt; {
                     <span class="macro">println!</span>(<span class="string">"info string Error: {}"</span>, error);
@@ -1424,18 +1310,12 @@
                 }
             }
         }
-        <span class="kw">_ </span>=&gt; Board::new_initial_position(
-            <span class="prelude-val">Some</span>(state_lock.evaluation_parameters.clone()),
-            <span class="prelude-val">Some</span>(state_lock.zobrist_container.clone()),
-            <span class="prelude-val">Some</span>(state_lock.patterns_container.clone()),
-            <span class="prelude-val">Some</span>(state_lock.see_container.clone()),
-            <span class="prelude-val">Some</span>(state_lock.magic_container.clone()),
-        ),
+        <span class="kw">_ </span>=&gt; Board::new_initial_position(),
     };
 
-    <span class="kw">if let </span><span class="prelude-val">Some</span>(index) = parameters.iter().position(|s| s == <span class="string">"moves"</span>) {
-        <span class="kw">for </span>premade_move <span class="kw">in </span><span class="kw-2">&amp;</span>parameters[index + <span class="number">1</span>..] {
-            <span class="kw">let </span>parsed_move = <span class="kw">match </span>Move::from_long_notation(premade_move, <span class="kw-2">&amp;</span>state_lock.board) {
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(index) = params.iter().position(|s| s == <span class="string">"moves"</span>) {
+        <span class="kw">for </span>premade_move <span class="kw">in </span><span class="kw-2">&amp;</span>params[index + <span class="number">1</span>..] {
+            <span class="kw">let </span>parsed_move = <span class="kw">match </span>Move::from_long_notation(premade_move, <span class="kw-2">&amp;</span>context_lock.board) {
                 <span class="prelude-val">Ok</span>(r#move) =&gt; r#move,
                 <span class="prelude-val">Err</span>(error) =&gt; {
                     <span class="macro">println!</span>(<span class="string">"info string Error: {}"</span>, error);
@@ -1443,20 +1323,23 @@
                 }
             };
 
-            state_lock.board.make_move(parsed_move);
+            context_lock.board.make_move(parsed_move);
         }
     };
 }
 
-<span class="doccomment">/// Handles `setoption [name] value [value]` command by creating or overwriting a `name` option with the specified `value`. Recreates tables if `Hash` or
-/// `Clear Hash` options are modified.
-</span><span class="kw">fn </span>handle_setoption(parameters: <span class="kw-2">&amp;</span>[String], state: Arc&lt;Mutex&lt;UciState&gt;&gt;) {
+<span class="doccomment">/// Handles `setoption [name] value [value]` command by creating or overwriting a `name` option with the specified `value`.
+/// Recreates tables if `Hash` or `Clear Hash` options are modified.
+</span><span class="kw">fn </span>handle_setoption(params: <span class="kw-2">&amp;</span>[String], state: <span class="kw-2">&amp;mut </span>UciState) {
+    <span class="kw">let </span>options_arc = state.options.clone();
+    <span class="kw">let </span><span class="kw-2">mut </span>options_lock = options_arc.write().unwrap();
+
     <span class="kw">let </span><span class="kw-2">mut </span>reading_name = <span class="bool-val">false</span>;
     <span class="kw">let </span><span class="kw-2">mut </span>reading_value = <span class="bool-val">false</span>;
     <span class="kw">let </span><span class="kw-2">mut </span>name_tokens = Vec::new();
     <span class="kw">let </span><span class="kw-2">mut </span>value_tokens = Vec::new();
 
-    <span class="kw">for </span>parameter <span class="kw">in </span>parameters {
+    <span class="kw">for </span>parameter <span class="kw">in </span>params {
         <span class="kw">match </span>parameter.as_str() {
             <span class="string">"name" </span>=&gt; {
                 reading_name = <span class="bool-val">true</span>;
@@ -1480,13 +1363,15 @@
     <span class="kw">let </span>value = value_tokens.join(<span class="string">" "</span>);
 
     <span class="kw">if </span>!name.is_empty() &amp;&amp; !value.is_empty() {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(option) = state.lock().unwrap().options.get_mut(<span class="kw-2">&amp;</span>name) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(option) = options_lock.get_mut(<span class="kw-2">&amp;</span>name) {
             option.value = value.to_string();
         } <span class="kw">else </span>{
             <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
-            </span><span class="macro">panic!</span>(<span class="string">"Invalid value: name={}, value={}"</span>, name, value);
+            </span><span class="macro">panic_fast!</span>(<span class="string">"Invalid value: name={}, value={}"</span>, name, value);
         }
     }
+
+    drop(options_lock);
 
     <span class="kw">match </span>name.as_str() {
         <span class="string">"Hash" </span>=&gt; {
@@ -1503,7 +1388,8 @@
         <span class="string">"Clear Hash" </span>=&gt; {
             recreate_state_tables(state);
         }
-        <span class="string">"Crash Files" </span>=&gt; <span class="kw">match </span>value.parse::&lt;bool&gt;().unwrap() {
+        <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
+        </span><span class="string">"Crash Files" </span>=&gt; <span class="kw">match </span>value.parse::&lt;bool&gt;().unwrap() {
             <span class="bool-val">true </span>=&gt; enable_crash_files(),
             <span class="bool-val">false </span>=&gt; disable_crash_files(),
         },
@@ -1512,25 +1398,19 @@
 }
 
 <span class="doccomment">/// Handles `ucinewgame` command by resetting a board state, recreating abort flag and clearing tables.
-</span><span class="kw">fn </span>handle_ucinewgame(state: Arc&lt;Mutex&lt;UciState&gt;&gt;) {
-    <span class="kw">let </span><span class="kw-2">mut </span>state_lock = state.lock().unwrap();
-    state_lock.abort_flag.store(<span class="bool-val">true</span>, Ordering::Relaxed);
-    state_lock.board = Board::new_initial_position(
-        <span class="prelude-val">Some</span>(state_lock.evaluation_parameters.clone()),
-        <span class="prelude-val">Some</span>(state_lock.zobrist_container.clone()),
-        <span class="prelude-val">Some</span>(state_lock.patterns_container.clone()),
-        <span class="prelude-val">Some</span>(state_lock.see_container.clone()),
-        <span class="prelude-val">Some</span>(state_lock.magic_container.clone()),
-    );
-    state_lock.abort_flag = Default::default();
-    drop(state_lock);
+</span><span class="kw">fn </span>handle_ucinewgame(state: <span class="kw-2">&amp;mut </span>UciState) {
+    <span class="kw">let </span><span class="kw-2">mut </span>context_lock = state.context.write().unwrap();
 
-    recreate_state_tables(state.clone());
+    state.abort_flag.store(<span class="bool-val">true</span>, Ordering::Relaxed);
+    context_lock.board = Board::new_initial_position();
+    drop(context_lock);
+
+    recreate_state_tables(state);
 }
 
 <span class="doccomment">/// Handles `stop` command by setting abort flag, which should stop ongoing search as fast as possible.
-</span><span class="kw">fn </span>handle_stop(state: Arc&lt;Mutex&lt;UciState&gt;&gt;) {
-    state.lock().unwrap().abort_flag.store(<span class="bool-val">true</span>, Ordering::Relaxed);
+</span><span class="kw">fn </span>handle_stop(state: <span class="kw-2">&amp;</span>UciState) {
+    state.abort_flag.store(<span class="bool-val">true</span>, Ordering::Relaxed);
 }
 
 <span class="doccomment">/// Handles `quit` command by terminating engine process.
@@ -1539,23 +1419,26 @@
 }
 
 <span class="doccomment">/// Recreates transposition table, pawn hashtable, killers table and history table.
-</span><span class="kw">fn </span>recreate_state_tables(state: Arc&lt;Mutex&lt;UciState&gt;&gt;) {
-    <span class="kw">let </span><span class="kw-2">mut </span>state_lock = state.lock().unwrap();
-    <span class="kw">let </span>total_size = state_lock.options[<span class="string">"Hash"</span>].value.parse::&lt;usize&gt;().unwrap();
-    <span class="kw">let </span>allocation_result = allocator::get_allocation(total_size);
+</span><span class="kw">fn </span>recreate_state_tables(state: <span class="kw-2">&amp;mut </span>UciState) {
+    <span class="kw">let </span><span class="kw-2">mut </span>context_lock = state.context.write().unwrap();
+    <span class="kw">let </span>options_lock = state.options.read().unwrap();
+    <span class="kw">let </span>ttable_size = options_lock[<span class="string">"Hash"</span>].value.parse::&lt;usize&gt;().unwrap();
 
-    state_lock.transposition_table = Arc::new(TranspositionTable::new(allocation_result.transposition_table_size * <span class="number">1024 </span>* <span class="number">1024</span>));
-    state_lock.pawn_hashtable = Arc::new(PawnHashTable::new(allocation_result.pawn_hashtable_size * <span class="number">1024 </span>* <span class="number">1024</span>));
-    state_lock.killers_table = Default::default();
-    state_lock.history_table = Default::default();
-    state_lock.countermoves_table = Default::default();
-
-    <span class="comment">// Reset Zobrist keys too, so each game will be slightly different
-    </span>state_lock.zobrist_container = Default::default();
+    context_lock.ttable = Arc::new(TTable::new(ttable_size * <span class="number">1024 </span>* <span class="number">1024</span>));
+    context_lock.phtable = Arc::new(PHTable::new(PAWN_HASHTABLE_SIZE));
+    context_lock.ktable = KTable::default();
+    context_lock.htable = HTable::default();
+    context_lock.cmtable = CMTable::default();
 }
 
 <span class="doccomment">/// Enables saving of crash files by setting a custom panic hook.
+</span><span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
 </span><span class="kw">fn </span>enable_crash_files() {
+    <span class="kw">use </span>std::fs;
+    <span class="kw">use </span>std::fs::File;
+    <span class="kw">use </span>std::io::Write;
+    <span class="kw">use </span>std::path::Path;
+
     panic::set_hook(Box::new(|panic| {
         <span class="kw">let </span>path = Path::new(<span class="string">"./crash"</span>);
         fs::create_dir_all(path).unwrap();
@@ -1569,6 +1452,7 @@
 }
 
 <span class="doccomment">/// Disables saving of crash files by reverting a panic hook to the default one.
+</span><span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
 </span><span class="kw">fn </span>disable_crash_files() {
     <span class="kw">let _ </span>= panic::take_hook();
 }

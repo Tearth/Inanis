@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["evaluate","recalculate_incremental_values"],"mod":["bishop","king","knight","pawn","queen","rook"]};
+window.SIDEBAR_ITEMS = {"constant":["KING_BUCKETS","KING_BUCKETS_COUNT"],"fn":["evaluate","get_pst_value","recalculate_incremental_values"],"mod":["bishop","king","knight","pawn","queen","rook"]};

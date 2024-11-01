@@ -95,11 +95,18 @@
 <a href="#93" id="93">93</a>
 <a href="#94" id="94">94</a>
 <a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="self">self</span>::context::PerftContext;
 <span class="kw">use </span><span class="kw">crate</span>::engine;
 <span class="kw">use </span><span class="kw">crate</span>::state::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::utils::panic_fast;
 <span class="kw">use </span>std::mem::MaybeUninit;
-<span class="kw">use </span>std::u64;
 
 <span class="kw">pub mod </span>context;
 <span class="kw">pub mod </span>divided;
@@ -109,27 +116,34 @@
 <span class="doccomment">/// Internal perft function, common for every mode.
 </span><span class="kw">pub fn </span>run_internal(context: <span class="kw-2">&amp;mut </span>PerftContext, depth: i32) -&gt; u64 {
     <span class="kw">if </span>context.check_integrity {
-        <span class="kw">let </span>original_hash = context.board.hash;
-        <span class="kw">let </span>original_pawn_hash = context.board.pawn_hash;
-        <span class="kw">let </span>original_evaluation = context.board.evaluate_without_cache(WHITE);
+        <span class="kw">let </span>original_hash = context.board.state.hash;
+        <span class="kw">let </span>original_pawn_hash = context.board.state.pawn_hash;
+        <span class="kw">let </span>original_eval = context.board.evaluate_without_cache(WHITE);
 
         context.board.recalculate_hashes();
         context.board.recalculate_incremental_values();
 
-        <span class="kw">if </span>original_hash != context.board.hash {
-            <span class="macro">panic!</span>(<span class="string">"Integrity check failed, invalid hash: fen={}, original_hash={}, context.board.hash={}"</span>, context.board, original_hash, context.board.hash);
-        }
-
-        <span class="kw">if </span>original_pawn_hash != context.board.pawn_hash {
-            <span class="macro">panic!</span>(
-                <span class="string">"Integrity check failed, invalid pawn hash: fen={}, original_pawn_hash={}, context.board.pawn_hash={}"</span>,
-                context.board, original_pawn_hash, context.board.pawn_hash
+        <span class="kw">if </span>original_hash != context.board.state.hash {
+            <span class="macro">panic_fast!</span>(
+                <span class="string">"Integrity check failed, invalid hash: fen={}, original_hash={}, context.board.state.hash={}"</span>,
+                context.board,
+                original_hash,
+                context.board.state.hash
             );
         }
 
-        <span class="kw">let </span>evaluation = context.board.evaluate_without_cache(WHITE);
-        <span class="kw">if </span>original_evaluation != evaluation {
-            <span class="macro">panic!</span>(<span class="string">"Integrity check failed, invalid evaluation: fen={}, original_evaluation={}, evaluation={}"</span>, context.board, original_evaluation, evaluation)
+        <span class="kw">if </span>original_pawn_hash != context.board.state.pawn_hash {
+            <span class="macro">panic_fast!</span>(
+                <span class="string">"Integrity check failed, invalid pawn hash: fen={}, original_pawn_hash={}, context.board.state.pawn_hash={}"</span>,
+                context.board,
+                original_pawn_hash,
+                context.board.state.pawn_hash
+            );
+        }
+
+        <span class="kw">let </span>eval = context.board.evaluate_without_cache(WHITE);
+        <span class="kw">if </span>original_eval != eval {
+            <span class="macro">panic_fast!</span>(<span class="string">"Integrity check failed, invalid evaluation: fen={}, original_eval={}, eval={}"</span>, context.board, original_eval, eval)
         }
     }
 
@@ -138,7 +152,7 @@
     }
 
     <span class="kw">if </span>context.fast {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(entry) = context.hashtable.get(context.board.hash, depth <span class="kw">as </span>u8) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(entry) = context.hashtable.get(context.board.state.hash, depth <span class="kw">as </span>u8) {
             <span class="kw">return </span>entry.leafs_count;
         }
     }
@@ -150,33 +164,33 @@
     <span class="kw">for </span>r#move <span class="kw">in </span><span class="kw-2">&amp;</span>moves[<span class="number">0</span>..moves_count] {
         <span class="kw">let </span>r#move = <span class="kw">unsafe </span>{ r#move.assume_init() };
         <span class="kw">if </span>context.check_integrity &amp;&amp; !r#move.is_legal(context.board) {
-            <span class="macro">panic!</span>(<span class="string">"Integrity check failed, illegal move: fen={}, r#move.data={}"</span>, context.board, r#move.data);
+            <span class="macro">panic_fast!</span>(<span class="string">"Integrity check failed, illegal move: fen={}, r#move.data={}"</span>, context.board, r#move.data);
         }
 
         context.board.make_move(r#move);
 
-        <span class="kw">if </span>!context.board.is_king_checked(context.board.active_color ^ <span class="number">1</span>) {
+        <span class="kw">if </span>!context.board.is_king_checked(context.board.stm ^ <span class="number">1</span>) {
             count += run_internal(context, depth - <span class="number">1</span>);
 
             <span class="kw">if </span>!context.fast &amp;&amp; depth == <span class="number">1 </span>{
                 <span class="kw">if </span>r#move.is_capture() {
-                    context.statistics.captures += <span class="number">1</span>;
+                    context.stats.captures += <span class="number">1</span>;
                 }
 
                 <span class="kw">if </span>r#move.is_en_passant() {
-                    context.statistics.en_passants += <span class="number">1</span>;
+                    context.stats.en_passants += <span class="number">1</span>;
                 }
 
                 <span class="kw">if </span>r#move.is_castling() {
-                    context.statistics.castles += <span class="number">1</span>;
+                    context.stats.castles += <span class="number">1</span>;
                 }
 
                 <span class="kw">if </span>r#move.is_promotion() {
-                    context.statistics.promotions += <span class="number">1</span>;
+                    context.stats.promotions += <span class="number">1</span>;
                 }
 
-                <span class="kw">if </span>context.board.is_king_checked(context.board.active_color) {
-                    context.statistics.checks += <span class="number">1</span>;
+                <span class="kw">if </span>context.board.is_king_checked(context.board.stm) {
+                    context.stats.checks += <span class="number">1</span>;
                 }
             }
         }
@@ -185,7 +199,7 @@
     }
 
     <span class="kw">if </span>context.fast {
-        context.hashtable.add(context.board.hash, depth <span class="kw">as </span>u8, count);
+        context.hashtable.add(context.board.state.hash, depth <span class="kw">as </span>u8, count);
     }
 
     count

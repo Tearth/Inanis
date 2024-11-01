@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["evaluate","get_mobility_data"],"struct":["MobilityData","PieceMobility"]};
+window.SIDEBAR_ITEMS = {"fn":["evaluate","get_mobility_data"],"struct":["EvalAux","MobilityData","PieceMobility"]};

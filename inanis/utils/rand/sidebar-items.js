@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["SEED"],"fn":["i16","i32","i64","i8","isize","rand_internal","seed","u16","u32","u64","u8","usize"],"macro":["rand_definition"],"struct":["RandState"]};
+window.SIDEBAR_ITEMS = {"constant":["SEED"],"fn":["i16","i32","i64","i8","isize","rand","seed","u16","u32","u64","u8","usize"],"macro":["rand_definition"],"struct":["RandState"]};

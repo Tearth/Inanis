@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["evaluate","recalculate_incremental_values"]};
+window.SIDEBAR_ITEMS = {"fn":["evaluate"]};

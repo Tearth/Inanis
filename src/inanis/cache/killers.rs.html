@@ -79,149 +79,83 @@
 <a href="#77" id="77">77</a>
 <a href="#78" id="78">78</a>
 <a href="#79" id="79">79</a>
-<a href="#80" id="80">80</a>
-<a href="#81" id="81">81</a>
-<a href="#82" id="82">82</a>
-<a href="#83" id="83">83</a>
-<a href="#84" id="84">84</a>
-<a href="#85" id="85">85</a>
-<a href="#86" id="86">86</a>
-<a href="#87" id="87">87</a>
-<a href="#88" id="88">88</a>
-<a href="#89" id="89">89</a>
-<a href="#90" id="90">90</a>
-<a href="#91" id="91">91</a>
-<a href="#92" id="92">92</a>
-<a href="#93" id="93">93</a>
-<a href="#94" id="94">94</a>
-<a href="#95" id="95">95</a>
-<a href="#96" id="96">96</a>
-<a href="#97" id="97">97</a>
-<a href="#98" id="98">98</a>
-<a href="#99" id="99">99</a>
-<a href="#100" id="100">100</a>
-<a href="#101" id="101">101</a>
-<a href="#102" id="102">102</a>
-<a href="#103" id="103">103</a>
-<a href="#104" id="104">104</a>
-<a href="#105" id="105">105</a>
-<a href="#106" id="106">106</a>
-<a href="#107" id="107">107</a>
-<a href="#108" id="108">108</a>
-<a href="#109" id="109">109</a>
-<a href="#110" id="110">110</a>
-<a href="#111" id="111">111</a>
-<a href="#112" id="112">112</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::engine::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::state::movescan::Move;
-<span class="kw">use </span>std::sync::atomic::AtomicU16;
-<span class="kw">use </span>std::sync::atomic::Ordering;
+<span class="kw">use </span><span class="kw">crate</span>::utils::assert_fast;
+<span class="kw">use </span>std::alloc;
+<span class="kw">use </span>std::alloc::Layout;
+<span class="kw">use </span>std::mem;
 
 <span class="kw">const </span>KILLER_SLOTS: usize = <span class="number">2</span>;
 
-<span class="kw">pub struct </span>KillersTable {
-    <span class="kw">pub </span>table: [[KillersTableEntry; KILLER_SLOTS]; MAX_DEPTH <span class="kw">as </span>usize],
+<span class="kw">pub struct </span>KTable {
+    <span class="kw">pub </span>table: Box&lt;[[KTableEntry; KILLER_SLOTS]; MAX_DEPTH <span class="kw">as </span>usize]&gt;,
 }
 
-<span class="kw">pub struct </span>KillersTableEntry {
-    <span class="kw">pub </span>data: AtomicU16,
+<span class="kw">pub struct </span>KTableEntry {
+    <span class="kw">pub </span>data: Move,
 }
 
-<span class="kw">pub struct </span>KillersTableResult {
-    <span class="kw">pub </span>r#move: Move,
-}
-
-<span class="kw">impl </span>KillersTable {
+<span class="kw">impl </span>KTable {
     <span class="doccomment">/// Adds a new killer `r#move` at the level specified by `ply` value. Maximal amount of slots for each of them is set by
     /// [KILLER_SLOTS] constant, and newer entries have always a priority over old ones. If there's already exactly the same
     /// move in the slot 0, the table is not changed.
-    </span><span class="kw">pub fn </span>add(<span class="kw-2">&amp;</span><span class="self">self</span>, ply: u16, r#move: Move) {
-        <span class="kw">if </span>ply &gt;= MAX_DEPTH <span class="kw">as </span>u16 || <span class="self">self</span>.table[ply <span class="kw">as </span>usize][<span class="number">0</span>].get_data().r#move == r#move {
+    </span><span class="kw">pub fn </span>add(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ply: u16, r#move: Move) {
+        <span class="macro">assert_fast!</span>(r#move.is_some());
+
+        <span class="kw">if </span>ply &gt;= MAX_DEPTH <span class="kw">as </span>u16 || <span class="self">self</span>.table[ply <span class="kw">as </span>usize][<span class="number">0</span>].data == r#move {
             <span class="kw">return</span>;
         }
 
         <span class="kw">for </span>slot_index <span class="kw">in </span>(<span class="number">1</span>..KILLER_SLOTS).rev() {
-            <span class="kw">let </span>entry = <span class="kw-2">&amp;</span><span class="self">self</span>.table[ply <span class="kw">as </span>usize][slot_index - <span class="number">1</span>];
-            <span class="kw">let </span>entry_data = entry.get_data();
-
-            <span class="self">self</span>.table[ply <span class="kw">as </span>usize][slot_index].set_data(entry_data.r#move);
+            <span class="kw">let </span>entry = <span class="kw-2">&amp;mut </span><span class="self">self</span>.table[ply <span class="kw">as </span>usize][slot_index - <span class="number">1</span>];
+            <span class="self">self</span>.table[ply <span class="kw">as </span>usize][slot_index].data = entry.data;
         }
 
-        <span class="self">self</span>.table[ply <span class="kw">as </span>usize][<span class="number">0</span>].set_data(r#move);
+        <span class="self">self</span>.table[ply <span class="kw">as </span>usize][<span class="number">0</span>].data = r#move;
     }
 
     <span class="doccomment">/// Gets all killer moves at the level specified by `ply`.
     </span><span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, ply: u16) -&gt; [Move; KILLER_SLOTS] {
-        <span class="kw">let </span><span class="kw-2">mut </span>result = [Default::default(); KILLER_SLOTS];
+        <span class="kw">let </span><span class="kw-2">mut </span>result = [Move::default(); KILLER_SLOTS];
 
         <span class="kw">if </span>ply &gt;= MAX_DEPTH <span class="kw">as </span>u16 {
             <span class="kw">return </span>result;
         }
 
         <span class="kw">for </span>(index, slot) <span class="kw">in </span><span class="self">self</span>.table[ply <span class="kw">as </span>usize].iter().enumerate() {
-            result[index] = slot.get_data().r#move;
+            result[index] = slot.data
         }
 
         result
     }
 
     <span class="doccomment">/// Ages killer table by shifting all ply levels by two positions up, to ensure that killer moves inside match board after two halfmoves.
-    </span><span class="kw">pub fn </span>age_moves(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+    </span><span class="kw">pub fn </span>age_moves(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">for </span>row <span class="kw">in </span><span class="number">2</span>..MAX_DEPTH {
             <span class="kw">for </span>slot_index <span class="kw">in </span><span class="number">0</span>..KILLER_SLOTS {
                 <span class="kw">let </span>entry = <span class="kw-2">&amp;</span><span class="self">self</span>.table[row <span class="kw">as </span>usize][slot_index];
-                <span class="kw">let </span>entry_data = entry.get_data();
-
-                <span class="self">self</span>.table[(row <span class="kw">as </span>usize) - <span class="number">2</span>][slot_index].set_data(entry_data.r#move);
+                <span class="self">self</span>.table[(row <span class="kw">as </span>usize) - <span class="number">2</span>][slot_index].data = entry.data;
             }
         }
 
         <span class="kw">for </span>ply <span class="kw">in </span>MAX_DEPTH - <span class="number">2</span>..MAX_DEPTH {
-            <span class="kw">for </span>entry <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.table[ply <span class="kw">as </span>usize] {
-                entry.set_data(Default::default());
+            <span class="kw">for </span>entry <span class="kw">in </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.table[ply <span class="kw">as </span>usize] {
+                entry.data = Move::default();
             }
         }
     }
 }
 
-<span class="kw">impl </span>Default <span class="kw">for </span>KillersTable {
-    <span class="doccomment">/// Constructs a default instance of [KillersTable] with zeroed elements.
+<span class="kw">impl </span>Default <span class="kw">for </span>KTable {
+    <span class="doccomment">/// Constructs a default instance of [KTable] by allocating `KILLER_SLOTS * MAX_DEPTH * mem::size_of::&lt;KTableEntry&gt;()`
+    /// boxed array with zeroed elements.
     </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        <span class="kw">const </span>INIT_1: KillersTableEntry = KillersTableEntry::new_const();
-        <span class="kw">const </span>INIT_2: [KillersTableEntry; KILLER_SLOTS] = [INIT_1; KILLER_SLOTS];
-
-        <span class="self">Self </span>{ table: [INIT_2; MAX_DEPTH <span class="kw">as </span>usize] }
-    }
-}
-
-<span class="kw">impl </span>KillersTableEntry {
-    <span class="doccomment">/// Constructs a new instance of [KillersTableEntry] with zeroed values.
-    </span><span class="kw">pub const fn </span>new_const() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ data: AtomicU16::new(<span class="number">0</span>) }
-    }
-
-    <span class="doccomment">/// Converts `r#move` into an atomic word, and stores it.
-    </span><span class="kw">pub fn </span>set_data(<span class="kw-2">&amp;</span><span class="self">self</span>, r#move: Move) {
-        <span class="self">self</span>.data.store(r#move.data, Ordering::Relaxed);
-    }
-
-    <span class="doccomment">/// Loads and parses atomic value into a [KillersTableEntry] struct.
-    </span><span class="kw">pub fn </span>get_data(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; KillersTableResult {
-        KillersTableResult::new(Move::new_from_raw(<span class="self">self</span>.data.load(Ordering::Relaxed)))
-    }
-}
-
-<span class="kw">impl </span>Default <span class="kw">for </span>KillersTableEntry {
-    <span class="doccomment">/// Constructs a default instance of [KillersTableEntry] with zeroed elements.
-    </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ data: AtomicU16::new(<span class="number">0</span>) }
-    }
-}
-
-<span class="kw">impl </span>KillersTableResult {
-    <span class="doccomment">/// Constructs a new instance of [KillersTableResult] with stored `r#move`.
-    </span><span class="kw">pub fn </span>new(r#move: Move) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ r#move }
+        <span class="kw">const </span>SIZE: usize = mem::size_of::&lt;KTableEntry&gt;();
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>ptr = alloc::alloc_zeroed(Layout::from_size_align(KILLER_SLOTS * MAX_DEPTH <span class="kw">as </span>usize * SIZE, SIZE).unwrap());
+            <span class="self">Self </span>{ table: Box::from_raw(ptr <span class="kw">as </span><span class="kw-2">*mut </span>[[KTableEntry; KILLER_SLOTS]; MAX_DEPTH <span class="kw">as </span>usize]) }
+        }
     }
 }
 </code></pre></div></section></main></body></html>

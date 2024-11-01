@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["cache","engine","evaluation","interface","perft","state","tablebases","testing","tuning","utils"]};
+window.SIDEBAR_ITEMS = {"mod":["cache","engine","evaluation","interface","perft","state","tablebases","testing","tuning","utils"],"type":["MoveScores","Moves"]};

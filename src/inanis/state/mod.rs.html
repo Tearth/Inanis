@@ -190,7 +190,11 @@
 <a href="#188" id="188">188</a>
 <a href="#189" id="189">189</a>
 <a href="#190" id="190">190</a>
-</pre></div><pre class="rust"><code><span class="kw">pub mod </span>movegen;
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::ops::RangeInclusive;
+
+<span class="kw">pub mod </span>movegen;
 <span class="kw">pub mod </span>movescan;
 <span class="kw">pub mod </span>patterns;
 <span class="kw">pub mod </span>representation;
@@ -374,10 +378,10 @@
 <span class="kw">pub const </span>G8_BB: u64 = <span class="number">1 </span>&lt;&lt; G8;
 <span class="kw">pub const </span>H8_BB: u64 = <span class="number">1 </span>&lt;&lt; H8;
 
-<span class="kw">pub const </span>ALL_COLORS: std::ops::RangeInclusive&lt;usize&gt; = <span class="number">0</span>..=<span class="number">1</span>;
-<span class="kw">pub const </span>ALL_PHASES: std::ops::RangeInclusive&lt;usize&gt; = <span class="number">0</span>..=<span class="number">1</span>;
-<span class="kw">pub const </span>ALL_PIECES: std::ops::RangeInclusive&lt;usize&gt; = <span class="number">0</span>..=<span class="number">5</span>;
-<span class="kw">pub const </span>ALL_FILES: std::ops::RangeInclusive&lt;usize&gt; = <span class="number">0</span>..=<span class="number">7</span>;
-<span class="kw">pub const </span>ALL_RANKS: std::ops::RangeInclusive&lt;usize&gt; = <span class="number">0</span>..=<span class="number">7</span>;
-<span class="kw">pub const </span>ALL_SQUARES: std::ops::RangeInclusive&lt;usize&gt; = <span class="number">0</span>..=<span class="number">63</span>;
+<span class="kw">pub const </span>ALL_COLORS: RangeInclusive&lt;usize&gt; = <span class="number">0</span>..=<span class="number">1</span>;
+<span class="kw">pub const </span>ALL_PHASES: RangeInclusive&lt;usize&gt; = <span class="number">0</span>..=<span class="number">1</span>;
+<span class="kw">pub const </span>ALL_PIECES: RangeInclusive&lt;usize&gt; = <span class="number">0</span>..=<span class="number">5</span>;
+<span class="kw">pub const </span>ALL_FILES: RangeInclusive&lt;usize&gt; = <span class="number">0</span>..=<span class="number">7</span>;
+<span class="kw">pub const </span>ALL_RANKS: RangeInclusive&lt;usize&gt; = <span class="number">0</span>..=<span class="number">7</span>;
+<span class="kw">pub const </span>ALL_SQUARES: RangeInclusive&lt;usize&gt; = <span class="number">0</span>..=<span class="number">63</span>;
 </code></pre></div></section></main></body></html>

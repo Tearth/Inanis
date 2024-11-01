@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["check_extensions_can_be_applied","check_extensions_get_e","iir_can_be_applied","iir_get_r","lmp_can_be_applied","lmr_can_be_applied","lmr_get_r","nmp_can_be_applied","nmp_get_r","razoring_can_be_applied","razoring_get_margin","run","run_internal","snmp_can_be_applied","snmp_get_margin"]};

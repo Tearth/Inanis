@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["SEEContainer"]};
+window.SIDEBAR_ITEMS = {"constant":["SEE_KING_VALUE","SEE_KNISHOP_VALUE","SEE_PAWN_VALUE","SEE_QUEEN_VALUE","SEE_ROOK_VALUE"],"fn":["evaluate","evaluate_internal","get","get_piece_value","get_see_piece_index","init"],"static":["SEE_TABLE"]};

@@ -169,7 +169,7 @@
             <span class="number">0</span>,
             <span class="number">0</span>,
             <span class="number">0</span>,
-            board.active_color == WHITE,
+            board.stm == WHITE,
         );
 
         <span class="kw">return match </span>wdl {
@@ -197,10 +197,10 @@
             board.pieces[WHITE][BISHOP] | board.pieces[BLACK][BISHOP],
             board.pieces[WHITE][KNIGHT] | board.pieces[BLACK][KNIGHT],
             board.pieces[WHITE][PAWN] | board.pieces[BLACK][PAWN],
-            board.halfmove_clock <span class="kw">as </span>u32,
+            board.state.halfmove_clock <span class="kw">as </span>u32,
             <span class="number">0</span>,
             <span class="number">0</span>,
-            board.active_color == WHITE,
+            board.stm == WHITE,
             ptr::null_mut(),
         );
 

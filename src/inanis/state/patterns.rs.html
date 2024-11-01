@@ -241,295 +241,245 @@
 <a href="#239" id="239">239</a>
 <a href="#240" id="240">240</a>
 <a href="#241" id="241">241</a>
-<a href="#242" id="242">242</a>
-<a href="#243" id="243">243</a>
-<a href="#244" id="244">244</a>
-<a href="#245" id="245">245</a>
-<a href="#246" id="246">246</a>
-<a href="#247" id="247">247</a>
-<a href="#248" id="248">248</a>
-<a href="#249" id="249">249</a>
-<a href="#250" id="250">250</a>
-<a href="#251" id="251">251</a>
-<a href="#252" id="252">252</a>
-<a href="#253" id="253">253</a>
-<a href="#254" id="254">254</a>
-<a href="#255" id="255">255</a>
-<a href="#256" id="256">256</a>
-<a href="#257" id="257">257</a>
-<a href="#258" id="258">258</a>
-<a href="#259" id="259">259</a>
-<a href="#260" id="260">260</a>
-<a href="#261" id="261">261</a>
-<a href="#262" id="262">262</a>
-<a href="#263" id="263">263</a>
-<a href="#264" id="264">264</a>
-<a href="#265" id="265">265</a>
-<a href="#266" id="266">266</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::utils::assert_fast;
 
-<span class="kw">pub struct </span>PatternsContainer {
-    <span class="kw">pub </span>file_patterns: [u64; <span class="number">64</span>],
-    <span class="kw">pub </span>rank_patterns: [u64; <span class="number">64</span>],
-    <span class="kw">pub </span>diagonal_patterns: [u64; <span class="number">64</span>],
-    <span class="kw">pub </span>jump_patterns: [u64; <span class="number">64</span>],
-    <span class="kw">pub </span>box_patterns: [u64; <span class="number">64</span>],
-    <span class="kw">pub </span>rail_patterns: [u64; <span class="number">8</span>],
-    <span class="kw">pub </span>star_patterns: [u64; <span class="number">64</span>],
-    <span class="kw">pub </span>front_patterns: [[u64; <span class="number">64</span>]; <span class="number">2</span>],
+<span class="kw">pub const </span>DIAGONAL_PATTERNS: [u64; <span class="number">64</span>] = generate_diagonals();
+<span class="kw">pub const </span>JUMP_PATTERNS: [u64; <span class="number">64</span>] = generate_jumps();
+<span class="kw">pub const </span>BOX_PATTERNS: [u64; <span class="number">64</span>] = generate_boxes();
+<span class="kw">pub const </span>RAIL_PATTERNS: [u64; <span class="number">8</span>] = generate_rails();
+<span class="kw">pub const </span>FRONT_PATTERNS: [[u64; <span class="number">64</span>]; <span class="number">2</span>] = generate_fronts();
+
+<span class="doccomment">/// Gets a file pattern for the square specified by `square`.
+/// ```
+/// . . . x . . . .
+/// . . . x . . . .
+/// . . . x . . . .
+/// . . . x . . . .
+/// . . . x . . . .
+/// . . . x . . . .
+/// . . . x . . . .
+/// . . . x . . . .
+/// ```
+</span><span class="kw">pub fn </span>get_file(square: usize) -&gt; u64 {
+    <span class="macro">assert_fast!</span>(square &lt; <span class="number">64</span>);
+    FILE_H_BB &lt;&lt; (square % <span class="number">8</span>)
 }
 
-<span class="kw">impl </span>PatternsContainer {
-    <span class="doccomment">/// Gets a file pattern for the square specified by `square`.
-    /// ```
-    /// . . . x . . . .
-    /// . . . x . . . .
-    /// . . . x . . . .
-    /// . . . x . . . .
-    /// . . . o . . . .
-    /// . . . x . . . .
-    /// . . . x . . . .
-    /// . . . x . . . .
-    /// ```
-    </span><span class="kw">pub fn </span>get_file(<span class="kw-2">&amp;</span><span class="self">self</span>, square: usize) -&gt; u64 {
-        <span class="self">self</span>.file_patterns[square]
-    }
+<span class="doccomment">/// Gets a rank pattern for the square specified by `square`.
+/// ```
+/// . . . . . . . .
+/// . . . . . . . .
+/// . . . . . . . .
+/// . . . . . . . .
+/// x x x x x x x x
+/// . . . . . . . .
+/// . . . . . . . .
+/// . . . . . . . .
+/// ```
+</span><span class="kw">pub fn </span>get_rank(square: usize) -&gt; u64 {
+    <span class="macro">assert_fast!</span>(square &lt; <span class="number">64</span>);
+    RANK_1_BB &lt;&lt; ((square / <span class="number">8</span>) * <span class="number">8</span>)
+}
 
-    <span class="doccomment">/// Gets a rank pattern for the square specified by `square`.
-    /// ```
-    /// . . . . . . . .
-    /// . . . . . . . .
-    /// . . . . . . . .
-    /// . . . . . . . .
-    /// x x x o x x x x
-    /// . . . . . . . .
-    /// . . . . . . . .
-    /// . . . . . . . .
-    /// ```
-    </span><span class="kw">pub fn </span>get_rank(<span class="kw-2">&amp;</span><span class="self">self</span>, square: usize) -&gt; u64 {
-        <span class="self">self</span>.rank_patterns[square]
-    }
+<span class="doccomment">/// Gets a diagonal pattern for the square specified by `square_`.
+/// ```
+/// . . . . . . . x
+/// x . . . . . x .
+/// . x . . . x . .
+/// . . x . x . . .
+/// . . . x . . . .
+/// . . x . x . . .
+/// . x . . . x . .
+/// x . . . . . x .
+/// ```
+</span><span class="kw">pub fn </span>get_diagonals(square: usize) -&gt; u64 {
+    <span class="macro">assert_fast!</span>(square &lt; <span class="number">64</span>);
+    DIAGONAL_PATTERNS[square]
+}
 
-    <span class="doccomment">/// Gets a diagonal pattern for the square specified by `square_`.
-    /// ```
-    /// . . . . . . . x
-    /// x . . . . . x .
-    /// . x . . . x . .
-    /// . . x . x . . .
-    /// . . . o . . . .
-    /// . . x . x . . .
-    /// . x . . . x . .
-    /// x . . . . . x .
-    /// ```
-    </span><span class="kw">pub fn </span>get_diagonals(<span class="kw-2">&amp;</span><span class="self">self</span>, square: usize) -&gt; u64 {
-        <span class="self">self</span>.diagonal_patterns[square]
-    }
+<span class="doccomment">/// Get a jumps pattern for the square specified by `square`.
+/// ```
+/// . . . . . . . .
+/// . . . . . . . .
+/// . . x . x . . .
+/// . x . . . x . .
+/// . . . . . . . .
+/// . x . . . x . .
+/// . . x . x . . .
+/// . . . . . . . .
+/// ```
+</span><span class="kw">pub fn </span>get_jumps(square: usize) -&gt; u64 {
+    <span class="macro">assert_fast!</span>(square &lt; <span class="number">64</span>);
+    JUMP_PATTERNS[square]
+}
 
-    <span class="doccomment">/// Get a jumps pattern for the square specified by `square`.
-    /// ```
-    /// . . . . . . . .
-    /// . . . . . . . .
-    /// . . x . x . . .
-    /// . x . . . x . .
-    /// . . . o . . . .
-    /// . x . . . x . .
-    /// . . x . x . . .
-    /// . . . . . . . .
-    /// ```
-    </span><span class="kw">pub fn </span>get_jumps(<span class="kw-2">&amp;</span><span class="self">self</span>, square: usize) -&gt; u64 {
-        <span class="self">self</span>.jump_patterns[square]
-    }
+<span class="doccomment">/// Get a box pattern for the square specified by `square`.
+/// ```
+/// . . . . . . . .
+/// . . . . . . . .
+/// . . . . . . . .
+/// . . x x x . . .
+/// . . x x x . . .
+/// . . x x x . . .
+/// . . . . . . . .
+/// . . . . . . . .
+/// ```
+</span><span class="kw">pub fn </span>get_box(square: usize) -&gt; u64 {
+    <span class="macro">assert_fast!</span>(square &lt; <span class="number">64</span>);
+    BOX_PATTERNS[square]
+}
 
-    <span class="doccomment">/// Get a box pattern for the square specified by `square`.
-    /// ```
-    /// . . . . . . . .
-    /// . . . . . . . .
-    /// . . . . . . . .
-    /// . . x x x . . .
-    /// . . x o x . . .
-    /// . . x x x . . .
-    /// . . . . . . . .
-    /// . . . . . . . .
-    /// ```
-    </span><span class="kw">pub fn </span>get_box(<span class="kw-2">&amp;</span><span class="self">self</span>, square: usize) -&gt; u64 {
-        <span class="self">self</span>.box_patterns[square]
-    }
+<span class="doccomment">/// Get a rail pattern for the square specified by `file`.
+/// ```
+/// . . x . x . . .
+/// . . x . x . . .
+/// . . x . x . . .
+/// . . x . x . . .
+/// . . x . x . . .
+/// . . x . x . . .
+/// . . x . x . . .
+/// . . x . x . . .
+/// ```
+</span><span class="kw">pub fn </span>get_rail(file: usize) -&gt; u64 {
+    <span class="macro">assert_fast!</span>(file &lt; <span class="number">8</span>);
+    RAIL_PATTERNS[file]
+}
 
-    <span class="doccomment">/// Get a rail pattern for the square specified by `file`.
-    /// ```
-    /// . . x . x . . .
-    /// . . x . x . . .
-    /// . . x . x . . .
-    /// . . x . x . . .
-    /// . . x o x . . .
-    /// . . x . x . . .
-    /// . . x . x . . .
-    /// . . x . x . . .
-    /// ```
-    </span><span class="kw">pub fn </span>get_rail(<span class="kw-2">&amp;</span><span class="self">self</span>, file: usize) -&gt; u64 {
-        <span class="self">self</span>.rail_patterns[file]
-    }
+<span class="doccomment">/// Get a front pattern for the square specified by `square`, from the `color` perspective.
+/// ```
+/// . . x x x . . .
+/// . . x x x . . .
+/// . . x x x . . .
+/// . . x x x . . .
+/// . . . . . . . .
+/// . . . . . . . .
+/// . . . . . . . .
+/// . . . . . . . .
+/// ```
+</span><span class="kw">pub fn </span>get_front(color: usize, square: usize) -&gt; u64 {
+    <span class="macro">assert_fast!</span>(color &lt; <span class="number">2</span>);
+    <span class="macro">assert_fast!</span>(square &lt; <span class="number">64</span>);
+    FRONT_PATTERNS[color][square]
+}
 
-    <span class="doccomment">/// Get a star pattern for the square specified by `square`.
-    /// ```
-    /// . . . . . . . .
-    /// . . . . . . . .
-    /// . . . . . . . .
-    /// . . x . x . . .
-    /// . . . o . . . .
-    /// . . x . x . . .
-    /// . . . . . . . .
-    /// . . . . . . . .
-    /// ```
-    </span><span class="kw">pub fn </span>get_star(<span class="kw-2">&amp;</span><span class="self">self</span>, square: usize) -&gt; u64 {
-        <span class="self">self</span>.star_patterns[square]
-    }
+<span class="doccomment">/// Generates diagonal patterns for all squares.
+</span><span class="kw">pub const fn </span>generate_diagonals() -&gt; [u64; <span class="number">64</span>] {
+    <span class="kw">let </span><span class="kw-2">mut </span>square = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>result = [<span class="number">0</span>; <span class="number">64</span>];
 
-    <span class="doccomment">/// Get a front pattern for the square specified by `square`, from the `color` perspective.
-    /// ```
-    /// . . x x x . . .
-    /// . . x x x . . .
-    /// . . x x x . . .
-    /// . . x x x . . .
-    /// . . . o . . . .
-    /// . . . . . . . .
-    /// . . . . . . . .
-    /// . . . . . . . .
-    /// ```
-    </span><span class="kw">pub fn </span>get_front(<span class="kw-2">&amp;</span><span class="self">self</span>, color: usize, square: usize) -&gt; u64 {
-        <span class="self">self</span>.front_patterns[color][square]
-    }
+    <span class="kw">while </span>square &lt; <span class="number">64 </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>index = <span class="number">0</span>;
+        <span class="kw">while </span>index &lt; <span class="number">4 </span>{
+            <span class="kw">let </span>offset = ((index % <span class="number">2</span>) * <span class="number">2 </span>- <span class="number">1</span>, (index / <span class="number">2</span>) * <span class="number">2 </span>- <span class="number">1</span>);
+            <span class="kw">let </span><span class="kw-2">mut </span>current = ((square <span class="kw">as </span>isize) % <span class="number">8 </span>+ offset.<span class="number">0</span>, (square <span class="kw">as </span>isize) / <span class="number">8 </span>+ offset.<span class="number">1</span>);
 
-    <span class="doccomment">/// Generates file patterns for all squares.
-    </span><span class="kw">pub fn </span>regenerate_files(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">for </span>square <span class="kw">in </span>ALL_SQUARES {
-            <span class="self">self</span>.file_patterns[square] = (FILE_H_BB &lt;&lt; (square % <span class="number">8</span>)) &amp; !(<span class="number">1u64 </span>&lt;&lt; square);
-        }
-    }
-
-    <span class="doccomment">/// Generates rank patterns for all squares.
-    </span><span class="kw">pub fn </span>regenerate_ranks(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">for </span>square <span class="kw">in </span>ALL_SQUARES {
-            <span class="self">self</span>.rank_patterns[square] = (RANK_1_BB &lt;&lt; (<span class="number">8 </span>* (square / <span class="number">8</span>))) &amp; !(<span class="number">1u64 </span>&lt;&lt; square);
-        }
-    }
-
-    <span class="doccomment">/// Generates diagonal patterns for all squares.
-    </span><span class="kw">pub fn </span>regenerate_diagonals(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">for </span>square <span class="kw">in </span>ALL_SQUARES {
-            <span class="kw">let </span><span class="kw-2">mut </span>result = <span class="number">0u64</span>;
-
-            <span class="kw">for </span>direction <span class="kw">in </span>[(<span class="number">1</span>, <span class="number">1</span>), (-<span class="number">1</span>, <span class="number">1</span>), (<span class="number">1</span>, -<span class="number">1</span>), (-<span class="number">1</span>, -<span class="number">1</span>)] {
-                <span class="kw">let </span><span class="kw-2">mut </span>current = ((square <span class="kw">as </span>isize) % <span class="number">8 </span>+ direction.<span class="number">0</span>, (square <span class="kw">as </span>isize) / <span class="number">8 </span>+ direction.<span class="number">1</span>);
-
-                <span class="kw">while </span>current.<span class="number">0 </span>&gt;= <span class="number">0 </span>&amp;&amp; current.<span class="number">0 </span>&lt;= <span class="number">7 </span>&amp;&amp; current.<span class="number">1 </span>&gt;= <span class="number">0 </span>&amp;&amp; current.<span class="number">1 </span>&lt;= <span class="number">7 </span>{
-                    result |= <span class="number">1u64 </span>&lt;&lt; (current.<span class="number">0 </span>+ current.<span class="number">1 </span>* <span class="number">8</span>);
-                    current = (current.<span class="number">0 </span>+ direction.<span class="number">0</span>, current.<span class="number">1 </span>+ direction.<span class="number">1</span>);
-                }
+            <span class="kw">while </span>current.<span class="number">0 </span>&gt;= <span class="number">0 </span>&amp;&amp; current.<span class="number">0 </span>&lt;= <span class="number">7 </span>&amp;&amp; current.<span class="number">1 </span>&gt;= <span class="number">0 </span>&amp;&amp; current.<span class="number">1 </span>&lt;= <span class="number">7 </span>{
+                result[square] |= <span class="number">1u64 </span>&lt;&lt; (current.<span class="number">0 </span>+ current.<span class="number">1 </span>* <span class="number">8</span>);
+                current = (current.<span class="number">0 </span>+ offset.<span class="number">0</span>, current.<span class="number">1 </span>+ offset.<span class="number">1</span>);
             }
 
-            <span class="self">self</span>.diagonal_patterns[square] = result;
+            index += <span class="number">1</span>;
         }
+
+        result[square] |= <span class="number">1u64 </span>&lt;&lt; square;
+        square += <span class="number">1</span>;
     }
 
-    <span class="doccomment">/// Generates jump patterns for all fiellds.
-    </span><span class="kw">pub fn </span>regenerate_jumps(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">for </span>square <span class="kw">in </span>ALL_SQUARES {
-            <span class="kw">let </span>square_bb = <span class="number">1u64 </span>&lt;&lt; square;
+    result
+}
 
-            <span class="self">self</span>.jump_patterns[square] = <span class="number">0
-                </span>| ((square_bb &amp; !FILE_G_BB &amp; !FILE_H_BB) &lt;&lt; <span class="number">6</span>)
-                | ((square_bb &amp; !FILE_A_BB &amp; !FILE_B_BB) &gt;&gt; <span class="number">6</span>)
-                | ((square_bb &amp; !FILE_A_BB &amp; !FILE_B_BB) &lt;&lt; <span class="number">10</span>)
-                | ((square_bb &amp; !FILE_G_BB &amp; !FILE_H_BB) &gt;&gt; <span class="number">10</span>)
-                | ((square_bb &amp; !FILE_H_BB) &lt;&lt; <span class="number">15</span>)
-                | ((square_bb &amp; !FILE_A_BB) &gt;&gt; <span class="number">15</span>)
-                | ((square_bb &amp; !FILE_A_BB) &lt;&lt; <span class="number">17</span>)
-                | ((square_bb &amp; !FILE_H_BB) &gt;&gt; <span class="number">17</span>);
-        }
+<span class="doccomment">/// Generates jump patterns for all fields.
+</span><span class="kw">pub const fn </span>generate_jumps() -&gt; [u64; <span class="number">64</span>] {
+    <span class="kw">let </span><span class="kw-2">mut </span>square = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>result = [<span class="number">0</span>; <span class="number">64</span>];
+
+    <span class="kw">while </span>square &lt; <span class="number">64 </span>{
+        <span class="kw">let </span>square_bb = <span class="number">1u64 </span>&lt;&lt; square;
+        result[square] = <span class="number">0
+            </span>| ((square_bb &amp; !FILE_G_BB &amp; !FILE_H_BB) &lt;&lt; <span class="number">6</span>)
+            | ((square_bb &amp; !FILE_A_BB &amp; !FILE_B_BB) &gt;&gt; <span class="number">6</span>)
+            | ((square_bb &amp; !FILE_A_BB &amp; !FILE_B_BB) &lt;&lt; <span class="number">10</span>)
+            | ((square_bb &amp; !FILE_G_BB &amp; !FILE_H_BB) &gt;&gt; <span class="number">10</span>)
+            | ((square_bb &amp; !FILE_H_BB) &lt;&lt; <span class="number">15</span>)
+            | ((square_bb &amp; !FILE_A_BB) &gt;&gt; <span class="number">15</span>)
+            | ((square_bb &amp; !FILE_A_BB) &lt;&lt; <span class="number">17</span>)
+            | ((square_bb &amp; !FILE_H_BB) &gt;&gt; <span class="number">17</span>);
+
+        square += <span class="number">1</span>;
     }
 
-    <span class="doccomment">/// Generates box patterns for all squares.
-    </span><span class="kw">pub fn </span>regenerate_boxes(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">for </span>square <span class="kw">in </span>ALL_SQUARES {
-            <span class="kw">let </span>square_bb = <span class="number">1u64 </span>&lt;&lt; square;
+    result
+}
 
-            <span class="self">self</span>.box_patterns[square] = <span class="number">0
-                </span>| ((square_bb &amp; !FILE_A_BB) &lt;&lt; <span class="number">1</span>)
-                | ((square_bb &amp; !FILE_H_BB) &gt;&gt; <span class="number">1</span>)
-                | ((square_bb &amp; !FILE_H_BB) &lt;&lt; <span class="number">7</span>)
-                | ((square_bb &amp; !FILE_A_BB) &gt;&gt; <span class="number">7</span>)
-                | ((square_bb &amp; !RANK_8_BB) &lt;&lt; <span class="number">8</span>)
-                | ((square_bb &amp; !RANK_1_BB) &gt;&gt; <span class="number">8</span>)
-                | ((square_bb &amp; !FILE_A_BB) &lt;&lt; <span class="number">9</span>)
-                | ((square_bb &amp; !FILE_H_BB) &gt;&gt; <span class="number">9</span>);
-        }
+<span class="doccomment">/// Generates box patterns for all squares.
+</span><span class="kw">pub const fn </span>generate_boxes() -&gt; [u64; <span class="number">64</span>] {
+    <span class="kw">let </span><span class="kw-2">mut </span>square = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>result = [<span class="number">0</span>; <span class="number">64</span>];
+
+    <span class="kw">while </span>square &lt; <span class="number">64 </span>{
+        <span class="kw">let </span>square_bb = <span class="number">1u64 </span>&lt;&lt; square;
+        result[square] = <span class="number">0
+            </span>| ((square_bb &amp; !FILE_A_BB) &lt;&lt; <span class="number">1</span>)
+            | ((square_bb &amp; !FILE_H_BB) &gt;&gt; <span class="number">1</span>)
+            | ((square_bb &amp; !FILE_H_BB) &lt;&lt; <span class="number">7</span>)
+            | ((square_bb &amp; !FILE_A_BB) &gt;&gt; <span class="number">7</span>)
+            | ((square_bb &amp; !RANK_8_BB) &lt;&lt; <span class="number">8</span>)
+            | ((square_bb &amp; !RANK_1_BB) &gt;&gt; <span class="number">8</span>)
+            | ((square_bb &amp; !FILE_A_BB) &lt;&lt; <span class="number">9</span>)
+            | ((square_bb &amp; !FILE_H_BB) &gt;&gt; <span class="number">9</span>);
+
+        square += <span class="number">1</span>;
     }
 
-    <span class="doccomment">/// Generates rail patterns for all squares.
-    </span><span class="kw">pub fn </span>regenerate_rails(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">for </span>file <span class="kw">in </span>ALL_FILES {
+    result
+}
+
+<span class="doccomment">/// Generates rail patterns for all squares.
+</span><span class="kw">pub const fn </span>generate_rails() -&gt; [u64; <span class="number">8</span>] {
+    <span class="kw">let </span><span class="kw-2">mut </span>file = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>result = [<span class="number">0</span>; <span class="number">8</span>];
+
+    <span class="kw">while </span>file &lt; <span class="number">8 </span>{
+        <span class="kw">let </span>left_file_bb = <span class="kw">if </span>file &gt; <span class="number">0 </span>{ FILE_H_BB &lt;&lt; (file - <span class="number">1</span>) } <span class="kw">else </span>{ <span class="number">0 </span>};
+        <span class="kw">let </span>right_file_bb = <span class="kw">if </span>file &lt; <span class="number">7 </span>{ FILE_H_BB &lt;&lt; (file + <span class="number">1</span>) } <span class="kw">else </span>{ <span class="number">0 </span>};
+
+        result[file] = left_file_bb | right_file_bb;
+        file += <span class="number">1</span>;
+    }
+
+    result
+}
+
+<span class="doccomment">/// Generates front patterns for all squares.
+</span><span class="kw">pub const fn </span>generate_fronts() -&gt; [[u64; <span class="number">64</span>]; <span class="number">2</span>] {
+    <span class="kw">let </span><span class="kw-2">mut </span>color = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>result = [[<span class="number">0</span>; <span class="number">64</span>]; <span class="number">2</span>];
+
+    <span class="kw">while </span>color &lt; <span class="number">2 </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>square = <span class="number">0</span>;
+        <span class="kw">while </span>square &lt; <span class="number">64 </span>{
+            <span class="kw">let </span>file = square % <span class="number">8</span>;
+            <span class="kw">let </span>rank = square / <span class="number">8</span>;
+
+            <span class="kw">let </span>center_file_bb = FILE_H_BB &lt;&lt; file;
             <span class="kw">let </span>left_file_bb = <span class="kw">if </span>file &gt; <span class="number">0 </span>{ FILE_H_BB &lt;&lt; (file - <span class="number">1</span>) } <span class="kw">else </span>{ <span class="number">0 </span>};
             <span class="kw">let </span>right_file_bb = <span class="kw">if </span>file &lt; <span class="number">7 </span>{ FILE_H_BB &lt;&lt; (file + <span class="number">1</span>) } <span class="kw">else </span>{ <span class="number">0 </span>};
-            <span class="self">self</span>.rail_patterns[file] = left_file_bb | right_file_bb;
-        }
-    }
 
-    <span class="doccomment">/// Generates star patterns for all squares.
-    </span><span class="kw">pub fn </span>regenerate_stars(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">for </span>square <span class="kw">in </span>ALL_SQUARES {
-            <span class="self">self</span>.star_patterns[square] = <span class="self">self</span>.diagonal_patterns[square] &amp; <span class="self">self</span>.box_patterns[square];
-        }
-    }
-
-    <span class="doccomment">/// Generates front patterns for all squares.
-    </span><span class="kw">pub fn </span>regenerate_fronts(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">for </span>color <span class="kw">in </span>ALL_PHASES {
-            <span class="kw">for </span>square <span class="kw">in </span>ALL_SQUARES {
-                <span class="kw">let </span>file = square % <span class="number">8</span>;
-                <span class="kw">let </span>rank = square / <span class="number">8</span>;
-
-                <span class="kw">let </span>center_file_bb = FILE_H_BB &lt;&lt; file;
-                <span class="kw">let </span>left_file_bb = <span class="kw">if </span>file &gt; <span class="number">0 </span>{ FILE_H_BB &lt;&lt; (file - <span class="number">1</span>) } <span class="kw">else </span>{ <span class="number">0 </span>};
-                <span class="kw">let </span>right_file_bb = <span class="kw">if </span>file &lt; <span class="number">7 </span>{ FILE_H_BB &lt;&lt; (file + <span class="number">1</span>) } <span class="kw">else </span>{ <span class="number">0 </span>};
-
-                <span class="kw">let </span><span class="kw-2">mut </span>current_rank = rank <span class="kw">as </span>i8;
-                <span class="kw">let </span><span class="kw-2">mut </span>forbidden_area = <span class="number">0</span>;
-                <span class="kw">while </span>ALL_RANKS.contains(<span class="kw-2">&amp;</span>(current_rank <span class="kw">as </span>usize)) {
-                    forbidden_area |= <span class="number">255 </span>&lt;&lt; (current_rank * <span class="number">8</span>);
-                    current_rank += (color <span class="kw">as </span>i8) * <span class="number">2 </span>- <span class="number">1</span>;
-                }
-
-                <span class="self">self</span>.front_patterns[color][square] = (left_file_bb | center_file_bb | right_file_bb) &amp; !forbidden_area;
+            <span class="kw">let </span><span class="kw-2">mut </span>current_rank = rank <span class="kw">as </span>i8;
+            <span class="kw">let </span><span class="kw-2">mut </span>forbidden_area = <span class="number">0</span>;
+            <span class="kw">while </span>current_rank &gt;= <span class="number">0 </span>&amp;&amp; current_rank &lt; <span class="number">8 </span>{
+                forbidden_area |= <span class="number">255 </span>&lt;&lt; (current_rank * <span class="number">8</span>);
+                current_rank += (color <span class="kw">as </span>i8) * <span class="number">2 </span>- <span class="number">1</span>;
             }
+
+            result[color][square] = (left_file_bb | center_file_bb | right_file_bb) &amp; !forbidden_area;
+            square += <span class="number">1</span>;
         }
+
+        color += <span class="number">1</span>;
     }
-}
 
-<span class="kw">impl </span>Default <span class="kw">for </span>PatternsContainer {
-    <span class="doccomment">/// Constructs a default instance of [PatternsContainer] with initialized patterns.
-    </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span><span class="kw-2">mut </span>result = <span class="self">Self </span>{
-            file_patterns: [<span class="number">0</span>; <span class="number">64</span>],
-            rank_patterns: [<span class="number">0</span>; <span class="number">64</span>],
-            diagonal_patterns: [<span class="number">0</span>; <span class="number">64</span>],
-            jump_patterns: [<span class="number">0</span>; <span class="number">64</span>],
-            box_patterns: [<span class="number">0</span>; <span class="number">64</span>],
-            rail_patterns: [<span class="number">0</span>; <span class="number">8</span>],
-            star_patterns: [<span class="number">0</span>; <span class="number">64</span>],
-            front_patterns: [[<span class="number">0</span>; <span class="number">64</span>]; <span class="number">2</span>],
-        };
-
-        result.regenerate_files();
-        result.regenerate_ranks();
-        result.regenerate_diagonals();
-        result.regenerate_jumps();
-        result.regenerate_boxes();
-        result.regenerate_rails();
-        result.regenerate_stars();
-        result.regenerate_fronts();
-
-        result
-    }
+    result
 }
 </code></pre></div></section></main></body></html>

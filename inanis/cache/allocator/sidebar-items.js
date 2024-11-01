@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["PAWN_HASHTABLE_SIZE_FRACTION"],"fn":["get_allocation"],"struct":["AllocationResult"]};

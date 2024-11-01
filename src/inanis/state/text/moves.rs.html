@@ -304,12 +304,14 @@
 <a href="#302" id="302">302</a>
 <a href="#303" id="303">303</a>
 <a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::engine;
 <span class="kw">use </span><span class="kw">crate</span>::state::movescan::Move;
 <span class="kw">use </span><span class="kw">crate</span>::state::movescan::MoveFlags;
 <span class="kw">use </span><span class="kw">crate</span>::state::representation::Board;
 <span class="kw">use </span><span class="kw">crate</span>::state::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::utils::bitflags::BitFlags;
+<span class="kw">use </span><span class="kw">crate</span>::utils::panic_fast;
 <span class="kw">use </span>std::mem::MaybeUninit;
 
 <span class="kw">impl </span>Move {
@@ -509,7 +511,7 @@
             <span class="kw">_ </span>=&gt; {
                 <span class="kw">for </span>r#move <span class="kw">in </span>valid_moves {
                     board.make_move(r#move);
-                    <span class="kw">if </span>!board.is_king_checked(board.active_color ^ <span class="number">1</span>) {
+                    <span class="kw">if </span>!board.is_king_checked(board.stm ^ <span class="number">1</span>) {
                         board.undo_move(r#move);
                         <span class="kw">return </span><span class="prelude-val">Ok</span>(r#move);
                     }
@@ -601,7 +603,7 @@
                 MoveFlags::BISHOP_PROMOTION | MoveFlags::BISHOP_PROMOTION_CAPTURE =&gt; <span class="string">'b'</span>,
                 MoveFlags::ROOK_PROMOTION | MoveFlags::ROOK_PROMOTION_CAPTURE =&gt; <span class="string">'r'</span>,
                 MoveFlags::QUEEN_PROMOTION | MoveFlags::QUEEN_PROMOTION_CAPTURE =&gt; <span class="string">'q'</span>,
-                <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">"Invalid value: flags={:?}"</span>, flags),
+                <span class="kw">_ </span>=&gt; <span class="macro">panic_fast!</span>(<span class="string">"Invalid value: flags={:?}"</span>, flags),
             });
         }
 
