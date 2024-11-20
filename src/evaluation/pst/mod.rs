@@ -46,24 +46,34 @@ pub fn recalculate_incremental_values(board: &mut Board) {
 
     for color in ALL_COLORS {
         let sign = -(color as i16 * 2 - 1);
+
         let king_bb = board.pieces[color][KING];
         let king_square = match color == WHITE {
             true => king_bb.bit_scan() % 64,
             false => king_bb.swap_bytes().bit_scan() % 64,
         };
 
-        for piece_index in ALL_PIECES {
-            let mut pieces_bb = board.pieces[color][piece_index];
-            while pieces_bb != 0 {
-                let square_bb = pieces_bb.get_lsb();
-                let mut square = square_bb.bit_scan();
-                pieces_bb = pieces_bb.pop_lsb();
+        let enemy_king_bb = board.pieces[color ^ 1][KING];
+        let enemy_king_square = match color == WHITE {
+            true => enemy_king_bb.swap_bytes().bit_scan() % 64,
+            false => enemy_king_bb.bit_scan() % 64,
+        };
 
-                if color == BLACK {
-                    square = (1u64 << square).swap_bytes().bit_scan();
+        for pov in ALL_POVS {
+            let king_square = if pov == US { king_square } else { enemy_king_square };
+            for piece_index in ALL_PIECES {
+                let mut pieces_bb = board.pieces[color][piece_index];
+                while pieces_bb != 0 {
+                    let square_bb = pieces_bb.get_lsb();
+                    let mut square = square_bb.bit_scan();
+                    pieces_bb = pieces_bb.pop_lsb();
+
+                    if color == BLACK {
+                        square = (1u64 << square).swap_bytes().bit_scan();
+                    }
+
+                    score += sign * evaluation::get_pst_value(piece_index, pov, king_square, square);
                 }
-
-                score += sign * evaluation::get_pst_value(piece_index, king_square, square);
             }
         }
     }
@@ -71,9 +81,10 @@ pub fn recalculate_incremental_values(board: &mut Board) {
     board.state.pst_score = score;
 }
 
-/// Gets a PST value for the specified `color`, `piece`, `phase` and `square` (relative perspective).
-pub fn get_pst_value(piece: usize, king_square: usize, square: usize) -> PackedEval {
+/// Gets a PST value for the specified `piece`, `pov`, `king_square` and `square` (relative perspective).
+pub fn get_pst_value(piece: usize, pov: usize, king_square: usize, square: usize) -> PackedEval {
     assert_fast!(piece < 6);
+    assert_fast!(pov < 2);
     assert_fast!(king_square < 64);
     assert_fast!(square < 64);
 
@@ -88,7 +99,7 @@ pub fn get_pst_value(piece: usize, king_square: usize, square: usize) -> PackedE
     };
 
     assert_fast!(KING_BUCKETS[63 - king_square] < KING_BUCKETS_COUNT);
-    pst[KING_BUCKETS[63 - king_square]][63 - square]
+    pst[pov][KING_BUCKETS[63 - king_square]][63 - square]
 }
 
 /// Gets coefficients of piece-square table for `piece` on `board` and inserts them into `coeffs`.
@@ -97,49 +108,51 @@ pub fn get_pst_value(piece: usize, king_square: usize, square: usize) -> PackedE
 pub fn get_coeffs(board: &Board, piece: usize, index: &mut u16, coeffs: &mut Vec<TunerCoeff>, indices: &mut Vec<u16>) {
     assert_fast!(piece < 6);
 
-    for bucket in 0..KING_BUCKETS_COUNT {
-        let valid_for_white = bucket == KING_BUCKETS[63 - board.pieces[WHITE][KING].bit_scan()];
-        let valid_for_black = bucket == KING_BUCKETS[63 - board.pieces[BLACK][KING].bit_scan()];
+    for pov in ALL_POVS {
+        for bucket in 0..KING_BUCKETS_COUNT {
+            let valid_for_white = bucket == KING_BUCKETS[63 - board.pieces[pov][KING].bit_scan()];
+            let valid_for_black = bucket == KING_BUCKETS[63 - board.pieces[pov ^ 1][KING].bit_scan()];
 
-        for square in ALL_SQUARES {
-            let current_index = 63 - square;
-            let opposite_index = (1u64 << current_index).swap_bytes().bit_scan();
+            for square in ALL_SQUARES {
+                let current_index = 63 - square;
+                let opposite_index = (1u64 << current_index).swap_bytes().bit_scan();
 
-            let current_piece = board.piece_table[current_index];
-            let opposite_piece = board.piece_table[opposite_index];
+                let current_piece = board.piece_table[current_index];
+                let opposite_piece = board.piece_table[opposite_index];
 
-            let current_color = if (board.occupancy[WHITE] & (1 << current_index)) != 0 { WHITE } else { BLACK };
-            let opposite_color = if (board.occupancy[WHITE] & (1 << opposite_index)) != 0 { WHITE } else { BLACK };
+                let current_color = if (board.occupancy[WHITE] & (1 << current_index)) != 0 { WHITE } else { BLACK };
+                let opposite_color = if (board.occupancy[WHITE] & (1 << opposite_index)) != 0 { WHITE } else { BLACK };
 
-            if valid_for_white && !valid_for_black {
-                if current_piece == piece as u8 && current_color == WHITE {
-                    coeffs.push(TunerCoeff::new(1, OPENING));
-                    coeffs.push(TunerCoeff::new(1, ENDING));
-                    indices.push(*index);
-                    indices.push(*index + 1);
+                if valid_for_white && !valid_for_black {
+                    if current_piece == piece as u8 && current_color == WHITE {
+                        coeffs.push(TunerCoeff::new(1, OPENING));
+                        coeffs.push(TunerCoeff::new(1, ENDING));
+                        indices.push(*index);
+                        indices.push(*index + 1);
+                    }
+                } else if !valid_for_white && valid_for_black {
+                    if opposite_piece == piece as u8 && opposite_color == BLACK {
+                        coeffs.push(TunerCoeff::new(-1, OPENING));
+                        coeffs.push(TunerCoeff::new(-1, ENDING));
+                        indices.push(*index);
+                        indices.push(*index + 1);
+                    }
+                } else if valid_for_white && valid_for_black {
+                    if current_piece == piece as u8 && opposite_piece != piece as u8 && current_color == WHITE {
+                        coeffs.push(TunerCoeff::new(1, OPENING));
+                        coeffs.push(TunerCoeff::new(1, ENDING));
+                        indices.push(*index);
+                        indices.push(*index + 1);
+                    } else if opposite_piece == piece as u8 && current_piece != piece as u8 && opposite_color == BLACK {
+                        coeffs.push(TunerCoeff::new(-1, OPENING));
+                        coeffs.push(TunerCoeff::new(-1, ENDING));
+                        indices.push(*index);
+                        indices.push(*index + 1);
+                    }
                 }
-            } else if !valid_for_white && valid_for_black {
-                if opposite_piece == piece as u8 && opposite_color == BLACK {
-                    coeffs.push(TunerCoeff::new(-1, OPENING));
-                    coeffs.push(TunerCoeff::new(-1, ENDING));
-                    indices.push(*index);
-                    indices.push(*index + 1);
-                }
-            } else if valid_for_white && valid_for_black {
-                if current_piece == piece as u8 && opposite_piece != piece as u8 && current_color == WHITE {
-                    coeffs.push(TunerCoeff::new(1, OPENING));
-                    coeffs.push(TunerCoeff::new(1, ENDING));
-                    indices.push(*index);
-                    indices.push(*index + 1);
-                } else if opposite_piece == piece as u8 && current_piece != piece as u8 && opposite_color == BLACK {
-                    coeffs.push(TunerCoeff::new(-1, OPENING));
-                    coeffs.push(TunerCoeff::new(-1, ENDING));
-                    indices.push(*index);
-                    indices.push(*index + 1);
-                }
+
+                *index += 2;
             }
-
-            *index += 2;
         }
     }
 }

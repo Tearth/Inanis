@@ -405,28 +405,43 @@ fn load_values(random_values: bool) -> Vec<TunerParameter> {
     params.append(&mut params::PAWN_SHIELD_OPEN_FILE.iter().flat_map(|v| v.to_tuner_params(-999, -40, -10, 999, 0)).collect());
     params.append(&mut params::KING_AREA_THREATS.iter().flat_map(|v| v.to_tuner_params(-999, -40, 40, 999, 0)).collect());
 
-    for bucket in &pst::PAWN_PST_PATTERN {
-        params.append(&mut bucket.iter().flat_map(|v| v.to_tuner_params(-9999, 50, 150, 9999, -PIECE_VALUES[PAWN])).collect());
+    for pov in ALL_POVS {
+        for bucket in &pst::PAWN_PST_PATTERN[pov] {
+            params.append(&mut bucket.iter().flat_map(|v| v.to_tuner_params(-9999, 50, 150, 9999, if pov == US { -PIECE_VALUES[PAWN] } else { 0 })).collect());
+        }
     }
 
-    for bucket in &pst::KNIGHT_PST_PATTERN {
-        params.append(&mut bucket.iter().flat_map(|v| v.to_tuner_params(-9999, 300, 500, 9999, -PIECE_VALUES[KNIGHT])).collect());
+    for pov in ALL_POVS {
+        let offset = if pov == US { -PIECE_VALUES[KNIGHT] } else { 0 };
+        for bucket in &pst::KNIGHT_PST_PATTERN[pov] {
+            params.append(&mut bucket.iter().flat_map(|v| v.to_tuner_params(-9999, 300, 500, 9999, offset)).collect());
+        }
     }
 
-    for bucket in &pst::BISHOP_PST_PATTERN {
-        params.append(&mut bucket.iter().flat_map(|v| v.to_tuner_params(-9999, 300, 500, 9999, -PIECE_VALUES[BISHOP])).collect());
+    for pov in ALL_POVS {
+        let offset = if pov == US { -PIECE_VALUES[BISHOP] } else { 0 };
+        for bucket in &pst::BISHOP_PST_PATTERN[pov] {
+            params.append(&mut bucket.iter().flat_map(|v| v.to_tuner_params(-9999, 300, 500, 9999, offset)).collect());
+        }
+    }
+    for pov in ALL_POVS {
+        let offset = if pov == US { -PIECE_VALUES[ROOK] } else { 0 };
+        for bucket in &pst::ROOK_PST_PATTERN[pov] {
+            params.append(&mut bucket.iter().flat_map(|v| v.to_tuner_params(-9999, 400, 600, 9999, offset)).collect());
+        }
     }
 
-    for bucket in &pst::ROOK_PST_PATTERN {
-        params.append(&mut bucket.iter().flat_map(|v| v.to_tuner_params(-9999, 400, 600, 9999, -PIECE_VALUES[ROOK])).collect());
+    for pov in ALL_POVS {
+        let offset = if pov == US { -PIECE_VALUES[QUEEN] } else { 0 };
+        for bucket in &pst::QUEEN_PST_PATTERN[pov] {
+            params.append(&mut bucket.iter().flat_map(|v| v.to_tuner_params(-9999, 800, 1400, 9999, offset)).collect());
+        }
     }
 
-    for bucket in &pst::QUEEN_PST_PATTERN {
-        params.append(&mut bucket.iter().flat_map(|v| v.to_tuner_params(-9999, 800, 1400, 9999, -PIECE_VALUES[QUEEN])).collect());
-    }
-
-    for bucket in &pst::KING_PST_PATTERN {
-        params.append(&mut bucket.iter().flat_map(|v| v.to_tuner_params(-999, -40, 40, 999, 0)).collect());
+    for pov in ALL_POVS {
+        for bucket in &pst::KING_PST_PATTERN[pov] {
+            params.append(&mut bucket.iter().flat_map(|v| v.to_tuner_params(-999, -40, 40, 999, 0)).collect());
+        }
     }
 
     if random_values {
@@ -485,12 +500,18 @@ where
     output.push_str("use super::*;\n");
     output.push('\n');
     output.push_str("#[rustfmt::skip]\n");
-    output.push_str(&format!("pub const {}_PST_PATTERN: [[PackedEval; 64]; KING_BUCKETS_COUNT] =\n", name));
+    output.push_str(&format!("pub const {}_PST_PATTERN: [[[PackedEval; 64]; KING_BUCKETS_COUNT]; 2] =\n", name));
     output.push_str("[\n");
 
-    for _ in 0..KING_BUCKETS_COUNT {
+    for pov in ALL_POVS {
         output.push_str("    [\n");
-        output.push_str(get_piece_square_table(weights, piece_value).as_str());
+
+        for _ in 0..KING_BUCKETS_COUNT {
+            output.push_str("        [\n");
+            output.push_str(get_piece_square_table(weights, if pov == US { piece_value } else { 0 }).as_str());
+            output.push_str("        ],\n");
+        }
+
         output.push_str("    ],\n");
     }
 
@@ -559,7 +580,7 @@ where
     W: Iterator<Item = &'a f32>,
 {
     let mut output = String::new();
-    output.push_str("        ");
+    output.push_str("            ");
 
     for index in ALL_SQUARES {
         let opening_score = *weights.next().unwrap();
@@ -572,7 +593,7 @@ where
         if index % 8 == 7 {
             output.push_str(",\n");
             if index != 63 {
-                output.push_str("        ");
+                output.push_str("            ");
             }
         } else {
             output.push_str(", ");

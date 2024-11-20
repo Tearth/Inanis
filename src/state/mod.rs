@@ -10,6 +10,9 @@ pub mod zobrist;
 pub const WHITE: usize = 0;
 pub const BLACK: usize = 1;
 
+pub const US: usize = 0;
+pub const THEM: usize = 1;
+
 pub const OPENING: usize = 0;
 pub const ENDING: usize = 1;
 
@@ -185,6 +188,7 @@ pub const G8_BB: u64 = 1 << G8;
 pub const H8_BB: u64 = 1 << H8;
 
 pub const ALL_COLORS: RangeInclusive<usize> = 0..=1;
+pub const ALL_POVS: RangeInclusive<usize> = 0..=1;
 pub const ALL_PHASES: RangeInclusive<usize> = 0..=1;
 pub const ALL_PIECES: RangeInclusive<usize> = 0..=5;
 pub const ALL_FILES: RangeInclusive<usize> = 0..=7;

@@ -637,14 +637,18 @@ impl Board {
 
         if !UNDO {
             let mut king_square = self.pieces[color][KING].bit_scan() % 64;
+            let mut enemy_king_square = self.pieces[color ^ 1][KING].bit_scan() % 64;
 
-            if color == BLACK {
+            if color == WHITE {
+                enemy_king_square = (1u64 << enemy_king_square).swap_bytes().bit_scan();
+            } else {
                 king_square = (1u64 << king_square).swap_bytes().bit_scan();
                 square = (1u64 << square).swap_bytes().bit_scan();
             }
 
             let sign = -(color as i16 * 2 - 1);
-            self.state.pst_score += sign * pst::get_pst_value(piece, king_square, square);
+            let score = pst::get_pst_value(piece, US, king_square, square) + pst::get_pst_value(piece, THEM, enemy_king_square, square);
+            self.state.pst_score += sign * score;
         }
     }
 
@@ -661,14 +665,18 @@ impl Board {
 
         if !UNDO {
             let mut king_square = self.pieces[color][KING].bit_scan() % 64;
+            let mut enemy_king_square = self.pieces[color ^ 1][KING].bit_scan() % 64;
 
-            if color == BLACK {
+            if color == WHITE {
+                enemy_king_square = (1u64 << enemy_king_square).swap_bytes().bit_scan();
+            } else {
                 king_square = (1u64 << king_square).swap_bytes().bit_scan();
                 square = (1u64 << square).swap_bytes().bit_scan();
             }
 
             let sign = -(color as i16 * 2 - 1);
-            self.state.pst_score -= sign * pst::get_pst_value(piece, king_square, square);
+            let score = pst::get_pst_value(piece, US, king_square, square) + pst::get_pst_value(piece, THEM, enemy_king_square, square);
+            self.state.pst_score -= sign * score;
         }
     }
 
@@ -687,16 +695,20 @@ impl Board {
 
         if !UNDO {
             let mut king_square = self.pieces[color][KING].bit_scan() % 64;
+            let mut enemy_king_square = self.pieces[color ^ 1][KING].bit_scan() % 64;
 
-            if color == BLACK {
+            if color == WHITE {
+                enemy_king_square = (1u64 << enemy_king_square).swap_bytes().bit_scan();
+            } else {
                 king_square = (1u64 << king_square).swap_bytes().bit_scan();
                 from = (1u64 << from).swap_bytes().bit_scan();
                 to = (1u64 << to).swap_bytes().bit_scan();
             }
 
             let sign = -(color as i16 * 2 - 1);
-            self.state.pst_score -= sign * pst::get_pst_value(piece, king_square, from);
-            self.state.pst_score += sign * pst::get_pst_value(piece, king_square, to);
+            let score_a = pst::get_pst_value(piece, US, king_square, to) - pst::get_pst_value(piece, US, king_square, from);
+            let score_b = pst::get_pst_value(piece, THEM, enemy_king_square, to) - pst::get_pst_value(piece, THEM, enemy_king_square, from);
+            self.state.pst_score += sign * (score_a + score_b);
         }
     }
 
