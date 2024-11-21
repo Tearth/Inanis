@@ -21,18 +21,18 @@ pub use pawn::PAWN_PST_PATTERN;
 pub use queen::QUEEN_PST_PATTERN;
 pub use rook::ROOK_PST_PATTERN;
 
-pub const KING_BUCKETS_COUNT: usize = 8;
+pub const KING_BUCKETS_COUNT: usize = 16;
 
 #[rustfmt::skip]
 pub const KING_BUCKETS: [usize; 64] = [
-    7, 6, 5, 4, 3, 2, 1, 0,
-    7, 6, 5, 4, 3, 2, 1, 0,
-    7, 6, 5, 4, 3, 2, 1, 0,
-    7, 6, 5, 4, 3, 2, 1, 0,
-    7, 6, 5, 4, 3, 2, 1, 0,
-    7, 6, 5, 4, 3, 2, 1, 0,
-    7, 6, 5, 4, 3, 2, 1, 0,
-    7, 6, 5, 4, 3, 2, 1, 0,
+    15, 14, 13, 12, 11, 10, 9,  8,
+    15, 14, 13, 12, 11, 10, 9,  8,
+    15, 14, 13, 12, 11, 10, 9,  8,
+    15, 14, 13, 12, 11, 10, 9,  8,
+    7,  6,  5,  4,  3,  2,  1,  0,
+    7,  6,  5,  4,  3,  2,  1,  0,
+    7,  6,  5,  4,  3,  2,  1,  0,
+    7,  6,  5,  4,  3,  2,  1,  0,
 ];
 
 /// Evaluates piece-square table value on the `board` and returns score from the white color perspective (more than 0 when advantage, less than 0 when disadvantage).
@@ -110,8 +110,17 @@ pub fn get_coeffs(board: &Board, piece: usize, index: &mut u16, coeffs: &mut Vec
 
     for pov in ALL_POVS {
         for bucket in 0..KING_BUCKETS_COUNT {
-            let valid_for_white = bucket == KING_BUCKETS[63 - board.pieces[pov][KING].bit_scan()];
-            let valid_for_black = bucket == KING_BUCKETS[63 - board.pieces[pov ^ 1][KING].bit_scan()];
+            let (valid_for_white, valid_for_black) = if pov == US {
+                (
+                    bucket == KING_BUCKETS[63 - board.pieces[WHITE][KING].bit_scan()],
+                    bucket == KING_BUCKETS[63 - board.pieces[BLACK][KING].swap_bytes().bit_scan()],
+                )
+            } else {
+                (
+                    bucket == KING_BUCKETS[63 - board.pieces[BLACK][KING].swap_bytes().bit_scan()],
+                    bucket == KING_BUCKETS[63 - board.pieces[WHITE][KING].bit_scan()],
+                )
+            };
 
             for square in ALL_SQUARES {
                 let current_index = 63 - square;
