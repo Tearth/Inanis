@@ -37,6 +37,7 @@ pub struct SearchContext {
     pub search_done: bool,
     pub uci_debug: bool,
     pub ponder_mode: bool,
+    pub soft_nodes: bool,
     pub syzygy_enabled: bool,
     pub syzygy_probe_limit: u32,
     pub syzygy_probe_depth: i8,
@@ -89,6 +90,7 @@ impl SearchContext {
             search_done: false,
             uci_debug: false,
             ponder_mode: false,
+            soft_nodes: false,
             syzygy_enabled: false,
             syzygy_probe_limit: 0,
             syzygy_probe_depth: 0,
@@ -111,7 +113,8 @@ impl Iterator for SearchContext {
 
     /// Performs the next iteration of the search, using data stored in the context. Returns [None] if any of the following conditions is true:
     ///  - the search has been done in the previous iteration or the current depth is about to exceed [MAX_DEPTH] value
-    ///  - `self.forced_depth` is not 0 and the current depth is about to exceed this value
+    ///  - forced depth is not 0 and the current depth is about to exceed this value
+    ///  - soft nodes are enabled and the nodes count exceeded the maximal value
     ///  - instant move is possible
     ///  - Syzygy tablebase move is possible
     ///  - time allocated for the current search has expired
@@ -155,6 +158,11 @@ impl Iterator for SearchContext {
                         return Some(SearchResult::new(0, self.current_depth));
                     }
                 }
+            }
+
+            // With soft nodes enabled, search is stopped after completing the depth instead aborting it in the middle
+            if self.soft_nodes && self.max_nodes_count > 0 && self.stats.nodes_count >= self.max_nodes_count {
+                return None;
             }
 
             let desired_time = if self.max_move_time != 0 {
