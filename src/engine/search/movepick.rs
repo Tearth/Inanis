@@ -6,6 +6,7 @@ use crate::utils::assert_fast;
 use crate::utils::bithelpers::BitHelpers;
 use crate::utils::dev;
 use crate::utils::panic_fast;
+use crate::utils::rand;
 use crate::MoveScores;
 use crate::Moves;
 use std::mem::MaybeUninit;
@@ -332,7 +333,11 @@ fn assign_quiet_scores(context: &SearchContext, state: &mut MoveGenState, start_
                 continue;
             }
 
-            let value = context.htable.get(r#move.get_from(), r#move.get_to(), MOVEORD_HISTORY_MOVE) as i16;
+            let mut value = context.htable.get(r#move.get_from(), r#move.get_to(), MOVEORD_HISTORY_MOVE) as i16;
+            if context.search_noise {
+                value = i16::clamp(value + rand::i16(-5..5), 0, MOVEORD_HISTORY_MOVE as i16);
+            }
+
             state.move_scores[move_index].write(value + MOVEORD_HISTORY_MOVE_OFFSET);
         } else if r#move.is_promotion() {
             state.move_scores[move_index].write(match r#move.get_promotion_piece() {

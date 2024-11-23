@@ -117,6 +117,7 @@ pub fn run() {
     #[cfg(feature = "dev")]
     {
         options_lock.insert("Soft Nodes".to_string(), UciOption::new(50, "check", false, false, false));
+        options_lock.insert("Search Noise".to_string(), UciOption::new(50, "check", false, false, false));
         options_lock.insert("Crash Files".to_string(), UciOption::new(50, "check", false, false, false));
     }
 
@@ -388,6 +389,7 @@ fn handle_go(params: &[String], state: &UciState) {
         let syzygy_probe_limit = options_lock["SyzygyProbeLimit"].value.parse::<u32>().unwrap();
         let syzygy_probe_depth = options_lock["SyzygyProbeDepth"].value.parse::<i8>().unwrap();
         let soft_nodes = options_lock["Soft Nodes"].value.parse::<bool>().unwrap();
+        let search_noise = options_lock["Search Noise"].value.parse::<bool>().unwrap();
 
         #[cfg(not(feature = "dev"))]
         let search_params = SearchParams::default();
@@ -456,6 +458,7 @@ fn handle_go(params: &[String], state: &UciState) {
         context_lock.uci_debug = debug_mode;
         context_lock.ponder_mode = ponder_mode;
         context_lock.soft_nodes = soft_nodes;
+        context_lock.search_noise = search_noise;
         context_lock.syzygy_enabled = syzygy_enabled;
         context_lock.syzygy_probe_limit = syzygy_probe_limit;
         context_lock.syzygy_probe_depth = syzygy_probe_depth;
