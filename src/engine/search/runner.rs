@@ -115,7 +115,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
         }
     }
 
-    if !context.soft_nodes && context.max_nodes_count != 0 {
+    if context.max_nodes_count != 0 {
         if context.stats.nodes_count + context.stats.q_nodes_count >= context.max_nodes_count {
             context.abort_flag.store(true, Ordering::Relaxed);
             return INVALID_SCORE;

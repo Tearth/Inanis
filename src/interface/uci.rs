@@ -112,14 +112,12 @@ pub fn run() {
     options_lock.insert("SyzygyProbeLimit".to_string(), UciOption::new(5, "spin", 1, 9, 8));
     options_lock.insert("SyzygyProbeDepth".to_string(), UciOption::new(6, "spin", 1, 32, 6));
     options_lock.insert("Ponder".to_string(), UciOption::new(7, "check", false, false, false));
+    options_lock.insert("Soft Nodes".to_string(), UciOption::new(50, "check", false, false, false));
+    options_lock.insert("Search Noise".to_string(), UciOption::new(50, "check", false, false, false));
     options_lock.insert("Clear Hash".to_string(), UciOption::new(8, "button", "", "", ""));
 
     #[cfg(feature = "dev")]
-    {
-        options_lock.insert("Soft Nodes".to_string(), UciOption::new(50, "check", false, false, false));
-        options_lock.insert("Search Noise".to_string(), UciOption::new(50, "check", false, false, false));
-        options_lock.insert("Crash Files".to_string(), UciOption::new(50, "check", false, false, false));
-    }
+    options_lock.insert("Crash Files".to_string(), UciOption::new(50, "check", false, false, false));
 
     #[cfg(feature = "dev")]
     {
@@ -449,6 +447,7 @@ fn handle_go(params: &[String], state: &UciState) {
         context_lock.current_depth = 1;
         context_lock.forced_depth = forced_depth;
         context_lock.max_nodes_count = max_nodes_count;
+        context_lock.max_soft_nodes_count = max_nodes_count;
         context_lock.max_move_time = max_move_time;
         context_lock.moves_to_go = moves_to_go;
         context_lock.moves_to_search = moves_to_search.clone();
@@ -463,6 +462,10 @@ fn handle_go(params: &[String], state: &UciState) {
         context_lock.syzygy_probe_limit = syzygy_probe_limit;
         context_lock.syzygy_probe_depth = syzygy_probe_depth;
         context_lock.stats = SearchStats::default();
+
+        if soft_nodes {
+            context_lock.max_nodes_count *= 10;
+        }
 
         context_lock.lines.clear();
         context_lock.helper_contexts.write().unwrap().clear();

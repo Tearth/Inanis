@@ -27,6 +27,7 @@ pub struct SearchContext {
     pub current_depth: i8,
     pub forced_depth: i8,
     pub max_nodes_count: u64,
+    pub max_soft_nodes_count: u64,
     pub max_move_time: u32,
     pub moves_to_go: u32,
     pub moves_to_search: Vec<Move>,
@@ -81,6 +82,7 @@ impl SearchContext {
             current_depth: 1,
             forced_depth: 0,
             max_nodes_count: 0,
+            max_soft_nodes_count: 0,
             max_move_time: 0,
             moves_to_go: 0,
             moves_to_search: Vec::new(),
@@ -163,7 +165,7 @@ impl Iterator for SearchContext {
             }
 
             // With soft nodes enabled, search is stopped after completing the depth instead aborting it in the middle
-            if self.soft_nodes && self.max_nodes_count > 0 && self.stats.nodes_count >= self.max_nodes_count {
+            if self.soft_nodes && self.max_soft_nodes_count > 0 && self.stats.nodes_count + self.stats.q_nodes_count >= self.max_soft_nodes_count {
                 return None;
             }
 
