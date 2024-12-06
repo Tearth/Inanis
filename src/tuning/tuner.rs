@@ -401,6 +401,8 @@ fn load_values(random_values: bool) -> Vec<TunerParameter> {
     params.append(&mut params::ISOLATED_PAWN.iter().flat_map(|v| v.to_tuner_params(-999, -40, -10, 999, 0)).collect());
     params.append(&mut params::CHAINED_PAWN.iter().flat_map(|v| v.to_tuner_params(-999, 10, 40, 999, 0)).collect());
     params.append(&mut params::PASSED_PAWN.iter().flat_map(|v| v.to_tuner_params(-999, 10, 40, 999, 0)).collect());
+    params.append(&mut params::BACKWARD_PAWN_OPEN_FILE.iter().flat_map(|v| v.to_tuner_params(-999, 10, 40, 999, 0)).collect());
+    params.append(&mut params::BACKWARD_PAWN_CLOSED_FILE.iter().flat_map(|v| v.to_tuner_params(-999, 10, 40, 999, 0)).collect());
     params.append(&mut params::PAWN_SHIELD.iter().flat_map(|v| v.to_tuner_params(-999, 10, 40, 999, 0)).collect());
     params.append(&mut params::PAWN_SHIELD_OPEN_FILE.iter().flat_map(|v| v.to_tuner_params(-999, -40, -10, 999, 0)).collect());
     params.append(&mut params::KING_AREA_THREATS.iter().flat_map(|v| v.to_tuner_params(-999, -40, 40, 999, 0)).collect());
@@ -476,6 +478,8 @@ where
     output.push_str(get_array("ISOLATED_PAWN", weights, 8).as_str());
     output.push_str(get_array("CHAINED_PAWN", weights, 8).as_str());
     output.push_str(get_array("PASSED_PAWN", weights, 8).as_str());
+    output.push_str(get_array("BACKWARD_PAWN_OPEN_FILE", weights, 8).as_str());
+    output.push_str(get_array("BACKWARD_PAWN_CLOSED_FILE", weights, 8).as_str());
     output.push_str(get_array("PAWN_SHIELD", weights, 8).as_str());
     output.push_str(get_array("PAWN_SHIELD_OPEN_FILE", weights, 8).as_str());
     output.push_str(get_array("KING_AREA_THREATS", weights, 8).as_str());

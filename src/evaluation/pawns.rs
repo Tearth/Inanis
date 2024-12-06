@@ -15,18 +15,21 @@ pub struct PawnsData {
     isolated_pawns: u8,
     chained_pawns: u8,
     passed_pawns: u8,
+    backward_pawns_open_file: u8,
+    backward_pawns_closed_file: u8,
     opened_files: u8,
     pawn_shield: u8,
 }
 
 /// Evaluates structure of pawns on the `board` and returns score from the white color perspective (more than 0 when advantage,
 /// less than 0 when disadvantage). This evaluator considers:
-///  - doubled pawns (negative score)
-///  - isolated pawns (negative score)
-///  - chained pawns (positive score)
-///  - passed pawns (positive score)
-///  - open files next to the king (negative score)
-///  - pawn shield next to the king (positive score)
+///  - doubled pawns
+///  - isolated pawns
+///  - chained pawns
+///  - passed pawns
+///  - backward pawns
+///  - open files next to the king
+///  - pawn shield next to the king
 ///
 /// To improve performance (using the fact that structure of pawns changes relatively rare), each evaluation is saved in the pawn hashtable,
 /// and used again if possible.
@@ -67,6 +70,8 @@ fn evaluate_color(board: &Board, color: usize) -> PackedEval {
     result += params::ISOLATED_PAWN[pawns_data.isolated_pawns.min(7) as usize];
     result += params::CHAINED_PAWN[pawns_data.chained_pawns.min(7) as usize];
     result += params::PASSED_PAWN[pawns_data.passed_pawns.min(7) as usize];
+    result += params::BACKWARD_PAWN_OPEN_FILE[pawns_data.backward_pawns_open_file.min(7) as usize];
+    result += params::BACKWARD_PAWN_CLOSED_FILE[pawns_data.backward_pawns_closed_file.min(7) as usize];
     result += params::PAWN_SHIELD[pawns_data.pawn_shield.min(7) as usize];
     result += params::PAWN_SHIELD_OPEN_FILE[pawns_data.opened_files.min(7) as usize];
 
@@ -81,6 +86,8 @@ fn get_pawns_data(board: &Board, color: usize) -> PawnsData {
     let mut isolated_pawns = 0;
     let mut chained_pawns = 0;
     let mut passed_pawns = 0;
+    let mut backward_pawns_open_file = 0;
+    let mut backward_pawns_closed_file = 0;
     let mut pawn_shield = 0;
     let mut opened_files = 0;
 
@@ -107,6 +114,24 @@ fn get_pawns_data(board: &Board, color: usize) -> PawnsData {
 
         chained_pawns += ((patterns::get_front(color ^ 1, square) & patterns::get_diagonals(square) & board.pieces[color][PAWN]) != 0) as u8;
         passed_pawns += ((patterns::get_front(color, square) & board.pieces[color ^ 1][PAWN]) == 0) as u8;
+
+        let offset = if color == WHITE { 8 } else { -8 };
+        let stop_square_bb = if color == WHITE { square_bb << 8 } else { square_bb >> 8 };
+        let front = patterns::get_front(color, square) & !patterns::get_file(square);
+        let front_backward = patterns::get_front(color ^ 1, (square as i8 + offset) as usize) & !patterns::get_file((square as i8 + offset) as usize);
+
+        let not_isolated = (front & board.pieces[color][PAWN]) != 0;
+        let no_pawns_behind = (front_backward & board.pieces[color][PAWN]) == 0;
+        let stop_square_attacked = (stop_square_bb & board.pawn_attacks[color ^ 1]) != 0;
+        let open_file = (patterns::get_file(square) & board.pieces[color ^ 1][PAWN]) == 0;
+
+        if not_isolated && no_pawns_behind && stop_square_attacked {
+            if open_file {
+                backward_pawns_open_file += 1;
+            } else {
+                backward_pawns_closed_file += 1;
+            }
+        }
     }
 
     let king_bb = board.pieces[color][KING];
@@ -120,7 +145,7 @@ fn get_pawns_data(board: &Board, color: usize) -> PawnsData {
         }
     }
 
-    PawnsData { doubled_pawns, isolated_pawns, chained_pawns, passed_pawns, pawn_shield, opened_files }
+    PawnsData { doubled_pawns, isolated_pawns, chained_pawns, passed_pawns, backward_pawns_open_file, backward_pawns_closed_file, pawn_shield, opened_files }
 }
 
 /// Gets coefficients of pawn structure for `board` and inserts them into `coeffs`. Similarly, their indices (starting from `index`) are inserted into `indices`.
@@ -133,6 +158,8 @@ pub fn get_coeffs(board: &Board, index: &mut u16, coeffs: &mut Vec<TunerCoeff>, 
     get_array_coeffs(white_pawns_data.isolated_pawns, black_pawns_data.isolated_pawns, 8, index, coeffs, indices);
     get_array_coeffs(white_pawns_data.chained_pawns, black_pawns_data.chained_pawns, 8, index, coeffs, indices);
     get_array_coeffs(white_pawns_data.passed_pawns, black_pawns_data.passed_pawns, 8, index, coeffs, indices);
+    get_array_coeffs(white_pawns_data.backward_pawns_open_file, black_pawns_data.backward_pawns_open_file, 8, index, coeffs, indices);
+    get_array_coeffs(white_pawns_data.backward_pawns_closed_file, black_pawns_data.backward_pawns_closed_file, 8, index, coeffs, indices);
     get_array_coeffs(white_pawns_data.pawn_shield, black_pawns_data.pawn_shield, 8, index, coeffs, indices);
     get_array_coeffs(white_pawns_data.opened_files, black_pawns_data.opened_files, 8, index, coeffs, indices);
 }
