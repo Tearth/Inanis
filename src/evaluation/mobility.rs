@@ -2,11 +2,14 @@ use super::*;
 use crate::state::movescan;
 use crate::state::representation::Board;
 use crate::utils::assert_fast;
+use crate::utils::bithelpers::BitHelpers;
 
 #[cfg(feature = "dev")]
 use crate::tuning::tuner::TunerCoeff;
 
 pub struct MobilityData {
+    rook_open_file: i8,
+    rook_semi_open_file: i8,
     knight_mobility: PieceMobility,
     bishop_mobility: PieceMobility,
     rook_mobility: PieceMobility,
@@ -31,6 +34,9 @@ pub fn evaluate(board: &Board, white_aux: &mut EvalAux, black_aux: &mut EvalAux)
     let white_data = get_mobility_data(board, WHITE, white_aux);
     let black_data = get_mobility_data(board, BLACK, black_aux);
 
+    result += (white_data.rook_open_file - black_data.rook_open_file) * params::ROOK_OPEN_FILE;
+    result += (white_data.rook_semi_open_file - black_data.rook_semi_open_file) * params::ROOK_SEMI_OPEN_FILE;
+
     result += (white_data.knight_mobility.inner - black_data.knight_mobility.inner) * params::MOBILITY_INNER[KNIGHT];
     result += (white_data.bishop_mobility.inner - black_data.bishop_mobility.inner) * params::MOBILITY_INNER[BISHOP];
     result += (white_data.rook_mobility.inner - black_data.rook_mobility.inner) * params::MOBILITY_INNER[ROOK];
@@ -48,7 +54,29 @@ pub fn evaluate(board: &Board, white_aux: &mut EvalAux, black_aux: &mut EvalAux)
 fn get_mobility_data(board: &Board, color: usize, aux: &mut EvalAux) -> MobilityData {
     assert_fast!(color < 2);
 
+    let mut rook_open_file = 0;
+    let mut rook_semi_open_file = 0;
+    let mut rooks_bb = board.pieces[color][ROOK];
+
+    while rooks_bb != 0 {
+        let square_bb = rooks_bb.get_lsb();
+        let square = square_bb.bit_scan();
+        rooks_bb = rooks_bb.pop_lsb();
+
+        let file = patterns::get_file(square);
+        if (file & board.pieces[color][PAWN]) == 0 {
+            if (file & board.pieces[color ^ 1][PAWN]) == 0 {
+                rook_open_file += 1;
+            } else {
+                rook_semi_open_file += 1;
+            }
+        }
+    }
+
     MobilityData {
+        rook_open_file,
+        rook_semi_open_file,
+
         knight_mobility: movescan::get_piece_mobility::<KNIGHT>(board, color, aux),
         bishop_mobility: movescan::get_piece_mobility::<BISHOP>(board, color, aux),
         rook_mobility: movescan::get_piece_mobility::<ROOK>(board, color, aux),
@@ -64,6 +92,11 @@ pub fn get_coeffs(board: &Board, white_aux: &mut EvalAux, black_aux: &mut EvalAu
     let black_data = get_mobility_data(board, BLACK, black_aux);
 
     let mut data = [
+        TunerCoeff::new(white_data.rook_open_file - black_data.rook_open_file, OPENING),
+        TunerCoeff::new(white_data.rook_open_file - black_data.rook_open_file, ENDING),
+        TunerCoeff::new(white_data.rook_semi_open_file - black_data.rook_semi_open_file, OPENING),
+        TunerCoeff::new(white_data.rook_semi_open_file - black_data.rook_semi_open_file, ENDING),
+        //
         TunerCoeff::new(0, OPENING),
         TunerCoeff::new(0, ENDING),
         TunerCoeff::new(white_data.knight_mobility.inner - black_data.knight_mobility.inner, OPENING),

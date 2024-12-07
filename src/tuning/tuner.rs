@@ -395,6 +395,8 @@ fn load_values(random_values: bool) -> Vec<TunerParameter> {
         TunerParameter::new(params::BISHOP_PAIR.get_ending(), -99, 10, 40, 99),
     ];
 
+    params.append(&mut params::ROOK_OPEN_FILE.to_tuner_params(-999, 10, 40, 999, 0).to_vec());
+    params.append(&mut params::ROOK_SEMI_OPEN_FILE.to_tuner_params(-999, 10, 40, 999, 0).to_vec());
     params.append(&mut params::MOBILITY_INNER.iter().flat_map(|v| v.to_tuner_params(0, 2, 6, 99, 0)).collect());
     params.append(&mut params::MOBILITY_OUTER.iter().flat_map(|v| v.to_tuner_params(0, 2, 6, 99, 0)).collect());
     params.append(&mut params::DOUBLED_PAWN.iter().flat_map(|v| v.to_tuner_params(-999, -40, -10, 999, 0)).collect());
@@ -472,6 +474,8 @@ where
     output.push_str("use super::*;\n");
     output.push('\n');
     output.push_str(get_parameter("BISHOP_PAIR", weights).as_str());
+    output.push_str(get_parameter("ROOK_OPEN_FILE", weights).as_str());
+    output.push_str(get_parameter("ROOK_SEMI_OPEN_FILE", weights).as_str());
     output.push_str(get_array("MOBILITY_INNER", weights, 6).as_str());
     output.push_str(get_array("MOBILITY_OUTER", weights, 6).as_str());
     output.push_str(get_array("DOUBLED_PAWN", weights, 8).as_str());
