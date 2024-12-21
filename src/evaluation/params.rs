@@ -4,6 +4,7 @@
 
 use super::*;
 
+pub const TEMPO: i16 = 15;
 pub const BISHOP_PAIR: PackedEval = s!(19, 56);
 pub const ROOK_OPEN_FILE: PackedEval = s!(24, -3);
 pub const ROOK_SEMI_OPEN_FILE: PackedEval = s!(9, 14);

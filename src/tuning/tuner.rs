@@ -473,6 +473,7 @@ where
     output.push('\n');
     output.push_str("use super::*;\n");
     output.push('\n');
+    output.push_str(get_constant("TEMPO", params::TEMPO).as_str());
     output.push_str(get_parameter("BISHOP_PAIR", weights).as_str());
     output.push_str(get_parameter("ROOK_OPEN_FILE", weights).as_str());
     output.push_str(get_parameter("ROOK_SEMI_OPEN_FILE", weights).as_str());
@@ -566,6 +567,11 @@ where
 
     output += "];\n";
     output
+}
+
+/// Gets a Rust representation of the constant value.
+fn get_constant(name: &str, value: i16) -> String {
+    format!("pub const {}: i16 = {};\n", name, value)
 }
 
 /// Gets a Rust representation of the single `weight`.

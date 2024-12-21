@@ -747,7 +747,7 @@ impl Board {
         let eval = material_eval + pst_eval + mobility_eval + safety_eval + pawns_eval;
         let sign = -((color as i16) * 2 - 1);
 
-        sign * eval.taper_score(self.game_phase)
+        sign * eval.taper_score(self.game_phase) + params::TEMPO
     }
 
     /// Runs full evaluation (material, piece-square tables, mobility, pawn structure and safety) of the current position.
@@ -767,7 +767,7 @@ impl Board {
         let eval = material_eval + pst_eval + mobility_eval + safety_eval + pawns_eval;
         let sign = -((color as i16) * 2 - 1);
 
-        sign * eval.taper_score(self.game_phase)
+        sign * eval.taper_score(self.game_phase) + params::TEMPO
     }
 
     /// Runs fast evaluations, considering only material, piece-square tables and pawn structure. Returns score from the `color` perspective (more than 0 when
@@ -782,7 +782,7 @@ impl Board {
         let eval = material_eval + pst_eval + pawns_eval;
         let sign = -((color as i16) * 2 - 1);
 
-        sign * eval.taper_score(self.game_phase)
+        sign * eval.taper_score(self.game_phase) + params::TEMPO
     }
 
     /// Recalculates incremental values entirely.
