@@ -40,7 +40,7 @@ pub fn run(context: &mut SearchContext, depth: i8) {
             }
 
             delta *= 2;
-            if delta >= param!(context.params.aspwin_max_width) {
+            if delta >= param!(context.params.aspwin_max_delta) {
                 alpha = MIN_ALPHA;
                 beta = MIN_BETA;
             }

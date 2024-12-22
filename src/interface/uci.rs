@@ -124,7 +124,7 @@ pub fn run() {
         let params = SearchParams::default();
         options_lock.insert("aspwin_delta".to_string(), UciOption::new_wide(99, params.aspwin_delta));
         options_lock.insert("aspwin_min_depth".to_string(), UciOption::new_wide(99, params.aspwin_min_depth));
-        options_lock.insert("aspwin_max_width".to_string(), UciOption::new_wide(99, params.aspwin_max_width));
+        options_lock.insert("aspwin_max_delta".to_string(), UciOption::new_wide(99, params.aspwin_max_delta));
 
         options_lock.insert("iir_min_depth".to_string(), UciOption::new_wide(99, params.iir_min_depth));
         options_lock.insert("iir_reduction_base".to_string(), UciOption::new_wide(99, params.iir_reduction_base));
@@ -396,7 +396,7 @@ fn handle_go(params: &[String], state: &UciState) {
         let search_params = SearchParams {
             aspwin_delta: options_lock["aspwin_delta"].value.parse().unwrap(),
             aspwin_min_depth: options_lock["aspwin_min_depth"].value.parse().unwrap(),
-            aspwin_max_width: options_lock["aspwin_max_width"].value.parse().unwrap(),
+            aspwin_max_delta: options_lock["aspwin_max_delta"].value.parse().unwrap(),
 
             iir_min_depth: options_lock["iir_min_depth"].value.parse().unwrap(),
             iir_reduction_base: options_lock["iir_reduction_base"].value.parse().unwrap(),

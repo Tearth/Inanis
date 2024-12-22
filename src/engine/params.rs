@@ -2,7 +2,7 @@
 pub struct SearchParams {
     pub aspwin_delta: i16,
     pub aspwin_min_depth: i8,
-    pub aspwin_max_width: i16,
+    pub aspwin_max_delta: i16,
 
     pub iir_min_depth: i8,
     pub iir_reduction_base: i8,
@@ -48,9 +48,9 @@ pub struct SearchParams {
 
 #[allow(non_upper_case_globals)]
 impl SearchParams {
-    pub const aspwin_delta: i16 = 25;
+    pub const aspwin_delta: i16 = 15;
     pub const aspwin_min_depth: i8 = 5;
-    pub const aspwin_max_width: i16 = 400;
+    pub const aspwin_max_delta: i16 = 200;
 
     pub const iir_min_depth: i8 = 4;
     pub const iir_reduction_base: i8 = 1;
@@ -100,7 +100,7 @@ impl Default for SearchParams {
         Self {
             aspwin_delta: Self::aspwin_delta,
             aspwin_min_depth: Self::aspwin_min_depth,
-            aspwin_max_width: Self::aspwin_max_width,
+            aspwin_max_delta: Self::aspwin_max_delta,
 
             iir_min_depth: Self::iir_min_depth,
             iir_reduction_base: Self::iir_reduction_base,
