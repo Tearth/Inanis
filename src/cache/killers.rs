@@ -49,6 +49,17 @@ impl KTable {
         result
     }
 
+    /// Clears all killer moves at the level specified by `ply`.
+    pub fn clear(&mut self, ply: u16) {
+        if ply >= MAX_DEPTH as u16 {
+            return;
+        }
+
+        for slot_index in 0..KILLER_SLOTS {
+            self.table[ply as usize][slot_index].data = Move::default();
+        }
+    }
+
     /// Ages killer table by shifting all ply levels by two positions up, to ensure that killer moves inside match board after two halfmoves.
     pub fn age_moves(&mut self) {
         for row in 2..MAX_DEPTH {

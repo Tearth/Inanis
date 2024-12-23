@@ -293,6 +293,8 @@ fn run_internal<const ROOT: bool, const PV: bool>(
         static_eval = Some(static_eval_value);
     }
 
+    context.ktable.clear(ply + 1);
+
     let mut best_score = -CHECKMATE_SCORE;
     let mut best_move = Move::default();
     let mut state = MoveGenState { hash_move, ply, friendly_king_checked, previous_move, ..Default::default() };
