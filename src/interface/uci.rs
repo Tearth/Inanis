@@ -553,7 +553,6 @@ fn handle_go(params: &[String], state: &UciState) {
             println!("bestmove {}", best_move);
         }
 
-        context_lock.ktable.age_moves();
         context_lock.htable.age_values();
     });
 }

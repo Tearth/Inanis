@@ -59,22 +59,6 @@ impl KTable {
             self.table[ply as usize][slot_index].data = Move::default();
         }
     }
-
-    /// Ages killer table by shifting all ply levels by two positions up, to ensure that killer moves inside match board after two halfmoves.
-    pub fn age_moves(&mut self) {
-        for row in 2..MAX_DEPTH {
-            for slot_index in 0..KILLER_SLOTS {
-                let entry = &self.table[row as usize][slot_index];
-                self.table[(row as usize) - 2][slot_index].data = entry.data;
-            }
-        }
-
-        for ply in MAX_DEPTH - 2..MAX_DEPTH {
-            for entry in &mut self.table[ply as usize] {
-                entry.data = Move::default();
-            }
-        }
-    }
 }
 
 impl Default for KTable {
