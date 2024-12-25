@@ -393,6 +393,8 @@ fn load_values(random_values: bool) -> Vec<TunerParameter> {
         TunerParameter::new(PIECE_VALUES[KING], PIECE_VALUES[KING], PIECE_VALUES[KING], PIECE_VALUES[KING], PIECE_VALUES[KING]),
         TunerParameter::new(params::BISHOP_PAIR.get_opening(), -99, 10, 40, 99),
         TunerParameter::new(params::BISHOP_PAIR.get_ending(), -99, 10, 40, 99),
+        TunerParameter::new(params::PAWNS_ATTACKING_PIECES.get_opening(), -99, 10, 40, 99),
+        TunerParameter::new(params::PAWNS_ATTACKING_PIECES.get_ending(), -99, 10, 40, 99),
     ];
 
     params.append(&mut params::ROOK_OPEN_FILE.to_tuner_params(-999, 10, 40, 999, 0).to_vec());
@@ -475,6 +477,7 @@ where
     output.push('\n');
     output.push_str(get_constant("TEMPO", params::TEMPO).as_str());
     output.push_str(get_parameter("BISHOP_PAIR", weights).as_str());
+    output.push_str(get_parameter("PAWNS_ATTACKING_PIECES", weights).as_str());
     output.push_str(get_parameter("ROOK_OPEN_FILE", weights).as_str());
     output.push_str(get_parameter("ROOK_SEMI_OPEN_FILE", weights).as_str());
     output.push_str(get_array("MOBILITY_INNER", weights, 6).as_str());
