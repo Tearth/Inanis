@@ -491,6 +491,14 @@ pub fn get_piece_mobility<const PIECE: usize>(board: &Board, color: usize, aux: 
             _ => panic_fast!("Invalid parameter: fen={}, PIECE={}", board, PIECE),
         };
 
+        match PIECE {
+            KNIGHT => aux.knight_threats |= piece_moves_bb,
+            BISHOP => aux.bishop_threats |= piece_moves_bb,
+            ROOK => aux.rook_threats |= piece_moves_bb,
+            QUEEN => aux.queen_threats |= piece_moves_bb,
+            _ => panic_fast!("Invalid parameter: fen={}, PIECE={}", board, PIECE),
+        };
+
         aux.king_area_threats += (enemy_king_box_bb & (piece_moves_bb | from_bb)).bit_count() as i8;
         piece_moves_bb &= !board.occupancy[color] & !board.pawn_attacks[nstm];
 

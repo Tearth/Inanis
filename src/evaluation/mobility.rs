@@ -19,6 +19,10 @@ pub struct MobilityData {
 #[derive(Default)]
 pub struct EvalAux {
     pub king_area_threats: i8,
+    pub knight_threats: u64,
+    pub bishop_threats: u64,
+    pub rook_threats: u64,
+    pub queen_threats: u64,
 }
 
 pub struct PieceMobility {

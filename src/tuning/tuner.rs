@@ -363,7 +363,7 @@ fn load_positions(epd: &str, coeffs: &mut Vec<TunerCoeff>, indices: &mut Vec<u16
         material::get_coeffs(&parsed_epd.board, &mut index, coeffs, indices);
         mobility::get_coeffs(&parsed_epd.board, &mut white_aux, &mut black_aux, &mut index, coeffs, indices);
         pawns::get_coeffs(&parsed_epd.board, &mut index, coeffs, indices);
-        safety::get_coeffs(&white_aux, &black_aux, &mut index, coeffs, indices);
+        safety::get_coeffs(&parsed_epd.board, &white_aux, &black_aux, &mut index, coeffs, indices);
         pst::get_coeffs(&parsed_epd.board, PAWN, &mut index, coeffs, indices);
         pst::get_coeffs(&parsed_epd.board, KNIGHT, &mut index, coeffs, indices);
         pst::get_coeffs(&parsed_epd.board, BISHOP, &mut index, coeffs, indices);
@@ -410,6 +410,10 @@ fn load_values(random_values: bool) -> Vec<TunerParameter> {
     params.append(&mut params::PAWN_SHIELD.iter().flat_map(|v| v.to_tuner_params(-999, 10, 40, 999, 0)).collect());
     params.append(&mut params::PAWN_SHIELD_OPEN_FILE.iter().flat_map(|v| v.to_tuner_params(-999, -40, -10, 999, 0)).collect());
     params.append(&mut params::KING_AREA_THREATS.iter().flat_map(|v| v.to_tuner_params(-999, -40, 40, 999, 0)).collect());
+    params.append(&mut params::KNIGHT_SAFE_CHECKS.iter().flat_map(|v| v.to_tuner_params(-999, -40, 40, 999, 0)).collect());
+    params.append(&mut params::BISHOP_SAFE_CHECKS.iter().flat_map(|v| v.to_tuner_params(-999, -40, 40, 999, 0)).collect());
+    params.append(&mut params::ROOK_SAFE_CHECKS.iter().flat_map(|v| v.to_tuner_params(-999, -40, 40, 999, 0)).collect());
+    params.append(&mut params::QUEEN_SAFE_CHECKS.iter().flat_map(|v| v.to_tuner_params(-999, -40, 40, 999, 0)).collect());
 
     for pov in ALL_POVS {
         for bucket in &pst::PAWN_PST_PATTERN[pov] {
@@ -491,6 +495,10 @@ where
     output.push_str(get_array("PAWN_SHIELD", weights, 8).as_str());
     output.push_str(get_array("PAWN_SHIELD_OPEN_FILE", weights, 8).as_str());
     output.push_str(get_array("KING_AREA_THREATS", weights, 8).as_str());
+    output.push_str(get_array("KNIGHT_SAFE_CHECKS", weights, 8).as_str());
+    output.push_str(get_array("BISHOP_SAFE_CHECKS", weights, 8).as_str());
+    output.push_str(get_array("ROOK_SAFE_CHECKS", weights, 8).as_str());
+    output.push_str(get_array("QUEEN_SAFE_CHECKS", weights, 8).as_str());
 
     let path = Path::new(output_directory);
     fs::create_dir_all(path).unwrap();
