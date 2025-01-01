@@ -105,7 +105,7 @@ pub fn run() {
     println!("id author {}", AUTHOR);
 
     options_lock.insert("Hash".to_string(), UciOption::new(0, "spin", 1, 1048576, 2));
-    options_lock.insert("Move Overhead".to_string(), UciOption::new(1, "spin", 0, 3600000, 10));
+    options_lock.insert("Move Overhead".to_string(), UciOption::new(1, "spin", 0, 3600000, 100));
     options_lock.insert("MultiPV".to_string(), UciOption::new(2, "spin", 1, 256, 1));
     options_lock.insert("Threads".to_string(), UciOption::new(3, "spin", 1, 1024, 1));
     options_lock.insert("SyzygyPath".to_string(), UciOption::new(4, "string", "", "", "<empty>"));
