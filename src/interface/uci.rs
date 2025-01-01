@@ -122,6 +122,14 @@ pub fn run() {
     #[cfg(feature = "dev")]
     {
         let params = SearchParams::default();
+        options_lock.insert("time_a".to_string(), UciOption::new_wide(99, params.time_a));
+        options_lock.insert("time_b".to_string(), UciOption::new_wide(99, params.time_b));
+        options_lock.insert("time_c".to_string(), UciOption::new_wide(99, params.time_c));
+        options_lock.insert("time_d".to_string(), UciOption::new_wide(99, params.time_d));
+        options_lock.insert("time_e".to_string(), UciOption::new_wide(99, params.time_e));
+        options_lock.insert("time_soft_bound".to_string(), UciOption::new_wide(99, params.time_soft_bound));
+        options_lock.insert("time_hard_bound".to_string(), UciOption::new_wide(99, params.time_hard_bound));
+
         options_lock.insert("aspwin_delta".to_string(), UciOption::new_wide(99, params.aspwin_delta));
         options_lock.insert("aspwin_min_depth".to_string(), UciOption::new_wide(99, params.aspwin_min_depth));
         options_lock.insert("aspwin_max_delta".to_string(), UciOption::new_wide(99, params.aspwin_max_delta));
@@ -394,6 +402,14 @@ fn handle_go(params: &[String], state: &UciState) {
 
         #[cfg(feature = "dev")]
         let search_params = SearchParams {
+            time_a: options_lock["time_a"].value.parse().unwrap(),
+            time_b: options_lock["time_b"].value.parse().unwrap(),
+            time_c: options_lock["time_c"].value.parse().unwrap(),
+            time_d: options_lock["time_d"].value.parse().unwrap(),
+            time_e: options_lock["time_e"].value.parse().unwrap(),
+            time_soft_bound: options_lock["time_soft_bound"].value.parse().unwrap(),
+            time_hard_bound: options_lock["time_hard_bound"].value.parse().unwrap(),
+
             aspwin_delta: options_lock["aspwin_delta"].value.parse().unwrap(),
             aspwin_min_depth: options_lock["aspwin_min_depth"].value.parse().unwrap(),
             aspwin_max_delta: options_lock["aspwin_max_delta"].value.parse().unwrap(),

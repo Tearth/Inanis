@@ -1,5 +1,13 @@
 #[derive(Clone)]
 pub struct SearchParams {
+    pub time_a: i8,
+    pub time_b: i8,
+    pub time_c: i8,
+    pub time_d: i8,
+    pub time_e: i8,
+    pub time_soft_bound: i16,
+    pub time_hard_bound: i16,
+
     pub aspwin_delta: i16,
     pub aspwin_min_depth: i8,
     pub aspwin_max_delta: i16,
@@ -48,6 +56,14 @@ pub struct SearchParams {
 
 #[allow(non_upper_case_globals)]
 impl SearchParams {
+    pub const time_a: i8 = 43;
+    pub const time_b: i8 = -28;
+    pub const time_c: i8 = 21;
+    pub const time_d: i8 = -8;
+    pub const time_e: i8 = 15;
+    pub const time_soft_bound: i16 = 60;
+    pub const time_hard_bound: i16 = 215;
+
     pub const aspwin_delta: i16 = 15;
     pub const aspwin_min_depth: i8 = 5;
     pub const aspwin_max_delta: i16 = 200;
@@ -98,6 +114,14 @@ impl Default for SearchParams {
     /// Constructs a default instance of [SearchParams] with default elements.
     fn default() -> Self {
         Self {
+            time_a: Self::time_a,
+            time_b: Self::time_b,
+            time_c: Self::time_c,
+            time_d: Self::time_d,
+            time_e: Self::time_e,
+            time_soft_bound: Self::time_soft_bound,
+            time_hard_bound: Self::time_hard_bound,
+
             aspwin_delta: Self::aspwin_delta,
             aspwin_min_depth: Self::aspwin_min_depth,
             aspwin_max_delta: Self::aspwin_max_delta,

@@ -10,6 +10,7 @@ use crate::engine::clock;
 use crate::state::movescan::Move;
 use crate::state::representation::Board;
 use crate::utils::panic_fast;
+use crate::utils::param;
 use std::cmp;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
@@ -172,7 +173,7 @@ impl Iterator for SearchContext {
             let desired_time = if self.max_move_time != 0 {
                 self.max_move_time
             } else {
-                let desired_time = clock::get_time_for_move(self.board.fullmove_number, self.time, self.inc_time, self.moves_to_go);
+                let desired_time = clock::get_time_for_move(self, self.board.fullmove_number, self.time, self.inc_time, self.moves_to_go);
 
                 // Desired time can't exceed the whole available time
                 cmp::min(desired_time, self.time)
@@ -181,7 +182,7 @@ impl Iterator for SearchContext {
             self.deadline = if self.max_move_time != 0 {
                 self.max_move_time
             } else if self.current_depth > 1 {
-                let deadline = ((desired_time as f32) * DEADLINE_MULTIPLIER) as u32;
+                let deadline = desired_time as u32 * param!(self.params.time_hard_bound) as u32 / 100;
 
                 // Deadline can't exceed the whole available time
                 cmp::min(deadline, self.time)
@@ -259,7 +260,7 @@ impl Iterator for SearchContext {
             self.current_depth += 1;
 
             if self.forced_depth == 0 && self.max_nodes_count == 0 {
-                if search_time > ((desired_time as f32) * TIME_THRESHOLD_RATIO) as u32 {
+                if search_time > (desired_time * param!(self.params.time_soft_bound) as u32 / 100) {
                     self.search_done = true;
                 }
 
