@@ -10,8 +10,6 @@ use crate::engine::clock;
 use crate::state::movescan::Move;
 use crate::state::representation::Board;
 use crate::utils::panic_fast;
-use crate::utils::param;
-use std::cmp;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
@@ -33,7 +31,7 @@ pub struct SearchContext {
     pub moves_to_go: u32,
     pub moves_to_search: Vec<Move>,
     pub search_time_start: SystemTime,
-    pub deadline: u32,
+    pub time_hard_bound: u32,
     pub multipv: bool,
     pub lines: Vec<SearchResultLine>,
     pub search_done: bool,
@@ -88,7 +86,7 @@ impl SearchContext {
             moves_to_go: 0,
             moves_to_search: Vec::new(),
             search_time_start: SystemTime::now(),
-            deadline: 0,
+            time_hard_bound: 0,
             multipv: false,
             lines: Vec::new(),
             search_done: false,
@@ -170,26 +168,9 @@ impl Iterator for SearchContext {
                 return None;
             }
 
-            let desired_time = if self.max_move_time != 0 {
-                self.max_move_time
-            } else {
-                let desired_time = clock::get_time_for_move(self, self.board.fullmove_number, self.time, self.inc_time, self.moves_to_go);
+            let (time_soft_bound, time_hard_bound) = clock::get_time_bounds(self);
 
-                // Desired time can't exceed the whole available time
-                cmp::min(desired_time, self.time)
-            };
-
-            self.deadline = if self.max_move_time != 0 {
-                self.max_move_time
-            } else if self.current_depth > 1 {
-                let deadline = desired_time as u32 * param!(self.params.time_hard_bound) as u32 / 100;
-
-                // Deadline can't exceed the whole available time
-                cmp::min(deadline, self.time)
-            } else {
-                u32::MAX
-            };
-
+            self.time_hard_bound = time_hard_bound;
             self.lines.clear();
 
             let helper_contexts_arc = self.helper_contexts.clone();
@@ -260,7 +241,7 @@ impl Iterator for SearchContext {
             self.current_depth += 1;
 
             if self.forced_depth == 0 && self.max_nodes_count == 0 {
-                if search_time > (desired_time * param!(self.params.time_soft_bound) as u32 / 100) {
+                if search_time > time_soft_bound {
                     self.search_done = true;
                 }
 
