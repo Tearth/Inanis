@@ -13,6 +13,10 @@ pub fn get_time_bounds(context: &SearchContext) -> (u32, u32) {
         return (soft_bound, hard_bound);
     }
 
+    if context.time > u32::MAX / 2 {
+        return (u32::MAX, u32::MAX);
+    }
+
     let allocated_time = if context.moves_to_go == 0 {
         let a = param!(context.params.time_a) as f32;
         let b = param!(context.params.time_b) as f32;
