@@ -131,6 +131,7 @@ pub fn run() {
         options_lock.insert("time_hard_bound".to_string(), UciOption::new_wide(99, params.time_hard_bound));
 
         options_lock.insert("aspwin_delta".to_string(), UciOption::new_wide(99, params.aspwin_delta));
+        options_lock.insert("aspwin_multiplier".to_string(), UciOption::new_wide(99, params.aspwin_multiplier));
         options_lock.insert("aspwin_min_depth".to_string(), UciOption::new_wide(99, params.aspwin_min_depth));
         options_lock.insert("aspwin_max_delta".to_string(), UciOption::new_wide(99, params.aspwin_max_delta));
 
@@ -411,6 +412,7 @@ fn handle_go(params: &[String], state: &UciState) {
             time_hard_bound: options_lock["time_hard_bound"].value.parse().unwrap(),
 
             aspwin_delta: options_lock["aspwin_delta"].value.parse().unwrap(),
+            aspwin_multiplier: options_lock["aspwin_multiplier"].value.parse().unwrap(),
             aspwin_min_depth: options_lock["aspwin_min_depth"].value.parse().unwrap(),
             aspwin_max_delta: options_lock["aspwin_max_delta"].value.parse().unwrap(),
 

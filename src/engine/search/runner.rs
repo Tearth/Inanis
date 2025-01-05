@@ -39,7 +39,7 @@ pub fn run(context: &mut SearchContext, depth: i8) {
                 break;
             }
 
-            delta *= 2;
+            delta = (delta as i32 * param!(context.params.aspwin_multiplier) as i32 / 100) as i16;
             if delta >= param!(context.params.aspwin_max_delta) {
                 alpha = MIN_ALPHA;
                 beta = MIN_BETA;

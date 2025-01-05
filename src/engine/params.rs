@@ -9,6 +9,7 @@ pub struct SearchParams {
     pub time_hard_bound: i16,
 
     pub aspwin_delta: i16,
+    pub aspwin_multiplier: i16,
     pub aspwin_min_depth: i8,
     pub aspwin_max_delta: i16,
 
@@ -65,6 +66,7 @@ impl SearchParams {
     pub const time_hard_bound: i16 = 215;
 
     pub const aspwin_delta: i16 = 15;
+    pub const aspwin_multiplier: i16 = 200;
     pub const aspwin_min_depth: i8 = 5;
     pub const aspwin_max_delta: i16 = 200;
 
@@ -123,6 +125,7 @@ impl Default for SearchParams {
             time_hard_bound: Self::time_hard_bound,
 
             aspwin_delta: Self::aspwin_delta,
+            aspwin_multiplier: Self::aspwin_multiplier,
             aspwin_min_depth: Self::aspwin_min_depth,
             aspwin_max_delta: Self::aspwin_max_delta,
 
