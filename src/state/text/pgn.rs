@@ -123,7 +123,7 @@ impl PGNLoader {
                         continue;
                     }
 
-                    if token == "*" {
+                    if token == "*" || token == "h1h1" {
                         break;
                     }
 
