@@ -62,8 +62,8 @@ impl SearchParams {
     pub const time_c: i8 = 21;
     pub const time_d: i8 = -8;
     pub const time_e: i8 = 15;
-    pub const time_soft_bound: i16 = 60;
-    pub const time_hard_bound: i16 = 215;
+    pub const time_soft_bound: i16 = 65;
+    pub const time_hard_bound: i16 = 315;
 
     pub const aspwin_delta: i16 = 15;
     pub const aspwin_multiplier: i16 = 200;
