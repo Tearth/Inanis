@@ -315,7 +315,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
         context.ttable.prefetch(context.board.state.hash);
 
         let king_checked = context.board.is_king_checked(context.board.stm);
-        let r = if lmr_can_be_applied::<PV>(context, depth, r#move, state.move_number, score, friendly_king_checked, king_checked) {
+        let r = if lmr_can_be_applied::<PV>(context, depth, state.move_number, score, friendly_king_checked, king_checked) {
             lmr_get_r::<PV>(context, state.move_number)
         } else {
             0
@@ -585,7 +585,6 @@ fn lmp_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, mo
 fn lmr_can_be_applied<const PV: bool>(
     context: &mut SearchContext,
     depth: i8,
-    r#move: Move,
     move_index: usize,
     move_score: i16,
     friendly_king_checked: bool,
@@ -595,7 +594,7 @@ fn lmr_can_be_applied<const PV: bool>(
     let min_move_index = if PV { param!(context.params.lmr_pv_min_move_index) } else { param!(context.params.lmr_min_move_index) };
     let max_score = param!(context.params.lmr_max_score);
 
-    depth >= min_depth && move_index >= min_move_index && move_score <= max_score && r#move.is_quiet() && !friendly_king_checked && !enemy_king_checked
+    depth >= min_depth && move_index >= min_move_index && move_score <= max_score && !friendly_king_checked && !enemy_king_checked
 }
 
 /// Gets the late move depth reduction, based on `move_index`. The lower the move was scored, the larger reduction will be returned.
