@@ -571,7 +571,7 @@ fn lmp_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, mo
         && !friendly_king_checked
 }
 
-/// The main idea of the late move reduction is to reduce search depth of all quiet moves, which aren't promising and with high chance won't improve score.
+/// The main idea of the late move reduction is to reduce search depth of all moves, which aren't promising and with high chance won't improve score.
 /// This is the least risky type of pruning (used inside PVS framework which cares about re-search when the move is better than expected),
 /// so it's also applied in PV nodes.
 ///
@@ -579,7 +579,6 @@ fn lmp_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, mo
 ///  - depth >= `lmr_min_depth`
 ///  - move index >= `lmr_pv_min_move_index` or move index >= `lmr_min_move_index`
 ///  - move score <= `lmr_max_score`
-///  - move is quiet
 ///  - friendly king is not checked
 ///  - enemy king is not checked
 fn lmr_can_be_applied<const PV: bool>(
