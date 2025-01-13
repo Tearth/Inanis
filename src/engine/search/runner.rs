@@ -501,14 +501,12 @@ fn razoring_get_margin(context: &mut SearchContext, depth: i8) -> i16 {
 /// Conditions:
 ///  - only non-PV nodes
 ///  - depth >= `snmp_min_depth`
-///  - depth <= `snmp_max_depth`
 ///  - beta is not a mate score
 ///  - friendly king is not checked
 fn snmp_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, beta: i16, friendly_king_checked: bool) -> bool {
     let min_depth = param!(context.params.snmp_min_depth);
-    let max_depth = param!(context.params.snmp_max_depth);
 
-    !PV && depth >= min_depth && depth <= max_depth && !is_score_near_checkmate(beta) && !friendly_king_checked
+    !PV && depth >= min_depth && !is_score_near_checkmate(beta) && !friendly_king_checked
 }
 
 /// Gets the static null move pruning margin, based on `depth`. The further from the horizon we are, the more margin should we take to determine

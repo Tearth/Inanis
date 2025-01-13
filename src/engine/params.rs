@@ -24,7 +24,6 @@ pub struct SearchParams {
     pub razoring_depth_margin_multiplier: i16,
 
     pub snmp_min_depth: i8,
-    pub snmp_max_depth: i8,
     pub snmp_depth_margin_base: i16,
     pub snmp_depth_margin_multiplier: i16,
 
@@ -81,7 +80,6 @@ impl SearchParams {
     pub const razoring_depth_margin_multiplier: i16 = 260;
 
     pub const snmp_min_depth: i8 = 1;
-    pub const snmp_max_depth: i8 = 8;
     pub const snmp_depth_margin_base: i16 = 135;
     pub const snmp_depth_margin_multiplier: i16 = 55;
 
@@ -140,7 +138,6 @@ impl Default for SearchParams {
             razoring_depth_margin_multiplier: Self::razoring_depth_margin_multiplier,
 
             snmp_min_depth: Self::snmp_min_depth,
-            snmp_max_depth: Self::snmp_max_depth,
             snmp_depth_margin_base: Self::snmp_depth_margin_base,
             snmp_depth_margin_multiplier: Self::snmp_depth_margin_multiplier,
 

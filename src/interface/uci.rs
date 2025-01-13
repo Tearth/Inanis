@@ -146,7 +146,6 @@ pub fn run() {
         options_lock.insert("razoring_depth_margin_multiplier".to_string(), UciOption::new_wide(99, params.razoring_depth_margin_multiplier));
 
         options_lock.insert("snmp_min_depth".to_string(), UciOption::new_wide(99, params.snmp_min_depth));
-        options_lock.insert("snmp_max_depth".to_string(), UciOption::new_wide(99, params.snmp_max_depth));
         options_lock.insert("snmp_depth_margin_base".to_string(), UciOption::new_wide(99, params.snmp_depth_margin_base));
         options_lock.insert("snmp_depth_margin_multiplier".to_string(), UciOption::new_wide(99, params.snmp_depth_margin_multiplier));
 
@@ -427,7 +426,6 @@ fn handle_go(params: &[String], state: &UciState) {
             razoring_depth_margin_multiplier: options_lock["razoring_depth_margin_multiplier"].value.parse().unwrap(),
 
             snmp_min_depth: options_lock["snmp_min_depth"].value.parse().unwrap(),
-            snmp_max_depth: options_lock["snmp_max_depth"].value.parse().unwrap(),
             snmp_depth_margin_base: options_lock["snmp_depth_margin_base"].value.parse().unwrap(),
             snmp_depth_margin_multiplier: options_lock["snmp_depth_margin_multiplier"].value.parse().unwrap(),
 
