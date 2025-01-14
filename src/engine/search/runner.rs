@@ -475,14 +475,12 @@ fn iir_get_r(_context: &mut SearchContext, _depth: i8) -> i8 {
 /// Conditions:
 ///  - only non-PV nodes
 ///  - depth >= `razoring_min_depth`
-///  - depth <= `razoring_max_depth`
 ///  - alpha is not a mate score
 ///  - friendly king is not checked
 fn razoring_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, alpha: i16, friendly_king_checked: bool) -> bool {
     let min_depth = param!(context.params.razoring_min_depth);
-    let max_depth = param!(context.params.razoring_max_depth);
 
-    !PV && depth >= min_depth && depth <= max_depth && !is_score_near_checkmate(alpha) && !friendly_king_checked
+    !PV && depth >= min_depth && !is_score_near_checkmate(alpha) && !friendly_king_checked
 }
 
 /// Gets the razoring margin, based on `depth`. The further from the horizon we are, the more margin we should take to determine if node can be pruned.

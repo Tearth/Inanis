@@ -19,7 +19,6 @@ pub struct SearchParams {
     pub iir_max_reduction: i8,
 
     pub razoring_min_depth: i8,
-    pub razoring_max_depth: i8,
     pub razoring_depth_margin_base: i16,
     pub razoring_depth_margin_multiplier: i16,
 
@@ -75,7 +74,6 @@ impl SearchParams {
     pub const iir_max_reduction: i8 = 3;
 
     pub const razoring_min_depth: i8 = 1;
-    pub const razoring_max_depth: i8 = 5;
     pub const razoring_depth_margin_base: i16 = 260;
     pub const razoring_depth_margin_multiplier: i16 = 260;
 
@@ -133,7 +131,6 @@ impl Default for SearchParams {
             iir_max_reduction: Self::iir_max_reduction,
 
             razoring_min_depth: Self::razoring_min_depth,
-            razoring_max_depth: Self::razoring_max_depth,
             razoring_depth_margin_base: Self::razoring_depth_margin_base,
             razoring_depth_margin_multiplier: Self::razoring_depth_margin_multiplier,
 

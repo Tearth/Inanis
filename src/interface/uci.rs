@@ -141,7 +141,6 @@ pub fn run() {
         options_lock.insert("iir_max_reduction".to_string(), UciOption::new_wide(99, params.iir_max_reduction));
 
         options_lock.insert("razoring_min_depth".to_string(), UciOption::new_wide(99, params.razoring_min_depth));
-        options_lock.insert("razoring_max_depth".to_string(), UciOption::new_wide(99, params.razoring_max_depth));
         options_lock.insert("razoring_depth_margin_base".to_string(), UciOption::new_wide(99, params.razoring_depth_margin_base));
         options_lock.insert("razoring_depth_margin_multiplier".to_string(), UciOption::new_wide(99, params.razoring_depth_margin_multiplier));
 
@@ -421,7 +420,6 @@ fn handle_go(params: &[String], state: &UciState) {
             iir_max_reduction: options_lock["iir_max_reduction"].value.parse().unwrap(),
 
             razoring_min_depth: options_lock["razoring_min_depth"].value.parse().unwrap(),
-            razoring_max_depth: options_lock["razoring_max_depth"].value.parse().unwrap(),
             razoring_depth_margin_base: options_lock["razoring_depth_margin_base"].value.parse().unwrap(),
             razoring_depth_margin_multiplier: options_lock["razoring_depth_margin_multiplier"].value.parse().unwrap(),
 
