@@ -177,9 +177,10 @@ fn run_internal<const ROOT: bool, const PV: bool>(
                 }
             }
 
-            if !ROOT {
-                if entry.depth >= depth {
-                    tt_entry_found = true;
+            if entry.depth >= depth {
+                tt_entry_found = true;
+
+                if !PV {
                     match entry.r#type {
                         TTableScoreType::UPPER_BOUND => {
                             beta = cmp::min(beta, entry.score);
@@ -188,12 +189,8 @@ fn run_internal<const ROOT: bool, const PV: bool>(
                             alpha = cmp::max(alpha, entry.score);
                         }
                         _ => {
-                            if !PV || entry.age == 0 {
-                                if !context.board.is_repetition_draw(2) {
-                                    dev!(context.stats.leafs_count += 1);
-                                    return entry.score;
-                                }
-                            }
+                            dev!(context.stats.leafs_count += 1);
+                            return entry.score;
                         }
                     }
 
@@ -202,15 +199,15 @@ fn run_internal<const ROOT: bool, const PV: bool>(
                         dev!(context.stats.beta_cutoffs += 1);
                         return entry.score;
                     }
-                } else {
-                    match entry.r#type {
-                        TTableScoreType::UPPER_BOUND | TTableScoreType::EXACT_SCORE => {
-                            if entry.score < beta {
-                                allow_null_move = false;
-                            }
+                }
+            } else {
+                match entry.r#type {
+                    TTableScoreType::UPPER_BOUND | TTableScoreType::EXACT_SCORE => {
+                        if entry.score < beta {
+                            allow_null_move = false;
                         }
-                        _ => {}
                     }
+                    _ => {}
                 }
             }
         }
