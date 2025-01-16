@@ -149,7 +149,6 @@ pub fn run() {
         options_lock.insert("snmp_depth_margin_multiplier".to_string(), UciOption::new_wide(99, params.snmp_depth_margin_multiplier));
 
         options_lock.insert("nmp_min_depth".to_string(), UciOption::new_wide(99, params.nmp_min_depth));
-        options_lock.insert("nmp_min_game_phase".to_string(), UciOption::new_wide(99, params.nmp_min_game_phase));
         options_lock.insert("nmp_margin".to_string(), UciOption::new_wide(99, params.nmp_margin));
         options_lock.insert("nmp_depth_base".to_string(), UciOption::new_wide(99, params.nmp_depth_base));
         options_lock.insert("nmp_depth_divider".to_string(), UciOption::new_wide(99, params.nmp_depth_divider));
@@ -428,7 +427,6 @@ fn handle_go(params: &[String], state: &UciState) {
             snmp_depth_margin_multiplier: options_lock["snmp_depth_margin_multiplier"].value.parse().unwrap(),
 
             nmp_min_depth: options_lock["nmp_min_depth"].value.parse().unwrap(),
-            nmp_min_game_phase: options_lock["nmp_min_game_phase"].value.parse().unwrap(),
             nmp_margin: options_lock["nmp_margin"].value.parse().unwrap(),
             nmp_depth_base: options_lock["nmp_depth_base"].value.parse().unwrap(),
             nmp_depth_divider: options_lock["nmp_depth_divider"].value.parse().unwrap(),

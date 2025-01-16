@@ -27,7 +27,6 @@ pub struct SearchParams {
     pub snmp_depth_margin_multiplier: i16,
 
     pub nmp_min_depth: i8,
-    pub nmp_min_game_phase: u8,
     pub nmp_margin: i16,
     pub nmp_depth_base: i8,
     pub nmp_depth_divider: i8,
@@ -82,7 +81,6 @@ impl SearchParams {
     pub const snmp_depth_margin_multiplier: i16 = 55;
 
     pub const nmp_min_depth: i8 = 2;
-    pub const nmp_min_game_phase: u8 = 3;
     pub const nmp_margin: i16 = 60;
     pub const nmp_depth_base: i8 = 2;
     pub const nmp_depth_divider: i8 = 5;
@@ -139,7 +137,6 @@ impl Default for SearchParams {
             snmp_depth_margin_multiplier: Self::snmp_depth_margin_multiplier,
 
             nmp_min_depth: Self::nmp_min_depth,
-            nmp_min_game_phase: Self::nmp_min_game_phase,
             nmp_margin: Self::nmp_margin,
             nmp_depth_base: Self::nmp_depth_base,
             nmp_depth_divider: Self::nmp_depth_divider,

@@ -521,15 +521,13 @@ fn snmp_get_margin(context: &mut SearchContext, depth: i8) -> i16 {
 /// Conditions:
 ///  - only non-PV nodes
 ///  - depth >= `nmp_min_depth`
-///  - game phase is not indicating endgame
 ///  - beta score is not a mate score
 ///  - friendly king is not checked
 ///  - this is not the second null move in a row
 fn nmp_can_be_applied<const PV: bool>(context: &mut SearchContext, depth: i8, beta: i16, allow_null_move: bool, friendly_king_checked: bool) -> bool {
     let min_depth = param!(context.params.nmp_min_depth);
-    let min_game_phase = param!(context.params.nmp_min_game_phase);
 
-    !PV && depth >= min_depth && context.board.game_phase > min_game_phase && !is_score_near_checkmate(beta) && !friendly_king_checked && allow_null_move
+    !PV && depth >= min_depth && !is_score_near_checkmate(beta) && !friendly_king_checked && allow_null_move
 }
 
 /// Gets the null move pruning depth reduction, based on `depth`. The further from the horizon we are, the more reduction will be applied.
