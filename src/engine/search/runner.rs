@@ -97,7 +97,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
     mut depth: i8,
     ply: u16,
     mut alpha: i16,
-    mut beta: i16,
+    beta: i16,
     mut allow_null_move: bool,
     friendly_king_checked: bool,
     previous_move: Move,
@@ -183,31 +183,28 @@ fn run_internal<const ROOT: bool, const PV: bool>(
                 if !PV {
                     match entry.r#type {
                         TTableScoreType::UPPER_BOUND => {
-                            beta = cmp::min(beta, entry.score);
+                            if entry.score < beta {
+                                dev!(context.stats.leafs_count += 1);
+                                dev!(context.stats.beta_cutoffs += 1);
+                                return entry.score;
+                            }
                         }
                         TTableScoreType::LOWER_BOUND => {
-                            alpha = cmp::max(alpha, entry.score);
+                            if entry.score > alpha {
+                                dev!(context.stats.leafs_count += 1);
+                                dev!(context.stats.beta_cutoffs += 1);
+                                return entry.score;
+                            }
                         }
                         _ => {
                             dev!(context.stats.leafs_count += 1);
                             return entry.score;
                         }
                     }
-
-                    if alpha >= beta {
-                        dev!(context.stats.leafs_count += 1);
-                        dev!(context.stats.beta_cutoffs += 1);
-                        return entry.score;
-                    }
                 }
             } else {
-                match entry.r#type {
-                    TTableScoreType::UPPER_BOUND | TTableScoreType::EXACT_SCORE => {
-                        if entry.score < beta {
-                            allow_null_move = false;
-                        }
-                    }
-                    _ => {}
+                if matches!(entry.r#type, TTableScoreType::UPPER_BOUND | TTableScoreType::EXACT_SCORE) && entry.score < beta {
+                    allow_null_move = false;
                 }
             }
         }
