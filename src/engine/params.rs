@@ -73,15 +73,15 @@ impl SearchParams {
     pub const iir_max_reduction: i8 = 3;
 
     pub const razoring_min_depth: i8 = 1;
-    pub const razoring_depth_margin_base: i16 = 260;
-    pub const razoring_depth_margin_multiplier: i16 = 260;
+    pub const razoring_depth_margin_base: i16 = 300;
+    pub const razoring_depth_margin_multiplier: i16 = 240;
 
     pub const snmp_min_depth: i8 = 1;
-    pub const snmp_depth_margin_base: i16 = 135;
-    pub const snmp_depth_margin_multiplier: i16 = 55;
+    pub const snmp_depth_margin_base: i16 = 85;
+    pub const snmp_depth_margin_multiplier: i16 = 65;
 
     pub const nmp_min_depth: i8 = 2;
-    pub const nmp_margin: i16 = 60;
+    pub const nmp_margin: i16 = 55;
     pub const nmp_depth_base: i8 = 2;
     pub const nmp_depth_divider: i8 = 5;
 
@@ -89,7 +89,7 @@ impl SearchParams {
     pub const lmp_max_depth: i8 = 3;
     pub const lmp_move_index_margin_base: usize = 2;
     pub const lmp_move_index_margin_multiplier: usize = 5;
-    pub const lmp_max_score: i16 = -55;
+    pub const lmp_max_score: i16 = -65;
 
     pub const lmr_min_depth: i8 = 2;
     pub const lmr_max_score: i16 = 90;
@@ -103,7 +103,7 @@ impl SearchParams {
     pub const lmr_pv_max_reduction: i8 = 2;
 
     pub const q_score_pruning_treshold: i16 = 0;
-    pub const q_futility_pruning_margin: i16 = 100;
+    pub const q_futility_pruning_margin: i16 = 75;
 }
 
 impl Default for SearchParams {
