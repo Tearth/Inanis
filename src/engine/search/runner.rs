@@ -414,7 +414,7 @@ fn run_internal<const ROOT: bool, const PV: bool>(
             TTableScoreType::EXACT_SCORE
         };
 
-        context.ttable.add(context.board.state.hash, alpha, best_move, depth, ply, score_type, context.search_id);
+        context.ttable.add(context.board.state.hash, best_score, best_move, depth, ply, score_type, context.search_id);
         dev!(context.stats.tt_added += 1);
     }
 
