@@ -1,7 +1,7 @@
 # Version 1.6.0 (01-02-2025)
  - Added perspective and more buckets to PST
  - Added "Soft Nodes" and "Search Noise" UCI options
- - Added new evaluation features: tempo, backward pawns, open files, pawns threats, safe checks
+ - Added new evaluation features: tempo, backward pawns, open files, pawn threats, safe checks
  - Added clearing of killers between plies
  - Added time management parameters as tunable options
  - Removed killer table aging
