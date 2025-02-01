@@ -8,7 +8,7 @@ UCI chess engine written in Rust, the successor of [Proxima b](https://github.co
 ## Releases
 | Version                                                       | Release date | Elo  | Main changes |
 |---------------------------------------------------------------|--------------|------|--------------|
-| [1.6.0](https://github.com/Tearth/Inanis/releases/tag/v1.6.0) | 01-02-2025   | 3100 | More evaluation features and improved time management |
+| [1.6.0](https://github.com/Tearth/Inanis/releases/tag/v1.6.0) | 01-02-2025   | 3100 | More evaluation features, improved time management |
 | [1.5.0](https://github.com/Tearth/Inanis/releases/tag/v1.5.0) | 01-11-2024   | 3000 | Aspiration windows, improved performance and multithreading |
 | [1.4.0](https://github.com/Tearth/Inanis/releases/tag/v1.4.0) | 03-08-2024   | 2950 | Check extensions, relative PST, countermove heuristic |
 | [1.3.0](https://github.com/Tearth/Inanis/releases/tag/v1.3.0) | 14-06-2024   | 2900 | Gradient descent tuner, improved SEE and evaluation |
@@ -111,7 +111,7 @@ Because Inanis is a pet project, pull requests are not currently accepted - this
 
 ## Commands
 
-All commands listed below can be executed both in interactive mode and directly from a command line, on example `inanis.exe perft 5`. Entries marked by [DEV] are available only when the engine is compiled with `dev` feature.
+All commands listed below can be executed both in interactive mode and directly from a command line, on example `inanis.exe perft 5`. Entries marked as [DEV] are available only when the engine is compiled with `dev` feature.
 
 ```
 === General ===
