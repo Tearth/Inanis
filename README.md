@@ -1,13 +1,14 @@
 # Inanis
 UCI chess engine written in Rust, the successor of [Proxima b](https://github.com/Tearth/Proxima-b), [Proxima b 2.0](https://github.com/Tearth/Proxima-b-2.0) and [Cosette](https://github.com/Tearth/Cosette). The project is written after hours, with the goal to reach a strength of 3000 Elo. Perfect as a sparring partner for other chess engines, since it was heavily tested using very fast games. Supports Syzygy tablebases, MultiPV, pondering and multithreading.
 
-**Current strength**: 3000 Elo (01-11-2024)
+**Current strength**: 3100 Elo (01-02-2025)
 
 **Documentation**: https://tearth.dev/Inanis/
 
 ## Releases
 | Version                                                       | Release date | Elo  | Main changes |
 |---------------------------------------------------------------|--------------|------|--------------|
+| [1.6.0](https://github.com/Tearth/Inanis/releases/tag/v1.6.0) | 01-02-2025   | 3100 | More evaluation features and improved time management |
 | [1.5.0](https://github.com/Tearth/Inanis/releases/tag/v1.5.0) | 01-11-2024   | 3000 | Aspiration windows, improved performance and multithreading |
 | [1.4.0](https://github.com/Tearth/Inanis/releases/tag/v1.4.0) | 03-08-2024   | 2950 | Check extensions, relative PST, countermove heuristic |
 | [1.3.0](https://github.com/Tearth/Inanis/releases/tag/v1.3.0) | 14-06-2024   | 2900 | Gradient descent tuner, improved SEE and evaluation |
@@ -35,7 +36,7 @@ Inanis has an official lichess account, where you can try to challenge the engin
 
 ## UCI options
  - `Hash` *(default: 2 MB)* - a total size (in megabytes) for the transposition table and pawn hashtable
- - `Move Overhead` *(default: 10 ms)* - the amount of time (in milliseconds) that should be reserved during a search for some unexpected delays (like the slowness of GUI or network lags)
+ - `Move Overhead` *(default: 100 ms)* - the amount of time (in milliseconds) that should be reserved during a search for some unexpected delays (like the slowness of GUI or network lags)
  - `MultiPV` *(default: 1 PV line)* - number of PV lines which should be displayed during search
  - `Threads` *(default: 1 thread)* - number of threads to use during search (should be less than a number of processor cores to get the best performance)
  - `SyzygyPath` *(default: &lt;empty&gt;)* - location of the optional Syzygy tablebases
@@ -43,17 +44,19 @@ Inanis has an official lichess account, where you can try to challenge the engin
  - `SyzygyProbeDepth` *(default: 6)* - minimal depth at which the tablebase probe should be executed
  - `Ponder` *(default: false)* - allows the engine to think during the opponent's time
  - `Crash Files` *(default: false)* - when enabled, saves crash messages in the ./crash directory
+ - `Search Noise` *(default: false)* - when enabled, a small random noise is added to make search different every time
+ - `Soft Nodes` *(default: false)* - when enabled, nodes limit is enforced only after search iteration is done instead of aborting it in the middle
 
 ## How to build
 By default, calling `cargo build` or `cargo build --release` will build the engine without support for Syzygy tablebases (but still fully functional). To include it, please add `--features syzygy,bindgen` and make sure you have installed [clang](https://clang.llvm.org/) when working on Windows (MSVC doesn't support some C11 elements, so can't be used).
 
 ## Algorithms
  - **Board representation**: bitboards (a hybrid of make/undo scheme and storing data on stacks)
- - **Move generator**: staged (hash move, captures, quiet moves), magic bitboards, precalculated arrays for knight and king
- - **Move ordering**: hash move, good captures (SEE with support for x-ray attacks), killer table, special moves, history table, bad captures
+ - **Move generator**: staged (captures, quiet moves), magic bitboards, precalculated arrays for knight and king
+ - **Move ordering**: hash move, good captures (SEE with support for x-ray attacks), killers, countermoves, castling and promotions, butterfly history, bad captures
  - **Search**: negamax, alpha-beta pruning, quiescence search, aspiration windows, null-move pruning, static null move pruning, razoring, late move reduction, late move pruning, lazy SMP, internal iterative reductions, check extensions
  - **Cache**: transposition table, pawn hashtable, history heuristic, killer heuristic, countermove heuristic
- - **Evaluation**: material, piece-square tables, pawn structure, mobility, king safety
+ - **Evaluation**: material, piece-square tables, pawn structure, pawn threats, mobility, king safety, tempo
 
 ## Tuner
 Inanis has a built-in tuner, which allows for optimizing all evaluation parameters using a well-known [Texel's tuning method](https://www.chessprogramming.org/Texel%27s_Tuning_Method). As an output, there are Rust source files generated in a way that allows them to be directly pasted into the engine's source code. 

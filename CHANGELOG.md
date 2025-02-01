@@ -1,3 +1,25 @@
+# Version 1.6.0 (01-02-2025)
+ - Added perspective and more buckets to PST
+ - Added "Soft Nodes" and "Search Noise" UCI options
+ - Added new evaluation features: tempo, backward pawns, open files, pawns threats, safe checks
+ - Added clearing of killers between plies
+ - Added time management parameters as tunable options
+ - Removed killer table aging
+ - Removed TT cutoffs from PV nodes completely
+ - Removed min game phase condition in NMP
+ - Removed max depth condition in SNMP
+ - Removed max depth condition in razoring
+ - Improved evaluation parameters
+ - Improved search parameters
+ - Improved time management parameters
+ - Increased default move overhead to 100 ms
+ - Allowed LMR to reduce losing captures
+ - Fixed rare invalid moves when checkmate in one
+ - Fixed PGN parser crashing on h1h1 move
+ - Fixed incorrect upper bound score when saving to transposition table
+
+**Strength**: 3100 Elo
+
 # Version 1.5.0 (01-11-2024)
  - Added aspiration windows
  - Added support for tuning based on evaluation
