@@ -606,18 +606,6 @@
 <a href="#604" id="604">604</a>
 <a href="#605" id="605">605</a>
 <a href="#606" id="606">606</a>
-<a href="#607" id="607">607</a>
-<a href="#608" id="608">608</a>
-<a href="#609" id="609">609</a>
-<a href="#610" id="610">610</a>
-<a href="#611" id="611">611</a>
-<a href="#612" id="612">612</a>
-<a href="#613" id="613">613</a>
-<a href="#614" id="614">614</a>
-<a href="#615" id="615">615</a>
-<a href="#616" id="616">616</a>
-<a href="#617" id="617">617</a>
-<a href="#618" id="618">618</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::cache::search::TTableScoreType;
 <span class="kw">use </span><span class="kw">crate</span>::engine::context::SearchContext;
 <span class="kw">use </span><span class="kw">crate</span>::engine::<span class="kw-2">*</span>;
@@ -659,8 +647,8 @@
                 <span class="kw">break</span>;
             }
 
-            delta <span class="kw-2">*</span>= <span class="number">2</span>;
-            <span class="kw">if </span>delta &gt;= <span class="macro">param!</span>(context.params.aspwin_max_width) {
+            delta = (delta <span class="kw">as </span>i32 * <span class="macro">param!</span>(context.params.aspwin_multiplier) <span class="kw">as </span>i32 / <span class="number">100</span>) <span class="kw">as </span>i16;
+            <span class="kw">if </span>delta &gt;= <span class="macro">param!</span>(context.params.aspwin_max_delta) {
                 alpha = MIN_ALPHA;
                 beta = MIN_BETA;
             }
@@ -717,7 +705,7 @@
     <span class="kw-2">mut </span>depth: i8,
     ply: u16,
     <span class="kw-2">mut </span>alpha: i16,
-    <span class="kw-2">mut </span>beta: i16,
+    beta: i16,
     <span class="kw-2">mut </span>allow_null_move: bool,
     friendly_king_checked: bool,
     previous_move: Move,
@@ -729,7 +717,7 @@
     }
 
     <span class="kw">if </span>context.forced_depth == <span class="number">0 </span>&amp;&amp; context.max_nodes_count == <span class="number">0 </span>&amp;&amp; (context.stats.nodes_count &amp; <span class="number">8191</span>) == <span class="number">0 </span>{
-        <span class="kw">if unsafe </span>{ context.search_time_start.elapsed().unwrap_unchecked().as_millis() } &gt; context.deadline <span class="kw">as </span>u128 {
+        <span class="kw">if unsafe </span>{ context.search_time_start.elapsed().unwrap_unchecked().as_millis() } &gt; context.time_hard_bound <span class="kw">as </span>u128 {
             context.abort_flag.store(<span class="bool-val">true</span>, Ordering::Relaxed);
             <span class="kw">return </span>INVALID_SCORE;
         }
@@ -797,40 +785,34 @@
                 }
             }
 
-            <span class="kw">if </span>!ROOT {
-                <span class="kw">if </span>entry.depth &gt;= depth {
-                    tt_entry_found = <span class="bool-val">true</span>;
+            <span class="kw">if </span>entry.depth &gt;= depth {
+                tt_entry_found = <span class="bool-val">true</span>;
+
+                <span class="kw">if </span>!PV {
                     <span class="kw">match </span>entry.r#type {
                         TTableScoreType::UPPER_BOUND =&gt; {
-                            beta = cmp::min(beta, entry.score);
+                            <span class="kw">if </span>entry.score &lt; beta {
+                                <span class="macro">dev!</span>(context.stats.leafs_count += <span class="number">1</span>);
+                                <span class="macro">dev!</span>(context.stats.beta_cutoffs += <span class="number">1</span>);
+                                <span class="kw">return </span>entry.score;
+                            }
                         }
                         TTableScoreType::LOWER_BOUND =&gt; {
-                            alpha = cmp::max(alpha, entry.score);
+                            <span class="kw">if </span>entry.score &gt; alpha {
+                                <span class="macro">dev!</span>(context.stats.leafs_count += <span class="number">1</span>);
+                                <span class="macro">dev!</span>(context.stats.beta_cutoffs += <span class="number">1</span>);
+                                <span class="kw">return </span>entry.score;
+                            }
                         }
                         <span class="kw">_ </span>=&gt; {
-                            <span class="kw">if </span>!PV || entry.age == <span class="number">0 </span>{
-                                <span class="kw">if </span>!context.board.is_repetition_draw(<span class="number">2</span>) {
-                                    <span class="macro">dev!</span>(context.stats.leafs_count += <span class="number">1</span>);
-                                    <span class="kw">return </span>entry.score;
-                                }
-                            }
+                            <span class="macro">dev!</span>(context.stats.leafs_count += <span class="number">1</span>);
+                            <span class="kw">return </span>entry.score;
                         }
                     }
-
-                    <span class="kw">if </span>alpha &gt;= beta {
-                        <span class="macro">dev!</span>(context.stats.leafs_count += <span class="number">1</span>);
-                        <span class="macro">dev!</span>(context.stats.beta_cutoffs += <span class="number">1</span>);
-                        <span class="kw">return </span>entry.score;
-                    }
-                } <span class="kw">else </span>{
-                    <span class="kw">match </span>entry.r#type {
-                        TTableScoreType::UPPER_BOUND | TTableScoreType::EXACT_SCORE =&gt; {
-                            <span class="kw">if </span>entry.score &lt; beta {
-                                allow_null_move = <span class="bool-val">false</span>;
-                            }
-                        }
-                        <span class="kw">_ </span>=&gt; {}
-                    }
+                }
+            } <span class="kw">else </span>{
+                <span class="kw">if </span><span class="macro">matches!</span>(entry.r#type, TTableScoreType::UPPER_BOUND | TTableScoreType::EXACT_SCORE) &amp;&amp; entry.score &lt; beta {
+                    allow_null_move = <span class="bool-val">false</span>;
                 }
             }
         }
@@ -913,6 +895,8 @@
         static_eval = <span class="prelude-val">Some</span>(static_eval_value);
     }
 
+    context.ktable.clear(ply + <span class="number">1</span>);
+
     <span class="kw">let </span><span class="kw-2">mut </span>best_score = -CHECKMATE_SCORE;
     <span class="kw">let </span><span class="kw-2">mut </span>best_move = Move::default();
     <span class="kw">let </span><span class="kw-2">mut </span>state = MoveGenState { hash_move, ply, friendly_king_checked, previous_move, ..Default::default() };
@@ -933,7 +917,7 @@
         context.ttable.prefetch(context.board.state.hash);
 
         <span class="kw">let </span>king_checked = context.board.is_king_checked(context.board.stm);
-        <span class="kw">let </span>r = <span class="kw">if </span>lmr_can_be_applied::&lt;PV&gt;(context, depth, r#move, state.move_number, score, friendly_king_checked, king_checked) {
+        <span class="kw">let </span>r = <span class="kw">if </span>lmr_can_be_applied::&lt;PV&gt;(context, depth, state.move_number, score, friendly_king_checked, king_checked) {
             lmr_get_r::&lt;PV&gt;(context, state.move_number)
         } <span class="kw">else </span>{
             <span class="number">0
@@ -1038,7 +1022,7 @@
             TTableScoreType::EXACT_SCORE
         };
 
-        context.ttable.add(context.board.state.hash, alpha, best_move, depth, ply, score_type, context.search_id);
+        context.ttable.add(context.board.state.hash, best_score, best_move, depth, ply, score_type, context.search_id);
         <span class="macro">dev!</span>(context.stats.tt_added += <span class="number">1</span>);
     }
 
@@ -1093,14 +1077,12 @@
 /// Conditions:
 ///  - only non-PV nodes
 ///  - depth &gt;= `razoring_min_depth`
-///  - depth &lt;= `razoring_max_depth`
 ///  - alpha is not a mate score
 ///  - friendly king is not checked
 </span><span class="kw">fn </span>razoring_can_be_applied&lt;<span class="kw">const </span>PV: bool&gt;(context: <span class="kw-2">&amp;mut </span>SearchContext, depth: i8, alpha: i16, friendly_king_checked: bool) -&gt; bool {
     <span class="kw">let </span>min_depth = <span class="macro">param!</span>(context.params.razoring_min_depth);
-    <span class="kw">let </span>max_depth = <span class="macro">param!</span>(context.params.razoring_max_depth);
 
-    !PV &amp;&amp; depth &gt;= min_depth &amp;&amp; depth &lt;= max_depth &amp;&amp; !is_score_near_checkmate(alpha) &amp;&amp; !friendly_king_checked
+    !PV &amp;&amp; depth &gt;= min_depth &amp;&amp; !is_score_near_checkmate(alpha) &amp;&amp; !friendly_king_checked
 }
 
 <span class="doccomment">/// Gets the razoring margin, based on `depth`. The further from the horizon we are, the more margin we should take to determine if node can be pruned.
@@ -1119,14 +1101,12 @@
 /// Conditions:
 ///  - only non-PV nodes
 ///  - depth &gt;= `snmp_min_depth`
-///  - depth &lt;= `snmp_max_depth`
 ///  - beta is not a mate score
 ///  - friendly king is not checked
 </span><span class="kw">fn </span>snmp_can_be_applied&lt;<span class="kw">const </span>PV: bool&gt;(context: <span class="kw-2">&amp;mut </span>SearchContext, depth: i8, beta: i16, friendly_king_checked: bool) -&gt; bool {
     <span class="kw">let </span>min_depth = <span class="macro">param!</span>(context.params.snmp_min_depth);
-    <span class="kw">let </span>max_depth = <span class="macro">param!</span>(context.params.snmp_max_depth);
 
-    !PV &amp;&amp; depth &gt;= min_depth &amp;&amp; depth &lt;= max_depth &amp;&amp; !is_score_near_checkmate(beta) &amp;&amp; !friendly_king_checked
+    !PV &amp;&amp; depth &gt;= min_depth &amp;&amp; !is_score_near_checkmate(beta) &amp;&amp; !friendly_king_checked
 }
 
 <span class="doccomment">/// Gets the static null move pruning margin, based on `depth`. The further from the horizon we are, the more margin should we take to determine
@@ -1146,15 +1126,13 @@
 /// Conditions:
 ///  - only non-PV nodes
 ///  - depth &gt;= `nmp_min_depth`
-///  - game phase is not indicating endgame
 ///  - beta score is not a mate score
 ///  - friendly king is not checked
 ///  - this is not the second null move in a row
 </span><span class="kw">fn </span>nmp_can_be_applied&lt;<span class="kw">const </span>PV: bool&gt;(context: <span class="kw-2">&amp;mut </span>SearchContext, depth: i8, beta: i16, allow_null_move: bool, friendly_king_checked: bool) -&gt; bool {
     <span class="kw">let </span>min_depth = <span class="macro">param!</span>(context.params.nmp_min_depth);
-    <span class="kw">let </span>min_game_phase = <span class="macro">param!</span>(context.params.nmp_min_game_phase);
 
-    !PV &amp;&amp; depth &gt;= min_depth &amp;&amp; context.board.game_phase &gt; min_game_phase &amp;&amp; !is_score_near_checkmate(beta) &amp;&amp; !friendly_king_checked &amp;&amp; allow_null_move
+    !PV &amp;&amp; depth &gt;= min_depth &amp;&amp; !is_score_near_checkmate(beta) &amp;&amp; !friendly_king_checked &amp;&amp; allow_null_move
 }
 
 <span class="doccomment">/// Gets the null move pruning depth reduction, based on `depth`. The further from the horizon we are, the more reduction will be applied.
@@ -1189,7 +1167,7 @@
         &amp;&amp; !friendly_king_checked
 }
 
-<span class="doccomment">/// The main idea of the late move reduction is to reduce search depth of all quiet moves, which aren't promising and with high chance won't improve score.
+<span class="doccomment">/// The main idea of the late move reduction is to reduce search depth of all moves, which aren't promising and with high chance won't improve score.
 /// This is the least risky type of pruning (used inside PVS framework which cares about re-search when the move is better than expected),
 /// so it's also applied in PV nodes.
 ///
@@ -1197,13 +1175,11 @@
 ///  - depth &gt;= `lmr_min_depth`
 ///  - move index &gt;= `lmr_pv_min_move_index` or move index &gt;= `lmr_min_move_index`
 ///  - move score &lt;= `lmr_max_score`
-///  - move is quiet
 ///  - friendly king is not checked
 ///  - enemy king is not checked
 </span><span class="kw">fn </span>lmr_can_be_applied&lt;<span class="kw">const </span>PV: bool&gt;(
     context: <span class="kw-2">&amp;mut </span>SearchContext,
     depth: i8,
-    r#move: Move,
     move_index: usize,
     move_score: i16,
     friendly_king_checked: bool,
@@ -1213,7 +1189,7 @@
     <span class="kw">let </span>min_move_index = <span class="kw">if </span>PV { <span class="macro">param!</span>(context.params.lmr_pv_min_move_index) } <span class="kw">else </span>{ <span class="macro">param!</span>(context.params.lmr_min_move_index) };
     <span class="kw">let </span>max_score = <span class="macro">param!</span>(context.params.lmr_max_score);
 
-    depth &gt;= min_depth &amp;&amp; move_index &gt;= min_move_index &amp;&amp; move_score &lt;= max_score &amp;&amp; r#move.is_quiet() &amp;&amp; !friendly_king_checked &amp;&amp; !enemy_king_checked
+    depth &gt;= min_depth &amp;&amp; move_index &gt;= min_move_index &amp;&amp; move_score &lt;= max_score &amp;&amp; !friendly_king_checked &amp;&amp; !enemy_king_checked
 }
 
 <span class="doccomment">/// Gets the late move depth reduction, based on `move_index`. The lower the move was scored, the larger reduction will be returned.

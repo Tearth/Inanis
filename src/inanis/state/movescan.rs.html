@@ -647,6 +647,14 @@
 <a href="#645" id="645">645</a>
 <a href="#646" id="646">646</a>
 <a href="#647" id="647">647</a>
+<a href="#648" id="648">648</a>
+<a href="#649" id="649">649</a>
+<a href="#650" id="650">650</a>
+<a href="#651" id="651">651</a>
+<a href="#652" id="652">652</a>
+<a href="#653" id="653">653</a>
+<a href="#654" id="654">654</a>
+<a href="#655" id="655">655</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::representation::Board;
 <span class="kw">use </span><span class="kw">super</span>::representation::CastlingRights;
 <span class="kw">use super</span>::<span class="kw-2">*</span>;
@@ -1137,6 +1145,14 @@
             ROOK =&gt; movegen::get_rook_moves(occupancy_bb, from),
             QUEEN =&gt; movegen::get_queen_moves(occupancy_bb, from),
             KING =&gt; movegen::get_king_moves(from),
+            <span class="kw">_ </span>=&gt; <span class="macro">panic_fast!</span>(<span class="string">"Invalid parameter: fen={}, PIECE={}"</span>, board, PIECE),
+        };
+
+        <span class="kw">match </span>PIECE {
+            KNIGHT =&gt; aux.knight_threats |= piece_moves_bb,
+            BISHOP =&gt; aux.bishop_threats |= piece_moves_bb,
+            ROOK =&gt; aux.rook_threats |= piece_moves_bb,
+            QUEEN =&gt; aux.queen_threats |= piece_moves_bb,
             <span class="kw">_ </span>=&gt; <span class="macro">panic_fast!</span>(<span class="string">"Invalid parameter: fen={}, PIECE={}"</span>, board, PIECE),
         };
 

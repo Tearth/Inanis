@@ -949,6 +949,18 @@
 <a href="#947" id="947">947</a>
 <a href="#948" id="948">948</a>
 <a href="#949" id="949">949</a>
+<a href="#950" id="950">950</a>
+<a href="#951" id="951">951</a>
+<a href="#952" id="952">952</a>
+<a href="#953" id="953">953</a>
+<a href="#954" id="954">954</a>
+<a href="#955" id="955">955</a>
+<a href="#956" id="956">956</a>
+<a href="#957" id="957">957</a>
+<a href="#958" id="958">958</a>
+<a href="#959" id="959">959</a>
+<a href="#960" id="960">960</a>
+<a href="#961" id="961">961</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::movescan;
 <span class="kw">use </span><span class="kw">super</span>::movescan::Move;
 <span class="kw">use </span><span class="kw">super</span>::movescan::MoveFlags;
@@ -1588,14 +1600,18 @@
 
         <span class="kw">if </span>!UNDO {
             <span class="kw">let </span><span class="kw-2">mut </span>king_square = <span class="self">self</span>.pieces[color][KING].bit_scan() % <span class="number">64</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>enemy_king_square = <span class="self">self</span>.pieces[color ^ <span class="number">1</span>][KING].bit_scan() % <span class="number">64</span>;
 
-            <span class="kw">if </span>color == BLACK {
+            <span class="kw">if </span>color == WHITE {
+                enemy_king_square = (<span class="number">1u64 </span>&lt;&lt; enemy_king_square).swap_bytes().bit_scan();
+            } <span class="kw">else </span>{
                 king_square = (<span class="number">1u64 </span>&lt;&lt; king_square).swap_bytes().bit_scan();
                 square = (<span class="number">1u64 </span>&lt;&lt; square).swap_bytes().bit_scan();
             }
 
             <span class="kw">let </span>sign = -(color <span class="kw">as </span>i16 * <span class="number">2 </span>- <span class="number">1</span>);
-            <span class="self">self</span>.state.pst_score += sign * pst::get_pst_value(piece, king_square, square);
+            <span class="kw">let </span>score = pst::get_pst_value(piece, US, king_square, square) + pst::get_pst_value(piece, THEM, enemy_king_square, square);
+            <span class="self">self</span>.state.pst_score += sign * score;
         }
     }
 
@@ -1612,14 +1628,18 @@
 
         <span class="kw">if </span>!UNDO {
             <span class="kw">let </span><span class="kw-2">mut </span>king_square = <span class="self">self</span>.pieces[color][KING].bit_scan() % <span class="number">64</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>enemy_king_square = <span class="self">self</span>.pieces[color ^ <span class="number">1</span>][KING].bit_scan() % <span class="number">64</span>;
 
-            <span class="kw">if </span>color == BLACK {
+            <span class="kw">if </span>color == WHITE {
+                enemy_king_square = (<span class="number">1u64 </span>&lt;&lt; enemy_king_square).swap_bytes().bit_scan();
+            } <span class="kw">else </span>{
                 king_square = (<span class="number">1u64 </span>&lt;&lt; king_square).swap_bytes().bit_scan();
                 square = (<span class="number">1u64 </span>&lt;&lt; square).swap_bytes().bit_scan();
             }
 
             <span class="kw">let </span>sign = -(color <span class="kw">as </span>i16 * <span class="number">2 </span>- <span class="number">1</span>);
-            <span class="self">self</span>.state.pst_score -= sign * pst::get_pst_value(piece, king_square, square);
+            <span class="kw">let </span>score = pst::get_pst_value(piece, US, king_square, square) + pst::get_pst_value(piece, THEM, enemy_king_square, square);
+            <span class="self">self</span>.state.pst_score -= sign * score;
         }
     }
 
@@ -1638,16 +1658,20 @@
 
         <span class="kw">if </span>!UNDO {
             <span class="kw">let </span><span class="kw-2">mut </span>king_square = <span class="self">self</span>.pieces[color][KING].bit_scan() % <span class="number">64</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>enemy_king_square = <span class="self">self</span>.pieces[color ^ <span class="number">1</span>][KING].bit_scan() % <span class="number">64</span>;
 
-            <span class="kw">if </span>color == BLACK {
+            <span class="kw">if </span>color == WHITE {
+                enemy_king_square = (<span class="number">1u64 </span>&lt;&lt; enemy_king_square).swap_bytes().bit_scan();
+            } <span class="kw">else </span>{
                 king_square = (<span class="number">1u64 </span>&lt;&lt; king_square).swap_bytes().bit_scan();
                 from = (<span class="number">1u64 </span>&lt;&lt; from).swap_bytes().bit_scan();
                 to = (<span class="number">1u64 </span>&lt;&lt; to).swap_bytes().bit_scan();
             }
 
             <span class="kw">let </span>sign = -(color <span class="kw">as </span>i16 * <span class="number">2 </span>- <span class="number">1</span>);
-            <span class="self">self</span>.state.pst_score -= sign * pst::get_pst_value(piece, king_square, from);
-            <span class="self">self</span>.state.pst_score += sign * pst::get_pst_value(piece, king_square, to);
+            <span class="kw">let </span>score_a = pst::get_pst_value(piece, US, king_square, to) - pst::get_pst_value(piece, US, king_square, from);
+            <span class="kw">let </span>score_b = pst::get_pst_value(piece, THEM, enemy_king_square, to) - pst::get_pst_value(piece, THEM, enemy_king_square, from);
+            <span class="self">self</span>.state.pst_score += sign * (score_a + score_b);
         }
     }
 
@@ -1686,7 +1710,7 @@
         <span class="kw">let </span>eval = material_eval + pst_eval + mobility_eval + safety_eval + pawns_eval;
         <span class="kw">let </span>sign = -((color <span class="kw">as </span>i16) * <span class="number">2 </span>- <span class="number">1</span>);
 
-        sign * eval.taper_score(<span class="self">self</span>.game_phase)
+        sign * eval.taper_score(<span class="self">self</span>.game_phase) + params::TEMPO
     }
 
     <span class="doccomment">/// Runs full evaluation (material, piece-square tables, mobility, pawn structure and safety) of the current position.
@@ -1706,7 +1730,7 @@
         <span class="kw">let </span>eval = material_eval + pst_eval + mobility_eval + safety_eval + pawns_eval;
         <span class="kw">let </span>sign = -((color <span class="kw">as </span>i16) * <span class="number">2 </span>- <span class="number">1</span>);
 
-        sign * eval.taper_score(<span class="self">self</span>.game_phase)
+        sign * eval.taper_score(<span class="self">self</span>.game_phase) + params::TEMPO
     }
 
     <span class="doccomment">/// Runs fast evaluations, considering only material, piece-square tables and pawn structure. Returns score from the `color` perspective (more than 0 when
@@ -1721,7 +1745,7 @@
         <span class="kw">let </span>eval = material_eval + pst_eval + pawns_eval;
         <span class="kw">let </span>sign = -((color <span class="kw">as </span>i16) * <span class="number">2 </span>- <span class="number">1</span>);
 
-        sign * eval.taper_score(<span class="self">self</span>.game_phase)
+        sign * eval.taper_score(<span class="self">self</span>.game_phase) + params::TEMPO
     }
 
     <span class="doccomment">/// Recalculates incremental values entirely.

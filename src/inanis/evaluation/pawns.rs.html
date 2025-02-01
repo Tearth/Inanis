@@ -138,6 +138,33 @@
 <a href="#136" id="136">136</a>
 <a href="#137" id="137">137</a>
 <a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::cache::pawns::PHTable;
 <span class="kw">use </span><span class="kw">crate</span>::engine::stats::SearchStats;
@@ -155,18 +182,21 @@
     isolated_pawns: u8,
     chained_pawns: u8,
     passed_pawns: u8,
+    backward_pawns_open_file: u8,
+    backward_pawns_closed_file: u8,
     opened_files: u8,
     pawn_shield: u8,
 }
 
 <span class="doccomment">/// Evaluates structure of pawns on the `board` and returns score from the white color perspective (more than 0 when advantage,
 /// less than 0 when disadvantage). This evaluator considers:
-///  - doubled pawns (negative score)
-///  - isolated pawns (negative score)
-///  - chained pawns (positive score)
-///  - passed pawns (positive score)
-///  - open files next to the king (negative score)
-///  - pawn shield next to the king (positive score)
+///  - doubled pawns
+///  - isolated pawns
+///  - chained pawns
+///  - passed pawns
+///  - backward pawns
+///  - open files next to the king
+///  - pawn shield next to the king
 ///
 /// To improve performance (using the fact that structure of pawns changes relatively rare), each evaluation is saved in the pawn hashtable,
 /// and used again if possible.
@@ -207,6 +237,8 @@
     result += params::ISOLATED_PAWN[pawns_data.isolated_pawns.min(<span class="number">7</span>) <span class="kw">as </span>usize];
     result += params::CHAINED_PAWN[pawns_data.chained_pawns.min(<span class="number">7</span>) <span class="kw">as </span>usize];
     result += params::PASSED_PAWN[pawns_data.passed_pawns.min(<span class="number">7</span>) <span class="kw">as </span>usize];
+    result += params::BACKWARD_PAWN_OPEN_FILE[pawns_data.backward_pawns_open_file.min(<span class="number">7</span>) <span class="kw">as </span>usize];
+    result += params::BACKWARD_PAWN_CLOSED_FILE[pawns_data.backward_pawns_closed_file.min(<span class="number">7</span>) <span class="kw">as </span>usize];
     result += params::PAWN_SHIELD[pawns_data.pawn_shield.min(<span class="number">7</span>) <span class="kw">as </span>usize];
     result += params::PAWN_SHIELD_OPEN_FILE[pawns_data.opened_files.min(<span class="number">7</span>) <span class="kw">as </span>usize];
 
@@ -221,6 +253,8 @@
     <span class="kw">let </span><span class="kw-2">mut </span>isolated_pawns = <span class="number">0</span>;
     <span class="kw">let </span><span class="kw-2">mut </span>chained_pawns = <span class="number">0</span>;
     <span class="kw">let </span><span class="kw-2">mut </span>passed_pawns = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>backward_pawns_open_file = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>backward_pawns_closed_file = <span class="number">0</span>;
     <span class="kw">let </span><span class="kw-2">mut </span>pawn_shield = <span class="number">0</span>;
     <span class="kw">let </span><span class="kw-2">mut </span>opened_files = <span class="number">0</span>;
 
@@ -247,6 +281,24 @@
 
         chained_pawns += ((patterns::get_front(color ^ <span class="number">1</span>, square) &amp; patterns::get_diagonals(square) &amp; board.pieces[color][PAWN]) != <span class="number">0</span>) <span class="kw">as </span>u8;
         passed_pawns += ((patterns::get_front(color, square) &amp; board.pieces[color ^ <span class="number">1</span>][PAWN]) == <span class="number">0</span>) <span class="kw">as </span>u8;
+
+        <span class="kw">let </span>offset = <span class="kw">if </span>color == WHITE { <span class="number">8 </span>} <span class="kw">else </span>{ -<span class="number">8 </span>};
+        <span class="kw">let </span>stop_square_bb = <span class="kw">if </span>color == WHITE { square_bb &lt;&lt; <span class="number">8 </span>} <span class="kw">else </span>{ square_bb &gt;&gt; <span class="number">8 </span>};
+        <span class="kw">let </span>front = patterns::get_front(color, square) &amp; !patterns::get_file(square);
+        <span class="kw">let </span>front_backward = patterns::get_front(color ^ <span class="number">1</span>, (square <span class="kw">as </span>i8 + offset) <span class="kw">as </span>usize) &amp; !patterns::get_file((square <span class="kw">as </span>i8 + offset) <span class="kw">as </span>usize);
+
+        <span class="kw">let </span>not_isolated = (front &amp; board.pieces[color][PAWN]) != <span class="number">0</span>;
+        <span class="kw">let </span>no_pawns_behind = (front_backward &amp; board.pieces[color][PAWN]) == <span class="number">0</span>;
+        <span class="kw">let </span>stop_square_attacked = (stop_square_bb &amp; board.pawn_attacks[color ^ <span class="number">1</span>]) != <span class="number">0</span>;
+        <span class="kw">let </span>open_file = (patterns::get_file(square) &amp; board.pieces[color ^ <span class="number">1</span>][PAWN]) == <span class="number">0</span>;
+
+        <span class="kw">if </span>not_isolated &amp;&amp; no_pawns_behind &amp;&amp; stop_square_attacked {
+            <span class="kw">if </span>open_file {
+                backward_pawns_open_file += <span class="number">1</span>;
+            } <span class="kw">else </span>{
+                backward_pawns_closed_file += <span class="number">1</span>;
+            }
+        }
     }
 
     <span class="kw">let </span>king_bb = board.pieces[color][KING];
@@ -260,7 +312,7 @@
         }
     }
 
-    PawnsData { doubled_pawns, isolated_pawns, chained_pawns, passed_pawns, pawn_shield, opened_files }
+    PawnsData { doubled_pawns, isolated_pawns, chained_pawns, passed_pawns, backward_pawns_open_file, backward_pawns_closed_file, pawn_shield, opened_files }
 }
 
 <span class="doccomment">/// Gets coefficients of pawn structure for `board` and inserts them into `coeffs`. Similarly, their indices (starting from `index`) are inserted into `indices`.
@@ -273,6 +325,8 @@
     get_array_coeffs(white_pawns_data.isolated_pawns, black_pawns_data.isolated_pawns, <span class="number">8</span>, index, coeffs, indices);
     get_array_coeffs(white_pawns_data.chained_pawns, black_pawns_data.chained_pawns, <span class="number">8</span>, index, coeffs, indices);
     get_array_coeffs(white_pawns_data.passed_pawns, black_pawns_data.passed_pawns, <span class="number">8</span>, index, coeffs, indices);
+    get_array_coeffs(white_pawns_data.backward_pawns_open_file, black_pawns_data.backward_pawns_open_file, <span class="number">8</span>, index, coeffs, indices);
+    get_array_coeffs(white_pawns_data.backward_pawns_closed_file, black_pawns_data.backward_pawns_closed_file, <span class="number">8</span>, index, coeffs, indices);
     get_array_coeffs(white_pawns_data.pawn_shield, black_pawns_data.pawn_shield, <span class="number">8</span>, index, coeffs, indices);
     get_array_coeffs(white_pawns_data.opened_files, black_pawns_data.opened_files, <span class="number">8</span>, index, coeffs, indices);
 }

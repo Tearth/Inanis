@@ -167,6 +167,28 @@
 <a href="#165" id="165">165</a>
 <a href="#166" id="166">166</a>
 <a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::evaluation;
 <span class="kw">use </span><span class="kw">crate</span>::state::representation::Board;
@@ -190,18 +212,18 @@
 <span class="kw">pub use </span>queen::QUEEN_PST_PATTERN;
 <span class="kw">pub use </span>rook::ROOK_PST_PATTERN;
 
-<span class="kw">pub const </span>KING_BUCKETS_COUNT: usize = <span class="number">8</span>;
+<span class="kw">pub const </span>KING_BUCKETS_COUNT: usize = <span class="number">16</span>;
 
 <span class="attr">#[rustfmt::skip]
 </span><span class="kw">pub const </span>KING_BUCKETS: [usize; <span class="number">64</span>] = [
-    <span class="number">7</span>, <span class="number">6</span>, <span class="number">5</span>, <span class="number">4</span>, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">0</span>,
-    <span class="number">7</span>, <span class="number">6</span>, <span class="number">5</span>, <span class="number">4</span>, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">0</span>,
-    <span class="number">7</span>, <span class="number">6</span>, <span class="number">5</span>, <span class="number">4</span>, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">0</span>,
-    <span class="number">7</span>, <span class="number">6</span>, <span class="number">5</span>, <span class="number">4</span>, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">0</span>,
-    <span class="number">7</span>, <span class="number">6</span>, <span class="number">5</span>, <span class="number">4</span>, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">0</span>,
-    <span class="number">7</span>, <span class="number">6</span>, <span class="number">5</span>, <span class="number">4</span>, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">0</span>,
-    <span class="number">7</span>, <span class="number">6</span>, <span class="number">5</span>, <span class="number">4</span>, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">0</span>,
-    <span class="number">7</span>, <span class="number">6</span>, <span class="number">5</span>, <span class="number">4</span>, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">0</span>,
+    <span class="number">15</span>, <span class="number">14</span>, <span class="number">13</span>, <span class="number">12</span>, <span class="number">11</span>, <span class="number">10</span>, <span class="number">9</span>,  <span class="number">8</span>,
+    <span class="number">15</span>, <span class="number">14</span>, <span class="number">13</span>, <span class="number">12</span>, <span class="number">11</span>, <span class="number">10</span>, <span class="number">9</span>,  <span class="number">8</span>,
+    <span class="number">15</span>, <span class="number">14</span>, <span class="number">13</span>, <span class="number">12</span>, <span class="number">11</span>, <span class="number">10</span>, <span class="number">9</span>,  <span class="number">8</span>,
+    <span class="number">15</span>, <span class="number">14</span>, <span class="number">13</span>, <span class="number">12</span>, <span class="number">11</span>, <span class="number">10</span>, <span class="number">9</span>,  <span class="number">8</span>,
+    <span class="number">7</span>,  <span class="number">6</span>,  <span class="number">5</span>,  <span class="number">4</span>,  <span class="number">3</span>,  <span class="number">2</span>,  <span class="number">1</span>,  <span class="number">0</span>,
+    <span class="number">7</span>,  <span class="number">6</span>,  <span class="number">5</span>,  <span class="number">4</span>,  <span class="number">3</span>,  <span class="number">2</span>,  <span class="number">1</span>,  <span class="number">0</span>,
+    <span class="number">7</span>,  <span class="number">6</span>,  <span class="number">5</span>,  <span class="number">4</span>,  <span class="number">3</span>,  <span class="number">2</span>,  <span class="number">1</span>,  <span class="number">0</span>,
+    <span class="number">7</span>,  <span class="number">6</span>,  <span class="number">5</span>,  <span class="number">4</span>,  <span class="number">3</span>,  <span class="number">2</span>,  <span class="number">1</span>,  <span class="number">0</span>,
 ];
 
 <span class="doccomment">/// Evaluates piece-square table value on the `board` and returns score from the white color perspective (more than 0 when advantage, less than 0 when disadvantage).
@@ -215,24 +237,34 @@
 
     <span class="kw">for </span>color <span class="kw">in </span>ALL_COLORS {
         <span class="kw">let </span>sign = -(color <span class="kw">as </span>i16 * <span class="number">2 </span>- <span class="number">1</span>);
+
         <span class="kw">let </span>king_bb = board.pieces[color][KING];
         <span class="kw">let </span>king_square = <span class="kw">match </span>color == WHITE {
             <span class="bool-val">true </span>=&gt; king_bb.bit_scan() % <span class="number">64</span>,
             <span class="bool-val">false </span>=&gt; king_bb.swap_bytes().bit_scan() % <span class="number">64</span>,
         };
 
-        <span class="kw">for </span>piece_index <span class="kw">in </span>ALL_PIECES {
-            <span class="kw">let </span><span class="kw-2">mut </span>pieces_bb = board.pieces[color][piece_index];
-            <span class="kw">while </span>pieces_bb != <span class="number">0 </span>{
-                <span class="kw">let </span>square_bb = pieces_bb.get_lsb();
-                <span class="kw">let </span><span class="kw-2">mut </span>square = square_bb.bit_scan();
-                pieces_bb = pieces_bb.pop_lsb();
+        <span class="kw">let </span>enemy_king_bb = board.pieces[color ^ <span class="number">1</span>][KING];
+        <span class="kw">let </span>enemy_king_square = <span class="kw">match </span>color == WHITE {
+            <span class="bool-val">true </span>=&gt; enemy_king_bb.swap_bytes().bit_scan() % <span class="number">64</span>,
+            <span class="bool-val">false </span>=&gt; enemy_king_bb.bit_scan() % <span class="number">64</span>,
+        };
 
-                <span class="kw">if </span>color == BLACK {
-                    square = (<span class="number">1u64 </span>&lt;&lt; square).swap_bytes().bit_scan();
+        <span class="kw">for </span>pov <span class="kw">in </span>ALL_POVS {
+            <span class="kw">let </span>king_square = <span class="kw">if </span>pov == US { king_square } <span class="kw">else </span>{ enemy_king_square };
+            <span class="kw">for </span>piece_index <span class="kw">in </span>ALL_PIECES {
+                <span class="kw">let </span><span class="kw-2">mut </span>pieces_bb = board.pieces[color][piece_index];
+                <span class="kw">while </span>pieces_bb != <span class="number">0 </span>{
+                    <span class="kw">let </span>square_bb = pieces_bb.get_lsb();
+                    <span class="kw">let </span><span class="kw-2">mut </span>square = square_bb.bit_scan();
+                    pieces_bb = pieces_bb.pop_lsb();
+
+                    <span class="kw">if </span>color == BLACK {
+                        square = (<span class="number">1u64 </span>&lt;&lt; square).swap_bytes().bit_scan();
+                    }
+
+                    score += sign * evaluation::get_pst_value(piece_index, pov, king_square, square);
                 }
-
-                score += sign * evaluation::get_pst_value(piece_index, king_square, square);
             }
         }
     }
@@ -240,9 +272,10 @@
     board.state.pst_score = score;
 }
 
-<span class="doccomment">/// Gets a PST value for the specified `color`, `piece`, `phase` and `square` (relative perspective).
-</span><span class="kw">pub fn </span>get_pst_value(piece: usize, king_square: usize, square: usize) -&gt; PackedEval {
+<span class="doccomment">/// Gets a PST value for the specified `piece`, `pov`, `king_square` and `square` (relative perspective).
+</span><span class="kw">pub fn </span>get_pst_value(piece: usize, pov: usize, king_square: usize, square: usize) -&gt; PackedEval {
     <span class="macro">assert_fast!</span>(piece &lt; <span class="number">6</span>);
+    <span class="macro">assert_fast!</span>(pov &lt; <span class="number">2</span>);
     <span class="macro">assert_fast!</span>(king_square &lt; <span class="number">64</span>);
     <span class="macro">assert_fast!</span>(square &lt; <span class="number">64</span>);
 
@@ -257,7 +290,7 @@
     };
 
     <span class="macro">assert_fast!</span>(KING_BUCKETS[<span class="number">63 </span>- king_square] &lt; KING_BUCKETS_COUNT);
-    pst[KING_BUCKETS[<span class="number">63 </span>- king_square]][<span class="number">63 </span>- square]
+    pst[pov][KING_BUCKETS[<span class="number">63 </span>- king_square]][<span class="number">63 </span>- square]
 }
 
 <span class="doccomment">/// Gets coefficients of piece-square table for `piece` on `board` and inserts them into `coeffs`.
@@ -266,49 +299,60 @@
 </span><span class="kw">pub fn </span>get_coeffs(board: <span class="kw-2">&amp;</span>Board, piece: usize, index: <span class="kw-2">&amp;mut </span>u16, coeffs: <span class="kw-2">&amp;mut </span>Vec&lt;TunerCoeff&gt;, indices: <span class="kw-2">&amp;mut </span>Vec&lt;u16&gt;) {
     <span class="macro">assert_fast!</span>(piece &lt; <span class="number">6</span>);
 
-    <span class="kw">for </span>bucket <span class="kw">in </span><span class="number">0</span>..KING_BUCKETS_COUNT {
-        <span class="kw">let </span>valid_for_white = bucket == KING_BUCKETS[<span class="number">63 </span>- board.pieces[WHITE][KING].bit_scan()];
-        <span class="kw">let </span>valid_for_black = bucket == KING_BUCKETS[<span class="number">63 </span>- board.pieces[BLACK][KING].bit_scan()];
+    <span class="kw">for </span>pov <span class="kw">in </span>ALL_POVS {
+        <span class="kw">for </span>bucket <span class="kw">in </span><span class="number">0</span>..KING_BUCKETS_COUNT {
+            <span class="kw">let </span>(valid_for_white, valid_for_black) = <span class="kw">if </span>pov == US {
+                (
+                    bucket == KING_BUCKETS[<span class="number">63 </span>- board.pieces[WHITE][KING].bit_scan()],
+                    bucket == KING_BUCKETS[<span class="number">63 </span>- board.pieces[BLACK][KING].swap_bytes().bit_scan()],
+                )
+            } <span class="kw">else </span>{
+                (
+                    bucket == KING_BUCKETS[<span class="number">63 </span>- board.pieces[BLACK][KING].swap_bytes().bit_scan()],
+                    bucket == KING_BUCKETS[<span class="number">63 </span>- board.pieces[WHITE][KING].bit_scan()],
+                )
+            };
 
-        <span class="kw">for </span>square <span class="kw">in </span>ALL_SQUARES {
-            <span class="kw">let </span>current_index = <span class="number">63 </span>- square;
-            <span class="kw">let </span>opposite_index = (<span class="number">1u64 </span>&lt;&lt; current_index).swap_bytes().bit_scan();
+            <span class="kw">for </span>square <span class="kw">in </span>ALL_SQUARES {
+                <span class="kw">let </span>current_index = <span class="number">63 </span>- square;
+                <span class="kw">let </span>opposite_index = (<span class="number">1u64 </span>&lt;&lt; current_index).swap_bytes().bit_scan();
 
-            <span class="kw">let </span>current_piece = board.piece_table[current_index];
-            <span class="kw">let </span>opposite_piece = board.piece_table[opposite_index];
+                <span class="kw">let </span>current_piece = board.piece_table[current_index];
+                <span class="kw">let </span>opposite_piece = board.piece_table[opposite_index];
 
-            <span class="kw">let </span>current_color = <span class="kw">if </span>(board.occupancy[WHITE] &amp; (<span class="number">1 </span>&lt;&lt; current_index)) != <span class="number">0 </span>{ WHITE } <span class="kw">else </span>{ BLACK };
-            <span class="kw">let </span>opposite_color = <span class="kw">if </span>(board.occupancy[WHITE] &amp; (<span class="number">1 </span>&lt;&lt; opposite_index)) != <span class="number">0 </span>{ WHITE } <span class="kw">else </span>{ BLACK };
+                <span class="kw">let </span>current_color = <span class="kw">if </span>(board.occupancy[WHITE] &amp; (<span class="number">1 </span>&lt;&lt; current_index)) != <span class="number">0 </span>{ WHITE } <span class="kw">else </span>{ BLACK };
+                <span class="kw">let </span>opposite_color = <span class="kw">if </span>(board.occupancy[WHITE] &amp; (<span class="number">1 </span>&lt;&lt; opposite_index)) != <span class="number">0 </span>{ WHITE } <span class="kw">else </span>{ BLACK };
 
-            <span class="kw">if </span>valid_for_white &amp;&amp; !valid_for_black {
-                <span class="kw">if </span>current_piece == piece <span class="kw">as </span>u8 &amp;&amp; current_color == WHITE {
-                    coeffs.push(TunerCoeff::new(<span class="number">1</span>, OPENING));
-                    coeffs.push(TunerCoeff::new(<span class="number">1</span>, ENDING));
-                    indices.push(<span class="kw-2">*</span>index);
-                    indices.push(<span class="kw-2">*</span>index + <span class="number">1</span>);
+                <span class="kw">if </span>valid_for_white &amp;&amp; !valid_for_black {
+                    <span class="kw">if </span>current_piece == piece <span class="kw">as </span>u8 &amp;&amp; current_color == WHITE {
+                        coeffs.push(TunerCoeff::new(<span class="number">1</span>, OPENING));
+                        coeffs.push(TunerCoeff::new(<span class="number">1</span>, ENDING));
+                        indices.push(<span class="kw-2">*</span>index);
+                        indices.push(<span class="kw-2">*</span>index + <span class="number">1</span>);
+                    }
+                } <span class="kw">else if </span>!valid_for_white &amp;&amp; valid_for_black {
+                    <span class="kw">if </span>opposite_piece == piece <span class="kw">as </span>u8 &amp;&amp; opposite_color == BLACK {
+                        coeffs.push(TunerCoeff::new(-<span class="number">1</span>, OPENING));
+                        coeffs.push(TunerCoeff::new(-<span class="number">1</span>, ENDING));
+                        indices.push(<span class="kw-2">*</span>index);
+                        indices.push(<span class="kw-2">*</span>index + <span class="number">1</span>);
+                    }
+                } <span class="kw">else if </span>valid_for_white &amp;&amp; valid_for_black {
+                    <span class="kw">if </span>current_piece == piece <span class="kw">as </span>u8 &amp;&amp; opposite_piece != piece <span class="kw">as </span>u8 &amp;&amp; current_color == WHITE {
+                        coeffs.push(TunerCoeff::new(<span class="number">1</span>, OPENING));
+                        coeffs.push(TunerCoeff::new(<span class="number">1</span>, ENDING));
+                        indices.push(<span class="kw-2">*</span>index);
+                        indices.push(<span class="kw-2">*</span>index + <span class="number">1</span>);
+                    } <span class="kw">else if </span>opposite_piece == piece <span class="kw">as </span>u8 &amp;&amp; current_piece != piece <span class="kw">as </span>u8 &amp;&amp; opposite_color == BLACK {
+                        coeffs.push(TunerCoeff::new(-<span class="number">1</span>, OPENING));
+                        coeffs.push(TunerCoeff::new(-<span class="number">1</span>, ENDING));
+                        indices.push(<span class="kw-2">*</span>index);
+                        indices.push(<span class="kw-2">*</span>index + <span class="number">1</span>);
+                    }
                 }
-            } <span class="kw">else if </span>!valid_for_white &amp;&amp; valid_for_black {
-                <span class="kw">if </span>opposite_piece == piece <span class="kw">as </span>u8 &amp;&amp; opposite_color == BLACK {
-                    coeffs.push(TunerCoeff::new(-<span class="number">1</span>, OPENING));
-                    coeffs.push(TunerCoeff::new(-<span class="number">1</span>, ENDING));
-                    indices.push(<span class="kw-2">*</span>index);
-                    indices.push(<span class="kw-2">*</span>index + <span class="number">1</span>);
-                }
-            } <span class="kw">else if </span>valid_for_white &amp;&amp; valid_for_black {
-                <span class="kw">if </span>current_piece == piece <span class="kw">as </span>u8 &amp;&amp; opposite_piece != piece <span class="kw">as </span>u8 &amp;&amp; current_color == WHITE {
-                    coeffs.push(TunerCoeff::new(<span class="number">1</span>, OPENING));
-                    coeffs.push(TunerCoeff::new(<span class="number">1</span>, ENDING));
-                    indices.push(<span class="kw-2">*</span>index);
-                    indices.push(<span class="kw-2">*</span>index + <span class="number">1</span>);
-                } <span class="kw">else if </span>opposite_piece == piece <span class="kw">as </span>u8 &amp;&amp; current_piece != piece <span class="kw">as </span>u8 &amp;&amp; opposite_color == BLACK {
-                    coeffs.push(TunerCoeff::new(-<span class="number">1</span>, OPENING));
-                    coeffs.push(TunerCoeff::new(-<span class="number">1</span>, ENDING));
-                    indices.push(<span class="kw-2">*</span>index);
-                    indices.push(<span class="kw-2">*</span>index + <span class="number">1</span>);
-                }
+
+                <span class="kw-2">*</span>index += <span class="number">2</span>;
             }
-
-            <span class="kw-2">*</span>index += <span class="number">2</span>;
         }
     }
 }

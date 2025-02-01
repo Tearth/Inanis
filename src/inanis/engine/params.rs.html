@@ -147,11 +147,38 @@
 <a href="#145" id="145">145</a>
 <a href="#146" id="146">146</a>
 <a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
 </pre></div><pre class="rust"><code><span class="attr">#[derive(Clone)]
 </span><span class="kw">pub struct </span>SearchParams {
+    <span class="kw">pub </span>time_a: i8,
+    <span class="kw">pub </span>time_b: i8,
+    <span class="kw">pub </span>time_c: i8,
+    <span class="kw">pub </span>time_d: i8,
+    <span class="kw">pub </span>time_e: i8,
+    <span class="kw">pub </span>time_soft_bound: i16,
+    <span class="kw">pub </span>time_hard_bound: i16,
+
     <span class="kw">pub </span>aspwin_delta: i16,
+    <span class="kw">pub </span>aspwin_multiplier: i16,
     <span class="kw">pub </span>aspwin_min_depth: i8,
-    <span class="kw">pub </span>aspwin_max_width: i16,
+    <span class="kw">pub </span>aspwin_max_delta: i16,
 
     <span class="kw">pub </span>iir_min_depth: i8,
     <span class="kw">pub </span>iir_reduction_base: i8,
@@ -159,17 +186,14 @@
     <span class="kw">pub </span>iir_max_reduction: i8,
 
     <span class="kw">pub </span>razoring_min_depth: i8,
-    <span class="kw">pub </span>razoring_max_depth: i8,
     <span class="kw">pub </span>razoring_depth_margin_base: i16,
     <span class="kw">pub </span>razoring_depth_margin_multiplier: i16,
 
     <span class="kw">pub </span>snmp_min_depth: i8,
-    <span class="kw">pub </span>snmp_max_depth: i8,
     <span class="kw">pub </span>snmp_depth_margin_base: i16,
     <span class="kw">pub </span>snmp_depth_margin_multiplier: i16,
 
     <span class="kw">pub </span>nmp_min_depth: i8,
-    <span class="kw">pub </span>nmp_min_game_phase: u8,
     <span class="kw">pub </span>nmp_margin: i16,
     <span class="kw">pub </span>nmp_depth_base: i8,
     <span class="kw">pub </span>nmp_depth_divider: i8,
@@ -197,9 +221,18 @@
 
 <span class="attr">#[allow(non_upper_case_globals)]
 </span><span class="kw">impl </span>SearchParams {
-    <span class="kw">pub const </span>aspwin_delta: i16 = <span class="number">25</span>;
+    <span class="kw">pub const </span>time_a: i8 = <span class="number">43</span>;
+    <span class="kw">pub const </span>time_b: i8 = -<span class="number">28</span>;
+    <span class="kw">pub const </span>time_c: i8 = <span class="number">21</span>;
+    <span class="kw">pub const </span>time_d: i8 = -<span class="number">8</span>;
+    <span class="kw">pub const </span>time_e: i8 = <span class="number">15</span>;
+    <span class="kw">pub const </span>time_soft_bound: i16 = <span class="number">70</span>;
+    <span class="kw">pub const </span>time_hard_bound: i16 = <span class="number">400</span>;
+
+    <span class="kw">pub const </span>aspwin_delta: i16 = <span class="number">15</span>;
+    <span class="kw">pub const </span>aspwin_multiplier: i16 = <span class="number">200</span>;
     <span class="kw">pub const </span>aspwin_min_depth: i8 = <span class="number">5</span>;
-    <span class="kw">pub const </span>aspwin_max_width: i16 = <span class="number">400</span>;
+    <span class="kw">pub const </span>aspwin_max_delta: i16 = <span class="number">200</span>;
 
     <span class="kw">pub const </span>iir_min_depth: i8 = <span class="number">4</span>;
     <span class="kw">pub const </span>iir_reduction_base: i8 = <span class="number">1</span>;
@@ -207,18 +240,15 @@
     <span class="kw">pub const </span>iir_max_reduction: i8 = <span class="number">3</span>;
 
     <span class="kw">pub const </span>razoring_min_depth: i8 = <span class="number">1</span>;
-    <span class="kw">pub const </span>razoring_max_depth: i8 = <span class="number">5</span>;
-    <span class="kw">pub const </span>razoring_depth_margin_base: i16 = <span class="number">260</span>;
-    <span class="kw">pub const </span>razoring_depth_margin_multiplier: i16 = <span class="number">260</span>;
+    <span class="kw">pub const </span>razoring_depth_margin_base: i16 = <span class="number">300</span>;
+    <span class="kw">pub const </span>razoring_depth_margin_multiplier: i16 = <span class="number">240</span>;
 
     <span class="kw">pub const </span>snmp_min_depth: i8 = <span class="number">1</span>;
-    <span class="kw">pub const </span>snmp_max_depth: i8 = <span class="number">8</span>;
-    <span class="kw">pub const </span>snmp_depth_margin_base: i16 = <span class="number">135</span>;
-    <span class="kw">pub const </span>snmp_depth_margin_multiplier: i16 = <span class="number">55</span>;
+    <span class="kw">pub const </span>snmp_depth_margin_base: i16 = <span class="number">85</span>;
+    <span class="kw">pub const </span>snmp_depth_margin_multiplier: i16 = <span class="number">65</span>;
 
     <span class="kw">pub const </span>nmp_min_depth: i8 = <span class="number">2</span>;
-    <span class="kw">pub const </span>nmp_min_game_phase: u8 = <span class="number">3</span>;
-    <span class="kw">pub const </span>nmp_margin: i16 = <span class="number">60</span>;
+    <span class="kw">pub const </span>nmp_margin: i16 = <span class="number">55</span>;
     <span class="kw">pub const </span>nmp_depth_base: i8 = <span class="number">2</span>;
     <span class="kw">pub const </span>nmp_depth_divider: i8 = <span class="number">5</span>;
 
@@ -226,7 +256,7 @@
     <span class="kw">pub const </span>lmp_max_depth: i8 = <span class="number">3</span>;
     <span class="kw">pub const </span>lmp_move_index_margin_base: usize = <span class="number">2</span>;
     <span class="kw">pub const </span>lmp_move_index_margin_multiplier: usize = <span class="number">5</span>;
-    <span class="kw">pub const </span>lmp_max_score: i16 = -<span class="number">55</span>;
+    <span class="kw">pub const </span>lmp_max_score: i16 = -<span class="number">65</span>;
 
     <span class="kw">pub const </span>lmr_min_depth: i8 = <span class="number">2</span>;
     <span class="kw">pub const </span>lmr_max_score: i16 = <span class="number">90</span>;
@@ -240,16 +270,25 @@
     <span class="kw">pub const </span>lmr_pv_max_reduction: i8 = <span class="number">2</span>;
 
     <span class="kw">pub const </span>q_score_pruning_treshold: i16 = <span class="number">0</span>;
-    <span class="kw">pub const </span>q_futility_pruning_margin: i16 = <span class="number">100</span>;
+    <span class="kw">pub const </span>q_futility_pruning_margin: i16 = <span class="number">75</span>;
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>SearchParams {
     <span class="doccomment">/// Constructs a default instance of [SearchParams] with default elements.
     </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
+            time_a: <span class="self">Self</span>::time_a,
+            time_b: <span class="self">Self</span>::time_b,
+            time_c: <span class="self">Self</span>::time_c,
+            time_d: <span class="self">Self</span>::time_d,
+            time_e: <span class="self">Self</span>::time_e,
+            time_soft_bound: <span class="self">Self</span>::time_soft_bound,
+            time_hard_bound: <span class="self">Self</span>::time_hard_bound,
+
             aspwin_delta: <span class="self">Self</span>::aspwin_delta,
+            aspwin_multiplier: <span class="self">Self</span>::aspwin_multiplier,
             aspwin_min_depth: <span class="self">Self</span>::aspwin_min_depth,
-            aspwin_max_width: <span class="self">Self</span>::aspwin_max_width,
+            aspwin_max_delta: <span class="self">Self</span>::aspwin_max_delta,
 
             iir_min_depth: <span class="self">Self</span>::iir_min_depth,
             iir_reduction_base: <span class="self">Self</span>::iir_reduction_base,
@@ -257,17 +296,14 @@
             iir_max_reduction: <span class="self">Self</span>::iir_max_reduction,
 
             razoring_min_depth: <span class="self">Self</span>::razoring_min_depth,
-            razoring_max_depth: <span class="self">Self</span>::razoring_max_depth,
             razoring_depth_margin_base: <span class="self">Self</span>::razoring_depth_margin_base,
             razoring_depth_margin_multiplier: <span class="self">Self</span>::razoring_depth_margin_multiplier,
 
             snmp_min_depth: <span class="self">Self</span>::snmp_min_depth,
-            snmp_max_depth: <span class="self">Self</span>::snmp_max_depth,
             snmp_depth_margin_base: <span class="self">Self</span>::snmp_depth_margin_base,
             snmp_depth_margin_multiplier: <span class="self">Self</span>::snmp_depth_margin_multiplier,
 
             nmp_min_depth: <span class="self">Self</span>::nmp_min_depth,
-            nmp_min_game_phase: <span class="self">Self</span>::nmp_min_game_phase,
             nmp_margin: <span class="self">Self</span>::nmp_margin,
             nmp_depth_base: <span class="self">Self</span>::nmp_depth_base,
             nmp_depth_divider: <span class="self">Self</span>::nmp_depth_divider,

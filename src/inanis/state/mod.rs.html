@@ -192,6 +192,10 @@
 <a href="#190" id="190">190</a>
 <a href="#191" id="191">191</a>
 <a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::ops::RangeInclusive;
 
 <span class="kw">pub mod </span>movegen;
@@ -203,6 +207,9 @@
 
 <span class="kw">pub const </span>WHITE: usize = <span class="number">0</span>;
 <span class="kw">pub const </span>BLACK: usize = <span class="number">1</span>;
+
+<span class="kw">pub const </span>US: usize = <span class="number">0</span>;
+<span class="kw">pub const </span>THEM: usize = <span class="number">1</span>;
 
 <span class="kw">pub const </span>OPENING: usize = <span class="number">0</span>;
 <span class="kw">pub const </span>ENDING: usize = <span class="number">1</span>;
@@ -379,6 +386,7 @@
 <span class="kw">pub const </span>H8_BB: u64 = <span class="number">1 </span>&lt;&lt; H8;
 
 <span class="kw">pub const </span>ALL_COLORS: RangeInclusive&lt;usize&gt; = <span class="number">0</span>..=<span class="number">1</span>;
+<span class="kw">pub const </span>ALL_POVS: RangeInclusive&lt;usize&gt; = <span class="number">0</span>..=<span class="number">1</span>;
 <span class="kw">pub const </span>ALL_PHASES: RangeInclusive&lt;usize&gt; = <span class="number">0</span>..=<span class="number">1</span>;
 <span class="kw">pub const </span>ALL_PIECES: RangeInclusive&lt;usize&gt; = <span class="number">0</span>..=<span class="number">5</span>;
 <span class="kw">pub const </span>ALL_FILES: RangeInclusive&lt;usize&gt; = <span class="number">0</span>..=<span class="number">7</span>;

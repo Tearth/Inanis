@@ -271,12 +271,6 @@
 <a href="#269" id="269">269</a>
 <a href="#270" id="270">270</a>
 <a href="#271" id="271">271</a>
-<a href="#272" id="272">272</a>
-<a href="#273" id="273">273</a>
-<a href="#274" id="274">274</a>
-<a href="#275" id="275">275</a>
-<a href="#276" id="276">276</a>
-<a href="#277" id="277">277</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="self">self</span>::params::SearchParams;
 <span class="kw">use </span><span class="kw">super</span>::stats::SearchStats;
 <span class="kw">use super</span>::<span class="kw-2">*</span>;
@@ -289,7 +283,6 @@
 <span class="kw">use </span><span class="kw">crate</span>::state::movescan::Move;
 <span class="kw">use </span><span class="kw">crate</span>::state::representation::Board;
 <span class="kw">use </span><span class="kw">crate</span>::utils::panic_fast;
-<span class="kw">use </span>std::cmp;
 <span class="kw">use </span>std::sync::atomic::AtomicBool;
 <span class="kw">use </span>std::sync::atomic::Ordering;
 <span class="kw">use </span>std::sync::Arc;
@@ -306,16 +299,19 @@
     <span class="kw">pub </span>current_depth: i8,
     <span class="kw">pub </span>forced_depth: i8,
     <span class="kw">pub </span>max_nodes_count: u64,
+    <span class="kw">pub </span>max_soft_nodes_count: u64,
     <span class="kw">pub </span>max_move_time: u32,
     <span class="kw">pub </span>moves_to_go: u32,
     <span class="kw">pub </span>moves_to_search: Vec&lt;Move&gt;,
     <span class="kw">pub </span>search_time_start: SystemTime,
-    <span class="kw">pub </span>deadline: u32,
+    <span class="kw">pub </span>time_hard_bound: u32,
     <span class="kw">pub </span>multipv: bool,
     <span class="kw">pub </span>lines: Vec&lt;SearchResultLine&gt;,
     <span class="kw">pub </span>search_done: bool,
     <span class="kw">pub </span>uci_debug: bool,
     <span class="kw">pub </span>ponder_mode: bool,
+    <span class="kw">pub </span>soft_nodes: bool,
+    <span class="kw">pub </span>search_noise: bool,
     <span class="kw">pub </span>syzygy_enabled: bool,
     <span class="kw">pub </span>syzygy_probe_limit: u32,
     <span class="kw">pub </span>syzygy_probe_depth: i8,
@@ -358,16 +354,19 @@
             current_depth: <span class="number">1</span>,
             forced_depth: <span class="number">0</span>,
             max_nodes_count: <span class="number">0</span>,
+            max_soft_nodes_count: <span class="number">0</span>,
             max_move_time: <span class="number">0</span>,
             moves_to_go: <span class="number">0</span>,
             moves_to_search: Vec::new(),
             search_time_start: SystemTime::now(),
-            deadline: <span class="number">0</span>,
+            time_hard_bound: <span class="number">0</span>,
             multipv: <span class="bool-val">false</span>,
             lines: Vec::new(),
             search_done: <span class="bool-val">false</span>,
             uci_debug: <span class="bool-val">false</span>,
             ponder_mode: <span class="bool-val">false</span>,
+            soft_nodes: <span class="bool-val">false</span>,
+            search_noise: <span class="bool-val">false</span>,
             syzygy_enabled: <span class="bool-val">false</span>,
             syzygy_probe_limit: <span class="number">0</span>,
             syzygy_probe_depth: <span class="number">0</span>,
@@ -390,7 +389,8 @@
 
     <span class="doccomment">/// Performs the next iteration of the search, using data stored in the context. Returns [None] if any of the following conditions is true:
     ///  - the search has been done in the previous iteration or the current depth is about to exceed [MAX_DEPTH] value
-    ///  - `self.forced_depth` is not 0 and the current depth is about to exceed this value
+    ///  - forced depth is not 0 and the current depth is about to exceed this value
+    ///  - soft nodes are enabled and the nodes count exceeded the maximal value
     ///  - instant move is possible
     ///  - Syzygy tablebase move is possible
     ///  - time allocated for the current search has expired
@@ -436,26 +436,14 @@
                 }
             }
 
-            <span class="kw">let </span>desired_time = <span class="kw">if </span><span class="self">self</span>.max_move_time != <span class="number">0 </span>{
-                <span class="self">self</span>.max_move_time
-            } <span class="kw">else </span>{
-                <span class="kw">let </span>desired_time = clock::get_time_for_move(<span class="self">self</span>.board.fullmove_number, <span class="self">self</span>.time, <span class="self">self</span>.inc_time, <span class="self">self</span>.moves_to_go);
+            <span class="comment">// With soft nodes enabled, search is stopped after completing the depth instead aborting it in the middle
+            </span><span class="kw">if </span><span class="self">self</span>.soft_nodes &amp;&amp; <span class="self">self</span>.max_soft_nodes_count &gt; <span class="number">0 </span>&amp;&amp; <span class="self">self</span>.stats.nodes_count + <span class="self">self</span>.stats.q_nodes_count &gt;= <span class="self">self</span>.max_soft_nodes_count {
+                <span class="kw">return </span><span class="prelude-val">None</span>;
+            }
 
-                <span class="comment">// Desired time can't exceed the whole available time
-                </span>cmp::min(desired_time, <span class="self">self</span>.time)
-            };
+            <span class="kw">let </span>(time_soft_bound, time_hard_bound) = clock::get_time_bounds(<span class="self">self</span>);
 
-            <span class="self">self</span>.deadline = <span class="kw">if </span><span class="self">self</span>.max_move_time != <span class="number">0 </span>{
-                <span class="self">self</span>.max_move_time
-            } <span class="kw">else if </span><span class="self">self</span>.current_depth &gt; <span class="number">1 </span>{
-                <span class="kw">let </span>deadline = ((desired_time <span class="kw">as </span>f32) * DEADLINE_MULTIPLIER) <span class="kw">as </span>u32;
-
-                <span class="comment">// Deadline can't exceed the whole available time
-                </span>cmp::min(deadline, <span class="self">self</span>.time)
-            } <span class="kw">else </span>{
-                u32::MAX
-            };
-
+            <span class="self">self</span>.time_hard_bound = time_hard_bound;
             <span class="self">self</span>.lines.clear();
 
             <span class="kw">let </span>helper_contexts_arc = <span class="self">self</span>.helper_contexts.clone();
@@ -526,7 +514,7 @@
             <span class="self">self</span>.current_depth += <span class="number">1</span>;
 
             <span class="kw">if </span><span class="self">self</span>.forced_depth == <span class="number">0 </span>&amp;&amp; <span class="self">self</span>.max_nodes_count == <span class="number">0 </span>{
-                <span class="kw">if </span>search_time &gt; ((desired_time <span class="kw">as </span>f32) * TIME_THRESHOLD_RATIO) <span class="kw">as </span>u32 {
+                <span class="kw">if </span>search_time &gt; time_soft_bound {
                     <span class="self">self</span>.search_done = <span class="bool-val">true</span>;
                 }
 

@@ -17,21 +17,59 @@
 <a href="#15" id="15">15</a>
 <a href="#16" id="16">16</a>
 <a href="#17" id="17">17</a>
-</pre></div><pre class="rust"><code><span class="doccomment">/// Calculates a time which should be allocated for the next move, based on `move_number`, `total_time`, `inc_time` (0 if not available)
-/// and `moves_to_go` (0 if not available). Formula and chart used when `moves_to_go` is zeroed can be found in the `/misc/time.xlsx` Excel sheet,
-/// but in general outline it tries to allocate more time during mid-game where usually there's a lot of pieces on the board and it's crucial
-/// to find some advantage at this phase. Formula used when `moves_to_go` is greater than zero is simpler and allocates time evenly.
-</span><span class="kw">pub fn </span>get_time_for_move(move_number: u16, total_time: u32, inc_time: u32, moves_to_go: u32) -&gt; u32 {
-    <span class="kw">if </span>moves_to_go == <span class="number">0 </span>{
-        <span class="kw">const </span>A: f32 = <span class="number">45.0</span>;
-        <span class="kw">const </span>B: f32 = -<span class="number">25.0</span>;
-        <span class="kw">const </span>C: f32 = <span class="number">25.0</span>;
-        <span class="kw">const </span>D: f32 = -<span class="number">10.0</span>;
-        <span class="kw">const </span>E: f32 = <span class="number">15.0</span>;
+<a href="#18" id="18">18</a>
+<a href="#19" id="19">19</a>
+<a href="#20" id="20">20</a>
+<a href="#21" id="21">21</a>
+<a href="#22" id="22">22</a>
+<a href="#23" id="23">23</a>
+<a href="#24" id="24">24</a>
+<a href="#25" id="25">25</a>
+<a href="#26" id="26">26</a>
+<a href="#27" id="27">27</a>
+<a href="#28" id="28">28</a>
+<a href="#29" id="29">29</a>
+<a href="#30" id="30">30</a>
+<a href="#31" id="31">31</a>
+<a href="#32" id="32">32</a>
+<a href="#33" id="33">33</a>
+<a href="#34" id="34">34</a>
+<a href="#35" id="35">35</a>
+<a href="#36" id="36">36</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::context::SearchContext;
+<span class="kw">use </span><span class="kw">crate</span>::utils::param;
 
-        total_time / ((A + B * (C.min((move_number <span class="kw">as </span>f32) + D) / E).sin()) <span class="kw">as </span>u32) + inc_time
-    } <span class="kw">else </span>{
-        total_time / (moves_to_go + <span class="number">2</span>) + inc_time
+<span class="doccomment">/// Calculates time bounds (soft and hard) which should be used for the next move. Formula and plot for the case when `moves_to_go` is zeroed can
+/// be found in the `/misc/time.xlsx` Excel sheet, but in general outline it tries to allocate more time during midgame where usually there's
+/// a lot of pieces on the board and it's crucial to find some advantage at this phase, that can be converted later to decisive result. Formula used
+/// when `moves_to_go` is greater than zero is simpler and allocates time evenly.
+</span><span class="kw">pub fn </span>get_time_bounds(context: <span class="kw-2">&amp;</span>SearchContext) -&gt; (u32, u32) {
+    <span class="kw">if </span>context.max_move_time != <span class="number">0 </span>{
+        <span class="kw">let </span>soft_bound = context.max_move_time * <span class="macro">param!</span>(context.params.time_soft_bound) <span class="kw">as </span>u32 / <span class="number">100</span>;
+        <span class="kw">let </span>hard_bound = context.max_move_time;
+
+        <span class="kw">return </span>(soft_bound, hard_bound);
     }
+
+    <span class="kw">if </span>context.time &gt; u32::MAX / <span class="number">2 </span>{
+        <span class="kw">return </span>(u32::MAX, u32::MAX);
+    }
+
+    <span class="kw">let </span>allocated_time = <span class="kw">if </span>context.moves_to_go == <span class="number">0 </span>{
+        <span class="kw">let </span>a = <span class="macro">param!</span>(context.params.time_a) <span class="kw">as </span>f32;
+        <span class="kw">let </span>b = <span class="macro">param!</span>(context.params.time_b) <span class="kw">as </span>f32;
+        <span class="kw">let </span>c = <span class="macro">param!</span>(context.params.time_c) <span class="kw">as </span>f32;
+        <span class="kw">let </span>d = <span class="macro">param!</span>(context.params.time_d) <span class="kw">as </span>f32;
+        <span class="kw">let </span>e = <span class="macro">param!</span>(context.params.time_e) <span class="kw">as </span>f32;
+
+        context.time / ((a + b * f32::sin(f32::min(c, (context.board.fullmove_number <span class="kw">as </span>f32) + d) / e)) <span class="kw">as </span>u32) + context.inc_time
+    } <span class="kw">else </span>{
+        context.time / (context.moves_to_go + <span class="number">2</span>) + context.inc_time
+    };
+
+    <span class="kw">let </span>soft_bound = allocated_time * <span class="macro">param!</span>(context.params.time_soft_bound) <span class="kw">as </span>u32 / <span class="number">100</span>;
+    <span class="kw">let </span>hard_bound = allocated_time * <span class="macro">param!</span>(context.params.time_hard_bound) <span class="kw">as </span>u32 / <span class="number">100</span>;
+
+    (soft_bound.min(context.time), hard_bound.min(context.time))
 }
 </code></pre></div></section></main></body></html>

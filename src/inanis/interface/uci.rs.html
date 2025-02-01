@@ -728,6 +728,28 @@
 <a href="#726" id="726">726</a>
 <a href="#727" id="727">727</a>
 <a href="#728" id="728">728</a>
+<a href="#729" id="729">729</a>
+<a href="#730" id="730">730</a>
+<a href="#731" id="731">731</a>
+<a href="#732" id="732">732</a>
+<a href="#733" id="733">733</a>
+<a href="#734" id="734">734</a>
+<a href="#735" id="735">735</a>
+<a href="#736" id="736">736</a>
+<a href="#737" id="737">737</a>
+<a href="#738" id="738">738</a>
+<a href="#739" id="739">739</a>
+<a href="#740" id="740">740</a>
+<a href="#741" id="741">741</a>
+<a href="#742" id="742">742</a>
+<a href="#743" id="743">743</a>
+<a href="#744" id="744">744</a>
+<a href="#745" id="745">745</a>
+<a href="#746" id="746">746</a>
+<a href="#747" id="747">747</a>
+<a href="#748" id="748">748</a>
+<a href="#749" id="749">749</a>
+<a href="#750" id="750">750</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::cache::counters::CMTable;
 <span class="kw">use </span><span class="kw">crate</span>::cache::history::HTable;
 <span class="kw">use </span><span class="kw">crate</span>::cache::killers::KTable;
@@ -835,13 +857,15 @@
     <span class="macro">println!</span>(<span class="string">"id author {}"</span>, AUTHOR);
 
     options_lock.insert(<span class="string">"Hash"</span>.to_string(), UciOption::new(<span class="number">0</span>, <span class="string">"spin"</span>, <span class="number">1</span>, <span class="number">1048576</span>, <span class="number">2</span>));
-    options_lock.insert(<span class="string">"Move Overhead"</span>.to_string(), UciOption::new(<span class="number">1</span>, <span class="string">"spin"</span>, <span class="number">0</span>, <span class="number">3600000</span>, <span class="number">10</span>));
+    options_lock.insert(<span class="string">"Move Overhead"</span>.to_string(), UciOption::new(<span class="number">1</span>, <span class="string">"spin"</span>, <span class="number">0</span>, <span class="number">3600000</span>, <span class="number">100</span>));
     options_lock.insert(<span class="string">"MultiPV"</span>.to_string(), UciOption::new(<span class="number">2</span>, <span class="string">"spin"</span>, <span class="number">1</span>, <span class="number">256</span>, <span class="number">1</span>));
     options_lock.insert(<span class="string">"Threads"</span>.to_string(), UciOption::new(<span class="number">3</span>, <span class="string">"spin"</span>, <span class="number">1</span>, <span class="number">1024</span>, <span class="number">1</span>));
     options_lock.insert(<span class="string">"SyzygyPath"</span>.to_string(), UciOption::new(<span class="number">4</span>, <span class="string">"string"</span>, <span class="string">""</span>, <span class="string">""</span>, <span class="string">"&lt;empty&gt;"</span>));
     options_lock.insert(<span class="string">"SyzygyProbeLimit"</span>.to_string(), UciOption::new(<span class="number">5</span>, <span class="string">"spin"</span>, <span class="number">1</span>, <span class="number">9</span>, <span class="number">8</span>));
     options_lock.insert(<span class="string">"SyzygyProbeDepth"</span>.to_string(), UciOption::new(<span class="number">6</span>, <span class="string">"spin"</span>, <span class="number">1</span>, <span class="number">32</span>, <span class="number">6</span>));
     options_lock.insert(<span class="string">"Ponder"</span>.to_string(), UciOption::new(<span class="number">7</span>, <span class="string">"check"</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>));
+    options_lock.insert(<span class="string">"Soft Nodes"</span>.to_string(), UciOption::new(<span class="number">50</span>, <span class="string">"check"</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>));
+    options_lock.insert(<span class="string">"Search Noise"</span>.to_string(), UciOption::new(<span class="number">50</span>, <span class="string">"check"</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>));
     options_lock.insert(<span class="string">"Clear Hash"</span>.to_string(), UciOption::new(<span class="number">8</span>, <span class="string">"button"</span>, <span class="string">""</span>, <span class="string">""</span>, <span class="string">""</span>));
 
     <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
@@ -850,9 +874,18 @@
     <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
     </span>{
         <span class="kw">let </span>params = SearchParams::default();
+        options_lock.insert(<span class="string">"time_a"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.time_a));
+        options_lock.insert(<span class="string">"time_b"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.time_b));
+        options_lock.insert(<span class="string">"time_c"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.time_c));
+        options_lock.insert(<span class="string">"time_d"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.time_d));
+        options_lock.insert(<span class="string">"time_e"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.time_e));
+        options_lock.insert(<span class="string">"time_soft_bound"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.time_soft_bound));
+        options_lock.insert(<span class="string">"time_hard_bound"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.time_hard_bound));
+
         options_lock.insert(<span class="string">"aspwin_delta"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.aspwin_delta));
+        options_lock.insert(<span class="string">"aspwin_multiplier"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.aspwin_multiplier));
         options_lock.insert(<span class="string">"aspwin_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.aspwin_min_depth));
-        options_lock.insert(<span class="string">"aspwin_max_width"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.aspwin_max_width));
+        options_lock.insert(<span class="string">"aspwin_max_delta"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.aspwin_max_delta));
 
         options_lock.insert(<span class="string">"iir_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.iir_min_depth));
         options_lock.insert(<span class="string">"iir_reduction_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.iir_reduction_base));
@@ -860,17 +893,14 @@
         options_lock.insert(<span class="string">"iir_max_reduction"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.iir_max_reduction));
 
         options_lock.insert(<span class="string">"razoring_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.razoring_min_depth));
-        options_lock.insert(<span class="string">"razoring_max_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.razoring_max_depth));
         options_lock.insert(<span class="string">"razoring_depth_margin_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.razoring_depth_margin_base));
         options_lock.insert(<span class="string">"razoring_depth_margin_multiplier"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.razoring_depth_margin_multiplier));
 
         options_lock.insert(<span class="string">"snmp_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.snmp_min_depth));
-        options_lock.insert(<span class="string">"snmp_max_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.snmp_max_depth));
         options_lock.insert(<span class="string">"snmp_depth_margin_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.snmp_depth_margin_base));
         options_lock.insert(<span class="string">"snmp_depth_margin_multiplier"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.snmp_depth_margin_multiplier));
 
         options_lock.insert(<span class="string">"nmp_min_depth"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.nmp_min_depth));
-        options_lock.insert(<span class="string">"nmp_min_game_phase"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.nmp_min_game_phase));
         options_lock.insert(<span class="string">"nmp_margin"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.nmp_margin));
         options_lock.insert(<span class="string">"nmp_depth_base"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.nmp_depth_base));
         options_lock.insert(<span class="string">"nmp_depth_divider"</span>.to_string(), UciOption::new_wide(<span class="number">99</span>, params.nmp_depth_divider));
@@ -1114,15 +1144,26 @@
         <span class="kw">let </span>syzygy_enabled = !syzygy_path.is_empty() &amp;&amp; syzygy_path != <span class="string">"&lt;empty&gt;"</span>;
         <span class="kw">let </span>syzygy_probe_limit = options_lock[<span class="string">"SyzygyProbeLimit"</span>].value.parse::&lt;u32&gt;().unwrap();
         <span class="kw">let </span>syzygy_probe_depth = options_lock[<span class="string">"SyzygyProbeDepth"</span>].value.parse::&lt;i8&gt;().unwrap();
+        <span class="kw">let </span>soft_nodes = options_lock[<span class="string">"Soft Nodes"</span>].value.parse::&lt;bool&gt;().unwrap();
+        <span class="kw">let </span>search_noise = options_lock[<span class="string">"Search Noise"</span>].value.parse::&lt;bool&gt;().unwrap();
 
         <span class="attr">#[cfg(not(feature = <span class="string">"dev"</span>))]
         </span><span class="kw">let </span>search_params = SearchParams::default();
 
         <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
         </span><span class="kw">let </span>search_params = SearchParams {
+            time_a: options_lock[<span class="string">"time_a"</span>].value.parse().unwrap(),
+            time_b: options_lock[<span class="string">"time_b"</span>].value.parse().unwrap(),
+            time_c: options_lock[<span class="string">"time_c"</span>].value.parse().unwrap(),
+            time_d: options_lock[<span class="string">"time_d"</span>].value.parse().unwrap(),
+            time_e: options_lock[<span class="string">"time_e"</span>].value.parse().unwrap(),
+            time_soft_bound: options_lock[<span class="string">"time_soft_bound"</span>].value.parse().unwrap(),
+            time_hard_bound: options_lock[<span class="string">"time_hard_bound"</span>].value.parse().unwrap(),
+
             aspwin_delta: options_lock[<span class="string">"aspwin_delta"</span>].value.parse().unwrap(),
+            aspwin_multiplier: options_lock[<span class="string">"aspwin_multiplier"</span>].value.parse().unwrap(),
             aspwin_min_depth: options_lock[<span class="string">"aspwin_min_depth"</span>].value.parse().unwrap(),
-            aspwin_max_width: options_lock[<span class="string">"aspwin_max_width"</span>].value.parse().unwrap(),
+            aspwin_max_delta: options_lock[<span class="string">"aspwin_max_delta"</span>].value.parse().unwrap(),
 
             iir_min_depth: options_lock[<span class="string">"iir_min_depth"</span>].value.parse().unwrap(),
             iir_reduction_base: options_lock[<span class="string">"iir_reduction_base"</span>].value.parse().unwrap(),
@@ -1130,17 +1171,14 @@
             iir_max_reduction: options_lock[<span class="string">"iir_max_reduction"</span>].value.parse().unwrap(),
 
             razoring_min_depth: options_lock[<span class="string">"razoring_min_depth"</span>].value.parse().unwrap(),
-            razoring_max_depth: options_lock[<span class="string">"razoring_max_depth"</span>].value.parse().unwrap(),
             razoring_depth_margin_base: options_lock[<span class="string">"razoring_depth_margin_base"</span>].value.parse().unwrap(),
             razoring_depth_margin_multiplier: options_lock[<span class="string">"razoring_depth_margin_multiplier"</span>].value.parse().unwrap(),
 
             snmp_min_depth: options_lock[<span class="string">"snmp_min_depth"</span>].value.parse().unwrap(),
-            snmp_max_depth: options_lock[<span class="string">"snmp_max_depth"</span>].value.parse().unwrap(),
             snmp_depth_margin_base: options_lock[<span class="string">"snmp_depth_margin_base"</span>].value.parse().unwrap(),
             snmp_depth_margin_multiplier: options_lock[<span class="string">"snmp_depth_margin_multiplier"</span>].value.parse().unwrap(),
 
             nmp_min_depth: options_lock[<span class="string">"nmp_min_depth"</span>].value.parse().unwrap(),
-            nmp_min_game_phase: options_lock[<span class="string">"nmp_min_game_phase"</span>].value.parse().unwrap(),
             nmp_margin: options_lock[<span class="string">"nmp_margin"</span>].value.parse().unwrap(),
             nmp_depth_base: options_lock[<span class="string">"nmp_depth_base"</span>].value.parse().unwrap(),
             nmp_depth_divider: options_lock[<span class="string">"nmp_depth_divider"</span>].value.parse().unwrap(),
@@ -1173,6 +1211,7 @@
         context_lock.current_depth = <span class="number">1</span>;
         context_lock.forced_depth = forced_depth;
         context_lock.max_nodes_count = max_nodes_count;
+        context_lock.max_soft_nodes_count = max_nodes_count;
         context_lock.max_move_time = max_move_time;
         context_lock.moves_to_go = moves_to_go;
         context_lock.moves_to_search = moves_to_search.clone();
@@ -1181,10 +1220,16 @@
         context_lock.search_done = <span class="bool-val">false</span>;
         context_lock.uci_debug = debug_mode;
         context_lock.ponder_mode = ponder_mode;
+        context_lock.soft_nodes = soft_nodes;
+        context_lock.search_noise = search_noise;
         context_lock.syzygy_enabled = syzygy_enabled;
         context_lock.syzygy_probe_limit = syzygy_probe_limit;
         context_lock.syzygy_probe_depth = syzygy_probe_depth;
         context_lock.stats = SearchStats::default();
+
+        <span class="kw">if </span>soft_nodes {
+            context_lock.max_nodes_count <span class="kw-2">*</span>= <span class="number">10</span>;
+        }
 
         context_lock.lines.clear();
         context_lock.helper_contexts.write().unwrap().clear();
@@ -1272,7 +1317,6 @@
             <span class="macro">println!</span>(<span class="string">"bestmove {}"</span>, best_move);
         }
 
-        context_lock.ktable.age_moves();
         context_lock.htable.age_values();
     });
 }

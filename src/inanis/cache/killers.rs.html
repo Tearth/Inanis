@@ -74,11 +74,6 @@
 <a href="#72" id="72">72</a>
 <a href="#73" id="73">73</a>
 <a href="#74" id="74">74</a>
-<a href="#75" id="75">75</a>
-<a href="#76" id="76">76</a>
-<a href="#77" id="77">77</a>
-<a href="#78" id="78">78</a>
-<a href="#79" id="79">79</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::engine::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::state::movescan::Move;
 <span class="kw">use </span><span class="kw">crate</span>::utils::assert_fast;
@@ -130,19 +125,14 @@
         result
     }
 
-    <span class="doccomment">/// Ages killer table by shifting all ply levels by two positions up, to ensure that killer moves inside match board after two halfmoves.
-    </span><span class="kw">pub fn </span>age_moves(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">for </span>row <span class="kw">in </span><span class="number">2</span>..MAX_DEPTH {
-            <span class="kw">for </span>slot_index <span class="kw">in </span><span class="number">0</span>..KILLER_SLOTS {
-                <span class="kw">let </span>entry = <span class="kw-2">&amp;</span><span class="self">self</span>.table[row <span class="kw">as </span>usize][slot_index];
-                <span class="self">self</span>.table[(row <span class="kw">as </span>usize) - <span class="number">2</span>][slot_index].data = entry.data;
-            }
+    <span class="doccomment">/// Clears all killer moves at the level specified by `ply`.
+    </span><span class="kw">pub fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ply: u16) {
+        <span class="kw">if </span>ply &gt;= MAX_DEPTH <span class="kw">as </span>u16 {
+            <span class="kw">return</span>;
         }
 
-        <span class="kw">for </span>ply <span class="kw">in </span>MAX_DEPTH - <span class="number">2</span>..MAX_DEPTH {
-            <span class="kw">for </span>entry <span class="kw">in </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.table[ply <span class="kw">as </span>usize] {
-                entry.data = Move::default();
-            }
+        <span class="kw">for </span>slot_index <span class="kw">in </span><span class="number">0</span>..KILLER_SLOTS {
+            <span class="self">self</span>.table[ply <span class="kw">as </span>usize][slot_index].data = Move::default();
         }
     }
 }

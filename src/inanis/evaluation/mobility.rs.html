@@ -103,15 +103,55 @@
 <a href="#101" id="101">101</a>
 <a href="#102" id="102">102</a>
 <a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::state::movescan;
 <span class="kw">use </span><span class="kw">crate</span>::state::representation::Board;
 <span class="kw">use </span><span class="kw">crate</span>::utils::assert_fast;
+<span class="kw">use </span><span class="kw">crate</span>::utils::bithelpers::BitHelpers;
 
 <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::tuning::tuner::TunerCoeff;
 
 <span class="kw">pub struct </span>MobilityData {
+    rook_open_file: i8,
+    rook_semi_open_file: i8,
     knight_mobility: PieceMobility,
     bishop_mobility: PieceMobility,
     rook_mobility: PieceMobility,
@@ -121,6 +161,10 @@
 <span class="attr">#[derive(Default)]
 </span><span class="kw">pub struct </span>EvalAux {
     <span class="kw">pub </span>king_area_threats: i8,
+    <span class="kw">pub </span>knight_threats: u64,
+    <span class="kw">pub </span>bishop_threats: u64,
+    <span class="kw">pub </span>rook_threats: u64,
+    <span class="kw">pub </span>queen_threats: u64,
 }
 
 <span class="kw">pub struct </span>PieceMobility {
@@ -135,6 +179,9 @@
     <span class="kw">let </span><span class="kw-2">mut </span>result = PackedEval::default();
     <span class="kw">let </span>white_data = get_mobility_data(board, WHITE, white_aux);
     <span class="kw">let </span>black_data = get_mobility_data(board, BLACK, black_aux);
+
+    result += (white_data.rook_open_file - black_data.rook_open_file) * params::ROOK_OPEN_FILE;
+    result += (white_data.rook_semi_open_file - black_data.rook_semi_open_file) * params::ROOK_SEMI_OPEN_FILE;
 
     result += (white_data.knight_mobility.inner - black_data.knight_mobility.inner) * params::MOBILITY_INNER[KNIGHT];
     result += (white_data.bishop_mobility.inner - black_data.bishop_mobility.inner) * params::MOBILITY_INNER[BISHOP];
@@ -153,7 +200,29 @@
 </span><span class="kw">fn </span>get_mobility_data(board: <span class="kw-2">&amp;</span>Board, color: usize, aux: <span class="kw-2">&amp;mut </span>EvalAux) -&gt; MobilityData {
     <span class="macro">assert_fast!</span>(color &lt; <span class="number">2</span>);
 
+    <span class="kw">let </span><span class="kw-2">mut </span>rook_open_file = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>rook_semi_open_file = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>rooks_bb = board.pieces[color][ROOK];
+
+    <span class="kw">while </span>rooks_bb != <span class="number">0 </span>{
+        <span class="kw">let </span>square_bb = rooks_bb.get_lsb();
+        <span class="kw">let </span>square = square_bb.bit_scan();
+        rooks_bb = rooks_bb.pop_lsb();
+
+        <span class="kw">let </span>file = patterns::get_file(square);
+        <span class="kw">if </span>(file &amp; board.pieces[color][PAWN]) == <span class="number">0 </span>{
+            <span class="kw">if </span>(file &amp; board.pieces[color ^ <span class="number">1</span>][PAWN]) == <span class="number">0 </span>{
+                rook_open_file += <span class="number">1</span>;
+            } <span class="kw">else </span>{
+                rook_semi_open_file += <span class="number">1</span>;
+            }
+        }
+    }
+
     MobilityData {
+        rook_open_file,
+        rook_semi_open_file,
+
         knight_mobility: movescan::get_piece_mobility::&lt;KNIGHT&gt;(board, color, aux),
         bishop_mobility: movescan::get_piece_mobility::&lt;BISHOP&gt;(board, color, aux),
         rook_mobility: movescan::get_piece_mobility::&lt;ROOK&gt;(board, color, aux),
@@ -169,7 +238,12 @@
     <span class="kw">let </span>black_data = get_mobility_data(board, BLACK, black_aux);
 
     <span class="kw">let </span><span class="kw-2">mut </span>data = [
-        TunerCoeff::new(<span class="number">0</span>, OPENING),
+        TunerCoeff::new(white_data.rook_open_file - black_data.rook_open_file, OPENING),
+        TunerCoeff::new(white_data.rook_open_file - black_data.rook_open_file, ENDING),
+        TunerCoeff::new(white_data.rook_semi_open_file - black_data.rook_semi_open_file, OPENING),
+        TunerCoeff::new(white_data.rook_semi_open_file - black_data.rook_semi_open_file, ENDING),
+        <span class="comment">//
+        </span>TunerCoeff::new(<span class="number">0</span>, OPENING),
         TunerCoeff::new(<span class="number">0</span>, ENDING),
         TunerCoeff::new(white_data.knight_mobility.inner - black_data.knight_mobility.inner, OPENING),
         TunerCoeff::new(white_data.knight_mobility.inner - black_data.knight_mobility.inner, ENDING),

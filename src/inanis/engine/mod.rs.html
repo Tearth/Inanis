@@ -24,8 +24,6 @@
 <a href="#22" id="22">22</a>
 <a href="#23" id="23">23</a>
 <a href="#24" id="24">24</a>
-<a href="#25" id="25">25</a>
-<a href="#26" id="26">26</a>
 </pre></div><pre class="rust"><code><span class="kw">pub mod </span>clock;
 <span class="kw">pub mod </span>context;
 <span class="kw">pub mod </span>movesort;
@@ -36,10 +34,8 @@
 <span class="kw">pub mod </span>stats;
 
 <span class="kw">pub const </span>MAX_DEPTH: i8 = <span class="number">64</span>;
-<span class="kw">pub const </span>MIN_ALPHA: i16 = -CHECKMATE_SCORE;
-<span class="kw">pub const </span>MIN_BETA: i16 = CHECKMATE_SCORE;
-<span class="kw">pub const </span>TIME_THRESHOLD_RATIO: f32 = <span class="number">0.5</span>;
-<span class="kw">pub const </span>DEADLINE_MULTIPLIER: f32 = <span class="number">2.0</span>;
+<span class="kw">pub const </span>MIN_ALPHA: i16 = -<span class="number">32000</span>;
+<span class="kw">pub const </span>MIN_BETA: i16 = <span class="number">32000</span>;
 <span class="kw">pub const </span>MAX_MOVES_COUNT: usize = <span class="number">218</span>;
 
 <span class="kw">pub const </span>INVALID_SCORE: i16 = -<span class="number">32700</span>;

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["evaluate","evaluate_color"]};
+window.SIDEBAR_ITEMS = {"fn":["evaluate","evaluate_color","get_safety_data"],"struct":["SafetyData"]};

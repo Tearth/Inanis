@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["evaluate"]};
+window.SIDEBAR_ITEMS = {"fn":["evaluate","get_material_data"],"struct":["MaterialData"]};

@@ -53,27 +53,66 @@
 <a href="#51" id="51">51</a>
 <a href="#52" id="52">52</a>
 <a href="#53" id="53">53</a>
+<a href="#54" id="54">54</a>
+<a href="#55" id="55">55</a>
+<a href="#56" id="56">56</a>
+<a href="#57" id="57">57</a>
+<a href="#58" id="58">58</a>
+<a href="#59" id="59">59</a>
+<a href="#60" id="60">60</a>
+<a href="#61" id="61">61</a>
+<a href="#62" id="62">62</a>
+<a href="#63" id="63">63</a>
+<a href="#64" id="64">64</a>
+<a href="#65" id="65">65</a>
+<a href="#66" id="66">66</a>
+<a href="#67" id="67">67</a>
+<a href="#68" id="68">68</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::PackedEval;
 <span class="kw">use </span><span class="kw">crate</span>::evaluation::params;
 <span class="kw">use </span><span class="kw">crate</span>::state::representation::Board;
 <span class="kw">use </span><span class="kw">crate</span>::state::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::utils::assert_fast;
 <span class="kw">use </span><span class="kw">crate</span>::utils::bithelpers::BitHelpers;
 
 <span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::tuning::tuner::TunerCoeff;
 
+<span class="kw">pub struct </span>MaterialData {
+    <span class="kw">pub </span>bishop_pair: i8,
+    <span class="kw">pub </span>pawns_attacking_pieces: i8,
+}
+
 <span class="doccomment">/// Evaluates material on the `board` and returns score from the white color perspective (more than 0 when advantage, less than 0 when disadvantage).
 /// The piece values themself are included in PST so it's no longer evaluated here, instead other features like bishop pair are processed.
 </span><span class="kw">pub fn </span>evaluate(board: <span class="kw-2">&amp;</span>Board) -&gt; PackedEval {
-    <span class="kw">let </span>white_has_bishop_pair = <span class="kw">if </span>board.pieces[WHITE][BISHOP].bit_count() == <span class="number">2 </span>{ <span class="number">1 </span>} <span class="kw">else </span>{ <span class="number">0 </span>};
-    <span class="kw">let </span>black_has_bishop_pair = <span class="kw">if </span>board.pieces[BLACK][BISHOP].bit_count() == <span class="number">2 </span>{ <span class="number">1 </span>} <span class="kw">else </span>{ <span class="number">0 </span>};
+    <span class="kw">let </span><span class="kw-2">mut </span>result = PackedEval::default();
+    <span class="kw">let </span>white_data = get_material_data(board, WHITE);
+    <span class="kw">let </span>black_data = get_material_data(board, BLACK);
 
-    (white_has_bishop_pair - black_has_bishop_pair) * params::BISHOP_PAIR
+    result += (white_data.bishop_pair - black_data.bishop_pair) * params::BISHOP_PAIR;
+    result += (white_data.pawns_attacking_pieces - black_data.pawns_attacking_pieces) * params::PAWNS_ATTACKING_PIECES;
+
+    result
+}
+
+<span class="doccomment">/// Gets material data for `board` and `color`.
+</span><span class="kw">fn </span>get_material_data(board: <span class="kw-2">&amp;</span>Board, color: usize) -&gt; MaterialData {
+    <span class="macro">assert_fast!</span>(color &lt; <span class="number">2</span>);
+
+    <span class="kw">let </span>bishop_pair = <span class="kw">if </span>board.pieces[color][BISHOP].bit_count() == <span class="number">2 </span>{ <span class="number">1 </span>} <span class="kw">else </span>{ <span class="number">0 </span>};
+    <span class="kw">let </span>enemy_pieces = board.occupancy[color ^ <span class="number">1</span>] &amp; !board.pieces[color ^ <span class="number">1</span>][PAWN];
+    <span class="kw">let </span>pawns_attacking_pieces = (board.pawn_attacks[color] &amp; enemy_pieces).bit_count() <span class="kw">as </span>i8;
+
+    MaterialData { bishop_pair, pawns_attacking_pieces }
 }
 
 <span class="doccomment">/// Gets coefficients of material for `board` and inserts them into `coeffs`. Similarly, their indices (starting from `index`) are inserted into `indices`.
 </span><span class="attr">#[cfg(feature = <span class="string">"dev"</span>)]
 </span><span class="kw">pub fn </span>get_coeffs(board: <span class="kw-2">&amp;</span>Board, index: <span class="kw-2">&amp;mut </span>u16, coeffs: <span class="kw-2">&amp;mut </span>Vec&lt;TunerCoeff&gt;, indices: <span class="kw-2">&amp;mut </span>Vec&lt;u16&gt;) {
+    <span class="kw">let </span>white_data = get_material_data(board, WHITE);
+    <span class="kw">let </span>black_data = get_material_data(board, BLACK);
+
     <span class="kw">let </span><span class="kw-2">mut </span>data = [
         TunerCoeff::new(board.pieces[WHITE][PAWN].bit_count() <span class="kw">as </span>i8 - board.pieces[BLACK][PAWN].bit_count() <span class="kw">as </span>i8, OPENING),
         TunerCoeff::new(board.pieces[WHITE][KNIGHT].bit_count() <span class="kw">as </span>i8 - board.pieces[BLACK][KNIGHT].bit_count() <span class="kw">as </span>i8, OPENING),
@@ -81,6 +120,10 @@
         TunerCoeff::new(board.pieces[WHITE][ROOK].bit_count() <span class="kw">as </span>i8 - board.pieces[BLACK][ROOK].bit_count() <span class="kw">as </span>i8, OPENING),
         TunerCoeff::new(board.pieces[WHITE][QUEEN].bit_count() <span class="kw">as </span>i8 - board.pieces[BLACK][QUEEN].bit_count() <span class="kw">as </span>i8, OPENING),
         TunerCoeff::new(board.pieces[WHITE][KING].bit_count() <span class="kw">as </span>i8 - board.pieces[BLACK][KING].bit_count() <span class="kw">as </span>i8, OPENING),
+        TunerCoeff::new(white_data.bishop_pair - black_data.bishop_pair, OPENING),
+        TunerCoeff::new(white_data.bishop_pair - black_data.bishop_pair, ENDING),
+        TunerCoeff::new(white_data.pawns_attacking_pieces - black_data.pawns_attacking_pieces, OPENING),
+        TunerCoeff::new(white_data.pawns_attacking_pieces - black_data.pawns_attacking_pieces, ENDING),
     ];
 
     <span class="kw">for </span>coeff <span class="kw">in </span><span class="kw-2">&amp;mut </span>data {
@@ -92,18 +135,5 @@
 
         <span class="kw-2">*</span>index += <span class="number">1</span>;
     }
-
-    <span class="kw">let </span>white_has_bishop_pair = <span class="kw">if </span>board.pieces[WHITE][BISHOP].bit_count() == <span class="number">2 </span>{ <span class="number">1 </span>} <span class="kw">else </span>{ <span class="number">0 </span>};
-    <span class="kw">let </span>black_has_bishop_pair = <span class="kw">if </span>board.pieces[BLACK][BISHOP].bit_count() == <span class="number">2 </span>{ <span class="number">1 </span>} <span class="kw">else </span>{ <span class="number">0 </span>};
-    <span class="kw">let </span>bishop_pair_diff = white_has_bishop_pair - black_has_bishop_pair;
-
-    <span class="kw">if </span>bishop_pair_diff != <span class="number">0 </span>{
-        coeffs.push(TunerCoeff::new(bishop_pair_diff, OPENING));
-        coeffs.push(TunerCoeff::new(bishop_pair_diff, ENDING));
-        indices.push(<span class="kw-2">*</span>index);
-        indices.push(<span class="kw-2">*</span>index + <span class="number">1</span>);
-    }
-
-    <span class="kw-2">*</span>index += <span class="number">2</span>;
 }
 </code></pre></div></section></main></body></html>
